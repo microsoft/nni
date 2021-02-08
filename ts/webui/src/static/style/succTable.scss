@@ -1,8 +1,17 @@
+$tableHeight: 432px;
+
+.scrollPanel {
+    height: $tableHeight;
+}
+
 #succTable {
-    min-height: 400px;
-    max-height: 1000px;
-    overflow-y: auto;
+    height: $tableHeight;
     position: relative;
+    top: -10px;
+
+    .ms-DetailsHeader {
+        padding-top: 0;
+    }
 
     .succTable-tooltip {
         width: 90%;

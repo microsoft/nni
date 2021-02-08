@@ -1,42 +1,21 @@
 import * as React from 'react';
 import axios from 'axios';
 import { WEBUIDOC, MANAGER_IP } from '../static/const';
-import {
-    Stack,
-    initializeIcons,
-    StackItem,
-    CommandBarButton,
-    IContextualMenuProps,
-    IStackTokens,
-    IStackStyles
-} from '@fluentui/react';
-import LogPanel from './modals/LogPanel';
-import ExperimentPanel from './modals/ExperimentPanel';
-import { downLoadIcon, infoIconAbout, timeIcon, disableUpdates, requency, closeTimer } from './buttons/Icon';
+import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluentui/react';
+import { Link } from 'react-router-dom';
+import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from './buttons/Icon';
+import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
 import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
+import { stackTokens, stackStyle } from './NavConst';
 import '../static/style/nav/nav.scss';
 import '../static/style/icon.scss';
-
-initializeIcons();
-const stackTokens: IStackTokens = {
-    childrenGap: 15
-};
-const stackStyle: IStackStyles = {
-    root: {
-        minWidth: 400,
-        height: 56,
-        display: 'flex',
-        verticalAlign: 'center'
-    }
-};
 
 interface NavState {
     version: string;
     menuVisible: boolean;
     navBarVisible: boolean;
     isdisabledFresh: boolean;
-    isvisibleLogDrawer: boolean;
     isvisibleExperimentDrawer: boolean;
     refreshText: string;
     refreshFrequency: number | string;
@@ -55,7 +34,6 @@ class NavCon extends React.Component<NavProps, NavState> {
             menuVisible: false,
             navBarVisible: false,
             isdisabledFresh: false,
-            isvisibleLogDrawer: false, // download button (nnimanager·dispatcher) click -> drawer
             isvisibleExperimentDrawer: false,
             refreshText: 'Auto refresh',
             refreshFrequency: 10
@@ -65,16 +43,6 @@ class NavCon extends React.Component<NavProps, NavState> {
     // to see & download experiment parameters
     showExpcontent = (): void => {
         this.setState({ isvisibleExperimentDrawer: true });
-    };
-
-    // to see & download dispatcher | nnimanager log
-    showDispatcherLog = (): void => {
-        this.setState({ isvisibleLogDrawer: true });
-    };
-
-    // close log drawer (nnimanager.dispatcher)
-    closeLogDrawer = (): void => {
-        this.setState({ isvisibleLogDrawer: false });
     };
 
     // close download experiment parameters drawer
@@ -121,7 +89,7 @@ class NavCon extends React.Component<NavProps, NavState> {
     }
 
     render(): React.ReactNode {
-        const { isvisibleLogDrawer, isvisibleExperimentDrawer, version, refreshText, refreshFrequency } = this.state;
+        const { isvisibleExperimentDrawer, version, refreshText, refreshFrequency } = this.state;
         const aboutProps: IContextualMenuProps = {
             items: [
                 {
@@ -146,59 +114,53 @@ class NavCon extends React.Component<NavProps, NavState> {
         };
         return (
             <Stack horizontal className='nav'>
-                <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
-                    <span className='desktop-logo'>{NNILOGO}</span>
-                    <span className='left-right-margin'>{OVERVIEWTABS}</span>
-                    <span>{DETAILTABS}</span>
-                </StackItem>
-                <StackItem grow={70} className='navOptions'>
-                    <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
-                        {/* refresh button danyi*/}
-                        {/* TODO: fix bug */}
-                        {/* <CommandBarButton
-                            iconProps={{ iconName: 'sync' }}
-                            text="Refresh"
-                            onClick={this.props.refreshFunction}
-                        /> */}
-                        <div className='nav-refresh'>
+                <React.Fragment>
+                    <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
+                        <span className='desktop-logo'>{NNILOGO}</span>
+                        <span className='left-right-margin'>{OVERVIEWTABS}</span>
+                        <span>{DETAILTABS}</span>
+                    </StackItem>
+                    <StackItem grow={70} className='navOptions'>
+                        <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
+                            {/* refresh button danyi*/}
+                            {/* TODO: fix bug */}
+                            {/* <CommandBarButton
+                                        iconProps={{ iconName: 'sync' }}
+                                        text="Refresh"
+                                        onClick={this.props.refreshFunction}
+                                    /> */}
+                            <div className='nav-refresh'>
+                                <CommandBarButton
+                                    iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
+                                    text={refreshText}
+                                    menuProps={this.refreshProps}
+                                />
+                                <div className='nav-refresh-num'>{refreshFrequency}</div>
+                            </div>
                             <CommandBarButton
-                                iconProps={refreshFrequency === '' ? disableUpdates : timeIcon}
-                                text={refreshText}
-                                menuProps={this.refreshProps}
+                                iconProps={{ iconName: 'ShowResults' }}
+                                text='Experiment summary'
+                                onClick={this.showExpcontent}
                             />
-                            <div className='nav-refresh-num'>{refreshFrequency}</div>
-                        </div>
-                        <CommandBarButton iconProps={downLoadIcon} text='Download' menuProps={this.menuProps} />
-                        <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
-                    </Stack>
-                </StackItem>
-                {/* the drawer for dispatcher & nnimanager log message */}
-                {isvisibleLogDrawer && <LogPanel closeDrawer={this.closeLogDrawer} />}
-                {isvisibleExperimentDrawer && (
-                    <ExperimentPanel closeExpDrawer={this.closeExpDrawer} experimentProfile={EXPERIMENT.profile} />
-                )}
+                            <CommandBarButton iconProps={infoIconAbout} text='About' menuProps={aboutProps} />
+                            <Link to='/experiment' className='experiment'>
+                                <div className='expNavTitle'>
+                                    <span>All experiments</span>
+                                    {ChevronRightMed}
+                                </div>
+                            </Link>
+                        </Stack>
+                    </StackItem>
+                    {isvisibleExperimentDrawer && (
+                        <ExperimentSummaryPanel
+                            closeExpDrawer={this.closeExpDrawer}
+                            experimentProfile={EXPERIMENT.profile}
+                        />
+                    )}
+                </React.Fragment>
             </Stack>
         );
     }
-
-    // view and download experiment [log & experiment result]
-    private menuProps: IContextualMenuProps = {
-        items: [
-            {
-                key: 'experiment',
-                text: 'Experiment summary',
-                iconProps: { iconName: 'ShowResults' },
-                onClick: this.showExpcontent
-            },
-            {
-                key: 'logfiles',
-                text: 'Log files',
-                iconProps: { iconName: 'FilePDB' },
-                onClick: this.showDispatcherLog
-            }
-        ],
-        directionalHintFixed: true
-    };
 
     private refreshProps: IContextualMenuProps = {
         items: [

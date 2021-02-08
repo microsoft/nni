@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import copy
 import functools
 from enum import Enum, unique
@@ -9,8 +8,6 @@ import json_tricks
 from schema import And
 
 from . import parameter_expressions
-from .runtime.common import init_logger
-from .runtime.env_vars import dispatcher_env_vars
 
 
 to_json = functools.partial(json_tricks.dumps, allow_nan=True)
@@ -112,22 +109,13 @@ def extract_scalar_history(trial_history, scalar_key='default'):
 def convert_dict2tuple(value):
     """
     convert dict type to tuple to solve unhashable problem.
+    NOTE: this function will change original data.
     """
     if isinstance(value, dict):
         for _keys in value:
             value[_keys] = convert_dict2tuple(value[_keys])
         return tuple(sorted(value.items()))
     return value
-
-
-def init_dispatcher_logger():
-    """
-    Initialize dispatcher logging configuration
-    """
-    logger_file_path = 'dispatcher.log'
-    if dispatcher_env_vars.NNI_LOG_DIRECTORY is not None:
-        logger_file_path = os.path.join(dispatcher_env_vars.NNI_LOG_DIRECTORY, logger_file_path)
-    init_logger(logger_file_path, dispatcher_env_vars.NNI_LOG_LEVEL)
 
 
 def json2space(x, oldy=None, name=NodeType.ROOT):

@@ -1,3 +1,4 @@
+/nni/version.py
 /nni_node/
 /toolchain/
 
@@ -51,6 +52,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+**/package-lock.json
 
 # TypeScript v1 declaration files
 typings/
@@ -80,7 +82,10 @@ typings/
 __pycache__
 build
 *.egg-info
+.eggs/
 setup.pye
+**/__init__.pye
+**/.ipynb_checkpoints
 
 # Environments
 .env
@@ -94,3 +99,6 @@ venv.bak/
 # VSCode
 .vscode
 .vs
+.history
+generated/
+test/ut/retiarii/_debug_graph_data.json

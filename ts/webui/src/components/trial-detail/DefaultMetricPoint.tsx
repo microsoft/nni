@@ -24,7 +24,9 @@ const EmptyGraph = {
 
 interface DefaultPointProps {
     trialIds: string[];
-    visible: boolean;
+    chartHeight: number;
+    hasBestCurve: boolean;
+    changeExpandRowIDs: Function;
 }
 
 interface DefaultPointState {
@@ -47,10 +49,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         this.setState({ bestCurveEnabled: checked });
     };
 
-    shouldComponentUpdate(nextProps: DefaultPointProps): boolean {
-        return nextProps.visible;
-    }
-
     metricDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
@@ -60,7 +58,13 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         }
     };
 
-    generateGraphConfig(maxSequenceId: number): any {
+    pointClick = (params: any): void => {
+        if (window.location.pathname === '/oview') {
+            this.props.changeExpandRowIDs(params.data[2], 'chart');
+        }
+    };
+
+    generateGraphConfig(_maxSequenceId: number): any {
         const { startY, endY } = this.state;
         return {
             grid: {
@@ -69,22 +73,25 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: number[], data: TooltipForAccuracy): number[] => [
-                    data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
-                    80
-                ],
-                formatter: (data: TooltipForAccuracy): React.ReactNode =>
-                    '<div class="tooldetailAccuracy">' +
-                    '<div>Trial No.: ' +
-                    data.data[0] +
-                    '</div>' +
-                    '<div>Default metric: ' +
-                    data.data[1] +
-                    '</div>' +
-                    '<div>Parameters: <pre>' +
-                    JSON.stringify(data.data[2], null, 4) +
-                    '</pre></div>' +
-                    '</div>'
+                confine: true, // confirm always show tooltip box rather than hidden by background
+                formatter: (data: TooltipForAccuracy): React.ReactNode => {
+                    return (
+                        '<div class="tooldetailAccuracy">' +
+                        '<div>Trial No.: ' +
+                        data.data[0] +
+                        '</div>' +
+                        '<div>Trial ID: ' +
+                        data.data[2] +
+                        '</div>' +
+                        '<div>Default metric: ' +
+                        data.data[1] +
+                        '</div>' +
+                        '<div>Parameters: <pre>' +
+                        JSON.stringify(data.data[3], null, 4) +
+                        '</pre></div>' +
+                        '</div>'
+                    );
+                }
             },
             dataZoom: [
                 {
@@ -110,7 +117,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     generateScatterSeries(trials: Trial[]): any {
-        const data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.description.parameters]);
+        const data = trials.map(trial => [trial.sequenceId, trial.accuracy, trial.id, trial.description.parameters]);
         return {
             symbolSize: 6,
             type: 'scatter',
@@ -120,7 +127,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
 
     generateBestCurveSeries(trials: Trial[]): any {
         let best = trials[0];
-        const data = [[best.sequenceId, best.accuracy, best.description.parameters]];
+        const data = [[best.sequenceId, best.accuracy, best.id, best.description.parameters]];
 
         for (let i = 1; i < trials.length; i++) {
             const trial = trials[i];
@@ -128,10 +135,10 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             const delta = trial.accuracy! - best.accuracy!;
             const better = EXPERIMENT.optimizeMode === 'minimize' ? delta < 0 : delta > 0;
             if (better) {
-                data.push([trial.sequenceId, trial.accuracy, trial.description.parameters]);
+                data.push([trial.sequenceId, trial.accuracy, best.id, trial.description.parameters]);
                 best = trial;
             } else {
-                data.push([trial.sequenceId, best.accuracy, trial.description.parameters]);
+                data.push([trial.sequenceId, best.accuracy, best.id, trial.description.parameters]);
             }
         }
 
@@ -143,24 +150,27 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     render(): React.ReactNode {
+        const { hasBestCurve, chartHeight } = this.props;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
-        const onEvents = { dataZoom: this.metricDataZoom };
+        const onEvents = { dataZoom: this.metricDataZoom, click: this.pointClick };
 
         return (
             <div>
-                <Stack horizontalAlign='end' className='default-metric'>
-                    <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
-                </Stack>
+                {hasBestCurve && (
+                    <Stack horizontalAlign='end' className='default-metric'>
+                        <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
+                    </Stack>
+                )}
                 <div className='default-metric-graph'>
                     <ReactEcharts
                         option={graph}
                         style={{
                             width: '100%',
-                            height: 402,
+                            height: chartHeight,
                             margin: '0 auto'
                         }}
-                        theme='my_theme'
+                        theme='nni_theme'
                         notMerge={true} // update now
                         onEvents={onEvents}
                     />

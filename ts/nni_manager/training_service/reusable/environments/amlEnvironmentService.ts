@@ -3,7 +3,6 @@
 
 'use strict';
 
-import { EventEmitter } from "events";
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
@@ -14,13 +13,13 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
-import { AMLCommandChannel } from '../channels/amlCommandChannel';
-import { CommandChannel } from "../commandChannel";
 import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { EventEmitter } from "events";
+import { AMLCommandChannel } from '../channels/amlCommandChannel';
 
 
 /**
- * Collector PAI jobs info from PAI cluster, and update pai job status locally
+ * Collector AML jobs info from AML cluster, and update aml job status locally
  */
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
@@ -41,12 +40,16 @@ export class AMLEnvironmentService extends EnvironmentService {
         return false;
     }
 
-    public createCommandChannel(commandEmitter: EventEmitter): CommandChannel {
-        return new AMLCommandChannel(commandEmitter);
+    public initCommandChannel(eventEmitter: EventEmitter): void {
+        this.commandChannel = new AMLCommandChannel(eventEmitter);
     }
 
     public createEnvironmentInformation(envId: string, envName: string): EnvironmentInformation {
         return new AMLEnvironmentInformation(envId, envName);
+    }
+
+    public get getName(): string {
+        return 'aml';
     }
 
     public async config(key: string, value: string): Promise<void> {
@@ -111,7 +114,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
-        environment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        environment.command = `import os\nos.system('mv envs outputs/envs && cd outputs && ${amlEnvironment.command}')`;
         environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
         environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });

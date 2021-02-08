@@ -1,39 +1,36 @@
 import React from 'react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { rightEidtParam } from '../count/commonStyle';
 import '../../../static/style/overview/command.scss';
 
 export const Command1 = (): any => {
     const tuner = EXPERIMENT.profile.params.tuner;
     const advisor = EXPERIMENT.profile.params.advisor;
     const assessor = EXPERIMENT.profile.params.assessor;
-    let title = '';
-    let builtinName = '';
+    const title: string[] = [];
+    const builtinName: string[] = [];
     if (tuner !== undefined) {
-        title = title.concat('Tuner');
-        if (tuner.builtinTunerName !== undefined) {
-            builtinName = builtinName.concat(tuner.builtinTunerName);
-        }
+        title.push('Tuner');
+        builtinName.push(tuner.builtinTunerName || tuner.className || 'unknown');
     }
+
     if (advisor !== undefined) {
-        title = title.concat('/ Assessor');
-        if (advisor.builtinAdvisorName !== undefined) {
-            builtinName = builtinName.concat(advisor.builtinAdvisorName);
-        }
+        title.push('Advisor');
+        builtinName.push(advisor.builtinAdvisorName || advisor.className || 'unknown');
     }
+
     if (assessor !== undefined) {
-        title = title.concat('/ Addvisor');
-        if (assessor.builtinAssessorName !== undefined) {
-            builtinName = builtinName.concat(assessor.builtinAssessorName);
-        }
+        title.push('Assessor');
+        builtinName.push(assessor.builtinAssessorName || assessor.className || 'unknown');
     }
 
     return (
-        <div className='basic'>
+        <div className='basic' style={rightEidtParam}>
             <div>
                 <p className='command'>Training platform</p>
-                <div className='nowrap'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
-                <p className='lineMargin'>{title}</p>
-                <div className='nowrap'>{builtinName}</div>
+                <div className='ellipsis'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
+                <p className='lineMargin'>{title.join('/')}</p>
+                <div className='ellipsis'>{builtinName.join('/')}</div>
             </div>
         </div>
     );

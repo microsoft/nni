@@ -2,10 +2,17 @@ import * as React from 'react';
 import { Stack } from '@fluentui/react';
 import { COLUMN } from './static/const';
 import { EXPERIMENT, TRIALS } from './static/datamodel';
+import { isManagerExperimentPage } from './static/function';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
-import { TrialConfigButton } from './components/public-child/config/TrialConfigButton';
+import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
+const echarts = require('echarts/lib/echarts');
+echarts.registerTheme('nni_theme', {
+    color: '#3c8dbc'
+});
 import './App.scss';
+import './static/style/common.scss';
+import './static/style/trialsDetail.scss';
 
 interface AppState {
     interval: number;
@@ -18,6 +25,7 @@ interface AppState {
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
     isUpdate: boolean;
+    expandRowIDs: Set<string>;
 }
 
 export const AppContext = React.createContext({
@@ -28,16 +36,19 @@ export const AppContext = React.createContext({
     metricGraphMode: 'max',
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeColumn: (val: string[]) => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeMetricGraphMode: (val: 'max' | 'min') => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeMaxDurationUnit: (val: string) => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    changeEntries: (val: string) => {},
-    // eslint-disable-next-line @typescript-eslint/no-empty-function, @typescript-eslint/no-unused-vars
-    updateOverviewPage: () => {}
+    expandRowIDs: new Set(['']),
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeColumn: (_val: string[]): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeMetricGraphMode: (_val: 'max' | 'min'): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeMaxDurationUnit: (_val: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeEntries: (_val: string): void => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    updateOverviewPage: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeExpandRowIDs: (_val: string, _type?: string): void => {}
 });
 
 class App extends React.Component<{}, AppState> {
@@ -55,7 +66,8 @@ class App extends React.Component<{}, AppState> {
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
-            isUpdate: true
+            isUpdate: true,
+            expandRowIDs: new Set()
         };
     }
 
@@ -85,6 +97,20 @@ class App extends React.Component<{}, AppState> {
     // TODO: use local storage
     changeColumn = (columnList: string[]): void => {
         this.setState({ columnList: columnList });
+    };
+
+    changeExpandRowIDs = (id: string, type?: string): void => {
+        const currentExpandRowIDs = this.state.expandRowIDs;
+
+        if (!currentExpandRowIDs.has(id)) {
+            currentExpandRowIDs.add(id);
+        } else {
+            if (!(type !== undefined && type === 'chart')) {
+                currentExpandRowIDs.delete(id);
+            }
+        }
+
+        this.setState({ expandRowIDs: currentExpandRowIDs });
     };
 
     changeMetricGraphMode = (val: 'max' | 'min'): void => {
@@ -125,7 +151,8 @@ class App extends React.Component<{}, AppState> {
             isillegalFinal,
             expWarningMessage,
             bestTrialEntries,
-            maxDurationUnit
+            maxDurationUnit,
+            expandRowIDs
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null; // TODO: render a loading page
@@ -138,69 +165,59 @@ class App extends React.Component<{}, AppState> {
             { errorWhere: TRIALS.latestMetricDataError(), errorMessage: TRIALS.getLatestMetricDataErrorMessage() },
             { errorWhere: TRIALS.metricDataRangeError(), errorMessage: TRIALS.metricDataRangeErrorMessage() }
         ];
+
         return (
-            <Stack className='nni' style={{ minHeight: window.innerHeight }}>
-                <div className='header'>
-                    <div className='headerCon'>
-                        <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
-                    </div>
-                </div>
-                <Stack className='contentBox'>
-                    <Stack className='content'>
-                        {/* search space & config */}
-                        <AppContext.Provider
-                            value={{
-                                interval,
-                                columnList,
-                                changeColumn: this.changeColumn,
-                                experimentUpdateBroadcast,
-                                trialsUpdateBroadcast,
-                                metricGraphMode,
-                                maxDurationUnit,
-                                changeMaxDurationUnit: this.changeMaxDurationUnit,
-                                changeMetricGraphMode: this.changeMetricGraphMode,
-                                bestTrialEntries,
-                                changeEntries: this.changeEntries,
-                                updateOverviewPage: this.updateOverviewPage
-                            }}
-                        >
-                            <TrialConfigButton />
-                        </AppContext.Provider>
-                        {/* if api has error field, show error message */}
-                        {errorList.map(
-                            (item, key) =>
-                                item.errorWhere && (
-                                    <div key={key} className='warning'>
-                                        <MessageInfo info={item.errorMessage} typeInfo='error' />
-                                    </div>
-                                )
-                        )}
-                        {isillegalFinal && (
-                            <div className='warning'>
-                                <MessageInfo info={expWarningMessage} typeInfo='warning' />
+            <React.Fragment>
+                {isManagerExperimentPage() ? null : (
+                    <Stack className='nni' style={{ minHeight: window.innerHeight }}>
+                        <div className='header'>
+                            <div className='headerCon'>
+                                <NavCon changeInterval={this.changeInterval} refreshFunction={this.lastRefresh} />
                             </div>
-                        )}
-                        <AppContext.Provider
-                            value={{
-                                interval,
-                                columnList,
-                                changeColumn: this.changeColumn,
-                                experimentUpdateBroadcast,
-                                trialsUpdateBroadcast,
-                                metricGraphMode,
-                                maxDurationUnit,
-                                changeMaxDurationUnit: this.changeMaxDurationUnit,
-                                changeMetricGraphMode: this.changeMetricGraphMode,
-                                bestTrialEntries,
-                                changeEntries: this.changeEntries,
-                                updateOverviewPage: this.updateOverviewPage
-                            }}
-                        >
-                            {this.props.children}
-                        </AppContext.Provider>
+                        </div>
+                        <Stack className='contentBox'>
+                            <Stack className='content'>
+                                {/* search space & config */}
+                                <SlideNavBtns />
+                                {/* if api has error field, show error message */}
+                                {errorList.map(
+                                    (item, key) =>
+                                        item.errorWhere && (
+                                            <div key={key} className='warning'>
+                                                <MessageInfo info={item.errorMessage} typeInfo='error' />
+                                            </div>
+                                        )
+                                )}
+                                {isillegalFinal && (
+                                    <div className='warning'>
+                                        <MessageInfo info={expWarningMessage} typeInfo='warning' />
+                                    </div>
+                                )}
+                                <AppContext.Provider
+                                    value={{
+                                        interval,
+                                        columnList,
+                                        changeColumn: this.changeColumn,
+                                        experimentUpdateBroadcast,
+                                        trialsUpdateBroadcast,
+                                        metricGraphMode,
+                                        maxDurationUnit,
+                                        changeMaxDurationUnit: this.changeMaxDurationUnit,
+                                        changeMetricGraphMode: this.changeMetricGraphMode,
+                                        bestTrialEntries,
+                                        changeEntries: this.changeEntries,
+                                        updateOverviewPage: this.updateOverviewPage,
+                                        expandRowIDs,
+                                        changeExpandRowIDs: this.changeExpandRowIDs
+                                    }}
+                                >
+                                    {this.props.children}
+                                </AppContext.Provider>
+                            </Stack>
+                        </Stack>
                     </Stack>
-                </Stack>
-            </Stack>
+                )}
+            </React.Fragment>
         );
     }
 

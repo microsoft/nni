@@ -1,6 +1,7 @@
 import React from 'react';
 import { TooltipHost, DirectionalHint } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { leftProgress } from '../count/commonStyle';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import '../../../static/style/overview/command.scss';
 
@@ -21,12 +22,12 @@ export const Command2 = (): any => {
         }
     }
     return (
-        <div className='basic'>
+        <div className='basic' style={leftProgress}>
             <p className='command'>Log directory</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={EXPERIMENT.profile.logDir || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {
@@ -42,10 +43,10 @@ export const Command2 = (): any => {
                 </TooltipHost>
             </div>
             <p className='lineMargin'>Trial command</p>
-            <div className='nowrap'>
+            <div className='ellipsis'>
                 <TooltipHost
                     content={trialCommand || 'unknown'}
-                    className='nowrap'
+                    className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
                         calloutProps: {

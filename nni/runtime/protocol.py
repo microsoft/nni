@@ -6,6 +6,8 @@ import os
 import threading
 from enum import Enum
 
+_logger = logging.getLogger(__name__)
+
 
 class CommandType(Enum):
     # in
@@ -32,8 +34,7 @@ try:
         _in_file = open(3, 'rb')
         _out_file = open(4, 'wb')
 except OSError:
-    _msg = 'IPC pipeline not exists, maybe you are importing tuner/assessor from trial code?'
-    logging.getLogger(__name__).warning(_msg)
+    _logger.debug('IPC pipeline not exists')
 
 
 def send(command, data):
@@ -46,7 +47,7 @@ def send(command, data):
         _lock.acquire()
         data = data.encode('utf8')
         msg = b'%b%014d%b' % (command.value, len(data), data)
-        logging.getLogger(__name__).debug('Sending command, data: [%s]', msg)
+        _logger.debug('Sending command, data: [%s]', msg)
         _out_file.write(msg)
         _out_file.flush()
     finally:
@@ -58,14 +59,14 @@ def receive():
     Returns a tuple of command (CommandType) and payload (str)
     """
     header = _in_file.read(16)
-    logging.getLogger(__name__).debug('Received command, header: [%s]', header)
+    _logger.debug('Received command, header: [%s]', header)
     if header is None or len(header) < 16:
         # Pipe EOF encountered
-        logging.getLogger(__name__).debug('Pipe EOF encountered')
+        _logger.debug('Pipe EOF encountered')
         return None, None
     length = int(header[2:])
     data = _in_file.read(length)
     command = CommandType(header[:2])
     data = data.decode('utf8')
-    logging.getLogger(__name__).debug('Received command, data: [%s]', data)
+    _logger.debug('Received command, data: [%s]', data)
     return command, data

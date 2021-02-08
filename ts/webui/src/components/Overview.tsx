@@ -5,16 +5,17 @@ import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
-import Accuracy from './overview/Accuracy';
-import { ReBasicInfo } from './overview/experiment/BasicInfo';
+import DefaultPoint from './trial-detail/DefaultMetricPoint';
+import { BasicInfo } from './overview/params/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
 import { TrialCount } from './overview/count/TrialCount';
 import { Command1 } from './overview/command/Command1';
 import { Command2 } from './overview/command/Command2';
 import { TitleContext } from './overview/TitleContext';
-import { itemStyle1, itemStyleSucceed, itemStyle2, entriesOption } from './overview/overviewConst';
+import { itemStyleSucceed, entriesOption } from './overview/overviewConst';
 import '../static/style/overview/overview.scss';
+import '../static/style/overview/topTrial.scss';
 import '../static/style/logPath.scss';
 
 interface OverviewState {
@@ -59,11 +60,9 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
-        const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
-
         const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
+
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
@@ -71,8 +70,10 @@ class Overview extends React.Component<{}, OverviewState> {
                         metricGraphMode,
                         bestTrialEntries,
                         maxDurationUnit,
+                        expandRowIDs,
                         updateOverviewPage,
-                        changeMaxDurationUnit
+                        changeMaxDurationUnit,
+                        changeExpandRowIDs
                     } = value;
                     const maxActive = metricGraphMode === 'max' ? 'active' : '';
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
@@ -85,46 +86,44 @@ class Overview extends React.Component<{}, OverviewState> {
                                         <Title />
                                     </TitleContext.Provider>
                                     <BestMetricContext.Provider value={{ bestAccuracy: bestAccuracy }}>
-                                        <ReBasicInfo />
+                                        <BasicInfo />
                                     </BestMetricContext.Provider>
                                 </div>
                                 {/* duration & trial numbers */}
-                                <div className='overviewProgress'>
-                                    <div className='duration'>
-                                        <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
-                                            <Title />
-                                        </TitleContext.Provider>
-                                        <ExpDurationContext.Provider
-                                            value={{
-                                                maxExecDuration,
-                                                execDuration,
-                                                updateOverviewPage,
-                                                maxDurationUnit,
-                                                changeMaxDurationUnit
-                                            }}
-                                        >
-                                            <ExpDuration />
-                                        </ExpDurationContext.Provider>
-                                    </div>
-                                    <div className='trialCount'>
-                                        <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
-                                            <Title />
-                                        </TitleContext.Provider>
-                                        <ExpDurationContext.Provider
-                                            value={{
-                                                maxExecDuration,
-                                                execDuration,
-                                                updateOverviewPage,
-                                                maxDurationUnit,
-                                                changeMaxDurationUnit
-                                            }}
-                                        >
-                                            <TrialCount />
-                                        </ExpDurationContext.Provider>
-                                    </div>
+                                <div className='duration'>
+                                    <TitleContext.Provider value={{ text: 'Duration', icon: 'Timer' }}>
+                                        <Title />
+                                    </TitleContext.Provider>
+                                    <ExpDurationContext.Provider
+                                        value={{
+                                            maxExecDuration,
+                                            execDuration,
+                                            updateOverviewPage,
+                                            maxDurationUnit,
+                                            changeMaxDurationUnit
+                                        }}
+                                    >
+                                        <ExpDuration />
+                                    </ExpDurationContext.Provider>
+                                </div>
+                                <div className='trialCount'>
+                                    <TitleContext.Provider value={{ text: 'Trial numbers', icon: 'NumberSymbol' }}>
+                                        <Title />
+                                    </TitleContext.Provider>
+                                    <ExpDurationContext.Provider
+                                        value={{
+                                            maxExecDuration,
+                                            execDuration,
+                                            updateOverviewPage,
+                                            maxDurationUnit,
+                                            changeMaxDurationUnit
+                                        }}
+                                    >
+                                        <TrialCount />
+                                    </ExpDurationContext.Provider>
                                 </div>
                                 {/* table */}
-                                <div className='overviewTable'>
+                                <div className='overviewBestMetric'>
                                     <Stack horizontal>
                                         <div style={itemStyleSucceed}>
                                             <TitleContext.Provider value={{ text: 'Top trials', icon: 'BulletedList' }}>
@@ -167,32 +166,25 @@ class Overview extends React.Component<{}, OverviewState> {
                                             </Stack>
                                         </div>
                                     </Stack>
-                                    <SuccessTable trialIds={bestTrials.map(trial => trial.info.id)} />
+                                    <div className='overviewChart'>
+                                        <DefaultPoint
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            chartHeight={300}
+                                            hasBestCurve={false}
+                                            changeExpandRowIDs={changeExpandRowIDs}
+                                        />
+                                        <SuccessTable
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            updateOverviewPage={updateOverviewPage}
+                                            expandRowIDs={expandRowIDs}
+                                            changeExpandRowIDs={changeExpandRowIDs}
+                                        />
+                                    </div>
                                 </div>
-                                <div className='overviewCommand1'>
-                                    <Command1 />
-                                </div>
-                                <div className='overviewCommand2'>
+                                <Stack className='overviewCommand' horizontal>
                                     <Command2 />
-                                </div>
-                                <div className='overviewChart'>
-                                    <Stack horizontal>
-                                        <div style={itemStyle1}>
-                                            <TitleContext.Provider
-                                                value={{ text: 'Trial metric chart', icon: 'HomeGroup' }}
-                                            >
-                                                <Title />
-                                            </TitleContext.Provider>
-                                        </div>
-                                        <div style={itemStyle2}>
-                                            <Stack className='maxmin' horizontal>
-                                                <div className='circle' />
-                                                <div>{`Top ${this.context.metricGraphMode}imal trials`}</div>
-                                            </Stack>
-                                        </div>
-                                    </Stack>
-                                    <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} height={380} />
-                                </div>
+                                    <Command1 />
+                                </Stack>
                             </div>
                         </div>
                     );
@@ -210,40 +202,6 @@ class Overview extends React.Component<{}, OverviewState> {
             bestTrials.splice(JSON.parse(bestTrialEntries));
         }
         return bestTrials;
-    }
-
-    private generateAccuracyGraph(bestTrials: Trial[]): object {
-        const xSequence = bestTrials.map(trial => trial.sequenceId);
-        const ySequence = bestTrials.map(trial => trial.accuracy);
-
-        return {
-            // support max show 0.0000000
-            grid: {
-                left: 67,
-                right: 40
-            },
-            tooltip: {
-                trigger: 'item'
-            },
-            xAxis: {
-                name: 'Trial',
-                type: 'category',
-                data: xSequence
-            },
-            yAxis: {
-                name: 'Default metric',
-                type: 'value',
-                scale: true,
-                data: ySequence
-            },
-            series: [
-                {
-                    symbolSize: 6,
-                    type: 'scatter',
-                    data: ySequence
-                }
-            ]
-        };
     }
 }
 

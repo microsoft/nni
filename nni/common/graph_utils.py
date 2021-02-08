@@ -15,6 +15,7 @@ LIST_CONSTRUCT_KIND = 'prim::ListConstruct'
 LIST_UNPACK_KIND = 'prim::ListUnpack'
 TUPLE_CONSTRUCT_KIND = 'prim::TupleConstruct'
 TUPLE_UNPACK_KIND = 'prim::TupleUnpack'
+CONSTANT_KIND = 'prim::Constant'
 
 _logger = logging.getLogger(__name__)
 
@@ -68,9 +69,11 @@ class TorchGraph:
                 'Please provide model & dummy_input or the traced_model as inputs')
 
     def _trace(self, model, dummy_input):
-        with torch.onnx.set_training(model, False):
-            self.trace = torch.jit.trace(model, dummy_input)
-            torch._C._jit_pass_inline(self.trace.graph)
+        training = model.training
+        model.eval()
+        self.trace = torch.jit.trace(model, dummy_input)
+        torch._C._jit_pass_inline(self.trace.graph)
+        model.train(training)
 
 
 class TorchProtoGraph(TorchGraph):
@@ -282,24 +285,32 @@ class TorchModuleGraph(TorchGraph):
         self.global_count += 1
         op_type = node.kind()
         node_group = [node]
-        inputs = list()
-        outputs = list()
+        inputs = []
+        outputs = []
         node_queue = queue.Queue()
         node_queue.put(node)
         while not node_queue.empty():
             curr_node = node_queue.get()
             for _input in curr_node.inputs():
+                if _input.node().kind() == CONSTANT_KIND:
+                    continue
                 input_name = _input.debugName()
-                if input_name in output_to_node and output_to_node[input_name] in nodes:
-                    predecessor_node = output_to_node[input_name]
-                    if not self._is_key_func(predecessor_node):
-                        node_group.append(predecessor_node)
-                        node_queue.put(predecessor_node)
-                    else:
-                        inputs.append(input_name)
+                if input_name in output_to_node:
+                    for predecessor_node in output_to_node[input_name]:
+                        if predecessor_node in nodes:
+                            if not self._is_key_func(predecessor_node):
+                                if predecessor_node not in node_group:
+                                    node_group.append(predecessor_node)
+                                    node_queue.put(predecessor_node)
+                            else:
+                                inputs.append(input_name)
+                        else:
+                            inputs.append(input_name)
                 else:
                     inputs.append(input_name)
         for output in node.outputs():
+            if output.node().kind() == CONSTANT_KIND:
+                continue
             outputs.append(output.debugName())
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
                              node_group, inputs=inputs, outputs=outputs, key_node=node)
@@ -342,36 +353,46 @@ class TorchModuleGraph(TorchGraph):
         if not op_type:
             op_type = node.kind()
         node_group = [node]
-        inputs = list()
-        outputs = list()
+        inputs = []
+        outputs = []
         node_queue = queue.Queue()
         node_queue.put(node)
         visited = {node}
         while not node_queue.empty():
             curr_node = node_queue.get()
             for _input in curr_node.inputs():
+                if _input.node().kind() == CONSTANT_KIND:
+                    continue
                 input_name = _input.debugName()
-                if input_name in output_to_node and output_to_node[input_name] in nodes:
-                    predecessor_node = output_to_node[input_name]
-                    if predecessor_node not in visited:
-                        node_group.append(predecessor_node)
-                        node_queue.put(predecessor_node)
-                        visited.add(predecessor_node)
+                if input_name in output_to_node:
+                    for predecessor_node in output_to_node[input_name]:
+                        if predecessor_node in nodes:
+                            if predecessor_node not in visited:
+                                node_group.append(predecessor_node)
+                                node_queue.put(predecessor_node)
+                                visited.add(predecessor_node)
+                        else:
+                            inputs.append(input_name)
                 else:
                     inputs.append(input_name)
             for _output in curr_node.outputs():
+                if _output.node().kind() == CONSTANT_KIND:
+                    continue
                 output_name = _output.debugName()
-                if output_name in input_to_node and input_to_node[output_name] in nodes:
-                    successor_node = input_to_node[output_name]
-                    if successor_node not in visited:
-                        node_group.append(successor_node)
-                        node_queue.put(successor_node)
-                        visited.add(successor_node)
+                if output_name in input_to_node:
+                    for successor_node in input_to_node[output_name]:
+                        if successor_node in nodes:
+                            if successor_node not in visited:
+                                node_group.append(successor_node)
+                                node_queue.put(successor_node)
+                                visited.add(successor_node)
+                        else:
+                            outputs.append(output_name)
                 else:
                     outputs.append(output_name)
 
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
-                             node_group, inputs=inputs, outputs=outputs)
+                             node_group, inputs=list(inputs), outputs=list(outputs))
         return nodepy
 
     def _extract_cat_info(self, node_group, cpp_node):
@@ -541,10 +562,13 @@ class TorchModuleGraph(TorchGraph):
         for node in nodes_op:
             name_to_node[node.unique_name] = node
             for _input in node.inputs:
-                input_to_node[_input].append(node)
+                # inputs may have duplicate tensors
+                if node not in input_to_node[_input]:
+                    input_to_node[_input].append(node)
             for output in node.outputs:
-                assert not output in output_to_node, \
-                    "One output cannot be generated by multiple nodes"
+                if output in output_to_node:
+                    assert output_to_node[output] == node, \
+                        "One output cannot be generated by multiple nodes %s" % output
                 output_to_node[output] = node
         return name_to_node, input_to_node, output_to_node
 
@@ -598,8 +622,6 @@ class TorchModuleGraph(TorchGraph):
 
                     assert len(node.inputs) == len(list(last_cpp.inputs())), errmsg
                     for _debug_input, _debug_output in zip(node.inputs, node.outputs):
-                        # _debug_input = _input.debugName()
-                        # _debug_output = _output.debugName()
                         if _debug_input in self.input_to_node and _debug_output in self.input_to_node:
                             # input_to_node[_debug_input] is a list of NodePyGroup, because
                             # one tensor can be used as input for multiple nodes at the same time.
@@ -608,7 +630,8 @@ class TorchModuleGraph(TorchGraph):
                             # will be merged into the same NodePyGroup, so we remove the `node` from
                             # input_to_node[_debug_input] and directly connect this tensor to the
                             # input_to_node[_debug_output]
-                            self.input_to_node[_debug_input].remove(node)
+                            if node in self.input_to_node[_debug_input]:
+                                self.input_to_node[_debug_input].remove(node)
                             # add the following nodes of _output into the input_to_node[_debug_input]
                             self.input_to_node[_debug_input].extend(self.input_to_node[_debug_output])
                         # just remove the _debug_output from the grapgh index. So that we can also skip
@@ -642,12 +665,22 @@ class TorchModuleGraph(TorchGraph):
         omit_useless_nodes = True
         graph = self.trace.graph
         _logger.debug(graph)
-        # build output mapping, from output debugName to its node
-        output_to_node = {x.debugName(): n for n in graph.nodes()
-                          for x in n.outputs()}
-        # build input mapping, from input debugName to its node
-        input_to_node = {x.debugName(): n for n in graph.nodes()
-                         for x in n.inputs()}
+        # build input/output mapping, from input/output debugName to its node
+        input_to_node = defaultdict(list)
+        output_to_node = defaultdict(list)
+        for node in graph.nodes():
+            if node.kind() == CONSTANT_KIND:
+                continue
+            for x in node.outputs():
+                if x.node().kind() == CONSTANT_KIND:
+                    continue
+                output_to_node[x.debugName()].append(node)
+                assert len(output_to_node[x.debugName()]) <= 1, "One output cannot be generated by multiple nodes %s" % x.debugName()
+            for x in node.inputs():
+                if x.node().kind() == CONSTANT_KIND:
+                    continue
+                input_to_node[x.debugName()].append(node)
+
         # build module mapping, from module name to all nodes (as list) under this module scope
         module_to_nodes = defaultdict(list)
         # the mapping of function (non-module in forward) to nodes, key is scope name
@@ -668,6 +701,8 @@ class TorchModuleGraph(TorchGraph):
 
         # associate module name with their trace graph nodes
         for node in graph.nodes():
+            if node.kind() == CONSTANT_KIND:
+                continue
             module_name = self._get_module_name(node.scopeName())
             if module_name in self.leaf_modules:
                 module_to_nodes[module_name].append(node)

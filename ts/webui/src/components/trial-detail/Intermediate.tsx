@@ -24,7 +24,6 @@ interface IntermediateState {
 
 interface IntermediateProps {
     source: Array<TableObj>;
-    whichChart: string;
 }
 
 class Intermediate extends React.Component<IntermediateProps, IntermediateState> {
@@ -61,6 +60,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 const temp = source[item];
                 trialIntermediate.push({
                     name: temp.id,
+                    trialNum: temp.sequenceId,
                     data: temp.description.intermediate,
                     type: 'line',
                     hyperPara: temp.description.parameters
@@ -94,13 +94,18 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     },
                     formatter: function(data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
-                        let obj = {};
+                        let parameters = {};
+                        let trialNum = 0;
                         const temp = trialIntermediate.find(key => key.name === trialId);
                         if (temp !== undefined) {
-                            obj = temp.hyperPara;
+                            parameters = temp.hyperPara;
+                            trialNum = temp.trialNum;
                         }
                         return (
                             '<div class="tooldetailAccuracy">' +
+                            '<div>Trial No.: ' +
+                            trialNum +
+                            '</div>' +
                             '<div>Trial ID: ' +
                             trialId +
                             '</div>' +
@@ -109,7 +114,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             '</div>' +
                             '<div>Parameters: ' +
                             '<pre>' +
-                            JSON.stringify(obj, null, 4) +
+                            JSON.stringify(parameters, null, 4) +
                             '</pre>' +
                             '</div>' +
                             '</div>'
@@ -224,20 +229,18 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
     componentDidUpdate(prevProps: IntermediateProps, prevState: any): void {
         if (this.props.source !== prevProps.source || this.state.isFilter !== prevState.isFilter) {
             const { isFilter, filterSource } = this.state;
-            const { whichChart, source } = this.props;
+            const { source } = this.props;
 
-            if (whichChart === 'Intermediate result') {
-                if (isFilter === true) {
-                    const pointVal = this.pointInput !== null ? this.pointInput.value : '';
-                    const minVal = this.minValInput !== null ? this.minValInput.value : '';
-                    if (pointVal === '' && minVal === '') {
-                        this.drawIntermediate(source);
-                    } else {
-                        this.drawIntermediate(filterSource);
-                    }
-                } else {
+            if (isFilter === true) {
+                const pointVal = this.pointInput !== null ? this.pointInput.value : '';
+                const minVal = this.minValInput !== null ? this.minValInput.value : '';
+                if (pointVal === '' && minVal === '') {
                     this.drawIntermediate(source);
+                } else {
+                    this.drawIntermediate(filterSource);
                 }
+            } else {
+                this.drawIntermediate(source);
             }
         }
     }
