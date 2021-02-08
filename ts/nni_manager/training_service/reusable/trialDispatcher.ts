@@ -732,6 +732,7 @@ class TrialDispatcher implements TrainingService {
                 throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
             }
             trial.environment.runningTrialCount--;
+            trial.environment.latestTrialReleasedTime = Date.now();
             trial.environment = undefined;
         }
         if (true === this.enableGpuScheduler) {
