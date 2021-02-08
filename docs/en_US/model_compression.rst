@@ -29,3 +29,4 @@ For details, please refer to the following tutorials:
     Quantization <Compression/quantization>
     Utilities <Compression/CompressionUtils>
     Advanced Usage <Compression/advanced>
+    API Reference <Compression/CompressionReference>

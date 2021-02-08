@@ -1,16 +1,61 @@
-Python API Reference of Compression Utilities
-=============================================
+Compression Reference
+=====================
 
 .. contents::
 
-Sensitivity Utilities
+Compressors
+----------
+
+Compressor
+^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.compressor.Compressor
+    :members:
+
+
+..  autoclass:: nni.compression.pytorch.compressor.Pruner
+    :members:
+
+..  autoclass:: nni.compression.pytorch.pruning.one_shot.OneshotPruner
+    :members:
+
+..  autoclass:: nni.compression.pytorch.compressor.Quantizer
+    :members:
+
+
+..  autoclass:: nni.compression.pytorch.compressor.Quantizer
+    :members:
+
+Module Wrapper
+^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.compressor.PrunerModuleWrapper
+    :members:
+
+
+..  autoclass:: nni.compression.pytorch.compressor.QuantizerModuleWrapper
+    :members:
+
+Weight Masker
+^^^^^^^^^^^^^
+..  autoclass:: nni.compression.pytorch.pruning.weight_masker.WeightMasker
+    :members:
+
+..  autoclass:: nni.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
+    :members:
+
+
+Compression Utilities
 ---------------------
+
+Sensitivity Utilities
+^^^^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.utils.sensitivity_analysis.SensitivityAnalysis
     :members:
 
 Topology Utilities
-------------------
+^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.utils.shape_dependency.ChannelDependency
     :members:
@@ -28,6 +73,6 @@ Topology Utilities
     :members:
 
 Model FLOPs/Parameters Counter
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ..  autofunction:: nni.compression.pytorch.utils.counter.count_flops_params
