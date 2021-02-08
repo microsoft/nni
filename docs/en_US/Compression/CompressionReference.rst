@@ -4,7 +4,7 @@ Compression Reference
 .. contents::
 
 Compressors
-----------
+-----------
 
 Compressor
 ^^^^^^^^^^
@@ -16,7 +16,7 @@ Compressor
 ..  autoclass:: nni.compression.pytorch.compressor.Pruner
     :members:
 
-..  autoclass:: nni.compression.pytorch.pruning.one_shot.OneshotPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.OneshotPruner
     :members:
 
 ..  autoclass:: nni.compression.pytorch.compressor.Quantizer
@@ -38,10 +38,10 @@ Module Wrapper
 
 Weight Masker
 ^^^^^^^^^^^^^
-..  autoclass:: nni.compression.pytorch.pruning.weight_masker.WeightMasker
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.weight_masker.WeightMasker
     :members:
 
-..  autoclass:: nni.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
     :members:
 
 
