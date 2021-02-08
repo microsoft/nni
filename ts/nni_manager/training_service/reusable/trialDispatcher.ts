@@ -651,13 +651,13 @@ class TrialDispatcher implements TrainingService {
         const environment = environmentService.createEnvironmentInformation(envId, envName);
         environment.environmentService = environmentService;
         this.log.info(`Assign environment service ${environmentService.getName} to environment ${envId}`);
-        environment.command = `sh ../install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`;
+        environment.command = `sh install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`;
 
         if (this.isDeveloping) {
             environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
         }
 
-        environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
+        environment.command = `${environment.command}`;
 
         await environmentService.startEnvironment(environment);
         this.environments.set(environment.id, environment);
