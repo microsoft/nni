@@ -1,51 +1,55 @@
-Tutorial for Model Compression
-==============================
+Quick Start
+===========
 
 .. contents::
 
-In this tutorial, we use the `first section <#quick-start-to-compress-a-model>`__ to quickly go through the usage of model compression on NNI. Then use the `second section <#detailed-usage-guide>`__ to explain more details of the usage.
+Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focus on the second stage that provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress the model. 
+
 
 Quick Start to Compress a Model
 -------------------------------
 
-NNI provides very simple APIs for compressing a model. The compression includes pruning algorithms and quantization algorithms. The usage of them are the same, thus, here we use `slim pruner <../Compression/Pruner.rst#slim-pruner>`__ as an example to show the usage.
+To compress a model, both pruning and quantization can be applied. NNI provides a unified usage of them. Thus, here we use `level pruner <../Compression/Pruner.rst#level-pruner>`__ as an example to show the usage.
 
-Write configuration
+Step1. Write configuration
 ^^^^^^^^^^^^^^^^^^^
 
-Write a configuration to specify the layers that you want to prune. The following configuration means pruning all the ``BatchNorm2d``\ s to sparsity 0.7 while keeping other layers unpruned.
+Write a configuration to specify the layers that you want to prune. The following configuration means pruning all the ``default``\ ops to sparsity 0.5 while keeping other layers unpruned.
 
 .. code-block:: python
 
-   configure_list = [{
-       'sparsity': 0.7,
-       'op_types': ['BatchNorm2d'],
+   config_list = [{
+       'sparsity': 0.5,
+       'op_types': ['default'],
    }]
 
 The specification of configuration can be found `here <#specification-of-config-list>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
 
-Choose a compression algorithm
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Step2. Choose a pruner and compress the model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Choose a pruner to prune your model. First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model.
+First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model.
 
 .. code-block:: python
 
-   pruner = SlimPruner(model, configure_list)
+   from nni.algorithms.compression.pytorch.pruning import LevelPruner
+
+   optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01)
+   pruner = LevelPruner(model, config_list, optimizer_finetune)
    model = pruner.compress()
 
 Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
-Export compression result
-^^^^^^^^^^^^^^^^^^^^^^^^^
+Step3. Export compression result
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After training, you get accuracy of the pruned model. You can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
+After training, you can export model weights to a file, and the generated masks to a file as well. Exporting onnx model is also supported.
 
 .. code-block:: python
 
    pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
-Please refer :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for quick start.
+Plese refer to :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for example code.
 
 Speed up the model
 ^^^^^^^^^^^^^^^^^^
@@ -155,7 +159,7 @@ The following example shows a more complete ``config_list``\ , it uses ``op_name
 
 .. code-block:: bash
 
-   configure_list = [{
+   config_list = [{
            'quant_types': ['weight'],        
            'quant_bits': 8, 
            'op_names': ['conv1']
@@ -208,9 +212,9 @@ You can export the quantized model directly by using ``torch.save`` api and the 
 
    # Init model and quantize it by using NNI QAT
    model = Mnist()
-   configure_list = [...]
+   config_list = [...]
    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-   quantizer = QAT_Quantizer(model, configure_list, optimizer)
+   quantizer = QAT_Quantizer(model, config_list, optimizer)
    quantizer.compress()
 
    model.to(device)
@@ -227,7 +231,7 @@ You can export the quantized model directly by using ``torch.save`` api and the 
    # Have to init new model and compress it before loading
    qmodel_load = Mnist()
    optimizer = torch.optim.SGD(qmodel_load.parameters(), lr=0.01, momentum=0.5)
-   quantizer = QAT_Quantizer(qmodel_load, configure_list, optimizer)
+   quantizer = QAT_Quantizer(qmodel_load, config_list, optimizer)
    quantizer.compress()
    
    # Load quantized model

@@ -28,5 +28,4 @@ For details, please refer to the following tutorials:
     Pruning <Compression/pruning>
     Quantization <Compression/quantization>
     Utilities <Compression/CompressionUtils>
-    Framework <Compression/Framework>
-    Customize Model Compression Algorithms <Compression/CustomizeCompressor>
+    Advanced Usage <Compression/advanced>
