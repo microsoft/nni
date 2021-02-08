@@ -1,18 +1,21 @@
 Quick Start
 ===========
 
-.. contents::
+..  toctree::
+    :hidden:
 
-Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focus on the second stage that provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress the model. 
+    Tutorial <Tutorial>
 
 
-Quick Start to Compress a Model
--------------------------------
+Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focuses on the second stage and provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress a model. 
 
-To compress a model, both pruning and quantization can be applied. NNI provides a unified usage of them. Thus, here we use `level pruner <../Compression/Pruner.rst#level-pruner>`__ as an example to show the usage.
+Model Pruning
+-------------
+
+Here we use `level pruner <../Compression/Pruner.rst#level-pruner>`__ as an example to show the usage of pruning in NNI.
 
 Step1. Write configuration
-^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Write a configuration to specify the layers that you want to prune. The following configuration means pruning all the ``default``\ ops to sparsity 0.5 while keeping other layers unpruned.
 
@@ -23,12 +26,12 @@ Write a configuration to specify the layers that you want to prune. The followin
        'op_types': ['default'],
    }]
 
-The specification of configuration can be found `here <#specification-of-config-list>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
+The specification of configuration can be found `here <./Tutorial.rst#specify-the-configuration>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
 
 Step2. Choose a pruner and compress the model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model.
+First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model. Note that, some algorithms may check gradients for compressing, so we also define an optimizer and pass it to the pruner.
 
 .. code-block:: python
 
@@ -39,6 +42,8 @@ First instantiate the chosen pruner with your model and configuration as argumen
    model = pruner.compress()
 
 Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+
+Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine-tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
 
 Step3. Export compression result
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -51,4 +56,53 @@ After training, you can export model weights to a file, and the generated masks 
 
 Plese refer to :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for example code.
 
-Congratulations! You've compressed your first model via NNI. To go a bit more in depth and learn more about NNI compressino, check out the Tutorials.
+
+Model Quantization
+------------------
+
+Here we use `QAT  Quantizer <../Compression/Quantizer.rst#level-pruner>`__ as an example to show the usage of pruning in NNI.
+
+Step1. Write configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   config_list = [{
+       'quant_types': ['weight'],
+       'quant_bits': {
+           'weight': 8,
+       }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+       'op_types':['Conv2d', 'Linear']
+   }, {
+       'quant_types': ['output'],
+       'quant_bits': 8,
+       'quant_start_step': 7000,
+       'op_types':['ReLU6']
+   }]
+
+The specification of configuration can be found `here <./Tutorial.rst#quantization-specific-keys>`__.
+
+Step2. Choose a quantizer and compress the model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+
+   quantizer = QAT_Quantizer(model, config_list)
+   quantizer.compress()
+
+
+Step3. Export compression result
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can export the quantized model directly by using ``torch.save`` api and the quantized model can be loaded by ``torch.load`` without any extra modification.
+
+.. code-block:: python
+
+   # Save quantized model which is generated by using NNI QAT algorithm
+   torch.save(model.state_dict(), "quantized_model.pkt")
+
+Plese refer to :githublink:`mnist example <examples/model_compress/quantization/QAT_torch_quantizer.py>` for example code.
+
+Congratulations! You've compressed your first model via NNI. To go a bit more in depth about model compression in NNI, check out the `Tutorial <./Tutorial.rst>`__.
