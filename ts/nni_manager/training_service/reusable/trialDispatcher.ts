@@ -201,7 +201,7 @@ class TrialDispatcher implements TrainingService {
             } else {
                 this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
                 storageService = new MountedStorageService();
-                const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+                const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
                 storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
             }
             // Copy the compressed file to remoteDirectory and delete it

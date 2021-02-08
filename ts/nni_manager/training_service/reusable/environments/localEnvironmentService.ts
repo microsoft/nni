@@ -118,9 +118,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         if (this.localTrialConfig === undefined) {
             throw new Error('Local trial config is not initialized');
         }
-        // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,
-            "environment-temp", "envs");
+        const localTempFolder: string = path.join(this.experimentRootDir, "environment-temp", "envs");
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
         environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
         await execMkdir(environment.runnerWorkingFolder);
