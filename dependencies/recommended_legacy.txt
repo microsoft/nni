@@ -5,5 +5,4 @@ torchvision == 0.6.1+cpu
 keras == 2.1.6
 onnx
 peewee
-thop
 graphviz

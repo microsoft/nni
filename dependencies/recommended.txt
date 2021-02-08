@@ -11,5 +11,4 @@ torchvision == 0.7.0+cpu ; sys_platform != "darwin"
 torchvision == 0.7.0 ; sys_platform == "darwin"
 onnx
 peewee
-thop
 graphviz
