@@ -60,7 +60,7 @@ Plese refer to :githublink:`mnist example <examples/model_compress/pruning/naive
 Model Quantization
 ------------------
 
-Here we use `QAT  Quantizer <../Compression/Quantizer.rst#level-pruner>`__ as an example to show the usage of pruning in NNI.
+Here we use `QAT  Quantizer <../Compression/Quantizer.rst#qat-quantizer>`__ as an example to show the usage of pruning in NNI.
 
 Step1. Write configuration
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

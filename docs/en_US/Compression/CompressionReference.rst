@@ -23,9 +23,6 @@ Compressor
     :members:
 
 
-..  autoclass:: nni.compression.pytorch.compressor.Quantizer
-    :members:
-
 Module Wrapper
 ^^^^^^^^^^^^^^
 
