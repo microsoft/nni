@@ -1,0 +1,8 @@
+-f https://download.pytorch.org/whl/torch_stable.html
+tensorflow == 1.15.4
+torch == 1.5.1+cpu
+torchvision == 0.6.1+cpu
+keras == 2.1.6
+onnx
+peewee
+graphviz
