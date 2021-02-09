@@ -583,6 +583,12 @@ class GraphConverter:
 
         # handle TorchScript graph
         sm_graph = script_module.graph
+        print(script_module)
+        print(dir(script_module))
+        print(script_module.modules())
+        for each in script_module.modules():
+            print(each)
+        print(dir(script_module.modules))
         print(sm_graph)
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)

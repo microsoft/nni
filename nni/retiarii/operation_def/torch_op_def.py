@@ -46,6 +46,9 @@ class FunctionalOperator(PyTorchOperation):
     _ori_type_name = ['FunctionalOperator']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         func_name = self.type[len('Function.'):]
+        if not hasattr(torch.nn.functional, func_name):
+            raise RuntimeError('For now, we only support calling independent functions from `torch.nn.functional`, '
+                               f'{func_name} is not in it.')
         return f'{output} = F.{func_name}({", ".join(inputs)})'
 
 class PrimConstant(PyTorchOperation):
@@ -129,6 +132,19 @@ class AtenNewZeros(PyTorchOperation):
         dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
         return f'{output} = {inputs[0]}.new_zeros({inputs[1]}{dtype_str}{device_str})'
 
+class AtenArange(PyTorchOperation):
+    _ori_type_name = ['aten::arange']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[3]]}' if inputs_value[3] is not None else ''
+        if inputs_value[4] is not None:
+            layout_str = f', layout=torch.strided'
+            print('Warning: only support `torch.strided` for now!!!')
+        else:
+            layout_str = ''
+        device_str = f', device=torch.device({inputs[5]})' if inputs_value[5] is not None else ''
+        return f'{output} = torch.arange({inputs[0]}, {inputs[1]}, {inputs[2]}{dtype_str}{layout_str}{device_str})'
+
+# TODO: add requires_grad for other ops
 class AtenTensor(PyTorchOperation):
     _ori_type_name = ['aten::tensor']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
@@ -208,8 +224,9 @@ class AtenEmptyLike(PyTorchOperation):
         mem_format_str = f', memory_format={mem_format[inputs_value[5]]}' if inputs_value[5] is not None else ''
         return f'{output} = torch.{op_name}({inputs[0]}{dtype_str}{layout_str}{device_str}{mem_format_str})'
 
-class AtenRand(PyTorchOperation):
-    _ori_type_name = ['aten::rand', 'aten::randn']
+class AtenRandTensor(PyTorchOperation):
+    # NOTE: TorchOps also includes 'aten::scalar_tensor', deal with it here, as TorchOps has unmatched def
+    _ori_type_name = ['aten::rand', 'aten::randn', 'aten::scalar_tensor']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         op_name = self.type.split('::')[-1]
         dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[1]]}' if inputs_value[1] is not None else ''
@@ -231,19 +248,34 @@ class AtenLen(PyTorchOperation):
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         return f'{output} = len({inputs[0]})'
 
+class AtenIntImplicit(PyTorchOperation):
+    _ori_type_name = ['aten::IntImplicit']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = int({inputs[0]})'
+
 ManuallyChooseDef = {
     'aten::flatten': [('start_dim', 'int', '0'), ('end_dim', 'int', '-1')],
     'aten::split': [('split_size', 'int', 'None'), ('dim', 'int', '0')]
 }
 
 TensorOpExceptions = {
-    'aten::sub': lambda output, inputs: f'{output} = {inputs[0]} - {inputs[1]}' # example: x.size(1) - 3
+    'aten::sub': lambda output, inputs: f'{output} = {inputs[0]} - {inputs[1]}', # example: x.size(1) - 3
+    'aten::add': lambda output, inputs: f'{output} = {inputs[0]} + {inputs[1]}' # example: input.shape[0] + 5
 }
 
-def _get_tensor_ops():
-    def hidden(name):
-        return name.startswith('_') and not name.startswith('__')
+TorchOpExclude = ['aten::Size', 'aten::as_tensor', 'aten::device',
+                  'aten::manual_seed', 'aten::quantized_gru', 'aten::quantized_lstm',
+                  'aten::save', 'aten::tensor', 'aten::wait'
+]
 
+def _hidden(name):
+    return name.startswith('_') and not name.startswith('__')
+
+def _emit_args(args):
+    # filter out the `out` argument here
+    return [(arg.name, str(arg.type), str(arg.default_value)) for arg in args] #  if arg.name != 'out'
+
+def _get_tensor_ops():
     def is_tensor_method(schema):
         if len(schema.arguments) == 0:
             return False
@@ -254,20 +286,16 @@ def _get_tensor_ops():
             return False
         return True
 
-    def emit_args(args):
-        # filter out the `out` argument here
-        return [(arg.name, str(arg.type), str(arg.default_value)) for arg in args] #  if arg.name != 'out'
-
     op_names = []
     op_args = {}
     # discover methods
     for elem in dir(torch.Tensor):
-        if not hidden(elem):
+        if not _hidden(elem):
             schemas = torch._C._jit_get_schemas_for_operator("aten::" + elem)
             for schema in schemas:
                 if is_tensor_method(schema):
                     op_name = 'aten::' + elem
-                    args = emit_args(schema.arguments[1:])
+                    args = _emit_args(schema.arguments[1:])
                     if op_name in op_args:
                         op_args[op_name].append(args)
                     else:
@@ -275,13 +303,50 @@ def _get_tensor_ops():
 
     return op_args.keys(), op_args
 
+def _get_torch_ops():
+    torch_op_args = {}
+    for mod in torch.jit._builtins._modules_containing_builtins:
+        name = mod.__name__
+        if name == 'torch._C._nn':
+            continue
+        # only process 'torch.XXX'
+        for elem in dir(mod):
+            builtin = torch.jit._builtins._find_builtin(getattr(mod, elem))
+            if builtin is not None:
+                schemas = torch._C._jit_get_schemas_for_operator(builtin)
+                for schema in schemas:
+                    # remove _tan but not __and__
+                    if not _hidden(elem):
+                        op_name = 'aten::' + elem
+                        if len(schema.arguments) > 0 and schema.arguments[0].name == 'self':
+                            continue
+                        args = _emit_args(schema.arguments)
+                        if op_name in torch_op_args:
+                            torch_op_args[op_name].append(args)
+                        else:
+                            torch_op_args[op_name] = [args]
+
+    return torch_op_args.keys(), torch_op_args
+
+def _get_torch_ops_exclude_tensor_ops():
+    tensor_op_names, tensor_ops = _get_tensor_ops()
+    torch_op_names, torch_ops = _get_torch_ops()
+
+    torch_exclude_ops = {}
+    for name in torch_op_names:
+        if name not in tensor_op_names:
+            if name not in TorchOpExclude:
+                # exclude the ops that are not in
+                # https://github.com/pytorch/pytorch/blob/master/aten/src/ATen/native/native_functions.yaml
+                torch_exclude_ops[name] = torch_ops[name]
+
+    return torch_exclude_ops.keys(), torch_exclude_ops
+
 class TensorOps(PyTorchOperation):
     """
     corresponding to _get_tensor_ops in torch.jit.supported_ops
     """
     _ori_type_name, _op_args = _get_tensor_ops()
-    #print(_op_args)
-    #exit(1)
 
     @staticmethod
     def _get_matched_args(_type, inputs):
@@ -298,6 +363,7 @@ class TensorOps(PyTorchOperation):
         overloaded_defs = TensorOps._op_args[_type]
         matched = []
         for each in overloaded_defs:
+            # plus 1 because we skip the first argument when generating tensor op def
             if len(each) + 1 == len(inputs):
                 matched.append(each)
         if len(matched) == 1:
@@ -310,11 +376,11 @@ class TensorOps(PyTorchOperation):
             elif _type in ManuallyChooseDef:
                 return ManuallyChooseDef[_type]
             else:
-                raise RuntimeError(f'type {_type} has more than one matched: {matched}')
+                raise RuntimeError(f'tensor op type {_type} has more than one matched: {matched}')
         else:
             if _type in TensorOpExceptions:
                 return None
-            raise RuntimeError(f'type {_type} has no matched')
+            raise RuntimeError(f'tensor op type {_type} has no matched')
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         #print(self.type)
@@ -329,3 +395,50 @@ class TensorOps(PyTorchOperation):
         args_str = ', '.join([f'{name}={inputs[i+1]}' for i, (name, t, default) in enumerate(matched_args)])
         print(args_str)
         return f'{output} = {inputs[0]}.{op_name}({args_str})'
+
+class TorchOps(PyTorchOperation):
+    """
+    corresponding to _get_nn_functional_ops in torch.jit.supported_ops
+    """
+    _ori_type_name, _op_args = _get_torch_ops_exclude_tensor_ops()
+    #print(_op_args)
+    #exit(1)
+    # add 'aten::pixel_shuffle'
+    _op_args['aten::pixel_shuffle'] = [[('input', 'Tensor', 'None'), ('upscale_factor', 'Optional[int]', 'None')]]
+    _ori_type_name = _op_args.keys()
+
+    @staticmethod
+    def _get_matched_args(_type, inputs):
+        def has_same_arg_name(matched):
+            concated_names = []
+            for i, each in enumerate(matched):
+                name = ','.join([arg[0] for arg in each])
+                concated_names.append(name)
+            for i in range(len(concated_names) - 1):
+                if concated_names[i] != concated_names[i+1]:
+                    return False
+            return True
+                
+        overloaded_defs = TorchOps._op_args[_type]
+        matched = []
+        for each in overloaded_defs:
+            if len(each) == len(inputs):
+                matched.append(each)
+        if len(matched) == 1:
+            return matched[0]
+        elif len(matched) > 1:
+            # TODO: match with arg's type. manually choose for now
+            if has_same_arg_name(matched):
+                # return any one is okay
+                return matched[0]
+            else:
+                raise RuntimeError(f'torch op type {_type} has more than one matched: {matched}')
+        else:
+            raise RuntimeError(f'torch op type {_type} has no matched')
+    
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        matched_args = TorchOps._get_matched_args(self.type, inputs)
+        op_name = self.type.split('::')[-1]
+        args_str = ', '.join([f'{name}={inputs[i]}' if t.startswith('Optional[') else f'{inputs[i]}' for i, (name, t, default) in enumerate(matched_args)])
+        print(args_str)
+        return f'{output} = torch.{op_name}({args_str})'
