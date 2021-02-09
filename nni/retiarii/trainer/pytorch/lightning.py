@@ -77,11 +77,22 @@ class Lightning(TrainingConfig):
         }
 
     def _execute(self, model_cls):
-        self.module.set_model(model_cls)
-        return self.trainer.fit(self.module, self.train_dataloader, self.val_dataloaders)
+        return self.fit(model_cls)
 
     def __eq__(self, other):
         return self.function == other.function and self.arguments == other.arguments
+
+    def fit(self, model):
+        """
+        Fit the model with provided dataloader, with Lightning trainer.
+
+        Parameters
+        ----------
+        model : nn.Module
+            The model to fit.
+        """
+        self.module.set_model(model)
+        return self.trainer.fit(self.module, self.train_dataloader, self.val_dataloaders)
 
 
 def _check_dataloader(dataloader):
@@ -94,7 +105,7 @@ def _check_dataloader(dataloader):
 
 ### The following are some commonly used Lightning modules ###
 
-class _SupervisedLearning(LightningModule):
+class _SupervisedLearningModule(LightningModule):
     def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
@@ -152,9 +163,18 @@ class _SupervisedLearning(LightningModule):
 
 
 @blackbox_module
-class Classification(_SupervisedLearning):
+class _ClassificationModule(_SupervisedLearningModule):
+    def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
+                 learning_rate: float = 0.001,
+                 weight_decay: float = 0.,
+                 optimizer: optim.Optimizer = optim.Adam):
+        super().__init__(criterion, {'acc': pl.metrics.Accuracy},
+                         learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
+
+
+class Classification(Lightning):
     """
-    Lightning module that is used for classification.
+    Trainer that is used for classification.
 
     Parameters
     ----------
@@ -166,20 +186,43 @@ class Classification(_SupervisedLearning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
+    train_dataloders : DataLoader
+        Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
+        If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
+    val_dataloaders : DataLoader or List of DataLoader
+        Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
+        If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
+    trainer_kwargs : dict
+        Optional keyword arguments passed to trainer. See
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'acc': pl.metrics.Accuracy},
-                         learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
+                 optimizer: optim.Optimizer = optim.Adam,
+                 train_dataloader: Optional[DataLoader] = None,
+                 val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
+                 **trainer_kwargs):
+        module = _ClassificationModule(criterion=criterion, learning_rate=learning_rate,
+                                       weight_decay=weight_decay, optimizer=optimizer)
+        super().__init__(module, Trainer(**trainer_kwargs),
+                         train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
 @blackbox_module
-class Regression(_SupervisedLearning):
+class _RegressionModule(_SupervisedLearningModule):
+    def __init__(self, criterion: nn.Module = nn.MSELoss,
+                 learning_rate: float = 0.001,
+                 weight_decay: float = 0.,
+                 optimizer: optim.Optimizer = optim.Adam):
+        super().__init__(criterion, {'mse': pl.metrics.MeanSquaredError},
+                         learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
+
+
+class Regression(Lightning):
     """
-    Lightning module that is used for regression.
+    Trainer that is used for regression.
 
     Parameters
     ----------
@@ -191,11 +234,25 @@ class Regression(_SupervisedLearning):
         L2 weight decay. default: 0
     optimizer : Optimizer
         Class for optimizer (not an instance). default: ``Adam``
+    train_dataloders : DataLoader
+        Used in ``trainer.fit()``. A PyTorch DataLoader with training samples.
+        If the ``lightning_module`` has a predefined train_dataloader method this will be skipped.
+    val_dataloaders : DataLoader or List of DataLoader
+        Used in ``trainer.fit()``. Either a single PyTorch Dataloader or a list of them, specifying validation samples.
+        If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
+    trainer_kwargs : dict
+        Optional keyword arguments passed to trainer. See
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
-                 optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'mse': pl.metrics.MeanSquaredError},
-                         learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
+                 optimizer: optim.Optimizer = optim.Adam,
+                 train_dataloader: Optional[DataLoader] = None,
+                 val_dataloaders: Union[DataLoader, List[DataLoader], None] = None,
+                 **trainer_kwargs):
+        module = _RegressionModule(criterion=criterion, learning_rate=learning_rate,
+                                   weight_decay=weight_decay, optimizer=optimizer)
+        super().__init__(module, Trainer(**trainer_kwargs),
+                         train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)

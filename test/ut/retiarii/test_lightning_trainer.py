@@ -6,7 +6,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from nni.retiarii import blackbox_module as bm
-from nni.retiarii.trainer import FunctionalTraining
+from nni.retiarii.trainer import FunctionalTrainer
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -90,11 +90,10 @@ def test_mnist():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
-    lightning = pl.Lightning(pl.Classification(),
-                             pl.Trainer(max_epochs=2, limit_train_batches=0.25,  # for faster training
-                                        progress_bar_refresh_rate=progress_bar_refresh_rate),
-                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+    lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                  max_epochs=2, limit_train_batches=0.25,  # for faster training
+                                  progress_bar_refresh_rate=progress_bar_refresh_rate)
     lightning._execute(MNISTModel)
     assert _get_final_result() > 0.7
     _reset()
@@ -106,18 +105,18 @@ def test_diabetes():
     nni.runtime.platform.test._last_metric = None
     train_dataset = DiabetesDataset(train=True)
     test_dataset = DiabetesDataset(train=False)
-    lightning = pl.Lightning(pl.Regression(optimizer=torch.optim.SGD),
-                             pl.Trainer(max_epochs=100,
-                                        progress_bar_refresh_rate=progress_bar_refresh_rate),
-                             train_dataloader=pl.DataLoader(train_dataset, batch_size=20),
-                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=20))
+    lightning = pl.Regression(optimizer=torch.optim.SGD,
+                              train_dataloader=pl.DataLoader(train_dataset, batch_size=20),
+                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=20),
+                              max_epochs=100,
+                              progress_bar_refresh_rate=progress_bar_refresh_rate)
     lightning._execute(FCNet(train_dataset.x.shape[1], 1))
     assert _get_final_result() < 2e4
     _reset()
 
 
 def test_functional():
-    FunctionalTraining(_foo)._execute(MNISTModel)
+    FunctionalTrainer(_foo)._execute(MNISTModel)
 
 
 if __name__ == '__main__':

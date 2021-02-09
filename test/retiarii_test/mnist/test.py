@@ -38,10 +38,9 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
-    lightning = pl.Lightning(pl.Classification(),
-                             pl.Trainer(max_epochs=2),
-                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+    lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                  max_epochs=2)
 
     simple_startegy = RandomStrategy()
 

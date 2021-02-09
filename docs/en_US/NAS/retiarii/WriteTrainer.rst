@@ -68,14 +68,14 @@ There is another way to customize a new trainer with functional APIs, which prov
 
 .. code-block::python
 
-    from nni.retiarii.trainer import FunctionalTraining
+    from nni.retiarii.trainer import FunctionalTrainer
 
     def fit(model, dataloader):
         train(model, dataloader)
         acc = test(model, dataloader)
         nni.report_final_result(acc)
 
-    training = FunctionalTraining(fit, dataloader=DataLoader(foo, bar))
+    training = FunctionalTrainer(fit, dataloader=DataLoader(foo, bar))
 
 
 One-shot trainers

@@ -1,7 +1,7 @@
 from ..graph import TrainingConfig
 
 
-class FunctionalTraining(TrainingConfig):
+class FunctionalTrainer(TrainingConfig):
     """
     Functional training config that directly takes a function and thus should be general.
 
@@ -19,7 +19,7 @@ class FunctionalTraining(TrainingConfig):
 
     @staticmethod
     def _load(ir):
-        return FunctionalTraining(ir['function'], **ir['arguments'])
+        return FunctionalTrainer(ir['function'], **ir['arguments'])
 
     def _dump(self):
         return {
