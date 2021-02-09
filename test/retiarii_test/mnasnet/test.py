@@ -37,9 +37,9 @@ if __name__ == '__main__':
     ])
     train_dataset = bm(CIFAR10)(root='data/cifar10', train=True, download=True, transform=train_transform)
     test_dataset = bm(CIFAR10)(root='data/cifar10', train=False, download=True, transform=valid_transform)
-    lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                  max_epochs=1, limit_train_batches=0.2)
+    trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                max_epochs=1, limit_train_batches=0.2)
 
     applied_mutators = [
         BlockMutator('mutable_0'),
@@ -48,7 +48,7 @@ if __name__ == '__main__':
 
     simple_startegy = TPEStrategy()
 
-    exp = RetiariiExperiment(base_model, lightning, applied_mutators, simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnasnet_search'
