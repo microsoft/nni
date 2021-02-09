@@ -16,9 +16,9 @@ compare_results = True
 
 config = {
     'apoz': {
-        'model_name': 'lenet',
-        'input_shape': [64, 1, 28, 28],
-        'masks_file': './experiment_data/mask_lenet_mnist_apoz.pth'
+        'model_name': 'vgg16',
+        'input_shape': [64, 3, 32, 32],
+        'masks_file': './experiment_data/mask_vgg16_cifar10_apoz.pth'
     },
     'l1filter': {
         'model_name': 'vgg16',
