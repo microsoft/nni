@@ -189,14 +189,13 @@ Here is a simple example of using trainer and strategy.
   transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
   train_dataset = blackbox(MNIST, root='data/mnist', train=True, download=True, transform=transform)
   test_dataset = blackbox(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-  lightning = pl.Lightning(pl.Classification(),
-                           pl.Trainer(max_epochs=10),
-                           train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                           val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+  lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                max_epochs=10)
 
 .. Note:: For NNI to capture the dataset and dataloader and distribute it across different runs, please wrap your dataset with ``blackbox`` and use ``pl.DataLoader`` instead of ``torch.utils.data.DataLoader``. See ``blackbox_module`` section below for details.
 
-Users can refer to `this document <./WriteTrainer.rst>`__ for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
+Users can refer to `API reference <./ApiReference.rst>`__ on detailed usage of trainer. "`write a trainer <./WriteTrainer.rst>`__" for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
 Set up an Experiment
 ^^^^^^^^^^^^^^^^^^^^
