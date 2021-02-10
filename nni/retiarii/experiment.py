@@ -17,7 +17,7 @@ from .integration import RetiariiAdvisor
 from .converter import convert_to_graph
 from .mutator import Mutator
 from .trainer.interface import BaseTrainer, BaseOneShotTrainer
-from .strategies.strategy import BaseStrategy
+from .strategy import BaseStrategy
 from .trainer import BaseOneShotTrainer
 
 _logger = logging.getLogger(__name__)

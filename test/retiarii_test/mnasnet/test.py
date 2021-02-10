@@ -8,7 +8,7 @@ from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 from base_mnasnet import MNASNet
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
 
-from nni.retiarii.strategies import TPEStrategy
+from nni.retiarii.strategy import TPEStrategy
 from mutator import BlockMutator
 
 if __name__ == '__main__':
@@ -31,9 +31,9 @@ if __name__ == '__main__':
     applied_mutators.append(BlockMutator('mutable_0'))
     applied_mutators.append(BlockMutator('mutable_1'))
 
-    simple_startegy = TPEStrategy()
+    simple_strategy = TPEStrategy()
 
-    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnasnet_search'

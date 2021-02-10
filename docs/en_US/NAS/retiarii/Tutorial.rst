@@ -188,7 +188,7 @@ Here is a simple example of using trainer and strategy.
     dataloader_kwargs={"batch_size": 32},
     optimizer_kwargs={"lr": 1e-3},
     trainer_kwargs={"max_epochs": 1})
-  simple_startegy = RandomStrategy()
+  simple_strategy = RandomStrategy()
 
 Users can refer to `this document <./WriteTrainer.rst>`__ for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
@@ -199,7 +199,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
+  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
   exp_config = RetiariiExeConfig('local')
   exp_config.experiment_name = 'mnasnet_search'
   exp_config.trial_concurrency = 2

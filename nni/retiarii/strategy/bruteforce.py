@@ -6,7 +6,7 @@ import time
 from typing import Any, Dict, List
 
 from .. import Sampler, submit_models, query_available_resources
-from .strategy import BaseStrategy
+from .base import BaseStrategy
 from .utils import dry_run_for_search_space
 
 _logger = logging.getLogger(__name__)
@@ -72,7 +72,7 @@ class _RandomSampler(Sampler):
         return random.choice(candidates)
 
 
-class RandomStrategy(BaseStrategy):
+class Random(BaseStrategy):
     def __init__(self, variational=False, dedup=True):
         self.variational = variational
         self.dedup = dedup

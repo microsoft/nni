@@ -2,8 +2,8 @@ import random
 
 import nni.retiarii.nn.pytorch as nn
 import torch.nn.functional as F
+from nni.retiarii import strategy
 from nni.retiarii.experiment import RetiariiExeConfig, RetiariiExperiment
-from nni.retiarii.strategies import RandomStrategy
 from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 
 
@@ -37,9 +37,9 @@ if __name__ == '__main__':
                                                 optimizer_kwargs={"lr": 1e-3},
                                                 trainer_kwargs={"max_epochs": 1})
 
-    simple_startegy = RandomStrategy()
+    simple_strategy = strategy.Random()
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'

@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
 from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategies import TPEStrategy
+from nni.retiarii.strategy import TPEStrategy
 from nni.retiarii.trainer.pytorch import DartsTrainer
 
 from darts_model import CNN
