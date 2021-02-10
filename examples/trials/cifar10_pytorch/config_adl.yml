@@ -22,12 +22,15 @@ trial:
   codeDir: /cifar10
   gpuNum: 1
   image: {image_built_by_adl.Dockerfile}
-  # optional
-  imagePullSecrets:
-    - name: {secret}
+  # optional: 
+  # the user needs to provide the secret for a private registry, 
+  # imagePullSecrets:
+  #  - name: {secret}
   adaptive: true
   checkpoint:
-    storageClass: dfs
+    # the user needs to determine the storageClass
+    # we give a default storageClass for microk8s
+    storageClass: microk8s-hostpath 
     storageSize: 1Gi
   cpuNum: 1
   memorySize: 1Gi
