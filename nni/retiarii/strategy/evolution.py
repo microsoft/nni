@@ -4,7 +4,7 @@ import logging
 import random
 import time
 
-from ..execution import submit_models
+from ..execution import query_available_resources, submit_models
 from ..graph import ModelStatus
 from .base import BaseStrategy
 from .utils import dry_run_for_search_space, get_targeted_model
@@ -65,7 +65,7 @@ class Evolution(BaseStrategy):
 
     def run(self, base_model, applied_mutators):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
-        # Run the first population regardless of the resources
+        # Run the first population regardless concurrency
         _logger.info('Initializing the first population.')
         while len(self._population) + len(self._running_models) <= self._population:
             # try to submit new models
@@ -73,20 +73,20 @@ class Evolution(BaseStrategy):
                 config = self.random(search_space)
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
-            self._remove_failed_models_from_running_list()
             self._move_succeeded_models_to_population()
+            self._remove_failed_models_from_running_list()
             time.sleep(self._polling_interval)
 
         # Resource-aware mutation of models
         _logger.info('Running mutations.')
         while self._success_count + len(self._running_models) <= self.cycles:
             # try to submit new models
-            if self._success_count + len(self._running_models) < self.cycles:
+            if query_available_resources() > 0 and self._success_count + len(self._running_models) < self.cycles:
                 config = self.mutate(self.best_parent(), search_space)
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
-            self._remove_failed_models_from_running_list()
             self._move_succeeded_models_to_population()
+            self._remove_failed_models_from_running_list()
             time.sleep(self._polling_interval)
 
     def _submit_config(self, config, base_model, mutators):
@@ -94,12 +94,6 @@ class Evolution(BaseStrategy):
         submit_models(model)
         self._running_models.append((config, model))
         return model
-
-    def _remove_failed_models_from_running_list(self):
-        if self.on_failure == 'ignore':
-            number_of_failed_models = len([g for g in self._running_models if g.status == ModelStatus.Failed])
-            self._running_models = [g for g in self._running_models if g.status != ModelStatus.Failed]
-            _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)
 
     def _move_succeeded_models_to_population(self):
         completed_indices = []
@@ -110,10 +104,19 @@ class Evolution(BaseStrategy):
             elif model.status == ModelStatus.Trained:
                 metric = model.metric
             if metric is not None:
-                self._population.append(Individual(config, metric))
+                individual = Individual(config, metric)
+                _logger.info('New individual created: %s', str(individual))
+                self._population.append(individual)
                 if len(self._population) >= self.population_size:
                     self._population.popleft()
                 completed_indices.append(i)
         for i in completed_indices:
             self._success_count += 1
             self._running_models.pop(i)
+
+    def _remove_failed_models_from_running_list(self):
+        # this is only done when on_failure policy is set to "ignore".
+        if self.on_failure == 'ignore':
+            number_of_failed_models = len([g for g in self._running_models if g.status == ModelStatus.Failed])
+            self._running_models = [g for g in self._running_models if g.status != ModelStatus.Failed]
+            _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)
