@@ -11,9 +11,6 @@
 /ts/nni_manager/metrics.json
 /ts/nni_manager/trial_jobs.json
 
-# tmp
-*.bak
-
 # Logs
 logs
 *.log

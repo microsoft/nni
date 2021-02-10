@@ -4,7 +4,6 @@ trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
 logLevel: trace
-nniManagerIp: 127.0.0.1
 #choice: local, remote, pai, kubeflow
 trainingServicePlatform: frameworkcontroller
 searchSpacePath: search_space.json
@@ -27,4 +26,4 @@ frameworkcontrollerConfig:
   storage: pvc
   namespace: "default"
   pvc:
-    path: "/tmp/data"
+    path: "/tmp/mount"

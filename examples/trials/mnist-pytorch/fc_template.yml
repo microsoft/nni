@@ -9,47 +9,8 @@ spec:
     fancyRetryPolicy: true
     maxRetryCount: 2
   taskRoles:
-  - name: ps
-    taskNumber: 2
-    frameworkAttemptCompletionPolicy:
-      minFailedTaskCount: 1
-      minSucceededTaskCount: -1
-    task:
-      retryPolicy:
-        fancyRetryPolicy: false
-        maxRetryCount: 0
-      # Large timeout to force delete Pod as it may break the stateful batch.
-      podGracefulDeletionTimeoutSec: 1800
-      pod:
-        spec:
-          restartPolicy: Never
-          hostNetwork: false
-          containers:
-          - name: mnist-pytorch
-            image: msranni/nni:latest
-            command: ["python3", "mnist.py"]
-            ports:
-            - containerPort: 4001
-            volumeMounts:
-            - name: frameworkbarrier-volume
-              mountPath: /mnt/frameworkbarrier
-            - name: data-volume
-              mountPath: /tmp/data
-          serviceAccountName: frameworkbarrier
-          initContainers:
-          - name: frameworkbarrier
-            image: frameworkcontroller/frameworkbarrier
-            volumeMounts:
-            - name: frameworkbarrier-volume
-              mountPath: /mnt/frameworkbarrier
-          volumes:
-          - name: frameworkbarrier-volume
-            emptyDir: {}
-          - name: data-volume
-            persistentVolumeClaim:
-              claimName: nni-storage
   - name: worker
-    taskNumber: 3
+    taskNumber: 1
     frameworkAttemptCompletionPolicy:
       minFailedTaskCount: 1
       minSucceededTaskCount: 3
@@ -72,7 +33,7 @@ spec:
             - name: frameworkbarrier-volume
               mountPath: /mnt/frameworkbarrier
             - name: data-volume
-              mountPath: /tmp/data
+              mountPath: /tmp/mount
           serviceAccountName: frameworkbarrier
           initContainers:
           - name: frameworkbarrier

@@ -301,7 +301,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             const fcClusterConfigNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
             const nfsConfig: NFSConfig = fcClusterConfigNFS.nfs;
             return `nfs://${nfsConfig.server}:${destDirectory}`;
-        } else if (this.fcClusterConfig.storage === 'pvc' || this.fcClusterConfig.storage === undefined) {
+        } else if (this.fcClusterConfig.storage === 'pvc') {
             await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
             await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
             return `${this.trialLocalNFSTempFolder}/${destDirectory}`;
