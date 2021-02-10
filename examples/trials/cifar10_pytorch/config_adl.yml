@@ -21,15 +21,18 @@ trial:
   command: python3 /cifar10/main_adl.py
   codeDir: /cifar10
   gpuNum: 1
-  image: {image_built_by_adl.Dockerfile}
+  # the user needs to have a docker image built by the adl.Dockerfile
+  # the docker image should be pushed to a registry for the cluster to pull
+  # in our example we provide a docker image from our public docker hub
+  image: petuum/nni:cifar-example 
   # optional: 
-  # the user needs to provide the secret for a private registry, 
+  # the user needs to provide the secret if the image is pulled from a private registry
   # imagePullSecrets:
   #  - name: {secret}
   adaptive: true
   checkpoint:
-    # the user needs to determine the storageClass
-    # we give a default storageClass for microk8s
+    # the user needs to determine the storageClass in Kubenetes
+    # For example, for MicroK8s, ‘microk8s-hostpath’ is always used
     storageClass: microk8s-hostpath 
     storageSize: 1Gi
   cpuNum: 1
