@@ -335,7 +335,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'id' && {
                     onRender: (record): React.ReactNode => (
                         <Stack horizontal className='idCopy'>
-                            <div className='succeed-padding'>{record.id}</div>
+                            <div>{record.id}</div>
                             <CopyButton value={record.id} />
                         </Stack>
                     )

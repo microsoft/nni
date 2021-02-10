@@ -19,7 +19,7 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
         const protocol = window.location.protocol;
         const webuiPortal = `${protocol}//${hostname}:${port}/oview`;
         return (
-            <Stack horizontal className='succeed-padding ellipsis idCopy'>
+            <Stack horizontal className='ellipsis idCopy'>
                 {status === 'STOPPED' ? (
                     <div className='idColor'>{id}</div>
                 ) : (
