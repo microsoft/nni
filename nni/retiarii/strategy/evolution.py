@@ -1,4 +1,98 @@
-# TODO: needs to be adapted to new API
+import collections
+import dataclasses
+import logging
+import random
+
+from ..execution import submit_models
+from ..graph import ModelStatus
+from .base import BaseStrategy
+from .utils import dry_run_for_search_space, get_targeted_model
+
+
+_logger = logging.getLogger(__name__)
+
+
+@dataclasses.dataclass
+class Individual:
+    x: dict
+    y: float
+
+
+class Evolution(BaseStrategy):
+    def __init__(self, optimize_mode='maximize', population_size=100, sample_size=25, cycles=20000,
+                 mutation_prob=0.05, on_failure='ignore'):
+        assert optimize_mode in ['maximize', 'minimize']
+        assert on_failure in ['ignore', 'worst']
+        assert sample_size < population_size
+        self.optimize_mode = optimize_mode
+        self.population_size = population_size
+        self.sample_size = sample_size
+        self.cycles = cycles
+        self.mutation_prob = mutation_prob
+        self.on_failure = on_failure
+
+        self._worst = float('-inf') if self.optimize_mode == 'maximize' else float('inf')
+
+        self._succeed_count = 0
+        self._population = collections.deque()
+        self._running_models = []
+
+    def random(self, search_space):
+        return {k: random.choice(v) for k, v in search_space.items()}
+
+    def mutate(self, config, search_space):
+        new_config = {}
+        for k, v in config.items():
+            if random.uniform(0, 1) < self.mutation_prob:
+                # NOTE: we do not exclude the original choice here for simplicity,
+                # which is slightly different from the original paper.
+                new_config[k] = random.choice(search_space[k])
+            else:
+                new_config[k] = v
+        return new_config
+
+    def run(self, base_model, applied_mutators):
+        search_space = dry_run_for_search_space(base_model, applied_mutators)
+        # Run the first population regardless of the resources
+        _logger.info('Initializing the first population.')
+        while len(self._population) + len(self._running_models) <= self._population:
+            # try to submit new models
+            if len(self._population) + len(self._running_models) < self._population:
+                random_config = self.random(search_space)
+                random_model = get_targeted_model(base_model, applied_mutators, random_config)
+                submit_models(random_model)
+                self._running_models.append((random_config, random_model))
+            # collect results
+            self._remove_failed_models_from_running_list()
+            self._move_succeeded_models_to_population()
+
+    def _is_better(self, a, b):
+        if self.optimize_mode == 'maximize':
+            return a > b
+        else:
+            return a < b
+
+    def _remove_failed_models_from_running_list(self):
+        if self.on_failure == 'ignore':
+            number_of_failed_models = len([g for g in self._running_models if g.status == ModelStatus.Failed])
+            self._running_models = [g for g in self._running_models if g.status != ModelStatus.Failed]
+            _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)
+
+    def _move_succeeded_models_to_population(self):
+        completed_indices = []
+        for i, (config, model) in enumerate(self._running_models):
+            metric = None
+            if self.on_failure == 'worst' and model.status == ModelStatus.Failed:
+                metric = self._worst
+            elif model.status == ModelStatus.Trained:
+                metric = model.metric
+            if metric is not None:
+                self._population.append(Individual(config, metric))
+                if len(self._population) >= self.population_size:
+                    self._population.popleft()
+            completed_indices.append(i)
+        for i in completed_indices:
+            self._running_models.pop(i)
 
 
 class RegularizedEvolution:

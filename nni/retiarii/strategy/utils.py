@@ -1,7 +1,15 @@
 import collections
 from typing import Dict, Any, List
 from ..graph import Model
-from ..mutator import Mutator
+from ..mutator import Mutator, Sampler
+
+
+class _FixedSampler(Sampler):
+    def __init__(self, sample):
+        self.sample = sample
+
+    def choice(self, candidates, mutator, model, index):
+        return self.sample[(mutator, index)]
 
 
 def dry_run_for_search_space(model: Model, mutators: List[Mutator]) -> Dict[Any, List[Any]]:
@@ -11,3 +19,11 @@ def dry_run_for_search_space(model: Model, mutators: List[Mutator]) -> Dict[Any,
         for i, candidates in recorded_candidates:
             search_space[(id(mutator), i)] = candidates
     return search_space
+
+
+def get_targeted_model(base_model: Model, mutators: List[Mutator], sample: dict) -> Model:
+    sampler = _FixedSampler(sample)
+    model = base_model
+    for mutator in mutators:
+        model = mutator.bind_sampler(sampler).apply(model)
+    return model

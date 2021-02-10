@@ -4,7 +4,7 @@ import time
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
 from .. import Sampler, submit_models, query_available_resources, is_stopped_exec
-from .strategy import BaseStrategy
+from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)
 

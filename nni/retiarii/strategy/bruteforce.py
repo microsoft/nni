@@ -7,12 +7,12 @@ from typing import Any, Dict, List
 
 from .. import Sampler, submit_models, query_available_resources
 from .base import BaseStrategy
-from .utils import dry_run_for_search_space
+from .utils import dry_run_for_search_space, get_targeted_model
 
 _logger = logging.getLogger(__name__)
 
 
-def _generate_with_gridsearch(search_space: Dict[Any, List[Any]], shuffle=True):
+def grid_generator(search_space: Dict[Any, List[Any]], shuffle=True):
     keys = list(search_space.keys())
     search_space_values = copy.deepcopy(list(search_space.values()))
     if shuffle:
@@ -22,7 +22,7 @@ def _generate_with_gridsearch(search_space: Dict[Any, List[Any]], shuffle=True):
         yield {key: value for key, value in zip(keys, values)}
 
 
-def _generate_with_random(search_space: Dict[Any, List[Any]], dedup=True, retries=500):
+def random_generator(search_space: Dict[Any, List[Any]], dedup=True, retries=500):
     keys = list(search_space.keys())
     history = set()
     search_space_values = copy.deepcopy(list(search_space.values()))
@@ -41,14 +41,6 @@ def _generate_with_random(search_space: Dict[Any, List[Any]], dedup=True, retrie
         yield {key: value for key, value in zip(keys, selected)}
 
 
-class _FixedSampler(Sampler):
-    def __init__(self, sample):
-        self.sample = sample
-
-    def choice(self, candidates, mutator, model, index):
-        return self.sample[(mutator, index)]
-
-
 class GridSearch(BaseStrategy):
     def __init__(self, shuffle=True):
         self._polling_interval = 2.
@@ -56,15 +48,11 @@ class GridSearch(BaseStrategy):
 
     def run(self, base_model, applied_mutators):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
-        for sample in _generate_with_gridsearch(search_space, shuffle=self.shuffle):
+        for sample in grid_generator(search_space, shuffle=self.shuffle):
             _logger.info('New model created. Waiting for resource. %s', str(sample))
             if query_available_resources() <= 0:
                 time.sleep(self._polling_interval)
-            sampler = _FixedSampler(sample)
-            model = base_model
-            for mutator in applied_mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
-            submit_models(model)
+            submit_models(get_targeted_model(base_model, applied_mutators, sample))
 
 
 class _RandomSampler(Sampler):
@@ -100,12 +88,8 @@ class Random(BaseStrategy):
         else:
             _logger.info('Random search running in fixed size mode. Dedup: %s.', 'on' if self.dedup else 'off')
             search_space = dry_run_for_search_space(base_model, applied_mutators)
-            for sample in _generate_with_random(search_space, dedup=self.dedup):
+            for sample in random_generator(search_space, dedup=self.dedup):
                 _logger.info('New model created. Waiting for resource. %s', str(sample))
                 if query_available_resources() <= 0:
                     time.sleep(self._polling_interval)
-                sampler = _FixedSampler(sample)
-                model = base_model
-                for mutator in applied_mutators:
-                    model = mutator.bind_sampler(sampler).apply(model)
-                submit_models(model)
+                submit_models(get_targeted_model(base_model, applied_mutators, sample))
