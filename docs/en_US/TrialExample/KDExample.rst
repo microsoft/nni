@@ -4,13 +4,12 @@ Knowledge Distillation on NNI
 KnowledgeDistill
 ----------------
 
-Knowledge distillation support, in `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ ,  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student.
+Knowledge Distillation (KD) is proposed in `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ ,  the compressed model is trained to mimic a pre-trained, larger model.  This training setting is also referred to as "teacher-student",  where the large model is the teacher and the small model is the student. KD is often used to fine-tune the pruned model.
 
 
 .. image:: ../../img/distill.png
    :target: ../../img/distill.png
    :alt: 
-
 
 Usage
 ^^^^^
@@ -19,24 +18,29 @@ PyTorch code
 
 .. code-block:: python
 
-   from knowledge_distill.knowledge_distill import KnowledgeDistill
-   kd = KnowledgeDistill(kd_teacher_model, kd_T=5)
-   alpha = 1
-   beta = 0.8
-   for batch_idx, (data, target) in enumerate(train_loader):
-       data, target = data.to(device), target.to(device)
-       optimizer.zero_grad()
-       output = model(data)
-       loss = F.cross_entropy(output, target)
-       # you only to add the following line to fine-tune with knowledge distillation
-       loss = alpha * loss + beta * kd.loss(data=data, student_out=output)
-       loss.backward()
+      for batch_idx, (data, target) in enumerate(train_loader):
+         data, target = data.to(device), target.to(device)
+         optimizer.zero_grad()
+         y_s = model_s(data)
+         y_t = model_t(data)
+         loss_cri = F.cross_entropy(y_s, target)
 
-User configuration for KnowledgeDistill
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+         # kd loss
+         p_s = F.log_softmax(y_s/kd_T, dim=1)
+         p_t = F.softmax(y_t/kd_T, dim=1)
+         loss_kd = F.kl_div(p_s, p_t, size_average=False) * (self.T**2) / y_s.shape[0]
+
+         # total loss
+         loss = loss_cir + loss_kd
+         loss.backward()
 
 
-* **kd_teacher_model:** The pre-trained teacher model 
-* **kd_T:** Temperature for smoothing teacher model's output
+The complete code for fine-tuning the pruend model can be found :githublink:`here <examples/model_compress/pruning/finetune_kd_torch.py>`
 
-The complete code can be found `here <https://github.com/microsoft/nni/tree/v1.3/examples/model_compress/knowledge_distill/>`__
+.. code-block:: python
+
+      python finetune_kd_torch.py --model [model name] --teacher-model-dir [pretrained checkpoint path]  --student-model-dir [pruend checkpoint path] --mask-path [mask file path]
+
+Note that: for fine-tuning a pruned model, run :githublink:`basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>` first to get the mask file, then pass the mask path as argument to the script.
+
+
