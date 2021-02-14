@@ -2,7 +2,7 @@
 tensorflow == 1.15.4
 torch == 1.5.1+cpu
 torchvision == 0.6.1+cpu
-pytorch-lightning
+pytorch-lightning == 1.1
 keras == 2.1.6
 onnx
 peewee
