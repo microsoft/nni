@@ -87,7 +87,7 @@ def _reset():
     nni.runtime.platform.test._last_metric = None
 
 
-@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', 'Incompatible APIs.')
+@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_mnist():
     _reset()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
@@ -102,7 +102,7 @@ def test_mnist():
     _reset()
 
 
-@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', 'Incompatible APIs.')
+@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_diabetes():
     _reset()
     nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
@@ -119,7 +119,7 @@ def test_diabetes():
     _reset()
 
 
-@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', 'Incompatible APIs.')
+@pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_functional():
     FunctionalTrainer(_foo)._execute(MNISTModel)
 
