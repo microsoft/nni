@@ -1,3 +1,4 @@
+import abc
 import functools
 import inspect
 from collections import defaultdict
@@ -89,6 +90,17 @@ def del_record(key):
         _records.pop(key, None)
 
 
+class Translatable(abc.ABC):
+    """
+    Inherit this class and implement ``translate`` when the inner class needs a different
+    parameter from the wrapper class in its init function.
+    """
+
+    @abc.abstractmethod
+    def __translate__(self) -> Any:
+        pass
+
+
 def _blackbox_cls(cls):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
@@ -99,6 +111,15 @@ def _blackbox_cls(cls):
             assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
             for argname, value in zip(argname_list, args):
                 full_args[argname] = value
+
+            # translate parameters
+            args = list(args)
+            for i, value in enumerate(args):
+                if isinstance(value, Translatable):
+                    args[i] = value.__translate__()
+            for i, value in kwargs.items():
+                if isinstance(value, Translatable):
+                    kwargs[i] = value.__translate__()
 
             add_record(id(self), full_args)  # for compatibility. Will remove soon.
 

@@ -5,7 +5,7 @@ import warnings
 import torch
 import torch.nn as nn
 
-from ...utils import uid, add_record, del_record
+from ...utils import uid, add_record, del_record, Translatable
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
@@ -189,7 +189,7 @@ class InputChoice(nn.Module):
         return candidate_inputs[0]
 
 
-class ValueChoice(nn.Module):
+class ValueChoice(Translatable, nn.Module):
     """
     ValueChoice is to choose one from ``candidates``.
 
@@ -235,6 +235,10 @@ class ValueChoice(nn.Module):
 
     def forward(self):
         warnings.warn('You should not run forward of this module directly.')
+        return self.candidates[0]
+
+    def __translate__(self):
+        # Will function as a value when used in serializer.
         return self.candidates[0]
 
 
