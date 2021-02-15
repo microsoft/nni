@@ -1,6 +1,6 @@
 
 '''
-The tests in this file is copied and transformed from 
+The tests in this file is copied and transformed from
 `https://github.com/pytorch/pytorch/blob/master/test/onnx/test_operators.py`
 '''
 
@@ -39,6 +39,7 @@ class TestOperators(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
+        #print(model_code)
 
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)

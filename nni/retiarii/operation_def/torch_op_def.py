@@ -107,52 +107,6 @@ class AtenContiguous(PyTorchOperation):
         assert inputs_value[1] in [0, 1, 2]
         return f'{output} = {inputs[0]}.contiguous(memory_format={mem_format[inputs_value[1]]})'
 
-class AtenNewFull(PyTorchOperation):
-    _ori_type_name = ['aten::new_full']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        device_str = f', device=torch.device({inputs[5]})' if inputs_value[5] is not None else ''
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[3]]}' if inputs_value[3] is not None else ''
-        return f'{output} = {inputs[0]}.new_full({inputs[1]}, {inputs[2]}{dtype_str}{device_str})'
-
-class AtenNewEmpty(PyTorchOperation):
-    _ori_type_name = ['aten::new_empty']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
-        return f'{output} = {inputs[0]}.new_empty({inputs[1]}{dtype_str}{device_str})'
-
-class AtenNewZeros(PyTorchOperation):
-    _ori_type_name = ['aten::new_zeros']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        # in pytorch: new_zeros(size, dtype=None, device=None, requires_grad=False) → Tensor
-        # in aten: - func: new_zeros(Tensor self, int[] size, *, ScalarType? dtype=None,
-        # Layout? layout=None, Device? device=None, bool? pin_memory=None) -> Tensor
-        # TODO: check requires_grad when it is true!!!
-        device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
-        return f'{output} = {inputs[0]}.new_zeros({inputs[1]}{dtype_str}{device_str})'
-
-class AtenArange(PyTorchOperation):
-    _ori_type_name = ['aten::arange']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[3]]}' if inputs_value[3] is not None else ''
-        if inputs_value[4] is not None:
-            layout_str = f', layout=torch.strided'
-            print('Warning: only support `torch.strided` for now!!!')
-        else:
-            layout_str = ''
-        device_str = f', device=torch.device({inputs[5]})' if inputs_value[5] is not None else ''
-        return f'{output} = torch.arange({inputs[0]}, {inputs[1]}, {inputs[2]}{dtype_str}{layout_str}{device_str})'
-
-# TODO: add requires_grad for other ops
-class AtenTensor(PyTorchOperation):
-    _ori_type_name = ['aten::tensor']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        device_str = f', device=torch.device({inputs[2]})' if inputs_value[2] is not None else ''
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[1]]}' if inputs_value[1] is not None else ''
-        req_grad_str = f', requires_grad={inputs[3]}' if inputs_value[3] else ''
-        return f'{output} = torch.tensor({inputs[0]}{dtype_str}{device_str}{req_grad_str})'
-
 class AtenGetitem(PyTorchOperation):
     _ori_type_name = ['aten::__getitem__']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
@@ -194,49 +148,53 @@ class AtenCat(PyTorchOperation):
         assert len(inputs) == 2
         return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
 
-class AtenFull(PyTorchOperation):
-    _ori_type_name = ['aten::full', 'aten::full_like']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        device_str = f', device=torch.device({inputs[4]})' if inputs_value[4] is not None else ''
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[2]]}' if inputs_value[2] is not None else ''
-        if inputs_value[3] is not None:
-            layout_str = f', layout=torch.strided'
-            print('Warning: only support `torch.strided` for now!!!')
-        else:
-            layout_str = ''
-        if self.type == 'aten::full_like':
-            mem_format_str = f', memory_format={mem_format[inputs_value[6]]}' if inputs_value[6] is not None else ''
-            return f'{output} = torch.full_like({inputs[0]}, {inputs[1]}{dtype_str}{layout_str}{device_str}{mem_format_str})'
-        else:
-            return f'{output} = torch.full({inputs[0]}, {inputs[1]}{dtype_str}{layout_str}{device_str})'
+#====================================
 
-class AtenEmptyLike(PyTorchOperation):
-    _ori_type_name = ['aten::empty_like', 'aten::ones_like', 'aten::zeros_like']
-    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        op_name = self.type.split('::')[-1]
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[1]]}' if inputs_value[1] is not None else ''
-        if inputs_value[2] is not None:
-            layout_str = f', layout=torch.strided'
-            print('Warning: only support `torch.strided` for now!!!')
-        else:
-            layout_str = ''
-        device_str = f', device=torch.device({inputs[3]})' if inputs_value[3] is not None else ''
-        mem_format_str = f', memory_format={mem_format[inputs_value[5]]}' if inputs_value[5] is not None else ''
-        return f'{output} = torch.{op_name}({inputs[0]}{dtype_str}{layout_str}{device_str}{mem_format_str})'
+class AtenTensors(PyTorchOperation):
+    _ori_type_name = ['aten::full', 'aten::full_like', 'aten::empty_like',
+                      'aten::ones_like', 'aten::zeros_like', 'aten::rand',
+                      'aten::randn', 'aten::scalar_tensor', 'aten::new_full',
+                      'aten::new_empty', 'aten::new_zeros', 'aten::arange',
+                      'aten::tensor']
 
-class AtenRandTensor(PyTorchOperation):
-    # NOTE: TorchOps also includes 'aten::scalar_tensor', deal with it here, as TorchOps has unmatched def
-    _ori_type_name = ['aten::rand', 'aten::randn', 'aten::scalar_tensor']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        schemas = torch._C._jit_get_schemas_for_operator(self.type)
+        # match number of inputs
+        overloaded_defs = [len(s.arguments) for s in schemas]
+        matched = overloaded_defs.index(len(inputs))
+        print('matched index: ', matched)
+        args_list = []
+        for idx, arg in enumerate(schemas[matched].arguments):
+            if arg.name == 'dtype':
+                arg_str = f'dtype={scalar_type_to_pytorch_type[inputs_value[idx]]}' if inputs_value[idx] is not None else ''
+            elif arg.name == 'layout':
+                if inputs_value[idx] is not None:
+                    arg_str = f'layout=torch.strided'
+                    print('Warning: only support `torch.strided` for now!!!')
+                else:
+                    arg_str = ''
+            elif arg.name == 'device':
+                arg_str = f'device=torch.device({inputs[idx]})' if inputs_value[idx] is not None else ''
+            elif arg.name == 'memory_format':
+                mem_format_str = f'memory_format={mem_format[inputs_value[idx]]}' if inputs_value[idx] is not None else ''
+            elif arg.name == 'pin_memory':
+                # TODO: deal with this argument
+                continue
+            elif arg.name == 'requires_grad':
+                arg_str = f'requires_grad={inputs[idx]}' if inputs_value[idx] else ''
+            elif str(arg.type).startswith('Optional['):
+                arg_str = f'{arg.name}={inputs[idx]}'
+            else:
+                arg_str = f'{inputs[idx]}'
+            if arg_str != '':
+                args_list.append(arg_str)
         op_name = self.type.split('::')[-1]
-        dtype_str = f', dtype={scalar_type_to_pytorch_type[inputs_value[1]]}' if inputs_value[1] is not None else ''
-        if inputs_value[2] is not None:
-            layout_str = f', layout=torch.strided'
-            print('Warning: only support `torch.strided` for now!!!')
+        if hasattr(torch, op_name):
+            return f'{output} = torch.{op_name}({", ".join(args_list)})'
         else:
-            layout_str = ''
-        device_str = f', device=torch.device({inputs[3]})' if inputs_value[3] is not None else ''
-        return f'{output} = torch.{op_name}({inputs[0]}{dtype_str}{layout_str}{device_str})'
+            return f'{output} = {inputs[0]}.{op_name}({", ".join(args_list[1:])})'
+
+#====================================
 
 class AtenFloordiv(PyTorchOperation):
     _ori_type_name = ['aten::floordiv']

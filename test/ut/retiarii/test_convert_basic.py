@@ -31,6 +31,7 @@ class TestConvert(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
+        print(model_code)
 
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
@@ -73,6 +74,7 @@ class TestConvert(unittest.TestCase):
 
     # skip torch.Tensor.new_ones as it is not supported by jit
 
+    # requires_grad=False is not supported by jit
     def test_basic_new_zeros(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
