@@ -58,7 +58,7 @@ class PrimConstant(PyTorchOperation):
         # TODO: deal with all the types
         if self.parameters['type'] == 'None':
             return f'{output} = None'
-        elif self.parameters['type'] in ('int', 'float', 'bool'):
+        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'):
             return f'{output} = {self.parameters["value"]}'
         elif self.parameters['type'] == 'str':
             str_val = self.parameters["value"]
@@ -73,6 +73,11 @@ class PrimListConstruct(PyTorchOperation):
     _ori_type_name = ['prim::ListConstruct']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         return f'{output} = [{", ".join(inputs)}]'
+
+class PrimListUnpack(PyTorchOperation):
+    _ori_type_name = ['prim::ListUnpack']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = {inputs[0]}'
 
 class PrimTupleConstruct(PyTorchOperation):
     _ori_type_name = ['prim::TupleConstruct']
@@ -95,7 +100,7 @@ class PrimGetAttr(PyTorchOperation):
             return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
 
 class SimpleMember(PyTorchOperation):
-    _ori_type_name = ['prim::is_cuda']
+    _ori_type_name = ['prim::is_cuda', 'prim::data']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         member_name = self.type.split('::')[-1]
         return f'{output} = {inputs[0]}.{member_name}'
@@ -122,13 +127,18 @@ class AtenAppend(PyTorchOperation):
 class MergedSlice(PyTorchOperation):
     _ori_type_name = ['MergedSlice']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        assert (len(inputs) - 1) % 4 == 0
-        slices = []
-        dim = int((len(inputs) - 1) / 4)
-        for i in range(dim):
-            slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
-        slice_str = ','.join(slices)
-        return f'{output} = {inputs[0]}[{slice_str}]'
+        if (len(inputs) - 1) % 4 == 0:
+            slices = []
+            dim = int((len(inputs) - 1) / 4)
+            for i in range(dim):
+                slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
+            slice_str = ','.join(slices)
+            return f'{output} = {inputs[0]}[{slice_str}]'
+        elif len(inputs) == 4:
+            # this case is for simple list
+            return f'{output} = {inputs[0]}[{inputs[1]}:{inputs[2]}:{inputs[3]}]'
+        else:
+            raise RuntimeError('Unsupported slice pattern')
 
 # the following Aten classes means these aten ops are not in torch.Tensor
 
@@ -155,7 +165,7 @@ class AtenTensors(PyTorchOperation):
                       'aten::ones_like', 'aten::zeros_like', 'aten::rand',
                       'aten::randn', 'aten::scalar_tensor', 'aten::new_full',
                       'aten::new_empty', 'aten::new_zeros', 'aten::arange',
-                      'aten::tensor']
+                      'aten::tensor', 'aten::ones', 'aten::zeros']
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         schemas = torch._C._jit_get_schemas_for_operator(self.type)
@@ -207,9 +217,19 @@ class AtenLen(PyTorchOperation):
         return f'{output} = len({inputs[0]})'
 
 class AtenIntImplicit(PyTorchOperation):
-    _ori_type_name = ['aten::IntImplicit']
+    _ori_type_name = ['aten::IntImplicit', 'aten::Float', 'aten::Int', 'aten::ScalarImplicit']
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        return f'{output} = int({inputs[0]})'
+        if self.type.endswith('Implicit'):
+            return f'{output} = {inputs[0]}'
+        elif self.type == 'aten::Int':
+            return f'{output} = int({inputs[0]})'
+        elif self.type == 'aten::Float':
+            return f'{output} = float({inputs[0]})'
+
+class AtenIndex(PyTorchOperation):
+    _ori_type_name = ['aten::index']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = {inputs[0]}[{inputs[1]}]'
 
 ManuallyChooseDef = {
     'aten::flatten': [('start_dim', 'int', '0'), ('end_dim', 'int', '-1')],
@@ -341,11 +361,12 @@ class TensorOps(PyTorchOperation):
             raise RuntimeError(f'tensor op type {_type} has no matched')
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
-        #print(self.type)
-        #print(inputs)
-        #print(TensorOps._op_args[self.type])
-        #if self.type not in ValidationExceptions:
-        #    assert len(inputs) == len(TensorOps._op_args[self.type]) + 1
+        # TODO: deal with conditional ops
+        if self.type == 'aten::eq':
+            print(inputs_value)
+            #exit(1)
+            if inputs_value[0] is not None:
+                return f'{output} = ({inputs[0]} == {inputs[1]})'
         matched_args = TensorOps._get_matched_args(self.type, inputs)
         if matched_args is None:
             return TensorOpExceptions[self.type](output, inputs)
@@ -400,3 +421,9 @@ class TorchOps(PyTorchOperation):
         args_str = ', '.join([f'{name}={inputs[i]}' if t.startswith('Optional[') else f'{inputs[i]}' for i, (name, t, default) in enumerate(matched_args)])
         print(args_str)
         return f'{output} = torch.{op_name}({args_str})'
+
+class AtenAvgpool2d(PyTorchOperation):
+    # NOTE: it is not included in the above aten ops for unkown reason
+    _ori_type_name = ['aten::avg_pool2d']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = F.avg_pool2d({", ".join(inputs)})'

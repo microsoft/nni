@@ -66,7 +66,7 @@ def _format_inputs(node: Node) -> List[str]:
             if edge.head_slot is None:
                 # when the input comes from a single-output operator
                 inputs.append('{}'.format(edge.head.name))
-                if edge.head.operation.type == 'prim::Constant' and \
+                if edge.head.operation.type in ('prim::Constant', 'prim::GetAttr') and \
                     'value' in edge.head.operation.parameters:
                     inputs_value.append(edge.head.operation.parameters['value'])
                 else:
