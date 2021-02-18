@@ -22,12 +22,8 @@ import '../../static/style/tableStatus.css';
 import '../../static/style/logPath.scss';
 import '../../static/style/table.scss';
 import '../../static/style/button.scss';
-import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
 import '../../static/style/pagination.scss';
-import '../../static/style/search.scss';
-import '../../static/style/table.scss';
-import '../../static/style/tableStatus.css';
 import '../../static/style/overview/overviewTitle.scss';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
@@ -38,13 +34,9 @@ import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
 import { Trial } from '../../static/model/trial';
 
-const echarts = require('echarts/lib/echarts');
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
-echarts.registerTheme('my_theme', {
-    color: '#3c8dbc'
-});
 
 type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
 const searchOptionLiterals = {

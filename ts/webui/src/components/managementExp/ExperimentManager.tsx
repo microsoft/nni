@@ -23,7 +23,7 @@ interface ExpListState {
     errorMessage: string;
     hideFilter: boolean;
     searchInputVal: string;
-    selectedStatus: string;
+    selectedStatus: string[];
     selectedPlatform: string;
     selectedStartDate?: Date;
     selectedEndDate?: Date;
@@ -42,7 +42,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             errorMessage: '',
             hideFilter: true,
             searchInputVal: '',
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             source: [], // data in table
             originExperimentList: [], // api /experiments-info
@@ -312,39 +312,28 @@ class Experiment extends React.Component<{}, ExpListState> {
      */
     private commonSelectString = (data: AllExperimentList[], field: string): AllExperimentList[] => {
         const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        const hasStatus = selectedStatus === '' ? false : true;
-        const hasPlatform = selectedPlatform === '' ? false : true;
-        const hasStartDate = selectedStartDate === undefined ? false : true;
-        const hasEndDate = selectedEndDate === undefined ? false : true;
 
         if (field === 'status') {
-            if (hasPlatform) {
-                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
-            }
+            data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
         }
         if (field === 'platform') {
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = filterByStatusOrPlatform(selectedStatus, 'status', data);
         }
 
         if (field === '') {
-            if (hasPlatform) {
-                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
-            }
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = Array.from(
+                new Set([
+                    ...filterByStatusOrPlatform(selectedPlatform, 'platform', data),
+                    ...filterByStatusOrPlatform(selectedStatus, 'status', data)
+                ])
+            );
         }
 
-        if (hasStartDate) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            data = data.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
-        }
-        if (hasEndDate) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            data = data.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
-        }
+        data = data.filter(
+            item =>
+                (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate)) &&
+                (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
+        );
 
         return data;
     };
@@ -352,10 +341,16 @@ class Experiment extends React.Component<{}, ExpListState> {
     // status platform startTime endTime
     private selectStatus = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            const { searchSource, sortInfo } = this.state;
-            let result = filterByStatusOrPlatform(item.key, 'status', searchSource);
+            const { searchSource, sortInfo, selectedStatus } = this.state;
+            const newSelectedStatus = item.selected
+                ? [...selectedStatus, item.key as string]
+                : selectedStatus.filter(key => key !== item.key);
+            let result = filterByStatusOrPlatform(newSelectedStatus, 'status', searchSource);
             result = this.commonSelectString(result, 'status');
-            this.setState({ selectedStatus: item.key, source: getSortedSource(result, sortInfo) });
+            this.setState({
+                selectedStatus: newSelectedStatus,
+                source: getSortedSource(result, sortInfo)
+            });
         }
     };
 
@@ -378,41 +373,30 @@ class Experiment extends React.Component<{}, ExpListState> {
                 searchSource,
                 sortInfo
             } = this.state;
-            const hasStatus = selectedStatus === '' ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
-            const hasStartDate = selectedStartDate === undefined ? false : true;
-            const hasEndDate = selectedEndDate === undefined ? false : true;
-            let result;
+
+            // filter status, platform
+            let result = filterByStatusOrPlatform(selectedStatus, 'status', searchSource);
+            if (hasPlatform) {
+                result = result.filter(temp => temp.platform === selectedPlatform);
+            }
+
             if (type === 'start') {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = searchSource.filter(item => compareDate(new Date(item.startTime), date));
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
-                if (hasPlatform) {
-                    result = result.filter(temp => temp.platform === selectedPlatform);
-                }
-                if (hasEndDate) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
-                }
+                result = result.filter(
+                    item =>
+                        compareDate(new Date(item.startTime), date) &&
+                        (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
+                );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
                     selectedStartDate: date
                 }));
             } else {
-                result = searchSource.filter(item => compareDate(new Date(item.endTime), date));
-
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
-                if (hasPlatform) {
-                    result = result.filter(temp => temp.platform === selectedPlatform);
-                }
-                if (hasStartDate) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
-                }
+                result = result.filter(
+                    item =>
+                        compareDate(new Date(item.endTime), date) &&
+                        (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate))
+                );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
                     selectedEndDate: date
@@ -434,7 +418,7 @@ class Experiment extends React.Component<{}, ExpListState> {
         );
         this.setState(() => ({
             source: getSortedSource(result, sortInfo),
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             selectedStartDate: undefined,
             selectedEndDate: undefined
