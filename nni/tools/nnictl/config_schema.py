@@ -588,4 +588,3 @@ class NNIConfigSchema:
                 config_name = required_config_name_map.get(platform)
                 if config_name and not experiment_config.get(config_name):
                     raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
-                

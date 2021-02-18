@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import contextlib
 import logging
 from pathlib import Path
@@ -13,7 +16,6 @@ import nni_node  # pylint: disable=import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
-from .config import convert
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments
