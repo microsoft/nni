@@ -85,11 +85,11 @@ abstract class TrainingService {
     public get isMultiPhaseJobSupported(): boolean { return false; }
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
-    public async setClusterMetadata(key: string, value: string): Promise<void> { throw new Error(); }
-    public async getClusterMetadata(key: string): Promise<string> { throw new Error(); }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { throw new Error(); }
+    public async getClusterMetadata(_key: string): Promise<string> { throw new Error(); }
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
-    public async initConfig(config: ExperimentConfig): Promise<void> { }
+    public async initConfig(_config: ExperimentConfig): Promise<void> { return; }
 }
 
 /**

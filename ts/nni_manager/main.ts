@@ -95,6 +95,27 @@ function usage(): void {
     <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
+async function cleanUp(): Promise<void> {
+    const log: Logger = getLogger();
+    let hasError: boolean = false;
+    try {
+        const nniManager: Manager = component.get(Manager);
+        await nniManager.stopExperiment();
+        const experimentManager: ExperimentManager = component.get(ExperimentManager);
+        await experimentManager.stop();
+        const ds: DataStore = component.get(DataStore);
+        await ds.close();
+        const restServer: NNIRestServer = component.get(NNIRestServer);
+        await restServer.stop();
+    } catch (err) {
+        hasError = true;
+        log.error(`${err.stack}`);
+    } finally {
+        log.close();
+        process.exit(hasError ? 1 : 0);
+    }
+}
+
 function main(): void {
     const strPort: string = parseArg(['--port', '-p']);
     if (!strPort || strPort.length === 0) {
@@ -178,27 +199,6 @@ function main(): void {
     process.on('SIGTERM', cleanUp);
     process.on('SIGBREAK', cleanUp);
     process.on('SIGINT', cleanUp);
-}
-
-async function cleanUp(): Promise<void> {
-    const log: Logger = getLogger();
-    let hasError: boolean = false;
-    try {
-        const nniManager: Manager = component.get(Manager);
-        await nniManager.stopExperiment();
-        const experimentManager: ExperimentManager = component.get(ExperimentManager);
-        await experimentManager.stop();
-        const ds: DataStore = component.get(DataStore);
-        await ds.close();
-        const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.stop();
-    } catch (err) {
-        hasError = true;
-        log.error(`${err.stack}`);
-    } finally {
-        log.close();
-        process.exit(hasError ? 1 : 0);
-    }
 }
 
 main();

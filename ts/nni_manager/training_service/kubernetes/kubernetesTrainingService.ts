@@ -13,9 +13,8 @@ import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig } from '../../common/manager';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType, TrainingService
+    TrialJobDetail, TrialJobMetric, LogType, TrainingService
 } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
@@ -380,7 +379,7 @@ abstract class KubernetesTrainingService extends TrainingService {
         return Promise.resolve(folderUriInAzure);
     }
 
-    public updateTrialJob(trialJobId: string, form: any): Promise<TrialJobDetail> {
+    public updateTrialJob(_trialJobId: string, _form: any): Promise<TrialJobDetail> {
         throw new Error('not implemented');
     }
 }

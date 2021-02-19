@@ -23,12 +23,8 @@ import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 import { PAIClusterConfig, PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, NNIPAITrialConfig } from './paiConfig';
 import { String } from 'typescript-string-operations';
-import {
-    generateParamFileName,
-    getIPV4Address, getVersion, uniqueString
-} from '../../common/utils';
+import { generateParamFileName, getVersion, uniqueString } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
 const yaml = require('js-yaml');
@@ -46,6 +42,16 @@ interface OpenpaiConfig {
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfigFile: string;
+}
+
+function parseMemorySize(size: string): number {
+    if (size.endsWith('mb')) {
+        return Number(size.slice(0, -2));
+    } else if (size.endsWith('gb')) {
+        return Number(size.slice(0, -2)) * 1024;
+    } else {
+        return 1;
+    }
 }
 
 /**
@@ -587,16 +593,6 @@ class PAITrainingService extends TrainingService {
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
         const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
-    }
-}
-
-function parseMemorySize(size: string): number {
-    if (size.endsWith('mb')) {
-        return Number(size.slice(0, -2));
-    } else if (size.endsWith('gb')) {
-        return Number(size.slice(0, -2)) * 1024;
-    } else {
-        return 1;
     }
 }
 

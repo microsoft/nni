@@ -3,7 +3,6 @@
 
 'use strict';
 import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
@@ -342,7 +341,7 @@ class LocalTrainingService extends TrainingService {
                 { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
                 { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
                 { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() },
-                { key: 'NNI_CODE_DIR', value: this.trialCodeDir!}
+                { key: 'NNI_CODE_DIR', value: this.trialCodeDir! }
             ];
             if (gpuNum !== undefined) {
                 envVariables.push({

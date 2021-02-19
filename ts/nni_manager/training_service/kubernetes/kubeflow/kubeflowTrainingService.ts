@@ -12,11 +12,10 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { ExperimentConfig } from '../../../common/manager';
 import {
-    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
+    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getExperimentRootDir, uniqueString } from '../../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../../common/containerJobData';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';

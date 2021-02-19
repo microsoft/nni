@@ -883,7 +883,7 @@ class NNIManager implements Manager {
         // create checkpoint directory
         await mkDirP(chkpDir);
         // assign this directory to exp profile's checkpointDir
-        for (let algoType of ['tuner', 'assessor', 'advisor']) {
+        for (const algoType of ['tuner', 'assessor', 'advisor']) {
             const algoParams = (this.experimentProfile.params as any)[algoType];
             if (algoParams && algoParams.checkpointDir !== undefined) {
                 algoParams.checkpointDir = chkpDir;

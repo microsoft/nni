@@ -10,10 +10,9 @@ import { String } from 'typescript-string-operations';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { ExperimentConfig } from '../../../common/manager';
 import {
-    NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
+    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../../common/trainingService';
 import { delay, generateParamFileName, getVersion, uniqueString } from '../../../common/utils';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { AdlClientFactory } from './adlApiClient'
