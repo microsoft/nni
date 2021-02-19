@@ -12,8 +12,8 @@ import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { TrialConfig } from '../../common/trialConfig';
-import { getExperimentRootDir, isAlive } from '../../../common/utils';
-import { execMkdir, runScript, execCopydir } from '../../common/util';
+import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
+import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
 import { SharedStorageService } from '../sharedStorage'
 
 @component.Singleton
@@ -54,8 +54,8 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         environments.forEach(async (environment) => {
-            const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
-            const runnerReturnCodeFilePath: string = `${environment.runnerWorkingFolder}/code`;
+            const jobpidPath: string = `${path.join(environment.runnerWorkingFolder, 'pid')}`;
+            const runnerReturnCodeFilePath: string = `${path.join(environment.runnerWorkingFolder, 'code')}`;
             /* eslint-disable require-atomic-updates */
             try {
                 // check if pid file exist
@@ -88,6 +88,32 @@ export class LocalEnvironmentService extends EnvironmentService {
             }
         });
     }
+    
+    private getScript(environment: EnvironmentInformation): string[] {
+        const script: string[] = [];
+        if (process.platform === 'win32') {
+            script.push(`cd $env:${this.experimentRootDir}`);
+            script.push(`New-Item -ItemType "directory" -Path ${path.join(this.experimentRootDir, 'envs', environment.id)} -Force`);
+            environment.command = `cd envs\\${environment.id} && python -m nni.tools.trial_tool.trial_runner`;
+            script.push(
+                `cmd.exe /c ${environment.command} --job_pid_file ${path.join(environment.runnerWorkingFolder, 'pid')} 2>&1 | Out-File "${path.join(environment.runnerWorkingFolder, 'trial_runner.log')}" -encoding utf8`,
+                `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
+                `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
+                `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(environment.runnerWorkingFolder, 'code')}" -NoNewline -encoding utf8`);
+        } else {
+            script.push(`cd ${this.experimentRootDir}`);
+            script.push(`eval ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr"`);
+            if (process.platform === 'darwin') {
+                // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
+                // Considering the worst case, write 999 to avoid negative duration
+                script.push(`echo $? \`date +%s999\` >'${environment.runnerWorkingFolder}/code'`);
+            } else {
+                script.push(`echo $? \`date +%s%3N\` >'${environment.runnerWorkingFolder}/code'`);
+            }
+        }
+
+        return script;
+    }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         if (this.localTrialConfig === undefined) {
@@ -111,15 +137,13 @@ export class LocalEnvironmentService extends EnvironmentService {
         }
         environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
         await execMkdir(environment.runnerWorkingFolder);
-       
-        environment.command = `cd ${localWorkingRoot} && \
-            ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-            1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-            && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-        await fs.promises.writeFile(path.join(localEnvCodeFolder, 'nni_run.sh'),
-            environment.command, { encoding: 'utf8', mode: 0o777 }),
+        environment.command = this.getScript(environment).join(getNewLine());
+        const scriptName: string = getScriptName('run');
+        await fs.promises.writeFile(path.join(localEnvCodeFolder, scriptName),
+                                    environment.command, { encoding: 'utf8', mode: 0o777 });
+
         // Execute command in local machine
-        runScript(path.join(localEnvCodeFolder, 'nni_run.sh'));
+        runScript(path.join(localEnvCodeFolder, scriptName));
         environment.trackingUrl = `${environment.runnerWorkingFolder}`;
     }
 
@@ -128,7 +152,7 @@ export class LocalEnvironmentService extends EnvironmentService {
             return Promise.resolve();
         }
 
-        const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
+        const jobpidPath: string = `${path.join(environment.runnerWorkingFolder, 'pid')}`;
         const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
         tkill(Number(pid), 'SIGKILL');
     }

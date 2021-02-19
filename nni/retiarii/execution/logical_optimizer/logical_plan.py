@@ -149,7 +149,7 @@ class LogicalPlan:
             phy_model.training_config.kwargs['model_cls'] = phy_graph.name
             phy_model.training_config.kwargs['model_kwargs'] = []
             # FIXME: allow user to specify
-            phy_model.training_config.module = 'nni.retiarii.trainer.PyTorchMultiModelTrainer'
+            phy_model.training_config.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
 
         # merge sub-graphs
         for model in multi_model_placement:

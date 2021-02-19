@@ -10,6 +10,7 @@ class OpTypeName(str, Enum):
     Attr = 'Attr'
     Constant = 'Constant'
     ListConstruct = 'ListConstruct'
+    TupleConstruct = 'TupleConstruct'
     LayerChoice = 'LayerChoice'
     InputChoice = 'InputChoice'
     ValueChoice = 'ValueChoice'
@@ -29,6 +30,7 @@ BasicOpsPT = {
     'aten::cat': 'Cat',
     'aten::size': 'Size',
     'aten::view': 'View',
+    'aten::reshape': 'Reshape',
     'aten::eq': 'Eq',
     'aten::Bool': 'Bool',
     'aten::empty': 'Empty',
