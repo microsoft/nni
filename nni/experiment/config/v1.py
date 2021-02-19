@@ -61,7 +61,7 @@ def convert_to_v2(v1) -> ExperimentConfig:
             class_directory = util.canonical_path(v1_algo.pop('codeDir'))
             class_file_name = v1_algo.pop('classFileName')
             assert class_file_name.endswith('.py')
-            class_name = class_file_name[:-3]
+            class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
             v2_algo = CustomAlgorithmConfig(
                 class_name=class_name,
                 class_directory=class_directory,
@@ -167,6 +167,8 @@ def convert_to_v2(v1) -> ExperimentConfig:
         assert not kf_config, kf_config
 
         for role in [ps_name, 'worker']:
+            if role not in v1_trial:
+                continue
             v1_role = v1_trial.pop(role)
             v2_role = KubeflowRoleConfig()
             _move_field(v1_role, v2_role, 'replicas', 'replicas')
@@ -182,15 +184,6 @@ def convert_to_v2(v1) -> ExperimentConfig:
                 ts.parameter_server = v2_role
 
         _drop_field(v1_trial, 'nasMode')
-
-    if platform == 'frameworkcontroller':
-        pass  # FIXME
-
-    if platform == 'adl':
-        pass  # FIXME
-
-    if platform == 'hybrid':
-        pass  # FIXME
 
     assert not v1_trial, v1_trial
     assert not v1, v1
