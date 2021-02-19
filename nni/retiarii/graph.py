@@ -2,13 +2,14 @@
 Model representation.
 """
 
+import abc
 import copy
-from enum import Enum
 import json
+from enum import Enum
 from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import uid
+from .utils import get_full_class_name, import_, uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -24,40 +25,43 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 """
 
 
-class TrainingConfig:
+class TrainingConfig(abc.ABC):
     """
-    Training training_config of a model.
+    Training config of a model. A training config should define where the training code is, and the configuration of
+    training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
+    or tune-able parameters (such as learning rate), depending on the implementation of training code.
 
-    Module will be imported, initialized with generated model and arguments in ``kwargs``.
-
-    Attributes
-    ----------
-    module
-        Trainer module
-    kwargs
-        Trainer keyword arguments
+    Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
+    For example, functional training config might directly import the function and call the function.
     """
-
-    def __init__(self, module: str, kwargs: Dict[str, Any]):
-        self.module = module
-        self.kwargs = kwargs
 
     def __repr__(self):
-        return f'TrainingConfig(module={self.module}, kwargs={self.kwargs})'
+        items = ', '.join(['%s=%r' % (k, v) for k, v in self.__dict__.items()])
+        return f'{self.__class__.__name__}({items})'
+
+    @abc.abstractstaticmethod
+    def _load(ir: Any) -> 'TrainingConfig':
+        pass
 
     @staticmethod
-    def _load(ir: Any) -> 'TrainingConfig':
-        return TrainingConfig(ir['module'], ir.get('kwargs', {}))
+    def _load_with_type(type_name: str, ir: Any) -> 'Optional[TrainingConfig]':
+        if type_name == '_debug_no_trainer':
+            return DebugTraining()
+        config_cls = import_(type_name)
+        assert issubclass(config_cls, TrainingConfig)
+        return config_cls._load(ir)
 
+    @abc.abstractmethod
     def _dump(self) -> Any:
-        return {
-            'module': self.module,
-            'kwargs': self.kwargs
-        }
+        pass
 
-    def __eq__(self, other):
-        return self.module == other.module and \
-            self.kwargs == other.kwargs
+    @abc.abstractmethod
+    def _execute(self, model_cls: type) -> Any:
+        pass
+
+    @abc.abstractmethod
+    def __eq__(self, other) -> bool:
+        pass
 
 
 class Model:
@@ -100,7 +104,7 @@ class Model:
 
         self._root_graph_name: str = '_model'
         self.graphs: Dict[str, Graph] = {}
-        self.training_config: TrainingConfig = TrainingConfig('foo', {})
+        self.training_config: Optional[TrainingConfig] = None
 
         self.history: List[Model] = []
 
@@ -137,17 +141,16 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_training_config':
                 Graph._load(model, graph_name, graph_data)._register()
-        model.training_config = TrainingConfig._load(ir['_training_config'])
+        model.training_config = TrainingConfig._load_with_type(ir['_training_config']['__type__'], ir['_training_config'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        ret['_training_config'] = self.training_config._dump()
+        ret['_training_config'] = {
+            '__type__': get_full_class_name(self.training_config.__class__),
+            **self.training_config._dump()
+        }
         return ret
-
-    def apply_trainer(self, module, args) -> None:
-        # TODO: rethink the way of specifying a trainer
-        self.training_config = TrainingConfig(module, args)
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """
@@ -668,3 +671,18 @@ class IllegalGraphError(ValueError):
             graph = graph._dump()
         with open('generated/debug.json', 'w') as dump_file:
             json.dump(graph, dump_file, indent=4)
+
+
+class DebugTraining(TrainingConfig):
+    @staticmethod
+    def _load(ir: Any) -> 'DebugTraining':
+        return DebugTraining()
+
+    def _dump(self) -> Any:
+        return {'__type__': '_debug_no_trainer'}
+
+    def _execute(self, model_cls: type) -> Any:
+        pass
+
+    def __eq__(self, other) -> bool:
+        return True
