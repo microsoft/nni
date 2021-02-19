@@ -99,203 +99,24 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, int(start_time * 1000)
 
-def set_trial_config(experiment_config, port, config_file_name):
-    '''set trial configuration'''
-    request_data = dict()
-    request_data['trial_config'] = experiment_config['trial']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
-    if check_response(response):
-        return True
-    else:
-        print('Error message is {}'.format(response.text))
-        _, stderr_full_path = get_log_path(config_file_name)
-        if response:
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-        return False
-
-def set_adl_config(experiment_config, port, config_file_name):
-    '''set adl configuration'''
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), None
-
-def set_remote_config(experiment_config, port, config_file_name):
-    '''Call setClusterMetadata to pass trial'''
-    #set machine_list
-    request_data = dict()
-    if experiment_config.get('remoteConfig'):
-        request_data['remote_config'] = experiment_config['remoteConfig']
-    else:
-        request_data['remote_config'] = {'reuse': False}
-    request_data['machine_list'] = experiment_config['machineList']
-    if request_data['machine_list']:
-        for i in range(len(request_data['machine_list'])):
-            if isinstance(request_data['machine_list'][i].get('gpuIndices'), int):
-                request_data['machine_list'][i]['gpuIndices'] = str(request_data['machine_list'][i].get('gpuIndices'))
-    # It needs to connect all remote machines, the time out of connection is 30 seconds.
-    # So timeout of this place should be longer.
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), 60, True)
-    err_message = ''
-    if not response or not check_response(response):
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def setNNIManagerIp(experiment_config, port, config_file_name):
-    '''set nniManagerIp'''
-    if experiment_config.get('nniManagerIp') is None:
-        return True, None
-    ip_config_dict = dict()
-    ip_config_dict['nni_manager_ip'] = {'nniManagerIp': experiment_config['nniManagerIp']}
-    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    return True, None
-
-def set_pai_config(experiment_config, port, config_file_name):
-    '''set pai configuration'''
-    pai_config_data = dict()
-    pai_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_kubeflow_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration'''
-    kubeflow_config_data = dict()
-    kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_frameworkcontroller_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration'''
-    frameworkcontroller_config_data = dict()
-    frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_dlts_config(experiment_config, port, config_file_name):
-    '''set dlts configuration'''
-    dlts_config_data = dict()
-    dlts_config_data['dlts_config'] = experiment_config['dltsConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(dlts_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_aml_config(experiment_config, port, config_file_name):
-    '''set aml configuration'''
-    aml_config_data = dict()
-    aml_config_data['aml_config'] = experiment_config['amlConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(aml_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_hybrid_config(experiment_config, port, config_file_name):
-    '''set hybrid configuration'''
-    hybrid_config_data = dict()
-    hybrid_config_data['hybrid_config'] = experiment_config['hybridConfig']
-    platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
-    for platform in platform_list:
-        if platform == 'aml':
-            hybrid_config_data['aml_config'] = experiment_config['amlConfig']
-        elif platform ==  'remote':
-            if experiment_config.get('remoteConfig'):
-                hybrid_config_data['remote_config'] = experiment_config['remoteConfig']
-            hybrid_config_data['machine_list'] = experiment_config['machineList']
-        elif platform == 'local' and experiment_config.get('localConfig'):
-            hybrid_config_data['local_config'] = experiment_config['localConfig']
-        elif platform == 'pai':
-            hybrid_config_data['pai_config'] = experiment_config['paiConfig']
-    # It needs to connect all remote machines, set longer timeout here to wait for restful server connection response.
-    time_out = 60 if 'remote' in platform_list else REST_TIME_OUT
-    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), time_out)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
+#def set_dlts_config(experiment_config, port, config_file_name):
+#    '''set dlts configuration'''
+#    dlts_config_data = dict()
+#    dlts_config_data['dlts_config'] = experiment_config['dltsConfig']
+#    response = rest_put(cluster_metadata_url(port), json.dumps(dlts_config_data), REST_TIME_OUT)
+#    err_message = None
+#    if not response or not response.status_code == 200:
+#        if response is not None:
+#            err_message = response.text
+#            _, stderr_full_path = get_log_path(config_file_name)
+#            with open(stderr_full_path, 'a+') as fout:
+#                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+#        return False, err_message
+#    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
+#    if not result:
+#        return result, message
+#    #set trial_config
+#    return set_trial_config(experiment_config, port, config_file_name), err_message
 
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''

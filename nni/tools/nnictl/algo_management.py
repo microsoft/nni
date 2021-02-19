@@ -36,8 +36,8 @@ def algo_reg(args):
     meta_list = read_reg_meta_list(args.meta_path)
     for meta in meta_list:
         if get_registered_algo_meta(meta['builtinName']) is not None:
-            print_error('builtinName {} already registered'.format(meta['builtinName']))
-            return
+            print_green(f'Updating previously registered algorithm {meta["builtinName"]}')
+            algo_unreg(meta['builtinName'])
         verify_algo_import(meta)
         save_algo_meta_data(meta)
         print_green('{} registered sucessfully!'.format(meta['builtinName']))
