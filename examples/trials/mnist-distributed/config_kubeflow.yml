@@ -1,45 +1,37 @@
-authorName: default
-experimentName: example_mnist
-trialConcurrency: 2
-maxExecDuration: 1h
-maxTrialNum: 20
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform: kubeflow
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
-tuner:
-  #choice: TPE, Random, Anneal, Evolution
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
 assessor:
-  builtinAssessorName: Medianstop
-  classArgs:
-    optimize_mode: maximize
-trial:
-  codeDir: .
-  worker:
-    replicas: 2
-    command: python3 dist_mnist.py
-    gpuNum: 1
-    cpuNum: 1
-    memoryMB: 8196
-    image: msranni/nni:latest
-  ps:
-    replicas: 1
-    command: python3 dist_mnist.py
-    gpuNum: 0
-    cpuNum: 1
-    memoryMB: 8196
-    image: msranni/nni:latest
-kubeflowConfig:
-  operator: tf-operator
+  classArgs: {optimize_mode: maximize}
+  name: Medianstop
+debug: false
+experimentName: example_mnist
+maxExperimentDuration: 1h
+maxTrialNumber: 20
+searchSpaceFile: search_space.json
+trainingService:
   apiVersion: v1alpha2
-  storage: nfs
-  nfs:
-    # Your NFS server IP, like 10.10.10.10
-    server: {your_nfs_server_ip}
-    # Your NFS server export path, like /var/nfs/nni
-    path: {your_nfs_server_export_path}
+  operator: tf-operator
+  parameterServer:
+    command: python3 dist_mnist.py
+    cpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    dockerImage: msranni/nni:latest
+    gpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    memorySize: 8196
+    replicas: 1
+  platform: kubeflow
+  storage:
+    path: {your_nfs_server_export_path: null}
+    server: {your_nfs_server_ip: null}
+    storage: nfs
+  worker:
+    command: python3 dist_mnist.py
+    cpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    dockerImage: msranni/nni:latest
+    gpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    memorySize: 8196
+    replicas: 2
+trialCodeDirectory: .
+trialCommand: !!python/object:dataclasses._MISSING_TYPE {}
+trialConcurrency: 2
+tuner:
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: false

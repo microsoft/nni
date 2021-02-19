@@ -1,21 +1,14 @@
-authorName: default
+debug: false
 experimentName: example_auto-gbdt-metis
+maxExperimentDuration: 10h
+maxTrialNumber: 10
+searchSpaceFile: search_space_metis.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 10h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space_metis.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: MetisTuner
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: minimize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: minimize}
+  name: MetisTuner
+useAnnotation: false

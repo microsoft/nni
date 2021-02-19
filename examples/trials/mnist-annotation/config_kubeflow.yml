@@ -1,31 +1,23 @@
-authorName: default
+debug: false
 experimentName: example_dist
-trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 1
-#choice: local, remote, pai, kubeflow
-trainingServicePlatform: kubeflow
-#choice: true, false
-useAnnotation: true
-tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  codeDir: .
-  worker:
-    replicas: 1
-    command: python3 mnist.py
-    gpuNum: 0
-    cpuNum: 1
-    memoryMB: 8192
-    image: msranni/nni:latest
-kubeflowConfig:
-  operator: tf-operator
+maxExperimentDuration: 1h
+maxTrialNumber: 1
+trainingService:
   apiVersion: v1alpha2
-  storage: nfs
-  nfs:
-    server: 10.10.10.10
-    path: /var/nfs/general
+  operator: tf-operator
+  platform: kubeflow
+  storage: {path: /var/nfs/general, server: 10.10.10.10, storage: nfs}
+  worker:
+    command: python3 mnist.py
+    cpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    dockerImage: msranni/nni:latest
+    gpuNumber: !!python/object:dataclasses._MISSING_TYPE {}
+    memorySize: 8192
+    replicas: 1
+trialCodeDirectory: .
+trialCommand: !!python/object:dataclasses._MISSING_TYPE {}
+trialConcurrency: 1
+tuner:
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: true

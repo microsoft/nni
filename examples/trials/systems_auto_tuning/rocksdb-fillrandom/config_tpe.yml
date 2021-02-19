@@ -1,21 +1,14 @@
-authorName: default
+debug: false
 experimentName: auto_rocksdb_TPE
+maxExperimentDuration: 12h
+maxTrialNumber: 256
+searchSpaceFile: search_space.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 12h
-maxTrialNum: 256
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: false

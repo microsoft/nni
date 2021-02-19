@@ -1,19 +1,14 @@
-authorName: default
+debug: false
 experimentName: example_ga_squad
+maxExperimentDuration: 1h
+maxTrialNumber: 10
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 trial.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  codeDir: ../../tuners/ga_customer_tuner
-  classFileName: customer_tuner.py
-  className: CustomerTuner
-  classArgs:
-    optimize_mode: maximize
-trial:
-  command: python3 trial.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: maximize}
+  classDirectory: !!python/object/apply:pathlib.PosixPath [.., .., tuners, ga_customer_tuner]
+  className: customer_tuner.CustomerTuner
+useAnnotation: false

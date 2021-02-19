@@ -1,20 +1,14 @@
-authorName: default
+debug: false
 experimentName: mnist-nested-search-space
+maxExperimentDuration: 1h
+maxTrialNumber: 100
+searchSpaceFile: search_space.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
 trialConcurrency: 2
-maxExecDuration: 1h
-maxTrialNum: 100
-#choice: local, remote
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: false

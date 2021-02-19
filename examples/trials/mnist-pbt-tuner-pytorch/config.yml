@@ -1,22 +1,14 @@
-authorName: default
+debug: false
 experimentName: example_mnist_pbt_tuner_pytorch
+maxExperimentDuration: 2h
+maxTrialNumber: 100
+searchSpaceFile: search_space.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
 trialConcurrency: 3
-maxExecDuration: 2h
-maxTrialNum: 100
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 1
 tuner:
-#  codeDir: ~/nni/src/sdk/pynni/nni/pbt_tuner
-#  classFileName: pbt_tuner.py
-#  className: PBTTuner
-  builtinTunerName: PBTTuner
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 1
+  classArgs: {optimize_mode: maximize}
+  name: PBTTuner
+useAnnotation: false

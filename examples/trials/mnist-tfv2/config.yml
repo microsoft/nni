@@ -1,17 +1,14 @@
-authorName: NNI Example
+debug: false
 experimentName: MNIST TF v2.x
+maxExperimentDuration: 1h
+maxTrialNumber: 10
+searchSpaceFile: search_space.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-trainingServicePlatform: local  # choices: local, remote, pai
-searchSpacePath: search_space.json
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-    builtinTunerName: TPE   # choices: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner,
-                            #          GPTuner, SMAC (SMAC should be installed through nnictl)
-    classArgs:
-        optimize_mode: maximize  # choices: maximize, minimize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: false

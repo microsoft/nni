@@ -1,31 +1,23 @@
-authorName: default
+debug: false
 experimentName: ga_squad_weight_sharing
+maxExperimentDuration: 1h
+maxTrialNumber: 200
+trainingService:
+  machineList:
+  - {host: remote-ip-0, maxTrialNumberPerGpu: 1, password: screencast, port: 8022,
+    useActiveGpu: false, user: root}
+  - {host: remote-ip-1, maxTrialNumberPerGpu: 1, password: screencast, port: 8022,
+    useActiveGpu: false, user: root}
+  platform: remote
+  reuseMode: false
+trialCodeDirectory: .
+trialCommand: python3 trial.py --input_file /mnt/nfs/nni/train-v1.1.json --dev_file
+  /mnt/nfs/nni/dev-v1.1.json --max_epoch 1 --embedding_file /mnt/nfs/nni/glove.6B.300d.txt
 trialConcurrency: 2
-maxExecDuration: 1h
-maxTrialNum: 200
-#choice: local, remote, pai
-trainingServicePlatform: remote
-#choice: true, false
-useAnnotation: false
-multiThread: true
+trialGpuNumber: 1
 tuner:
-  codeDir: ../../../tuners/weight_sharing/ga_customer_tuner
-  classFileName: customer_tuner.py
-  className: CustomerTuner
-  classArgs:
-    optimize_mode: maximize
-    population_size: 32
-    save_dir_root: /mnt/nfs/nni/ga_squad
-trial:
-  command: python3 trial.py --input_file /mnt/nfs/nni/train-v1.1.json --dev_file /mnt/nfs/nni/dev-v1.1.json --max_epoch 1 --embedding_file /mnt/nfs/nni/glove.6B.300d.txt
-  codeDir: .
-  gpuNum: 1
-machineList:
-  - ip: remote-ip-0
-    port: 8022
-    username: root
-    passwd: screencast
-  - ip: remote-ip-1
-    port: 8022
-    username: root
-    passwd: screencast
+  classArgs: {optimize_mode: maximize, population_size: 32, save_dir_root: /mnt/nfs/nni/ga_squad}
+  classDirectory: !!python/object/apply:pathlib.PosixPath [.., .., .., tuners, weight_sharing,
+    ga_customer_tuner]
+  className: customer_tuner.CustomerTuner
+useAnnotation: false

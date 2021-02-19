@@ -1,41 +1,17 @@
-authorName: default
-experimentName: example_mnist_hyperband
-maxExecDuration: 1h
-maxTrialNum: 10000
-trialConcurrency: 10
-#choice: local, remote, pai
-trainingServicePlatform: pai
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
 advisor:
-  #choice: Hyperband, BOHB
-  #(BOHB should be installed through nnictl)
-  builtinAdvisorName: Hyperband
-  classArgs:
-    #R: the maximum trial budget
-    R: 100
-    #eta: proportion of discarded trials
-    eta: 3
-    #choice: maximize, minimize
-    optimize_mode: maximize
-    #choice: serial, parallelism
-    exec_mode: parallelism
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
-  cpuNum: 1
-  memoryMB: 8196
-  #The docker image to run nni job on pai
-  image: msranni/nni:latest
-  nniManagerNFSMountPath: /home/user/mnt
-  containerNFSMountPath: /mnt/data/user
-  paiStorageConfigName: confignfs-data
-paiConfig:
-  #The username to login pai
-  userName: username
-  #The token to login pai
-  token: token
-  #The host of restful server of pai
-  host: 10.10.10.10
+  classArgs: {R: 100, eta: 3, exec_mode: parallelism, optimize_mode: maximize}
+  name: Hyperband
+debug: false
+experimentName: example_mnist_hyperband
+maxExperimentDuration: 1h
+maxTrialNumber: 10000
+searchSpaceFile: search_space.json
+trainingService: {containerStorageMountPoint: /mnt/data/user, dockerImage: msranni/nni:latest,
+  host: 10.10.10.10, localStorageMountPoint: /home/user/mnt, platform: openpai, reuseMode: false,
+  storageConfigName: confignfs-data, token: token, trialCpuNumber: 1, trialMemorySize: 8196,
+  username: username}
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
+trialConcurrency: 10
+trialGpuNumber: 0
+useAnnotation: false

@@ -1,20 +1,14 @@
-authorName: default
+debug: false
 experimentName: example_sklearn-regression
+maxExperimentDuration: 1h
+maxTrialNumber: 30
+searchSpaceFile: search_space.json
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 30
-#choice: local, remote
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: false

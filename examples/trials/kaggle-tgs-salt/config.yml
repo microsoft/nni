@@ -1,20 +1,13 @@
-authorName: default
+debug: false
 experimentName: example_tgs
+maxExperimentDuration: 10h
+maxTrialNumber: 10
+trainingService: {maxTrialNumberPerGpu: 1, platform: local}
+trialCodeDirectory: .
+trialCommand: python3 train.py
 trialConcurrency: 2
-maxExecDuration: 10h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-#choice: true, false
-useAnnotation: true
+trialGpuNumber: 1
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 train.py
-  codeDir: .
-  gpuNum: 1
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: true

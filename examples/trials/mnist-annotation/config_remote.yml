@@ -1,33 +1,22 @@
-authorName: default
+debug: false
 experimentName: example_mnist
+maxExperimentDuration: 1h
+maxTrialNumber: 10
+trainingService:
+  machineList:
+  - {host: 10.1.1.1, maxTrialNumberPerGpu: 1, password: bob123, port: 22, useActiveGpu: false,
+    user: bob}
+  - {host: 10.1.1.2, maxTrialNumberPerGpu: 1, password: bob123, port: 22, useActiveGpu: false,
+    user: bob}
+  - {host: 10.1.1.3, maxTrialNumberPerGpu: 1, password: bob123, port: 22, useActiveGpu: false,
+    user: bob}
+  platform: remote
+  reuseMode: false
+trialCodeDirectory: .
+trialCommand: python3 mnist.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: remote
-#choice: true, false
-useAnnotation: true
+trialGpuNumber: 0
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
-  classArgs:
-    #choice: maximize, minimize
-    optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
-#machineList can be empty if the platform is local
-machineList:
-  - ip: 10.1.1.1
-    username: bob
-    passwd: bob123
-    #port can be skip if using default ssh port 22
-    #port: 22
-  - ip: 10.1.1.2
-    username: bob
-    passwd: bob123
-  - ip: 10.1.1.3
-    username: bob
-    passwd: bob123
+  classArgs: {optimize_mode: maximize}
+  name: TPE
+useAnnotation: true
