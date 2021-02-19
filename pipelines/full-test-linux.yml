@@ -31,6 +31,7 @@ jobs:
       python3 -m pip install scikit-learn==0.23.2
       python3 -m pip install torchvision==0.6.1
       python3 -m pip install torch==1.5.1
+      python3 -m pip install pytorch-lightning
       python3 -m pip install keras==2.1.6
       python3 -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
       python3 -m pip install thop

@@ -28,6 +28,7 @@ jobs:
       python -m pip install scikit-learn==0.23.2
       python -m pip install keras==2.1.6
       python -m pip install torchvision===0.6.1 torch===1.5.1 -f https://download.pytorch.org/whl/torch_stable.html
+      python -m pip install pytorch-lightning
       python -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
     displayName: Install extra dependencies
 
