@@ -213,6 +213,10 @@ class GraphConverter:
                     left = _generate_expr(tensor.node().inputsAt(0))
                     right = _generate_expr(tensor.node().inputsAt(1))
                     return f'({left} <= {right})'
+                elif tensor.node().kind() == 'aten::ge':
+                    left = _generate_expr(tensor.node().inputsAt(0))
+                    right = _generate_expr(tensor.node().inputsAt(1))
+                    return f'({left} >= {right})'
                 elif tensor.node().kind() == 'aten::__not__':
                     value = _generate_expr(tensor.node().inputsAt(0))
                     return f'(not {value})'
@@ -235,6 +239,10 @@ class GraphConverter:
                     left = _generate_expr(tensor.node().inputsAt(0))
                     right = _generate_expr(tensor.node().inputsAt(1))
                     return f'({left} > {right})'
+                elif tensor.node().kind() == 'aten::lt':
+                    left = _generate_expr(tensor.node().inputsAt(0))
+                    right = _generate_expr(tensor.node().inputsAt(1))
+                    return f'({left} < {right})'
                 elif tensor.node().kind() == 'prim::If':
                     raise RuntimeError('Have not supported `if A and/or B`, please use two `if` statements instead.')
                 else:

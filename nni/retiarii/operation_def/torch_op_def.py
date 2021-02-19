@@ -326,6 +326,8 @@ class TensorOps(PyTorchOperation):
     """
     _ori_type_name, _op_args = _get_tensor_ops()
 
+    comparison_ops = {'aten::eq': '==', 'aten::ne': '!=', 'aten::le': '<=', 'aten::ge': '>=', 'aten::lt': '<', 'aten::gt': '>'}
+
     @staticmethod
     def _get_matched_args(_type, inputs):
         def has_same_arg_name(matched):
@@ -362,11 +364,11 @@ class TensorOps(PyTorchOperation):
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         # TODO: deal with conditional ops
-        if self.type == 'aten::eq':
+        if self.type in TensorOps.comparison_ops:
             print(inputs_value)
             #exit(1)
-            if inputs_value[0] is not None:
-                return f'{output} = ({inputs[0]} == {inputs[1]})'
+            #if inputs_value[0] is not None:
+            return f'{output} = ({inputs[0]} {TensorOps.comparison_ops[self.type]} {inputs[1]})'
         matched_args = TensorOps._get_matched_args(self.type, inputs)
         if matched_args is None:
             return TensorOpExceptions[self.type](output, inputs)

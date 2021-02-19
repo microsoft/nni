@@ -1219,3 +1219,16 @@ class TestPytorch(unittest.TestCase):
 
         x = torch.randn(5, 3, 2)
         self.run_test(SizeModel(), (x, ))
+
+    def test_size2(self):
+        class SizeModel(nn.Module):
+            def __init__(self, a, b):
+                super().__init__()
+                self.a = a
+                self.b = b
+            def forward(self, input):
+                if self.a < self.b:
+                    return torch.arange(input.size(0)), torch.arange(input.size(-1)), torch.ones(input.shape)
+
+        x = torch.randn(5, 3, 2)
+        self.run_test(SizeModel(10, 5), (x, ))

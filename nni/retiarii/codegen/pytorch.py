@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Tuple, Any
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
@@ -32,7 +32,7 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
 
 
-def _format_inputs(node: Node) -> List[str]:
+def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
     """
     Format the inputs of a given node
 
