@@ -144,13 +144,13 @@ interface TrialJobInfo {
 }
 
 interface ExperimentParams {
-    authorName: string;
+    authorName?: string;
     experimentName: string;
     description?: string;
     trialConcurrency: number;
-    maxExecDuration: number; // seconds
-    maxTrialNum: number;
-    searchSpace: string;
+    maxExperimentDuration: number; // seconds
+    maxTrialNumber: number;
+    searchSpace: any;
     trainingServicePlatform: string;
     multiThread?: boolean;
     versionCheck?: boolean;

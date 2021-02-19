@@ -332,7 +332,7 @@ async function getVersion(): Promise<string> {
     import(path.join(__dirname, '..', 'package.json')).then((pkg) => {
         deferred.resolve(pkg.version);
     }).catch((error) => {
-        deferred.reject(error);
+        deferred.resolve('999.0.0-developing');
     });
     return deferred.promise;
 }

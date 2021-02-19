@@ -27,19 +27,25 @@ export const EditExperimentParam = (): any => {
     const hideSucceedInfo = useCallback(() => {
         setShowSucceedInfo(false);
     }, []);
-    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
-        EditExpeParamContext
-    );
+    const {
+        title,
+        field,
+        editType,
+        maxExperimentDuration,
+        maxTrialNumber,
+        trialConcurrency,
+        updateOverviewPage
+    } = useContext(EditExpeParamContext);
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);
     let defaultVal = '';
     let editVal = '';
     if (title === 'Max duration') {
-        defaultVal = maxExecDuration;
-        editVal = maxExecDuration;
+        defaultVal = maxExperimentDuration;
+        editVal = maxExperimentDuration;
     } else if (title === MAX_TRIAL_NUMBERS) {
-        defaultVal = maxTrialNum.toString();
-        editVal = maxTrialNum.toString();
+        defaultVal = maxTrialNumber.toString();
+        editVal = maxTrialNumber.toString();
     } else {
         defaultVal = trialConcurrency.toString();
         editVal = trialConcurrency.toString();
@@ -81,9 +87,9 @@ export const EditExperimentParam = (): any => {
             }
         }
         if (isMaxDuration) {
-            beforeParam = maxExecDuration;
+            beforeParam = maxExperimentDuration;
         } else if (title === MAX_TRIAL_NUMBERS) {
-            beforeParam = maxTrialNum.toString();
+            beforeParam = maxTrialNumber.toString();
         } else {
             beforeParam = trialConcurrency.toString();
         }
@@ -162,7 +168,7 @@ export const EditExperimentParam = (): any => {
                     <EditExpeParamContext.Consumer>
                         {(value): React.ReactNode => {
                             let editClassName = '';
-                            if (value.field === 'maxExecDuration') {
+                            if (value.field === 'maxExperimentDuration') {
                                 editClassName = isShowPencil ? 'noEditDuration' : 'editDuration';
                             }
                             return (

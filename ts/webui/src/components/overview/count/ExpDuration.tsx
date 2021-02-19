@@ -12,11 +12,11 @@ import '../../../static/style/overview/count.scss';
 export const ExpDuration = (): any => (
     <ExpDurationContext.Consumer>
         {(value): React.ReactNode => {
-            const { maxExecDuration, execDuration, maxDurationUnit, updateOverviewPage } = value;
-            const tooltip = maxExecDuration - execDuration;
-            const percent = execDuration / maxExecDuration;
+            const { maxExperimentDuration, execDuration, maxDurationUnit, updateOverviewPage } = value;
+            const tooltip = maxExperimentDuration - execDuration;
+            const percent = execDuration / maxExperimentDuration;
             const execDurationStr = convertDuration(execDuration);
-            const maxExecDurationStr = convertTimeAsUnit(maxDurationUnit, maxExecDuration).toString();
+            const maxExecDurationStr = convertTimeAsUnit(maxDurationUnit, maxExperimentDuration).toString();
             return (
                 <Stack horizontal className='ExpDuration'>
                     <div style={leftProgress}>
@@ -50,10 +50,10 @@ export const ExpDuration = (): any => (
                         <EditExpeParamContext.Provider
                             value={{
                                 editType: CONTROLTYPE[0],
-                                field: 'maxExecDuration',
+                                field: 'maxExperimentDuration',
                                 title: 'Max duration',
-                                maxExecDuration: maxExecDurationStr,
-                                maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                maxExperimentDuration: maxExecDurationStr,
+                                maxTrialNumber: EXPERIMENT.profile.params.maxTrialNumber,
                                 trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                 updateOverviewPage
                             }}

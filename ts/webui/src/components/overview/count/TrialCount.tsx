@@ -13,9 +13,9 @@ export const TrialCount = (): any => {
     const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
-    const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
+    const maxTrialNumber = EXPERIMENT.profile.params.maxTrialNumber;
     // support type [0, 1], not 98%
-    const bar2Percent = bar2 / maxTrialNum;
+    const bar2Percent = bar2 / maxTrialNumber;
     return (
         <ExpDurationContext.Consumer>
             {(value): React.ReactNode => {
@@ -46,7 +46,7 @@ export const TrialCount = (): any => {
                                 <div className='exp-progress'>
                                     <span className={`${EXPERIMENT.status} bold`}>{bar2}</span>
                                     <span className='joiner'>/</span>
-                                    <span>{maxTrialNum}</span>
+                                    <span>{maxTrialNumber}</span>
                                 </div>
                             </div>
                         </Stack>
@@ -82,15 +82,15 @@ export const TrialCount = (): any => {
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,
-                                        field: 'maxTrialNum',
+                                        field: 'maxTrialNumber',
                                         editType: CONTROLTYPE[1],
-                                        maxExecDuration: '',
-                                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                        maxExperimentDuration: '',
+                                        maxTrialNumber: EXPERIMENT.profile.params.maxTrialNumber,
                                         trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                         updateOverviewPage
                                     }}
                                 >
-                                    <div className='maxTrialNum'>
+                                    <div className='maxTrialNumber'>
                                         <EditExperimentParam />
                                     </div>
                                 </EditExpeParamContext.Provider>
@@ -100,9 +100,9 @@ export const TrialCount = (): any => {
                                             title: 'Concurrency',
                                             field: 'trialConcurrency',
                                             editType: CONTROLTYPE[2],
-                                            // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
-                                            maxExecDuration: '',
-                                            maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                            // maxExperimentDuration: EXPERIMENT.profile.params.maxExperimentDuration,
+                                            maxExperimentDuration: '',
+                                            maxTrialNumber: EXPERIMENT.profile.params.maxTrialNumber,
                                             trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                             updateOverviewPage
                                         }}

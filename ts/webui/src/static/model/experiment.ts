@@ -96,9 +96,9 @@ class Experiment {
                         authorName: '',
                         experimentName: '',
                         trialConcurrency: 0,
-                        maxExecDuration: 0,
-                        maxTrialNum: 0,
-                        searchSpace: 'null',
+                        maxExperimentDuration: 0,
+                        maxTrialNumber: 0,
+                        searchSpace: {},
                         trainingServicePlatform: '',
                         tuner: {
                             builtinTunerName: 'TPE',
@@ -148,7 +148,7 @@ class Experiment {
     }
 
     get searchSpace(): object {
-        const result = JSON.parse(this.profile.params.searchSpace);
+        const result = this.profile.params.searchSpace;
         for (const item in result) {
             if (result[item]._value && typeof result[item]._value[0] === 'object') {
                 this.isNestedExperiment = true;

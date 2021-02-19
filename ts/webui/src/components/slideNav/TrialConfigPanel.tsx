@@ -73,9 +73,9 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
                     const unit = value.maxDurationUnit;
-                    profile.params.maxExecDuration = `${convertTimeAsUnit(
+                    profile.params.maxExperimentDuration = `${convertTimeAsUnit(
                         unit,
-                        profile.params.maxExecDuration
+                        profile.params.maxExperimentDuration
                     )}${unit}`;
                     const showProfile = JSON.stringify(profile, filter, 2);
                     return (
