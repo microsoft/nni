@@ -29,7 +29,7 @@ scalar_type_to_pytorch_type = [
     'torch.bool',         # 11
 ]
 
-class NoopIdentity(PyTorchOperation):
+class NoOpIdentity(PyTorchOperation):
     """
     this operator type is added by us
     """
@@ -172,7 +172,6 @@ class AtenTensors(PyTorchOperation):
         # match number of inputs
         overloaded_defs = [len(s.arguments) for s in schemas]
         matched = overloaded_defs.index(len(inputs))
-        print('matched index: ', matched)
         args_list = []
         for idx, arg in enumerate(schemas[matched].arguments):
             if arg.name == 'dtype':
@@ -365,9 +364,6 @@ class TensorOps(PyTorchOperation):
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         # TODO: deal with conditional ops
         if self.type in TensorOps.comparison_ops:
-            print(inputs_value)
-            #exit(1)
-            #if inputs_value[0] is not None:
             return f'{output} = ({inputs[0]} {TensorOps.comparison_ops[self.type]} {inputs[1]})'
         matched_args = TensorOps._get_matched_args(self.type, inputs)
         if matched_args is None:
@@ -382,8 +378,6 @@ class TorchOps(PyTorchOperation):
     corresponding to _get_nn_functional_ops in torch.jit.supported_ops
     """
     _ori_type_name, _op_args = _get_torch_ops_exclude_tensor_ops()
-    #print(_op_args)
-    #exit(1)
     # add 'aten::pixel_shuffle'
     _op_args['aten::pixel_shuffle'] = [[('input', 'Tensor', 'None'), ('upscale_factor', 'Optional[int]', 'None')]]
     _ori_type_name = _op_args.keys()

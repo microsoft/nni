@@ -296,7 +296,6 @@ class TestConvert(unittest.TestCase):
 
             def __init__(self, config):
                 super(SNLIClassifier, self).__init__()
-                #self.config = config
                 self.embed = nn.Embedding(config["n_embed"], config["d_embed"])
                 self.projection = Linear(config["d_embed"], config["d_proj"])
                 self.encoder = Encoder(config)
