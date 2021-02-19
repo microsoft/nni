@@ -120,18 +120,17 @@ export class LocalEnvironmentService extends EnvironmentService {
             throw new Error('Local trial config is not initialized');
         }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        let localWorkingRoot: string;
         const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
-            localWorkingRoot = sharedStorageService.localWorkingRoot;
+            this.experimentRootDir = sharedStorageService.localWorkingRoot;
         } else {
-            localWorkingRoot = this.experimentRootDir;
+            this.experimentRootDir = getExperimentRootDir();
         }
-        const localEnvCodeFolder: string = path.join(localWorkingRoot, "envs");
+        const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
         if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {
             await sharedStorageService.storageService.copyDirectoryBack("envs", localEnvCodeFolder)
         } else if (!environment.useSharedStorage) {
-            const localTempFolder: string = path.join(localWorkingRoot, this.experimentId,
+            const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,
                 "environment-temp", "envs");
             await execCopydir(localTempFolder, localEnvCodeFolder);
         }
