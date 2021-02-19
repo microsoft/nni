@@ -35,11 +35,18 @@ def verify_algo_import(meta):
 def algo_reg(args):
     meta_list = read_reg_meta_list(args.meta_path)
     for meta in meta_list:
-        if get_registered_algo_meta(meta['builtinName']) is not None:
-            print_green(f'Updating previously registered algorithm {meta["builtinName"]}')
-            algo_unreg(meta['builtinName'])
-        verify_algo_import(meta)
-        save_algo_meta_data(meta)
+        old = get_registered_algo_meta(meta['builtinName'])
+        if old is None:
+            verify_algo_import(meta)
+            save_algo_meta_data(meta)
+        elif old['source'] != 'nni':
+            verify_algo_import(meta)
+            print_green(f'Updating exist algorithm')
+            remove_algo_meta_data(name)
+            save_algo_meta_data(meta)
+        else:
+            print_error(f'Cannot overwrite builtin algorithm')
+            raise
         print_green('{} registered sucessfully!'.format(meta['builtinName']))
 
 def algo_unreg(args):
