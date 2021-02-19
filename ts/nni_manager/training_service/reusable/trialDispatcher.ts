@@ -716,6 +716,7 @@ class TrialDispatcher implements TrainingService {
         }
         trial.startTime = Date.now();
         trial.status = "RUNNING";
+        trial.message = `Assign trial ${trial.id} to environment ${environment.id}, running platform is ${environment.name}.`;
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} does not have environment service!`);
         }
