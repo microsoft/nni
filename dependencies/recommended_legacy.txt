@@ -5,7 +5,7 @@ torchvision == 0.6.1+cpu
 
 # It will install pytorch-lightning 0.8.x and unit tests won't work.
 # Latest version has conflict with tensorboard and tensorflow 1.x.
-pytorch-lightning
+pytorch-lightning >= 1.1.1, < 1.2
 
 keras == 2.1.6
 onnx
