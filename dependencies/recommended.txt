@@ -6,7 +6,7 @@ torch == 1.6.0+cpu ; sys_platform != "darwin"
 torch == 1.6.0 ; sys_platform == "darwin"
 torchvision == 0.7.0+cpu ; sys_platform != "darwin"
 torchvision == 0.7.0 ; sys_platform == "darwin"
-pytorch-lightning
+pytorch-lightning >= 1.1.1, < 1.2
 onnx
 peewee
 graphviz
