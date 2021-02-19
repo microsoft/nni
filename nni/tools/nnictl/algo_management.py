@@ -42,7 +42,7 @@ def algo_reg(args):
         elif old['source'] != 'nni':
             verify_algo_import(meta)
             print_green(f'Updating exist algorithm')
-            remove_algo_meta_data(name)
+            remove_algo_meta_data(meta['builtinName'])
             save_algo_meta_data(meta)
         else:
             print_error(f'Cannot overwrite builtin algorithm')
