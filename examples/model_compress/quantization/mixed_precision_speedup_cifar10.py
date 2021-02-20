@@ -195,14 +195,13 @@ class ResNet(nn.Module):
 
         return x
 
-def _resnet(arch, block, layers, pretrained, progress, device, **kwargs):
+def _resnet(block, layers, **kwargs):
     model = ResNet(block, layers, **kwargs)
     return model
 
 
-def resnet18(pretrained=False, progress=True, device='cpu', **kwargs):
-    return _resnet('resnet18', BasicBlock, [2, 2, 2, 2], pretrained, progress, device,
-                   **kwargs)
+def resnet18(**kwargs):
+    return _resnet(BasicBlock, [2, 2, 2, 2], **kwargs)
 
 def get_testset():
     test_loader = torch.utils.data.DataLoader(

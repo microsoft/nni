@@ -17,8 +17,8 @@ class Calibrator(trt.IInt8Calibrator):
             The data using to calibrate quantization model
         cache_file : str
             The path user want to store calibrate cache file
-        batchsize : int
-            The batchsize of calibrating process
+        batch_size : int
+            The batch_size of calibrating process
         algorithm : tensorrt.tensorrt.CalibrationAlgoType
             The algorithm of calibrating. Please refer to https://docs.nvidia.com/deeplearning/
             tensorrt/api/python_api/infer/Int8/Calibrator.html for detail
