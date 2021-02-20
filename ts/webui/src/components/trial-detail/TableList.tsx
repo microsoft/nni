@@ -283,7 +283,26 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     )
                 }),
                 ...(k === 'message' && {
-                    onRender: (record): React.ReactNode => <span>{record.message}</span>
+                    onRender: (record): React.ReactNode =>
+                        record.message.length > 15 ? (
+                            <TooltipHost
+                                content={record.message}
+                                directionalHint={DirectionalHint.bottomCenter}
+                                tooltipProps={{
+                                    calloutProps: {
+                                        styles: {
+                                            beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                        }
+                                    }
+                                }}
+                            >
+                                <div>{record.message}</div>
+                            </TooltipHost>
+                        ) : (
+                            <div>{record.message}</div>
+                        )
                 }),
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
