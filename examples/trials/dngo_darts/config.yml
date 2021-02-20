@@ -1,0 +1,20 @@
+authorName: Ayan Mao
+experimentName: arch2vec_dngo_darts
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 56
+trainingServicePlatform: local  # choices: local, remote, pai
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  codeDir: /home/v-ayanmao/msra/nni/examples/trials/may/
+  classFileName: tuner.py
+  className: MayTuner
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example
+  # classArgs:
+  #   arg1: value1
+trial:
+  command: python3 trial.py
+  codeDir: .
+  gpuNum: 1

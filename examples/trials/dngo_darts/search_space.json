@@ -1,0 +1,15 @@
+{
+    "alpha": {
+      "_type": "quniform",
+      "_value": [1.0, 2.0, 0.05]
+    },
+    "beta": {
+      "_type": "quniform",
+      "_value": [1.0, 1.5, 0.05]
+    },
+    "gamma": {
+      "_type": "quniform",
+      "_value": [1.0, 1.5, 0.05]
+    }
+  }
+  
