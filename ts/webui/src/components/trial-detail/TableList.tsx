@@ -55,6 +55,8 @@ function _inferColumnTitle(columnKey: string): string {
         return 'ID';
     } else if (columnKey === 'intermediateCount') {
         return 'Intermediate results (#)';
+    } else if (columnKey === 'message') {
+        return 'Message';
     } else if (columnKey.startsWith('space/')) {
         return columnKey.split('/', 2)[1] + ' (space)';
     } else if (columnKey === 'latestAccuracy') {
@@ -184,6 +186,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 endTime: (trial as Trial).info.endTime,
                 duration: trial.duration,
                 status: trial.status,
+                message: (trial as Trial).info.message || '--',
                 intermediateCount: trial.intermediates.length,
                 _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
             };
@@ -278,6 +281,9 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     onRender: (record): React.ReactNode => (
                         <span className={`${record.status} commonStyle`}>{record.status}</span>
                     )
+                }),
+                ...(k === 'message' && {
+                    onRender: (record): React.ReactNode => <span>{record.message}</span>
                 }),
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip

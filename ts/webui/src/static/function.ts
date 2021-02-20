@@ -265,8 +265,10 @@ function formatAccuracy(accuracy: number): string {
 function formatComplexTypeValue(value: any): string | number {
     if (['number', 'string'].includes(typeof value)) {
         return value;
-    } else {
+    } else if (value !== null) {
         return value.toString();
+    } else {
+        return 0;
     }
 }
 
