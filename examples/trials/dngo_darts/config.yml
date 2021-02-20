@@ -12,8 +12,8 @@ tuner:
   className: MayTuner
   # Any parameter need to pass to your tuner class __init__ constructor
   # can be specified in this optional classArgs field, for example
-  # classArgs:
-  #   arg1: value1
+  classArgs:
+    embedding_path: /home/v-ayanmao/msra/nni/examples/trials/may/arch2vec-darts.pt
 trial:
   command: python3 trial.py
   codeDir: .

@@ -12,14 +12,13 @@ from dngo_darts import query
 from dngo import DNGO
 from torch.distributions import Normal
 
-
-
+import os.path
 
 
 
 class MayTuner(Tuner):
     
-    def __init__(self):
+    def __init__(self, embedding_path):
         self.arch0_flag = True
         self.feat_next = []
         self.geno_next = []
@@ -42,12 +41,7 @@ class MayTuner(Tuner):
 
         torch.manual_seed(3)
         
-        # print(os.getcwd())
-        # self.embedding_path = os.getcwd()+"/arch2vec-darts.pt"
-        # if not self.embedding_path.exists():
-        #     print("path not exist")
-
-        self.embedding_path = "/Users/may/nni/examples/trials/may/arch2vec-darts.pt"
+        self.embedding_path = embedding_path
         self.features, self.genotype = load_arch2vec(self.embedding_path)
         self.features, self.genotype = self.features.cpu().detach(), self.genotype
 
@@ -184,7 +178,6 @@ class MayTuner(Tuner):
                 m_split, v_split = model.predict(features_split[i].numpy())
                 m.extend(list(m_split))
                 v.extend(list(v_split))
-            print("@finish for chunks")
             mean = torch.Tensor(m)
             sigma = torch.Tensor(v)
             # u = (mean - torch.Tensor([args.objective]).expand_as(mean)) / sigma
@@ -194,7 +187,6 @@ class MayTuner(Tuner):
             updf = torch.exp(normal.log_prob(u))
             ei = sigma * (updf + u * ucdf)
 
-            print("@ei = ", ei)
             # feat_next, geno_next, label_next_valid, label_next_test, visited = propose_location(ei, features, genotype, visited, counter)
             count = self.counter
             # k = args.batch_size
