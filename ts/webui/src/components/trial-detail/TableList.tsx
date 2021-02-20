@@ -32,6 +32,7 @@ import Customize from '../modals/CustomizedTrial';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
+import CopyButton from '../public-child/CopyButton';
 import { Trial } from '../../static/model/trial';
 
 require('echarts/lib/chart/line');
@@ -325,6 +326,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'duration' && {
                     onRender: (record): React.ReactNode => (
                         <span className='durationsty'>{convertDuration(record[k])}</span>
+                    )
+                }),
+                ...(k === 'id' && {
+                    onRender: (record): React.ReactNode => (
+                        <Stack horizontal className='idCopy'>
+                            <div>{record.id}</div>
+                            <CopyButton value={record.id} />
+                        </Stack>
                     )
                 })
             });
