@@ -185,7 +185,7 @@ class AtenTensors(PyTorchOperation):
             elif arg.name == 'device':
                 arg_str = f'device=torch.device({inputs[idx]})' if inputs_value[idx] is not None else ''
             elif arg.name == 'memory_format':
-                mem_format_str = f'memory_format={mem_format[inputs_value[idx]]}' if inputs_value[idx] is not None else ''
+                arg_str = f'memory_format={mem_format[inputs_value[idx]]}' if inputs_value[idx] is not None else ''
             elif arg.name == 'pin_memory':
                 # TODO: deal with this argument
                 continue
@@ -263,7 +263,6 @@ def _get_tensor_ops():
             return False
         return True
 
-    op_names = []
     op_args = {}
     # discover methods
     for elem in dir(torch.Tensor):
@@ -306,7 +305,7 @@ def _get_torch_ops():
     return torch_op_args.keys(), torch_op_args
 
 def _get_torch_ops_exclude_tensor_ops():
-    tensor_op_names, tensor_ops = _get_tensor_ops()
+    tensor_op_names, _ = _get_tensor_ops()
     torch_op_names, torch_ops = _get_torch_ops()
 
     torch_exclude_ops = {}
@@ -338,7 +337,7 @@ class TensorOps(PyTorchOperation):
                 if concated_names[i] != concated_names[i+1]:
                     return False
             return True
-                
+
         overloaded_defs = TensorOps._op_args[_type]
         matched = []
         for each in overloaded_defs:
@@ -393,7 +392,7 @@ class TorchOps(PyTorchOperation):
                 if concated_names[i] != concated_names[i+1]:
                     return False
             return True
-                
+
         overloaded_defs = TorchOps._op_args[_type]
         matched = []
         for each in overloaded_defs:
@@ -410,12 +409,12 @@ class TorchOps(PyTorchOperation):
                 raise RuntimeError(f'torch op type {_type} has more than one matched: {matched}')
         else:
             raise RuntimeError(f'torch op type {_type} has no matched')
-    
+
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         matched_args = TorchOps._get_matched_args(self.type, inputs)
         op_name = self.type.split('::')[-1]
-        args_str = ', '.join([f'{name}={inputs[i]}' if t.startswith('Optional[') else f'{inputs[i]}' for i, (name, t, default) in enumerate(matched_args)])
-        print(args_str)
+        args_str = ', '.join([f'{name}={inputs[i]}' if t.startswith('Optional[') else f'{inputs[i]}' \
+            for i, (name, t, default) in enumerate(matched_args)])
         return f'{output} = torch.{op_name}({args_str})'
 
 class AtenAvgpool2d(PyTorchOperation):
