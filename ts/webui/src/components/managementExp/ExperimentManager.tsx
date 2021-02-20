@@ -12,6 +12,7 @@ import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
 import '../../App.scss';
+import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/overview/probar.scss';
@@ -173,7 +174,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.experimentName}</div>
+            onRender: (item: any): React.ReactNode => <div>{item.experimentName}</div>
         },
         {
             name: 'ID',
@@ -195,9 +196,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             maxWidth: MAXSCREENCOLUMNWIDHT,
             isResizable: true,
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
-            )
+            onRender: (item: any): React.ReactNode => <div className={`${item.status} commonStyle`}>{item.status}</div>
         },
         {
             name: 'Port',
@@ -209,10 +208,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div className={item.status === 'STOPPED' ? 'gray-port' : ''}>
-                        {item.port !== undefined ? item.port : '--'}
-                    </div>
+                <div className={item.status === 'STOPPED' ? 'gray-port' : ''}>
+                    {item.port !== undefined ? item.port : '--'}
                 </div>
             )
         },
@@ -225,7 +222,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='commonStyle succeed-padding'>{item.platform}</div>
+            onRender: (item: any): React.ReactNode => <div className='commonStyle'>{item.platform}</div>
         },
         {
             name: 'Start time',
@@ -236,11 +233,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div>{expformatTimestamp(item.startTime)}</div>
-                </div>
-            )
+            onRender: (item: any): React.ReactNode => <div>{expformatTimestamp(item.startTime)}</div>
         },
         {
             name: 'End time',
@@ -251,11 +244,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div>{expformatTimestamp(item.endTime)}</div>
-                </div>
-            )
+            onRender: (item: any): React.ReactNode => <div>{expformatTimestamp(item.endTime)}</div>
         }
     ];
 

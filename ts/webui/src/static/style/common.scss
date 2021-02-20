@@ -25,3 +25,19 @@
 		cursor: pointer;
 	}
 }
+
+.idCopy {
+	.ms-Button--icon {
+		width: 18px;
+    	height: 18px;
+		margin-left: 4px;
+	}
+
+    i {
+        color: #33333C;
+    }
+}
+
+.ms-DetailsRow {
+    height: 32px;
+}

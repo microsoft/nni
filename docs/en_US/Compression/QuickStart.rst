@@ -45,7 +45,7 @@ After training, you get accuracy of the pruned model. You can export model weigh
 
    pruner.export_model(model_path='pruned_vgg19_cifar10.pth', mask_path='mask_vgg19_cifar10.pth')
 
-The complete code of model compression examples can be found :githublink:`here <examples/model_compress/pruning/model_prune_torch.py>`.
+Please refer :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for quick start.
 
 Speed up the model
 ^^^^^^^^^^^^^^^^^^
@@ -71,15 +71,6 @@ PyTorch code
    from nni.algorithms.compression.pytorch.pruning import LevelPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
    pruner = LevelPruner(model, config_list)
-   pruner.compress()
-
-Tensorflow code
-
-.. code-block:: python
-
-   from nni.algorithms.compression.tensorflow.pruning import LevelPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-   pruner = LevelPruner(tf.get_default_graph(), config_list)
    pruner.compress()
 
 You can use other compression algorithms in the package of ``nni.compression``. The algorithms are implemented in both PyTorch and TensorFlow (partial support on TensorFlow), under ``nni.compression.pytorch`` and ``nni.compression.tensorflow`` respectively. You can refer to `Pruner <./Pruner.rst>`__ and `Quantizer <./Quantizer.rst>`__ for detail description of supported algorithms. Also if you want to use knowledge distillation, you can refer to `KDExample <../TrialExample/KDExample.rst>`__
