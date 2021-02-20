@@ -38,7 +38,7 @@ class TestPytorch(unittest.TestCase):
         model_code = model_to_pytorch_script(model_ir)
         print(model_code)
 
-        from inject_nn import remove_inject_pytorch_nn
+        from .inject_nn import remove_inject_pytorch_nn
         remove_inject_pytorch_nn()
 
         exec_vars = {}
@@ -213,7 +213,7 @@ class TestPytorch(unittest.TestCase):
 
     @unittest.skip('does not support `if A and/or B`')
     def test_faster_rcnn(self):
-        from inject_nn import inject_pytorch_nn
+        from .inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
 
         model = torchvision.models.detection.faster_rcnn.fasterrcnn_resnet50_fpn(pretrained=True, min_size=200,
@@ -228,7 +228,7 @@ class TestPytorch(unittest.TestCase):
 
     @unittest.skip('does not support `if A and/or B`')
     def test_mask_rcnn(self):
-        from inject_nn import inject_pytorch_nn
+        from .inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
 
         model = torchvision.models.detection.mask_rcnn.maskrcnn_resnet50_fpn(pretrained=True, min_size=200,
@@ -240,7 +240,7 @@ class TestPytorch(unittest.TestCase):
 
     @unittest.skip('does not support `if A and/or B`')
     def test_keypoint_rcnn(self):
-        from inject_nn import inject_pytorch_nn
+        from .inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
 
         model = torchvision.models.detection.keypoint_rcnn.keypointrcnn_resnet50_fpn(pretrained=True, min_size=200,
@@ -251,7 +251,7 @@ class TestPytorch(unittest.TestCase):
         self.run_test(model, (dummy_images,))
 
     def test_shufflenet_v2_dynamic_axes(self):
-        from inject_nn import inject_pytorch_nn
+        from .inject_nn import inject_pytorch_nn
         inject_pytorch_nn()
 
         model = torchvision.models.shufflenet_v2_x0_5(pretrained=True)
