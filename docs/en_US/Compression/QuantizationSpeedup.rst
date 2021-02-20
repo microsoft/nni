@@ -1,5 +1,5 @@
 Speed up Mixed Precision Quantization Model (experimental)
-===========================================
+==========================================================
 
 
 Introduction
@@ -85,6 +85,7 @@ input tensor: ``torch.randn(128, 1, 28, 28)``
    * - all in 8bit
      - 0.000229869
      - 93.7%
+
 Cifar10 resnet18 example(train one epoch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
