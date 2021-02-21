@@ -86,11 +86,14 @@ input tensor: ``torch.randn(128, 1, 28, 28)``
      - 0.000229869
      - 93.7%
 
+
 Cifar10 resnet18 example(train one epoch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+
 on one GTX2080 GPU,
 input tensor: ``torch.randn(128, 3, 32, 32)``
+
 
 .. list-table::
    :header-rows: 1
