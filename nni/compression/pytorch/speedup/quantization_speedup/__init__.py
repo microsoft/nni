@@ -1,1 +1,1 @@
-from .integrated_tensorrt import CalibrateType, TensorRTModelSpeedUp
+from .integrated_tensorrt import CalibrateType, ModelSpeedupTensorRT
