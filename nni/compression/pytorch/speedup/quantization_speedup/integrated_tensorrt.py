@@ -69,7 +69,7 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
     def __init__(self, model, onnx_path, input_shape, config=None, extra_layer_bit=32, strict_datatype=False, using_calibrate=True, 
-    calibrate_type=None, calib_data=None, calibration_cache = None, batchsize=1, input_names=["actual_input_1"], output_names=["output1"]):
+    calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = None, batchsize=1, input_names=["actual_input_1"], output_names=["output1"]):
         """
         Parameters
         ----------

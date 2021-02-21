@@ -312,9 +312,7 @@ def main():
     calibration_cache = "cifar_calibration.cache"
     test_set, test_labels = get_testset()
 
-    engine = ModelSpeedupTensorRT(model, onnx_path, input_shape, config=config, extra_layer_bit=32, 
-        strict_datatype=True, using_calibrate=True, calibrate_type=CalibrateType.ENTROPY2, calib_data=test_set, 
-        calibration_cache = calibration_cache, batchsize=batch_size, input_names=input_names, output_names=output_names)
+    engine = ModelSpeedupTensorRT(model, onnx_path, input_shape, config=config, strict_datatype=True, calib_data=test_set, calibration_cache = calibration_cache, batchsize=batch_size)
     engine.build()
     output, time = engine.inference(test_set)
 
