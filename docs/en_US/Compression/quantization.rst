@@ -15,3 +15,4 @@ create your own quantizer using NNI model compression interface.
     :maxdepth: 2
 
     Quantizers <Quantizer>
+    Quantization Speedup <QuantizationSpeedup>
