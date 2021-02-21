@@ -2,10 +2,11 @@
 # Licensed under the MIT license.
 
 import tensorrt as trt
-import nni.compression.pytorch.speedup.quantization_speedup.frontend_to_onnx as fonnx
-import nni.compression.pytorch.speedup.quantization_speedup.calibrator as calibrator
-import nni.compression.pytorch.speedup.quantization_speedup.common as common
-from nni.compression.pytorch.speedup.quantization_speedup.backend import BaseModelSpeedup
+
+from . import frontend_to_onnx as fonnx
+from . import calibrator as calibrator
+from . import common as common
+from .backend import BaseModelSpeedup
 import time
 import numpy as np
 

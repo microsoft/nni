@@ -3,7 +3,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 import numpy as np
 
-from nni.compression.pytorch.speedup.quantization_speedup.integrated_tensorrt import CalibrateType, TensorRTModelSpeedUp
+from nni.compression.pytorch import CalibrateType, TensorRTModelSpeedUp
 
 class Mnist(torch.nn.Module):
     def __init__(self):
