@@ -31,18 +31,19 @@ class RegularizedEvolution(BaseStrategy):
     Parameters
     ----------
     optimize_mode : str
-        Can be one of "maximize" and "minimize".
+        Can be one of "maximize" and "minimize". Default: maximize.
     population_size : int
-        The number of individuals to keep in the population.
+        The number of individuals to keep in the population. Default: 100.
     cycles : int
-        The number of cycles (trials) the algorithm should run for.
+        The number of cycles (trials) the algorithm should run for. Default: 20000.
     sample_size : int
-        The number of individuals that should participate in each tournament.
+        The number of individuals that should participate in each tournament. Default: 25.
     mutation_prob : float
-        Probability that mutation happens in each dim.
+        Probability that mutation happens in each dim. Default: 0.05
     on_failure : str
         Can be one of "ignore" and "worst". If "ignore", simply give up the model and find a new one.
         If "worst", mark the model as -inf (if maximize, inf if minimize), so that the algorithm "learns" to avoid such model.
+        Default: ignore.
     """
 
     def __init__(self, optimize_mode='maximize', population_size=100, sample_size=25, cycles=20000,

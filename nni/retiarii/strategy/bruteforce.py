@@ -48,7 +48,7 @@ class GridSearch(BaseStrategy):
     Parameters
     ----------
     shuffle : bool
-        Shuffle the order in a candidate list, so that they are tried in a random order.
+        Shuffle the order in a candidate list, so that they are tried in a random order. Default: true.
     """
 
     def __init__(self, shuffle=True):
