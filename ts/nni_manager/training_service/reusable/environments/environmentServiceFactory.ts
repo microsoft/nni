@@ -13,7 +13,7 @@ export class EnvironmentServiceFactory {
                 return new RemoteEnvironmentService();
             case 'aml':
                 return new AMLEnvironmentService();
-            case 'pai':
+            case 'openpai':
                 return new OpenPaiEnvironmentService();
             default:
                 throw new Error(`${name} not supported!`);

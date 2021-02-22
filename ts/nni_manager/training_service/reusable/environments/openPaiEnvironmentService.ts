@@ -46,7 +46,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     }
 
     public get getName(): string {
-        return 'pai';
+        return 'openpai';
     }
 
     public async config(key: string, value: string): Promise<void> {

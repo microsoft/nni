@@ -12,7 +12,7 @@ import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
-    ExperimentConfig, ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
+    ExperimentConfig, ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
@@ -179,7 +179,7 @@ class NNIManager implements Manager {
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
     }
 
-    public async startExperiment(expParams: ExperimentParams | ExperimentConfig): Promise<string> {
+    public async startExperiment(expParams: ExperimentConfig): Promise<string> {
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
         this.experimentProfile.params = expParams;
         await this.storeExperimentProfile();
@@ -390,9 +390,9 @@ class NNIManager implements Manager {
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
         let includeIntermediateResultsEnv: boolean | undefined = false;
-        if (this.experimentProfile.params.tuner !== undefined) {
-            includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
-        }
+        //if (this.experimentProfile.params.tuner !== undefined) {
+        //    includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
+        //}
 
         const nniEnv = {
             SDK_PROCESS: 'dispatcher',
@@ -412,24 +412,8 @@ class NNIManager implements Manager {
     }
 
     private getGpuEnvvarValue(): string {
-        let cudaDevices: string | undefined;
-
-        if (this.experimentProfile.params instanceof ExperimentConfig) {
-            const config = this.experimentProfile.params as ExperimentConfig;
-            if (config.tunerGpuIndices) {
-                cudaDevices = config.tunerGpuIndices.join(',');
-            }
-        } else if (this.experimentProfile.params.advisor !== undefined) {
-            cudaDevices = (this.experimentProfile.params.advisor as any).gpuIndices;
-        } else if (this.experimentProfile.params.tuner !== undefined) {
-            cudaDevices = (this.experimentProfile.params.tuner as any).gpuIndices;
-        }
-
-        if (cudaDevices === undefined) {
-            return '';
-        } else {
-            return cudaDevices;
-        }
+        const indices = this.experimentProfile.params.tunerGpuIndices;
+        return indices ? indices.join(',') : '';
     }
 
     private updateTrialConcurrency(trialConcurrency: number): void {
@@ -858,13 +842,14 @@ class NNIManager implements Manager {
             logDir: getExperimentRootDir(),
             nextSequenceId: 0,
             params: {
-                authorName: '',
-                experimentName: '',
-                trialConcurrency: 0,
-                maxExecDuration: 0, // unit: second
-                maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
-                trainingServicePlatform: '',
-                searchSpace: ''
+                searchSpace: undefined,
+                trialCommand: '',
+                trialCodeDirectory: '',
+                trialConcurrency: 1,
+                trainingService: undefined,
+                multiPhase: false,
+                versionCheck: false,
+                logCollection: false,
             }
         };
     }

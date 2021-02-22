@@ -22,23 +22,22 @@ function startProcess(): void {
         // Mock tuner config
         {
             experimentName: 'exp1',
-            maxExecDuration: 3600,
+            //maxExecDuration: 3600,
             searchSpace: '',
-            trainingServicePlatform: 'local',
-            authorName: '',
+            trainingService: {
+                platform: 'local',
+            },
             trialConcurrency: 1,
-            maxTrialNum: 5,
+            trialCommand: '',
+            trialCodeDirectory: '.',
+            maxTrialNumber: 5,
             tuner: {
-                className: 'DummyTuner',
-                codeDir: './',
-                classFileName: 'dummy_tuner.py',
-                checkpointDir: './'
+                className: 'dummy_tuner.DummyTuner',
+                codeDirectory: '.',
             },
             assessor: {
-                className: 'DummyAssessor',
-                codeDir: './',
-                classFileName: 'dummy_assessor.py',
-                checkpointDir: './'
+                className: 'dummy_assessor.DummyAssessor',
+                codeDirectory: '.',
             }
         }
     );

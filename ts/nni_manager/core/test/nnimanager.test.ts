@@ -39,46 +39,50 @@ describe('Unit test for nnimanager', function () {
     let ClusterMetadataKey = 'mockedMetadataKey';
 
     let experimentParams = {
-        authorName: 'zql',
         experimentName: 'naive_experiment',
         trialConcurrency: 3,
-        maxExecDuration: 5,
-        maxTrialNum: 3,
-        trainingServicePlatform: 'local',
+        //maxExecDuration: 5,
+        maxTrialNumber: 3,
+        trialCommand: '',
+        trialCodeDirectory: '.',
+        trainingService: {
+            platform: 'local',
+        },
         searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
-            checkpointDir: '',
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
+            name: 'Medianstop',
         }
     }
 
     let updateExperimentParams = {
-        authorName: '',
         experimentName: 'another_experiment',
         trialConcurrency: 2,
-        maxExecDuration: 6,
-        maxTrialNum: 2,
-        trainingServicePlatform: 'local',
+        //maxExecDuration: 6,
+        maxTrialNumber: 2,
+        trialCommand: '',
+        trialCodeDirectory: '.',
+        trainingService: {
+            platform: 'local',
+        },
         searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
             },
-            checkpointDir: '',
-            gpuNum: 0
+            //checkpointDir: '',
+            gpuNumber: 0
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
-            gpuNum: 1
+            name: 'Medianstop',
+            //checkpointDir: '',
+            gpuNumber: 1
         }
     }
 

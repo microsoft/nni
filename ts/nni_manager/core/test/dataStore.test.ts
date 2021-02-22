@@ -38,13 +38,16 @@ describe('Unit test for dataStore', () => {
     it('test experiment profiles CRUD', async () => {
         const profile: ExperimentProfile = {
             params: {
-                authorName: 'test1',
                 experimentName: 'exp1',
                 trialConcurrency: 2,
-                maxExecDuration: 10,
-                maxTrialNum: 5,
-                trainingServicePlatform: 'local',
-                searchSpace: `{
+                //maxExecDuration: 10,
+                maxTrialNumber: 5,
+                trialCommand: '',
+                trialCodeDirectory: '.',
+                trainingService: {
+                    Platform: 'local',
+                },
+                searchSpace: {
                     "dropout_rate": {
                         "_type": "uniform",
                         "_value": [0.1, 0.5]
@@ -53,10 +56,9 @@ describe('Unit test for dataStore', () => {
                         "_type": "choice",
                         "_value": [50, 250, 500]
                     }
-                }`,
+                },
                 tuner: {
                     className: 'testTuner',
-                    checkpointDir: '/tmp/cp'
                 }
             },
             id: 'exp123',

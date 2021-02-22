@@ -10,39 +10,45 @@ import { Container } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { Database, MetricDataRecord, TrialJobEvent, TrialJobEventRecord } from '../../common/datastore';
 import { setExperimentStartupInfo } from '../../common/experimentStartupInfo';
-import { ExperimentParams, ExperimentProfile } from '../../common/manager';
+import { ExperimentProfile } from '../../common/manager';
 import { cleanupUnitTest, getDefaultDatabaseDir, mkDirP, prepareUnitTest } from '../../common/utils';
 import { SqlDB } from '../sqlDatabase';
 
-const expParams1: ExperimentParams = {
-    authorName: 'ZhangSan',
+const expParams1 = {
     experimentName: 'Exp1',
     trialConcurrency: 3,
-    maxExecDuration: 100,
-    maxTrialNum: 5,
-    trainingServicePlatform: 'local',
+    //maxExecDuration: 100,
+    maxTrialNumber: 5,
+    trialCommand: '',
+    trialCodeDirectory: '.',
+    trainingService: {
+        platform: 'local',
+    },
     searchSpace: 'SS',
     tuner: {
         className: 'testTuner',
-        checkpointDir: '/tmp'
+        //checkpointDir: '/tmp'
     }
 };
 
-const expParams2: ExperimentParams = {
-    authorName: 'LiSi',
+const expParams2 = {
     experimentName: 'Exp2',
     trialConcurrency: 5,
-    maxExecDuration: 1000,
-    maxTrialNum: 5,
-    trainingServicePlatform: 'local',
+    //maxExecDuration: 1000,
+    maxTrialNumber: 5,
+    trialCommand: '',
+    trialCodeDirectory: '.',
+    trainingService: {
+        platform: 'local',
+    },
     searchSpace: '',
     tuner: {
         className: 'testTuner',
-        checkpointDir: '/tmp'
+        //checkpointDir: '/tmp'
     },
     assessor: {
         className: 'testAssessor',
-        checkpointDir: '/tmp'
+        //checkpointDir: '/tmp'
     }
 };
 

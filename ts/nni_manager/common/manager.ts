@@ -13,59 +13,12 @@ namespace ExperimentStartUpMode {
     export const RESUME = 'resume';
 }
 
-interface ExperimentParams {
-    authorName: string;
-    experimentName: string;
-    description?: string;
-    trialConcurrency: number;
-    maxExecDuration: number; //seconds
-    maxTrialNum: number;
-    searchSpace: string;
-    trainingServicePlatform: string;
-    multiPhase?: boolean;
-    multiThread?: boolean;
-    versionCheck?: boolean;
-    logCollection?: string;
-    tuner?: {
-        className?: string;
-        builtinTunerName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        includeIntermediateResults?: boolean;
-        gpuIndices?: string;
-    };
-    assessor?: {
-        className?: string;
-        builtinAssessorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-    };
-    advisor?: {
-        className?: string;
-        builtinAdvisorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        gpuIndices?: string;
-    };
-    clusterMetaData?: {
-        key: string;
-        value: string;
-    }[];
-}
-
 class AlgorithmConfig {
     name?: string;
     className?: string;
     codeDirectory?: string;
     classArgs?: object;
-
-    get includeIntermediateResults(): boolean { return false; }
+    //get includeIntermediateResults(): boolean { return false; }
 }
 
 class ExperimentConfig {
@@ -88,15 +41,18 @@ class ExperimentConfig {
     advisor?: AlgorithmConfig;
     trainingService: any;
 
-    get multiPhase(): boolean { return false; }
-    get versionCheck(): boolean { return false; }
-    get logCollection(): boolean { return false; }
+    multiPhase?: boolean;
+    versionCheck?: boolean;
+    logCollection?: boolean;
+    //get multiPhase(): boolean | undefined { return false; }
+    //get versionCheck(): boolean | undefined { return false; }
+    //get logCollection(): boolean | undefined { return false; }
 
     constructor() { throw new Error('trying to construct ExperimentConfig'); }
 }
 
 interface ExperimentProfile {
-    params: ExperimentParams | ExperimentConfig;
+    params: ExperimentConfig;
     id: string;
     execDuration: number;
     logDir?: string;
@@ -117,7 +73,7 @@ interface NNIManagerStatus {
 }
 
 abstract class Manager {
-    public abstract startExperiment(experimentParams: ExperimentParams): Promise<string>;
+    public abstract startExperiment(experimentParams: ExperimentConfig): Promise<string>;
     public abstract resumeExperiment(readonly: boolean): Promise<void>;
     public abstract stopExperiment(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
@@ -145,4 +101,4 @@ abstract class Manager {
     public abstract getStatus(): NNIManagerStatus;
 }
 
-export { Manager, ExperimentConfig, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };
+export { Manager, ExperimentConfig, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };
