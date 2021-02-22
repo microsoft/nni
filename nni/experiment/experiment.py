@@ -204,7 +204,7 @@ class Experiment:
         finally:
             self.stop()
 
-    def connect_experiment(self, port: int):
+    def connect(self, port: int):
         """
         Connect to an existing experiment.
 
@@ -214,7 +214,14 @@ class Experiment:
             The port of web UI.
         """
         self.port = port
-        self.get_status()
+        self.id = self.get_experiment_profile().get('id')
+        status = self.get_status()
+        pid = self.get_experiment_metadata(self.id).get('pid')
+        if pid is None:
+            _logger.warning('Get experiment pid failed, can not stop experiment by stop().')
+        else:
+            self._proc = psutil.Process(pid)
+        _logger.info('Connect to port {} success, experiment id is {}, status is {}.'.format(port, self.id, status))
 
     def _experiment_rest_get(self, port: int, api: str) -> Any:
         if self.port is None:
@@ -316,6 +323,49 @@ class Experiment:
         resp = self._experiment_rest_get(self.port, '/experiment')
         return resp
 
+    def get_experiment_metadata(self, exp_id: str):
+        """
+        Return experiment metadata with specified exp_id as a dict.
+
+        Returns
+        ----------
+        dict
+            The specified experiment metadata.
+        """
+        experiments_metadata = self.get_all_experiments_metadata()
+        for metadata in experiments_metadata:
+            if metadata['id'] == exp_id:
+                return metadata
+        return {}
+
+    def get_all_experiments_metadata(self):
+        """
+        Return all experiments metadata as a list.
+
+        Returns
+        ----------
+        list
+            The experiments metadata.
+            Example format: [
+                                {
+                                    "id": str,
+                                    "port": int,
+                                    "startTime": int,
+                                    "endTime": int,
+                                    "status": str,
+                                    "platform": str,
+                                    "experimentName": str,
+                                    "tag": [str],
+                                    "pid": int,
+                                    "webuiUrl": [str],
+                                    "logDir": str
+                                },
+                                {...}
+                            ]
+        """
+        resp = self._experiment_rest_get(self.port, '/experiments-info')
+        return resp
+
     def export_data(self):
         """
         Return exported information for all trial jobs.
@@ -329,13 +379,13 @@ class Experiment:
         return [TrialResult(**trial_result) for trial_result in resp]
 
     def _get_query_type(self, key: str):
-        if key == 'trial_concurrency':
+        if key == 'trialConcurrency':
             return '?update_type=TRIAL_CONCURRENCY'
-        if key == 'max_experiment_duration':
+        if key == 'maxExecDuration':
             return '?update_type=MAX_EXEC_DURATION'
-        if key == 'search_space':
+        if key == 'searchSpace':
             return '?update_type=SEARCH_SPACE'
-        if key == 'max_trial_number':
+        if key == 'maxTrialNum':
             return '?update_type=MAX_TRIAL_NUM'
 
     def _update_experiment_profile(self, key: str, value: Any):
@@ -363,7 +413,7 @@ class Experiment:
         value: int
             New trial_concurrency value.
         """
-        self._update_experiment_profile('trial_concurrency', value)
+        self._update_experiment_profile('trialConcurrency', value)
 
     def update_max_experiment_duration(self, value: str):
         """
@@ -375,7 +425,7 @@ class Experiment:
             Strings like '1m' for one minute or '2h' for two hours.
             SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
-        self._update_experiment_profile('max_experiment_duration', value)
+        self._update_experiment_profile('maxExecDuration', value)
 
     def update_search_space(self, value: dict):
         """
@@ -387,9 +437,9 @@ class Experiment:
         value: dict
             New search_space.
         """
-        self._update_experiment_profile('search_space', value)
+        self._update_experiment_profile('searchSpace', value)
 
-    def update_max_trial_number(self, value):
+    def update_max_trial_number(self, value: int):
         """
         Update an experiment's max_trial_number
 
@@ -398,4 +448,4 @@ class Experiment:
         value: int
             New max_trial_number value.
         """
-        self._update_experiment_profile('max_trial_number', value)
+        self._update_experiment_profile('maxTrialNum', value)
