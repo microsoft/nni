@@ -162,6 +162,14 @@ def _get_module_name(cls):
                                     f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
                 module_name = main_file_path.stem
                 break
+
+    # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
+    # to make LSTM's source code can be found, we should assign original LSTM's __module__ to
+    # the wrapped LSTM's __module__
+    # TODO: find out all the modules that have the same requirement as LSTM
+    if f'{cls.__module__}.{cls.__name__}' == 'torch.nn.modules.rnn.LSTM':
+        module_name = cls.__module__
+
     return module_name
 
 
