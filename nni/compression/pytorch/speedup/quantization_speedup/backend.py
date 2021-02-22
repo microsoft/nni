@@ -21,10 +21,12 @@ class BaseModelSpeedup:
         """
         This function should be overrided by subclass to provide inference ability,
         which should return output and inference time.
+
         Parameters
         ----------
         input : numpy data
             input data given to the inference engine
+
         Returns
         -------
         output : numpy data
