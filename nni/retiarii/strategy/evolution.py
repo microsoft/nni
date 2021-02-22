@@ -15,11 +15,36 @@ _logger = logging.getLogger(__name__)
 
 @dataclasses.dataclass
 class Individual:
+    """
+    A class that represents an individual.
+    Holds two attributes, where ``x`` is the model and ``y`` is the metric (e.g., accuracy).
+    """
     x: dict
     y: float
 
 
-class Evolution(BaseStrategy):
+class RegularizedEvolution(BaseStrategy):
+    """
+    Algorithm for regularized evolution (i.e. aging evolution).
+    Follows "Algorithm 1" in Real et al. "Regularized Evolution for Image Classifier Architecture Search".
+
+    Parameters
+    ----------
+    optimize_mode : str
+        Can be one of "maximize" and "minimize".
+    population_size : int
+        The number of individuals to keep in the population.
+    cycles : int
+        The number of cycles (trials) the algorithm should run for.
+    sample_size : int
+        The number of individuals that should participate in each tournament.
+    mutation_prob : float
+        Probability that mutation happens in each dim.
+    on_failure : str
+        Can be one of "ignore" and "worst". If "ignore", simply give up the model and find a new one.
+        If "worst", mark the model as -inf (if maximize, inf if minimize), so that the algorithm "learns" to avoid such model.
+    """
+
     def __init__(self, optimize_mode='maximize', population_size=100, sample_size=25, cycles=20000,
                  mutation_prob=0.05, on_failure='ignore'):
         assert optimize_mode in ['maximize', 'minimize']
@@ -54,7 +79,7 @@ class Evolution(BaseStrategy):
         return child
 
     def best_parent(self):
-        samples = [p for p in self.population]  # copy population
+        samples = [p for p in self._population]  # copy population
         random.shuffle(samples)
         samples = list(samples)[:self.sample_size]
         if self.optimize_mode == 'maximize':
@@ -67,9 +92,9 @@ class Evolution(BaseStrategy):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
         # Run the first population regardless concurrency
         _logger.info('Initializing the first population.')
-        while len(self._population) + len(self._running_models) <= self._population:
+        while len(self._population) + len(self._running_models) <= self.population_size:
             # try to submit new models
-            if len(self._population) + len(self._running_models) < self._population:
+            while len(self._population) + len(self._running_models) < self.population_size:
                 config = self.random(search_space)
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
@@ -77,11 +102,14 @@ class Evolution(BaseStrategy):
             self._remove_failed_models_from_running_list()
             time.sleep(self._polling_interval)
 
+            if len(self._population) >= self.population_size:
+                break
+
         # Resource-aware mutation of models
         _logger.info('Running mutations.')
         while self._success_count + len(self._running_models) <= self.cycles:
             # try to submit new models
-            if query_available_resources() > 0 and self._success_count + len(self._running_models) < self.cycles:
+            while query_available_resources() > 0 and self._success_count + len(self._running_models) < self.cycles:
                 config = self.mutate(self.best_parent(), search_space)
                 self._submit_config(config, base_model, applied_mutators)
             # collect results
@@ -89,7 +117,11 @@ class Evolution(BaseStrategy):
             self._remove_failed_models_from_running_list()
             time.sleep(self._polling_interval)
 
+            if self._success_count >= self.cycles:
+                break
+
     def _submit_config(self, config, base_model, mutators):
+        _logger.info('Model submitted to running queue: %s', config)
         model = get_targeted_model(base_model, mutators, config)
         submit_models(model)
         self._running_models.append((config, model))
@@ -105,18 +137,21 @@ class Evolution(BaseStrategy):
                 metric = model.metric
             if metric is not None:
                 individual = Individual(config, metric)
-                _logger.info('New individual created: %s', str(individual))
+                _logger.info('Individual created: %s', str(individual))
                 self._population.append(individual)
-                if len(self._population) >= self.population_size:
+                if len(self._population) > self.population_size:
                     self._population.popleft()
                 completed_indices.append(i)
-        for i in completed_indices:
+        for i in completed_indices[::-1]:
+            # delete from end to start so that the index number will not be affected.
             self._success_count += 1
             self._running_models.pop(i)
 
     def _remove_failed_models_from_running_list(self):
-        # this is only done when on_failure policy is set to "ignore".
+        # This is only done when on_failure policy is set to "ignore".
+        # Otherwise, failed models will be treated as inf when processed.
         if self.on_failure == 'ignore':
-            number_of_failed_models = len([g for g in self._running_models if g.status == ModelStatus.Failed])
-            self._running_models = [g for g in self._running_models if g.status != ModelStatus.Failed]
-            _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)
+            number_of_failed_models = len([g for g in self._running_models if g[1].status == ModelStatus.Failed])
+            self._running_models = [g for g in self._running_models if g[1].status != ModelStatus.Failed]
+            if number_of_failed_models > 0:
+                _logger.info('%d failed models are ignored. Will retry.', number_of_failed_models)

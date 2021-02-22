@@ -42,6 +42,15 @@ def random_generator(search_space: Dict[Any, List[Any]], dedup=True, retries=500
 
 
 class GridSearch(BaseStrategy):
+    """
+    Traverse the search space and try all the possible combinations one by one.
+
+    Parameters
+    ----------
+    shuffle : bool
+        Shuffle the order in a candidate list, so that they are tried in a random order.
+    """
+
     def __init__(self, shuffle=True):
         self._polling_interval = 2.
         self.shuffle = shuffle
@@ -61,6 +70,17 @@ class _RandomSampler(Sampler):
 
 
 class Random(BaseStrategy):
+    """
+    Random search on the search space.
+
+    Parameters
+    ----------
+    variational : bool
+        Do not dry run to get the full search space. Used when the search space has variational size or candidates. Default: false.
+    dedup : bool
+        Do not try the same configuration twice. When variational is true, deduplication is not supported. Default: true.
+    """
+
     def __init__(self, variational=False, dedup=True):
         self.variational = variational
         self.dedup = dedup
