@@ -1,14 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import time
 import tensorrt as trt
+import numpy as np
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
 from . import common as common
 from .backend import BaseModelSpeedup
-import time
-import numpy as np
 
 TRT_LOGGER = trt.Logger()
 
@@ -24,7 +24,7 @@ Precision_Dict = {
     32: trt.float32
 }
 
-def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit='float32', strict_datatype=False):
+def build_engine(model_file, calib, config=None, extra_layer_bit='float32', strict_datatype=False):
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
         """
         This function builds an engine from an onnx model.
@@ -44,7 +44,7 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
             builder.fp16_mode = True
             builder.int8_calibrator = calib
             builder.strict_type_constraints = strict_datatype
-        
+
         # Parse onnx model
         with open(model_file, 'rb') as model:
             if not parser.parse(model.read()):
@@ -62,35 +62,31 @@ def build_engine(model_file, calib, batch_size=32, config=None, extra_layer_bit=
                 bitset = config[layer.name]
                 layer.precision = Precision_Dict[bitset]
                 layer.set_output_type(0, Precision_Dict[bitset])
-        # network.mark_output(model_tensors.find(ModelData.OUTPUT_NAME))
         # Build engine and do int8 calibration.
         engine = builder.build_cuda_engine(network)
         return engine
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
-    def __init__(self, model, onnx_path, input_shape, config=None, extra_layer_bit=32, strict_datatype=False, using_calibrate=True, 
-    calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = None, batchsize=1, input_names=["actual_input_1"], output_names=["output1"]):
+    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx", extra_layer_bit=32, strict_datatype=True,  
+        calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = "calibration.cache", batchsize=1, 
+        input_names=["actual_input_1"], output_names=["output1"]):
         """
         Parameters
         ----------
         model : pytorch model
             The model to speed up by quantization.
-        onnx_path : str
-            The path user want to store onnx model which is converted from pytorch model.
         input_shape : tuple
             The input shape of model, shall pass it to torch.onnx.export.
         config : dict
             Config recording bit number and name of layers.
+        onnx_path : str
+            The path user want to store onnx model which is converted from pytorch model.
         extra_layer_bit : int
             Other layers which are not in config will be quantized to corresponding bit number.
         strict_datatype : bool
             Whether constrain layer bit to the number given in config or not. If true, all the layer 
             will be set to given bit strictly. Otherwise, these layers will be set automatically by
             tensorrt.
-        using_calibrate : bool
-            Whether calibrating during quantization or not. If true, user should provide calibration
-            dataset. If not, user should provide scale and zero_point for each layer. Current version
-            only support using calibrating.
         calibrate_type : tensorrt.tensorrt.CalibrationAlgoType
             The algorithm of calibrating. Please refer to https://docs.nvidia.com/deeplearning/
             tensorrt/api/python_api/infer/Int8/Calibrator.html for detail
@@ -112,7 +108,6 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         self.config = config
         self.extra_layer_bit = extra_layer_bit
         self.strict_datatype = strict_datatype
-        self.using_calibrate = using_calibrate
         self.calibrate_type = calibrate_type
         self.calib_data = calib_data
         self.calibration_cache = calibration_cache
@@ -122,7 +117,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         self.context = None
         self.onnx_config = {}
 
-    def build(self):
+    def compress(self):
         """
         Get onnx config and build tensorrt engine.
         """
@@ -131,9 +126,10 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         assert self.input_shape is not None
 
         # Convert pytorch model to onnx model and save onnx model in onnx_path
-        _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape, model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
+        _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape, 
+            model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
 
-        if self.using_calibrate:
+        if self.calib_data is not None:
             assert self.calibrate_type is not None
             context = self.tensorrt_build_withcalib(self.onnx_path)
         else:
@@ -142,7 +138,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
 
     def tensorrt_build_withcalib(self, onnx_path):
         calib = calibrator.Calibrator(self.calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
-        engine = build_engine(onnx_path, calib, self.batchsize, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
+        engine = build_engine(onnx_path, calib, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
     def inference(self, test_data):

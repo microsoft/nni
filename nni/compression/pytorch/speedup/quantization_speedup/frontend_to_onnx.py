@@ -2,11 +2,16 @@
 # Licensed under the MIT license.
 
 import torch
-import torch.nn.functional as F
-from torchvision import datasets, transforms
-from torch.autograd import Variable
 import onnx
 import onnx.numpy_helper
+"""
+The main function of this page is to convert pytorch model to onnx model.
+Convertion from pytorch model to onnx model is primary so that a critical 
+problem is caused that Layer name of pytorch model fail to convert to onnx 
+layer name directly. To solve it, we wrap pytorch model in new wrapper which 
+multiply bit number and input before computation of each op. Only in this 
+way can onnx model get bit number of corresponded layer.
+"""
 
 class LayernameModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_bit) -> None:

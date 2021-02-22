@@ -302,16 +302,14 @@ def main():
         'layer4.1.conv2':8,
         'fc':32,
     }
-    # parameter init for torch model to onnx
-    onnx_path = "resnet18.onnx"
 
+    # parameter init
     batch_size = 32
     input_shape = (batch_size, 3, 32, 32)
-    calibration_cache = "cifar_calibration.cache"
     test_set, test_labels = get_testset()
 
-    engine = ModelSpeedupTensorRT(model, onnx_path, input_shape, config=config, strict_datatype=True, calib_data=test_set, calibration_cache = calibration_cache, batchsize=batch_size)
-    engine.build()
+    engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data=test_set, batchsize=batch_size)
+    engine.compress()
     output, time = engine.inference(test_set)
 
     check_accuracy(output, test_labels)
