@@ -176,5 +176,44 @@ Windows
      - ip: ${replace_to_your_remote_machine_ip}
        username: ${replace_to_your_remote_machine_username}
        sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
+       # Pre-command will be executed before the remote machine executes other commands.
        # Below is an example of specifying python environment.
-       pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
+       # If you want to execute multiple commands, please use "&&" to connect them.
+       # preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
+       # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
+       preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
+
+在远程机器执行其他命令之前，将执行 **预命令**。 因此，可以像这样配置 python 环境路径：
+
+.. code-block:: yaml
+
+   # Linux remote machine
+   preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
+   # Windows remote machine
+   preCommand: set path=${replace_to_python_environment_path_in_your_remote_machine};%path%
+
+或者，如果想激活 ``virtualen`` 环境：
+
+.. code-block:: yaml
+
+   # Linux remote machine
+   preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
+   # Windows remote machine
+   preCommand: ${replace_to_absolute_path_recommended_here}\\scripts\\activate
+
+或者，如果想激活 ``conda`` 环境：
+
+.. code-block:: yaml
+
+   # Linux remote machine
+   preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
+   # Windows remote machine
+   preCommand: call activate ${replace_to_conda_env_name}
+
+如果要执行多个命令，可以使用 ``&&`` 连接以下命令：
+
+.. code-block:: yaml
+
+   preCommand: command1 && command2 && command3
+
+**注意**：因为 ``preCommand`` 每次都会在其他命令之前执行，所以强烈建议不要设置 **preCommand** 来对系统进行更改，即 ``mkdir`` or ``touch``.
