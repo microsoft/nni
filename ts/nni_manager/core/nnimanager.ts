@@ -230,19 +230,11 @@ class NNIManager implements Manager {
         if (readonly) {
             return Promise.resolve();
         }
-        const expParams: ExperimentParams = this.experimentProfile.params as ExperimentParams;
 
-        // Set up multiphase config
-        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
-            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
-        }
+        const experimentConfig: ExperimentConfig = this.experimentProfile.params as ExperimentConfig;
+        this.trainingService.initConfig(experimentConfig);
 
-        // Set up versionCheck config
-        if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
-        }
-
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
+        const dispatcherCommand: string = getMsgDispatcherCommand(experimentConfig);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(

@@ -120,11 +120,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
 
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
-    #print(experiment_config)
-    from nni.experiment.config.v1 import convert_to_v2
-    v2 = convert_to_v2(experiment_config).json()
-    response = rest_post(experiment_url(port), json.dumps(v2), REST_TIME_OUT, show_error=True)
-    #print(response.text)
+    response = rest_post(experiment_url(port), json.dumps(experiment_config), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
     else:
@@ -165,12 +161,12 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
             log_level = 'debug'
     # start rest server
-    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
+    rest_process, start_time = start_rest_server(args.port, experiment_config['trainingService']['platform'], \
                                                  mode, experiment_id, foreground, log_dir, log_level)
     # save experiment information
     Experiments().add_experiment(experiment_id, args.port, start_time,
-                                 experiment_config['trainingServicePlatform'],
-                                 experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
+                                 experiment_config['trainingService']['platform'],
+                                 experiment_config.get('experimentName', 'N/A'), pid=rest_process.pid, logDir=log_dir)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -183,11 +179,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = json.dumps(search_space)
         assert search_space, ERROR_INFO % 'Generated search space is empty'
-    elif experiment_config.get('searchSpacePath'):
-        search_space = get_json_content(experiment_config.get('searchSpacePath'))
-        experiment_config['searchSpace'] = json.dumps(search_space)
-    else:
-        experiment_config['searchSpace'] = json.dumps('')
 
     # check rest server
     running, _ = check_rest_server(args.port)
@@ -201,9 +192,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
-    if mode != 'view':
-        # set platform configuration
-        raise Exception('TODO')
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -245,22 +233,20 @@ def create_experiment(args):
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
         exit(1)
-    experiment_config = get_yml_content(config_path)
+    config_yml = get_yml_content(config_path)
 
     try:
-        validate_all_content(experiment_config, config_path)
-    except Exception:
-        print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
+        experiment_config = ExperimentConfig(**config_yml).json()
+    except Exception as error_v2:
+        print_warning('Validation with V2 schema failed. Trying to convert from V1 format...')
         try:
-            config = ExperimentConfig(**experiment_config)
-            experiment_config = convert.to_v1_yaml(config)
-        except Exception as e:
-            print_error(f'Conversion from v2 format failed: {repr(e)}')
-        try:
-            validate_all_content(experiment_config, config_path)
-        except Exception as e:
-            print_error(f'Config in v1 format validation failed. {repr(e)}')
+            validate_all_content(config_yml, config_path)
+        except Exception as error_v1:
+            print_error(f'Convert from v1 format failed: {repr(error_v1)}')
+            print_error(f'Config in v2 format validation failed: {repr(error_v2)}')
             exit(1)
+        from nni.experiment.config.v1 import convert_to_v2
+        experiment_config = convert_to_v2(config_yml).json()
 
     try:
         launch_experiment(args, experiment_config, 'new', experiment_id)
