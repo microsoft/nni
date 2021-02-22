@@ -26,7 +26,7 @@ class LinuxCommands extends OsCommands {
             cp -r $NNI_CODE_DIR/. $NNI_SYS_DIR/code
             sh $NNI_SYS_DIR/install_nni.sh
             cd $NNI_SYS_DIR/code
-            python3 -m nni.tools.trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
+            python3.7 -m nni.tools.trial_tool.trial_keeper --trial_command '${cudaVisibleSetting} ${command}' --nnimanager_ip '${nniManagerAddress}' \
                 --nnimanager_port '${nniManagerPort}' --nni_manager_version '${nniManagerVersion}' \
                 --job_id_file ${jobIdFileName} \
                 --log_collection '${logCollection}' 1>$NNI_OUTPUT_DIR/trialkeeper_stdout 2>$NNI_OUTPUT_DIR/trialkeeper_stderr
@@ -34,7 +34,7 @@ class LinuxCommands extends OsCommands {
     }
 
     public generateGpuStatsScript(scriptFolder: string): string {
-        return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni.tools.gpu_tool.gpu_metrics_collector`;
+        return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3.7 -m nni.tools.gpu_tool.gpu_metrics_collector`;
     }
 
     public createFolder(folderName: string, sharedFolder: boolean = false): string {
@@ -129,11 +129,11 @@ class LinuxCommands extends OsCommands {
         return command;
     }
 
-    public addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined{
-        if (command === undefined || command === '' || preCommand === undefined || preCommand === ''){
+    public setPythonPath(pythonPath: string | undefined, command: string | undefined): string | undefined{
+        if (command === undefined || command === '' || pythonPath === undefined || pythonPath === ''){
             return command;
         } else {
-            return `${preCommand} && ${command}`;
+            return `export PATH=${pythonPath}:$PATH && ${command}`;
         }
     }
 
