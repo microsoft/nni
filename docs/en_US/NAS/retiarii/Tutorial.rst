@@ -167,13 +167,13 @@ In the following table, we listed the available trainers and strategies.
     - TPEStrategy
     - DartsTrainer
   * - Regression
-    - RandomStrategy
+    - Random
     - EnasTrainer
   * - 
-    - 
+    - GridSearch
     - ProxylessTrainer
   * - 
-    - 
+    - RegularizedEvolution
     - SinglePathTrainer (RandomTrainer)
 
 There usage and API document can be found `here <./ApiReference>`__\.

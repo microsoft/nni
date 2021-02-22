@@ -131,7 +131,7 @@ class Model:
         new_model = Model(_internal=True)
         new_model._root_graph_name = self._root_graph_name
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.training_config = copy.deepcopy(self.training_config)
+        new_model.training_config = copy.deepcopy(self.training_config)  # TODO this may be a problem when training config is large
         new_model.history = self.history + [self]
         return new_model
 
