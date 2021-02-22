@@ -152,6 +152,14 @@ class Model:
         }
         return ret
 
+    def get_nodes(self) -> List['Node']:
+        """
+        Traverse through all the nodes.
+        """
+        for graph in self.graphs.values():
+            for node in graph.nodes:
+                yield node
+
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """
         Traverse all the nodes to find the matched node(s) with the given name.

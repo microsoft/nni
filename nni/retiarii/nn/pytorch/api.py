@@ -130,6 +130,9 @@ class LayerChoice(nn.Module):
         warnings.warn('You should not run forward of this module directly.')
         return x
 
+    def __repr__(self):
+        return f'LayerChoice({self.candidates}, label={repr(self.label)})'
+
 
 class InputChoice(nn.Module):
     """
@@ -188,14 +191,56 @@ class InputChoice(nn.Module):
         warnings.warn('You should not run forward of this module directly.')
         return candidate_inputs[0]
 
+    def __repr__(self):
+        return f'InputChoice(n_candidates={self.n_candidates}, n_chosen={self.n_chosen}, ' \
+            f'reduction={repr(self.reduction)}, label={repr(self.label)})'
+
 
 class ValueChoice(Translatable, nn.Module):
     """
     ValueChoice is to choose one from ``candidates``.
 
-    Should initialize the values to choose from in init and call the module in forward to get the chosen value.
+    In most use scenarios, ValueChoice should be passed to the init parameters of a serializable module. For example,
 
-    A common use is to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```. For example,
+    .. code-block:: python
+
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, nn.ValueChoice([32, 64]), kernel_size=nn.ValueChoice([3, 5, 7]))
+
+            def forward(self, x):
+                return self.conv(x)
+
+    In case, you want to search a parameter that is used repeatedly, this is also possible by sharing the same value choice instance.
+    (Sharing the label should have the same effect.) For example,
+
+    .. code-block:: python
+
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                hidden_dim = nn.ValueChoice([128, 512])
+                self.fc = nn.Sequential(
+                    nn.Linear(64, hidden_dim),
+                    nn.Linear(hidden_dim, 10)
+                )
+
+                # the following code has the same effect.
+                # self.fc = nn.Sequential(
+                #     nn.Linear(64, nn.ValueChoice([128, 512], label='dim')),
+                #     nn.Linear(nn.ValueChoice([128, 512], label='dim'), 10)
+                # )
+
+            def forward(self, x):
+                return self.fc(x)
+
+    Note that ValueChoice should be used directly. Transformations like ``nn.Linear(32, nn.ValueChoice([64, 128]) * 2)``
+    are not supported.
+
+    Another common use case is to initialize the values to choose from in init and call the module in forward to get the chosen value.
+    Usually, this is used to pass a mutable value to a functional API like ``torch.xxx`` or ``nn.functional.xxx```.
+    For example,
 
     .. code-block:: python
 
@@ -206,15 +251,6 @@ class ValueChoice(Translatable, nn.Module):
 
             def forward(self, x):
                 return F.dropout(x, self.dropout_rate())
-
-    The following use case is currently not supported because ValueChoice cannot be called in ``__init__``.
-    Please use LayerChoice as a workaround.
-
-    .. code-block:: python
-
-        # in __init__ code
-        self.kernel_size = nn.ValueChoice([3, 5])
-        self.conv = nn.Conv2d(3, self.out_channels, kernel_size=self.kernel_size())
 
     Parameters
     ----------
@@ -240,6 +276,9 @@ class ValueChoice(Translatable, nn.Module):
     def __translate__(self):
         # Will function as a value when used in serializer.
         return self.candidates[0]
+
+    def __repr__(self):
+        return f'ValueChoice({self.candidates}, label={repr(self.label)})'
 
 
 class Placeholder(nn.Module):
