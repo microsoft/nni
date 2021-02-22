@@ -149,7 +149,7 @@ Create a Trainer and Exploration Strategy
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Classic search approach:**
-In this approach, trainer is for training each explored model, while strategy is for sampling the models. Both trainer and strategy are required to explore the model space.
+In this approach, trainer is for training each explored model, while strategy is for sampling the models. Both trainer and strategy are required to explore the model space. We recommend PyTorch-Lightning to write the full training process.
 
 **Oneshot (weight-sharing) search approach:**
 In this approach, users only need a oneshot trainer, because this trainer takes charge of both search and training.
@@ -163,10 +163,10 @@ In the following table, we listed the available trainers and strategies.
   * - Trainer
     - Strategy
     - Oneshot Trainer
-  * - PyTorchImageClassificationTrainer
+  * - Classification
     - TPEStrategy
     - DartsTrainer
-  * - PyTorchMultiModelTrainer
+  * - Regression
     - RandomStrategy
     - EnasTrainer
   * - 
@@ -182,15 +182,20 @@ Here is a simple example of using trainer and strategy.
 
 .. code-block:: python
 
-  trainer = PyTorchImageClassificationTrainer(base_model,   
-    dataset_cls="MNIST",
-    dataset_kwargs={"root": "data/mnist", "download": True},
-    dataloader_kwargs={"batch_size": 32},
-    optimizer_kwargs={"lr": 1e-3},
-    trainer_kwargs={"max_epochs": 1})
-  simple_strategy = RandomStrategy()
+  import nni.retiarii.trainer.pytorch.lightning as pl
+  from nni.retiarii import blackbox
+  from torchvision import transforms
 
-Users can refer to `this document <./WriteTrainer.rst>`__ for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
+  transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+  train_dataset = blackbox(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+  test_dataset = blackbox(MNIST, root='data/mnist', train=False, download=True, transform=transform)
+  lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                max_epochs=10)
+
+.. Note:: For NNI to capture the dataset and dataloader and distribute it across different runs, please wrap your dataset with ``blackbox`` and use ``pl.DataLoader`` instead of ``torch.utils.data.DataLoader``. See ``blackbox_module`` section below for details.
+
+Users can refer to `API reference <./ApiReference.rst>`__ on detailed usage of trainer. "`write a trainer <./WriteTrainer.rst>`__" for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
 Set up an Experiment
 ^^^^^^^^^^^^^^^^^^^^

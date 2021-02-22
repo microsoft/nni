@@ -132,7 +132,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        key: 'python | "$(Agent.OS)" | latest | dependencies/*.txt'
         restoreKeys: | 
           python | "$(Agent.OS)"
           python
@@ -141,7 +141,7 @@ stages:
 
     - task: Cache@2
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
+        key: 'yarn | "$(Agent.OS)" | latest | ts/**/yarn.lock, !**/node_modules/**'
         restoreKeys: |
           yarn | "$(Agent.OS)"
         path: $(YARN_CACHE_FOLDER)
@@ -250,7 +250,9 @@ stages:
 
     - script: |
         cd test
-        python -m pytest ut
+        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
+          --ignore=ut/retiarii/test_convert_operators.py \
+          --ignore=ut/retiarii/test_convert_pytorch.py
       displayName: Python unit test
 
     - script: |

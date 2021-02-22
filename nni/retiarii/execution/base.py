@@ -2,31 +2,29 @@ import logging
 import os
 import random
 import string
-from typing import Dict, Any, List
+from typing import Dict, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData
+from ..graph import Model, ModelStatus, MetricData, TrainingConfig
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
-    def __init__(self, model_script: str, training_module: str, training_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, model_script: str, training_config: TrainingConfig) -> None:
         self.model_script = model_script
-        self.training_module = training_module
-        self.training_kwargs = training_kwargs
+        self.training_config = training_config
 
     def dump(self) -> dict:
         return {
             'model_script': self.model_script,
-            'training_module': self.training_module,
-            'training_kwargs': self.training_kwargs
+            'training_config': self.training_config
         }
 
     @staticmethod
-    def load(data):
-        return BaseGraphData(data['model_script'], data['training_module'], data['training_kwargs'])
+    def load(data) -> 'BaseGraphData':
+        return BaseGraphData(data['model_script'], data['training_config'])
 
 
 class BaseExecutionEngine(AbstractExecutionEngine):
@@ -57,8 +55,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model),
-                                 model.training_config.module, model.training_config.kwargs)
+            data = BaseGraphData(codegen.model_to_pytorch_script(model), model.training_config)
             self._running_models[send_trial(data.dump())] = model
 
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
@@ -105,11 +102,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
         random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        file_name = f'_generated_model_{random_str}.py'
+        file_name = f'_generated_model/{random_str}.py'
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
-        trainer_cls = utils.import_(graph_data.training_module)
-        model_cls = utils.import_(f'_generated_model_{random_str}._model')
-        trainer_instance = trainer_cls(model=model_cls(), **graph_data.training_kwargs)
-        trainer_instance.fit()
+        model_cls = utils.import_(f'_generated_model.{random_str}._model')
+        graph_data.training_config._execute(model_cls)
         os.remove(file_name)

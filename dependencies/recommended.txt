@@ -2,13 +2,11 @@
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-
-# PyTorch 1.7 has compatibility issue with model compression.
-# Check for MacOS because this file is used on all platforms.
 torch == 1.6.0+cpu ; sys_platform != "darwin"
 torch == 1.6.0 ; sys_platform == "darwin"
 torchvision == 0.7.0+cpu ; sys_platform != "darwin"
 torchvision == 0.7.0 ; sys_platform == "darwin"
+pytorch-lightning >= 1.1.1, < 1.2
 onnx
 peewee
 graphviz

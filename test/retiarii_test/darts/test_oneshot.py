@@ -8,8 +8,7 @@ from pathlib import Path
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategy import TPEStrategy
+from nni.retiarii.experiment.pytorch import RetiariiExperiment
 from nni.retiarii.trainer.pytorch import DartsTrainer
 
 from darts_model import CNN
