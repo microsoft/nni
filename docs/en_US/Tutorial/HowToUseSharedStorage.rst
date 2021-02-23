@@ -14,6 +14,7 @@ Use
 If you want to use AzureBlob, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_azureblob.yml <examples/trials/mnist-sharedstorage/config_azureblob.yml>`.
 
 .. code-block:: yaml
+
     sharedStorage:
         storageType: AzureBlob
         localMountPoint: ${your/local/mount/point}
@@ -31,6 +32,7 @@ If you want to use AzureBlob, add below to your config. Full config file see :gi
 If you want to use NFS, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_nfs.yml <examples/trials/mnist-sharedstorage/config_nfs.yml>`.
 
 .. code-block:: yaml
+
     sharedStorage:
         storageType: NFS
         localMountPoint: ${your/local/mount/point}
