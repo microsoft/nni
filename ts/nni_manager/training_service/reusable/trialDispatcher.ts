@@ -435,7 +435,6 @@ class TrialDispatcher implements TrainingService {
                             if (environment.environmentService === undefined) {
                                 throw new Error(`${environment.id} does not has environment service!`);
                             }
-
                             trial.url = environment.trackingUrl;
                             const environmentStatus = environment.status;
 
@@ -704,6 +703,7 @@ class TrialDispatcher implements TrainingService {
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
+        trial.message = `Trial ${trial.id} is assigned to environment ${environment.id}, platform is ${environment.environmentService.getName}`;
         if (environment.environmentService.hasStorageService) {	
             const storageService = component.get<StorageService>(StorageService);	
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
@@ -716,7 +716,6 @@ class TrialDispatcher implements TrainingService {
         }
         trial.startTime = Date.now();
         trial.status = "RUNNING";
-        trial.message = `Assign trial ${trial.id} to environment ${environment.id}, running platform is ${environment.name}.`;
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} does not have environment service!`);
         }
