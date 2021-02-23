@@ -221,7 +221,7 @@ class Experiment:
             _logger.warning('Get experiment pid failed, can not stop experiment by stop().')
         else:
             self._proc = psutil.Process(pid)
-        _logger.info('Connect to port {} success, experiment id is {}, status is {}.'.format(port, self.id, status))
+        _logger.info('Connect to port %d success, experiment id is %s, status is %s.' % (port, self.id, status))
 
     def _experiment_rest_get(self, port: int, api: str) -> Any:
         if self.port is None:
