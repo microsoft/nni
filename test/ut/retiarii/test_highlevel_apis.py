@@ -167,6 +167,7 @@ class TestHighLevelAPI(unittest.TestCase):
         mutator = mutators[0].bind_sampler(EnuemrateSampler())
         model1 = mutator.apply(model)
         model2 = mutator.apply(model)
+        self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
 

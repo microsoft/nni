@@ -18,7 +18,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean(),
-                preCommand: joi.string()
+                pythonPath: joi.string()
             })),
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),

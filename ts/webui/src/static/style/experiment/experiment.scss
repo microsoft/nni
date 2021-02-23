@@ -1,84 +1,87 @@
 $pageMargin: 24px;
 
 .expBackground {
-	background: #f2f2f2;
-	height: 100%;
+    background: #f2f2f2;
+    height: 100%;
 
-	.content {
-		/* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
-		margin-top: 32px;
-		margin-bottom: $pageMargin;
-		background: #fff;
-	}
+    .content {
+        /* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
+        margin-top: 32px;
+        margin-bottom: $pageMargin;
+        background: #fff;
+    }
 }
 
 .experimentList {
-	padding: $pageMargin 42px;
+    padding: $pageMargin 42px;
 
-	.ms-DetailsRow {
-		&:hover, &:focus {
-			background: #F3F2F1 !important;
-		}
-	}
+    .ms-DetailsRow {
+        &:hover,
+        &:focus {
+            background: #f3f2f1 !important;
+        }
+    }
 
-	.box {
-		margin-top: 20px;
+    .box {
+        margin-top: 20px;
 
-		.search {
-			width: 90%;
+        .search {
+            width: 90%;
 
-			&-input {
-				width: 330px;
-			}
-		}
+            &-input {
+                width: 330px;
+            }
+        }
 
-		.filter {
-			width: 10%;
-			text-align: right;
+        .filter {
+            width: 10%;
+            text-align: right;
 
-			&-button-open {
-				background: #f3f2f1;
-			}
-		}
-	}
+            &-button-open {
+                background: #f3f2f1;
+            }
+        }
+    }
 
-	.filter-condition {
-		margin-top: 26px;
-		.reset {
-			width: 80px;
-			position: relative;
-			top: 29px;
-		}
+    .filter-condition {
+        margin-top: 26px;
 
-		&-status {
-			width: 194px;
-		}
-		&-platform {
-			width: 150px;
-		}
-	}
+        .reset {
+            width: 80px;
+            position: relative;
+            top: 29px;
+        }
 
-	.hidden {
-		display: none;
-	}
+        &-status {
+            width: 194px;
+        }
 
-	.margin {
-		margin-left: 10px;
-	}
+        &-platform {
+            width: 150px;
+        }
+    }
 
-	.idColor {
-		color: #615f5d !important;
-	}
+    .hidden {
+        display: none;
+    }
 
-	.toAnotherExp {
-		color: #0071bc !important;
-	}
+    .margin {
+        margin-left: 10px;
+    }
 
-	.ms-DetailsRow:focus {
-		background: #e1dfdd;
-	}
+    .idColor {
+        color: #615f5d !important;
+    }
+
+    .toAnotherExp {
+        color: #0071bc !important;
+    }
+
+    .ms-DetailsRow:focus {
+        background: #e1dfdd;
+    }
 }
 
 .gray-port {
-	color: #bebebe;
+    color: #bebebe;
 }

@@ -1,1 +1,2 @@
-from .interface import BaseTrainer, BaseOneShotTrainer
+from .functional import FunctionalTrainer
+from .interface import BaseOneShotTrainer

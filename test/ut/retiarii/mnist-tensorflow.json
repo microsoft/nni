@@ -39,7 +39,6 @@
     },
 
     "_training_config": {
-        "module": "_debug_no_trainer",
-        "kwargs": {}
+        "__type__": "_debug_no_trainer"
     }
 }
