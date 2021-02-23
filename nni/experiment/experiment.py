@@ -346,22 +346,6 @@ class Experiment:
         ----------
         list
             The experiments metadata.
-            Example format: [
-                                {
-                                    "id": str,
-                                    "port": int,
-                                    "startTime": int,
-                                    "endTime": int,
-                                    "status": str,
-                                    "platform": str,
-                                    "experimentName": str,
-                                    "tag": [str],
-                                    "pid": int,
-                                    "webuiUrl": [str],
-                                    "logDir": str
-                                },
-                                {...}
-                            ]
         """
         resp = self._experiment_rest_get(self.port, '/experiments-info')
         return resp
