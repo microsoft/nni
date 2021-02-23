@@ -40,10 +40,10 @@ Weight Masker
 
 Pruners
 ^^^^^^^
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitive_pruner.OneshotPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitivity_pruner.SensitivityPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitive_pruner.SensitivityPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.OneshotPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.LevelPruner
@@ -55,9 +55,6 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L1FilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
-    :members:
-    
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
     :members:
 
@@ -79,7 +76,7 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp.AGPPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm.ADMMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
