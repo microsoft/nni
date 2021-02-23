@@ -27,14 +27,12 @@ class BlockMutator(Mutator):
         n_filter = self.choice(related_info['n_filter_options'])
 
         if related_info['in_ch'] is not None:
-            _logger.info('zql debug X ...')
             in_ch = related_info['in_ch']
         else:
             assert len(node.predecessors) == 1
             the_node = node.predecessors[0]
-            _logger.info('zql debug ...')
-            _logger.info(the_node.operation.parameters)
-            _logger.info(the_node.__repr__())
+            _logger.debug(repr(the_node.operation.parameters))
+            _logger.debug(the_node.__repr__())
             in_ch = the_node.operation.parameters['out_ch']
 
         # update the placeholder to be a new operation

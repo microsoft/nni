@@ -46,7 +46,7 @@ class WindowsCommands extends OsCommands {
     }
 
     public generateGpuStatsScript(scriptFolder: string): string {
-        return `powershell -command $env:Path=If($env:prePath){$env:prePath}Else{$env:Path};$env:METRIC_OUTPUT_DIR='${scriptFolder}';$app = Start-Process -FilePath python -NoNewWindow -passthru -ArgumentList '-m nni.tools.gpu_tool.gpu_metrics_collector' -RedirectStandardOutput ${scriptFolder}\\scriptstdout -RedirectStandardError ${scriptFolder}\\scriptstderr;Write $PID ^| Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8;wait-process $app.ID`;
+        return `powershell -command $setEnv = Start-Job -script {$env:Path=If($env:prePath){$env:prePath}Else{$env:Path};$env:METRIC_OUTPUT_DIR='${scriptFolder}'};wait-job $setEnv;$app = Start-Process -FilePath python -NoNewWindow -passthru -ArgumentList '-m nni.tools.gpu_tool.gpu_metrics_collector' -RedirectStandardOutput ${scriptFolder}\\scriptstdout -RedirectStandardError ${scriptFolder}\\scriptstderr;Write $PID ^| Out-File ${scriptFolder}\\pid -NoNewline -encoding utf8;wait-process $app.ID`;
     }
 
     public createFolder(folderName: string, sharedFolder: boolean = false): string {
@@ -123,11 +123,11 @@ class WindowsCommands extends OsCommands {
         return command;
     }
 
-    public addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined{
-        if (command === undefined || command === '' || preCommand === undefined || preCommand === ''){
+    public setPythonPath(pythonPath: string | undefined, command: string | undefined): string | undefined{
+        if (command === undefined || command === '' || pythonPath === undefined || pythonPath === ''){
             return command;
         } else {
-            return `${preCommand} && set prePath=%path% && ${command}`;
+            return `set path=${pythonPath};%path% && set prePath=%path% && ${command}`;
         }
     }
 
