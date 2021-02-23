@@ -31,7 +31,7 @@ If you cannot find an existing issue that describes your bug or feature, create 
 # Writing good bug reports or feature requests
 File a single issue per problem and feature request. Do not enumerate multiple bugs or feature requests in the same issue.
 
-Provide as many information as you think might relevant to the context (thinking the issue is assigning to you, what kinds of info you will need to debug it!!!). To give you a general idea about what kinds of info are useful for developers to dig out the issue, we had provided issue template for you.
+Provide as much information as you think might relevant to the context (thinking the issue is assigning to you, what kinds of info you will need to debug it!!!). To give you a general idea about what kinds of info are useful for developers to dig out the issue, we had provided issue template for you.
 
 Once you had submitted an issue, be sure to follow it for questions and discussions. 
 
