@@ -56,6 +56,8 @@ After training, you can export model weights to a file, and the generated masks 
 
 Plese refer to :githublink:`mnist example <examples/model_compress/pruning/naive_prune_torch.py>` for example code.
 
+More examples of pruning algorithms can be found in :githublink:`basic_pruners_torch <examples/model_compress/pruning/basic_pruners_torch.py>` and :githublink:`auto_pruners_torch <examples/model_compress/pruning/auto_pruners_torch.py>`.
+
 
 Model Quantization
 ------------------

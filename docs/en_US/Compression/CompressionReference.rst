@@ -12,11 +12,7 @@ Compressor
 ..  autoclass:: nni.compression.pytorch.compressor.Compressor
     :members:
 
-
 ..  autoclass:: nni.compression.pytorch.compressor.Pruner
-    :members:
-
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.OneshotPruner
     :members:
 
 ..  autoclass:: nni.compression.pytorch.compressor.Quantizer
@@ -40,6 +36,76 @@ Weight Masker
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
     :members:
+
+
+Pruners
+^^^^^^^
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitive_pruner.OneshotPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitive_pruner.SensitivityPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.LevelPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.SlimPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L1FilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
+    :members:
+    
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.FPGMPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.TaylorFOWeightFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationAPoZRankFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationMeanRankFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp.AGPPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm.ADMMPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.net_adapt_pruner.NetAdaptPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.simulated_annealing_pruner.SimulatedAnnealingPruner
+    :members:
+
+
+Quantizers
+^^^^^^^^^^
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.NaiveQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.QAT_Quantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.DoReFaQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
+    :members:
+
 
 
 Compression Utilities

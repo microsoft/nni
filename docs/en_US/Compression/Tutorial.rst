@@ -21,7 +21,7 @@ There are different keys in a ``dict``. Some of them are common keys supported b
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
-Some other keys are often specific to a certain algorithms, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
+Some other keys are often specific to a certain algorithm, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
 A simple example of configuration is shown below:
 
