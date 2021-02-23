@@ -93,9 +93,10 @@ Below is an example for this new launching approach. You can also find this code
 View and Control Experiment with Python API
 -------------------------------------------
 We migrate the API in `nnicli` to this new launching approach.
-Launch the experiment by `start()` instead of `run()`, then you can use these APIs in interactive mode.
-`run()` polls the experiment status and will automatically call `stop()` when the experiment finished.
-`start()` just launch a new experiment, so you need to manually stop the experiment by calling `stop()`.
+Launch the experiment by `Experiment.start()` instead of `Experiment.run()`, then you can use these APIs in interactive mode.
+`Experiment.run()` polls the experiment status and will automatically call `Experiment.stop()` when the experiment finished.
+`Experiment.start()` just launch a new experiment, so you need to manually stop the experiment by calling `Experiment.stop()`.
+If you launch the experiment by `nnictl` and also want to use these APIs, you can use `Experiment.connect()` to connect to an exsit experiment.
 An example with Jupyter Notebook has been provided, view :githublink:`python_api_quickstart.ipynb <examples/trials/sklearn/classification/python_api_quickstart.ipynb>`.
 
 API
