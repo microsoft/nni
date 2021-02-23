@@ -61,7 +61,7 @@ Now, you have successfully launched an NNI experiment. And you can type ``localh
 
 Example
 -------
-Below is an example for this new launching approach. You can also find this code in :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>` .
+Below is an example for this new launching approach. You can also find this code in :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>`.
 
 .. code-block:: python
 
@@ -89,6 +89,14 @@ Below is an example for this new launching approach. You can also find this code
     experiment.config.training_service.use_active_gpu = True
 
     experiment.run(8081)
+
+View and Control Experiment with Python API
+-------------------------------------------
+We migrate the API in `nnicli` to this new launching approach.
+Launch the experiment by `start()` instead of `run()`, then you can use these APIs in interactive mode.
+`run()` polls the experiment status and will automatically call `stop()` when the experiment finished.
+`start()` just launch a new experiment, so you need to manually stop the experiment by calling `stop()`.
+An example with Jupyter Notebook has been provided, view :githublink:`python_api_quickstart.ipynb <examples/trials/sklearn/classification/python_api_quickstart.ipynb>`.
 
 API
 ---
