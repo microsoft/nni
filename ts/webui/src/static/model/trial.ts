@@ -152,6 +152,7 @@ class Trial implements TableObj {
             endTime: this.info.endTime,
             duration,
             status: this.info.status,
+            message: this.info.message || '--',
             intermediateCount: this.intermediates.length,
             accuracy: accuracy,
             latestAccuracy: this.latestAccuracy,
