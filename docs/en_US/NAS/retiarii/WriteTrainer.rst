@@ -22,7 +22,7 @@ An example is as follows:
 
     from nni.retiarii.trainer.pytorch.lightning import LightningModule  # please import this one
 
-    @blackbox_module
+    @basic_unit
     class AutoEncoder(LightningModule):
         def __init__(self):
             super().__init__()
@@ -80,14 +80,14 @@ Then, users need to wrap everything (including LightningModule, trainer and data
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     experiment = RetiariiExperiment(base_model, lightning, mutators, strategy)
 
-With FunctionalTrainer
+With FunctionalEvaluator
 ^^^^^^^^^^^^^^^^^^^^^^
 
 There is another way to customize a new trainer with functional APIs, which provides more flexibility. Users only need to write a fit function that wraps everything. This function takes one positional arguments (model) and possible keyword arguments. In this way, users get everything under their control, but exposes less information to the framework and thus fewer opportunities for possible optimization. An example is as belows:
 
 .. code-block::python
 
-    from nni.retiarii.trainer import FunctionalTrainer
+    from nni.retiarii.trainer import FunctionalEvaluator
     from nni.retiarii.experiment.pytorch import RetiariiExperiment
 
     def fit(model, dataloader):
@@ -95,7 +95,7 @@ There is another way to customize a new trainer with functional APIs, which prov
         acc = test(model, dataloader)
         nni.report_final_result(acc)
 
-    trainer = FunctionalTrainer(fit, dataloader=DataLoader(foo, bar))
+    trainer = FunctionalEvaluator(fit, dataloader=DataLoader(foo, bar))
     experiment = RetiariiExperiment(base_model, trainer, mutators, strategy)
 
 

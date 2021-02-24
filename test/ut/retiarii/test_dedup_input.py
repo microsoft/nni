@@ -74,7 +74,7 @@ class DedupInputTest(unittest.TestCase):
         # sys.path.insert(0, 'generated')
         # multi_model = import_('debug_dedup_input.logical_0')
         # trainer = PyTorchMultiModelTrainer(
-        #     multi_model(), phy_models[0][0].training_config.kwargs
+        #     multi_model(), phy_models[0][0].evaluator.kwargs
         # )
         # trainer.fit()
 

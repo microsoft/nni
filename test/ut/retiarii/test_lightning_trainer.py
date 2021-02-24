@@ -7,8 +7,8 @@ import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.retiarii import blackbox_module as bm
-from nni.retiarii.trainer import FunctionalTrainer
+from nni.retiarii import basic_unit as bm
+from nni.retiarii.trainer import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -121,7 +121,7 @@ def test_diabetes():
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_functional():
-    FunctionalTrainer(_foo)._execute(MNISTModel)
+    FunctionalEvaluator(_foo)._execute(MNISTModel)
 
 
 if __name__ == '__main__':

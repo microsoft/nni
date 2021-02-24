@@ -6,7 +6,7 @@ from pathlib import Path
 from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
 
 import nni.retiarii.trainer.pytorch.lightning as pl
-from nni.retiarii import blackbox_module as bm
+from nni.retiarii import basic_unit as bm
 from base_mnasnet import MNASNet
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.strategy import TPEStrategy

@@ -12,7 +12,7 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.utils import get_records
@@ -35,8 +35,8 @@ class MnistNet(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
-# NOTE: blackbox module cannot be placed within class or function
-@blackbox_module
+# NOTE: serialize module cannot be placed within class or function
+@basic_unit
 class Linear(nn.Module):
     def __init__(self, d_embed, d_proj):
         super().__init__()

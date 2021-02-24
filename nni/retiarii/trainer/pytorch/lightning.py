@@ -7,8 +7,8 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 import nni
-from ...graph import TrainingConfig
-from ...utils import blackbox_module
+from ...graph import ModelEvaluator
+from ...utils import basic_unit
 
 
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
@@ -22,11 +22,11 @@ class LightningModule(pl.LightningModule):
             self.model = model
 
 
-Trainer = blackbox_module(pl.Trainer)
-DataLoader = blackbox_module(DataLoader)
+Trainer = basic_unit(pl.Trainer)
+DataLoader = basic_unit(DataLoader)
 
 
-class Lightning(TrainingConfig):
+class Lightning(ModelEvaluator):
     """
     Delegate the whole training to PyTorch Lightning.
 
@@ -162,7 +162,7 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-@blackbox_module
+@basic_unit
 class _ClassificationModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -210,7 +210,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@blackbox_module
+@basic_unit
 class _RegressionModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,

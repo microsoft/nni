@@ -24,7 +24,7 @@ Define Base Model
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. There are only two small differences.
 
 * Replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` for PyTorch modules, such as ``nn.Conv2d``, ``nn.ReLU``.
-* Some **user-defined** modules should be decorated with ``@blackbox_module``. For example, user-defined module used in ``LayerChoice`` should be decorated. Users can refer to `here <#blackbox-module>`__ for detailed usage instruction of ``@blackbox_module``.
+* Some **user-defined** modules should be decorated with ``@basic_unit``. For example, user-defined module used in ``LayerChoice`` should be decorated. Users can refer to `here <#serialize-module>`__ for detailed usage instruction of ``@basic_unit``.
 
 Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
 
@@ -59,7 +59,7 @@ A base model is only one concrete model not a model space. We provide APIs and p
 
 For easy usability and also backward compatibility, we provide some APIs for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as `blackbox module <#blackbox-module>`__. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as `serialize module <#serialize-module>`__. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
 
   .. code-block:: python
 
@@ -83,7 +83,7 @@ For easy usability and also backward compatibility, we provide some APIs for use
     # invoked in `forward` function, choose one from the three
     out = self.input_switch([tensor1, tensor2, tensor3])
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of the modules in ``nn.modules`` and ``@blackbox_module`` decorated user-defined modules.
+* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of the modules in ``nn.modules`` and ``@basic_unit`` decorated user-defined modules.
 
   .. code-block:: python
 
@@ -183,17 +183,17 @@ Here is a simple example of using trainer and strategy.
 .. code-block:: python
 
   import nni.retiarii.trainer.pytorch.lightning as pl
-  from nni.retiarii import blackbox
+  from nni.retiarii import serialize
   from torchvision import transforms
 
   transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-  train_dataset = blackbox(MNIST, root='data/mnist', train=True, download=True, transform=transform)
-  test_dataset = blackbox(MNIST, root='data/mnist', train=False, download=True, transform=transform)
+  train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+  test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
   lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
 
-.. Note:: For NNI to capture the dataset and dataloader and distribute it across different runs, please wrap your dataset with ``blackbox`` and use ``pl.DataLoader`` instead of ``torch.utils.data.DataLoader``. See ``blackbox_module`` section below for details.
+.. Note:: For NNI to capture the dataset and dataloader and distribute it across different runs, please wrap your dataset with ``serialize`` and use ``pl.DataLoader`` instead of ``torch.utils.data.DataLoader``. See ``basic_unit`` section below for details.
 
 Users can refer to `API reference <./ApiReference.rst>`__ on detailed usage of trainer. "`write a trainer <./WriteTrainer.rst>`__" for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
@@ -231,17 +231,17 @@ If you are using *oneshot (weight-sharing) search approach*, you can invole ``ex
 Advanced and FAQ
 ----------------
 
-.. _blackbox-module:
+.. _serialize-module:
 
-**Blackbox Module**
+**serialize Module**
 
-To understand the decorator ``blackbox_module``, we first briefly explain how our framework works: it converts user-defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user-defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@blackbox_module`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a user-defined module class in the following cases:
+To understand the decorator ``basic_unit``, we first briefly explain how our framework works: it converts user-defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user-defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@basic_unit`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a user-defined module class in the following cases:
 
-* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as blackbox module. The following ``MyModule`` should be decorated.
+* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as serialize module. The following ``MyModule`` should be decorated.
 
   .. code-block:: python
 
-    @blackbox_module
+    @basic_unit
     class MyModule(nn.Module):
       def __init__(self):
         ...
@@ -249,6 +249,6 @@ To understand the decorator ``blackbox_module``, we first briefly explain how ou
         for i in range(10): # <- adhoc loop
           ...
 
-* The candidate ops in ``LayerChoice`` should be decorated as blackbox module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated if they are user defined modules.
-* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as blackbox module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
-* If no mutation is targeted on a module, this module *can be* decorated as a blackbox module.
+* The candidate ops in ``LayerChoice`` should be decorated as serialize module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated if they are user defined modules.
+* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as serialize module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
+* If no mutation is targeted on a module, this module *can be* decorated as a serialize module.

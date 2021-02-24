@@ -4,7 +4,7 @@ import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
 import nni.retiarii.trainer.pytorch.lightning as pl
 import torch.nn.functional as F
-from nni.retiarii import blackbox_module as bm
+from nni.retiarii import basic_unit as bm
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from torch.utils.data import DataLoader
 from torchvision import transforms

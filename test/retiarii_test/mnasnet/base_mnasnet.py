@@ -1,4 +1,4 @@
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 import nni.retiarii.nn.pytorch as nn
 import warnings
 

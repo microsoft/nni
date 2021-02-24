@@ -13,7 +13,7 @@ from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 
 from ..converter import convert_to_graph
-from ..graph import Model, TrainingConfig
+from ..graph import Model, ModelEvaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
 from ..nn.pytorch.mutator import process_inline_mutation
@@ -77,7 +77,7 @@ _validation_rules = {
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: nn.Module, trainer: Union[TrainingConfig, BaseOneShotTrainer],
+    def __init__(self, base_model: nn.Module, trainer: Union[ModelEvaluator, BaseOneShotTrainer],
                  applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = None
@@ -101,7 +101,7 @@ class RetiariiExperiment(Experiment):
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
         base_model_ir = convert_to_graph(script_module, self.base_model)
-        base_model_ir.training_config = self.trainer
+        base_model_ir.evaluator = self.trainer
 
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)

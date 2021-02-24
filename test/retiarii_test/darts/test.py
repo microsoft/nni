@@ -6,7 +6,7 @@ from pathlib import Path
 
 import nni.retiarii.trainer.pytorch.lightning as pl
 import nni.retiarii.strategy as strategy
-from nni.retiarii import blackbox_module as bm
+from nni.retiarii import basic_unit as bm
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from torchvision import transforms
 from torchvision.datasets import CIFAR10

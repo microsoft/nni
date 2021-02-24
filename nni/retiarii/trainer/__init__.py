@@ -1,2 +1,2 @@
-from .functional import FunctionalTrainer
+from .functional import FunctionalEvaluator
 from .interface import BaseOneShotTrainer

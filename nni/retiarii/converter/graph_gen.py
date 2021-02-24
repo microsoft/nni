@@ -247,7 +247,7 @@ class GraphConverter:
                     raise RuntimeError('Have not supported `if A and/or B`, please use two `if` statements instead.')
                 else:
                     raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition, '
-                                        'you are suggested to decorate the corresponding class with "@blackbox_module".')
+                                        'you are suggested to decorate the corresponding class with "@basic_unit".')
             expr = _generate_expr(cond_tensor)
             return eval(expr)
 
@@ -542,7 +542,7 @@ class GraphConverter:
             assert id(cand) in self.modules_arg, \
                 f'Module not recorded: {id(cand)}. ' \
                 'Try to import from `retiarii.nn` if you are using torch.nn module or ' \
-                'annotate your customized module with @blackbox_module.'
+                'annotate your customized module with @basic_unit.'
             assert isinstance(self.modules_arg[id(cand)], dict)
             cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
             choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
@@ -607,7 +607,7 @@ class GraphConverter:
             assert id(module) in self.modules_arg, f'{original_type_name} arguments are not recorded'
             m_attrs = self.modules_arg[id(module)]
         elif id(module) in self.modules_arg:
-            # this module is marked as blackbox, won't continue to parse
+            # this module is marked as serialize, won't continue to parse
             m_attrs = self.modules_arg[id(module)]
         if m_attrs is not None:
             return None, m_attrs

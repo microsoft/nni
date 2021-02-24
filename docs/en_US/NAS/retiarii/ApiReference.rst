@@ -42,7 +42,7 @@ Graph Mutation APIs
 Trainers
 --------
 
-..  autoclass:: nni.retiarii.trainer.FunctionalTrainer
+..  autoclass:: nni.retiarii.trainer.FunctionalEvaluator
     :members:
 
 ..  autoclass:: nni.retiarii.trainer.pytorch.lightning.LightningModule
