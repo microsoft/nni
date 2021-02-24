@@ -703,7 +703,7 @@ class TrialDispatcher implements TrainingService {
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
-        trial.message = `Trial ${trial.id} is assigned to environment ${environment.id}, platform is ${environment.environmentService.getName}`;
+        trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
         if (environment.environmentService.hasStorageService) {	
             const storageService = component.get<StorageService>(StorageService);	
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
