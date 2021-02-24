@@ -6,7 +6,7 @@ import abc
 import copy
 import json
 from enum import Enum
-from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
+from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import get_full_class_name, import_, uid
@@ -151,6 +151,14 @@ class Model:
             **self.training_config._dump()
         }
         return ret
+
+    def get_nodes(self) -> Iterable['Node']:
+        """
+        Traverse through all the nodes.
+        """
+        for graph in self.graphs.values():
+            for node in graph.nodes:
+                yield node
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """
