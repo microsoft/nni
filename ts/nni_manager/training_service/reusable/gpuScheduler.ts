@@ -199,11 +199,11 @@ export class GpuScheduler {
     }
     
     // Select the environment which is idle most recently. If all environments are not idle, use round robin to select an environment.
-    private recentlyIdleSelect(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]) : EnvironmentInformation {
+    private recentlyIdleSelect(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]): EnvironmentInformation {
         const now = Date.now();
         let selectedEnvironment: EnvironmentInformation | undefined = undefined;
         let minTimeInterval = Number.MAX_SAFE_INTEGER;
-        for (let environment of qualifiedEnvironments) {
+        for (const environment of qualifiedEnvironments) {
             if (environment.latestTrialReleasedTime > 0 && (now - environment.latestTrialReleasedTime) < minTimeInterval) {
                 selectedEnvironment = environment;
                 minTimeInterval = now - environment.latestTrialReleasedTime;
