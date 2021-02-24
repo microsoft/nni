@@ -9,8 +9,12 @@ This saves you from finding for experiment-related information in various places
 Remember that your trial working directory is ``/nni/{EXPERIMENT_ID}/trials/{TRIAL_ID}``, so if you upload your data in this shared storage, you can open it like a local file in your trial code without downloading it.
 And we will develop more practical features in the future based on shared storage.
 
-Use
----
+.. note::
+    Shared storage is currently in the experimental stage. We suggest use AzureBlob under Ubuntu/CentOS/RHEL, and NFS under Ubuntu/CentOS/RHEL/Fedora/Debian for remote.
+    And make sure your local machine can mount NFS or fuse AzureBlob and has ``sudo`` permission on your remote runtime. We only support shared storage under training service with reuse mode for now.
+
+Example
+-------
 If you want to use AzureBlob, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_azureblob.yml <examples/trials/mnist-sharedstorage/config_azureblob.yml>`.
 
 .. code-block:: yaml
@@ -43,8 +47,3 @@ If you want to use NFS, add below to your config. Full config file see :githubli
         # nnimount means nni will try to mount this storage on localMountPoint
         # nomount means storage will not mount in local machine, will support partial storages in the future 
         localMounted: nnimount
-
-Suggestion
-----------
-Shared storage is currently in the experimental stage. We suggest use AzureBlob under Ubuntu/CentOS/RHEL, and NFS under Ubuntu/CentOS/RHEL/Fedora/Debian for remote.
-And make sure your local machine can mount NFS or fuse AzureBlob and has ``sudo`` permission on your remote runtime. We only support shared storage under training service with reuse mode for now.
