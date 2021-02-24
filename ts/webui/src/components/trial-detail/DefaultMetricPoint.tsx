@@ -36,6 +36,8 @@ interface DefaultPointState {
 }
 
 class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState> {
+    private isDetailPage = window.location.pathname === '/oview' ? false : true;
+
     constructor(props: DefaultPointProps) {
         super(props);
         this.state = {
@@ -59,114 +61,61 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     };
 
     pointClick = (params: any): void => {
-        if (window.location.pathname === '/oview') {
+        if (!this.isDetailPage) {
             this.props.changeExpandRowIDs(params.data[2], 'chart');
         }
     };
 
     generateGraphConfig(_maxSequenceId: number): any {
         const { startY, endY } = this.state;
-        const flag = window.location.pathname === '/oview';
-        if (flag === true) {
-            // enterable: false
-            return {
-                grid: {
-                    left: '8%'
-                },
-                tooltip: {
-                    trigger: 'item',
-                    enterable: false,
-                    confine: true, // confirm always show tooltip box rather than hidden by background
-                    formatter: (data: TooltipForAccuracy): React.ReactNode => {
-                        return (
-                            '<div class="tooldetailAccuracy">' +
-                            '<div>Trial No.: ' +
-                            data.data[0] +
-                            '</div>' +
-                            '<div>Trial ID: ' +
-                            data.data[2] +
-                            '</div>' +
-                            '<div>Default metric: ' +
-                            data.data[1] +
-                            '</div>' +
-                            '<div>Parameters: <pre>' +
-                            JSON.stringify(data.data[3], null, 4) +
-                            '</pre></div>' +
-                            '</div>'
-                        );
-                    }
-                },
-                dataZoom: [
-                    {
-                        id: 'dataZoomY',
-                        type: 'inside',
-                        yAxisIndex: [0],
-                        filterMode: 'empty',
-                        start: startY,
-                        end: endY
-                    }
-                ],
-                xAxis: {
-                    name: 'Trial',
-                    type: 'category'
-                },
-                yAxis: {
-                    name: 'Default metric',
-                    type: 'value',
-                    scale: true
-                },
-                series: undefined
-            };
-        } else {
-            return {
-                grid: {
-                    left: '8%'
-                },
-                tooltip: {
-                    trigger: 'item',
-                    enterable: true,
-                    confine: true, // confirm always show tooltip box rather than hidden by background
-                    formatter: (data: TooltipForAccuracy): React.ReactNode => {
-                        return (
-                            '<div class="tooldetailAccuracy">' +
-                            '<div>Trial No.: ' +
-                            data.data[0] +
-                            '</div>' +
-                            '<div>Trial ID: ' +
-                            data.data[2] +
-                            '</div>' +
-                            '<div>Default metric: ' +
-                            data.data[1] +
-                            '</div>' +
-                            '<div>Parameters: <pre>' +
-                            JSON.stringify(data.data[3], null, 4) +
-                            '</pre></div>' +
-                            '</div>'
-                        );
-                    }
-                },
-                dataZoom: [
-                    {
-                        id: 'dataZoomY',
-                        type: 'inside',
-                        yAxisIndex: [0],
-                        filterMode: 'empty',
-                        start: startY,
-                        end: endY
-                    }
-                ],
-                xAxis: {
-                    name: 'Trial',
-                    type: 'category'
-                },
-                yAxis: {
-                    name: 'Default metric',
-                    type: 'value',
-                    scale: true
-                },
-                series: undefined
-            };
-        }
+        return {
+            grid: {
+                left: '8%'
+            },
+            tooltip: {
+                trigger: 'item',
+                enterable: this.isDetailPage,
+                confine: true, // confirm always show tooltip box rather than hidden by background
+                formatter: (data: TooltipForAccuracy): React.ReactNode => {
+                    return (
+                        '<div class="tooldetailAccuracy">' +
+                        '<div>Trial No.: ' +
+                        data.data[0] +
+                        '</div>' +
+                        '<div>Trial ID: ' +
+                        data.data[2] +
+                        '</div>' +
+                        '<div>Default metric: ' +
+                        data.data[1] +
+                        '</div>' +
+                        '<div>Parameters: <pre>' +
+                        JSON.stringify(data.data[3], null, 4) +
+                        '</pre></div>' +
+                        '</div>'
+                    );
+                }
+            },
+            dataZoom: [
+                {
+                    id: 'dataZoomY',
+                    type: 'inside',
+                    yAxisIndex: [0],
+                    filterMode: 'empty',
+                    start: startY,
+                    end: endY
+                }
+            ],
+            xAxis: {
+                name: 'Trial',
+                type: 'category'
+            },
+            yAxis: {
+                name: 'Default metric',
+                type: 'value',
+                scale: true
+            },
+            series: undefined
+        };
     }
 
     generateScatterSeries(trials: Trial[]): any {
