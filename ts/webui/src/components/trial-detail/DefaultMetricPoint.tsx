@@ -70,9 +70,12 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
             grid: {
                 left: '8%'
             },
+
             tooltip: {
                 trigger: 'item',
-                enterable: true,
+                // TODO: 不能每一个点都判断一次，整体判断一次
+                enterable: window.location.pathname === '/oview' ? false : true,
+                // position: 'bottom',
                 confine: true, // confirm always show tooltip box rather than hidden by background
                 formatter: (data: TooltipForAccuracy): React.ReactNode => {
                     return (
