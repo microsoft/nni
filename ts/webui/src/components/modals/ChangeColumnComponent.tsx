@@ -59,7 +59,6 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
         const { currentSelected } = this.state;
         const { allColumns, onSelectedChange } = this.props;
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
-        console.info(selectedColumns); // eslint-disable-line
         localStorage.setItem('columns', JSON.stringify(selectedColumns));
         onSelectedChange(selectedColumns);
         this.hideDialog();
