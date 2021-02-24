@@ -6,7 +6,7 @@ import abc
 import copy
 import json
 from enum import Enum
-from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
+from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import get_full_class_name, import_, uid
@@ -152,7 +152,7 @@ class Model:
         }
         return ret
 
-    def get_nodes(self) -> List['Node']:
+    def get_nodes(self) -> Iterable['Node']:
         """
         Traverse through all the nodes.
         """

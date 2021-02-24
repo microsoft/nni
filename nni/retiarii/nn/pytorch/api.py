@@ -273,7 +273,7 @@ class ValueChoice(Translatable, nn.Module):
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
-    def __translate__(self):
+    def _translate(self):
         # Will function as a value when used in serializer.
         return self.candidates[0]
 

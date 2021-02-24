@@ -97,7 +97,7 @@ class Translatable(abc.ABC):
     """
 
     @abc.abstractmethod
-    def __translate__(self) -> Any:
+    def _translate(self) -> Any:
         pass
 
 
@@ -116,10 +116,10 @@ def _blackbox_cls(cls):
             args = list(args)
             for i, value in enumerate(args):
                 if isinstance(value, Translatable):
-                    args[i] = value.__translate__()
+                    args[i] = value._translate()
             for i, value in kwargs.items():
                 if isinstance(value, Translatable):
-                    kwargs[i] = value.__translate__()
+                    kwargs[i] = value._translate()
 
             add_record(id(self), full_args)  # for compatibility. Will remove soon.
 
