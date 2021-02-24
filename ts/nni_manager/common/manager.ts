@@ -105,7 +105,6 @@ abstract class Manager {
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
-    public abstract getTrialJobMessage(trialJobId: string): string | undefined;
     public abstract getStatus(): NNIManagerStatus;
 }
 

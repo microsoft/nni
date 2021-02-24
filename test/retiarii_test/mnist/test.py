@@ -1,11 +1,11 @@
 import random
 
 import nni.retiarii.nn.pytorch as nn
+import nni.retiarii.strategy as strategy
 import nni.retiarii.trainer.pytorch.lightning as pl
 import torch.nn.functional as F
 from nni.retiarii import blackbox_module as bm
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
-from nni.retiarii.strategies import RandomStrategy
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -42,9 +42,9 @@ if __name__ == '__main__':
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=2)
 
-    simple_startegy = RandomStrategy()
+    simple_strategy = strategy.Random()
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'

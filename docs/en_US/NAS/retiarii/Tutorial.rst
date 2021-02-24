@@ -167,13 +167,13 @@ In the following table, we listed the available trainers and strategies.
     - TPEStrategy
     - DartsTrainer
   * - Regression
-    - RandomStrategy
+    - Random
     - EnasTrainer
   * - 
-    - 
+    - GridSearch
     - ProxylessTrainer
   * - 
-    - 
+    - RegularizedEvolution
     - SinglePathTrainer (RandomTrainer)
 
 There usage and API document can be found `here <./ApiReference>`__\.
@@ -204,7 +204,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
+  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
   exp_config = RetiariiExeConfig('local')
   exp_config.experiment_name = 'mnasnet_search'
   exp_config.trial_concurrency = 2

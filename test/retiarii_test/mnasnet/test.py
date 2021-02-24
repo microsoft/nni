@@ -9,7 +9,7 @@ import nni.retiarii.trainer.pytorch.lightning as pl
 from nni.retiarii import blackbox_module as bm
 from base_mnasnet import MNASNet
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategies import TPEStrategy
+from nni.retiarii.strategy import TPEStrategy
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -46,9 +46,9 @@ if __name__ == '__main__':
         BlockMutator('mutable_1')
     ]
 
-    simple_startegy = TPEStrategy()
+    simple_strategy = TPEStrategy()
 
-    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnasnet_search'
