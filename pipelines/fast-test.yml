@@ -250,7 +250,9 @@ stages:
 
     - script: |
         cd test
-        python -m pytest ut
+        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
+          --ignore=ut/retiarii/test_convert_operators.py \
+          --ignore=ut/retiarii/test_convert_pytorch.py
       displayName: Python unit test
 
     - script: |

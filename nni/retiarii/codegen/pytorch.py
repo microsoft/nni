@@ -1,5 +1,5 @@
 import logging
-from typing import List
+from typing import List, Tuple, Any
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
@@ -32,9 +32,26 @@ def _sorted_incoming_edges(node: Node) -> List[Edge]:
     raise IllegalGraphError(node.graph, 'Node {} has bad inputs'.format(node.name))
 
 
-def _format_inputs(node: Node) -> List[str]:
+def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
+    """
+    Format the inputs of a given node
+
+    Parameters
+    ----------
+    node : Node
+        a graph node, get and format its inputs
+
+    Returns
+    -------
+    list
+        the list of input names
+    list
+        the list of input values, if an input is simple type, record its value,
+        otherwise the value is None
+    """
     edges = _sorted_incoming_edges(node)
     inputs = []
+    inputs_value = []
     for edge in edges:
         if edge.head.name == '_inputs':
             assert isinstance(edge.head_slot, int)
@@ -44,14 +61,21 @@ def _format_inputs(node: Node) -> List[str]:
             else:
                 # when input has no name, e.g., forward(*_inputs)
                 inputs.append('_inputs[{}]'.format(edge.head_slot))
+            inputs_value.append(None)
         else:
             if edge.head_slot is None:
                 # when the input comes from a single-output operator
                 inputs.append('{}'.format(edge.head.name))
+                if edge.head.operation.type in ('prim::Constant', 'prim::GetAttr') and \
+                    'value' in edge.head.operation.parameters:
+                    inputs_value.append(edge.head.operation.parameters['value'])
+                else:
+                    inputs_value.append(None)
             else:
                 # when the input comes from a multi-output operator: needs to know which one it comes from
                 inputs.append('{}[{}]'.format(edge.head.name, edge.head_slot))
-    return inputs
+                inputs_value.append(None)
+    return inputs, inputs_value
 
 
 def _remove_prefix(names, graph_name):
@@ -80,6 +104,8 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     node_codes = []
     for node in nodes:
         if node.operation:
+            if node.operation.type == 'shared':
+                continue
             pkg_name = node.operation.get_import_pkg()
             if pkg_name is not None:
                 import_pkgs.add(pkg_name)
@@ -101,12 +127,15 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     sorted_nodes = graph.topo_sort()
     for node in sorted_nodes:
         if node.operation:
-            inputs = _format_inputs(node)
+            inputs, inputs_value = _format_inputs(node)
             inputs = _remove_prefix(inputs, graph_name)
             node_name = _remove_prefix(node.name, graph_name)
-            edge_codes.append(node.operation.to_forward_code(node_name, node_name, inputs))
+            submodule_name = node_name
+            if node.operation.type == 'shared':
+                submodule_name = _remove_prefix(node.operation.parameters['reference'], graph_name)
+            edge_codes.append(node.operation.to_forward_code(submodule_name, node_name, inputs, inputs_value))
 
-    output_names = _format_inputs(graph.output_node)
+    output_names, _ = _format_inputs(graph.output_node)
     output_names = _remove_prefix(output_names, graph_name)
     if not output_names:
         raise RuntimeError('"forward" function should have return value(s): {}, {}, {}'.format(output_names, graph_name, graph.output_node))

@@ -9,34 +9,8 @@ class OpTypeName(str, Enum):
     """
     Attr = 'Attr'
     Constant = 'Constant'
-    ListConstruct = 'ListConstruct'
-    TupleConstruct = 'TupleConstruct'
     LayerChoice = 'LayerChoice'
     InputChoice = 'InputChoice'
     ValueChoice = 'ValueChoice'
     Placeholder = 'Placeholder'
     MergedSlice = 'MergedSlice'
-
-
-# deal with aten op
-BasicOpsPT = {
-    'aten::mean': 'Mean',
-    'aten::relu': 'Relu',
-    'aten::add': 'Add',
-    'aten::__getitem__': 'getitem',
-    'aten::append': 'Append',
-    'aten::len': 'Len',
-    'aten::slice': 'Slice',
-    'aten::cat': 'Cat',
-    'aten::size': 'Size',
-    'aten::view': 'View',
-    'aten::reshape': 'Reshape',
-    'aten::eq': 'Eq',
-    'aten::Bool': 'Bool',
-    'aten::empty': 'Empty',
-    'aten::zeros': 'Zeros',
-    'aten::chunk': 'Chunk',
-    'aten::add_': 'Add_'  # %out.3 : Tensor = aten::add_(%out.1, %connection.1, %4)
-}
-
-BasicOpsTF = {}
