@@ -48,6 +48,7 @@ Note that, ``pruner.compress`` simply adds masks on model weights, it does not i
 For example:
 
 .. code-block:: python
+
    for epoch in range(1, args.epochs + 1):
         pruner.update_epoch(epoch)
         train(args, model, device, train_loader, optimizer_finetune, epoch)
