@@ -87,7 +87,6 @@ class NNIDataStore implements DataStore {
         if (timestamp === undefined) {
             timestamp = Date.now();
         }
-
         return this.db.storeTrialJobEvent(event, trialJobId, timestamp, hyperParameter, jobDetail).catch(
                 (err: Error) => {
                     throw NNIError.FromError(err, 'Datastore error: ');
@@ -381,6 +380,7 @@ class NNIDataStore implements DataStore {
             if (record.sequenceId !== undefined && jobInfo.sequenceId === undefined) {
                 jobInfo.sequenceId = record.sequenceId;
             }
+            jobInfo.message = record.message;
             map.set(record.trialJobId, jobInfo);
         }
 

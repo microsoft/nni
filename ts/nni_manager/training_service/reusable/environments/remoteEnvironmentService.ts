@@ -20,6 +20,7 @@ import {
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
+import { SharedStorageService } from '../sharedStorage'
 
 
 @component.Singleton
@@ -247,13 +248,20 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
-            environment.runnerWorkingFolder = 
-                executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
-                'envs', environment.id)
+            if (environment.useSharedStorage) {
+                const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+                environment.runnerWorkingFolder = executor.joinPath(environmentRoot, 'envs', environment.id)
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
+                await executor.executeScript(remoteMountCommand, false, false);
+            } else {
+                environment.runnerWorkingFolder = 
+                    executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
+                    'envs', environment.id)
+            }
             environment.command = `cd ${environment.runnerWorkingFolder} && \
-${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
             return Promise.resolve(true);
         }
     }
@@ -264,7 +272,7 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
+            path.join(this.experimentRootDir, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),

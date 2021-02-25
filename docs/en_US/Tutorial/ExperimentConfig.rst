@@ -823,6 +823,79 @@ Optional. Bool. default: ``false``. It's an experimental feature.
 
 If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
 
+sharedStorage
+^^^^^^^^^^^^^
+
+storageType
+^^^^^^^^^^^
+
+Required. String.
+
+The type of the storage, support ``NFS`` and ``AzureBlob``.
+
+localMountPoint
+^^^^^^^^^^^^^^^
+
+Required. String.
+
+The absolute path that the storage has been or will be mounted in local.
+
+remoteMountPoint
+^^^^^^^^^^^^^^^^
+
+Required. String.
+
+The absolute path that the storage will be mounted in remote.
+
+localMounted
+^^^^^^^^^^^^
+
+Required. String.
+
+One of ``usermount``, ``nnimount`` or ``nomount``. ``usermount`` means you have already mount this storage on localMountPoint. ``nnimount`` means nni will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in local machine, will support partial storages in the future.
+
+nfsServer
+^^^^^^^^^
+
+Optional. String.
+
+Required if using NFS storage. The NFS server host.
+
+exportedDirectory
+^^^^^^^^^^^^^^^^^
+
+Optional. String.
+
+Required if using NFS storage. The exported directory of NFS server.
+
+storageAccountName
+^^^^^^^^^^^^^^^^^^
+
+Optional. String.
+
+Required if using AzureBlob storage. The azure storage account name.
+
+storageAccountKey
+^^^^^^^^^^^^^^^^^
+
+Optional. String.
+
+Required if using AzureBlob storage and ``resourceGroupName`` not set. The azure storage account key.
+
+resourceGroupName
+^^^^^^^^^^^^^^^^^
+
+Optional. String.
+
+Required if using AzureBlob storage and ``storageAccountKey`` not set. The resource group that AzureBlob container belongs to.
+
+containerName
+^^^^^^^^^^^^^
+
+Optional. String.
+
+Required if using AzureBlob storage. The AzureBlob container name.
+
 Examples
 --------
 

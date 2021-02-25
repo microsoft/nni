@@ -191,6 +191,18 @@ export namespace ValidationSchemas {
             }),
             remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 reuse: joi.boolean()
+            }),
+            shared_storage_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                storageType: joi.string(),
+                localMountPoint: joi.string(),
+                remoteMountPoint: joi.string(),
+                nfsServer: joi.string(),
+                exportedDirectory: joi.string(),
+                storageAccountName: joi.string(),
+                storageAccountKey: joi.string(),
+                containerName: joi.string(),
+                resourceGroupName: joi.string(),
+                localMounted: joi.string()
             })
         }
     };

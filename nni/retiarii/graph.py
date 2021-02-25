@@ -6,7 +6,7 @@ import abc
 import copy
 import json
 from enum import Enum
-from typing import (Any, Dict, List, Optional, Tuple, Union, overload)
+from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import get_full_class_name, import_, uid
@@ -131,7 +131,7 @@ class Model:
         new_model = Model(_internal=True)
         new_model._root_graph_name = self._root_graph_name
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.training_config = copy.deepcopy(self.training_config)
+        new_model.training_config = copy.deepcopy(self.training_config)  # TODO this may be a problem when training config is large
         new_model.history = self.history + [self]
         return new_model
 
@@ -151,6 +151,14 @@ class Model:
             **self.training_config._dump()
         }
         return ret
+
+    def get_nodes(self) -> Iterable['Node']:
+        """
+        Traverse through all the nodes.
+        """
+        for graph in self.graphs.values():
+            for node in graph.nodes:
+                yield node
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """

@@ -83,7 +83,7 @@ For easy usability and also backward compatibility, we provide some APIs for use
     # invoked in `forward` function, choose one from the three
     out = self.input_switch([tensor1, tensor2, tensor3])
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of the modules in ``nn.modules`` and ``@blackbox_module`` decorated user-defined modules. *Note that it has not been officially supported.*
+* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of the modules in ``nn.modules`` and ``@blackbox_module`` decorated user-defined modules.
 
   .. code-block:: python
 
@@ -167,13 +167,13 @@ In the following table, we listed the available trainers and strategies.
     - TPEStrategy
     - DartsTrainer
   * - Regression
-    - RandomStrategy
+    - Random
     - EnasTrainer
   * - 
-    - 
+    - GridSearch
     - ProxylessTrainer
   * - 
-    - 
+    - RegularizedEvolution
     - SinglePathTrainer (RandomTrainer)
 
 There usage and API document can be found `here <./ApiReference>`__\.
@@ -204,7 +204,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_startegy)
+  exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
   exp_config = RetiariiExeConfig('local')
   exp_config.experiment_name = 'mnasnet_search'
   exp_config.trial_concurrency = 2

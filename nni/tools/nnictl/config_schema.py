@@ -142,6 +142,17 @@ common_schema = {
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool)
+    },
+    Optional('sharedStorage'): {
+        'storageType': setChoice('storageType', 'NFS', 'AzureBlob'),
+        Optional('localMountPoint'): setType('localMountPoint', str),
+        Optional('remoteMountPoint'): setType('remoteMountPoint', str),
+        Optional('nfsServer'): setType('nfsServer', str),
+        Optional('storageAccountName'): setType('storageAccountName', str),
+        Optional('storageAccountKey'): setType('storageAccountKey', str),
+        Optional('containerName'): setType('containerName', str),
+        Optional('resourceGroupName'): setType('resourceGroupName', str),
+        Optional('localMounted'): setChoice('localMounted', 'usermount', 'nnimount', 'nomount')
     }
 }
 
