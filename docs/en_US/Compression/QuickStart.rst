@@ -41,7 +41,7 @@ First instantiate the chosen pruner with your model and configuration as argumen
    pruner = LevelPruner(model, config_list, optimizer_finetune)
    model = pruner.compress()
 
-Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners prune once at the beginning, the following training can be seen as fine-tune. Some pruners prune your model iteratively, the masks are adjusted epoch by epoch during training.
+Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners (e.g., L1FilterPruner, FPGMPruner) prune once at the beginning, the following training can be seen as fine-tune. Some pruners (e.g., AGPPruner) prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
 Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine-tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
 
