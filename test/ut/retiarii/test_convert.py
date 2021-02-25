@@ -15,7 +15,6 @@ import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import get_records
 
 class MnistNet(nn.Module):
     def __init__(self):
@@ -65,9 +64,6 @@ class TestConvert(unittest.TestCase):
         script_module = torch.jit.script(model)
         model_ir = convert_to_graph(script_module, model)
         model_code = model_to_pytorch_script(model_ir)
-
-        from .inject_nn import remove_inject_pytorch_nn
-        remove_inject_pytorch_nn()
 
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
@@ -458,9 +454,12 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(VAE().eval(), (torch.rand(128, 1, 28, 28),))
 
     def test_torchvision_resnet18(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
-        self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
+            self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
+        finally:
+            remove_inject_pytorch_nn()
 
     def test_resnet(self):
         def conv1x1(in_planes, out_planes, stride=1):
@@ -572,8 +571,11 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(resnet18, (torch.randn(1, 3, 224, 224),))
 
     def test_alexnet(self):
-        from .inject_nn import inject_pytorch_nn
-        inject_pytorch_nn()
-        x = torch.ones(1, 3, 224, 224)
-        model = torchvision.models.AlexNet()
-        self.checkExportImport(model, (x,))
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
+            x = torch.ones(1, 3, 224, 224)
+            model = torchvision.models.AlexNet()
+            self.checkExportImport(model, (x,))
+        finally:
+            remove_inject_pytorch_nn()

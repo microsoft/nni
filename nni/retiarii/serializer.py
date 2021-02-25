@@ -8,14 +8,17 @@ import json_tricks
 from .utils import get_full_class_name, get_module_name, import_
 
 
-def get_init_parameters_or_fail(obj):
+def get_init_parameters_or_fail(obj, silently=False):
     if hasattr(obj, '_init_parameters'):
         return obj._init_parameters
+    elif silently:
+        return None
     else:
         raise ValueError(f'Object {obj} needs to be serializable but `_init_parameters` is not available. '
                          'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
                          'If it is a customized module, please to decorate it with @basic_unit. '
-                         'For other complex objects, try to use serialize or @serialize_cls.')
+                         'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
+                         'try to use serialize or @serialize_cls.')
 
 
 ### This is a patch of json-tricks to make it more useful to us ###
@@ -69,30 +72,30 @@ class Translatable(abc.ABC):
         pass
 
 
-def serialize_cls(cls):
-    """
-    To create an serializable class.
-    """
+def _create_wrapper_cls(cls, store_init_parameters=True):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
-            argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
-            full_args = {}
-            full_args.update(kwargs)
+            if store_init_parameters:
+                argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
+                full_args = {}
+                full_args.update(kwargs)
 
-            assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
-            for argname, value in zip(argname_list, args):
-                full_args[argname] = value
+                assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
+                for argname, value in zip(argname_list, args):
+                    full_args[argname] = value
 
-            # translate parameters
-            args = list(args)
-            for i, value in enumerate(args):
-                if isinstance(value, Translatable):
-                    args[i] = value._translate()
-            for i, value in kwargs.items():
-                if isinstance(value, Translatable):
-                    kwargs[i] = value._translate()
+                # translate parameters
+                args = list(args)
+                for i, value in enumerate(args):
+                    if isinstance(value, Translatable):
+                        args[i] = value._translate()
+                for i, value in kwargs.items():
+                    if isinstance(value, Translatable):
+                        kwargs[i] = value._translate()
 
-            self._init_parameters = full_args
+                self._init_parameters = full_args
+            else:
+                self._init_parameters = {}
 
             super().__init__(*args, **kwargs)
 
@@ -102,6 +105,20 @@ def serialize_cls(cls):
     wrapper.__init__.__doc__ = cls.__init__.__doc__
 
     return wrapper
+
+
+def serialize_cls(cls):
+    """
+    To create an serializable class.
+    """
+    return _create_wrapper_cls(cls)
+
+
+def transparent_serialize(cls):
+    """
+    Wrap a module but does not record parameters. For internal use only.
+    """
+    return _create_wrapper_cls(cls, store_init_parameters=False)
 
 
 def serialize(cls, *args, **kwargs):

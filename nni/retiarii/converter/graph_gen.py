@@ -597,9 +597,9 @@ class GraphConverter:
         elif module.__class__.__module__.startswith('torch.nn') and original_type_name in torch.nn.__dict__:
             # this is a basic module from pytorch, no need to parse its graph
             m_attrs = get_init_parameters_or_fail(module)
-        elif id(module) in self.modules_arg:
+        else:
             # this module is marked as serialize, won't continue to parse
-            m_attrs = get_init_parameters_or_fail(module)
+            m_attrs = get_init_parameters_or_fail(module, silently=True)
         if m_attrs is not None:
             return None, m_attrs
 

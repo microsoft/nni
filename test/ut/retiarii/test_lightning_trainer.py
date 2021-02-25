@@ -7,7 +7,7 @@ import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.retiarii import basic_unit, serialize
+from nni.retiarii import serialize_cls, serialize
 from nni.retiarii.trainer import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
@@ -49,7 +49,7 @@ class FCNet(nn.Module):
         return output.view(-1)
 
 
-@basic_unit
+@serialize_cls
 class DiabetesDataset(Dataset):
     def __init__(self, train=True):
         data = load_diabetes()

@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 
 from ...serializer import basic_unit
+from ...serializer import transparent_serialize
 from ...utils import version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0
@@ -37,8 +38,8 @@ if version_larger_equal(torch.__version__, '1.7.0'):
 
 Module = nn.Module
 
-Sequential = nn.Sequential
-ModuleList = nn.ModuleList
+Sequential = transparent_serialize(nn.Sequential)
+ModuleList = transparent_serialize(nn.ModuleList)
 
 Identity = basic_unit(nn.Identity)
 Linear = basic_unit(nn.Linear)
