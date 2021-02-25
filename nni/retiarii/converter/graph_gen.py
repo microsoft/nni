@@ -1,4 +1,3 @@
-import logging
 import re
 
 import torch
@@ -6,18 +5,16 @@ import torch
 from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
 from ..operation import Cell, Operation
-from ..utils import get_records
+from ..serializer import get_init_parameters_or_fail
+from ..utils import get_full_class_name
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import _convert_name, build_full_name
-
-_logger = logging.getLogger(__name__)
 
 
 class GraphConverter:
     def __init__(self):
         self.global_seq = 0
         self.global_graph_id = 0
-        self.modules_arg = get_records()
 
     def _add_edge_handle_source_node(self, _input, graph_inputs, ir_graph, output_remap, node_index):
         if _input in graph_inputs:
@@ -539,13 +536,8 @@ class GraphConverter:
     def _handle_layerchoice(self, module):
         choices = []
         for cand in list(module):
-            assert id(cand) in self.modules_arg, \
-                f'Module not recorded: {id(cand)}. ' \
-                'Try to import from `retiarii.nn` if you are using torch.nn module or ' \
-                'annotate your customized module with @basic_unit.'
-            assert isinstance(self.modules_arg[id(cand)], dict)
-            cand_type = '__torch__.' + cand.__class__.__module__ + '.' + cand.__class__.__name__
-            choices.append({'type': cand_type, 'parameters': self.modules_arg[id(cand)]})
+            cand_type = '__torch__.' + get_full_class_name(cand.__class__)
+            choices.append({'type': cand_type, 'parameters': get_init_parameters_or_fail(cand)})
         return {
             'candidates': choices,
             'label': module.label
@@ -601,14 +593,13 @@ class GraphConverter:
         elif original_type_name == OpTypeName.ValueChoice:
             m_attrs = self._handle_valuechoice(module)
         elif original_type_name == OpTypeName.Placeholder:
-            m_attrs = self.modules_arg[id(module)]
+            m_attrs = get_init_parameters_or_fail(module)
         elif module.__class__.__module__.startswith('torch.nn') and original_type_name in torch.nn.__dict__:
             # this is a basic module from pytorch, no need to parse its graph
-            assert id(module) in self.modules_arg, f'{original_type_name} arguments are not recorded'
-            m_attrs = self.modules_arg[id(module)]
+            m_attrs = get_init_parameters_or_fail(module)
         elif id(module) in self.modules_arg:
             # this module is marked as serialize, won't continue to parse
-            m_attrs = self.modules_arg[id(module)]
+            m_attrs = get_init_parameters_or_fail(module)
         if m_attrs is not None:
             return None, m_attrs
 

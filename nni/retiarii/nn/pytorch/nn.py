@@ -1,7 +1,8 @@
 import torch
 import torch.nn as nn
 
-from ...utils import add_record, basic_unit, del_record, version_larger_equal
+from ...serializer import basic_unit
+from ...utils import version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0
 
@@ -36,24 +37,8 @@ if version_larger_equal(torch.__version__, '1.7.0'):
 
 Module = nn.Module
 
-
-class Sequential(nn.Sequential):
-    def __init__(self, *args):
-        add_record(id(self), {})
-        super(Sequential, self).__init__(*args)
-
-    def __del__(self):
-        del_record(id(self))
-
-
-class ModuleList(nn.ModuleList):
-    def __init__(self, *args):
-        add_record(id(self), {})
-        super(ModuleList, self).__init__(*args)
-
-    def __del__(self):
-        del_record(id(self))
-
+Sequential = nn.Sequential
+ModuleList = nn.ModuleList
 
 Identity = basic_unit(nn.Identity)
 Linear = basic_unit(nn.Linear)

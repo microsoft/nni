@@ -7,7 +7,7 @@ import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.retiarii import basic_unit as bm
+from nni.retiarii import basic_unit, serialize
 from nni.retiarii.trainer import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
@@ -49,7 +49,7 @@ class FCNet(nn.Module):
         return output.view(-1)
 
 
-@bm
+@basic_unit
 class DiabetesDataset(Dataset):
     def __init__(self, train=True):
         data = load_diabetes()
@@ -91,8 +91,8 @@ def _reset():
 def test_mnist():
     _reset()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
-    test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
+    train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+    test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
     lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                   val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                   max_epochs=2, limit_train_batches=0.25,  # for faster training

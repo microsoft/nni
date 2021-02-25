@@ -7,15 +7,26 @@ import json_tricks
 
 from .utils import get_full_class_name, get_module_name, import_
 
+
+def get_init_parameters_or_fail(obj):
+    if hasattr(obj, '_init_parameters'):
+        return obj._init_parameters
+    else:
+        raise ValueError(f'Object {obj} needs to be serializable but `_init_parameters` is not available. '
+                         'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
+                         'If it is a customized module, please to decorate it with @basic_unit. '
+                         'For other complex objects, try to use serialize or @serialize_cls.')
+
+
 ### This is a patch of json-tricks to make it more useful to us ###
 
 
 def _serialize_class_instance_encode(obj, primitives=False):
     assert not primitives, 'Encoding with primitives is not supported.'
-    if hasattr(obj, '__class__') and hasattr(obj, '__init_parameters__'):
+    if hasattr(obj, '__class__'):
         return {
             '__type__': get_full_class_name(obj.__class__),
-            'arguments': obj.__init_parameters__
+            'arguments': get_init_parameters_or_fail(obj)
         }
     return obj
 
@@ -81,7 +92,7 @@ def serialize_cls(cls):
                 if isinstance(value, Translatable):
                     kwargs[i] = value._translate()
 
-            self.__init_parameters__ = full_args
+            self._init_parameters = full_args
 
             super().__init__(*args, **kwargs)
 

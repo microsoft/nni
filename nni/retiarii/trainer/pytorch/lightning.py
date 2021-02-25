@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 
 import nni
 from ...graph import ModelEvaluator
-from ...utils import basic_unit
+from ...serializer import serialize_cls
 
 
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
@@ -22,8 +22,7 @@ class LightningModule(pl.LightningModule):
             self.model = model
 
 
-Trainer = basic_unit(pl.Trainer)
-DataLoader = basic_unit(DataLoader)
+Trainer = serialize_cls(pl.Trainer)
 
 
 class Lightning(ModelEvaluator):
@@ -162,7 +161,7 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-@basic_unit
+@serialize_cls
 class _ClassificationModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -210,7 +209,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@basic_unit
+@serialize_cls
 class _RegressionModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,
