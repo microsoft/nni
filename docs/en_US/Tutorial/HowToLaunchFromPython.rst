@@ -1,6 +1,12 @@
 **How to Launch an Experiment from Python**
 ===========================================
 
+..  toctree::
+    :hidden:
+
+    Start Usage <python_api_start>
+    Connect Usage <python_api_connect>
+
 Overview
 --------
 Since ``nni v2.0``, we provide a new way to launch experiments. Before that, you need to configure the experiment in the yaml configuration file and then use the experiment ``nnictl`` command to launch the experiment. Now, you can also configure and run experiments directly in python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
