@@ -14,6 +14,11 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 
 const INSTALL_NFS_CLIENT = `
 #!/bin/bash
+if [ -n "$(command -v nfsstat)" ]
+then
+    exit 0
+fi
+
 if [ -n "$(command -v apt-get)" ]
 then
     sudo apt-get update
