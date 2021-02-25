@@ -45,6 +45,6 @@ enable= unused-wildcard-import,
 ignore-patterns=test*
 
 # List of members which are set dynamically and missed by pylint inference
-generated-members=numpy.*,torch.*,tensorflow.*
+generated-members=numpy.*,torch.*,tensorflow.*,pycuda.*,tensorrt.*
 
-ignored-modules=tensorflow,_winapi,msvcrt
+ignored-modules=tensorflow,_winapi,msvcrt,tensorrt

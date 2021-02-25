@@ -18,7 +18,7 @@ class Calibrator(trt.IInt8Calibrator):
             The batch_size of calibrating process
         algorithm : tensorrt.tensorrt.CalibrationAlgoType
             The algorithms of calibrating contains LEGACY_CALIBRATION,
-            ENTROPY_CALIBRATION, ENTROPY_CALIBRATION_2, MINMAX_CALIBRATION. 
+            ENTROPY_CALIBRATION, ENTROPY_CALIBRATION_2, MINMAX_CALIBRATION.
             Please refer to https://docs.nvidia.com/deeplearning/tensorrt/api/
             python_api/infer/Int8/Calibrator.html for detail
         """

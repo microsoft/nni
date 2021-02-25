@@ -1,15 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import argparse
 import pycuda.driver as cuda
 import pycuda.autoinit
 import tensorrt as trt
 
-try:
-    FileNotFoundError
-except NameError:
-    FileNotFoundError = IOError
+pycuda.autoinit
 
 EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
 
