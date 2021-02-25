@@ -77,16 +77,6 @@ class Experiment:
         """
         ...
 
-    @overload
-    def __init__(self) -> None:
-        """
-        Prepare an empty experiment, for `connect_experiment`.
-
-        Use `Experiment.connect_experiment` to manage experiment.
-
-        """
-        ...
-
     def __init__(self, tuner=None, config=None, training_service=None):
         self.config: Optional[ExperimentConfig] = None
         self.id: Optional[str] = None
@@ -204,7 +194,8 @@ class Experiment:
         finally:
             self.stop()
 
-    def connect(self, port: int):
+    @classmethod
+    def connect(cls, port: int):
         """
         Connect to an existing experiment.
 
@@ -213,15 +204,17 @@ class Experiment:
         port
             The port of web UI.
         """
-        self.port = port
-        self.id = self.get_experiment_profile().get('id')
-        status = self.get_status()
-        pid = self.get_experiment_metadata(self.id).get('pid')
+        experiment = Experiment()
+        experiment.port = port
+        experiment.id = experiment.get_experiment_profile().get('id')
+        status = experiment.get_status()
+        pid = experiment.get_experiment_metadata(experiment.id).get('pid')
         if pid is None:
             _logger.warning('Get experiment pid failed, can not stop experiment by stop().')
         else:
-            self._proc = psutil.Process(pid)
-        _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, self.id, status)
+            experiment._proc = psutil.Process(pid)
+        _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, experiment.id, status)
+        return experiment
 
     def _experiment_rest_get(self, port: int, api: str) -> Any:
         if self.port is None:
