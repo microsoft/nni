@@ -436,7 +436,7 @@ machine_list_schema = {
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool),
-            Optional('preCommand'): setType('preCommand', str)
+            Optional('pythonPath'): setType('pythonPath', str)
         },
         {
             'ip': setType('ip', str),
@@ -446,7 +446,7 @@ machine_list_schema = {
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool),
-            Optional('preCommand'): setType('preCommand', str)
+            Optional('pythonPath'): setType('pythonPath', str)
         })]
 }
 

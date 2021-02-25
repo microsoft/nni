@@ -5,9 +5,9 @@ import torch
 from pathlib import Path
 
 import nni.retiarii.trainer.pytorch.lightning as pl
+import nni.retiarii.strategy as strategy
 from nni.retiarii import blackbox_module as bm
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategies import TPEStrategy, RandomStrategy
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -33,9 +33,9 @@ if __name__ == '__main__':
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=1, limit_train_batches=0.2)
 
-    simple_startegy = RandomStrategy()
+    simple_strategy = strategy.Random()
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_startegy)
+    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'darts_search'

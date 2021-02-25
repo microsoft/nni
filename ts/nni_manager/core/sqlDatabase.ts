@@ -22,7 +22,7 @@ import { TrialJobDetail } from '../common/trainingService';
 
 
 const createTables: string = `
-create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text, sequenceId integer);
+create table TrialJobEvent (timestamp integer, trialJobId text, event text, data text, logPath text, sequenceId integer, message text);
 create index TrialJobEvent_trialJobId on TrialJobEvent(trialJobId);
 create index TrialJobEvent_event on TrialJobEvent(event);
 
@@ -62,7 +62,8 @@ function loadTrialJobEvent(row: any): TrialJobEventRecord {
         event: row.event,
         data: row.data === null ? undefined : row.data,
         logPath: row.logPath === null ? undefined : row.logPath,
-        sequenceId: row.sequenceId === null ? undefined : row.sequenceId
+        sequenceId: row.sequenceId === null ? undefined : row.sequenceId,
+        message: row.message === null ? undefined: row.message
     };
 }
 
@@ -163,10 +164,11 @@ class SqlDB implements Database {
 
     public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, timestamp: number, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?)';
+        const sql: string = 'insert into TrialJobEvent values (?,?,?,?,?,?,?)';
         const logPath: string | undefined = jobDetail === undefined ? undefined : jobDetail.url;
         const sequenceId: number | undefined = jobDetail === undefined ? undefined : jobDetail.form.sequenceId;
-        const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId];
+        const message: string | undefined = jobDetail === undefined ? undefined : jobDetail.message;
+        const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId, message];
 
         this.log.trace(`storeTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
         const deferred: Deferred<void> = new Deferred<void>();

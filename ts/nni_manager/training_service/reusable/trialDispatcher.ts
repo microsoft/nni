@@ -216,7 +216,7 @@ class TrialDispatcher implements TrainingService {
             } else {
                 this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
                 storageService = new MountedStorageService();
-                const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+                const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
                 storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
             }
             // Copy the compressed file to remoteDirectory and delete it
@@ -462,7 +462,6 @@ class TrialDispatcher implements TrainingService {
                             if (environment.environmentService === undefined) {
                                 throw new Error(`${environment.id} does not has environment service!`);
                             }
-
                             trial.url = environment.trackingUrl;
                             const environmentStatus = environment.status;
 
@@ -733,6 +732,7 @@ class TrialDispatcher implements TrainingService {
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
+        trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
         if (environment.environmentService.hasStorageService) {	
             const storageService = component.get<StorageService>(StorageService);	
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
@@ -761,6 +761,7 @@ class TrialDispatcher implements TrainingService {
                 throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
             }
             trial.environment.runningTrialCount--;
+            trial.environment.latestTrialReleasedTime = Date.now();
             trial.environment = undefined;
         }
         if (true === this.enableGpuScheduler) {

@@ -1,3 +1,4 @@
+import abc
 import functools
 import inspect
 from collections import defaultdict
@@ -89,6 +90,17 @@ def del_record(key):
         _records.pop(key, None)
 
 
+class Translatable(abc.ABC):
+    """
+    Inherit this class and implement ``translate`` when the inner class needs a different
+    parameter from the wrapper class in its init function.
+    """
+
+    @abc.abstractmethod
+    def _translate(self) -> Any:
+        pass
+
+
 def _blackbox_cls(cls):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
@@ -99,6 +111,15 @@ def _blackbox_cls(cls):
             assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
             for argname, value in zip(argname_list, args):
                 full_args[argname] = value
+
+            # translate parameters
+            args = list(args)
+            for i, value in enumerate(args):
+                if isinstance(value, Translatable):
+                    args[i] = value._translate()
+            for i, value in kwargs.items():
+                if isinstance(value, Translatable):
+                    kwargs[i] = value._translate()
 
             add_record(id(self), full_args)  # for compatibility. Will remove soon.
 
@@ -162,6 +183,14 @@ def _get_module_name(cls):
                                     f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
                 module_name = main_file_path.stem
                 break
+
+    # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
+    # to make LSTM's source code can be found, we should assign original LSTM's __module__ to
+    # the wrapped LSTM's __module__
+    # TODO: find out all the modules that have the same requirement as LSTM
+    if f'{cls.__module__}.{cls.__name__}' == 'torch.nn.modules.rnn.LSTM':
+        module_name = cls.__module__
+
     return module_name
 
 

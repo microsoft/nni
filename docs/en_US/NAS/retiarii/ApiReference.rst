@@ -72,10 +72,16 @@ Oneshot Trainers
 Strategies
 ----------
 
-..  autoclass:: nni.retiarii.strategies.RandomStrategy
+..  autoclass:: nni.retiarii.strategy.Random
     :members:
 
-..  autoclass:: nni.retiarii.strategies.TPEStrategy
+..  autoclass:: nni.retiarii.strategy.GridSearch
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.RegularizedEvolution
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.TPEStrategy
     :members:
 
 Retiarii Experiments

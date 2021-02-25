@@ -114,7 +114,7 @@ export class AMLEnvironmentService extends EnvironmentService {
             throw new Error('AML trial config is not initialized');
         }
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
-        const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+        const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
         if (!fs.existsSync(environmentLocalTempFolder)) {
             await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
         }
@@ -128,6 +128,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
         amlEnvironment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
         amlEnvironment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,

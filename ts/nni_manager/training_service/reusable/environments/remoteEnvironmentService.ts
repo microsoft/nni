@@ -272,7 +272,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
+            path.join(this.experimentRootDir, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),

@@ -4,7 +4,7 @@ import time
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
 from .. import Sampler, submit_models, query_available_resources, is_stopped_exec
-from .strategy import BaseStrategy
+from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)
 
@@ -50,16 +50,14 @@ class TPEStrategy(BaseStrategy):
             sample_space.extend(recorded_candidates)
         self.tpe_sampler.update_sample_space(sample_space)
 
-        _logger.info('stargety start...')
+        _logger.info('TPE strategy has been started.')
         while True:
             avail_resource = query_available_resources()
             if avail_resource > 0:
                 model = base_model
-                _logger.info('apply mutators...')
-                _logger.info('mutators: %s', str(applied_mutators))
+                _logger.info('New model created. Applied mutators: %s', str(applied_mutators))
                 self.tpe_sampler.generate_samples(self.model_id)
                 for mutator in applied_mutators:
-                    _logger.info('mutate model...')
                     mutator.bind_sampler(self.tpe_sampler)
                     model = mutator.apply(model)
                 # run models

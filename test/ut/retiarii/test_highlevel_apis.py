@@ -10,7 +10,7 @@ from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation
 
 
-class EnuemrateSampler(Sampler):
+class EnumerateSampler(Sampler):
     def __init__(self):
         self.index = 0
 
@@ -70,7 +70,7 @@ class TestHighLevelAPI(unittest.TestCase):
         model = self._convert_to_ir(Net())
         mutators = process_inline_mutation(model)
         self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnuemrateSampler())
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
         model1 = mutator.apply(model)
         model2 = mutator.apply(model)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(),
@@ -94,7 +94,7 @@ class TestHighLevelAPI(unittest.TestCase):
         model = self._convert_to_ir(Net())
         mutators = process_inline_mutation(model)
         self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnuemrateSampler())
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
         model1 = mutator.apply(model)
         model2 = mutator.apply(model)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(),
@@ -119,7 +119,7 @@ class TestHighLevelAPI(unittest.TestCase):
             model = self._convert_to_ir(Net(reduction))
             mutators = process_inline_mutation(model)
             self.assertEqual(len(mutators), 1)
-            mutator = mutators[0].bind_sampler(EnuemrateSampler())
+            mutator = mutators[0].bind_sampler(EnumerateSampler())
             model = mutator.apply(model)
             result = self._get_converted_pytorch_model(model)(torch.randn(1, 3, 3, 3))
             if reduction == 'none':
@@ -144,13 +144,94 @@ class TestHighLevelAPI(unittest.TestCase):
         model = self._convert_to_ir(Net())
         mutators = process_inline_mutation(model)
         self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnuemrateSampler())
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
         model1 = mutator.apply(model)
         model2 = mutator.apply(model)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(),
                          torch.Size([1, 3, 3, 3]))
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).size(),
                          torch.Size([1, 5, 3, 3]))
+
+    def test_value_choice_as_parameter(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, 5, kernel_size=nn.ValueChoice([3, 5]))
+
+            def forward(self, x):
+                return self.conv(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 3, 3]))
+        self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 1, 1]))
+
+    def test_value_choice_as_parameter(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, 5, kernel_size=nn.ValueChoice([3, 5]))
+
+            def forward(self, x):
+                return self.conv(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 3, 3]))
+        self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 5, 1, 1]))
+
+    def test_value_choice_as_parameter(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv = nn.Conv2d(3, nn.ValueChoice([6, 8]), kernel_size=nn.ValueChoice([3, 5]))
+
+            def forward(self, x):
+                return self.conv(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 2)
+        mutators[0].bind_sampler(EnumerateSampler())
+        mutators[1].bind_sampler(EnumerateSampler())
+        input = torch.randn(1, 3, 5, 5)
+        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+                         torch.Size([1, 6, 3, 3]))
+        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+                         torch.Size([1, 8, 1, 1]))
+
+    def test_value_choice_as_parameter_shared(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = nn.Conv2d(3, nn.ValueChoice([6, 8], label='shared'), 1)
+                self.conv2 = nn.Conv2d(3, nn.ValueChoice([6, 8], label='shared'), 1)
+
+            def forward(self, x):
+                return self.conv1(x) + self.conv2(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 6, 5, 5]))
+        self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
+                         torch.Size([1, 8, 5, 5]))
 
     def test_value_choice_in_functional(self):
         class Net(nn.Module):
@@ -164,9 +245,10 @@ class TestHighLevelAPI(unittest.TestCase):
         model = self._convert_to_ir(Net())
         mutators = process_inline_mutation(model)
         self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnuemrateSampler())
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
         model1 = mutator.apply(model)
         model2 = mutator.apply(model)
+        self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
 

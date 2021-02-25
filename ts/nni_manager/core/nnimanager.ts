@@ -353,14 +353,6 @@ class NNIManager implements Manager {
         return this.status;
     }
 
-    public getTrialJobMessage(trialJobId: string): string | undefined {
-        const trialJob = this.trialJobs.get(trialJobId);
-        if (trialJob !== undefined){
-            return trialJob.message
-        }
-        return undefined
-    }
-
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
         return this.dataStore.listTrialJobs(status);
     }
