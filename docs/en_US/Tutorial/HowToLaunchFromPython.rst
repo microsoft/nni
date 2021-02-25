@@ -99,15 +99,15 @@ Launch the experiment by ``start()`` instead of ``run()``, then you can use thes
 
 Please refer to `example usage <./python_api_start.rst>`__ and code file :githublink:`python_api_start.ipynb <examples/trials/sklearn/classification/python_api_start.ipynb>`.
 
-.. Note:: ``run()`` polls the experiment status and will automatically call ``stop()`` when the experiment finished. ``start()`` just launch a new experiment, so you need to manually stop the experiment by calling ``stop()``.
+.. Note:: ``run()`` polls the experiment status and will automatically call ``stop()`` when the experiment finished. ``start()`` just launched a new experiment, so you need to manually stop the experiment by calling ``stop()``.
 
 Connect and Manage an Exist Experiment
 --------------------------------------
-If you launch the experiment by `nnictl` and also want to use these APIs, you can use ``Experiment.connect()`` to connect to an exsit experiment.
+If you launch the experiment by ``nnictl`` and also want to use these APIs, you can use ``Experiment.connect()`` to connect to an existing experiment.
 
 Please refer to `example usage <./python_api_connect.rst>`__ and code file :githublink:`python_api_connect.ipynb <examples/trials/sklearn/classification/python_api_connect.ipynb>`.
 
-.. Note:: You can use ``stop()`` to stop the experiment when connecting to an exsit experiment.
+.. Note:: You can use ``stop()`` to stop the experiment when connecting to an existing experiment.
 
 API
 ---
