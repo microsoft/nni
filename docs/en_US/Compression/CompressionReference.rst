@@ -1,5 +1,5 @@
-Compression Reference
-=====================
+Model Compression API Reference
+===============================
 
 .. contents::
 
