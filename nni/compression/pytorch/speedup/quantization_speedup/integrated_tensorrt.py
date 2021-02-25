@@ -2,7 +2,10 @@
 # Licensed under the MIT license.
 
 import time
-import tensorrt as trt
+try:
+    import tensorrt as trt
+except ImportError:
+    pass
 import numpy as np
 
 from . import frontend_to_onnx as fonnx
