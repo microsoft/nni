@@ -107,7 +107,7 @@ In this example, 'op_names' is the name of layer and four layers will be quantiz
 Export compression result
 -------------------------
 
-Export the pruend model
+Export the pruned model
 ^^^^^^^^^^^^^^^^^^^^^^^
 
 You can easily export the pruned model using the following API if you are pruning your model, ``state_dict`` of the sparse model weights will be stored in ``model.pth``\ , which can be loaded by ``torch.load('model.pth')``. Note that, the exported ``model.pth``\ has the same parameters as the original model except the masked weights are zero. ``mask_dict`` stores the binary value that produced by the pruning algorithm, which can be further used to speed up the model.
