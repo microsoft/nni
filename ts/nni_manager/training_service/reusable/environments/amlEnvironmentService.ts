@@ -113,7 +113,7 @@ export class AMLEnvironmentService extends EnvironmentService {
             throw new Error('AML trial config is not initialized');
         }
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
-        const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
+        const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
         environment.command = `import os\nos.system('mv envs outputs/envs && cd outputs && ${amlEnvironment.command}')`;
         environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
         environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
