@@ -17,7 +17,7 @@ def accuracy(output, target, topk=(1,)):
     if target.ndimension() > 1:
         target = target.max(1)[1]
 
-    correct = pred.eq(target.view(1, -1).expand_as(pred))
+    correct = pred.eq(target.reshape(1, -1).expand_as(pred))
 
     res = []
     for k in topk:

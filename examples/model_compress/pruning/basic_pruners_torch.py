@@ -13,7 +13,6 @@ import logging
 import argparse
 import os
 import time
-import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -35,6 +34,7 @@ from nni.algorithms.compression.pytorch.pruning import (
     L1FilterPruner,
     L2FilterPruner,
     AGPPruner,
+    ActivationMeanRankFilterPruner,
     ActivationAPoZRankFilterPruner
 )
 
@@ -49,6 +49,7 @@ str2pruner = {
     'slim': SlimPruner,
     'agp': AGPPruner,
     'fpgm': FPGMPruner,
+    'mean_activation': ActivationMeanRankFilterPruner,
     'apoz': ActivationAPoZRankFilterPruner
 }
 
@@ -68,7 +69,7 @@ def get_pruner(model, pruner_name, device, optimizer=None, dependency_aware=Fals
             'sparsity': args.sparsity,
             'op_types': ['default']
         }]
-    elif pruner_name == 'l1filter':
+    elif pruner_name in ['l1filter', 'mean_activation', 'apoz']:
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
         config_list = [{
@@ -80,6 +81,15 @@ def get_pruner(model, pruner_name, device, optimizer=None, dependency_aware=Fals
         config_list = [{
             'sparsity': args.sparsity,
             'op_types': ['BatchNorm2d'],
+        }]
+    elif pruner_name == 'agp':
+        config_list = [{
+            'initial_sparsity': 0.,
+            'final_sparsity': 0.8,
+            'start_epoch': 0,
+            'end_epoch': 10,
+            'frequency': 1,
+            'op_types': ['Conv2d']
         }]
     else:
         config_list = [{
@@ -150,13 +160,13 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
         if args.pretrained_model_dir is None:
             optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
+                optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
     elif args.model == 'vgg19':
         model = VGG(depth=19).to(device)
         if args.pretrained_model_dir is None:
             optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
+                optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
     else:
         raise ValueError("model not recognized")
 
@@ -183,9 +193,8 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
 
     # setup new opotimizer for fine-tuning
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(
-                optimizer, milestones=[int(args.pretrain_epochs*0.5), int(args.pretrain_epochs*0.75)], gamma=0.1)
-        
+    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+
     print('Pretrained model acc:', best_acc)
     return model, optimizer, scheduler
 
@@ -253,7 +262,6 @@ def main(args):
     mask_path = os.path.join(args.experiment_data_dir, 'mask_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
 
-    
     pruner = get_pruner(model, args.pruner, device, optimizer, args.dependency_aware)
     model = pruner.compress()
 
@@ -284,7 +292,7 @@ def main(args):
         args.pretrained_model_dir = model_path
         model, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
         model.eval()
-        
+
         apply_compression_results(model, mask_path, device)
 
         # test model speed
@@ -316,7 +324,7 @@ if __name__ == '__main__':
     parser.add_argument('--data-dir', type=str, default='./data/',
                         help='dataset directory')
     parser.add_argument('--model', type=str, default='vgg16',
-                        choices=['LeNet', 'vgg16' ,'vgg19', 'resnet18'],
+                        choices=['lenet', 'vgg16', 'vgg19', 'resnet18'],
                         help='model to use')
     parser.add_argument('--pretrained-model-dir', type=str, default=None,
                         help='path to pretrained model')
@@ -344,27 +352,27 @@ if __name__ == '__main__':
                         help='toggle dependency aware mode')
     parser.add_argument('--pruner', type=str, default='l1filter',
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                        'fpgm', 'apoz'],
+                                 'fpgm', 'mean_activation', 'apoz'],
                         help='pruner to use')
 
     # fine-tuning
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
                         help='epochs to fine tune')
-                        
+
     # speed-up
     parser.add_argument('--speed-up', action='store_true', default=False,
                         help='whether to speed-up the pruned model')
 
-    parser.add_argument('--nni', action='store_true', default=False, 
+    parser.add_argument('--nni', action='store_true', default=False,
                         help="whether to tune the pruners using NNi tuners")
 
     args = parser.parse_args()
 
     if args.nni:
-         params = nni.get_next_parameter()
-         print(params)
-         args.sparsity = params['sparsity']
-         args.pruner = params['pruner']
-         args.model = params['pruner']
+        params = nni.get_next_parameter()
+        print(params)
+        args.sparsity = params['sparsity']
+        args.pruner = params['pruner']
+        args.model = params['pruner']
 
     main(args)

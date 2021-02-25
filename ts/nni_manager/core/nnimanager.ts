@@ -353,14 +353,6 @@ class NNIManager implements Manager {
         return this.status;
     }
 
-    public getTrialJobMessage(trialJobId: string): string | undefined {
-        const trialJob = this.trialJobs.get(trialJobId);
-        if (trialJob !== undefined){
-            return trialJob.message
-        }
-        return undefined
-    }
-
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
         return this.dataStore.listTrialJobs(status);
     }
@@ -631,8 +623,9 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
-                    this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
+                    this.trialJobs.set(trialJobDetail.id, Snapshot);
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(

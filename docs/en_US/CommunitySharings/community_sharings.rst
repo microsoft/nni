@@ -28,12 +28,13 @@ External Repositories
 
 Relevant Articles
 =================
+  * `Cost-effective Hyper-parameter Tuning using AdaptDL with NNI - Feb 23, 2021 <https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761>`__
+  * `(in Chinese) A summary of NNI new capabilities in NNI 2.0 - Jan 21, 2021 <https://www.msra.cn/zh-cn/news/features/nni-2>`__
+  * `(in Chinese) A summary of NNI new capabilities in 2019 - Dec 26, 2019 <https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA>`__
+  * `Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI - Nov 6, 2019 <https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1>`__ 
+  * `(in Chinese) AutoML tools (Advisor, NNI and Google Vizier) comparison - Aug 05, 2019 <http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90>`__  
   * `Hyper Parameter Optimization Comparison <./HpoComparison.rst>`__ 
   * `Neural Architecture Search Comparison <./NasComparison.rst>`__ 
   * `Parallelizing a Sequential Algorithm TPE <./ParallelizingTpeSearch.rst>`__ 
   * `Automatically tuning SVD with NNI <./RecommendersSvd.rst>`__ 
   * `Automatically tuning SPTAG with NNI <./SptagAutoTune.rst>`__ 
-  * `Find thy hyper-parameters for scikit-learn pipelines using Microsoft NNI <https://towardsdatascience.com/find-thy-hyper-parameters-for-scikit-learn-pipelines-using-microsoft-nni-f1015b1224c1>`__ 
-  * `(in Chinese) AutoML tools (Advisor, NNI and Google Vizier) comparison <http://gaocegege.com/Blog/%E6%9C%BA%E5%99%A8%E5%AD%A6%E4%B9%A0/katib-new#%E6%80%BB%E7%BB%93%E4%B8%8E%E5%88%86%E6%9E%90>`__  
-  * `(in Chinese) A summary of NNI new capabilities in 2019 <https://mp.weixin.qq.com/s/7_KRT-rRojQbNuJzkjFMuA>`__
-

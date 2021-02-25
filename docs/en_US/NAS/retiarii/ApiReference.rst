@@ -42,10 +42,16 @@ Graph Mutation APIs
 Trainers
 --------
 
-..  autoclass:: nni.retiarii.trainer.pytorch.PyTorchImageClassificationTrainer
+..  autoclass:: nni.retiarii.trainer.FunctionalTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer
+..  autoclass:: nni.retiarii.trainer.pytorch.lightning.LightningModule
+    :members:
+
+..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Classification
+    :members:
+
+..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Regression
     :members:
 
 Oneshot Trainers
@@ -66,17 +72,23 @@ Oneshot Trainers
 Strategies
 ----------
 
-..  autoclass:: nni.retiarii.strategies.RandomStrategy
+..  autoclass:: nni.retiarii.strategy.Random
     :members:
 
-..  autoclass:: nni.retiarii.strategies.TPEStrategy
+..  autoclass:: nni.retiarii.strategy.GridSearch
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.RegularizedEvolution
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.TPEStrategy
     :members:
 
 Retiarii Experiments
 --------------------
 
-..  autoclass:: nni.retiarii.experiment.RetiariiExperiment
+..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExperiment
     :members:
 
-..  autoclass:: nni.retiarii.experiment.RetiariiExeConfig
+..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:

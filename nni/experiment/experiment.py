@@ -77,16 +77,6 @@ class Experiment:
         """
         ...
 
-    @overload
-    def __init__(self) -> None:
-        """
-        Prepare an empty experiment, for `connect_experiment`.
-
-        Use `Experiment.connect_experiment` to manage experiment.
-
-        """
-        ...
-
     def __init__(self, tuner=None, config=None, training_service=None):
         self.config: Optional[ExperimentConfig] = None
         self.id: Optional[str] = None
@@ -204,7 +194,8 @@ class Experiment:
         finally:
             self.stop()
 
-    def connect_experiment(self, port: int):
+    @classmethod
+    def connect(cls, port: int):
         """
         Connect to an existing experiment.
 
@@ -213,8 +204,17 @@ class Experiment:
         port
             The port of web UI.
         """
-        self.port = port
-        self.get_status()
+        experiment = Experiment()
+        experiment.port = port
+        experiment.id = experiment.get_experiment_profile().get('id')
+        status = experiment.get_status()
+        pid = experiment.get_experiment_metadata(experiment.id).get('pid')
+        if pid is None:
+            _logger.warning('Get experiment pid failed, can not stop experiment by stop().')
+        else:
+            experiment._proc = psutil.Process(pid)
+        _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, experiment.id, status)
+        return experiment
 
     def _experiment_rest_get(self, port: int, api: str) -> Any:
         if self.port is None:
@@ -248,7 +248,7 @@ class Experiment:
             Trial job id.
 
         Returns
-        ----------
+        -------
         TrialJob
             A `TrialJob` instance corresponding to `trial_job_id`.
         """
@@ -260,7 +260,7 @@ class Experiment:
         Return information for all trial jobs as a list.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialJob`.
         """
@@ -272,7 +272,7 @@ class Experiment:
         Return trial job statistics information as a dict.
 
         Returns
-        ----------
+        -------
         dict
             Job statistics information.
         """
@@ -289,7 +289,7 @@ class Experiment:
             trial job id. if this parameter is None, all trail jobs' metrics will be returned.
 
         Returns
-        ----------
+        -------
         dict
             Each key is a trialJobId, the corresponding value is a list of `TrialMetricData`.
         """
@@ -309,11 +309,38 @@ class Experiment:
         Return experiment profile as a dict.
 
         Returns
-        ----------
+        -------
         dict
             The profile of the experiment.
         """
         resp = self._experiment_rest_get(self.port, '/experiment')
+        return resp
+
+    def get_experiment_metadata(self, exp_id: str):
+        """
+        Return experiment metadata with specified exp_id as a dict.
+
+        Returns
+        -------
+        dict
+            The specified experiment metadata.
+        """
+        experiments_metadata = self.get_all_experiments_metadata()
+        for metadata in experiments_metadata:
+            if metadata['id'] == exp_id:
+                return metadata
+        return {}
+
+    def get_all_experiments_metadata(self):
+        """
+        Return all experiments metadata as a list.
+
+        Returns
+        -------
+        list
+            The experiments metadata.
+        """
+        resp = self._experiment_rest_get(self.port, '/experiments-info')
         return resp
 
     def export_data(self):
@@ -321,7 +348,7 @@ class Experiment:
         Return exported information for all trial jobs.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialResult`.
         """
@@ -329,13 +356,13 @@ class Experiment:
         return [TrialResult(**trial_result) for trial_result in resp]
 
     def _get_query_type(self, key: str):
-        if key == 'trial_concurrency':
+        if key == 'trialConcurrency':
             return '?update_type=TRIAL_CONCURRENCY'
-        if key == 'max_experiment_duration':
+        if key == 'maxExecDuration':
             return '?update_type=MAX_EXEC_DURATION'
-        if key == 'search_space':
+        if key == 'searchSpace':
             return '?update_type=SEARCH_SPACE'
-        if key == 'max_trial_number':
+        if key == 'maxTrialNum':
             return '?update_type=MAX_TRIAL_NUM'
 
     def _update_experiment_profile(self, key: str, value: Any):
@@ -363,7 +390,7 @@ class Experiment:
         value: int
             New trial_concurrency value.
         """
-        self._update_experiment_profile('trial_concurrency', value)
+        self._update_experiment_profile('trialConcurrency', value)
 
     def update_max_experiment_duration(self, value: str):
         """
@@ -375,7 +402,7 @@ class Experiment:
             Strings like '1m' for one minute or '2h' for two hours.
             SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
-        self._update_experiment_profile('max_experiment_duration', value)
+        self._update_experiment_profile('maxExecDuration', value)
 
     def update_search_space(self, value: dict):
         """
@@ -387,9 +414,9 @@ class Experiment:
         value: dict
             New search_space.
         """
-        self._update_experiment_profile('search_space', value)
+        self._update_experiment_profile('searchSpace', value)
 
-    def update_max_trial_number(self, value):
+    def update_max_trial_number(self, value: int):
         """
         Update an experiment's max_trial_number
 
@@ -398,4 +425,4 @@ class Experiment:
         value: int
             New max_trial_number value.
         """
-        self._update_experiment_profile('max_trial_number', value)
+        self._update_experiment_profile('maxTrialNum', value)
