@@ -94,7 +94,7 @@ Below is an example for this new launching approach. You can also find this code
 
 Start and Manage a New Experiment
 ---------------------------------
-We migrate the API in ``nniClient`` to this new launching approach.
+We migrate the API in ``NNI Client`` to this new launching approach.
 Launch the experiment by ``start()`` instead of ``run()``, then you can use these APIs in interactive mode.
 
 Please refer to `example usage <./python_api_start.rst>`__ and code file :githublink:`python_api_start.ipynb <examples/trials/sklearn/classification/python_api_start.ipynb>`.
