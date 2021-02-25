@@ -17,15 +17,15 @@ class BaseModelSpeedup:
         self.quantize_model = model
         self.config = config
 
-    def inference(self, input):
+    def inference(self, test_data):
         """
         This function should be overrided by subclass to provide inference ability,
         which should return output and inference time.
 
         Parameters
         ----------
-        input : numpy data
-            input data given to the inference engine
+        test_data : numpy data
+            test data given to the inference engine
 
         Returns
         -------

@@ -7,7 +7,7 @@ import tensorrt as trt
 
 pycuda.autoinit
 
-EXPLICIT_BATCH = 1 << (int)(trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+EXPLICIT_BATCH = 1
 
 def GiB(val):
     return val * 1 << 30
