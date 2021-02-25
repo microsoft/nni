@@ -255,7 +255,7 @@ class Experiment:
             Trial job id.
 
         Returns
-        ----------
+        -------
         TrialJob
             A `TrialJob` instance corresponding to `trial_job_id`.
         """
@@ -267,7 +267,7 @@ class Experiment:
         Return information for all trial jobs as a list.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialJob`.
         """
@@ -279,7 +279,7 @@ class Experiment:
         Return trial job statistics information as a dict.
 
         Returns
-        ----------
+        -------
         dict
             Job statistics information.
         """
@@ -296,7 +296,7 @@ class Experiment:
             trial job id. if this parameter is None, all trail jobs' metrics will be returned.
 
         Returns
-        ----------
+        -------
         dict
             Each key is a trialJobId, the corresponding value is a list of `TrialMetricData`.
         """
@@ -316,7 +316,7 @@ class Experiment:
         Return experiment profile as a dict.
 
         Returns
-        ----------
+        -------
         dict
             The profile of the experiment.
         """
@@ -328,7 +328,7 @@ class Experiment:
         Return experiment metadata with specified exp_id as a dict.
 
         Returns
-        ----------
+        -------
         dict
             The specified experiment metadata.
         """
@@ -343,7 +343,7 @@ class Experiment:
         Return all experiments metadata as a list.
 
         Returns
-        ----------
+        -------
         list
             The experiments metadata.
         """
@@ -355,7 +355,7 @@ class Experiment:
         Return exported information for all trial jobs.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialResult`.
         """
