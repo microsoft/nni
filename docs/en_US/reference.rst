@@ -12,3 +12,4 @@ References
     SDK API References <sdk_reference>
     Supported Framework Library <SupportedFramework_Library>
     Launch from python <Tutorial/HowToLaunchFromPython>
+    Shared Storage <Tutorial/HowToUseSharedStorage>

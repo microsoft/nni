@@ -14,6 +14,7 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
+import { SharedStorageService } from '../sharedStorage'
 
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
@@ -118,11 +119,22 @@ export class LocalEnvironmentService extends EnvironmentService {
         if (this.localTrialConfig === undefined) {
             throw new Error('Local trial config is not initialized');
         }
-        const localTempFolder: string = path.join(this.experimentRootDir, "environment-temp", "envs");
+        // Need refactor, this temp folder path is not appropriate, there are two expId in this path
+        const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
+        if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
+            this.experimentRootDir = sharedStorageService.localWorkingRoot;
+        } else {
+            this.experimentRootDir = getExperimentRootDir();
+        }
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
+        if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {
+            await sharedStorageService.storageService.copyDirectoryBack("envs", localEnvCodeFolder)
+        } else if (!environment.useSharedStorage) {
+            const localTempFolder: string = path.join(this.experimentRootDir, "environment-temp", "envs");
+            await execCopydir(localTempFolder, localEnvCodeFolder);
+        }
         environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
         await execMkdir(environment.runnerWorkingFolder);
-        await execCopydir(localTempFolder, localEnvCodeFolder);
         environment.command = this.getScript(environment).join(getNewLine());
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(localEnvCodeFolder, scriptName),

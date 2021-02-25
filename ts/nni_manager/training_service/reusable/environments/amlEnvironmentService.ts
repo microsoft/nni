@@ -16,6 +16,7 @@ import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { EventEmitter } from "events";
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
+import { SharedStorageService } from '../sharedStorage'
 
 
 /**
@@ -114,9 +115,20 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
-        environment.command = `import os\nos.system('mv envs outputs/envs && cd outputs && ${amlEnvironment.command}')`;
-        environment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
-        environment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+        if (!fs.existsSync(environmentLocalTempFolder)) {
+            await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
+        }
+        if (amlEnvironment.useSharedStorage) {
+            const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+            const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
+            amlEnvironment.command = `${remoteMountCommand} && cd ${environmentRoot} && ${amlEnvironment.command}`.replace(/"/g, `\\"`);
+        } else {
+            amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
+        }
+        amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
+        amlEnvironment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
+        amlEnvironment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
             this.amlClusterConfig.subscriptionId,

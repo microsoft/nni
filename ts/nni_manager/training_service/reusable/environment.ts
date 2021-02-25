@@ -79,6 +79,8 @@ export class EnvironmentInformation {
 
     public environmentService?: EnvironmentService;
 
+    public useSharedStorage?: boolean;
+
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
         this.id = id;
