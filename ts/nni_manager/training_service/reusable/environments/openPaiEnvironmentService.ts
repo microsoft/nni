@@ -14,6 +14,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../../pai/paiConfig';
 import { NNIPAITrialConfig } from '../../pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { SharedStorageService } from '../sharedStorage';
 import { StorageService } from '../storageService';
 
 
@@ -178,9 +179,15 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         // Step 1. Prepare PAI job configuration
-        const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+        let environmentRoot: string;
+        if (environment.useSharedStorage) {
+            environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand} && cd ${environmentRoot} && ${environment.command}`;
+        } else {
+            environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+            environment.command = `cd ${environmentRoot} && ${environment.command}`;
+        }
         environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
-        environment.command = `cd ${environmentRoot} && ${environment.command}`;
         environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
         environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
         environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;

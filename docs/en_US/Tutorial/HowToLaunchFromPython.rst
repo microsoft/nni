@@ -1,12 +1,18 @@
-**How to Launch an experiment from Python**
+**How to Launch an Experiment from Python**
 ===========================================
+
+..  toctree::
+    :hidden:
+
+    Start Usage <python_api_start>
+    Connect Usage <python_api_connect>
 
 Overview
 --------
 Since ``nni v2.0``, we provide a new way to launch experiments. Before that, you need to configure the experiment in the yaml configuration file and then use the experiment ``nnictl`` command to launch the experiment. Now, you can also configure and run experiments directly in python file. If you are familiar with python programming, this will undoubtedly bring you more convenience.
 
-How to Use
-----------
+Run a New Experiment
+--------------------
 After successfully installing ``nni``, you can start the experiment with a python script in the following 3 steps.
 
 ..
@@ -59,9 +65,11 @@ See `parameter configuration <../reference/experiment_config.rst>`__ required by
 
 Now, you have successfully launched an NNI experiment. And you can type ``localhost:8081`` in your browser to observe your experiment in real time.
 
+.. Note:: In this way, experiment will run in the foreground and will automatically exit when the experiment finished. If you want to run an experiment in an interactive way, use ``start()`` in Step 3. 
+
 Example
--------
-Below is an example for this new launching approach. You can also find this code in :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>` .
+^^^^^^^
+Below is an example for this new launching approach. You can also find this code in :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>`.
 
 .. code-block:: python
 
@@ -89,6 +97,23 @@ Below is an example for this new launching approach. You can also find this code
     experiment.config.training_service.use_active_gpu = True
 
     experiment.run(8081)
+
+Start and Manage a New Experiment
+---------------------------------
+We migrate the API in ``NNI Client`` to this new launching approach.
+Launch the experiment by ``start()`` instead of ``run()``, then you can use these APIs in interactive mode.
+
+Please refer to `example usage <./python_api_start.rst>`__ and code file :githublink:`python_api_start.ipynb <examples/trials/sklearn/classification/python_api_start.ipynb>`.
+
+.. Note:: ``run()`` polls the experiment status and will automatically call ``stop()`` when the experiment finished. ``start()`` just launched a new experiment, so you need to manually stop the experiment by calling ``stop()``.
+
+Connect and Manage an Exist Experiment
+--------------------------------------
+If you launch the experiment by ``nnictl`` and also want to use these APIs, you can use ``Experiment.connect()`` to connect to an existing experiment.
+
+Please refer to `example usage <./python_api_connect.rst>`__ and code file :githublink:`python_api_connect.ipynb <examples/trials/sklearn/classification/python_api_connect.ipynb>`.
+
+.. Note:: You can use ``stop()`` to stop the experiment when connecting to an existing experiment.
 
 API
 ---

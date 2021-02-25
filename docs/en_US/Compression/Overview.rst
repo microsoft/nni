@@ -87,11 +87,6 @@ Quantization algorithms compress the original network by reducing the number of 
      - Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. `Reference Paper <https://arxiv.org/abs/1602.02830>`__
 
 
-Automatic Model Compression
----------------------------
-
-Given targeted compression ratio, it is pretty hard to obtain the best compressed ratio in a one shot manner. An automatic model compression algorithm usually need to explore the compression space by compressing different layers with different sparsities. NNI provides such algorithms to free users from specifying sparsity of each layer in a model. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Detailed document can be found `here <./AutoPruningUsingTuners.rst>`__.
-
 Model Speedup
 -------------
 
@@ -102,10 +97,11 @@ Compression Utilities
 
 Compression utilities include some useful tools for users to understand and analyze the model they want to compress. For example, users could check sensitivity of each layer to pruning. Users could easily calculate the FLOPs and parameter size of a model. Please refer to `here <./CompressionUtils.rst>`__ for a complete list of compression utilities.
 
-Customize Your Own Compression Algorithms
------------------------------------------
+Advanced Usage
+--------------
 
-NNI model compression leaves simple interface for users to customize a new compression algorithm. The design philosophy of the interface is making users focus on the compression logic while hiding framework specific implementation details from users. The detailed tutorial for customizing a new compression algorithm (pruning algorithm or quantization algorithm) can be found `here <./Framework.rst>`__.
+NNI model compression leaves simple interface for users to customize a new compression algorithm. The design philosophy of the interface is making users focus on the compression logic while hiding framework specific implementation details from users. Users can learn more about our compression framework and customize a new compression algorithm (pruning algorithm or quantization algorithm) based on our framework. Moreover, users could leverage NNI's auto tuning power to automatically compress a model. Please refer to `here <./advanced.rst>`__ for more details.
+
 
 Reference and Feedback
 ----------------------

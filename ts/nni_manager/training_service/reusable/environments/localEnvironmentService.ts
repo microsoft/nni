@@ -14,6 +14,7 @@ import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
+import { SharedStorageService } from '../sharedStorage'
 
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
@@ -101,7 +102,7 @@ export class LocalEnvironmentService extends EnvironmentService {
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(environment.runnerWorkingFolder, 'code')}" -NoNewline -encoding utf8`);
         } else {
             script.push(`cd ${this.experimentRootDir}`);
-            script.push(`eval ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr"`);
+            script.push(`eval ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
@@ -119,12 +120,21 @@ export class LocalEnvironmentService extends EnvironmentService {
             throw new Error('Local trial config is not initialized');
         }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
-        const localTempFolder: string = path.join(this.experimentRootDir, this.experimentId,
-            "environment-temp", "envs");
+        const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
+        if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
+            this.experimentRootDir = sharedStorageService.localWorkingRoot;
+        } else {
+            this.experimentRootDir = getExperimentRootDir();
+        }
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
+        if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {
+            await sharedStorageService.storageService.copyDirectoryBack("envs", localEnvCodeFolder)
+        } else if (!environment.useSharedStorage) {
+            const localTempFolder: string = path.join(this.experimentRootDir, "environment-temp", "envs");
+            await execCopydir(localTempFolder, localEnvCodeFolder);
+        }
         environment.runnerWorkingFolder = path.join(localEnvCodeFolder, environment.id);
         await execMkdir(environment.runnerWorkingFolder);
-        await execCopydir(localTempFolder, localEnvCodeFolder);
         environment.command = this.getScript(environment).join(getNewLine());
         const scriptName: string = getScriptName('run');
         await fs.promises.writeFile(path.join(localEnvCodeFolder, scriptName),
