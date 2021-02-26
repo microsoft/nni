@@ -330,6 +330,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     if experiment_config.get('multiThread'):
         request_data['multiThread'] = experiment_config.get('multiThread')
+    if experiment_config.get('nniManagerIp'):
+        request_data['nniManagerIp'] = experiment_config.get('nniManagerIp')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
         if request_data['advisor'].get('gpuNum'):
