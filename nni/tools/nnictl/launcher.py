@@ -343,6 +343,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     if experiment_config.get('multiThread'):
         request_data['multiThread'] = experiment_config.get('multiThread')
+    if experiment_config.get('nniManagerIp'):
+        request_data['nniManagerIp'] = experiment_config.get('nniManagerIp')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
         if request_data['advisor'].get('gpuNum'):
@@ -417,6 +419,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         for platform in platform_list:
             if request_dict.get(platform):
                 request_data['clusterMetaData'].append(request_dict[platform])
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'adl':
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)

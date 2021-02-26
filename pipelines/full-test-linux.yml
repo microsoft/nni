@@ -7,7 +7,7 @@ schedules:
 
 jobs:
 - job: linux
-  pool: NNI CI GPU3
+  pool: nni-ci-gpu-local
   timeoutInMinutes: 120
 
   steps:
@@ -15,7 +15,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       echo "##vso[task.setvariable variable=NNI_RELEASE]999.$(date -u +%Y%m%d%H%M%S)"
 
-      python3 -m pip install --upgrade pip setuptools
+      python3 -m pip install --upgrade pip setuptools wheel
       python3 -m pip install pytest
     displayName: Prepare
 
@@ -29,8 +29,9 @@ jobs:
   - script: |
       set -e
       python3 -m pip install scikit-learn==0.23.2
-      python3 -m pip install torchvision==0.6.1
-      python3 -m pip install torch==1.5.1
+      python3 -m pip install torchvision==0.7.0
+      python3 -m pip install torch==1.6.0
+      python3 -m pip install 'pytorch-lightning>=1.1.1,<1.2'
       python3 -m pip install keras==2.1.6
       python3 -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
       python3 -m pip install thop
