@@ -9,7 +9,7 @@ Deep learning network has been computational intensive and memory intensive
 which increase the difficulty of deploying deep neural network model. Quantization is a 
 fundamental technology which is widely used to reduce memory footprint and speed up inference 
 process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantiation. Frameworks like haq(https://arxiv.org/pdf/1811.08886.pdf) only support simulated mixed precision quantization which will 
+quantiation. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
 not speed up the inference process. To get real speedup of mixed precision quantization and 
 help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI to connect different 
 DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 

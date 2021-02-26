@@ -14,7 +14,7 @@ class BaseModelSpeedup:
         config : dict
             Config recording bit number and name of layers.
         """
-        self.quantize_model = model
+        self.model = model
         self.config = config
 
     def inference(self, test_data):
