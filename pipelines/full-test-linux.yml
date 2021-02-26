@@ -7,7 +7,7 @@ schedules:
 
 jobs:
 - job: linux
-  pool: NNI CI GPU3
+  pool: nni-ci-gpu-local
   timeoutInMinutes: 120
 
   steps:
