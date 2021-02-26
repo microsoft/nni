@@ -2,11 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-try:
-    import tensorrt as trt
-    import pycuda.driver as cuda
-except ImportError:
-    pass
+import tensorrt as trt
+import pycuda.driver as cuda
+
 
 
 class Calibrator(trt.IInt8Calibrator):

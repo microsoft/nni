@@ -1,12 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-try:
-    import pycuda.driver as cuda
-    import pycuda.autoinit
-    import tensorrt as trt
-except ImportError:
-    pass
+import pycuda.driver as cuda
+import pycuda.autoinit
+import tensorrt as trt
 
 pycuda.autoinit
 
