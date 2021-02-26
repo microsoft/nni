@@ -15,7 +15,7 @@ jobs:
       echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
       echo "##vso[task.setvariable variable=NNI_RELEASE]999.$(date -u +%Y%m%d%H%M%S)"
 
-      python3 -m pip install --upgrade pip setuptools
+      python3 -m pip install --upgrade pip setuptools wheel
       python3 -m pip install pytest
     displayName: Prepare
 

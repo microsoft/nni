@@ -12,7 +12,7 @@ jobs:
 
   steps:
   - script: |
-      python -m pip install --upgrade pip setuptools
+      python -m pip install --upgrade pip setuptools wheel
       python -m pip install pytest
     displayName: Install Python tools
 
