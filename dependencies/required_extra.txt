@@ -11,3 +11,7 @@ statsmodels==0.12.0
 
 # PPOTuner
 gym
+
+# BlendSearch
+FLAML
+optuna
