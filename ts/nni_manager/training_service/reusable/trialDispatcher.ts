@@ -716,7 +716,7 @@ class TrialDispatcher implements TrainingService {
         // convert assigned gpus to string for nvidia visible settings
         // undefined means no constraint, [] means no gpu visible.
         let gpuIndices: string | undefined = undefined;
-        if (undefined !== this.trialConfig.gpuNum) {
+        if (undefined !== this.trialConfig.gpuNum && this.trialConfig.gpuNum > 0) {
             const gpuArray: number[] = [];
             if (undefined !== trial.assignedGpus) {
                 trial.assignedGpus.map((value) => {
