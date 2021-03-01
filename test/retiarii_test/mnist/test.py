@@ -2,9 +2,9 @@ import random
 
 import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
-import nni.retiarii.trainer.pytorch.lightning as pl
+import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn.functional as F
-from nni.retiarii import basic_unit as bm
+from nni.retiarii import serialize
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from torch.utils.data import DataLoader
 from torchvision import transforms
@@ -36,8 +36,8 @@ class Net(nn.Module):
 if __name__ == '__main__':
     base_model = Net(128)
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
-    test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
+    train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+    test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=2)

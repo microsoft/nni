@@ -286,10 +286,10 @@ class ValueChoice(Translatable, nn.Module):
 class Placeholder(nn.Module):
     # TODO: docstring
 
-    def __init__(self, label, related_info):
+    def __init__(self, label, **related_info):
         self.label = label
         self.related_info = related_info
-        super(Placeholder, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return x

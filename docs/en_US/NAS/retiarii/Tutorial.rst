@@ -129,16 +129,15 @@ Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutat
 
 .. code-block:: python
 
-  ph = nn.Placeholder(label='mutable_0',
-    related_info={
-      'kernel_size_options': [1, 3, 5],
-      'n_layer_options': [1, 2, 3, 4],
-      'exp_ratio': exp_ratio,
-      'stride': stride
-    }
+  ph = nn.Placeholder(
+    label='mutable_0',
+    kernel_size_options=[1, 3, 5],
+    n_layer_options=[1, 2, 3, 4],
+    exp_ratio=exp_ratio,
+    stride=stride
   )
 
-``label`` is used by mutator to identify this placeholder, ``related_info`` is the information that are required by mutator. As ``related_info`` is a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
+``label`` is used by mutator to identify this placeholder. The other parameters are the information that are required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
 
 Explore the Defined Model Space
 -------------------------------

@@ -23,6 +23,7 @@ class LightningModule(pl.LightningModule):
 
 
 Trainer = serialize_cls(pl.Trainer)
+DataLoader = serialize_cls(DataLoader)
 
 
 class Lightning(ModelEvaluator):
