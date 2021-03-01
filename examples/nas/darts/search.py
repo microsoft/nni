@@ -55,7 +55,7 @@ if __name__ == "__main__":
 
         trainer.train()
     else:
-        from nni.retiarii.trainer.pytorch import DartsTrainer
+        from nni.retiarii.oneshot.pytorch import DartsTrainer
         trainer = DartsTrainer(
             model=model,
             loss=criterion,

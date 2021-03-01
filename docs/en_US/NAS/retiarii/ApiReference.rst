@@ -42,31 +42,31 @@ Graph Mutation APIs
 Trainers
 --------
 
-..  autoclass:: nni.retiarii.trainer.FunctionalEvaluator
+..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.LightningModule
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.LightningModule
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Classification
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Regression
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
     :members:
 
 Oneshot Trainers
 ----------------
 
-..  autoclass:: nni.retiarii.trainer.pytorch.DartsTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.DartsTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.EnasTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.EnasTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.ProxylessTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.ProxylessTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.SinglePathTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
     :members:
 
 Strategies

@@ -2,13 +2,13 @@ import json
 import pytest
 
 import nni
-import nni.retiarii.trainer.pytorch.lightning as pl
+import nni.retiarii.evaluator.pytorch.lightning as pl
 import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from nni.retiarii import serialize_cls, serialize
-from nni.retiarii.trainer import FunctionalEvaluator
+from nni.retiarii.evaluator import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms

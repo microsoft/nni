@@ -18,7 +18,7 @@ from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
 from ..nn.pytorch.mutator import process_inline_mutation
 from ..strategy import BaseStrategy
-from ..trainer.interface import BaseOneShotTrainer, BaseTrainer
+from ..oneshot.interface import BaseOneShotTrainer
 
 _logger = logging.getLogger(__name__)
 

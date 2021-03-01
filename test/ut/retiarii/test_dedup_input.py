@@ -17,7 +17,6 @@ from nni.retiarii import Model, Node
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.integration import RetiariiAdvisor
-from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
 

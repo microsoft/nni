@@ -1,5 +1,6 @@
 # This file is deprecated.
 
+import abc
 from typing import Any, List, Dict, Tuple
 
 import numpy as np
@@ -10,7 +11,10 @@ from torchvision import datasets, transforms
 
 import nni
 
-from ..interface import BaseTrainer
+class BaseTrainer(abc.ABC):
+    @abc.abstractmethod
+    def fit(self) -> None:
+        pass
 
 
 def get_default_transform(dataset: str) -> Any:

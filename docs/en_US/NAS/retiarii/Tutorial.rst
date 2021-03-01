@@ -143,24 +143,24 @@ Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutat
 Explore the Defined Model Space
 -------------------------------
 
-After model space is defined, it is time to explore this model space. Users can choose proper search and training approach to explore the model space.
+After model space is defined, it is time to explore this model space. Users can choose proper search and model evaluator to explore the model space.
 
-Create a Trainer and Exploration Strategy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create a Evaluator and Exploration Strategy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Classic search approach:**
-In this approach, trainer is for training each explored model, while strategy is for sampling the models. Both trainer and strategy are required to explore the model space. We recommend PyTorch-Lightning to write the full training process.
+In this approach, model evaluator is for training and testing each explored model, while strategy is for sampling the models. Both evaluator and strategy are required to explore the model space. We recommend PyTorch-Lightning to write the full evaluation process.
 
 **Oneshot (weight-sharing) search approach:**
-In this approach, users only need a oneshot trainer, because this trainer takes charge of both search and training.
+In this approach, users only need a oneshot trainer, because this trainer takes charge of both search, training and testing.
 
-In the following table, we listed the available trainers and strategies.
+In the following table, we listed the available evaluators and strategies.
 
 .. list-table::
   :header-rows: 1
   :widths: auto
 
-  * - Trainer
+  * - Evaluator
     - Strategy
     - Oneshot Trainer
   * - Classification
@@ -178,11 +178,11 @@ In the following table, we listed the available trainers and strategies.
 
 There usage and API document can be found `here <./ApiReference>`__\.
 
-Here is a simple example of using trainer and strategy.
+Here is a simple example of using evaluator and strategy.
 
 .. code-block:: python
 
-  import nni.retiarii.trainer.pytorch.lightning as pl
+  import nni.retiarii.evaluator.pytorch.lightning as pl
   from nni.retiarii import serialize
   from torchvision import transforms
 
@@ -195,7 +195,7 @@ Here is a simple example of using trainer and strategy.
 
 .. Note:: For NNI to capture the dataset and dataloader and distribute it across different runs, please wrap your dataset with ``serialize`` and use ``pl.DataLoader`` instead of ``torch.utils.data.DataLoader``. See ``basic_unit`` section below for details.
 
-Users can refer to `API reference <./ApiReference.rst>`__ on detailed usage of trainer. "`write a trainer <./WriteTrainer.rst>`__" for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
+Users can refer to `API reference <./ApiReference.rst>`__ on detailed usage of evaluator. "`write a trainer <./WriteTrainer.rst>`__" for how to write a new trainer, and refer to `this document <./WriteStrategy.rst>`__ for how to write a new strategy.
 
 Set up an Experiment
 ^^^^^^^^^^^^^^^^^^^^
