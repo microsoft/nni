@@ -26,11 +26,14 @@ def get_init_parameters_or_fail(obj, silently=False):
 
 def _serialize_class_instance_encode(obj, primitives=False):
     assert not primitives, 'Encoding with primitives is not supported.'
-    if hasattr(obj, '__class__'):
-        return {
-            '__type__': get_full_class_name(obj.__class__),
-            'arguments': get_init_parameters_or_fail(obj)
-        }
+    try:  # FIXME: raise error
+        if hasattr(obj, '__class__'):
+            return {
+                '__type__': get_full_class_name(obj.__class__),
+                'arguments': get_init_parameters_or_fail(obj)
+            }
+    except ValueError:
+        pass
     return obj
 
 

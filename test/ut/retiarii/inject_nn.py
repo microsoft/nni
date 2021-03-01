@@ -19,7 +19,7 @@ def wrap_module(original_class):
         full_args.update(kws)
         for i, arg in enumerate(args):
             full_args[argname_list[i]] = arg
-        self._init_parameters = args
+        self._init_parameters = full_args
 
         orig_init(self, *args, **kws)  # Call the original __init__
 

@@ -19,7 +19,6 @@ from ..mutator import Mutator
 from ..nn.pytorch.mutator import process_inline_mutation
 from ..strategy import BaseStrategy
 from ..trainer.interface import BaseOneShotTrainer, BaseTrainer
-from ..utils import get_records
 
 _logger = logging.getLogger(__name__)
 
@@ -87,7 +86,6 @@ class RetiariiExperiment(Experiment):
         self.trainer = trainer
         self.applied_mutators = applied_mutators
         self.strategy = strategy
-        self.recorded_module_args = get_records()
 
         self._dispatcher = RetiariiAdvisor()
         self._dispatcher_thread: Optional[Thread] = None

@@ -27,12 +27,12 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 
 class ModelEvaluator(abc.ABC):
     """
-    Training config of a model. A training config should define where the training code is, and the configuration of
+    Evaluator of a model. An evaluator should define where the training code is, and the configuration of
     training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
     or tune-able parameters (such as learning rate), depending on the implementation of training code.
 
     Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
-    For example, functional training config might directly import the function and call the function.
+    For example, functional evaluator might directly import the function and call the function.
     """
 
     def __repr__(self):
@@ -84,7 +84,7 @@ class Model:
     graphs
         All graphs (subgraphs) in this model.
     evaluator
-        Training config
+        Model evaluator
     history
         Mutation history.
         `self` is directly mutated from `self.history[-1]`;
@@ -131,7 +131,7 @@ class Model:
         new_model = Model(_internal=True)
         new_model._root_graph_name = self._root_graph_name
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.evaluator = copy.deepcopy(self.evaluator)  # TODO this may be a problem when training config is large
+        new_model.evaluator = copy.deepcopy(self.evaluator)  # TODO this may be a problem when evaluator is large
         new_model.history = self.history + [self]
         return new_model
 

@@ -3,7 +3,7 @@ from ..graph import ModelEvaluator
 
 class FunctionalEvaluator(ModelEvaluator):
     """
-    Functional training config that directly takes a function and thus should be general.
+    Functional evaluator that directly takes a function and thus should be general.
 
     Attributes
     ----------
