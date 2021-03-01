@@ -232,11 +232,11 @@ Advanced and FAQ
 
 .. _serialize-module:
 
-**serialize Module**
+**Serialize Module**
 
 To understand the decorator ``basic_unit``, we first briefly explain how our framework works: it converts user-defined model to a graph representation (called graph IR), each instantiated module is converted to a subgraph. Then user-defined mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@basic_unit`` here means the module will not be converted to a subgraph but is converted to a single graph node. That is, the module will not be unfolded anymore. Users should/can decorate a user-defined module class in the following cases:
 
-* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as serialize module. The following ``MyModule`` should be decorated.
+* When a module class cannot be successfully converted to a subgraph due to some implementation issues. For example, currently our framework does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as serializeble module. The following ``MyModule`` should be decorated.
 
   .. code-block:: python
 
@@ -248,6 +248,6 @@ To understand the decorator ``basic_unit``, we first briefly explain how our fra
         for i in range(10): # <- adhoc loop
           ...
 
-* The candidate ops in ``LayerChoice`` should be decorated as serialize module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated if they are user defined modules.
-* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as serialize module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
-* If no mutation is targeted on a module, this module *can be* decorated as a serialize module.
+* The candidate ops in ``LayerChoice`` should be decorated as serializable module. For example, ``self.op = nn.LayerChoice([Op1(...), Op2(...), Op3(...)])``, where ``Op1``, ``Op2``, ``Op3`` should be decorated if they are user defined modules.
+* When users want to use ``ValueChoice`` in a module's input argument, the module should be decorated as serializable module. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, where ``MyConv`` should be decorated.
+* If no mutation is targeted on a module, this module *can be* decorated as a serializable module.
