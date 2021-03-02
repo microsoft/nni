@@ -377,5 +377,13 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve(folderUriInAzure);
     }
+
+    public getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 export { KubernetesTrainingService };

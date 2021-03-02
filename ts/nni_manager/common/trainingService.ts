@@ -85,6 +85,8 @@ abstract class TrainingService {
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
+    public abstract getTrialOutputLocalPath(trialJobId: string): Promise<string>;
+    public abstract fetchTrialOutput(trialJobId: string, subpath: string): Promise<void>;
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
 }

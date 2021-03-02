@@ -934,6 +934,14 @@ class TrialDispatcher implements TrainingService {
         this.useSharedStorage = true;
         return Promise.resolve();
     }
+
+    public getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 
 export { TrialDispatcher };

@@ -855,6 +855,14 @@ class NNIManager implements Manager {
 
         return Promise.resolve(chkpDir);
     }
+
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        return this.trainingService.getTrialOutputLocalPath(trialJobId);
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        return this.trainingService.fetchTrialOutput(trialJobId, subpath);
+    }
 }
 
 export { NNIManager };

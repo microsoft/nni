@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
 import * as tkill from 'tree-kill';
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
@@ -582,6 +582,14 @@ class LocalTrainingService implements TrainingService {
     private async writeParameterFile(directory: string, hyperParameters: HyperParameters): Promise<void> {
         const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
+    }
+
+    public getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
     }
 }
 
