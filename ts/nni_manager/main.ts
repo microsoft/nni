@@ -13,12 +13,14 @@ import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
+import { TensorboardManager } from './common/tensorboardManager'
 import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
+import { nniTensorboardManager } from './core/nniTensorboardManager'
 import { NNIRestServer } from './rest_server/nniRestServer';
 import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { AdlTrainingService } from './training_service/kubernetes/adl/adlTrainingService';
@@ -75,6 +77,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         .scope(Scope.Singleton);
     Container.bind(ExperimentManager)
         .to(NNIExperimentsManager)
+        .scope(Scope.Singleton);
+    Container.bind(TensorboardManager)
+        .to(nniTensorboardManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     if (foreground) {
