@@ -3,7 +3,8 @@ GradientFeatureSelector
 
 GradientFeatureSelector 的算法来源于 `Feature Gradients: Scalable Feature Selection via Discrete Relaxation <https://arxiv.org/pdf/1908.10382.pdf>`__。
 
-GradientFeatureSelector 算法基于梯度搜索算法的特征选择。 
+GradientFeatureSelector，基于梯度搜索算法
+的特征选择。 
 
 1) 该方法扩展了一个近期的结果，
 即在亚线性数据中通过展示计算能迭代的学习（即，在迷你批处理中），在 **线性的时间空间中** 的特征数量 D 及样本大小 N。 

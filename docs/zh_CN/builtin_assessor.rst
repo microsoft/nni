@@ -7,7 +7,7 @@ Assessor 从 Trial 中接收中间结果，并通过指定的算法决定此 Tri
 
 这是 MNIST 在 "最大化" 模式下使用 "曲线拟合" Assessor 的实验结果。 可以看到 Assessor 成功的 **提前终止** 了许多结果不好超参组合的 Trial。 使用 Assessor，能在相同的计算资源下，得到更好的结果。
 
-实现代码: :githublink:`config_assessor.yml <examples/trials/mnist-tfv1/config_assessor.yml>`
+实验代码： :githublink:`config_assessor.yml <examples/trials/mnist-pytorch/config_assessor.yml>`
 
 ..  image:: ../img/Assessor.png
 

@@ -81,9 +81,9 @@
        def sample_final(self):
            return self.sample_search()  # use the same logic here. you can do something different
 
-可以在 :githublink:`这里<src/sdk/pynni/nni/nas/pytorch/random/mutator.py>` 找到随机mutator的完整示例。
+可以在 :githublink:`这里 <nni/nas/pytorch/mutator.py>` 找到随机 mutator 的完整示例。
 
-对于高级用法，例如，需要在 ``LayerChoice`` 执行的时候操作模型，可继承 ``BaseMutator``，并重载 ``on_forward_layer_choice`` 和 ``on_forward_input_choice`` 。这些是 ``LayerChoice`` 和 ``InputChoice`` 对应的回调实现。 还可使用属性 ``mutables`` 来获得模型中所有的 ``LayerChoice`` 和 ``InputChoice``。 详情请参考 :githublink:`reference <src/sdk/pynni/nni/nas/pytorch>` 。
+对于高级用法，例如，需要在 ``LayerChoice`` 执行的时候操作模型，可继承 ``BaseMutator``，并重载 ``on_forward_layer_choice`` 和 ``on_forward_input_choice`` 。这些是 ``LayerChoice`` 和 ``InputChoice`` 对应的回调实现。 还可使用属性 ``mutables`` 来获得模型中所有的 ``LayerChoice`` 和 ``InputChoice``。 详情请参考 :githublink:`这里 <nni/nas/pytorch/>` 。
 
 .. tip::
     用于调试的随机 Mutator。 使用
