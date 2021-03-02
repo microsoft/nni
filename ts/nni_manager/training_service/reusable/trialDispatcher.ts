@@ -936,7 +936,12 @@ class TrialDispatcher implements TrainingService {
     }
 
     public getTrialOutputLocalPath(trialJobId: string): Promise<string> {
-        throw new MethodNotImplementedError();
+        if (this.useSharedStorage) {
+            const localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+            return Promise.resolve(path.join(localWorkingRoot, 'trials', trialJobId));
+        } else {
+            return Promise.reject(new Error('Only support shared storage right now.'));
+        }
     }
 
     public fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
