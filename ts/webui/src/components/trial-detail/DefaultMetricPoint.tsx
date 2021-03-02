@@ -59,20 +59,23 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     };
 
     pointClick = (params: any): void => {
-        if (window.location.pathname === '/oview') {
+        // [hasBestCurve: true]: is detail page, otherwise, is overview page
+        const { hasBestCurve } = this.props;
+        if (!hasBestCurve) {
             this.props.changeExpandRowIDs(params.data[2], 'chart');
         }
     };
 
     generateGraphConfig(_maxSequenceId: number): any {
         const { startY, endY } = this.state;
+        const { hasBestCurve } = this.props;
         return {
             grid: {
                 left: '8%'
             },
             tooltip: {
                 trigger: 'item',
-                enterable: true,
+                enterable: hasBestCurve,
                 confine: true, // confirm always show tooltip box rather than hidden by background
                 formatter: (data: TooltipForAccuracy): React.ReactNode => {
                     return (
