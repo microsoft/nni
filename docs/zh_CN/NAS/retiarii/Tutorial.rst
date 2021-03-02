@@ -7,7 +7,7 @@
 * 在 Experiment 中，神经架构候选项和超参数候选项得到了更友好的支持。
 * Experiment 可以直接从 Python 代码启动。
 
-NNI 正在把 `之前 NAS 框架 <../Overview.rst>`__ *迁移至Retiarii框架。 因此，此功能仍然是实验性的。 NNI 建议用户尝试新的框架，并提供有价值的反馈来改进它。 旧框架目前仍受支持。*
+NNI 正在把 `之前 NAS 框架 <../Overview.rst>`__ *迁移至 Retiarii 框架。 因此，此功能仍然是实验性的。 NNI 建议用户尝试新的框架，并提供有价值的反馈来改进它。 旧框架目前仍受支持。*
 
 .. contents::
 

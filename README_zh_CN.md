@@ -24,7 +24,7 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 * **最新版本**：[v2.0 已发布](https://github.com/microsoft/nni/releases) - *2021年1月14日*
 * **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年2月19日*
 
-* **最新案例分享**：[使用 AdaptDL 和 NNI 进行经济高效的超参调优](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - *2021年2月23日发布*
+* **最新案例分享**：[利用 AdaptDL 和 NNI 集成方案实现经济高效超参调优](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - *2021年2月23日发布*
 
 ## **NNI 功能一览**
 
