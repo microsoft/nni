@@ -110,7 +110,7 @@ Training service
 """"""""""""""""
 
 
-* Support configuring python environment using "preCommand" in remote mode (#2875)
+* Support configuring python environment using "pythonPath" in remote mode (#2875)
 * Support AML training service in Windows (#2882)
 * Support reuse mode for remote training service (#2923)
 

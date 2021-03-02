@@ -88,7 +88,7 @@ describe('ShellExecutor test', () => {
         await executor.close();
     });
 
-    it('Test preCommand-1', async () => {
+    it('Test pythonPath-1', async () => {
         if (skip) {
             return;
         }
@@ -99,16 +99,16 @@ describe('ShellExecutor test', () => {
         await executor.close();
     });
 
-    it('Test preCommand-2', async () => {
+    it('Test pythonPath-2', async () => {
         if (skip) {
             return;
         }
         const executor: ShellExecutor = new ShellExecutor();
-        rmMeta.preCommand = isWindows ? "set TEST_PRE_COMMAND=test_pre_command" : "export TEST_PRE_COMMAND=test_pre_command";
+        rmMeta.pythonPath = "test_python_path";
         await executor.initialize(rmMeta);
-        const command = isWindows ? "python -c \"import os; print(os.environ.get(\'TEST_PRE_COMMAND\'))\"" : "python3 -c \"import os; print(os.environ.get(\'TEST_PRE_COMMAND\'))\"";
+        const command = isWindows ? "python -c \"import os; print(os.environ.get(\'PATH\'))\"" : "python3 -c \"import os; print(os.environ.get(\'PATH\'))\"";
         const result = (await executor.executeScript(command, false, false)).stdout.replace(/[\ +\r\n]/g, "");
-        chai.expect(result).eq("test_pre_command");
+        chai.expect(result).contain("test_python_path");
         await executor.close();
     });
 });
