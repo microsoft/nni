@@ -39,8 +39,8 @@ CIFAR10 Macro/Micro 搜索空间
 PyTorch
 ^^^^^^^
 
-..  autoclass:: nni.algorithms.nas.pytorch.enas.EnasTrainer
+.. autoclass:: nni.algorithms.nas.pytorch.enas.EnasTrainer
     :members:
 
-..  autoclass:: nni.algorithms.nas.pytorch.enas.EnasMutator
+.. autoclass:: nni.algorithms.nas.pytorch.enas.EnasMutator
     :members:

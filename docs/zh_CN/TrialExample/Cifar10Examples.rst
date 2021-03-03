@@ -13,7 +13,7 @@ CIFAR-10 示例
 
 本例中，选择了以下常见的深度学习优化器：
 
-..
+.. code-block:: bash
 
    "SGD", "Adadelta", "Adagrad", "Adam", "Adamax"
 
@@ -48,7 +48,7 @@ NNI 与 CIFAR-10
        "model":{"_type":"choice", "_value":["vgg", "resnet18", "googlenet", "densenet121", "mobilenet", "dpn92", "senet18"]}
    }
 
-示例： :githublink:`search_space.json <examples/trials/cifar10_pytorch/search_space.json>`
+代码示例： :githublink:`search_space.json <examples/trials/cifar10_pytorch/search_space.json>`
 
 **Trial**
 
@@ -59,7 +59,7 @@ NNI 与 CIFAR-10
 * 使用 ``nni.report_intermediate_result(acc)`` 在每个 epoch 结束时返回中间结果。
 * 使用 ``nni.report_final_result(acc)`` 在每个 Trial 结束时返回最终结果。
 
-示例： :githublink:`main.py <examples/trials/cifar10_pytorch/main.py>`
+代码示例： :githublink:`main.py <examples/trials/cifar10_pytorch/main.py>`
 
 还可直接修改现有的代码来支持 Nni，参考：`如何实现 Trial <Trials.rst>`__。
 
@@ -71,9 +71,9 @@ NNI 与 CIFAR-10
 
 这是在 OpenPAI 上运行 Experiment 的示例：
 
-代码 :githublink:`examples/trials/cifar10_pytorch/config_pai.yml <examples/trials/cifar10_pytorch/config_pai.yml>`
+代码： :githublink:`examples/trials/cifar10_pytorch/config_pai.yml <examples/trials/cifar10_pytorch/config_pai.yml>`
 
-完整示例 :githublink:`examples/trials/cifar10_pytorch/ <examples/trials/cifar10_pytorch>`
+完整示例： :githublink:`examples/trials/cifar10_pytorch/ <examples/trials/cifar10_pytorch>`
 
 运行 Experiment
 ^^^^^^^^^^^^^^^^^^^^^
