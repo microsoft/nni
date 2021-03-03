@@ -11,7 +11,7 @@ from .execution.base import BaseExecutionEngine
 from .execution.cgo_engine import CGOExecutionEngine
 from .execution.api import set_execution_engine
 from .integration_api import register_advisor
-from .utils import json_dumps, json_loads
+from .serializer import json_dumps, json_loads
 
 _logger = logging.getLogger(__name__)
 

@@ -5,7 +5,8 @@ import warnings
 import torch
 import torch.nn as nn
 
-from ...utils import uid, add_record, del_record, Translatable
+from ...serializer import Translatable, basic_unit
+from ...utils import uid
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
@@ -281,20 +282,17 @@ class ValueChoice(Translatable, nn.Module):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
 
 
+@basic_unit
 class Placeholder(nn.Module):
     # TODO: docstring
 
-    def __init__(self, label, related_info):
-        add_record(id(self), related_info)
+    def __init__(self, label, **related_info):
         self.label = label
         self.related_info = related_info
-        super(Placeholder, self).__init__()
+        super().__init__()
 
     def forward(self, x):
         return x
-
-    def __del__(self):
-        del_record(id(self))
 
 
 class ChosenInputs(nn.Module):

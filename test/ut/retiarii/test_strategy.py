@@ -12,7 +12,7 @@ from nni.retiarii import Model
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.execution import wait_models
 from nni.retiarii.execution.interface import AbstractExecutionEngine, WorkerInfo, MetricData, AbstractGraphListener
-from nni.retiarii.graph import DebugTraining, ModelStatus
+from nni.retiarii.graph import DebugEvaluator, ModelStatus
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation
 
 
@@ -80,7 +80,7 @@ def _get_model_and_mutators():
     base_model = Net()
     script_module = torch.jit.script(base_model)
     base_model_ir = convert_to_graph(script_module, base_model)
-    base_model_ir.training_config = DebugTraining()
+    base_model_ir.evaluator = DebugEvaluator()
     mutators = process_inline_mutation(base_model_ir)
     return base_model_ir, mutators
 
