@@ -9,7 +9,7 @@ responses
 schema
 PythonWebHDFS
 colorama
-scikit-learn >= 0.23.2
+scikit-learn >= 0.24.1
 websockets
 filelock
 prettytable
