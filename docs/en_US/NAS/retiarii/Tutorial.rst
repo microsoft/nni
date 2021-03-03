@@ -144,8 +144,8 @@ Explore the Defined Model Space
 
 After model space is defined, it is time to explore this model space. Users can choose proper search and model evaluator to explore the model space.
 
-Create a Evaluator and Exploration Strategy
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Create an Evaluator and Exploration Strategy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **Classic search approach:**
 In this approach, model evaluator is for training and testing each explored model, while strategy is for sampling the models. Both evaluator and strategy are required to explore the model space. We recommend PyTorch-Lightning to write the full evaluation process.
