@@ -442,8 +442,10 @@ class TorchModuleGraph(TorchGraph):
         for _tensor in input_tensors:
             debug_name = _tensor.debugName()
             if debug_name in self.output_to_node:
-                # the input tensor maybe the input tensor of the whole model
                 input_order.append(self.output_to_node[debug_name].unique_name)
+            else:
+                # the input tensor may be the input tensor of the whole model
+                input_order.append(None)
         cat_info['in_order'] = input_order
         input_shapes = [t.type().sizes() for t in input_tensors]
         cat_info['in_shape'] = input_shapes
