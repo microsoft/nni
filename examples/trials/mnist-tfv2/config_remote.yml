@@ -25,6 +25,6 @@ machineList:
     username: ${replace_to_your_remote_machine_username}
     sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
     # Below are examples of specifying python environment.
-    # pythonPath: /usr/bin/python3.7
-    # pythonPath: C:/Python37
+    # pythonPath: /usr/bin/Python37/
+    # pythonPath: C:/Python37/
     pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}

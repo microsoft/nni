@@ -538,10 +538,10 @@ If `trialGpuNumber`_ is less than the length of this value, only a subset will b
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
-trialPythonPath
+pythonPath
 -------------------
 
-The path will insert to PATH before launching each trial.
+The path will insert at the front of PATH.
 
 type: ``Optional[str]``
 
