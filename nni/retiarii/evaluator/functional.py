@@ -1,7 +1,7 @@
-from ..graph import ModelEvaluator
+from ..graph import Evaluator
 
 
-class FunctionalEvaluator(ModelEvaluator):
+class FunctionalEvaluator(Evaluator):
     """
     Functional evaluator that directly takes a function and thus should be general.
 

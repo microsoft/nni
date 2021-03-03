@@ -25,7 +25,7 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 """
 
 
-class ModelEvaluator(abc.ABC):
+class Evaluator(abc.ABC):
     """
     Evaluator of a model. An evaluator should define where the training code is, and the configuration of
     training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
@@ -40,15 +40,15 @@ class ModelEvaluator(abc.ABC):
         return f'{self.__class__.__name__}({items})'
 
     @abc.abstractstaticmethod
-    def _load(ir: Any) -> 'ModelEvaluator':
+    def _load(ir: Any) -> 'Evaluator':
         pass
 
     @staticmethod
-    def _load_with_type(type_name: str, ir: Any) -> 'Optional[ModelEvaluator]':
+    def _load_with_type(type_name: str, ir: Any) -> 'Optional[Evaluator]':
         if type_name == '_debug_no_trainer':
             return DebugEvaluator()
         config_cls = import_(type_name)
-        assert issubclass(config_cls, ModelEvaluator)
+        assert issubclass(config_cls, Evaluator)
         return config_cls._load(ir)
 
     @abc.abstractmethod
@@ -104,7 +104,7 @@ class Model:
 
         self._root_graph_name: str = '_model'
         self.graphs: Dict[str, Graph] = {}
-        self.evaluator: Optional[ModelEvaluator] = None
+        self.evaluator: Optional[Evaluator] = None
 
         self.history: List[Model] = []
 
@@ -141,7 +141,7 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
-        model.evaluator = ModelEvaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
+        model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
@@ -681,7 +681,7 @@ class IllegalGraphError(ValueError):
             json.dump(graph, dump_file, indent=4)
 
 
-class DebugEvaluator(ModelEvaluator):
+class DebugEvaluator(Evaluator):
     @staticmethod
     def _load(ir: Any) -> 'DebugEvaluator':
         return DebugEvaluator()

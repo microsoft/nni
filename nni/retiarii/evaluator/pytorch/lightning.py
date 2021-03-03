@@ -7,7 +7,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 import nni
-from ...graph import ModelEvaluator
+from ...graph import Evaluator
 from ...serializer import serialize_cls
 
 
@@ -26,7 +26,7 @@ Trainer = serialize_cls(pl.Trainer)
 DataLoader = serialize_cls(DataLoader)
 
 
-class Lightning(ModelEvaluator):
+class Lightning(Evaluator):
     """
     Delegate the whole training to PyTorch Lightning.
 

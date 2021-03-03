@@ -6,13 +6,13 @@ from typing import Dict, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData, ModelEvaluator
+from ..graph import Model, ModelStatus, MetricData, Evaluator
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
-    def __init__(self, model_script: str, evaluator: ModelEvaluator) -> None:
+    def __init__(self, model_script: str, evaluator: Evaluator) -> None:
         self.model_script = model_script
         self.evaluator = evaluator
 
