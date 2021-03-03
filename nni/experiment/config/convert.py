@@ -105,7 +105,7 @@ def _handle_training_service(ts, data):
                 'gpuIndices': _convert_gpu_indices(machine.get('gpuIndices')),
                 'maxTrialNumPerGpu': machine.get('maxTrialNumPerGpu'),
                 'useActiveGpu': machine.get('useActiveGpu'),
-                'pythonPath': machine.get('trialPrepareCommand')
+                'pythonPath': machine.get('trialPythonPath')
             }
             machine_v1 = {k: v for k, v in machine_v1.items() if v is not None}
             data['machineList'].append(machine_v1)

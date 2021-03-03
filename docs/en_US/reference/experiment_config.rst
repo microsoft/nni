@@ -538,7 +538,7 @@ If `trialGpuNumber`_ is less than the length of this value, only a subset will b
 This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
-trialPrepareCommand
+trialPythonPath
 -------------------
 
 Command(s) to run before launching each trial.
