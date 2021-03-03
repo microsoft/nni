@@ -541,7 +541,7 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 trialPythonPath
 -------------------
 
-Command(s) to run before launching each trial.
+The path will insert to PATH before launching each trial.
 
 type: ``Optional[str]``
 
