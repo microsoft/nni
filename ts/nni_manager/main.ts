@@ -174,25 +174,8 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-async function cleanUp(): Promise<void> {
-    const log: Logger = getLogger();
-    let hasError: boolean = false;
-    try {
-        const nniManager: Manager = component.get(Manager);
-        await nniManager.stopExperiment();
-        const experimentManager: ExperimentManager = component.get(ExperimentManager);
-        await experimentManager.stop();
-        const ds: DataStore = component.get(DataStore);
-        await ds.close();
-        const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.stop();
-    } catch (err) {
-        hasError = true;
-        log.error(`${err.stack}`);
-    } finally {
-        log.close();
-        process.exit(hasError ? 1 : 0);
-    }
+function cleanUp() {
+    (component.get(Manager) as Manager).stopExperiment();
 }
 
 process.on('SIGTERM', cleanUp);
