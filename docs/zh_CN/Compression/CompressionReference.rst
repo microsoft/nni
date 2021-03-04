@@ -1,16 +1,121 @@
-模型压缩 Python API 参考
+模型压缩 API 参考
 =============================================
 
 .. contents::
 
-灵敏度工具
+Compressor
+-----------
+
+Compressor
+^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.compressor.Compressor
+    :members:
+
+..  autoclass:: nni.compression.pytorch.compressor.Pruner
+    :members:
+
+..  autoclass:: nni.compression.pytorch.compressor.Quantizer
+    :members:
+
+
+module 的包装
+^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.compressor.PrunerModuleWrapper
+    :members:
+
+
+..  autoclass:: nni.compression.pytorch.compressor.QuantizerModuleWrapper
+    :members:
+
+权重掩码
+^^^^^^^^^^^^^
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.weight_masker.WeightMasker
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
+    :members:
+
+
+Pruners
+^^^^^^^
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitivity_pruner.SensitivityPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.OneshotPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.LevelPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.SlimPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L1FilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.FPGMPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.TaylorFOWeightFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationAPoZRankFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationMeanRankFilterPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp.AGPPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.net_adapt_pruner.NetAdaptPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.simulated_annealing_pruner.SimulatedAnnealingPruner
+    :members:
+
+
+Quantizers
+^^^^^^^^^^
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.NaiveQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.QAT_Quantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.DoReFaQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
+    :members:
+
+
+
+压缩工具
 ---------------------
+
+灵敏度工具
+^^^^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.utils.sensitivity_analysis.SensitivityAnalysis
     :members:
 
 拓扑结构工具
-------------------
+^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.utils.shape_dependency.ChannelDependency
     :members:
@@ -28,6 +133,6 @@
     :members:
 
 模型 FLOPs 和参数计数器
-------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ..  autofunction:: nni.compression.pytorch.utils.counter.count_flops_params

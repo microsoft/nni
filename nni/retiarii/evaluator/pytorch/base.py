@@ -1,5 +1,6 @@
 # This file is deprecated.
 
+import abc
 from typing import Any, List, Dict, Tuple
 
 import numpy as np
@@ -10,8 +11,10 @@ from torchvision import datasets, transforms
 
 import nni
 
-from ..interface import BaseTrainer
-from ...utils import register_trainer
+class BaseTrainer(abc.ABC):
+    @abc.abstractmethod
+    def fit(self) -> None:
+        pass
 
 
 def get_default_transform(dataset: str) -> Any:
@@ -45,7 +48,6 @@ def get_default_transform(dataset: str) -> Any:
     return None
 
 
-@register_trainer
 class PyTorchImageClassificationTrainer(BaseTrainer):
     """
     Image classification trainer for PyTorch.

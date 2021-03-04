@@ -1,4 +1,4 @@
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 import nni.retiarii.nn.pytorch as nn
 import warnings
 
@@ -148,7 +148,7 @@ class MNASNet(nn.Module):
         #        zip(convops, depths[:-1], depths[1:], kernel_sizes, skips, strides, num_layers, exp_ratios):
         for filter_size, exp_ratio, stride in zip(base_filter_sizes, exp_ratios, strides):
             # TODO: restrict that "choose" can only be used within mutator
-            ph = nn.Placeholder(label=f'mutable_{count}', related_info={
+            ph = nn.Placeholder(label=f'mutable_{count}', **{
                 'kernel_size_options': [1, 3, 5],
                 'n_layer_options': [1, 2, 3, 4],
                 'op_type_options': ['__mutated__.base_mnasnet.RegularConv',

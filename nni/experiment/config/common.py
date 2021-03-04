@@ -63,7 +63,7 @@ class ExperimentConfig(ConfigBase):
     experiment_working_directory: Optional[PathLike] = None
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
     tuner: Optional[_AlgorithmConfig] = None
-    accessor: Optional[_AlgorithmConfig] = None
+    assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
 
@@ -127,8 +127,8 @@ def _validate_for_exp(config: ExperimentConfig) -> None:
         raise ValueError('ExperimentConfig: annotation is not supported in this mode')
     if util.count(config.search_space, config.search_space_file) != 1:
         raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
-    if util.count(config.tuner, config.accessor, config.advisor) != 0:
-        raise ValueError('ExperimentConfig: tuner, accessor, and advisor must not be set in for this mode')
+    if util.count(config.tuner, config.assessor, config.advisor) != 0:
+        raise ValueError('ExperimentConfig: tuner, assessor, and advisor must not be set in for this mode')
     if config.tuner_gpu_indices is not None:
         raise ValueError('ExperimentConfig: tuner_gpu_indices is not supported in this mode')
 
