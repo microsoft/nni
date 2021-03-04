@@ -78,6 +78,12 @@ RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
 COPY dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl .
 RUN python3 -m pip install nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
 
+# 
+# Vision patch. Need del later
+# 
+COPY interim_vision_patch.py .
+RUN python3 interim_vision_patch.py
+
 #
 # install aml package
 #
