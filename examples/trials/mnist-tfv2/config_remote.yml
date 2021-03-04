@@ -25,7 +25,7 @@ machineList:
     username: ${replace_to_your_remote_machine_username}
     sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
     # Below are examples of specifying python environment.
-    # pythonPath: /usr/bin/Python37
+    # pythonPath: /opt/python3.7/bin
     # pythonPath: C:/Python37
     # Below is an example of specifying python environment for windows anaconda user. Multiple paths separated by ';'. 
     # pythonPath: C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin
