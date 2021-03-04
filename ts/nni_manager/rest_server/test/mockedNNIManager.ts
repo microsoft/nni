@@ -114,6 +114,12 @@ export class MockedNNIManager extends Manager {
     public stopExperiment(): Promise<void> {
         throw new MethodNotImplementedError();
     }
+    public stopExperimentTopHalf(): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
+    public stopExperimentBottomHalf(): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
     public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }

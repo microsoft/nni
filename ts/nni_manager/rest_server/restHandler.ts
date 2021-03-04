@@ -64,6 +64,7 @@ class NNIRestHandler {
         this.getTrialLog(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
+        this.stop(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any) => {
@@ -313,6 +314,15 @@ class NNIRestHandler {
                 res.send(JSON.stringify(experimentInfo));
             }).catch((err: Error) => {
                 this.handleError(err, res);
+            });
+        });
+    }
+
+    private stop(router: Router): void {
+        router.delete('/experiment', (req: Request, res: Response) => {
+            this.nniManager.stopExperimentTopHalf().then(() => {
+                res.send();
+                this.nniManager.stopExperimentBottomHalf();
             });
         });
     }

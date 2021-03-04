@@ -10,22 +10,19 @@ from typing import Optional, Tuple
 import colorama
 
 import nni_node  # pylint: disable=import-error
-import nni.runtime.protocol
 
 from .config import ExperimentConfig
 from .config import convert
-from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments
 
 _logger = logging.getLogger('nni.experiment')
 
 
-def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
-    pipe = None
+def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
     proc = None
 
-    config.validate(initialized_tuner=True)
+    config.validate(initialized_tuner=False)
     _ensure_port_idle(port)
     if isinstance(config.training_service, list): # hybrid training service
         _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
@@ -34,12 +31,7 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
 
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
-        pipe = Pipe(exp_id)
-        start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
-        _logger.info('Connecting IPC pipe...')
-        pipe_file = pipe.connect()
-        nni.runtime.protocol._in_file = pipe_file
-        nni.runtime.protocol._out_file = pipe_file
+        start_time, proc = _start_rest_server(config, port, debug, exp_id)
         _logger.info('Statring web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
@@ -47,16 +39,13 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
         _init_experiment(config, port, debug)
-        return proc, pipe
+        return proc
 
     except Exception as e:
         _logger.error('Create experiment failed')
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
-        if pipe is not None:
-            with contextlib.suppress(Exception):
-                pipe.close()
         raise e
 
 
@@ -68,7 +57,7 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
         raise RuntimeError(f'Port {port} is not idle {message}')
 
 
-def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Tuple[int, Popen]:
+def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str) -> Tuple[int, Popen]:
     if isinstance(config.training_service, list):
         ts = 'hybrid'
     else:
@@ -82,7 +71,6 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         'experiment_id': experiment_id,
         'start_mode': 'new',
         'log_level': 'debug' if debug else 'info',
-        'dispatcher_pipe': pipe_path,
     }
 
     node_dir = Path(nni_node.__path__[0])
@@ -97,7 +85,8 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         from subprocess import CREATE_NEW_PROCESS_GROUP
         proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        proc = Popen(cmd, cwd=node_dir)
+        import os
+        proc = Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
     return int(time.time() * 1000), proc
 
 
