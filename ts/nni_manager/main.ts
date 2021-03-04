@@ -174,7 +174,7 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-function cleanUp() {
+function cleanUp(): void {
     (component.get(Manager) as Manager).stopExperiment();
 }
 

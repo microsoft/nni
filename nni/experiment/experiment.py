@@ -3,7 +3,6 @@ import logging
 from pathlib import Path
 import socket
 from subprocess import Popen
-from threading import Thread
 import time
 from typing import Optional, Union, List, overload, Any
 
@@ -16,7 +15,6 @@ from .config import ExperimentConfig, AlgorithmConfig
 from .data import TrialJob, TrialMetricData, TrialResult
 from . import launcher
 from . import management
-from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.command_utils import kill_command
 

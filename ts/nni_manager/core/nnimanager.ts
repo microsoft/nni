@@ -498,9 +498,6 @@ class NNIManager implements Manager {
         return;
     }
 
-    private async experimentDoneCleanUp(): Promise<void> {
-    }
-
     private async periodicallyUpdateExecDuration(): Promise<void> {
         let count: number = 1;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
