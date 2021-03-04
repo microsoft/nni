@@ -105,6 +105,9 @@ class RetiariiAdvisor(MsgDispatcherBase):
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
+    def mark_experiment_as_ending(self):
+        send(CommandType.NoMoreTrialJobs, '')
+
     def handle_request_trial_jobs(self, num_trials):
         _logger.info('Request trial jobs: %s', num_trials)
         if self.request_trial_jobs_callback is not None:
