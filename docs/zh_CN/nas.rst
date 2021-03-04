@@ -18,9 +18,10 @@
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    定义搜索空间 <NAS/WriteSearchSpace>
+    编写搜索空间 <NAS/WriteSearchSpace>
     经典 NAS <NAS/ClassicNas>
     One-Shot NAS <NAS/one_shot_nas>
+    Retiarii NAS（实验性） <NAS/retiarii/retiarii_index>
     自定义 NAS 算法 <NAS/Advanced>
     NAS 可视化 <NAS/Visualization>
     搜索空间集合 <NAS/SearchSpaceZoo>

@@ -92,9 +92,11 @@ export class LocalEnvironmentService extends EnvironmentService {
     private getScript(environment: EnvironmentInformation): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
+            script.push(`$env:PATH="${process.env.path}"`)
             script.push(`cd $env:${this.experimentRootDir}`);
             script.push(`New-Item -ItemType "directory" -Path ${path.join(this.experimentRootDir, 'envs', environment.id)} -Force`);
-            environment.command = `cd envs\\${environment.id} && python -m nni.tools.trial_tool.trial_runner`;
+            script.push(`cd envs\\${environment.id}`);
+            environment.command = `python -m nni.tools.trial_tool.trial_runner`;
             script.push(
                 `cmd.exe /c ${environment.command} --job_pid_file ${path.join(environment.runnerWorkingFolder, 'pid')} 2>&1 | Out-File "${path.join(environment.runnerWorkingFolder, 'trial_runner.log')}" -encoding utf8`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,

@@ -218,6 +218,7 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            nniManagerIp: joi.string(),
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({

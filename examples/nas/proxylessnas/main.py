@@ -84,7 +84,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
     if args.train_mode == 'search':
-        from nni.retiarii.trainer.pytorch import ProxylessTrainer
+        from nni.retiarii.oneshot.pytorch import ProxylessTrainer
         from torchvision.datasets import ImageNet
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
