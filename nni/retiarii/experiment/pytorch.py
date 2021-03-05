@@ -1,6 +1,7 @@
 import atexit
 import logging
 from dataclasses import dataclass
+import os
 from pathlib import Path
 import socket
 from subprocess import Popen
@@ -53,6 +54,16 @@ class RetiariiExeConfig(ConfigBase):
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
             self.training_service = util.training_service_config_factory(platform = training_service_platform)
+
+    def __setattr__(self, key, value):
+        fixed_attrs = {'search_space': '',
+                       'trial_command': 'python3 -m nni.retiarii.trial_entry'}
+        if key in fixed_attrs and fixed_attrs[key] != value:
+            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
+        # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
+        if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
+            raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
+        self.__dict__[key] = value
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
