@@ -51,7 +51,6 @@ def _type_encode(obj, primitives=False):
     if isinstance(obj, (types.FunctionType, types.BuiltinFunctionType)):
         # This is not reliable for cases like closure, `open`, or objects that is callable but not intended to be serialized.
         # https://stackoverflow.com/questions/624926/how-do-i-detect-whether-a-python-variable-is-a-function
-        print(obj, get_importable_name(obj, relocate_module=True))
         return {'__typename__': get_importable_name(obj, relocate_module=True)}
     return obj
 
