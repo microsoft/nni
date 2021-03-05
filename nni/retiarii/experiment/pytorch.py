@@ -1,13 +1,21 @@
+import atexit
 import logging
 from dataclasses import dataclass
 from pathlib import Path
+import socket
 from subprocess import Popen
 from threading import Thread
+import time
 from typing import Any, List, Optional, Union
+
+import colorama
+import psutil
 
 import torch
 import torch.nn as nn
+import nni.runtime.log
 from nni.experiment import Experiment, TrainingServiceConfig
+from nni.experiment import management, launcher, rest
 from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
@@ -125,7 +133,37 @@ class RetiariiExperiment(Experiment):
         debug
             Whether to start in debug mode.
         """
-        super().start(port, debug)
+        atexit.register(self.stop)
+
+        self.id = management.generate_experiment_id()
+
+        if self.config.experiment_working_directory is not None:
+            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
+        else:
+            log_dir = Path.home() / f'nni-experiments/{self.id}/log'
+        nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
+
+        self._proc, self._pipe = launcher.start_experiment_retiarii(self.id, self.config, port, debug)
+        assert self._proc is not None
+        assert self._pipe is not None
+
+        self.port = port  # port will be None if start up failed
+
+        # dispatcher must be launched after pipe initialized
+        # the logic to launch dispatcher in background should be refactored into dispatcher api
+        self._dispatcher = self._create_dispatcher()
+        self._dispatcher_thread = Thread(target=self._dispatcher.run)
+        self._dispatcher_thread.start()
+
+        ips = [self.config.nni_manager_ip]
+        for interfaces in psutil.net_if_addrs().values():
+            for interface in interfaces:
+                if interface.family == socket.AF_INET:
+                    ips.append(interface.address)
+        ips = [f'http://{ip}:{port}' for ip in ips if ip]
+        msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
+        _logger.info(msg)
+
         self._start_strategy()
 
     def _create_dispatcher(self):
@@ -141,7 +179,58 @@ class RetiariiExperiment(Experiment):
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
-            super().run(port, debug)
+            self._run(port, debug)
+
+    def _run(self, port: int = 8080, debug: bool = False) -> bool:
+        """
+        Run the experiment.
+        This function will block until experiment finish or error.
+        Return `True` when experiment done; or return `False` when experiment failed.
+        """
+        self.start(port, debug)
+        try:
+            while True:
+                time.sleep(10)
+                status = self.get_status()
+                if status == 'DONE' or status == 'STOPPED':
+                    return True
+                if status == 'ERROR':
+                    return False
+        except KeyboardInterrupt:
+            _logger.warning('KeyboardInterrupt detected')
+        finally:
+            self.stop()
+
+    def stop(self) -> None:
+        """
+        Stop background experiment.
+        """
+        _logger.info('Stopping experiment, please wait...')
+        atexit.unregister(self.stop)
+ 
+        if self.id is not None:
+            nni.runtime.log.stop_experiment_log(self.id)
+        if self._proc is not None:
+            try:
+                rest.delete(self.port, '/experiment')
+            except Exception as e:
+                _logger.exception(e)
+                _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
+                kill_command(self._proc.pid)
+
+        if self._pipe is not None:
+            self._pipe.close()
+        if self._dispatcher_thread is not None:
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
+
+        self.id = None
+        self.port = None
+        self._proc = None
+        self._pipe = None
+        self._dispatcher = None
+        self._dispatcher_thread = None
+        _logger.info('Experiment stopped')
 
     def export_top_models(self, top_n: int = 1):
         """
