@@ -66,6 +66,16 @@ jobs:
     displayName: Copy test scripts to remote machine
     timeoutInMinutes: 10
 
+  # Need del later
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      contents: interim_vision_patch.py
+      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      overwrite: true
+    displayName: Copy vision patch to remote machine
+    timeoutInMinutes: 10
+
   - task: SSH@0
     inputs:
       sshEndpoint: $(worker)

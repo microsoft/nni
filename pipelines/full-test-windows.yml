@@ -32,6 +32,12 @@ jobs:
       python -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
     displayName: Install extra dependencies
 
+  # Need del later
+  - script: |
+      set -e
+      python interim_vision_patch.py
+    displayName: Vision MNIST Patch
+
   - script: |
       cd examples/tuners/customized_tuner
       python setup.py develop --user
