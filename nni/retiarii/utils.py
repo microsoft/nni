@@ -42,7 +42,8 @@ def get_module_name(cls_or_func):
                 module_name = main_file_path.stem
                 break
     if module_name == '__main__':
-        warnings.warn('Callstack exhausted but main module still not found. This will probably cause issues that the function/class cannot be imported.')
+        warnings.warn('Callstack exhausted but main module still not found. This will probably cause issues that the '
+                      'function/class cannot be imported.')
 
     # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
     # to make LSTM's source code can be found, we should assign original LSTM's __module__ to
