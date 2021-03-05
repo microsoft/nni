@@ -128,8 +128,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.log.debug(`initializing ${executor.name}`);
 
         // Create root working directory after executor is ready
-        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni');
-        await executor.createFolder(nniRootDir);
+        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni-experiments');
         await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
 
         // the directory to store temp scripts in remote machine
