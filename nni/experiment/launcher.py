@@ -127,9 +127,11 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         from subprocess import CREATE_NEW_PROCESS_GROUP
         proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        #import os
-        #proc = Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
-        proc = Popen(cmd, cwd=node_dir)
+        if pipe_path is None:
+            import os
+            proc = Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
+        else:
+            proc = Popen(cmd, cwd=node_dir)
     return int(time.time() * 1000), proc
 
 
