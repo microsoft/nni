@@ -123,7 +123,7 @@ export class NFSSharedStorageService extends SharedStorageService {
     }
 
     private getCommand(mountPoint: string): string {
-        const install = `rm -f nni_install_nfsclient.sh && touch nni_install_nfsclient.sh && echo -e "${INSTALL_NFS_CLIENT.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> nni_install_nfsclient.sh && bash nni_install_nfsclient.sh`;
+        const install = `rm -f nni_install_nfsclient.sh && touch nni_install_nfsclient.sh && echo "${INSTALL_NFS_CLIENT.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> nni_install_nfsclient.sh && bash nni_install_nfsclient.sh`;
         const mount = `mkdir -p ${mountPoint} && sudo mount ${this.nfsServer}:${this.exportedDirectory} ${mountPoint}`;
         const clean = `rm -f nni_install_nfsclient.sh`;
         return `${install} && ${mount} && ${clean}`;
