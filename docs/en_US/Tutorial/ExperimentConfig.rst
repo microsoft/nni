@@ -838,14 +838,14 @@ localMountPoint
 
 Required. String.
 
-The absolute path that the storage has been or will be mounted in local.
+The absolute path that the storage has been or will be mounted in local. i.e. ``/tmp/nni-shared-storage``.
 
 remoteMountPoint
 ^^^^^^^^^^^^^^^^
 
 Required. String.
 
-The absolute path that the storage will be mounted in remote.
+The absolute path that the storage will be mounted in remote. i.e. ``./nni-shared-storage``. Note that the directory must be empty if using AzureBlob.
 
 localMounted
 ^^^^^^^^^^^^
