@@ -41,7 +41,7 @@ jobs:
   # Need del later
   - script: |
       set -e
-      python interim_vision_patch.py
+      python3 interim_vision_patch.py
     displayName: Vision MNIST Patch
 
   - script: |
