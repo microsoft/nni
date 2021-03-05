@@ -138,11 +138,8 @@ class RetiariiExperiment(Experiment):
         return self._dispatcher
 
     def _strategy_monitor(self):
-        while True:
-            time.sleep(2)
-            if not self._strategy_thread.is_alive():
-                self._dispatcher.mark_experiment_as_ending()
-                break
+        self._strategy_thread.join()
+        self._dispatcher.mark_experiment_as_ending()
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """

@@ -33,7 +33,6 @@ def get_module_name(cls_or_func):
     if module_name == '__main__':
         # infer the module name with inspect
         for frm in inspect.stack():
-            print(inspect.getmodule(frm[0]).__name__)
             if inspect.getmodule(frm[0]).__name__ == '__main__':
                 # main module found
                 main_file_path = Path(inspect.getsourcefile(frm[0]))
