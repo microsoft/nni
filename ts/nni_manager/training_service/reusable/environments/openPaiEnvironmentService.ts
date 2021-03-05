@@ -182,7 +182,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         let environmentRoot: string;
         if (environment.useSharedStorage) {
             environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand} && cd ${environmentRoot} && ${environment.command}`;
+            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `)} && cd ${environmentRoot} && ${environment.command}`;
         } else {
             environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
             environment.command = `cd ${environmentRoot} && ${environment.command}`;
@@ -306,7 +306,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     const taskRole = nniJobConfig.taskRoles[taskRoleName];
                     // replace ' to '\''
                     const joinedCommand = taskRole.commands.join(" && ").replace("'", "'\\''").trim();
-                    const nniTrialCommand = `${environment.command.replace(/"/g, `\\"`)} --node_count ${environment.nodeCount} --trial_command '${joinedCommand}'`;
+                    const nniTrialCommand = `${environment.command} --node_count ${environment.nodeCount} --trial_command '${joinedCommand}'`;
                     this.log.debug(`replace command ${taskRole.commands} to ${[nniTrialCommand]}`);
                     taskRole.commands = [nniTrialCommand];
                 }
