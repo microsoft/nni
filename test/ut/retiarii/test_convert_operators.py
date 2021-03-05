@@ -15,10 +15,8 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import blackbox_module
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import get_records
 
 # following pytorch v1.7.1
 

@@ -17,7 +17,9 @@ Advisor 用于同时需要 Tuner 和 Assessor 方法的自动机器学习算法�
        def __init__(self, ...):
            ...
 
-**2. 实现所有除了 ``handle_request`` 外的，以 ``handle_`` 前缀开始的方法**。 `此文档 </sdk_reference.html#nni.runtime.msg_dispatcher_base.MsgDispatcherBase>`__ 可帮助理解 ``MsgDispatcherBase``。
+**2. 实现所有除了 "handle_request" 外的，以 "handle_" 前缀开始的方法**。
+
+关于 ``MsgDispatcherBase`` 可以查询此 `文档 <../autotune_ref.rst#Advisor>`__ 。
 
 **3. 在 Experiment 的 YAML 文件中配置好自定义的 Advisor** 。
 

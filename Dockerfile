@@ -63,9 +63,9 @@ RUN python3 -m pip --no-cache-dir install torch==1.4.0
 RUN python3 -m pip install torchvision==0.5.0
 
 #
-# sklearn 0.23.2
+# sklearn 0.24.1
 #
-RUN python3 -m pip --no-cache-dir install scikit-learn==0.23.2
+RUN python3 -m pip --no-cache-dir install scikit-learn==0.24.1
 
 #
 # pandas==0.23.4 lightgbm==2.2.2

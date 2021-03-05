@@ -6,14 +6,14 @@
 
 NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际运行的计算基础架构平台。 当从一个集群迁移到另一个集群时 (如，从本机迁移到 Kubeflow)，用户只需要调整几项配置，能很容易的扩展计算资源。
 
-用户可以使用 NNI 提供的训练平台来跑 trial, 训练平台有：`local machine <./LocalMode.rst>`__\ ， `remote machines <./RemoteMachineMode.rst>`__\ 以及集群类的 `PAI <./PaiMode.rst>`__\ ，`Kubeflow <./KubeflowMode.rst>`__\ ，`AdaptDL <./AdaptDLMode.rst>`__\ ， `FrameworkController <./FrameworkControllerMode.rst>`__\ ， `DLTS <./DLTSMode.rst>`__ 和 `AML <./AMLMode.rst>`__。 这些都是\ *内置的训练平台*。
+用户可以使用 NNI 提供的训练平台来跑 trial, 训练平台有：`local machine <./LocalMode.rst>`__\ ， `remote machines <./RemoteMachineMode.rst>`__\ 以及集群类的 `PAI <./PaiMode.rst>`__\ ，`Kubeflow <./KubeflowMode.rst>`__\ ，`AdaptDL <./AdaptDLMode.rst>`__\ ， `FrameworkController <./FrameworkControllerMode.rst>`__\ ， `DLTS <./DLTSMode.rst>`__ 和 `AML <./AMLMode.rst>`__。 这些都是 *内置的训练平台*。
 
-如果需要在计算资源上使用 NNI，可以根据相关接口，轻松构建对其它训练平台的支持。 详情请参考 `NNI 中如何实现训练平台 <./HowToImplementTrainingService.rst>`__  。
+如果需要在计算资源上使用 NNI，可以根据相关接口，轻松构建对其它训练平台的支持。 详情请参考 `如何实施训练平台 <./HowToImplementTrainingService.rst>`__ 。
 
 如何使用训练平台？
 ----------------------------
 
-在 Experiment 的 YAML 配置文件中选择并配置好训练平台。 参考相应训练平台的文档来了解如何配置。 同时， `Experiment 文档 <../Tutorial/ExperimentConfig.rst>`__ 提供了更多详细信息。
+在 Experiment 的 YAML 配置文件中选择并配置好训练平台。 参考相应训练平台的文档来了解如何配置。 `此文档 <../Tutorial/ExperimentConfig.rst>`__ 提供了更多详细信息。
 
 然后，需要准备代码目录，将路径填入配置文件的 ``codeDir`` 字段。 注意，非本机模式下，代码目录会在 Experiment 运行前上传到远程或集群中。 因此，NNI 将文件数量限制到 2000，总大小限制为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 写好这个文件请参考 :githublink:`示例 <examples/trials/mnist-tfv1/.nniignore>` 和 `git 文档 <https://git-scm.com/docs/gitignore#_pattern_format>`__。
 
@@ -35,9 +35,9 @@ NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际�
    * - `PAI <./PaiMode.rst>`__
      - NNI 支持在 `OpenPAI <https://github.com/Microsoft/pai>`__ (aka PAI) 上运行 Experiment，即 pai 模式。 在使用 NNI 的 pai 模式前, 需要有 `OpenPAI <https://github.com/Microsoft/pai>`__ 群集的账户。 如果没有 OpenPAI 账户，参考 `这里 <https://github.com/Microsoft/pai#how-to-deploy>`__ 来进行部署。 在 pai 模式中，会在 Docker 创建的容器中运行 Trial 程序。
    * - `Kubeflow <./KubeflowMode.rst>`__
-     - NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
+     - NNI 支持在 `Kubeflow <https://github.com/kubeflow/kubeflow>`__ 上运行，称为 kubeflow 模式。 在开始使用 NNI 的 Kubeflow 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好 `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 如果不熟悉 Kubernetes，可先浏览 `这里 <https://kubernetes.io/docs/tutorials/kubernetes-basics/>`__ 。 在 kubeflow 模式下，每个 Trial 程序会在 Kubernetes 集群中作为一个 Kubeflow 作业来运行。
    * - `AdaptDL <./AdaptDLMode.rst>`__
-     - NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI kubeflow 模式之前，应该具有 Kubernetes 集群。
+     - NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 AdaptDL 模式之前，应该具有 Kubernetes 集群。
    * - `FrameworkController <./FrameworkControllerMode.rst>`__
      - NNI 支持使用 `FrameworkController <https://github.com/Microsoft/frameworkcontroller>`__，来运行 Experiment，称之为 frameworkcontroller 模式。 FrameworkController 构建于 Kubernetes 上，用于编排各种应用。这样，可以不用为某个深度学习框架安装 Kubeflow 的 tf-operator 或 pytorch-operator 等。 而直接用 FrameworkController 作为 NNI Experiment 的训练平台。
    * - `DLTS <./DLTSMode.rst>`__
@@ -57,7 +57,7 @@ NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际�
    </p>
 
 
-根据 `概述 <../Overview>`__ 中展示的架构，训练平台会做三件事：1) 启动 Trial; 2) 收集指标，并与 NNI 核心（NNI 管理器）通信；3) 监控 Trial 任务状态。 为了展示训练平台的详细工作原理，下面介绍了训练平台从最开始到第一个 Trial 运行成功的过程。
+根据 `概述 <../Overview.rst>`__ 中展示的架构，训练平台会做三件事：1) 启动 Trial; 2) 收集指标，并与 NNI 核心（NNI 管理器）通信；3) 监控 Trial 任务状态。 为了展示训练平台的详细工作原理，下面介绍了训练平台从最开始到第一个 Trial 运行成功的过程。
 
 步骤 1. **验证配置，并准备训练平台。** 训练平台会首先检查用户配置是否正确（例如，身份验证是否有错）。 然后，训练平台会为 Experiment 做准备，创建训练平台可访问的代码目录（ ``codeDir`` ）。
 

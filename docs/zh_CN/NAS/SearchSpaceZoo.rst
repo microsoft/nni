@@ -82,7 +82,7 @@ ENAS Micro 的搜索空间如下图所示。 请注意，在 NNI 的实现中将
 ENASMicroLayer
 --------------
 
-该层是从设计的模型中提取的 :githublink:`这里 <examples/nas/enas>`. 一个模型包含共享结构的多个块。 一个块由一些常规层和约简层组成，``ENASMicroLayer`` 是这两型层的统一实现。 这两类层之间的唯一区别是约简层的所有操作 ``stride=2``。
+这层是由 :githublink:`这里 <examples/nas/enas>` 的模型提取出来的。 一个模型包含共享结构的多个块。 一个块由一些常规层和约简层组成，``ENASMicroLayer`` 是这两型层的统一实现。 这两类层之间的唯一区别是约简层的所有操作 ``stride=2``。
 
 ENAS Micro 的一个 cell 是含有 N 个节点的有向无环图。其中节点表示张量，边表示 N 个节点间的信息流。 一个 cell 包含两个输入节点和一个输出节点。 接下来节点选择前两个之前的节点作为输入，并从 `预定义的的操作集 <#predefined-operations-enas>`__ 中选择两个操作，分别应用到输入上，然后将它们相加为该节点的输出。 例如，节点 4 选择节点 1 和节点 3 作为输入，然后分别对输入应用 
  ``MaxPool`` 和 ``AvgPool``，然后将它们相加作为节点 4 的输出。 未用作任何其他节点输入的节点将被视为该层的输出。 如果有多个输出节点，则模型将计算这些节点的平均值作为当前层的输出。
@@ -193,10 +193,11 @@ ENAS Macro 的搜索空间如下图所示。
     首先将所有输入传递到 StdConv，该操作由 1x1Conv，BatchNorm2d 和 ReLU 组成。 然后进行下列的操作之一。 最终结果通过后处理，包括BatchNorm2d和ReLU。
 
 
-  Separable Conv3x3：如果 ``separable=True``，则 cell 将使用 `SepConv <#DilConv>`__ 而不是常规的卷积操作。 SepConv 固定为  ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
+  * Separable Conv3x3：如果 ``separable=True``，则 cell 将使用 `SepConv <#DilConv>`__ 而不是常规的卷积操作。 SepConv 固定为  ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
   * Separable Conv5x5: SepConv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
-  * 普通的 Conv3x3: 如果 ``separable=False``\ , cell 将使用常规的转化操作 ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
-  * 普通的 Conv5x5：Conv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
+  * Normal Conv3x3: 如果 ``separable=False``\ , cell 将使用常规的转化操作 ``kernel_size=3``\ , ``stride=1`` 和 ``padding=1``。
+  * 
+    Normal Conv5x5：Conv 固定为 ``kernel_size=5``\ , ``stride=1`` 和 ``padding=2``。
 
 ..  autoclass:: nni.nas.pytorch.search_space_zoo.enas_ops.ConvBranch
 

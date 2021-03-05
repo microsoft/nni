@@ -4,7 +4,7 @@ import unittest
 import nni.retiarii.nn.pytorch as nn
 import torch
 import torch.nn.functional as F
-from nni.retiarii import Sampler, blackbox_module
+from nni.retiarii import Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation
@@ -29,7 +29,7 @@ class RandomSampler(Sampler):
         return random.choice(candidates)
 
 
-@blackbox_module
+@basic_unit
 class MutableConv(nn.Module):
     def __init__(self):
         super().__init__()

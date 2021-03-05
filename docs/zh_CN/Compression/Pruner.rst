@@ -1,15 +1,14 @@
 NNI 支持的剪枝算法
 ===================================
 
-NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度的剪枝** 通常会导致非结构化的模型，这需要特定的硬件或软件来加速这样的稀疏网络。  NNI 还提供了算法来进行 **剪枝规划**。
+NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度剪枝** 通常会生成非结构化模型，这需要专门的硬件或软件来加速稀疏网络。 **滤波器剪枝** 通过移除整个滤波器来实现加速。 一些剪枝算法使用 One-Shot 的方法，即根据重要性指标一次性剪枝权重。 其他剪枝算法控制在优化过程中剪枝权重的 **剪枝调度**，包括一些自动剪枝算法。
+
 
 **细粒度剪枝**
-
 
 * `Level Pruner <#level-pruner>`__
 
 **滤波器剪枝**
-
 
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
@@ -21,7 +20,6 @@ NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算�
 
 **剪枝计划**
 
-
 * `AGP Pruner <#agp-pruner>`__
 * `NetAdapt Pruner <#netadapt-pruner>`__
 * `SimulatedAnnealing Pruner <#simulatedannealing-pruner>`__
@@ -30,7 +28,6 @@ NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算�
 * `Sensitivity Pruner <#sensitivity-pruner>`__
 
 **其它**
-
 
 * `ADMM Pruner <#admm-pruner>`__
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
@@ -44,15 +41,6 @@ Level Pruner
 
 用法
 ^^^^^
-
-TensorFlow 代码
-
-.. code-block:: python
-
-   from nni.algorithms.compression.tensorflow.pruning import LevelPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
-   pruner = LevelPruner(model, config_list)
-   pruner.compress()
 
 PyTorch 代码
 
@@ -70,26 +58,14 @@ PyTorch
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.LevelPruner
 
-TensorFlow 
-""""""""""
+**TensorFlow**
 
 ..  autoclass:: nni.algorithms.compression.tensorflow.pruning.LevelPruner
 
+
 Slim Pruner
 -----------
-
-这是一次性的 Pruner，在 `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/pdf/1708.06519.pdf>`__ 中提出，作者 Zhuang Liu, Jianguo Li, Zhiqiang Shen, Gao Huang, Shoumeng Yan 以及 Changshui Zhang。
-
-
-.. image:: ../../img/slim_pruner.png
-   :target: ../../img/slim_pruner.png
-   :alt: 
-
-
-..
-
-   Slim Pruner **会遮盖卷据层通道之后 BN 层对应的缩放因子**，训练时在缩放因子上的 L1 正规化应在批量正规化 (BN) 层之后来做。BN 层的缩放因子在修剪时，是 **全局排序的**，因此稀疏模型能自动找到给定的稀疏度。
-
+这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\。
 
 用法
 ^^^^^
@@ -124,36 +100,29 @@ Slim Pruner 的用户配置
      - 参数量
      - 剪除率
    * - VGGNet
-     - 6.34/6.40
+     - 6.34/6.69
      - 20.04M
      - 
    * - Pruned-VGGNet
-     - 6.20/6.26
+     - 6.20/6.34
      - 2.03M
      - 88.5%
 
 
-实验代码在 :githublink:`这里 <examples/model_compress/>`
+实验代码在 :githublink:`examples/model_compress/pruning/basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>`
+
+.. code-block:: python
+
+   python basic_pruners_torch.py --pruner slim --model vgg19 --sparsity 0.7 --speed-up
+
 
 ----
 
 FPGM Pruner
 -----------
 
-这是一种一次性的 Pruner，FPGM Pruner 是论文 `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__ 的实现
-
-具有最小几何中位数的 FPGMPruner 修剪滤波器。
-
- 
-.. image:: ../../img/fpgm_fig1.png
-   :target: ../../img/fpgm_fig1.png
-   :alt: 
-
-
-..
-
-   以前的方法使用 “smaller-norm-less-important” 准则来修剪卷积神经网络中规范值较小的。 本文中，分析了基于规范的准则，并指出其所依赖的两个条件不能总是满足：(1) 过滤器的规范偏差应该较大；(2) 过滤器的最小规范化值应该很小。 为了解决此问题，提出了新的过滤器修建方法，即 Filter Pruning via Geometric Median (FPGM)，可不考虑这两个要求来压缩模型。 与以前的方法不同，FPGM 通过修剪冗余的，而不是相关性更小的部分来压缩 CNN 模型。 
-
+这是一个 One-Shot Pruner，用最小的几何中值修剪滤波器。 FPGM 选择最可替换的滤波器。
+更多细节，请参考 `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__ 。
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
 
@@ -182,20 +151,10 @@ FPGM Pruner 的用户配置
 L1Filter Pruner
 ---------------
 
-这是一种一次性的 Pruner，由 `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ 提出，作者 Hao Li, Asim Kadav, Igor Durdanovic, Hanan Samet 和 Hans Peter Graf。
-
-
-.. image:: ../../img/l1filter_pruner.png
-   :target: ../../img/l1filter_pruner.png
-   :alt: 
-
+这是一个 One-Shot Pruner，它修剪 **卷积层** 中的滤波器。
 
 ..
-
-   L1Filter Pruner 修剪 **卷积层** 中的过滤器
-
    从第 i 个卷积层修剪 m 个过滤器的过程如下：
-
 
    #. 对于每个滤波器 :math:`F_{i,j}`，计算其绝对内核权重之和 :math:`s_j=\sum_{l=1}^{n_i}\sum|K_l|`.
 
@@ -206,6 +165,9 @@ L1Filter Pruner
 
    #. 为第 :math:`i` 层和第 :math:`i+1` 层创建新的内核权重，
       并保留剩余的内核 权重，复制到新模型中。
+
+更多细节，请参考 `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ 。
+
 
 
 此外，我们还为 L1FilterPruner 提供了依赖感知模式。 参考 `dependency-aware mode <./DependencyAware.rst>`__ 获取依赖感知模式的更多细节。
@@ -252,7 +214,11 @@ L1Filter Pruner 的用户配置
      - 64.0%
 
 
-实验代码在 :githublink:`这里 <examples/model_compress/>`
+实验代码在 :githublink:`examples/model_compress/pruning/basic_pruners_torch.py <examples/model_compress/pruning/basic_pruners_torch.py>`
+
+.. code-block:: python
+
+   python basic_pruners_torch.py --pruner l1filter --model vgg16 --speed-up
 
 ----
 
@@ -291,10 +257,7 @@ ActivationAPoZRankFilter Pruner 是从卷积层激活的输出，用最小的重
 
 APoZ 定义为：
 
-
-.. image:: ../../img/apoz.png
-   :target: ../../img/apoz.png
-   :alt: 
+:math:`APoZ_{c}^{(i)} = APoZ\left(O_{c}^{(i)}\right)=\frac{\sum_{k}^{N} \sum_{j}^{M} f\left(O_{c, j}^{(i)}(k)=0\right)}{N \times M}`
 
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
@@ -316,7 +279,7 @@ PyTorch 代码
 
 注意：ActivationAPoZRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 ``op_types`` 字段仅支持卷积层。
 
-参考 :githublink:`示例 <examples/model_compress/model_prune_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/basic_pruners_torch.py>` 获取更多信息。
 
 ActivationAPoZRankFilterPruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -352,7 +315,7 @@ PyTorch 代码
 
 注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 ``op_types`` 字段仅支持卷积层。
 
-参考 :githublink:`示例 <examples/model_compress/model_prune_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/basic_pruners_torch.py>` 获取更多信息。
 
 ActivationMeanRankFilterPruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -370,13 +333,7 @@ TaylorFOWeightFilter Pruner 根据权重上的一阶泰勒展开式，来估计�
 
 ..
 
-
-
-
-
-.. image:: ../../img/importance_estimation_sum.png
-   :target: ../../img/importance_estimation_sum.png
-   :alt: 
+:math:`\widehat{\mathcal{I}}_{\mathcal{S}}^{(1)}(\mathbf{W}) \triangleq \sum_{s \in \mathcal{S}} \mathcal{I}_{s}^{(1)}(\mathbf{W})=\sum_{s \in \mathcal{S}}\left(g_{s} w_{s}\right)^{2}`
 
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
@@ -408,18 +365,11 @@ TaylorFOWeightFilter Pruner 的用户配置
 AGP Pruner
 ----------
 
-这是一种迭代的 Pruner，在 `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__ 中，作者 Michael Zhu 和 Suyog Gupta 提出了一种逐渐修建权重的算法。
+这是一种新的自动逐步剪枝算法，在 n 个剪枝步骤中，稀疏度从初始的稀疏度值 si（通常为 0）增加到最终的稀疏度值 sf，从训练步骤 :math:`t_{0}` 开始，剪枝频率 :math:`\Delta t` ：
 
-..
+:math:`s_{t}=s_{f}+\left(s_{i}-s_{f}\right)\left(1-\frac{t-t_{0}}{n \Delta t}\right)^{3} \text { for } t \in\left\{t_{0}, t_{0}+\Delta t, \ldots, t_{0} + n \Delta t\right\}`
 
-   引入了一种新的自动逐步剪枝算法，在 n 个剪枝步骤中，稀疏度从初始的稀疏度值 si（通常为 0）增加到最终的稀疏度值 sf，从训练步骤 t0 开始，剪枝频率 ∆t：
-
-   .. image:: ../../img/agp_pruner.png
-      :target: ../../img/agp_pruner.png
-      :alt: 
-
-
-   在训练网络时，每隔 ∆t 步更新二值权重掩码，以逐渐增加网络的稀疏性，同时允许网络训练步骤从任何剪枝导致的精度损失中恢复。 根据我们的经验，∆t 设为 100 到 1000 个训练步骤之间时，对于模型最终精度的影响可忽略不计。 一旦模型达到了稀疏度目标 sf，权重掩码将不再更新。 背后的稀疏函数直觉在公式（1）。
+参考 `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\ 获取更多细节信息。
 
 
 用法
@@ -472,7 +422,6 @@ PyTorch 代码
 
    pruner.update_epoch(epoch)
 
-参考 :githublink:`示例 <examples/model_compress/model_prune_torch.py>` 了解更多信息。
 
 AGP Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -492,11 +441,6 @@ NetAdapt 在满足资源预算的情况下，自动简化预训练的网络。
 参考 `NetAdapt: Platform-Aware Neural Network Adaptation for Mobile Applications <https://arxiv.org/abs/1804.03230>`__ 了解详细信息。
 
 
-.. image:: ../../img/algo_NetAdapt.png
-   :target: ../../img/algo_NetAdapt.png
-   :alt: 
-
-
 用法
 ^^^^^
 
@@ -512,7 +456,7 @@ PyTorch 代码
    pruner = NetAdaptPruner(model, config_list, short_term_fine_tuner=short_term_fine_tuner, evaluator=evaluator,base_algo='l1', experiment_data_dir='./')
    pruner.compress()
 
-参考 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/auto_pruners_torch.py>` 了解更多信息。
 
 NetAdapt Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -553,7 +497,7 @@ PyTorch 代码
    pruner = SimulatedAnnealingPruner(model, config_list, evaluator=evaluator, base_algo='l1', cool_down_rate=0.9, experiment_data_dir='./')
    pruner.compress()
 
-参考 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/auto_pruners_torch.py>` 了解更多信息。
 
 SimulatedAnnealing Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -583,7 +527,7 @@ PyTorch 代码
 
 .. code-block:: python
 
-   from nni.algorithms.compression.pytorch.pruning import ADMMPruner
+   from nni.algorithms.compression.pytorch.pruning import AutoCompressPruner
    config_list = [{
            'sparsity': 0.5,
            'op_types': ['Conv2d']
@@ -594,7 +538,7 @@ PyTorch 代码
                cool_down_rate=0.9, admm_num_iterations=30, admm_training_epochs=5, experiment_data_dir='./')
    pruner.compress()
 
-参考 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/auto_pruners_torch.py>` 了解更多信息。
 
 AutoCompress Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -609,11 +553,6 @@ AMC Pruner
 AMC Pruner 利用强化学习来提供模型压缩策略。
 这种基于学习的压缩策略比传统的基于规则的压缩策略有更高的压缩比，
 更好地保存了精度，节省了人力。
-
-
-.. image:: ../../img/amc_pruner.jpg
-   :target: ../../img/amc_pruner.jpg
-   :alt: 
 
 
 更多信息请参考 `AMC: AutoML for Model Compression and Acceleration on Mobile Devices <https://arxiv.org/pdf/1802.03494.pdf>`__。
@@ -632,9 +571,9 @@ PyTorch 代码
    pruner = AMCPruner(model, config_list, evaluator, val_loader, flops_ratio=0.5)
    pruner.compress()
 
-你可以参考 :githublink:`示例 <examples/model_compress/amc/>` 获取更多信息。
+你可以参考 :githublink:`示例 <examples/model_compress/pruning/amc/>` 获取更多信息。
 
-AutoCompress Pruner 的用户配置
+AMC Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
@@ -660,7 +599,7 @@ AutoCompress Pruner 的用户配置
      - 50%
 
 
-实验代码在 :githublink:`这里 <examples/model_compress/amc/>`。
+实验代码在 :githublink:`这里 <examples/model_compress/pruning/amc/>`。
 
 ADMM Pruner
 -----------
@@ -694,7 +633,7 @@ PyTorch 代码
    pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
    pruner.compress()
 
-参考 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 了解更多信息。
+参考 :githublink:`示例 <examples/model_compress/pruning/auto_pruners_torch.py>` 了解更多信息。
 
 ADMM Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -743,7 +682,6 @@ PyTorch 代码
 
 上述配置意味着有 5 次迭代修剪。 由于在同一次运行中执行了 5 次修剪，LotteryTicketPruner 需要 ``model`` 和 ``optimizer`` ( **注意，如果使用 ``lr_scheduler``，也需要添加** ) 来在每次开始新的修剪迭代时，将其状态重置为初始值。 使用 ``get_prune_iterations`` 来获取修建迭代，并在每次迭代开始时调用 ``prune_iteration_start``。 为了模型能较好收敛，``epoch_num`` 最好足够大。因为假设是在后几轮中具有较高稀疏度的性能（准确度）可与第一轮获得的相当。
 
-*稍后支持 TensorFlow 版本。*
 
 LotteryTicket Pruner 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -755,7 +693,7 @@ LotteryTicket Pruner 的用户配置
 复现实验
 ^^^^^^^^^^^^^^^^^^^^^
 
-在重现时，在 MNIST 使用了与论文相同的配置。 实验代码在 :githublink:`这里 <examples/model_compress/lottery_torch_mnist_fc.py>`。 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
+在重现时，在 MNIST 使用了与论文相同的配置。 实验代码在 :githublink:`这里 <examples/model_compress/pruning/lottery_torch_mnist_fc.py>`. 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png

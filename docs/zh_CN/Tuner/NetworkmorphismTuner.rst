@@ -6,7 +6,7 @@ Network Morphism Tuner
 
 `Autokeras <https://arxiv.org/abs/1806.10282>`__ 是使用 Network Morphism 算法的流行的自动机器学习工具。 Autokeras 的基本理念是使用贝叶斯回归来预测神经网络架构的指标。 每次都会从父网络生成几个子网络。 然后使用朴素贝叶斯回归，从网络的历史训练结果来预测它的指标值。 接下来，会选择预测结果最好的子网络加入训练队列中。 在 `此代码 <https://github.com/jhfjhfj1/autokeras>`__ 的启发下，我们在 NNI 中实现了 Network Morphism 算法。
 
-要了解 Network Morphism Trial 的用法，参考 :githublink:`这里 <examples/trials/network_morphism/README.md>`。
+要了解 Network Morphism Trial 的用法，参考 :githublink:`Readme <examples/trials/network_morphism/README.rst>`。
 
 2. 用法
 --------
@@ -61,7 +61,7 @@ Network Morphism Tuner
 
    # 1. 使用 NNI API
    # 从 WebUI 获得最佳模型 ID
-   # or 'nni-experiments/experiment_id/log/model_path/best_model.txt'
+   # or `nni-experiments/experiment_id/log/model_path/best_model.txt'
 
    # 从模型文件中读取 json 字符串，并用 NNI API 加载
    with open("best-model.json") as json_file:
@@ -237,20 +237,27 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
 * ``adj_list`` 是二维列表，是图的邻接表。 第一维是张量标识。 在每条边的列表中，元素是两元组（张量标识，层标识）。
 * ``reverse_adj_list`` 是与 adj_list 格式一样的反向邻接列表。
 * ``node_list`` 是一个整数列表。 列表的索引是标识。
-* ``layer_list`` 是层的列表。 列表的索引是标识。
+* 
+  ``layer_list`` 是层的列表。 列表的索引是标识。
 
 
-  * 对于 ``StubConv(StubConv1d, StubConv2d, StubConv3d)``，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
+  * 
+    对于 ``StubConv(StubConv1d, StubConv2d, StubConv3d)``，后面的数字表示节点的输入 id（或 id 列表），节点输出 id，input_channel，filters，kernel_size，stride 和 padding。
 
-  * 对于 ``StubDense``，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
+  * 
+    对于 ``StubDense``，后面的数字表示节点的输入 id （或 id 列表），节点输出 id，input_units 和 units。
 
-  * 对于 ``StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)``，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
+  * 
+    对于 ``StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)``，后面的数字表示节点输入 id（或 id 列表），节点输出 id，和特征数量。
 
-  * 对于 ``StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)``，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
+  * 
+    对于 ``StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)``，后面的数字表示节点的输入 id （或 id 列表），节点的输出 id 和 dropout 率。
 
-  * 对于 ``StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`` 后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
+  * 
+    对于 ``StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)`` 后面的数字表示节点的输入 id（或 id 列表），节点输出 id，kernel_size, stride 和 padding。
 
-  * 对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
+  * 
+    对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
 5. TODO
 -------
