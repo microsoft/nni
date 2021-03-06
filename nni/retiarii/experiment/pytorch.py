@@ -20,6 +20,7 @@ from nni.experiment import management, launcher, rest
 from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
+from nni.tools.nnictl.command_utils import kill_command
 
 from ..converter import convert_to_graph
 from ..graph import Model, Evaluator
