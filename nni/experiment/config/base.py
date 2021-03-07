@@ -6,7 +6,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar
 
-from ruamel import yaml
+from ruamel.yaml import yaml
 
 from . import util
 
