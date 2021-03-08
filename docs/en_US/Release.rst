@@ -5,6 +5,69 @@
 Change Log
 ==========
 
+Release 2.1 - 3/8/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural architecture search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Alpha release)
+
+  * Feature roadmap (`issue #3301 <https://github.com/microsoft/nni/issues/3301>`__)
+  * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.1>`__
+  * Improve documentation (#3404 #3432)
+
+Training service
+""""""""""""""""
+
+* Support shared storage for reuse mode (#3354)
+* Support local platform for Windows in hybrid training service (#3353)
+* Remove PAIYarn training service (#3327)
+* Add recently-idle environment scheduler in reuse mode (#3375)
+* Rename ``preCommand`` to ``pythonPath`` and change command lines as serial in remote training service (#3284 #3410)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Migrate nnicli to new Python API ``nni.experiment`` (#3334)
+* Support resuming an experiment launched from Python by nnictl (#3309)
+* Align ``nni.experiment`` tuner behavior with nnictl (#3419)
+
+WebUI
+"""""
+
+* Support showing the assigned training service of each trial in hybrid mode on WebUI (#3261 #3391)
+* Support multiple selection for filter status in experiments management page (#3351)
+* Improve overview page (#3316 #3317 #3352)
+* Support copy trial id in the table (#3378)
+
+Documentation
+^^^^^^^^^^^^^
+
+* Improve model compression examples and documentation (#3326 #3371)
+* Add Python API examples and documentation (#3396)
+* Add SECURITY doc (#3358)
+* Add 'What's NEW!' section in README (#3395) 
+* Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
+
+
+Bug fixes
+^^^^^^^^^
+
+* Fix AML outputs path and python process not killed (#3321)
+* Fix env folder bug in reuse mode (#3374)
+* Fix import path of network morphism example (#3333)
+* Fix bug in the tuple unpack (#3340)
+* Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
+* Fix ``NoneType`` error on jupyter notebook (#3337, thanks external contributor @tczhangzhi)
+* Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
+* Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
+* Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
+
+
 Release 2.0 - 1/14/2021
 -----------------------
 
