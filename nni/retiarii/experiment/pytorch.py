@@ -1,4 +1,5 @@
 import logging
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
@@ -13,13 +14,12 @@ from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 
 from ..converter import convert_to_graph
-from ..graph import Model, TrainingConfig
+from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
 from ..nn.pytorch.mutator import process_inline_mutation
 from ..strategy import BaseStrategy
-from ..trainer.interface import BaseOneShotTrainer, BaseTrainer
-from ..utils import get_records
+from ..oneshot.interface import BaseOneShotTrainer
 
 _logger = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ _validation_rules = {
 
 
 class RetiariiExperiment(Experiment):
-    def __init__(self, base_model: nn.Module, trainer: Union[TrainingConfig, BaseOneShotTrainer],
+    def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
                  applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = None
@@ -87,12 +87,13 @@ class RetiariiExperiment(Experiment):
         self.trainer = trainer
         self.applied_mutators = applied_mutators
         self.strategy = strategy
-        self.recorded_module_args = get_records()
 
         self._dispatcher = RetiariiAdvisor()
         self._dispatcher_thread: Optional[Thread] = None
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
+
+        self._strategy_thread: Optional[Thread] = None
 
     def _start_strategy(self):
         try:
@@ -101,7 +102,7 @@ class RetiariiExperiment(Experiment):
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
         base_model_ir = convert_to_graph(script_module, self.base_model)
-        base_model_ir.training_config = self.trainer
+        base_model_ir.evaluator = self.trainer
 
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
@@ -112,8 +113,11 @@ class RetiariiExperiment(Experiment):
             self.applied_mutators = mutators
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators)).start()
+        # This is not intuitive and not friendly for debugging (setting breakpoints). Will refactor later.
+        self._strategy_thread = Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators))
+        self._strategy_thread.start()
         _logger.info('Strategy started!')
+        Thread(target=self._strategy_monitor).start()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -132,6 +136,10 @@ class RetiariiExperiment(Experiment):
 
     def _create_dispatcher(self):
         return self._dispatcher
+
+    def _strategy_monitor(self):
+        self._strategy_thread.join()
+        self._dispatcher.mark_experiment_as_ending()
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """

@@ -29,7 +29,7 @@ nnictl 支持的命令：
 * `nnictl log <#log>`__
 * `nnictl webui <#webui>`__
 * `nnictl tensorboard <#tensorboard>`__
-* `nnictl package <#package>`__
+* `nnictl algo <#algo>`__
 * `nnictl ss_gen <#ss_gen>`__
 * `nnictl --version <#version>`__
 
@@ -96,7 +96,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
   ..
 
@@ -105,7 +105,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088
 
   ..
 
@@ -114,7 +114,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088 --debug
 
 注意：
 
@@ -363,11 +363,11 @@ nnictl update
 * 
   示例
 
-  ``使用 'examples/trials/mnist-tfv1/search_space.json' 来更新 Experiment 的搜索空间``
+  ``使用 'examples/trials/mnist-pytorch/search_space.json' 来更新 Experiment 的搜索空间``
 
   .. code-block:: bash
 
-     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
+     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-pytorch/search_space.json
 
 
 * 
@@ -1403,82 +1403,79 @@ Manage webui
      - 需要设置的 Experiment 的 id
 
 
-:raw-html:`<a name="package"></a>`
+:raw-html:`<a name="algo"></a>`
 
-管理安装包
-^^^^^^^^^^^^^^
+管理内置算法
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 
-  **nnictl package install**
+  **nnictl algo register**
 
 
   * 
     说明
 
-    安装自定义的 Tuner，Assessor，Advisor（定制或 NNI 提供的算法）。
+    将自定义的算法注册为内置的 Tuner、Assessor、Advisor。
 
   * 
     用法
 
     .. code-block:: bash
 
-       nnictl package install --name <package name>
+       nnictl algo register --meta <path_to_meta_file>
 
-    可通过 ``nnictl package list`` 命令查看可用的 ``<包名称>``。
-
-    或者
-
-    .. code-block:: bash
-
-       nnictl package install <安装源>
-
-    参考 `安装自定义算法 <InstallCustomizedAlgos.rst>`__ 来准备安装源。
+    ``<path_to_meta_file>`` 是 yaml 格式元数据文件的路径，具有以下键：
+    
+    *
+      ``algoType``: 算法类型，可为 ``tuner``, ``assessor``, ``advisor``
+    
+    *
+      ``builtinName``: 在 Experiment 配置文件中使用的内置名称
+    
+    *
+      ``className`` : Tuner 类名，包括模块名，例如：``demo_tuner.DemoTuner``
+    
+    *
+      ``classArgsValidator``: 类的参数验证类 validator 的类名，包括模块名，如：``demo_tuner.MyClassArgsValidator``
 
   * 
     示例
 
     ..
 
-       安装 SMAC Tuner
+       在示例中安装自定义 Tuner 
 
 
     .. code-block:: bash
 
-       nnictl package install --name SMAC
-
-    ..
-
-       安装自定义 Tuner
-
-
-    .. code-block:: bash
-
-       nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
+       cd nni/examples/tuners/customized_tuner
+       python3 setup.py develop
+       nnictl algo register --meta meta_file.yml
 
 
 * 
-  **nnictl package show**
+  **nnictl algo show**
 
 
   * 
     说明
 
-    显示包的详情。
+    显示指定注册算法的详细信息
 
   * 
     用法
 
     .. code-block:: bash
 
-       nnictl package show <包名称>
+       nnictl algo show <builtinName>
 
   * 
     示例
 
     .. code-block:: bash
 
-       nnictl package show SMAC
+       nnictl algo show SMAC
 
 * 
   **nnictl package list**
@@ -1487,78 +1484,46 @@ Manage webui
   * 
     说明
 
-    列出已安装的包 / 所有包。
+    列出已注册的内置算法
 
   * 
     用法
 
     .. code-block:: bash
 
-       nnictl package list [OPTIONS]
-
-  * 
-    选项
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - 参数及缩写
-     - 是否必需
-     - 默认值
-     - 说明
-   * - --all
-     - False
-     - 
-     - 列出所有包
-
+       nnictl algo list
 
 
 * 
   示例
 
-  ..
-
-     列出已安装的包
-
-
   .. code-block:: bash
 
-     nnictl package list
-
-  ..
-
-     列出所有包
-
-
-  .. code-block:: bash
-
-     nnictl package list --all
+     nnictl algo list
 
 
 * 
-  **nnictl package uninstall**
+  **nnictl algo unregister**
 
 
   * 
     说明
 
-    卸载包。
+    注销一个已注册的自定义内置算法。 NNI 提供的内置算法不能被注销。
 
   * 
     用法
 
     .. code-block:: bash
 
-       nnictl package uninstall <包名称>
+       nnictl algo unregister <builtinName>
 
   * 
     示例
-    卸载 SMAC 包
 
     .. code-block:: bash
 
-       nnictl package uninstall SMAC
+       nnictl algo unregister demotuner
 
 :raw-html:`<a name="ss_gen"></a>`
 

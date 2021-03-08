@@ -3,6 +3,7 @@
 
 import ctypes
 import os
+import sys
 import shlex
 import tarfile
 import time
@@ -88,9 +89,12 @@ class Trial:
 
         trial_command = self.args.trial_command
 
-        gpuIndices = self.data.get('gpuIndices')
+        gpuIndices = self.data.get("gpuIndices")
         if (gpuIndices is not None):
-            trial_command = 'CUDA_VISIBLE_DEVICES="%s " %s' % (gpuIndices, trial_command)
+            if sys.platform == "win32":
+                trial_command = 'set CUDA_VISIBLE_DEVICES="%s " && call %s' % (gpuIndices, trial_command)
+            else:
+                trial_command = 'CUDA_VISIBLE_DEVICES="%s " %s' % (gpuIndices, trial_command)
 
         self.log_pipe_stdout = self.trial_syslogger_stdout.get_pipelog_reader()
         self.process = Popen(trial_command, shell=True, stdout=self.log_pipe_stdout,

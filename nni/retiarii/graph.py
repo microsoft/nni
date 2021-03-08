@@ -9,7 +9,7 @@ from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import get_full_class_name, import_, uid
+from .utils import get_importable_name, import_, uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -25,14 +25,14 @@ Type hint for edge's endpoint. The int indicates nodes' order.
 """
 
 
-class TrainingConfig(abc.ABC):
+class Evaluator(abc.ABC):
     """
-    Training config of a model. A training config should define where the training code is, and the configuration of
+    Evaluator of a model. An evaluator should define where the training code is, and the configuration of
     training code. The configuration includes basic runtime information trainer needs to know (such as number of GPUs)
     or tune-able parameters (such as learning rate), depending on the implementation of training code.
 
     Each config should define how it is interpreted in ``_execute()``, taking only one argument which is the mutated model class.
-    For example, functional training config might directly import the function and call the function.
+    For example, functional evaluator might directly import the function and call the function.
     """
 
     def __repr__(self):
@@ -40,15 +40,15 @@ class TrainingConfig(abc.ABC):
         return f'{self.__class__.__name__}({items})'
 
     @abc.abstractstaticmethod
-    def _load(ir: Any) -> 'TrainingConfig':
+    def _load(ir: Any) -> 'Evaluator':
         pass
 
     @staticmethod
-    def _load_with_type(type_name: str, ir: Any) -> 'Optional[TrainingConfig]':
+    def _load_with_type(type_name: str, ir: Any) -> 'Optional[Evaluator]':
         if type_name == '_debug_no_trainer':
-            return DebugTraining()
+            return DebugEvaluator()
         config_cls = import_(type_name)
-        assert issubclass(config_cls, TrainingConfig)
+        assert issubclass(config_cls, Evaluator)
         return config_cls._load(ir)
 
     @abc.abstractmethod
@@ -83,8 +83,8 @@ class Model:
         The outermost graph which usually takes dataset as input and feeds output to loss function.
     graphs
         All graphs (subgraphs) in this model.
-    training_config
-        Training config
+    evaluator
+        Model evaluator
     history
         Mutation history.
         `self` is directly mutated from `self.history[-1]`;
@@ -104,7 +104,7 @@ class Model:
 
         self._root_graph_name: str = '_model'
         self.graphs: Dict[str, Graph] = {}
-        self.training_config: Optional[TrainingConfig] = None
+        self.evaluator: Optional[Evaluator] = None
 
         self.history: List[Model] = []
 
@@ -113,7 +113,7 @@ class Model:
 
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
-            f'training_config={self.training_config}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics})'
+            f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics})'
 
     @property
     def root_graph(self) -> 'Graph':
@@ -131,7 +131,7 @@ class Model:
         new_model = Model(_internal=True)
         new_model._root_graph_name = self._root_graph_name
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.training_config = copy.deepcopy(self.training_config)  # TODO this may be a problem when training config is large
+        new_model.evaluator = copy.deepcopy(self.evaluator)  # TODO this may be a problem when evaluator is large
         new_model.history = self.history + [self]
         return new_model
 
@@ -139,16 +139,16 @@ class Model:
     def _load(ir: Any) -> 'Model':
         model = Model(_internal=True)
         for graph_name, graph_data in ir.items():
-            if graph_name != '_training_config':
+            if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
-        model.training_config = TrainingConfig._load_with_type(ir['_training_config']['__type__'], ir['_training_config'])
+        model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        ret['_training_config'] = {
-            '__type__': get_full_class_name(self.training_config.__class__),
-            **self.training_config._dump()
+        ret['_evaluator'] = {
+            '__type__': get_importable_name(self.evaluator.__class__),
+            **self.evaluator._dump()
         }
         return ret
 
@@ -681,10 +681,10 @@ class IllegalGraphError(ValueError):
             json.dump(graph, dump_file, indent=4)
 
 
-class DebugTraining(TrainingConfig):
+class DebugEvaluator(Evaluator):
     @staticmethod
-    def _load(ir: Any) -> 'DebugTraining':
-        return DebugTraining()
+    def _load(ir: Any) -> 'DebugEvaluator':
+        return DebugEvaluator()
 
     def _dump(self) -> Any:
         return {'__type__': '_debug_no_trainer'}

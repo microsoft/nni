@@ -63,7 +63,7 @@ class ExperimentConfig(ConfigBase):
     experiment_working_directory: Optional[PathLike] = None
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
     tuner: Optional[_AlgorithmConfig] = None
-    accessor: Optional[_AlgorithmConfig] = None
+    assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
 
@@ -83,9 +83,9 @@ class ExperimentConfig(ConfigBase):
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
         if initialized_tuner:
-            _validate_for_exp(self)
+            _validate_for_exp(self.canonical())
         else:
-            _validate_for_nnictl(self)
+            _validate_for_nnictl(self.canonical())
         if self.trial_gpu_number and hasattr(self.training_service, 'use_active_gpu'):
             if self.training_service.use_active_gpu is None:
                 raise ValueError('Please set "use_active_gpu"')
@@ -106,7 +106,10 @@ _canonical_rules = {
     'trial_code_directory': util.canonical_path,
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
-    'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value
+    'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
+    'tuner': lambda config: None if config.name == '_none_' else config,
+    'assessor': lambda config: None if config.name == '_none_' else config,
+    'advisor': lambda config: None if config.name == '_none_' else config,
 }
 
 _validation_rules = {
@@ -127,8 +130,8 @@ def _validate_for_exp(config: ExperimentConfig) -> None:
         raise ValueError('ExperimentConfig: annotation is not supported in this mode')
     if util.count(config.search_space, config.search_space_file) != 1:
         raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
-    if util.count(config.tuner, config.accessor, config.advisor) != 0:
-        raise ValueError('ExperimentConfig: tuner, accessor, and advisor must not be set in for this mode')
+    if util.count(config.tuner, config.assessor, config.advisor) != 0:
+        raise ValueError('ExperimentConfig: tuner, assessor, and advisor must not be set in for this mode')
     if config.tuner_gpu_indices is not None:
         raise ValueError('ExperimentConfig: tuner_gpu_indices is not supported in this mode')
 

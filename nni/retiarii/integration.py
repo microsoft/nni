@@ -11,7 +11,7 @@ from .execution.base import BaseExecutionEngine
 from .execution.cgo_engine import CGOExecutionEngine
 from .execution.api import set_execution_engine
 from .integration_api import register_advisor
-from .utils import json_dumps, json_loads
+from .serializer import json_dumps, json_loads
 
 _logger = logging.getLogger(__name__)
 
@@ -104,6 +104,9 @@ class RetiariiAdvisor(MsgDispatcherBase):
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
+
+    def mark_experiment_as_ending(self):
+        send(CommandType.NoMoreTrialJobs, '')
 
     def handle_request_trial_jobs(self, num_trials):
         _logger.info('Request trial jobs: %s', num_trials)

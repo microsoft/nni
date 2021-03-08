@@ -144,7 +144,7 @@ Files in ``codeDir`` will be uploaded to remote machines automatically. You can 
 Configure python environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **preCommand** to specify a python environment on your remote machine. 
+By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **pythonPath** to specify a python environment on your remote machine. 
 
 Use ``examples/trials/mnist-tfv2`` as the example. Below is content of ``examples/trials/mnist-tfv2/config_remote.yml``\ :
 

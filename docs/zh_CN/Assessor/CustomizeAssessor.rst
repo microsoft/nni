@@ -43,18 +43,16 @@ NNI 支持自定义 Assessor。
 
 NNI 需要定位到自定义的 Assessor 类，并实例化它，因此需要指定自定义 Assessor 类的文件位置，并将参数值传给 __init__ 构造函数。
 
-`论文 <https://static.googleusercontent.com/media/research.google.com/en//pubs/archive/46180.pdf>`__。 
-
 .. code-block:: yaml
 
    assessor:
-      codeDir: /home/abc/myassessor
-      classFileName: my_customized_assessor.py
-      className: CustomizedAssessor
-      # 所有的参数都需要传递给你 Assessor 的构造函数 __init__
-      # 例如，可以在可选的 classArgs 字段中指定
-      classArgs:
-        arg1: value1
+     codeDir: /home/abc/myassessor
+     classFileName: my_customized_assessor.py
+     className: CustomizedAssessor
+     # 所有的参数都需要传递给你 Assessor 的构造函数 __init__
+     # 例如，可以在可选的 classArgs 字段中指定
+     classArgs:
+       arg1: value1
 
 注意 **2** 中： 对象 ``trial_history`` 和 ``report_intermediate_result`` 函数返回给 Assessor 的完全一致。
 
@@ -62,8 +60,6 @@ Assessor 的工作目录是 ``<home>/nni-experiments/<experiment_id>/log``\  ，
 
 更多示例，可参考：
 
-..
-
-   * :githublink:`medianstop-assessor <src/sdk/pynni/nni/medianstop_assessor>`
-   * :githublink:`curvefitting-assessor <src/sdk/pynni/nni/curvefitting_assessor>`
+* :githublink:`medianstop-assessor <nni/algorithms/hpo/medianstop_assessor.py>`
+* :githublink:`curvefitting-assessor <nni/algorithms/hpo/curvefitting_assessor/>`
 

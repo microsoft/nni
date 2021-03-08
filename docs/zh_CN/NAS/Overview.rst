@@ -29,7 +29,7 @@ NNI 还提供了专门的  `可视化工具 <#nas-visualization>`__，用于查�
      - 算法简介
    * - :githublink:`Random Search <examples/tuners/random_nas_tuner>`
      - 从搜索空间中随机选择模型
-   * - `PPO Tuner </Tuner/BuiltinTuner.html#PPOTuner>`__
+   * - `PPO Tuner <../Tuner/BuiltinTuner.rst#PPO-Tuner>`__
      - PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 `参考论文 <https://arxiv.org/abs/1707.06347>`__
 
 
@@ -46,20 +46,22 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
 
    * - Name
      - 算法简介
-   * - `ENAS </NAS/ENAS.html>`__
+   * - `ENAS <ENAS.rst>`__
      - `Efficient Neural Architecture Search via Parameter Sharing <https://arxiv.org/abs/1802.03268>`__. 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 它通过在子模型间共享参数来实现加速和出色的性能指标。
-   * - `DARTS </NAS/DARTS.html>`__
+   * - `DARTS <DARTS.rst>`__
      - `DARTS: Differentiable Architecture Search <https://arxiv.org/abs/1806.09055>`__ 介绍了一种用于双级优化的可区分网络体系结构搜索的新算法。
-   * - `P-DARTS </NAS/PDARTS.html>`__
+   * - `P-DARTS <PDARTS.rst>`__
      - `Progressive Differentiable Architecture Search: Bridging the Depth Gap between Search and Evaluation <https://arxiv.org/abs/1904.12760>`__ 这篇论文是基于 DARTS 的. 它引入了一种有效的算法，可在搜索过程中逐渐增加搜索的深度。
-   * - `SPOS </NAS/SPOS.html>`__
-     - 论文 `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ 构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。
-   * - `CDARTS </NAS/CDARTS.html>`__
-     - `Cyclic Differentiable Architecture Search <https://arxiv.org/abs/****>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
-   * - `ProxylessNAS </NAS/Proxylessnas.html>`__
+   * - `SPOS <SPOS.rst>`__
+     - `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ 论文构造了一个采用统一的路径采样方法来训练简化的超网络，并使用进化算法来提高搜索神经网络结构的效率。
+   * - `CDARTS <CDARTS.rst>`__
+     - `Cyclic Differentiable Architecture Search <https://arxiv.org/pdf/2006.10724.pdf>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
+   * - `ProxylessNAS <Proxylessnas.rst>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。
-   * - `TextNAS </NAS/TextNAS.html>`__
+   * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. 这是专门用于文本表示的神经网络架构搜索算法。
+   * - `Cream <Cream.rst>`__
+     - `Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search  <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__. 一种新的 NAS 算法，无需使用进化算法即可提取搜索空间中的优先路径。 在 ImageNet 上的性能具有竞争力，特别是对于小模型（例如： FLOPs < 200 M 时）。
 
 
 One-shot 算法 **独立运行，不需要 nnictl**。 NNI 支持 PyTorch 和 TensorFlow 2.x。
