@@ -351,8 +351,8 @@ class NNIManager implements Manager {
 
         let hasError: boolean = false;
         try {
-            this.experimentManager.stop();
-            this.dataStore.close();
+            await this.experimentManager.stop();
+            await this.dataStore.close();
             await component.get<NNIRestServer>(NNIRestServer).stop();
         } catch (err) {
             hasError = true;
