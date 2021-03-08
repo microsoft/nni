@@ -1,5 +1,6 @@
 import atexit
 import logging
+import json
 from pathlib import Path
 import socket
 from subprocess import Popen
@@ -377,6 +378,7 @@ class Experiment:
         value: dict
             New search_space.
         """
+        value = json.dumps(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):
