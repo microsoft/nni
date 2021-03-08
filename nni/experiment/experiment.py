@@ -342,6 +342,7 @@ class Experiment:
         experiment_profile = self.get_experiment_profile()
         experiment_profile['params'][key] = value
         rest.put(self.port, api, experiment_profile)
+        logging.info('Successfully update %s.', key)
 
     def update_trial_concurrency(self, value: int):
         """

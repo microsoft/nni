@@ -6,7 +6,7 @@ from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
-from ..utils import get_full_class_name
+from ..utils import get_importable_name
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import _convert_name, build_full_name
 
@@ -536,7 +536,7 @@ class GraphConverter:
     def _handle_layerchoice(self, module):
         choices = []
         for cand in list(module):
-            cand_type = '__torch__.' + get_full_class_name(cand.__class__)
+            cand_type = '__torch__.' + get_importable_name(cand.__class__)
             choices.append({'type': cand_type, 'parameters': get_init_parameters_or_fail(cand)})
         return {
             'candidates': choices,

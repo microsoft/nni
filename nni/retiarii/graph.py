@@ -9,7 +9,7 @@ from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
-from .utils import get_full_class_name, import_, uid
+from .utils import get_importable_name, import_, uid
 
 __all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
 
@@ -147,7 +147,7 @@ class Model:
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
         ret['_evaluator'] = {
-            '__type__': get_full_class_name(self.evaluator.__class__),
+            '__type__': get_importable_name(self.evaluator.__class__),
             **self.evaluator._dump()
         }
         return ret

@@ -1,5 +1,6 @@
 import atexit
 import logging
+import time
 from dataclasses import dataclass
 import os
 from pathlib import Path
@@ -112,6 +113,8 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+        self._strategy_thread: Optional[Thread] = None
+
     def _start_strategy(self):
         try:
             script_module = torch.jit.script(self.base_model)
@@ -130,8 +133,11 @@ class RetiariiExperiment(Experiment):
             self.applied_mutators = mutators
 
         _logger.info('Starting strategy...')
-        Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators)).start()
+        # This is not intuitive and not friendly for debugging (setting breakpoints). Will refactor later.
+        self._strategy_thread = Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators))
+        self._strategy_thread.start()
         _logger.info('Strategy started!')
+        Thread(target=self._strategy_monitor).start()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -180,6 +186,10 @@ class RetiariiExperiment(Experiment):
 
     def _create_dispatcher(self):
         return self._dispatcher
+
+    def _strategy_monitor(self):
+        self._strategy_thread.join()
+        self._dispatcher.mark_experiment_as_ending()
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
