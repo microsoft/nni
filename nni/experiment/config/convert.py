@@ -14,7 +14,7 @@ _logger = logging.getLogger(__name__)
 
 
 def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:
-    config.validate(skip_nnictl)
+    config.validate(False)
     data = config.json()
 
     ts = data.pop('trainingService')
