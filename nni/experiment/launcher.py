@@ -53,7 +53,7 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
     pipe = None
     proc = None
 
-    config.validate(initialized_tuner=False)
+    config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
     if isinstance(config.training_service, list): # hybrid training service
         _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
@@ -62,7 +62,12 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
 
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
-        start_time, proc = _start_rest_server(config, port, debug, exp_id)
+        pipe = Pipe(exp_id)
+        start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
+        _logger.info('Connecting IPC pipe...')
+        pipe_file = pipe.connect()
+        nni.runtime.protocol._in_file = pipe_file
+        nni.runtime.protocol._out_file = pipe_file
         _logger.info('Statring web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
@@ -70,13 +75,16 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
         _init_experiment(config, port, debug)
-        return proc
+        return proc, pipe
 
     except Exception as e:
         _logger.error('Create experiment failed')
         if proc is not None:
             with contextlib.suppress(Exception):
                 proc.kill()
+        if pipe is not None:
+            with contextlib.suppress(Exception):
+                pipe.close()
         raise e
 
 def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
