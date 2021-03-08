@@ -341,6 +341,7 @@ class NNIManager implements Manager {
                 }
             }
         }
+
         await this.trainingService.cleanUp();
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
@@ -351,9 +352,9 @@ class NNIManager implements Manager {
 
         let hasError: boolean = false;
         try {
-            await (component.get(ExperimentManager) as ExperimentManager).stop();
-            await (component.get(DataStore) as DataStore).close();
-            await (component.get(NNIRestServer) as NNIRestServer).stop();
+            this.experimentManager.stop();
+            this.dataStore.close();
+            await component.get<NNIRestServer>(NNIRestServer).stop();
         } catch (err) {
             hasError = true;
             this.log.error(`${err.stack}`);
