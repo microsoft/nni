@@ -341,7 +341,6 @@ class NNIManager implements Manager {
                 }
             }
         }
-
         await this.trainingService.cleanUp();
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
