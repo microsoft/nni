@@ -16,9 +16,9 @@ Neural architecture search
 
 * Improve NAS 2.0 (Retiarii) Framework (Alpha release)
 
-  * Feature roadmap (`issue #3301 <https://github.com/microsoft/nni/issues/3301>`__)
+  * `Feature roadmap <https://github.com/microsoft/nni/issues/3301>`__
   * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.1>`__
-  * Improve documentation (#3404 #3432)
+  * Documentation improvement (#3404 #3432)
 
 Training service
 """"""""""""""""
@@ -52,7 +52,6 @@ Documentation
 * Add SECURITY doc (#3358)
 * Add 'What's NEW!' section in README (#3395) 
 * Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
-
 
 Bug fixes
 ^^^^^^^^^
