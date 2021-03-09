@@ -79,6 +79,9 @@ class ExperimentConfig(ConfigBase):
         else:
             raise RuntimeError('Unsupported Training service configuration!')
         super().__init__(**kwargs)
+        for algo_type in ['tuner', 'assessor', 'advisor']:
+            if isinstance(kwargs.get(algo_type), dict):
+                setattr(self, algo_type, _AlgorithmConfig(**kwargs.pop(algo_type)))
 
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
@@ -107,9 +110,9 @@ _canonical_rules = {
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
     'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
-    'tuner': lambda config: None if config.name == '_none_' else config,
-    'assessor': lambda config: None if config.name == '_none_' else config,
-    'advisor': lambda config: None if config.name == '_none_' else config,
+    'tuner': lambda config: None if config is None or config.name == '_none_' else config,
+    'assessor': lambda config: None if config is None or config.name == '_none_' else config,
+    'advisor': lambda config: None if config is None or config.name == '_none_' else config,
 }
 
 _validation_rules = {
