@@ -593,11 +593,11 @@ def create_experiment(args):
             config = ExperimentConfig(**experiment_config)
             experiment_config = convert.to_v1_yaml(config)
         except Exception as e:
-            print_error(f'Conversion from v2 format failed: {repr(e)}')
+            print_error(f'Config in v2 format validation failed, the config error in v2 format is: {repr(e)}')
         try:
             validate_all_content(experiment_config, config_path)
         except Exception as e:
-            print_error(f'Config in v1 format validation failed. {repr(e)}')
+            print_error(f'Config in v1 format validation failed, the config error in v1 format is: {repr(e)}')
             exit(1)
 
     try:
