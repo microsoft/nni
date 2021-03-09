@@ -82,6 +82,37 @@ Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
 
+Monitor your code in the cloud by using the studio
+--------------------------------------------------
+
+To monitor your job's code, you need visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file that looks like this:
+
+.. code-block:: yaml
+
+   1: [2020-08-04T22:15:44.407305] Entering context manager injector.
+   2: [context_manager_injector.py] Command line Options: Namespace(inject=['ProjectPythonPath:context_managers.ProjectPythonPath', 'RunHistory:context_managers.RunHistory', 'TrackUserError:context_managers.TrackUserError', 'UserExceptions:context_managers.UserExceptions'], invocation=['hello.py'])
+   3: Starting the daemon thread to refresh tokens in background for process with pid = 31263
+   4: Entering Run History Context Manager.
+   5: Preparing to call script [ hello.py ] with arguments: []
+   6: After variable expansion, calling script [ hello.py ] with arguments: []
+   7:
+   8: Hello world!
+   9: Starting the daemon thread to refresh tokens in background for process with pid = 31263
+   10: 
+   11: 
+   12: The experiment completed successfully. Finalizing run...
+   13: Logging experiment finalizing status in history service.
+   14: [2020-08-04T22:15:46.541334] TimeoutHandler __init__
+   15: [2020-08-04T22:15:46.541396] TimeoutHandler __enter__
+   16: Cleaning up all outstanding Run operations, waiting 300.0 seconds
+   17: 1 items cleaning up...
+   18: Cleanup took 0.1812913417816162 seconds
+   19: [2020-08-04T22:15:47.040203] TimeoutHandler __exit__
+  
+On line 8, you see the output.
+
+The 70_driver_log.txt file contains the standard output from a run. This file can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
+
 .. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
 
 amlConfig:
