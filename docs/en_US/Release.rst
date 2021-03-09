@@ -65,6 +65,7 @@ Bug fixes
 * Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
 * Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
 * Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
+* Fix bug in ruamel import (#3430, thanks external contributor @rushtehrani)
 
 
 Release 2.0 - 1/14/2021
