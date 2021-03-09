@@ -3,6 +3,7 @@
 
 import json
 import os
+from pathlib import Path
 import sys
 import string
 import random
@@ -590,7 +591,7 @@ def create_experiment(args):
     except Exception:
         print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
         try:
-            config = ExperimentConfig(**experiment_config)
+            config = ExperimentConfig(_base_path=Path(config_path).parent, **experiment_config)
             experiment_config = convert.to_v1_yaml(config)
         except Exception as e:
             print_error(f'Conversion from v2 format failed: {repr(e)}')
