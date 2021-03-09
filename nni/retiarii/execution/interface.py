@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from abc import ABC, abstractmethod, abstractclassmethod
 from typing import Any, NewType, List, Union
 

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import warnings
 from typing import Dict, Union, Optional, List
 
