@@ -39,7 +39,7 @@ def random_generator(search_space: Dict[Any, List[Any]], dedup=True, retries=500
                 history.add(selected)
                 break
             if retry_count + 1 == retries:
-                _logger.info('Random generation has run out of patience. There is nothing to search. Exiting.')
+                _logger.debug('Random generation has run out of patience. There is nothing to search. Exiting.')
                 return
         yield {key: value for key, value in zip(keys, selected)}
 

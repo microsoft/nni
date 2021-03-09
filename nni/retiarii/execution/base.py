@@ -66,7 +66,8 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def _send_trial_callback(self, paramater: dict) -> None:
         if self.resources <= 0:
-            _logger.warning('There is no available resource, but trial is submitted.')
+            # FIXME: should be a warning message here
+            _logger.debug('There is no available resource, but trial is submitted.')
         self.resources -= 1
         _logger.debug('Resource used. Remaining: %d', self.resources)
 
