@@ -61,7 +61,7 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return F.relu(self.convpool(self.mymodule(x)))
 
-The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <./Advanced.rst>`__.
+The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user-defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <./Advanced.rst>`__.
 
 Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complicated examples.
 
@@ -72,7 +72,7 @@ A base model is only one concrete model not a model space. We provide APIs and p
 
 We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <./Advanced.rst>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <./Advanced.rst>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.
 
   .. code-block:: python
 
@@ -121,7 +121,7 @@ If the inline mutation APIs are not enough for your scenario, you can refer to `
 Explore the Defined Model Space
 -------------------------------
 
-There are basically two exploration approaches: (1) search by evaluating each sampled model independently and (2) one-shot weight-sharing based search. We demonstrate the first approach below in this tutorial. Users can refer to `here <>`__ for the second approach.
+There are basically two exploration approaches: (1) search by evaluating each sampled model independently and (2) one-shot weight-sharing based search. We demonstrate the first approach below in this tutorial. Users can refer to `here <./OneshotTrainer.rst>`__ for the second approach.
 
 Users can choose a proper search strategy to explore the model space, and use a chosen or user-defined model evaluator to evaluate the performance of each sampled model.
 
@@ -170,16 +170,15 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
 
 As the model evaluator is running in another process (possibly in some remote machines), the defined evaluator, along with all its parameters, needs to be correctly serialized. For example, users should use the dataloader that has been already wrapped as a serializable class defined in ``nni.retiarii.evaluator.pytorch.lightning``. For the arguments used in dataloader, recursive serialization needs to be done, until the arguments are simple types like int, str, float.
 
-If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new evaluator <./WriteEvaluator.rst>`__ .
+Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
+
+If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new evaluator <./WriteTrainer.rst>`__ .
 
 .. note:: In case you want to run the model evaluator locally for debug purpose, you can directly run the evaluator via ``evaluator._execute(Net)`` (note that it has to be ``Net``, not ``Net()``). However, this API is currently internal and subject to change.
 
 .. warning:: Mutations on the parameters of model evaluator (known as hyper-parameter tuning) is currently not supported but will be supported in the future.
 
 .. warning:: To use PyTorch-lightning with Retiarii, currently you need to install PyTorch-lightning v1.1.x (v1.2 is not supported).
-
-Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
-
 
 Launch an Experiment
 --------------------
@@ -198,7 +197,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 The complete code of a simple MNIST example can be found :githublink:`here <test/retiarii_test/mnist/test.py>`.
 
-Visualize your experiment
--------------------------
+Visualize the Experiment
+------------------------
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../../Tutorial/WebUI.rst>`__ for details.

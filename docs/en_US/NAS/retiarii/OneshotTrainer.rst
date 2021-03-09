@@ -1,7 +1,7 @@
 One-shot Experiments on Retiarii
 ================================
 
-Before reading this tutorial, we highly recommend you to first go through the tutorial of how to `define a model space <./Tutorial.rst>`__.
+Before reading this tutorial, we highly recommend you to first go through the tutorial of how to `define a model space <./Tutorial.rst#define-your-model-space>`__.
 
 Model Search with One-shot Trainer
 ----------------------------------
@@ -93,4 +93,4 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
                     result[name] = select_best_of_module(module)
             return result
 
-The full code of DartsTrainer is available to Retiarii source code. Please have a check at :githublink:`nni/retiarii/trainer/pytorch/darts.py`.
+The full code of DartsTrainer is available to Retiarii source code. Please have a check at :githublink:`DartsTrainer <nni/retiarii/oneshot/pytorch/darts.py>`.
