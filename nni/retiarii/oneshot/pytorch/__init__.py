@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from .darts import DartsTrainer
 from .enas import EnasTrainer
 from .proxyless import ProxylessTrainer

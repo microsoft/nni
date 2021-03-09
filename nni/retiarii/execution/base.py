@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import os
 import random
@@ -65,11 +68,11 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         if self.resources <= 0:
             _logger.warning('There is no available resource, but trial is submitted.')
         self.resources -= 1
-        _logger.info('Resource used. Remaining: %d', self.resources)
+        _logger.debug('Resource used. Remaining: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
         self.resources += num_trials
-        _logger.info('New resource available. Remaining: %d', self.resources)
+        _logger.debug('New resource available. Remaining: %d', self.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]

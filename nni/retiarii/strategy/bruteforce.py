@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 import itertools
 import logging
@@ -58,7 +61,7 @@ class GridSearch(BaseStrategy):
     def run(self, base_model, applied_mutators):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
         for sample in grid_generator(search_space, shuffle=self.shuffle):
-            _logger.info('New model created. Waiting for resource. %s', str(sample))
+            _logger.debug('New model created. Waiting for resource. %s', str(sample))
             if query_available_resources() <= 0:
                 time.sleep(self._polling_interval)
             submit_models(get_targeted_model(base_model, applied_mutators, sample))
@@ -101,7 +104,7 @@ class Random(BaseStrategy):
                     model = base_model
                     for mutator in applied_mutators:
                         model = mutator.apply(model)
-                    _logger.info('New model created. Applied mutators are: %s', str(applied_mutators))
+                    _logger.debug('New model created. Applied mutators are: %s', str(applied_mutators))
                     submit_models(model)
                 else:
                     time.sleep(self._polling_interval)
@@ -109,7 +112,7 @@ class Random(BaseStrategy):
             _logger.info('Random search running in fixed size mode. Dedup: %s.', 'on' if self.dedup else 'off')
             search_space = dry_run_for_search_space(base_model, applied_mutators)
             for sample in random_generator(search_space, dedup=self.dedup):
-                _logger.info('New model created. Waiting for resource. %s', str(sample))
+                _logger.debug('New model created. Waiting for resource. %s', str(sample))
                 if query_available_resources() <= 0:
                     time.sleep(self._polling_interval)
                 submit_models(get_targeted_model(base_model, applied_mutators, sample))
