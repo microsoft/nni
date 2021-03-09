@@ -1,12 +1,12 @@
 import atexit
 import logging
-import json_tricks
 from pathlib import Path
 import socket
 from subprocess import Popen
 import time
 from typing import Optional, Union, List, overload, Any
 
+import json_tricks
 import colorama
 import psutil
 
