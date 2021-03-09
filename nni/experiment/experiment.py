@@ -6,6 +6,7 @@ from subprocess import Popen
 import time
 from typing import Optional, Union, List, overload, Any
 
+import json_tricks
 import colorama
 import psutil
 
@@ -377,6 +378,7 @@ class Experiment:
         value: dict
             New search_space.
         """
+        value = json_tricks.dumps(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):
