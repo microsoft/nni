@@ -1,7 +1,7 @@
 Customize A New Model Evaluator
 ===============================
 
-Model Evaluator is necessary to evaluate the performance of new explored models. A model evalutor usually includes training, validating and testing of a single model. We provide two ways for users to write a new model evaluator, which will be demonstrated below repectively.
+Model Evaluator is necessary to evaluate the performance of new explored models. A model evalutor usually includes training, validating and testing of a single model. We provide two ways for users to write a new model evaluator, which will be demonstrated below respectively.
 
 With FunctionalEvaluator
 ------------------------
