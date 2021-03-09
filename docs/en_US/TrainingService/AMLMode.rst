@@ -87,7 +87,7 @@ Monitor your code in the cloud by using the studio
 
 To monitor your job's code, you need visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file that looks like this:
 
-.. code-block:: yaml
+.. code-block:: text
 
    1: [2020-08-04T22:15:44.407305] Entering context manager injector.
    2: [context_manager_injector.py] Command line Options: Namespace(inject=['ProjectPythonPath:context_managers.ProjectPythonPath', 'RunHistory:context_managers.RunHistory', 'TrackUserError:context_managers.TrackUserError', 'UserExceptions:context_managers.UserExceptions'], invocation=['hello.py'])
