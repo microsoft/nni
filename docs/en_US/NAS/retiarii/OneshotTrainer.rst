@@ -6,7 +6,7 @@ Before reading this tutorial, we highly recommend you to first go through the tu
 Model Search with One-shot Trainer
 ----------------------------------
 
-One-shot is another family of popular NAS approaches, that does not require interactions between search strategy and model evaluator repeatedly, but combines everything into one model (usually called super-model or super-graph) and one trainer. The trainer here takes charge of both search, training and testing.
+With a defined model space, users can explore the space in two ways. One is using strategy and single-arch evaluator as demonstrated `here <./Tutorial.rst#explore-the-defined-model-space>`__. The other is using one-shot trainer, which consumes much less computational resource compared to the first one. In this tutorial we focus on this one-shot approach. The principle of one-shot approach is combining all the models in a model space into one big model (usually called super-model or super-graph). It takes charge of both search, training and testing, by training and evaluating this big model.
 
 We list the supported one-shot trainers here:
 
@@ -15,7 +15,7 @@ We list the supported one-shot trainers here:
 * ProxylessNAS trainer
 * Single-path (random) trainer
 
-See API reference for detailed usages. Here, we show an example to use DARTS trainer manually.
+See `API reference <./ApiReference.rst>`__ for detailed usages. Here, we show an example to use DARTS trainer manually.
 
 .. code-block:: python
 
@@ -34,23 +34,16 @@ See API reference for detailed usages. Here, we show an example to use DARTS tra
   trainer.fit()
   final_architecture = trainer.export()
 
+**Format of the exported architecture.** TBD.
 
-For a one-shot experiment, it can be launched like this:
-
-.. code-block:: python
-  exp = RetiariiExperiment(base_model, oneshot_trainer)
-  exp.run()
-
-If you are using *oneshot (weight-sharing) search approach*, you can invole ``exp.export_top_models`` to output several best models that are found in the experiment.
-
-If users are using oneshot trainer, they can refer to `here <../Visualization.rst>`__ for how to visualize their experiments.
+One-shot experiment can be visualized with NAS UI, please refer to `here <../Visualization.rst>`__ for the usage guidance. Note that NAS visualization is under intensive development.
 
 Customize a New One-shot Trainer
 --------------------------------
 
 One-shot trainers should inheirt ``nni.retiarii.oneshot.BaseOneShotTrainer``, and need to implement ``fit()`` (used to conduct the fitting and searching process) and ``export()`` method (used to return the searched best architecture).
 
-Writing a one-shot trainer is very different to classic evaluators. First of all, there are no more restrictions on init method arguments, any Python arguments are acceptable. Secondly, the model feeded into one-shot trainers might be a model with Retiarii-specific modules, such as LayerChoice and InputChoice. Such model cannot directly forward-propagate and trainers need to decide how to handle those modules.
+Writing a one-shot trainer is very different to single-arch evaluator. First of all, there are no more restrictions on init method arguments, any Python arguments are acceptable. Secondly, the model feeded into one-shot trainers might be a model with Retiarii-specific modules, such as LayerChoice and InputChoice. Such model cannot directly forward-propagate and trainers need to decide how to handle those modules.
 
 A typical example is DartsTrainer, where learnable-parameters are used to combine multiple choices in LayerChoice. Retiarii provides ease-to-use utility functions for module-replace purposes, namely ``replace_layer_choice``, ``replace_input_choice``. A simplified example is as follows: 
 

@@ -61,7 +61,7 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return F.relu(self.convpool(self.mymodule(x)))
 
-The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <>`__.
+The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <./Advanced.rst>`__.
 
 Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complicated examples.
 
@@ -72,7 +72,7 @@ A base model is only one concrete model not a model space. We provide APIs and p
 
 We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <#serializer>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. *Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <./Advanced.rst>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.*
 
   .. code-block:: python
 
@@ -116,7 +116,7 @@ All the APIs have an optional argument called ``label``, mutations with the same
 
 Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutations, to make it easier to express a new search space.
 
-If the inline mutation APIs are not enough for your scenario, you can refer to `defining model space using mutators <>`__ to write more complex model spaces.
+If the inline mutation APIs are not enough for your scenario, you can refer to `defining model space using mutators <./Advanced.rst#express-mutations-with-mutators>`__ to write more complex model spaces.
 
 Explore the Defined Model Space
 -------------------------------
