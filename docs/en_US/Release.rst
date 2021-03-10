@@ -28,7 +28,7 @@ Training service
 * Support Windows as the local training service in hybrid mode (#3353)
 * Remove PAIYarn training service (#3327)
 * Add "recently-idle" scheduling algorithm and set it as default scheduling algorithm in reuse mode (#3375)
-* Rename ``preCommand`` to ``pythonPath`` and change command lines as serial in remote training service (#3284 #3410)
+* Deprecated ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
 
 nnictl & nni.experiment
 """""""""""""""""""""""
