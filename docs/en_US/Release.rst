@@ -14,12 +14,13 @@ Major updates
 Neural architecture search
 """"""""""""""""""""""""""
 
-* Improve NAS 2.0 (Retiarii) Framework (Alpha release)
+* Improve NAS 2.0 (Retiarii) Framework (Imporved Experimental)
 
   * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
   * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
   * Improve the design and implementation of Model Evaluator (#3359 #3404)
   * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
 
 Training service
 """"""""""""""""
@@ -27,14 +28,15 @@ Training service
 * Support shared storage for reuse mode (#3354)
 * Support Windows as the local training service in hybrid mode (#3353)
 * Remove PAIYarn training service (#3327)
-* Add "recently-idle" scheduling algorithm and set it as default scheduling algorithm in reuse mode (#3375)
-* Deprecated ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
+* Add "recently-idle" scheduling algorithm (#3375)
+* Deprecate ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
+* Refactor reuse mode temp folder (#3374)
 
 nnictl & nni.experiment
 """""""""""""""""""""""
 
-* Migrate nnicli to new Python API ``nni.experiment`` (#3334)
-* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with nnictl (#3419)
+* Migrate ``nnicli`` to new Python API ``nni.experiment`` (#3334)
+* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with ``nnictl`` (#3419)
 
 WebUI
 """""
@@ -58,7 +60,6 @@ Bug fixes
 
 * Fix AML outputs path and python process not killed (#3321)
 * Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
-* Fix env folder bug in reuse mode (#3374)
 * Fix import path of network morphism example (#3333)
 * Fix bug in the tuple unpack (#3340)
 * Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
