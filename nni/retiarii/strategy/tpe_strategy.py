@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import time
 
@@ -55,7 +58,7 @@ class TPEStrategy(BaseStrategy):
             avail_resource = query_available_resources()
             if avail_resource > 0:
                 model = base_model
-                _logger.info('New model created. Applied mutators: %s', str(applied_mutators))
+                _logger.debug('New model created. Applied mutators: %s', str(applied_mutators))
                 self.tpe_sampler.generate_samples(self.model_id)
                 for mutator in applied_mutators:
                     mutator.bind_sampler(self.tpe_sampler)

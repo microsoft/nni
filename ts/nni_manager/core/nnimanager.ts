@@ -326,22 +326,26 @@ class NNIManager implements Manager {
     }
 
     public async stopExperimentBottomHalf(): Promise<void> {
-        const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
+        try {
+            const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
 
-        // DON'T try to make it in parallel, the training service may not handle it well.
-        // If there is performance concern, consider to support batch cancellation on training service.
-        for (const trialJob of trialJobList) {
-            if (trialJob.status === 'RUNNING' ||
-                trialJob.status === 'WAITING') {
-                try {
-                    this.log.info(`cancelTrialJob: ${trialJob.id}`);
-                    await this.trainingService.cancelTrialJob(trialJob.id);
-                } catch (error) {
-                    this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
+            // DON'T try to make it in parallel, the training service may not handle it well.
+            // If there is performance concern, consider to support batch cancellation on training service.
+            for (const trialJob of trialJobList) {
+                if (trialJob.status === 'RUNNING' ||
+                    trialJob.status === 'WAITING') {
+                    try {
+                        this.log.info(`cancelTrialJob: ${trialJob.id}`);
+                        await this.trainingService.cancelTrialJob(trialJob.id);
+                    } catch (error) {
+                        this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
+                    }
                 }
             }
+            await this.trainingService.cleanUp();
+        } catch (err) {
+            this.log.error(`${err.stack}`);
         }
-        await this.trainingService.cleanUp();
         if (this.experimentProfile.endTime === undefined) {
             this.setEndtime();
         }
