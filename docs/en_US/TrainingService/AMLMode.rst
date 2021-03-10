@@ -85,7 +85,7 @@ Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have
 Monitor your code in the cloud by using the studio
 --------------------------------------------------
 
-To monitor your job's code, you need visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run. This file can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
+To monitor your job's code, you need visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run and can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
 
 .. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
 
