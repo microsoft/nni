@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.1 - 3/8/2021
+Release 2.1 - 3/10/2021
 -----------------------
 
 Major updates
@@ -16,25 +16,25 @@ Neural architecture search
 
 * Improve NAS 2.0 (Retiarii) Framework (Alpha release)
 
-  * `Feature roadmap <https://github.com/microsoft/nni/issues/3301>`__
-  * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.1>`__
-  * Documentation improvement (#3404 #3432)
+  * Improved the robustness of graph generation and code generation for PyTorch models (#3365)
+  * Supported the inline mutation API ``ValueChoice`` (#3349 #3382)
+  * Improved the design and implementation of Model Evaluator (#3359 #3404)
+  * Supported Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
 
 Training service
 """"""""""""""""
 
 * Support shared storage for reuse mode (#3354)
-* Support local platform for Windows in hybrid training service (#3353)
+* Support Windows as the local training service in hybrid mode (#3353)
 * Remove PAIYarn training service (#3327)
-* Add recently-idle environment scheduler in reuse mode (#3375)
+* Add "recently-idle" scheduling algorithm and set it as default scheduling algorithm in reuse mode (#3375)
 * Rename ``preCommand`` to ``pythonPath`` and change command lines as serial in remote training service (#3284 #3410)
 
 nnictl & nni.experiment
 """""""""""""""""""""""
 
 * Migrate nnicli to new Python API ``nni.experiment`` (#3334)
-* Support resuming an experiment launched from Python by nnictl (#3309)
-* Align ``nni.experiment`` tuner behavior with nnictl (#3419)
+* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with nnictl (#3419)
 
 WebUI
 """""
@@ -57,6 +57,7 @@ Bug fixes
 ^^^^^^^^^
 
 * Fix AML outputs path and python process not killed (#3321)
+* Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
 * Fix env folder bug in reuse mode (#3374)
 * Fix import path of network morphism example (#3333)
 * Fix bug in the tuple unpack (#3340)
