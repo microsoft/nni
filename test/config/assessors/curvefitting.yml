@@ -1,6 +1,6 @@
 authorName: nni
 experimentName: default_test
-maxExecDuration: 5m
+maxExecDuration: 6m
 maxTrialNum: 8
 trialConcurrency: 8
 searchSpacePath: ../naive_trial/search_space.json
