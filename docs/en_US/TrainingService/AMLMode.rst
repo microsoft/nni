@@ -82,13 +82,6 @@ Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
 
-Monitor your code in the cloud by using the studio
---------------------------------------------------
-
-To monitor your job's code, you need visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run and can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
-
-.. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
-
 amlConfig:
 
 
@@ -130,3 +123,10 @@ Run the following commands to start the example experiment:
    nnictl create --config config_aml.yml
 
 Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.0``.
+
+Monitor your code in the cloud by using the studio
+--------------------------------------------------
+
+To monitor your job's code, you need to visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run and can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
+
+.. Note:: This image is build based on cuda environment, may not be suitable for CPU clusters in AML.
