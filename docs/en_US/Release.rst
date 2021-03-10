@@ -14,7 +14,7 @@ Major updates
 Neural architecture search
 """"""""""""""""""""""""""
 
-* Improve NAS 2.0 (Retiarii) Framework (Imporved Experimental)
+* Improve NAS 2.0 (Retiarii) Framework (Improved Experimental)
 
   * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
   * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
