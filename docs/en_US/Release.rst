@@ -16,10 +16,10 @@ Neural architecture search
 
 * Improve NAS 2.0 (Retiarii) Framework (Alpha release)
 
-  * Improved the robustness of graph generation and code generation for PyTorch models (#3365)
-  * Supported the inline mutation API ``ValueChoice`` (#3349 #3382)
-  * Improved the design and implementation of Model Evaluator (#3359 #3404)
-  * Supported Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
+  * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
+  * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
+  * Improve the design and implementation of Model Evaluator (#3359 #3404)
+  * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
 
 Training service
 """"""""""""""""
