@@ -21,8 +21,8 @@ NNI 中的特征工程
 
 .. code-block:: python
 
-   from nni.feature_engineering.gradient_selector import FeatureGradientSelector
-   # from nni.feature_engineering.gbdt_selector import GBDTSelector
+   from nni.algorithms.feature_engineering.gradient_selector import FeatureGradientSelector
+   # from nni.algorithms.feature_engineering.gbdt_selector import GBDTSelector
 
    # 下载数据
    ...
