@@ -122,7 +122,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             configTaskRoles = this.parseCustomTaskRoles(this.fcTemplate.spec.taskRoles)
         }
         const namespace = this.fcClusterConfig.namespace ? this.fcClusterConfig.namespace : "default";
-        this.genericK8sClient.setNamespace = namespace
+        this.genericK8sClient.setNamespace = namespace;
 
         if (this.kubernetesRestServerPort === undefined) {
             const restServer: FrameworkControllerJobRestServer = component.get(FrameworkControllerJobRestServer);
@@ -211,6 +211,14 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
                     this.azureStorageAccountName = azureFrameworkControllerClusterConfig.azureStorage.accountName;
                     this.azureStorageShare = azureFrameworkControllerClusterConfig.azureStorage.azureShare;
+                    if (azureFrameworkControllerClusterConfig.configPath !== undefined) {
+                        this.fcTemplate = yaml.safeLoad(
+                            fs.readFileSync(
+                                azureFrameworkControllerClusterConfig.configPath,
+                                'utf8'
+                            )
+                        );
+                    }
                     await this.createAzureStorage(
                         azureFrameworkControllerClusterConfig.keyVault.vaultName,
                         azureFrameworkControllerClusterConfig.keyVault.name
@@ -219,6 +227,14 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 } else if (this.fcClusterConfig.storageType === 'nfs') {
                     const nfsFrameworkControllerClusterConfig: FrameworkControllerClusterConfigNFS =
                         <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
+                    if (nfsFrameworkControllerClusterConfig.configPath !== undefined) {
+                        this.fcTemplate = yaml.safeLoad(
+                            fs.readFileSync(
+                                nfsFrameworkControllerClusterConfig.configPath,
+                                'utf8'
+                            )
+                        );
+                    }
                     await this.createNFSStorage(
                         nfsFrameworkControllerClusterConfig.nfs.server,
                         nfsFrameworkControllerClusterConfig.nfs.path
@@ -253,7 +269,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
 
                 // Validate to make sure codeDir doesn't have too many files
                 try {
-                    await validateCodeDir(this.fcTrialConfig ? this.fcTrialConfig.codeDir : './');
+                    await validateCodeDir(this.fcTrialConfig.codeDir);
                     //upload codeDir to storage
                     this.copyExpCodeDirPromise = this.uploadFolder(this.fcTrialConfig.codeDir, `nni/${getExperimentId()}/nni-code`);
                 } catch (error) {
@@ -296,15 +312,15 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             const fcClusterConfigAzure: FrameworkControllerClusterConfigAzure = <FrameworkControllerClusterConfigAzure>this.fcClusterConfig;
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, fcClusterConfigAzure.uploadRetryCount);
         } else if (this.fcClusterConfig.storage === 'nfs' || this.fcClusterConfig.storage === undefined) {
-            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
+            await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalTempFolder}/${destDirectory}/.`);
             const fcClusterConfigNFS: FrameworkControllerClusterConfigNFS = <FrameworkControllerClusterConfigNFS>this.fcClusterConfig;
             const nfsConfig: NFSConfig = fcClusterConfigNFS.nfs;
             return `nfs://${nfsConfig.server}:${destDirectory}`;
         } else if (this.fcClusterConfig.storage === 'pvc') {
-            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
-            return `${this.trialLocalNFSTempFolder}/${destDirectory}`;
+            await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalTempFolder}/${destDirectory}/.`);
+            return `${this.trialLocalTempFolder}/${destDirectory}`;
         }
         return '';
     }

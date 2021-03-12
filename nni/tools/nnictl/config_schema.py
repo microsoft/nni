@@ -396,10 +396,11 @@ frameworkcontroller_config_schema = {
             'path': setType('path', str)
         },
         Optional('namespace'): setType('namespace', str),
-    }, {Optional('configPath'): setType('configPath', str),
+        Optional('configPath'): setType('configPath', str),
+    }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
-        Optional('configPath'): setType('configPath', str),
+        'configPath': setType('configPath', str),
         'pvc': {'path': setType('server', str)},
         Optional('namespace'): setType('namespace', str),
     }, {
@@ -419,6 +420,7 @@ frameworkcontroller_config_schema = {
         },
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
         Optional('namespace'): setType('namespace', str),
+        Optional('configPath'): setType('configPath', str),
     })
 }
 
@@ -481,6 +483,7 @@ class NNIConfigSchema:
         self.validate_kubeflow_operators(experiment_config)
         self.validate_eth0_device(experiment_config)
         self.validate_hybrid_platforms(experiment_config)
+        self.validate_frameworkcontroller_trial_config(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -602,4 +605,25 @@ class NNIConfigSchema:
                 config_name = required_config_name_map.get(platform)
                 if config_name and not experiment_config.get(config_name):
                     raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
+
+    def validate_frameworkcontroller_trial_config(self, experiment_config):
+        if experiment_config.get('trainingServicePlatform') == 'frameworkcontroller':
+            if not experiment_config.get('trial').get('taskRoles'):
+                if not experiment_config.get('frameworkcontrollerConfig').get('configPath'):
+                    raise SchemaError("""If no taskRoles are specified a valid custom frameworkcontroller config should
+                                         be set using the configPath attribute in frameworkcontrollerConfig!""")
+                config_content = get_yml_content(experiment_config.get('frameworkcontrollerConfig').get('configPath'))
+                if not config_content.get('spec').get('taskRoles') or not len(config_content.get('spec').get('taskRoles')):
+                    raise SchemaError('Invalid frameworkcontroller config! No taskRoles were specified!')
+                if not config_content.get('spec').get('taskRoles')[0].get('task'):
+                    raise SchemaError('Invalid frameworkcontroller config! No task was specified for taskRole!')
+                names = []
+                for taskRole in config_content.get('spec').get('taskRoles'):
+                    if not "name" in taskRole:
+                        raise SchemaError('Invalid frameworkcontroller config! Name is missing for taskRole!')
+                    names.append(taskRole.get("name"))
+                if len(names) > len(set(names)):
+                    raise SchemaError('Invalid frameworkcontroller config! Duplicate taskrole names!')
+                if not config_content.get('metadata').get('name'):
+                    raise SchemaError('Invalid frameworkcontroller config! No experiment name was specified!')
 

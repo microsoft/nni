@@ -10,6 +10,7 @@ import {
     KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig, KubernetesClusterConfigPVC,
     PVCConfig,
 } from '../kubernetesConfig';
+import {config} from 'rx';
 
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
@@ -50,7 +51,7 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig {
 export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     public readonly serviceAccountName: string;
     constructor(apiVersion: string, serviceAccountName: string, configPath?: string, namespace?: string) {
-        super(apiVersion, undefined, namespace) ;
+        super(apiVersion, undefined, namespace);
         this.serviceAccountName = serviceAccountName;
     }
 }
@@ -82,15 +83,18 @@ export class FrameworkControllerClusterConfigPVC extends KubernetesClusterConfig
 
 export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfigNFS {
     public readonly serviceAccountName: string;
+    public readonly configPath?: string;
     constructor(
         serviceAccountName: string,
         apiVersion: string,
         nfs: NFSConfig,
         storage?: KubernetesStorageKind,
-        namespace?: string
+        namespace?: string,
+        configPath?: string
     ) {
         super(apiVersion, nfs, storage, namespace);
         this.serviceAccountName = serviceAccountName;
+        this.configPath = configPath
     }
 
     public static getInstance(jsonObject: object): FrameworkControllerClusterConfigNFS {
@@ -109,6 +113,7 @@ export class FrameworkControllerClusterConfigNFS extends KubernetesClusterConfig
 
 export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConfigAzure {
     public readonly serviceAccountName: string;
+    public readonly configPath?: string;
 
     constructor(
         serviceAccountName: string,
@@ -117,10 +122,12 @@ export class FrameworkControllerClusterConfigAzure extends KubernetesClusterConf
         azureStorage: AzureStorage,
         storage?: KubernetesStorageKind,
         uploadRetryCount?: number,
-        namespace?: string
+        namespace?: string,
+        configPath?: string
     ) {
         super(apiVersion, keyVault, azureStorage, storage, uploadRetryCount, namespace);
         this.serviceAccountName = serviceAccountName;
+        this.configPath = configPath
     }
 
     public static getInstance(jsonObject: object): FrameworkControllerClusterConfigAzure {

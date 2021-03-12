@@ -34,7 +34,7 @@ abstract class KubernetesTrainingService {
     protected readonly metricsEmitter: EventEmitter;
     protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
     //  experiment root dir in NFS
-    protected readonly trialLocalNFSTempFolder: string;
+    protected readonly trialLocalTempFolder: string;
     protected stopping: boolean = false;
     protected experimentId!: string;
     protected kubernetesRestServerPort?: number;
@@ -57,7 +57,7 @@ abstract class KubernetesTrainingService {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
-        this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
+        this.trialLocalTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.expContainerCodeFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId, 'nni-code');
@@ -191,9 +191,9 @@ abstract class KubernetesTrainingService {
 
         // Unmount NFS
         try {
-            await cpp.exec(`sudo umount ${this.trialLocalNFSTempFolder}`);
+            await cpp.exec(`sudo umount ${this.trialLocalTempFolder}`);
         } catch (error) {
-            this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
+            this.log.error(`Unmount ${this.trialLocalTempFolder} failed, error is ${error}`);
         }
 
         // Stop kubernetes rest server
@@ -299,11 +299,11 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(runScript);
     }
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
-        await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
+        await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}`);
         try {
-            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
+            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalTempFolder}`);
         } catch (error) {
-            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalTempFolder} failed, error is ${error}`;
             this.log.error(mountError);
 
             return Promise.reject(mountError);
@@ -313,9 +313,10 @@ abstract class KubernetesTrainingService {
     }
     protected async createPVCStorage(pvcPath: string): Promise<void> {
         try {
-            await cpp.exec(`sudo ln -s ${pvcPath} ${this.trialLocalNFSTempFolder}`);
+            await cpp.exec(`mkdir -p ${pvcPath}`);
+            await cpp.exec(`sudo ln -s ${pvcPath} ${this.trialLocalTempFolder}`);
         } catch (error) {
-            const linkError: string = `Linking ${pvcPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+            const linkError: string = `Linking ${pvcPath} to ${this.trialLocalTempFolder} failed, error is ${error}`;
             this.log.error(linkError);
 
             return Promise.reject(linkError);
