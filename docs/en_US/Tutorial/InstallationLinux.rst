@@ -24,7 +24,7 @@ Install NNI through source code
 
 .. code-block:: bash
 
-     git clone -b v2.0 https://github.com/Microsoft/nni.git
+     git clone -b v2.1 https://github.com/Microsoft/nni.git
      cd nni
      python3 -m pip install --upgrade pip setuptools
      python3 setup.py develop
@@ -37,7 +37,7 @@ If you want to perform a persist install instead, we recommend to build your own
 
 .. code-block:: bash
 
-    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    git clone -b v2.1 https://github.com/Microsoft/nni.git
     cd nni
     export NNI_RELEASE=2.0
     python3 -m pip install --upgrade pip setuptools wheel
@@ -59,7 +59,7 @@ Verify installation
 
   .. code-block:: bash
 
-     git clone -b v2.0 https://github.com/Microsoft/nni.git
+     git clone -b v2.1 https://github.com/Microsoft/nni.git
 
 * 
   Run the MNIST example.

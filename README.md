@@ -26,7 +26,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * ML Platform owners who want to **support AutoML in their platform**.
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
-* **New release**: [v2.0 is available](https://github.com/microsoft/nni/releases) - _released on Jan-14-2021_
+* **New release**: [v2.1 is available](https://github.com/microsoft/nni/releases) - _released on Mar-10-2021_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on Feb-19-2021_
 
 * **New use case sharing**: [Cost-effective Hyper-parameter Tuning using AdaptDL with NNI](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - _posted on Feb-23-2021_
@@ -252,7 +252,7 @@ Note:
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v2.0 https://github.com/Microsoft/nni.git
+  git clone -b v2.1 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

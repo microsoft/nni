@@ -68,17 +68,24 @@ class ExperimentConfig(ConfigBase):
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
+        base_path = kwargs.pop('_base_path', None)
         kwargs = util.case_insensitive(kwargs)
         if training_service_platform is not None:
             assert 'trainingservice' not in kwargs
-            kwargs['trainingservice'] = util.training_service_config_factory(platform = training_service_platform)
+            kwargs['trainingservice'] = util.training_service_config_factory(
+                platform=training_service_platform,
+                base_path=base_path
+            )
         elif isinstance(kwargs.get('trainingservice'), (dict, list)):
             # dict means a single training service
             # list means hybrid training service
-            kwargs['trainingservice'] = util.training_service_config_factory(config = kwargs['trainingservice'])
+            kwargs['trainingservice'] = util.training_service_config_factory(
+                config=kwargs['trainingservice'],
+                base_path=base_path
+            )
         else:
             raise RuntimeError('Unsupported Training service configuration!')
-        super().__init__(**kwargs)
+        super().__init__(_base_path=base_path, **kwargs)
         for algo_type in ['tuner', 'assessor', 'advisor']:
             if isinstance(kwargs.get(algo_type), dict):
                 setattr(self, algo_type, _AlgorithmConfig(**kwargs.pop(algo_type)))

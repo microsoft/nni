@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import (Any, List)
 
 import torch
@@ -369,7 +372,6 @@ class TensorOps(PyTorchOperation):
             return TensorOpExceptions[self.type](output, inputs)
         op_name = self.type.split('::')[-1]
         args_str = ', '.join([f'{name}={inputs[i+1]}' for i, (name, t, default) in enumerate(matched_args)])
-        print(args_str)
         return f'{output} = {inputs[0]}.{op_name}({args_str})'
 
 class TorchOps(PyTorchOperation):

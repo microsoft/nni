@@ -47,6 +47,8 @@ class ConfigBase:
         They will be converted to snake_case automatically.
         If a field is missing and don't have default value, it will be set to `dataclasses.MISSING`.
         """
+        if 'basepath' in kwargs:
+            _base_path = kwargs.pop('basepath')
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
         if _base_path is None:
             _base_path = Path()
