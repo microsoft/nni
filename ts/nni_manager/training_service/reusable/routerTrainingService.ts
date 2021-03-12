@@ -79,13 +79,6 @@ class RouterTrainingService implements TrainingService {
         return await this.internalTrainingService.updateTrialJob(trialJobId, form);
     }
 
-    public get isMultiPhaseJobSupported(): boolean {
-        if (this.internalTrainingService === undefined) {
-            throw new Error("TrainingService is not assigned!");
-        }
-        return this.internalTrainingService.isMultiPhaseJobSupported;
-    }
-
     public async cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean | undefined): Promise<void> {
         if (this.internalTrainingService === undefined) {
             throw new Error("TrainingService is not assigned!");
@@ -159,13 +152,6 @@ class RouterTrainingService implements TrainingService {
         }
         await this.internalTrainingService.setClusterMetadata(key, value);
         
-    }
-
-    public async getClusterMetadata(key: string): Promise<string> {
-        if (this.internalTrainingService === undefined) {
-            throw new Error("TrainingService is not assigned!");
-        }
-        return await this.internalTrainingService.getClusterMetadata(key);
     }
 
     public async cleanUp(): Promise<void> {

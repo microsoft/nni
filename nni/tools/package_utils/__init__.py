@@ -178,25 +178,24 @@ def create_customized_class_instance(class_params):
     ----------
     class_params: dict
         class_params should contains following keys:
-            codeDir: code directory
-            classFileName: python file name of the class
-            className: class name
+            codeDirectory: code directory
+            className: qualified class name
             classArgs (optional): kwargs pass to class constructor
+
     Returns: object
     -------
         Returns customized class instance.
     """
 
-    code_dir = class_params.get('codeDir')
-    class_filename = class_params.get('classFileName')
-    class_name = class_params.get('className')
+    code_dir = class_params.get('codeDirectory')
+    qualified_class_name = class_params.get('className')
     class_args = class_params.get('classArgs')
 
-    if not os.path.isfile(os.path.join(code_dir, class_filename)):
-        raise ValueError('Class file not found: {}'.format(
-            os.path.join(code_dir, class_filename)))
+    if code_dir and not os.path.isdir(code_dir):
+        raise ValueError(f'Directory not found: {code_dir}')
+
     sys.path.append(code_dir)
-    module_name = os.path.splitext(class_filename)[0]
+    module_name, class_name = qualified_class_name.rsplit('.', 1)
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
 

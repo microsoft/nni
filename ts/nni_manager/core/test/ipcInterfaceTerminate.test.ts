@@ -22,24 +22,24 @@ function startProcess(): void {
         // Mock tuner config
         {
             experimentName: 'exp1',
-            maxExecDuration: 3600,
+            maxExperimentDuration: '1h',
             searchSpace: '',
-            trainingServicePlatform: 'local',
-            authorName: '',
+            trainingService: {
+                platform: 'local'
+            },
             trialConcurrency: 1,
-            maxTrialNum: 5,
+            maxTrialNumber: 5,
             tuner: {
-                className: 'DummyTuner',
-                codeDir: './',
-                classFileName: 'dummy_tuner.py',
-                checkpointDir: './'
+                className: 'dummmy_tuner.DummyTuner',
+                codeDirectory: '.'
             },
             assessor: {
-                className: 'DummyAssessor',
-                codeDir: './',
-                classFileName: 'dummy_assessor.py',
-                checkpointDir: './'
-            }
+                className: 'dummy_assessor.DummyAssessor',
+                codeDirectory: '.'
+            },
+            trialCommand: '',
+            trialCodeDirectory: '',
+            debug: true
         }
     );
     const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);

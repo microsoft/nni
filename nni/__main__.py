@@ -78,26 +78,26 @@ def _run_advisor(exp_params):
 
 
 def _create_tuner(exp_params):
-    if exp_params.get('tuner').get('builtinTunerName'):
+    if exp_params['tuner'].get('name'):
         tuner = create_builtin_class_instance(
-            exp_params.get('tuner').get('builtinTunerName'),
-            exp_params.get('tuner').get('classArgs'),
+            exp_params['tuner']['name'],
+            exp_params['tuner'].get('classArgs'),
             'tuners')
     else:
-        tuner = create_customized_class_instance(exp_params.get('tuner'))
+        tuner = create_customized_class_instance(exp_params['tuner'])
     if tuner is None:
         raise AssertionError('Failed to create Tuner instance')
     return tuner
 
 
 def _create_assessor(exp_params):
-    if exp_params.get('assessor').get('builtinAssessorName'):
+    if exp_params['assessor'].get('name'):
         assessor = create_builtin_class_instance(
-            exp_params.get('assessor').get('builtinAssessorName'),
-            exp_params.get('assessor').get('classArgs'),
+            exp_params['assessor']['name'],
+            exp_params['assessor'].get('classArgs'),
             'assessors')
     else:
-        assessor = create_customized_class_instance(exp_params.get('assessor'))
+        assessor = create_customized_class_instance(exp_params['assessor'])
     if assessor is None:
         raise AssertionError('Failed to create Assessor instance')
     return assessor

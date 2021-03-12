@@ -160,7 +160,7 @@ class NNIRestHandler {
     }
 
     private startExperiment(router: Router): void {
-        router.post('/experiment', expressJoi(ValidationSchemas.STARTEXPERIMENT), (req: Request, res: Response) => {
+        router.post('/experiment', (req: Request, res: Response) => {
             if (isNewExperiment()) {
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({

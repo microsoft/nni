@@ -39,47 +39,49 @@ describe('Unit test for nnimanager', function () {
     let ClusterMetadataKey = 'mockedMetadataKey';
 
     let experimentParams = {
-        authorName: 'zql',
         experimentName: 'naive_experiment',
         trialConcurrency: 3,
-        maxExecDuration: 5,
-        maxTrialNum: 3,
-        trainingServicePlatform: 'local',
+        maxExperimentDuration: '5s',
+        maxTrialNumber: 3,
+        trainingService: {
+            platform: 'local'
+        },
         searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
-            },
-            checkpointDir: '',
+            }
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
-        }
+            name: 'Medianstop'
+        },
+        trialCommand: '',
+        trialCodeDirectory: '',
+        debug: true
     }
 
     let updateExperimentParams = {
-        authorName: '',
         experimentName: 'another_experiment',
         trialConcurrency: 2,
-        maxExecDuration: 6,
-        maxTrialNum: 2,
-        trainingServicePlatform: 'local',
+        maxExperimentDuration: '6s',
+        maxTrialNumber: 2,
+        trainingService: {
+            platform: 'local'
+        },
         searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
-            },
-            checkpointDir: '',
-            gpuNum: 0
+            }
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
-            gpuNum: 1
-        }
+            name: 'Medianstop'
+        },
+        trialCommand: '',
+        trialCodeDirectory: '',
+        debug: true
     }
 
     let experimentProfile = {
@@ -206,7 +208,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxExecDuration).to.be.equal(6);
+                expect(updateProfile.params.maxExperimentDuration).to.be.equal(6);
             });
         }).catch((error) => {
             assert.fail(error);
@@ -226,7 +228,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile MAX_TRIAL_NUM',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxTrialNum).to.be.equal(2);
+                expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
             });
         }).catch((error) => {
             assert.fail(error);
@@ -273,8 +275,8 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test addCustomizedTrialJob reach maxTrialNum', () => {
-        // test currSubmittedTrialNum reach maxTrialNum
+    it('test addCustomizedTrialJob reach maxTrialNumber', () => {
+        // test currSubmittedTrialNum reach maxTrialNumber
         return nniManager.addCustomizedTrialJob('"hyperParam"').then(() => {
             nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
                 if (trialJobStatistics[0].trialJobStatus === 'WAITING')
