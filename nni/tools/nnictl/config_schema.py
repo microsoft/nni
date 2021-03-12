@@ -148,6 +148,7 @@ common_schema = {
         Optional('localMountPoint'): setType('localMountPoint', str),
         Optional('remoteMountPoint'): setType('remoteMountPoint', str),
         Optional('nfsServer'): setType('nfsServer', str),
+        Optional('exportedDirectory'): setType('exportedDirectory', str),
         Optional('storageAccountName'): setType('storageAccountName', str),
         Optional('storageAccountKey'): setType('storageAccountKey', str),
         Optional('containerName'): setType('containerName', str),

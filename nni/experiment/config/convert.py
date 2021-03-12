@@ -91,7 +91,6 @@ def _handle_training_service(ts, data):
             data['localConfig']['gpuIndices'] = _convert_gpu_indices(ts['gpuIndices'])
 
     elif ts['platform'] == 'remote':
-        print(ts)
         data['remoteConfig'] = {'reuse': ts['reuseMode']}
         data['machineList'] = []
         for machine in ts['machineList']:
