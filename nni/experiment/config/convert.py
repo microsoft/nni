@@ -7,10 +7,89 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, List
 
-from .common import ExperimentConfig
+from .common import ExperimentConfig, AlgorithmConfig
 from . import util
 
 _logger = logging.getLogger(__name__)
+
+def to_v2(v1) -> ExperimentConfig:
+    platform = v1.pop('trainingServicePlatform')
+    assert platform in ['local']
+    v2 = ExperimentConfig(platform)
+
+    _drop_field(v1, 'authorName')
+    _move_field(v1, v2, 'experimentName', 'experiment_name')
+    _drop_field(v1, 'description')
+    _move_field(v1, v2, 'trialConcurrency', 'trial_concurrency')
+    _move_field(v1, v2, 'maxExecDuration', 'max_experiment_duration')
+    _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
+    v2.search_space_file = util.canonical_path(v1.pop('searchSpacePath', None))
+    _drop_field(v1, 'multiPhase')
+    _drop_field(v1, 'multiThread')
+    _move_field(v1, v2, 'nniManagerIp', 'nni_manager_ip')
+    _move_field(v1, v2, 'logDir', 'experiment_working_directory')
+    _move_field(v1, v2, 'debug', 'debug')
+    _drop_field(v1, 'versionCheck')
+    _move_field(v1, v2, 'logLevel', 'log_level')
+    _drop_field(v1, 'logCollection')
+    _drop_field(v1, 'useAnnotation')
+
+    if 'trial' in v1:
+        v1_trial = v1.pop('trial')
+        _move_field(v1_trial, v2, 'command', 'trial_command')
+        _move_field(v1_trial, v2, 'codeDir', 'trial_code_directory')
+        _move_field(v1_trial, v2, 'gpuNum', 'trial_gpu_number')
+
+    for algo_type in ['tuner', 'assessor', 'advisor']:
+        if algo_type not in v1:
+            continue
+        v1_algo = v1.pop(algo_type)
+
+        builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
+        class_args = v1_algo.pop('classArgs', None)
+
+        if builtin_name is not None:
+            v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
+
+        else:
+            class_directory = util.canonical_path(v1_algo.pop('codeDir'))
+            class_file_name = v1_algo.pop('classFileName')
+            assert class_file_name.endswith('.py')
+            class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
+            v2_algo = CustomAlgorithmConfig(
+                class_name=class_name,
+                class_directory=class_directory,
+                class_args=class_args
+            )
+
+        setattr(v2, algo_type, v2_algo)
+        _drop_field(v1_algo, 'includeIntermediateResults')
+        _move_field(v1_algo, v2, 'gpuIndices', 'tuner_gpu_indices')
+        assert not v1_algo, v1_algo
+
+    ts = v2.training_service
+
+    if platform == 'local':
+        local_config = v1.pop('localConfig', {})
+        _move_field(local_config, ts, 'gpuIndices', 'gpu_indices')
+        _move_field(local_config, ts, 'maxTrialNumPerGpu', 'max_trial_number_per_gpu')
+        _move_field(local_config, ts, 'useActiveGpu', 'use_active_gpu')
+        assert not local_config, local_config
+
+    assert not v1_trial, v1_trial
+    assert not v1, v1
+    return v2
+
+def _drop_field(v1, key):
+    if key in v1:
+        logging.warning(f'Configuration field {key} is no longer supported and has been ignored')
+        v1.pop(key)
+
+def _move_field(v1, v2, v1_key, v2_key):
+    if v1_key in v1:
+        value = v1.pop(v1_key, None)
+        if value is not None:
+            setattr(v2, v2_key, value)
 
 
 def to_v1_yaml(config: ExperimentConfig, skip_nnictl: bool = False) -> Dict[str, Any]:

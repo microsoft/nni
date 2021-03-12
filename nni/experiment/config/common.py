@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from ruamel.yaml import YAML
+
 from .base import ConfigBase, PathLike
 from . import util
 
@@ -99,6 +101,12 @@ class ExperimentConfig(ConfigBase):
         if self.trial_gpu_number and hasattr(self.training_service, 'use_active_gpu'):
             if self.training_service.use_active_gpu is None:
                 raise ValueError('Please set "use_active_gpu"')
+
+    def json(self) -> Dict[str, Any]:
+        obj = super().json()
+        if obj.get('searchSpaceFile'):
+            obj['searchSpace'] = YAML().load(open(obj.pop('searchSpaceFile')))
+        return obj
 
 ## End of public API ##
 
