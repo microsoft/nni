@@ -11,30 +11,28 @@
     "logDir": "/***/nni/experiments/Tkaxm2mb",
     "nextSequenceId": 110,
     "params": {
-      "authorName": "default",
       "experimentName": "default",
       "trialConcurrency": 10,
-      "maxExecDuration": 3600,
-      "maxTrialNum": 100,
-      "searchSpace": "{\"intermediate1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate3\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"intermediate_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2, 3]}, \"final1\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final2\": {\"_type\": \"choice\", \"_value\": [\"normal\", \"inf\", \"neginf\", \"nan\", \"string\", \"dict-empty\", \"dict-normal\", \"dict-nodefault\", \"dict-defaultdict\"]}, \"final_count\": {\"_type\": \"choice\", \"_value\": [0, 1, 2]}}",
-      "trainingServicePlatform": "local",
-      "tuner": {
-        "codeDir": "/***/nnidev/src/webui/tests/metrics-test/.",
-        "classFileName": "naive_random.py",
-        "className": "NaiveRandomTuner",
-        "checkpointDir": "/***/nni/experiments/Tkaxm2mb/checkpoint"
+      "maxExperimentDuration": "1h",
+      "maxTrialNumber": 100,
+      "searchSpace": {
+          "intermediate1": {"_type": "choice", "_value": [ "normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
+          "intermediate2": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
+          "intermediate3": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
+          "intermediate_count": {"_type": "choice", "_value": [0, 1, 2, 3]},
+          "final1": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
+          "final2": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
+          "final_count": {"_type": "choice", "_value": [0, 1, 2]}
+      }",
+      "trainingService": {
+         "platform": "local"
       },
-      "versionCheck": true,
-      "clusterMetaData": [
-        {
-          "key": "codeDir",
-          "value": "/***/nnidev/src/webui/tests/metrics-test/."
-        },
-        {
-          "key": "command",
-          "value": "python trial.py"
-        }
-      ]
+      "tuner": {
+        "codeDirectory": "/***/nnidev/src/webui/tests/metrics-test",
+        "className": "naive_random.NaiveRandomTuner"
+      },
+      "trialCommand": "python trial.py",
+      "codeDirectory": "/***/nnidev/src/webui/tests/metrics-test"
     },
     "startTime": 1595901129833,
     "endTime": 1595901290657

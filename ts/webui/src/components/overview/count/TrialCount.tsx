@@ -13,7 +13,7 @@ export const TrialCount = (): any => {
     const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
-    const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
+    const maxTrialNum = EXPERIMENT.maxTrialNumber;
     // support type [0, 1], not 98%
     const bar2Percent = bar2 / maxTrialNum;
     return (
@@ -85,7 +85,7 @@ export const TrialCount = (): any => {
                                         field: 'maxTrialNum',
                                         editType: CONTROLTYPE[1],
                                         maxExecDuration: '',
-                                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                        maxTrialNum: EXPERIMENT.maxTrialNumber,
                                         trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                         updateOverviewPage
                                     }}
@@ -102,7 +102,7 @@ export const TrialCount = (): any => {
                                             editType: CONTROLTYPE[2],
                                             // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
                                             maxExecDuration: '',
-                                            maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                            maxTrialNum: EXPERIMENT.maxTrialNumber,
                                             trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                             updateOverviewPage
                                         }}

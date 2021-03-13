@@ -654,6 +654,8 @@ class NNIManager implements Manager {
 
         this.addEventListeners();
 
+        this.sendInitTunerCommands();
+
         await Promise.all([
             this.periodicallyUpdateExecDuration(),
             this.pingDispatcher().catch((err: Error) => {

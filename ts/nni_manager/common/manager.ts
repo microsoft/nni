@@ -18,8 +18,8 @@ interface ExperimentProfile {
     params: ExperimentConfig;
     id: string;
     execDuration: number;
-    logDir?: string;
-    startTime?: number;
+    logDir: string;
+    startTime: number;
     endTime?: number;
     nextSequenceId: number;
     revision: number;

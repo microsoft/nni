@@ -6,21 +6,6 @@ import { TOOLTIP_BACKGROUND_COLOR } from '../../../static/const';
 import '../../../static/style/overview/command.scss';
 
 export const Command2 = (): any => {
-    const clusterMetaData = EXPERIMENT.profile.params.clusterMetaData;
-    let trialCommand = 'unknown';
-
-    if (clusterMetaData !== undefined) {
-        for (const item of clusterMetaData) {
-            if (item.key === 'command') {
-                trialCommand = item.value as string;
-            }
-            if (item.key === 'trial_config') {
-                if (typeof item.value === 'object' && 'command' in item.value) {
-                    trialCommand = item.value.command as string;
-                }
-            }
-        }
-    }
     return (
         <div className='basic' style={leftProgress}>
             <p className='command'>Log directory</p>
@@ -45,7 +30,7 @@ export const Command2 = (): any => {
             <p className='lineMargin'>Trial command</p>
             <div className='ellipsis'>
                 <TooltipHost
-                    content={trialCommand || 'unknown'}
+                    content={EXPERIMENT.config.trialCommand || 'unknown'}
                     className='ellipsis'
                     directionalHint={DirectionalHint.bottomCenter}
                     tooltipProps={{
@@ -58,7 +43,7 @@ export const Command2 = (): any => {
                         }
                     }}
                 >
-                    {trialCommand || 'unknown'}
+                    {EXPERIMENT.config.trialCommand || 'unknown'}
                 </TooltipHost>
             </div>
         </div>

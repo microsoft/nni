@@ -130,7 +130,7 @@ class NNIRestHandler {
     }
 
     private updateExperimentProfile(router: Router): void {
-        router.put('/experiment', expressJoi(ValidationSchemas.UPDATEEXPERIMENT), (req: Request, res: Response) => {
+        router.put('/experiment', (req: Request, res: Response) => {
             this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
                 res.send();
             }).catch((err: Error) => {
