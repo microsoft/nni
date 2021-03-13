@@ -13,14 +13,12 @@ import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
-import { TrainingService } from './common/trainingService';
 import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNIRestServer } from './rest_server/nniRestServer';
-import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 
 function initStartupInfo(

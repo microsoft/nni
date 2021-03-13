@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 'use strict';
-import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
@@ -20,8 +19,6 @@ import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
 } from '../../common/utils';
 import { ExperimentConfig, LocalConfig, flattenConfig } from '../../common/experimentConfig';
-import { TrialConfig } from '../common/trialConfig';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -76,7 +73,7 @@ class LocalTrialJobDetail implements TrialJobDetail {
     }
 }
 
-interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { };
+interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { }
 
 /**
  * Local machine training service
@@ -255,7 +252,7 @@ class LocalTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
         // for backward compatibility
     }
 

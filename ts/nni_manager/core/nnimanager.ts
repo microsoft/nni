@@ -252,11 +252,11 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJob(trialJobId);
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
         throw new Error('Calling removed API setClusterMetadata');
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
+    public getClusterMetadata(_key: string): Promise<string> {
         throw new Error('Calling removed API getClusterMetadata');
     }
 

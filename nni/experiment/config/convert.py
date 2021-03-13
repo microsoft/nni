@@ -7,7 +7,7 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any, Dict, List
 
-from .common import ExperimentConfig, AlgorithmConfig
+from .common import ExperimentConfig, AlgorithmConfig, CustomAlgorithmConfig
 from . import util
 
 _logger = logging.getLogger(__name__)

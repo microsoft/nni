@@ -5,7 +5,7 @@
 
 export interface TrainingServiceConfig {
     platform: string;
-};
+}
 
 /* Local */
 
@@ -14,7 +14,7 @@ export interface LocalConfig extends TrainingServiceConfig {
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
-};
+}
 
 /* Remote */
 
@@ -29,13 +29,13 @@ export interface RemoteMachineConfig {
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
     pythonPath?: string;
-};
+}
 
 export interface RemoteConfig extends TrainingServiceConfig {
     platform: 'remote';
     reuseMode: boolean;
     machineList: RemoteMachineConfig[];
-};
+}
 
 /* OpenPAI */
 
@@ -51,8 +51,8 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     localStorageMountPoint: string;
     containerStorageMountPoint: string;
     reuseMode: boolean;
-    openpaiConfig?: Object;
-};
+    openpaiConfig?: object;
+}
 
 /* AML */
 
@@ -63,7 +63,7 @@ export interface AmlConfig extends TrainingServiceConfig {
     workspaceName: string;
     computeTarget: string;
     dockerImage: string;
-};
+}
 
 /* Kubeflow */
 
@@ -75,7 +75,7 @@ export interface KubeflowStorageConfig {
     azureShare?: string;
     keyVault?: string;
     keyVaultSecret?: string;
-};
+}
 
 export interface KubeflowRoleConfig {
     replicas: number;
@@ -84,7 +84,7 @@ export interface KubeflowRoleConfig {
     cpuNumber: number;
     memorySize: string;
     dockerImage: string;
-};
+}
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
@@ -93,11 +93,11 @@ export interface KubeflowConfig extends TrainingServiceConfig {
     storage: KubeflowStorageConfig;
     worker: KubeflowRoleConfig;
     parameterServer?: KubeflowRoleConfig;
-};
+}
 
 /* FrameworkController */
 
-export interface FrameworkControllerStorageConfig extends KubeflowStorageConfig { };
+type FrameworkControllerStorageConfig = KubeflowStorageConfig;
 
 export interface FrameworkControllerRoleConfig {
     name: string;
@@ -109,14 +109,14 @@ export interface FrameworkControllerRoleConfig {
     memorySize: string;
     attemptCompletionMinFailedTasks: number;
     attemptCompletionMinSucceededTasks: number;
-};
+}
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {
     platform: 'frameworkcontroller';
     serviceAccountName: string;
     storage: FrameworkControllerStorageConfig;
     taskRoles: FrameworkControllerRoleConfig[];
-};
+}
 
 /* common */
 
@@ -124,8 +124,8 @@ export interface AlgorithmConfig {
     name?: string;
     className?: string;
     codeDirectory?: string;
-    classArgs?: Object;
-};
+    classArgs?: object;
+}
 
 export interface ExperimentConfig {
     experimentName?: string;
@@ -146,21 +146,21 @@ export interface ExperimentConfig {
     assessor?: AlgorithmConfig;
     advisor?: AlgorithmConfig;
     trainingService: TrainingServiceConfig;
-};
+}
 
 /* util functions */
 
-const time_units = { 'd': 24 * 3600, 'h': 3600, 'm': 60, 's': 1 };
+const timeUnits = { d: 24 * 3600, h: 3600, m: 60, s: 1 };
 
 export function toSeconds(time: string): number {
-    for (let [unit, factor] of Object.entries(time_units)) {
+    for (const [unit, factor] of Object.entries(timeUnits)) {
         if (time.endsWith(unit)) {
             const digits = time.slice(0, -1);
             return Number(digits) * factor;
         }
     }
     throw new Error(`Bad time string "${time}"`);
-};
+}
 
 export function toCudaVisibleDevices(gpuIndices?: number[]): string {
     return gpuIndices === undefined ? '' : gpuIndices.join(',');
