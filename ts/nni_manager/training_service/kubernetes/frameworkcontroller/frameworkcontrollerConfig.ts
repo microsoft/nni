@@ -10,7 +10,6 @@ import {
     KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig, KubernetesClusterConfigPVC,
     PVCConfig,
 } from '../kubernetesConfig';
-import {config} from 'rx';
 
 export class FrameworkAttemptCompletionPolicy {
     public readonly minFailedTaskCount: number;
