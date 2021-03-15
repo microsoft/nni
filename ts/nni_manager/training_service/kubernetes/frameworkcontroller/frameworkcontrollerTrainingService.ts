@@ -140,13 +140,16 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         let frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
 
+        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
+        let frameworkcontrollerJobConfig = JSON.parse(JSON.stringify(this.fcTemplate));
+
         if (this.fcTemplate !== undefined) {
             // add a custom name extension to the job name and apply it to the custom template
             frameworkcontrollerJobName += "xx" + this.fcTemplate.metadata.name;
             // Process custom task roles commands
             configTaskRoles.map((x: any, i: number) => {
                 const scriptName = path.join(trialWorkingFolder, "run_" + x.name + ".sh")
-                this.fcTemplate.spec.taskRoles[i].task.pod.spec.containers[0].command = ["sh", scriptName]
+                frameworkcontrollerJobConfig.spec.taskRoles[i].task.pod.spec.containers[0].command = ["sh", scriptName]
             })
         }
 
@@ -173,12 +176,9 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         // Set trial job detail until create frameworkcontroller job successfully
         this.trialJobsMap.set(trialJobId, trialJobDetail);
 
-        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
-        let frameworkcontrollerJobConfig: any = {};
-
         if (this.fcTemplate !== undefined) {
             frameworkcontrollerJobConfig = {
-                ...this.fcTemplate,
+                ...frameworkcontrollerJobConfig,
                 metadata: {...this.fcTemplate.metadata, name: frameworkcontrollerJobName}
             };
         } else {
