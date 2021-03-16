@@ -30,7 +30,7 @@ class TensorboardTaskDetail implements TensorboardTaskInfo {
     }
 }
 
-class nniTensorboardManager implements TensorboardManager {
+class NNITensorboardManager implements TensorboardManager {
     private log: Logger;
     private tensorboardTaskMap: Map<string, TensorboardTaskDetail>;
     private tensorboardVersion: string | undefined;
@@ -101,7 +101,7 @@ class nniTensorboardManager implements TensorboardManager {
                 const realPath = fs.realpathSync(trialLogDirectoryList[idx]);
                 logRealPaths.push(`${trialJobId}:${realPath}`);
             });
-            let command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --host=${host} --port=${port}`;
+            const command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --host=${host} --port=${port}`;
             return command;
         } catch (error){
             throw new Error(`${error.message}`);
@@ -213,5 +213,5 @@ class nniTensorboardManager implements TensorboardManager {
 }
 
 export {
-    nniTensorboardManager, TensorboardTaskDetail
+    NNITensorboardManager, TensorboardTaskDetail
 };

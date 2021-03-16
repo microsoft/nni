@@ -450,6 +450,32 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
     return result;
 }
 
+async function isPortOpen(host: string, port: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        try{
+            const id = setTimeout(function () {
+                stream.destroy();
+                resolve(false);
+            }, 1000);
+
+            const stream = net.createConnection(port, host);
+            stream.on('connect', function () {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(true);
+            });
+
+            stream.on('error', function () {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(false);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
 async function getFreePort(host: string, start: number, end: number): Promise<number> {
     const deferred = new Deferred<number>();
     if (start > end) {
@@ -463,32 +489,6 @@ async function getFreePort(host: string, start: number, end: number): Promise<nu
         }
     })
     return deferred.promise;
-}
-
-async function isPortOpen(host: string, port: number): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        try{
-            const stream = net.createConnection(port, host);
-            stream.on('connect', function () {
-                clearTimeout(id);
-                stream.destroy();
-                resolve(true);
-            });
-
-            stream.on('error', function () {
-                clearTimeout(id);
-                stream.destroy();
-                resolve(false);
-            });
-
-            const id = setTimeout(function () {
-                stream.destroy();
-                resolve(false);
-            }, 1000);
-        } catch (error) {
-            reject(error);
-        }
-    });
 }
 
 export {
