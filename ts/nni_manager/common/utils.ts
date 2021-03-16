@@ -9,6 +9,7 @@ import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
+import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import * as lockfile from 'lockfile';
@@ -449,8 +450,49 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
     return result;
 }
 
+async function getFreePort(host: string, start: number, end: number): Promise<number> {
+    const deferred = new Deferred<number>();
+    if (start > end) {
+        deferred.reject(new Error(`no more free port`));
+    }
+    isPortOpen(host, start).then((flag) => {
+        if (!flag) {
+            deferred.resolve(start);
+        } else {
+            getFreePort(host, start + 1, end).then(freePort=>deferred.resolve(freePort)).catch(err=>deferred.reject(err));
+        }
+    })
+    return deferred.promise;
+}
+
+async function isPortOpen(host: string, port: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        try{
+            const stream = net.createConnection(port, host);
+            stream.on('connect', function () {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(true);
+            });
+
+            stream.on('error', function () {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(false);
+            });
+
+            const id = setTimeout(function () {
+                stream.destroy();
+                resolve(false);
+            }, 1000);
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
 export {
     countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

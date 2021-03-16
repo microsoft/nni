@@ -4,14 +4,13 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as net from 'net';
 import * as cp from 'child_process';
 import { ChildProcess } from 'child_process';
 import { Deferred } from 'ts-deferred';
 
 import * as component from '../common/component';
 import { getLogger, Logger } from '../common/log';
-import { getTunerProc, isAlive, killPid, uniqueString, mkDirPSync } from '../common/utils';
+import { getTunerProc, isAlive, killPid, uniqueString, mkDirPSync, getFreePort } from '../common/utils';
 import { Manager } from '../common/manager';
 import { TensorboardParams, TensorboardTaskStatus, TensorboardTaskInfo, TensorboardManager } from '../common/tensorboardManager';
 
@@ -194,6 +193,9 @@ class nniTensorboardManager implements TensorboardManager {
     }
 
     private async killTensorboardTaskProc(tensorboardTask: TensorboardTaskDetail): Promise<void> {
+        if (['ERROR', 'STOPPED'].includes(tensorboardTask.status)) {
+            return
+        }
         const alive: boolean = await isAlive(tensorboardTask.pid);
         if (!alive) {
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
@@ -202,47 +204,12 @@ class nniTensorboardManager implements TensorboardManager {
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPED');
         }
     }
-}
 
-async function getFreePort(host: string, start: number, end: number): Promise<number> {
-    const deferred = new Deferred<number>();
-    if (start > end) {
-        deferred.reject(new Error(`no more free port`));
+    public async stop(): Promise<void> {
+        this.tensorboardTaskMap.forEach(async (value) => {
+            await this.killTensorboardTaskProc(value);
+        });
     }
-    isPortOpen(host, start).then((flag) => {
-        if (!flag) {
-            deferred.resolve(start);
-        } else {
-            getFreePort(host, start + 1, end).then(freePort=>deferred.resolve(freePort)).catch(err=>deferred.reject(err));
-        }
-    })
-    return deferred.promise;
-}
-
-async function isPortOpen(host: string, port: number): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-        try{
-            const stream = net.createConnection(port, host);
-            stream.on('connect', function () {
-                clearTimeout(id);
-                stream.destroy();
-                resolve(true);
-            });
-
-            stream.on('error', function () {
-                clearTimeout(id);
-                stream.destroy();
-                resolve(false);
-            });
-
-            const id = setTimeout(function () {
-                stream.destroy();
-                resolve(false);
-            }, 1000);
-        } catch (error) {
-            reject(error);
-        }
-    });
 }
 
 export {

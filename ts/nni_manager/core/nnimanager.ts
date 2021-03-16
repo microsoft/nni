@@ -16,6 +16,7 @@ import {
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
+import { TensorboardManager } from '../common/tensorboardManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
@@ -356,6 +357,7 @@ class NNIManager implements Manager {
         let hasError: boolean = false;
         try {
             await this.experimentManager.stop();
+            await component.get<TensorboardManager>(TensorboardManager).stop();
             await this.dataStore.close();
             await component.get<NNIRestServer>(NNIRestServer).stop();
         } catch (err) {

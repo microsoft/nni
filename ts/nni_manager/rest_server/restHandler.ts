@@ -67,15 +67,12 @@ class NNIRestHandler {
         this.getTrialLog(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
-<<<<<<< HEAD
         this.startTensorboardTask(router);
         this.getTensorboardTask(router);
         this.updateTensorboardTask(router);
         this.stopTensorboardTask(router);
         this.listTensorboardTask(router);
-=======
         this.stop(router);
->>>>>>> master
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any) => {

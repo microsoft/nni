@@ -24,6 +24,7 @@ abstract class TensorboardManager {
     public abstract updateTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo>;
     public abstract listTensorboardTasks(): Promise<TensorboardTaskInfo[]>;
     public abstract stopTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo>;
+    public abstract stop(): Promise<void>;
 }
 
 export {
