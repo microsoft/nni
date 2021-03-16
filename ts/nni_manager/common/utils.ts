@@ -453,12 +453,12 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
 async function isPortOpen(host: string, port: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         try{
+            const stream = net.createConnection(port, host);
             const id = setTimeout(function () {
                 stream.destroy();
                 resolve(false);
             }, 1000);
 
-            const stream = net.createConnection(port, host);
             stream.on('connect', function () {
                 clearTimeout(id);
                 stream.destroy();
