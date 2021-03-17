@@ -34,6 +34,16 @@ testCases:
   # check status of experiment before calling validator
   experimentStatusCheck: True
 
+- name: shared-storage
+  configFile: test/config/examples/config_sharedstorage_azureblob.yml
+  config:
+    sharedStorage:
+      localMountPoint: localrootpath
+      remoteMountPoint: remoterootpath
+      storageAccountName: jsblobtest
+      storageAccountKey: ${azureblob_token}
+      containerName: nnigit
+
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
 
