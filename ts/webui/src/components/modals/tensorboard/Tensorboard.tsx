@@ -5,6 +5,7 @@ import { Stack, Panel, StackItem, PrimaryButton, DetailsList, IColumn, IconButto
 import DialogDetail from './DialogDetail';
 import { MANAGER_IP } from '../../../static/const';
 import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
+// import { caclMonacoEditorHeight } from '../../../static/function';
 import '../../../static/style/tensorboard.scss';
 
 function Tensorboard(props): any {
@@ -41,9 +42,14 @@ function Tensorboard(props): any {
     ];
 
     useEffect(() => {
+        console.info(trialIDs); // eslint-diable-line
         const realIDs = trialIDs.filter(item => !(deleteIDs.includes(item)));
         setSource(realIDs.map(id => ({ id })));
-    }, [trialCount]); // trialCount发生改变时触发页面更新
+        // console.info(realIDs.map(id => ({id}))); // eslint-disable-line
+        // setSource(trialIDs.toString());
+
+    // }, [trialCount]); // trialCount发生改变时触发页面更新
+    }, []); // trialCount发生改变时触发页面更新
 
     // const { experiment, expDrawerHeight } = state;
     const tableHeight = caclMonacoEditorHeight(window.innerHeight);
@@ -78,8 +84,8 @@ function Tensorboard(props): any {
         //    效果演示代码
         //    await setStatus('downloag');
         //    await setVisibleDialog(true);
-        console.info(id);
-        await requestAxios(`${MANAGER_IP}/tensorboard/:${id}`)
+        // console.info(id);
+        await requestAxios(`${MANAGER_IP}/tensorboard/${id}`)
             .then(data => {
                 if (data.status !== 'downloading data') {
                     // trial 启动成功
@@ -95,6 +101,8 @@ function Tensorboard(props): any {
                 setDialogContent(error.message);
                 setVisibleDialog(true);
             });
+
+        // window.open('https://developer.microsoft.com/en-us/fluentui#/styles/web/icons');
     }
 
     async function deleteOneTrialTensorboard(id: string): Promise<void> {
@@ -120,6 +128,8 @@ function Tensorboard(props): any {
         setVisibleDialog(true);
     }
 
+    console.info(source); // eslint-disable-line
+    // const a = [{id: 'some-split-string-id-part'}];
     return (
         <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={onHideDialog}>
             <div className='panel'>

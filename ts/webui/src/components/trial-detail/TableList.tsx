@@ -93,6 +93,7 @@ interface TableListState {
     sortInfo: SortInfo;
     visibleDialog: boolean;
     dialogContent: string;
+    startTensorId: string;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -116,7 +117,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
             visibleDialog: false,
-            dialogContent: ''
+            dialogContent: '',
+            startTensorId: ''
         };
 
         this._selection = new Selection({
@@ -449,12 +451,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             data: {
-                trials: selectedRowIds.toString()
+                trials: selectedRowIds.join(',')
             }
         })
             .then(res => {
-                if (res.status === 201) {
-                    this.setState({ tensorboardPanelVisible: true });
+                if (res.status === 200) {
+                    console.info(res); // eslint-diable-line
+                    setTimeout(() => {this.setState({ startTensorId: res.data.id, tensorboardPanelVisible: true }), 2000});
+                    
                 }
             })
             .catch(error => {
@@ -489,10 +493,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
             intermediateDialogTrial,
             copiedTrialId,
             visibleDialog,
-            dialogContent
+            dialogContent,
+            startTensorId
         } = this.state;
-        console.info('detail');
-        console.info(selectedRowIds);
+        console.info(startTensorId); // eslint-diable-line
         return (
             <div id='tableList'>
                 <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
@@ -576,7 +580,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 )}
                 {tensorboardPanelVisible && (
                     <Tensorboard
-                        trialIDs={selectedRowIds}
+                        trialIDs={[startTensorId]}
+                        // trialIDs={selectedRowIds}
                         onHideDialog={(): void => {
                             this.setState({ tensorboardPanelVisible: false });
                         }}
