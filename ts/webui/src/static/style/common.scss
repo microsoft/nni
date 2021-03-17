@@ -42,3 +42,9 @@
 .ms-DetailsRow {
     height: 32px;
 }
+
+/* for graph tooltip style */
+.graph > div > div{
+    padding: 0 !important;
+    border: none !important;
+}

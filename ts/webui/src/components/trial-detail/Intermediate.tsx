@@ -280,7 +280,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         <Toggle onChange={this.switchTurn} />
                     </Stack>
                 </Stack>
-                <div className='intermediate-graph'>
+                <div className='intermediate-graph graph'>
                     <ReactEcharts
                         option={interSource}
                         style={{ width: '100%', height: 400, margin: '0 auto' }}
