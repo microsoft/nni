@@ -62,7 +62,7 @@ class NNITensorboardManager implements TensorboardManager {
         try{
             const host = 'localhost';
             const port = await getFreePort(host, 6006, 65535);
-            const command = this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, host, port);
+            const command = this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
             this.log.info(`tensorboard start command: ${command}`);
             const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env);
             const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
@@ -78,7 +78,7 @@ class NNITensorboardManager implements TensorboardManager {
         return deferred.promise
     }
 
-    private getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], host: string, port: number): string {
+    private getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): string {
         if (this.tensorboardVersion === undefined) {
             this.setTensorboardVersion();
             if (this.tensorboardVersion === undefined) {
@@ -93,7 +93,7 @@ class NNITensorboardManager implements TensorboardManager {
         }
         let logdirCmd = '--logdir';
         if (this.tensorboardVersion >= '2.0') {
-            logdirCmd = '--logdir_spec'
+            logdirCmd = '--bind_all --logdir_spec'
         }
         try {
             const logRealPaths: string[] = [];
@@ -101,7 +101,7 @@ class NNITensorboardManager implements TensorboardManager {
                 const realPath = fs.realpathSync(trialLogDirectoryList[idx]);
                 logRealPaths.push(`${trialJobId}:${realPath}`);
             });
-            const command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --host=${host} --port=${port}`;
+            const command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --port=${port}`;
             return command;
         } catch (error){
             throw new Error(`${error.message}`);
@@ -201,6 +201,7 @@ class NNITensorboardManager implements TensorboardManager {
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
         } else {
             await killPid(tensorboardTask.pid);
+            this.log.debug(`Tensorboard task ${tensorboardTask.id} stopped.`);
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPED');
         }
     }
@@ -209,6 +210,7 @@ class NNITensorboardManager implements TensorboardManager {
         this.tensorboardTaskMap.forEach(async (value) => {
             await this.killTensorboardTaskProc(value);
         });
+        this.log.info('Tensorboard manager stopped.');
     }
 }
 
