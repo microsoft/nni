@@ -13,7 +13,7 @@ logger = logging.getLogger('mnist_AutoML')
 
 if __name__ == '__main__':
     try:
-        logger.info("This is a test trial")
+        logger.debug("This is a test trial")
     except Exception as exception:
         logger.exception(exception)
         raise
