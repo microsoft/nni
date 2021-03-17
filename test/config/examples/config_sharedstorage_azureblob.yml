@@ -3,11 +3,11 @@ experimentName: example_mnist
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 1
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: ../../../examples/trials/mnist-pytorch/search_space.json
+trainingServicePlatform: aml
+searchSpacePath: ./mnist_search_space.json
 #choice: true, false
 useAnnotation: false
+nniManagerIp: 127.0.0.1
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
   #SMAC (SMAC should be installed through nnictl)
@@ -18,7 +18,12 @@ tuner:
 trial:
   command: python config_sharedstorage_azureblob_trial.py
   codeDir: .
-  gpuNum: 0
+  image: msranni/nni
+amlConfig:
+  subscriptionId: ${replace_to_your_subscriptionId}
+  resourceGroup: ${replace_to_your_resourceGroup}
+  workspaceName: ${replace_to_your_workspaceName}
+  computeTarget: ${replace_to_your_computeTarget}
 sharedStorage:
   storageType: AzureBlob
   localMountPoint: ${your/local/mount/point}
