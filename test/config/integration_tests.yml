@@ -38,11 +38,11 @@ testCases:
   configFile: test/config/examples/config_sharedstorage_azureblob.yml
   config:
     sharedStorage:
-      localMountPoint: localrootpath
-      remoteMountPoint: remoterootpath
+      localMountPoint: testlocalrootpath
+      remoteMountPoint: testremoterootpath
       storageAccountName: jsblobtest
       storageAccountKey: ${azureblob_token}
-      containerName: nnigit
+      containerName: nni
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
