@@ -18,7 +18,7 @@ GradientFeatureSelector，基于梯度搜索算法
 
 .. code-block:: python
 
-   from nni.algorithms.feature_engineering.gradient_selector import FeatureGradientSelector
+   from nni.feature_engineering.gradient_selector import FeatureGradientSelector
 
    # 下载数据
    ...
