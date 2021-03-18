@@ -10,7 +10,11 @@ import nni
 logger = logging.getLogger('mnist_AutoML')
 if __name__ == '__main__':
     try:
-        logger.debug('This is a test trial')
+        logger.debug(os.environ.get('NNI_OUTPUT_DIR'))
+        filename = os.path.join(os.environ.get('NNI_OUTPUT_DIR'), 'checkingfile.txt')
+        f = open(filename, "a")
+        f.write("this is the checking file.")
+        f.close()
     except Exception as exception:
         logger.exception(exception)
         raise
