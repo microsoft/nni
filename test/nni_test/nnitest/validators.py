@@ -103,7 +103,11 @@ class FileExistValidator(ITValidator):
         print(rest_endpoint)
         exp_id = osp.split(experiment_dir)[-1]
         rootpath = kwargs.get('rootpath')
-        checkpath = osp.join(rootpath, 'nni\\', exp_id, 'trials')
-        print('Checking shared storage log exists.')
-        assert osp.exists(path)
+        
+        metrics = requests.get(METRICS_URL).json()
+        for metric in metrics:
+            trial_id = metric['trialJobId']
+            checkpath = osp.join(rootpath, 'nni\\', exp_id, 'trials\\', trial_id, 'nnioutput\\', 'checkingfile.txt')
+            print('Checking shared storage log exists on trial ',trial_id)
+            assert osp.exists(checkpath)
 
