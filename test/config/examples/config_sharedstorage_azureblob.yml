@@ -16,7 +16,7 @@ tuner:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
-  command: python config_sharedstorage_azureblob_trial.py
+  command: python ./config_sharedstorage_azureblob_trial.py
   codeDir: .
   image: msranni/nni
 amlConfig:
