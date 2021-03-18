@@ -266,11 +266,7 @@ function formatComplexTypeValue(value: any): string | number {
     if (['number', 'string'].includes(typeof value)) {
         return value;
     } else {
-        if (value === null) {
-            return 0;
-        } else {
-            return value.toString();
-        }
+        return value.toString();
     }
 }
 

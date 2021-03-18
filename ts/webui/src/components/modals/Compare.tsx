@@ -174,7 +174,7 @@ class Compare extends React.Component<CompareProps, {}> {
         }
         const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
         const metricKeys = this._overlapKeys(items.map(item => item.metrics));
-        
+
         return (
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
