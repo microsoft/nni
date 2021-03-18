@@ -37,12 +37,21 @@ testCases:
 - name: shared-storage
   configFile: test/config/examples/config_sharedstorage_azureblob.yml
   config:
+    amlConfig:
+      subscriptionId: ${replace_to_your_subscriptionId}
+      resourceGroup: ${replace_to_your_resourceGroup}
+      workspaceName: ${replace_to_your_workspaceName}
+      computeTarget: ${replace_to_your_computeTarget}
     sharedStorage:
-      localMountPoint: testlocalrootpath
-      remoteMountPoint: testremoterootpath
+      localMountPoint: /tmp/nnimount/testlocalrootpath
+      remoteMountPoint: /tmp/nnimount/testremoterootpath
       storageAccountName: jsblobtest
       storageAccountKey: ${azureblob_token}
       containerName: nni
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
