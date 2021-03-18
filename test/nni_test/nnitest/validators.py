@@ -97,3 +97,13 @@ class NnicliValidator(ITValidator):
         print(exp.get_job_statistics())
         print(exp.get_experiment_status())
         print(exp.list_trial_jobs())
+
+class FileExistValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        print(rest_endpoint)
+        exp_id = osp.split(experiment_dir)[-1]
+        rootpath = kwargs.get('rootpath')
+        checkpath = osp.join(rootpath, 'nni\\', exp_id, 'trials')
+        print('Checking shared storage log exists.')
+        assert osp.exists(path)
+
