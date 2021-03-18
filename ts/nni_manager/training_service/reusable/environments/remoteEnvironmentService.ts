@@ -180,7 +180,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                         } else {
                             environment.setStatus('FAILED');
                         }
-                        this.releaseEnvironmentResource(environment);
+                        await this.releaseEnvironmentResource(environment);
                     }
                 }
             }
@@ -193,7 +193,16 @@ export class RemoteEnvironmentService extends EnvironmentService {
      * If a environment is finished, release the connection resource
      * @param environment remote machine environment job detail
      */
-    private releaseEnvironmentResource(environment: EnvironmentInformation): void {
+    private async releaseEnvironmentResource(environment: EnvironmentInformation): Promise<void> {
+        if (environment.useSharedStorage) {
+            const executor = await this.getExecutor(environment.id);
+            const remoteUmountCommand = component.get<SharedStorageService>(SharedStorageService).remoteUmountCommand;
+            const result = await executor.executeScript(remoteUmountCommand, false, false);
+            if (result.exitCode !== 0) {
+                this.log.error(`Umount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
+            }
+        }
+
         const executorManager = this.environmentExecutorManagerMap.get(environment.id);
         if (executorManager === undefined) {
             throw new Error(`ExecutorManager is not assigned for environment ${environment.id}`);
@@ -248,17 +257,20 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
+            let remoteWorkingRoot: string;
             if (environment.useSharedStorage) {
-                const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                environment.runnerWorkingFolder = executor.joinPath(environmentRoot, 'envs', environment.id)
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
-                await executor.executeScript(remoteMountCommand, false, false);
+                remoteWorkingRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+                environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRoot, 'envs', environment.id);
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
+                const result = await executor.executeScript(remoteMountCommand, false, false);
+                if (result.exitCode !== 0) {
+                    throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
+                }
             } else {
-                environment.runnerWorkingFolder = 
-                    executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
-                    'envs', environment.id)
+                remoteWorkingRoot = executor.getRemoteExperimentRootDir(getExperimentId());
+                environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRoot, 'envs', environment.id);
             }
-            environment.command = `cd ${environment.runnerWorkingFolder} && \
+            environment.command = `cd ${remoteWorkingRoot} && \
                 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
                 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
                 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
@@ -305,14 +317,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
-            this.releaseEnvironmentResource(environment);
+            await this.releaseEnvironmentResource(environment);
             return
         }
 
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         try {
             await executor.killChildProcesses(jobpidPath);
-            this.releaseEnvironmentResource(environment);
+            await this.releaseEnvironmentResource(environment);
         } catch (error) {
             this.log.error(`stopEnvironment: ${error}`);
         }

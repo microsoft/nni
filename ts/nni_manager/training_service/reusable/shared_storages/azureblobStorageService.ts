@@ -79,6 +79,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
     private log: Logger;
     private internalStorageService: MountedStorageService;
     private experimentId: string;
+    private localMounted?: string;
 
     private storageType?: SharedStorageType;
     private storageAccountName?: string;
@@ -113,10 +114,10 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
                 this.log.error(errorMessage);
                 return Promise.reject(errorMessage);
             }
-
-            if (azureblobConfig.localMounted === 'nnimount') {
+            this.localMounted = azureblobConfig.localMounted;
+            if (this.localMounted === 'nnimount') {
                 await this.helpLocalMount();
-            } else if (azureblobConfig.localMounted === 'nomount') {
+            } else if (this.localMounted === 'nomount') {
                 const errorMessage = `${this.storageType} Shared Storage: ${this.storageType} not Support 'nomount' yet.`;
                 this.log.error(errorMessage);
                 return Promise.reject(errorMessage);
@@ -148,6 +149,15 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
     public get remoteMountCommand(): string {
         if (this.remoteMountPoint) {
             return this.getCommand(this.remoteMountPoint);
+        } else {
+            this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
+            return '';
+        }
+    }
+
+    public get remoteUmountCommand(): string {
+        if (this.remoteMountPoint) {
+            return `sudo umount -l ${this.remoteMountPoint}`;
         } else {
             this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
             return '';
@@ -205,5 +215,22 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
+    }
+
+    public async cleanUp(): Promise<void> {
+        if (this.localMounted !== 'nnimount') {
+            return Promise.resolve();
+        }
+        try {
+            const result = await cpp.exec(`sudo umount -l ${this.localMountPoint}`);
+            if (result.stderr) {
+                throw new Error(result.stderr);
+            }
+        } catch (error) {
+            const errorMessage: string = `${this.storageType} Shared Storage: get account key failed, error is ${error}`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
+        return Promise.resolve();
     }
 }
