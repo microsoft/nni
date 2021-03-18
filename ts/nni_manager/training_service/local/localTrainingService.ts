@@ -93,7 +93,7 @@ class LocalTrainingService implements TrainingService {
     private readonly jobStreamMap: Map<string, ts.Stream>;
 
     constructor(config: ExperimentConfig) {
-        this.config = flattenConfig<FlattenLocalConfig>(config);
+        this.config = flattenConfig<FlattenLocalConfig>(config, 'local');
         this.eventEmitter = new EventEmitter();
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];

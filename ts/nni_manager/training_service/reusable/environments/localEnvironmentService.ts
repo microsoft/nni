@@ -9,6 +9,7 @@ import * as tkill from 'tree-kill';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
+import { ExperimentConfig } from '../../../common/experimentConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { TrialConfig } from '../../common/trialConfig';
@@ -20,11 +21,10 @@ import { SharedStorageService } from '../sharedStorage'
 export class LocalEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger();
-    private localTrialConfig: TrialConfig | undefined;
     private experimentRootDir: string;
     private experimentId: string;
 
-    constructor() {
+    constructor(_config: ExperimentConfig) {
         super();
         this.experimentId = getExperimentId();
         this.experimentRootDir = getExperimentRootDir();
@@ -40,16 +40,6 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public get getName(): string {
         return 'local';
-    }
-
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.localTrialConfig = <TrialConfig>JSON.parse(value);
-                break;
-            default:
-                this.log.debug(`Local mode does not proccess metadata key: '${key}', value: '${value}'`);
-        }
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -118,9 +108,6 @@ export class LocalEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        if (this.localTrialConfig === undefined) {
-            throw new Error('Local trial config is not initialized');
-        }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
         const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {

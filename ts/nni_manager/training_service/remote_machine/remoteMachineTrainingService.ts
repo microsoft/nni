@@ -516,7 +516,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
-            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(trialJobDetail.rmMeta);
+            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(rmScheduleInfo.rmMeta);
             if (copyExpCodeDirPromise !== undefined) {
                 await copyExpCodeDirPromise;
             }

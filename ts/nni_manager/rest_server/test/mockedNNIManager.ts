@@ -152,6 +152,7 @@ export class MockedNNIManager extends Manager {
             },
             id: '2345',
             execDuration: 0,
+            logDir: '',
             startTime: Date.now(),
             endTime: Date.now(),
             nextSequenceId: 0,

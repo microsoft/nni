@@ -3,8 +3,6 @@
 
 'use strict';
 
-import * as assert from 'assert';
-
 export interface TrainingServiceConfig {
     platform: string;
 }
@@ -147,7 +145,7 @@ export interface ExperimentConfig {
     tuner?: AlgorithmConfig;
     assessor?: AlgorithmConfig;
     advisor?: AlgorithmConfig;
-    trainingService: TrainingServiceConfig | TrainingServiceConfig[];
+    trainingService: TrainingServiceConfig;
 }
 
 /* util functions */
@@ -162,24 +160,4 @@ export function toSeconds(time: string): number {
         }
     }
     throw new Error(`Bad time string "${time}"`);
-}
-
-export function toCudaVisibleDevices(gpuIndices?: number[]): string {
-    return gpuIndices === undefined ? '' : gpuIndices.join(',');
-}
-
-export function flattenConfig<T>(config: ExperimentConfig, platform: string): T {
-    const flattened = { };
-    Object.assign(flattened, config);
-    if (Array.isArray(config.trainingService)) {
-        for (const trainingService of config.trainingService) {
-            if (trainingService.platform === platform) {
-                Object.assign(flattened, trainingService);
-            }
-        }
-    } else {
-        assert(config.trainingService.platform === platform);
-        Object.assign(flattened, config.trainingService);
-    }
-    return <T>flattened;
 }

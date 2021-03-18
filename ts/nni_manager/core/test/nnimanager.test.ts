@@ -88,6 +88,8 @@ describe('Unit test for nnimanager', function () {
         params: updateExperimentParams,
         id: 'test',
         execDuration: 0,
+        logDir: '',
+        startTime: 0,
         nextSequenceId: 0,
         revision: 0
     }
@@ -230,7 +232,7 @@ describe('Unit test for nnimanager', function () {
             nniManager.getExperimentProfile().then((updateProfile) => {
                 expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
             });
-        }).catch((error) => {
+        }).catch((error: any) => {
             assert.fail(error);
         })
     })

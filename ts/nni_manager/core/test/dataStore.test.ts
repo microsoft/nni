@@ -64,6 +64,7 @@ describe('Unit test for dataStore', () => {
             },
             id: 'exp123',
             execDuration: 0,
+            logDir: '',
             startTime: Date.now(),
             endTime: Date.now(),
             nextSequenceId: 0,

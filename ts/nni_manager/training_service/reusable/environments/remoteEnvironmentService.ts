@@ -9,43 +9,49 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import {
-    getExperimentRootDir,
-} from '../../../common/utils';
-import { TrialConfig } from '../../common/trialConfig';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { getExperimentRootDir } from '../../../common/utils';
+import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
 import { execMkdir, validateCodeDir } from '../../common/util';
-import {
-    ExecutorManager, RemoteMachineMeta,
-} from '../../remote_machine/remoteMachineData';
+import { ExecutorManager } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 import { SharedStorageService } from '../sharedStorage'
 
+interface FlattenRemoteConfig extends ExperimentConfig, RemoteConfig { }
 
 @component.Singleton
 export class RemoteEnvironmentService extends EnvironmentService {
 
     private readonly initExecutorId = "initConnection";
-    private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>;
+    private readonly machineExecutorManagerMap: Map<RemoteMachineConfig, ExecutorManager>;
     private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
-    private readonly remoteMachineMetaOccupiedMap: Map<RemoteMachineMeta, boolean>;
-    private trialConfig: TrialConfig | undefined;
+    private readonly remoteMachineMetaOccupiedMap: Map<RemoteMachineConfig, boolean>;
     private readonly log: Logger;
     private sshConnectionPromises: any[];
     private experimentRootDir: string;
     private experimentId: string;
+    private config: FlattenRemoteConfig;
 
-    constructor() {
+    constructor(config: ExperimentConfig) {
         super();
         this.experimentId = getExperimentId();
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
-        this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
-        this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineMeta, boolean>();
+        this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
+        this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
         this.sshConnectionPromises = [];
         this.experimentRootDir = getExperimentRootDir();
         this.experimentId = getExperimentId();
         this.log = getLogger();
+        this.config = flattenConfig(config, 'remote');
+
+        // codeDir is not a valid directory, throw Error
+        if (!fs.lstatSync(this.config.trialCodeDirectory).isDirectory()) {
+            throw new Error(`codeDir ${this.config.trialCodeDirectory} is not a directory`);
+        }
+
+        this.sshConnectionPromises = this.config.machineList.map(
+            machine => this.initRemoteMachineOnConnected(machine)
+        );
     }
 
     public get prefetchedEnvironmentCount(): number {
@@ -68,39 +74,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return 'remote';
     }
 
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.MACHINE_LIST:
-                await this.setupConnections(value);
-                break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
-                // Parse trial config failed, throw Error
-                if (remoteMachineTrailConfig === undefined) {
-                    throw new Error('trial config parsed failed');
-                }
-                // codeDir is not a valid directory, throw Error
-                if (!fs.lstatSync(remoteMachineTrailConfig.codeDir)
-                    .isDirectory()) {
-                    throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
-                }
-                try {
-                    // Validate to make sure codeDir doesn't have too many files
-                    await validateCodeDir(remoteMachineTrailConfig.codeDir);
-                } catch (error) {
-                    this.log.error(error);
-                    return Promise.reject(new Error(error));
-                }
-
-                this.trialConfig = remoteMachineTrailConfig;
-                break;
-            }
-            default:
-                this.log.debug(`Remote not support metadata key: '${key}', value: '${value}'`);
-        }
-    }
-
-    private scheduleMachine(): RemoteMachineMeta | undefined {
+    private scheduleMachine(): RemoteMachineConfig | undefined {
         for (const [rmMeta, occupied] of this.remoteMachineMetaOccupiedMap) {
             if (!occupied) {
                 this.remoteMachineMetaOccupiedMap.set(rmMeta, true);
@@ -110,19 +84,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
         return undefined;
     }
 
-    private async setupConnections(machineList: string): Promise<void> {
-        this.log.debug(`Connecting to remote machines: ${machineList}`);
-        //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
-        const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-
-        for (const rmMeta of rmMetaList) {
-            this.sshConnectionPromises.push(await this.initRemoteMachineOnConnected(rmMeta));
-        }
-    }
-
-    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta): Promise<void> {
+    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineConfig): Promise<void> {
         const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
-        this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
+        this.log.info(`connecting to ${rmMeta.user}@${rmMeta.host}:${rmMeta.port}`);
         const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
         this.log.debug(`reached ${executor.name}`);
         this.machineExecutorManagerMap.set(rmMeta, executorManager);
@@ -141,10 +105,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {	
-        const tasks: Promise<void>[] = [];	
-        environments.forEach(async (environment) => {	
-            tasks.push(this.refreshEnvironment(environment));	
-        });	
+        const tasks = environments.map(environment => this.refreshEnvironment(environment));
         await Promise.all(tasks);	
     }
 
@@ -167,7 +128,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                 if (remoteEnvironment.rmMachineMeta === undefined) {
                     throw new Error(`${remoteEnvironment.id} machine meta not initialized!`);
                 }
-                this.log.info(`pid in ${remoteEnvironment.rmMachineMeta.ip}:${jobpidPath} is not alive!`);
+                this.log.info(`pid in ${remoteEnvironment.rmMachineMeta.host}:${jobpidPath} is not alive!`);
                 if (fs.existsSync(runnerReturnCodeFilePath)) {
                     const runnerReturnCode: string = await executor.getRemoteFileContent(runnerReturnCodeFilePath);
                     const match: RegExpMatchArray | null = runnerReturnCode.trim()
@@ -214,9 +175,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
             this.log.info('ssh connection initialized!');
             // set sshConnectionPromises to [] to avoid log information duplicated
             this.sshConnectionPromises = [];
-            if (this.trialConfig ===  undefined) {
-                throw new Error("trial config not initialized!");
-            }
             Array.from(this.machineExecutorManagerMap.keys()).forEach(rmMeta => {
                 // initialize remoteMachineMetaOccupiedMap, false means not occupied
                 this.remoteMachineMetaOccupiedMap.set(rmMeta, false);
@@ -231,12 +189,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     private async prepareEnvironment(environment: RemoteMachineEnvironmentInformation): Promise<boolean> {
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
-
         // get an executor from scheduler
-        const rmMachineMeta: RemoteMachineMeta | undefined = this.scheduleMachine();
+        const rmMachineMeta: RemoteMachineConfig | undefined = this.scheduleMachine();
         if (rmMachineMeta === undefined) {
             this.log.warning(`No available machine!`);
             return Promise.resolve(false);
@@ -267,9 +221,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     private async launchRunner(environment: RemoteMachineEnvironmentInformation): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
             path.join(this.experimentRootDir, "environment-temp")
@@ -285,7 +236,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
         }
-        environment.trackingUrl = `file://${environment.rmMachineMeta.ip}:${environment.runnerWorkingFolder}`;
+        environment.trackingUrl = `file://${environment.rmMachineMeta.host}:${environment.runnerWorkingFolder}`;
     }
 
     private async getExecutor(environmentId: string): Promise<ShellExecutor> {
@@ -298,7 +249,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
         if (environment.isAlive === false) {
-            return Promise.resolve();
+            return;
         }
 
         const executor = await this.getExecutor(environment.id);
@@ -306,7 +257,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
             this.releaseEnvironmentResource(environment);
-            return
+            return;
         }
 
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;

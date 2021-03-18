@@ -4,6 +4,7 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
+import { RemoteMachineConfig } from '../../common/experimentConfig';
 import { GPUInfo, GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
 
@@ -11,19 +12,55 @@ import { ShellExecutor } from './shellExecutor';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip: string = '';
-    public readonly port: number = 22;
-    public readonly username: string = '';
-    public readonly passwd: string = '';
-    public readonly sshKeyPath?: string;
-    public readonly passphrase?: string;
+    public readonly config: RemoteMachineConfig;
     public gpuSummary: GPUSummary | undefined;
-    public readonly gpuIndices?: string;
-    public readonly maxTrialNumPerGpu?: number;
     //TODO: initialize varialbe in constructor
     public occupiedGpuIndexMap?: Map<number, number>;
-    public readonly useActiveGpu?: boolean = false;
-    public readonly pythonPath?: string;
+
+    constructor(config: RemoteMachineConfig) {
+        this.config = config;
+        this.occupiedGpuIndexMap = new Map<number, number>();
+    }
+
+    public get ip(): string {
+        return this.config.host;
+    }
+
+    public get port(): number {
+        return this.config.port;
+    }
+
+    public get username(): string {
+        return this.config.user;
+    }
+
+    public get passwd(): string {
+        return this.config.password || '';
+    }
+
+    public get sshKeyPath(): string | undefined {
+        return this.config.sshKeyFile;
+    }
+
+    public get passphrase(): string | undefined {
+        return this.config.sshPassphrase;
+    }
+
+    public get useActiveGpu(): boolean {
+        return this.config.useActiveGpu;
+    }
+
+    public get maxTrialNumPerGpu(): number {
+        return this.config.maxTrialNumberPerGpu;
+    }
+
+    public get gpuIndices(): string | undefined {
+        return this.config.gpuIndices === undefined ? undefined : this.config.gpuIndices.join(',');
+    }
+
+    public get pythonPath(): string | undefined {
+        return this.config.pythonPath;
+    }
 }
 
 /**
@@ -79,8 +116,12 @@ export class ExecutorManager {
 
     private executors: ShellExecutor[] = [];
 
-    constructor(rmMeta: RemoteMachineMeta) {
-        this.rmMeta = rmMeta;
+    constructor(config_or_meta: RemoteMachineConfig | RemoteMachineMeta) {
+        if (config_or_meta.constructor.name === 'RemoteMachineMeta') {
+            this.rmMeta = config_or_meta as RemoteMachineMeta;
+        } else {
+            this.rmMeta = new RemoteMachineMeta(config_or_meta as RemoteMachineConfig);
+        }
     }
 
     public async getExecutor(id: string): Promise<ShellExecutor> {

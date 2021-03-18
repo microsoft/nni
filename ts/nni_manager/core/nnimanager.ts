@@ -401,19 +401,15 @@ class NNIManager implements Manager {
     }
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
-        const platform = config.trainingService.platform;
-
-        if (platform === 'local') {
-            const module_ = await import('../training_service/local/localTrainingService');
-            return new module_.LocalTrainingService(config);
-        }
+        let platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
 
         //if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
-        //    const module_ = await import('../training_service/reusable/routerTrainingService');
-        //    return new module_.RouterTrainingService(config);
-        //} else if (platform === 'local') {
-        //    const module_ = await import('../training_service/local/localTrainingService');
-        //    return new module_.LocalTrainingService(config);
+        if (['remote'].includes(platform)) {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return new module_.RouterTrainingService(config);
+        } else if (platform === 'local') {
+            const module_ = await import('../training_service/local/localTrainingService');
+            return new module_.LocalTrainingService(config);
         //} else if (platform === 'kubeflow') {
         //    const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
         //    return new module_.KubeflowTrainingService(config);
@@ -423,7 +419,7 @@ class NNIManager implements Manager {
         //} else if (platform === 'adl') {
         //    const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
         //    return new module_.AdlTrainingService(config);
-        //}
+        }
 
         throw new Error(`Unsupported training service platform "${platform}"`);
     }
