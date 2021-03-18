@@ -36,11 +36,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
     render(): React.ReactNode {
         const { whichChart } = this.state;
         const source = TRIALS.toArray();
-        console.info('*********'); // eslint-disable-line
-        console.info(source); // eslint-disable-line
         const trialIds = TRIALS.toArray().map(trial => trial.id);
-        console.info('****------'); // eslint-disable-line
-        console.info(trialIds); // eslint-disable-line
 
         return (
             <AppContext.Consumer>

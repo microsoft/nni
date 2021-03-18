@@ -77,7 +77,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 trigger: 'item',
                 enterable: hasBestCurve,
                 confine: true, // confirm always show tooltip box rather than hidden by background
-                // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 formatter: (data: TooltipForAccuracy): React.ReactNode => `
                     <div class="tooldetailAccuracy">
                         <div>Trial No.: ${data.data[0]}</div>

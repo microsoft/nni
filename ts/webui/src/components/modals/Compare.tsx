@@ -96,6 +96,7 @@ class Compare extends React.Component<CompareProps, {}> {
             },
             legend: {
                 type: 'scroll',
+                right: 40,
                 left: legend.length > 6 ? '15%' : null,
                 data: legend
             },
@@ -173,8 +174,7 @@ class Compare extends React.Component<CompareProps, {}> {
         }
         const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
         const metricKeys = this._overlapKeys(items.map(item => item.metrics));
-        console.info(metricKeys); // eslint-disable-line
-        console.info(items); // eslint-disable-line
+        
         return (
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
