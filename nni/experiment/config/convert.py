@@ -15,7 +15,7 @@ _logger = logging.getLogger(__name__)
 
 def to_v2(v1) -> ExperimentConfig:
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local', 'remote']
+    assert platform in ['local', 'remote', 'openpai']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -97,6 +97,29 @@ def to_v2(v1) -> ExperimentConfig:
             _move_field(v1_machine, v2_machine, 'pythonPath', 'python_path')
             _move_field(v1_machine, v2_machine, 'passwd', 'password')
             assert not v1_machine, v1_machine
+
+    if platform == 'openpai':
+        _move_field(v1_trial, ts, 'nniManagerNFSMountPath', 'local_storage_mount_point')
+        _move_field(v1_trial, ts, 'containerNFSMountPath', 'container_storage_mount_point')
+        _move_field(v1_trial, ts, 'cpuNum', 'trial_cpu_number')
+        _move_field(v1_trial, ts, 'memoryMB', 'trial_memory_size')  # FIXME: unit
+        _move_field(v1_trial, ts, 'image', 'docker_image')
+        _drop_field(v1_trial, 'virtualCluster')  # FIXME: better error message
+        _move_field(v1_trial, ts, 'paiStorageConfigName', 'storage_config_name')
+        _move_field(v1_trial, ts, 'paiConfigPath', 'openpaiConfigFile')
+
+        pai_config = v1.pop('paiConfig')
+        _move_field(pai_config, ts, 'userName', 'username')
+        _drop_field(pai_config, 'password')
+        _move_field(pai_config, ts, 'token', 'token')
+        _move_field(pai_config, ts, 'host', 'host')
+        _move_field(pai_config, ts, 'reuse', 'reuse_mode')
+        _move_field(pai_config, ts, 'gpuNum', 'trial_gpu_number')
+        _move_field(pai_config, ts, 'cpuNum', 'trial_cpu_number')
+        _move_field(pai_config, ts, 'memoryMB', 'trial_memory_size')  # FIXME: unit
+        #_move_field(pai_config, ts, 'maxTrialNumPerGpu', 'max_trial_number_per_gpu')  # FIXME
+        #_move_field(pai_config, ts, 'useActiveGpu', 'use_active_gpu')  # FIXME
+        assert not pai_config, pai_config
 
     assert not v1_trial, v1_trial
     assert not v1, v1

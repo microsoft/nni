@@ -18,9 +18,10 @@ import {
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { delay } from '../../common/utils';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../common/experimentConfig';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
-import { PAIClusterConfig, PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT, NNIPAITrialConfig } from './paiConfig';
+import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
 import { String } from 'typescript-string-operations';
 import {
     generateParamFileName,
@@ -32,6 +33,8 @@ import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
 const yaml = require('js-yaml');
 
+interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
+
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
  * Refer https://github.com/Microsoft/pai for more info about OpenPAI
@@ -42,7 +45,6 @@ class PAITrainingService implements TrainingService {
     private readonly metricsEmitter: EventEmitter;
     private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
     private readonly expRootDir: string;
-    private paiClusterConfig?: PAIClusterConfig;
     private readonly jobQueue: string[];
     private stopping: boolean = false;
     private paiToken?: string;
@@ -53,16 +55,15 @@ class PAITrainingService implements TrainingService {
     private paiRestServerPort?: number;
     private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
-    private logCollection: string;
-    private isMultiPhase: boolean = false;
+    private logCollection: string = 'none';
     private paiJobRestServer?: PAIJobRestServer;
-    private protocol: string = 'http';
+    private protocol: string;
     private copyExpCodeDirPromise?: Promise<void>;
     private paiJobConfig: any;
     private nniVersion: string | undefined;
-    private paiTrialConfig: NNIPAITrialConfig | undefined;
+    private config: FlattenOpenpaiConfig;
 
-    constructor() {
+    constructor(config: ExperimentConfig) {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
@@ -71,8 +72,20 @@ class PAITrainingService implements TrainingService {
         this.experimentId = getExperimentId();
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.paiTokenUpdateInterval = 7200000; //2hours
-        this.logCollection = 'none';
         this.log.info('Construct paiBase training service.');
+        this.config = flattenConfig(config, 'openpai');
+        this.paiJobRestServer = new PAIJobRestServer(this);
+        this.paiToken = this.config.token;
+        this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
+        this.copyExpCodeDirPromise = this.copyTrialCode();
+    }
+
+    private async copyTrialCode(): Promise<void> {
+        await validateCodeDir(this.config.trialCodeDirectory);
+        const nniManagerNFSExpCodeDir = path.join(this.config.trialCodeDirectory, this.experimentId, 'nni-code');
+        await execMkdir(nniManagerNFSExpCodeDir);
+        this.log.info(`Starting copy codeDir data from ${this.config.trialCodeDirectory} to ${nniManagerNFSExpCodeDir}`);
+        await execCopydir(this.config.trialCodeDirectory, nniManagerNFSExpCodeDir);
     }
 
     public async run(): Promise<void> {
@@ -120,10 +133,6 @@ class PAITrainingService implements TrainingService {
     }
 
     public async getTrialJob(trialJobId: string): Promise<TrialJobDetail> {
-        if (this.paiClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
-        }
-
         const paiTrialJob: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
 
         if (paiTrialJob === undefined) {
@@ -141,21 +150,10 @@ class PAITrainingService implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
-    public get isMultiPhaseJobSupported(): boolean {
-        return true;
-    }
-
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJobDetail: PAITrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             return Promise.reject(new Error(`cancelTrialJob: trial job id ${trialJobId} not found`));
-        }
-
-        if (this.paiClusterConfig === undefined) {
-            return Promise.reject(new Error('PAI Cluster config is not initialized'));
-        }
-        if (this.paiToken === undefined) {
-            return Promise.reject(new Error('PAI token is not initialized'));
         }
 
         if (trialJobDetail.status === 'UNKNOWN') {
@@ -164,7 +162,7 @@ class PAITrainingService implements TrainingService {
         }
 
         const stopJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${trialJobDetail.paiJobName}/executionType`,
+            uri: `${this.config.host}/rest-server/api/v2/jobs/${this.config.username}~${trialJobDetail.paiJobName}/executionType`,
             method: 'PUT',
             json: true,
             body: { value: 'STOP' },
@@ -232,18 +230,14 @@ class PAITrainingService implements TrainingService {
 
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            if (this.paiClusterConfig && this.paiClusterConfig.passWord) {
-                try {
-                    await this.updatePaiToken();
-                } catch (error) {
-                    this.log.error(`${error}`);
-                    //only throw error when initlize paiToken first time
-                    if (this.paiToken === undefined) {
-                        throw new Error(error);
-                    }
-                }
-            }
-            await this.paiJobCollector.retrieveTrialStatus(this.protocol, this.paiToken, this.paiClusterConfig);
+            //if (this.config._password) {
+            //    try {
+            //        await this.updatePaiToken();
+            //    } catch (error) {
+            //        this.log.error(`${error}`);
+            //    }
+            //}
+            await this.paiJobCollector.retrieveTrialStatus(this.protocol, this.paiToken, this.config);
             if (this.paiJobRestServer === undefined) {
                 throw new Error('paiBaseJobRestServer not implemented!');
             }
@@ -257,103 +251,53 @@ class PAITrainingService implements TrainingService {
     /**
      * Update pai token by the interval time or initialize the pai token
      */
-    protected async updatePaiToken(): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
+    //protected async updatePaiToken(): Promise<void> {
+    //    const deferred: Deferred<void> = new Deferred<void>();
 
-        const currentTime: number = new Date().getTime();
-        //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-            return Promise.resolve();
-        }
+    //    const currentTime: number = new Date().getTime();
+    //    //If pai token initialized and not reach the interval time, do not update
+    //    if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
+    //        return Promise.resolve();
+    //    }
 
-        if (this.paiClusterConfig === undefined) {
-            const paiClusterConfigError: string = `pai cluster config not initialized!`;
-            this.log.error(`${paiClusterConfigError}`);
-            throw Error(`${paiClusterConfigError}`);
-        }
+    //    const authenticationReq: request.Options = {
+    //        uri: `${this.config.host}/rest-server/api/v1/token`,
+    //        method: 'POST',
+    //        json: true,
+    //        body: {
+    //            username: this.config.username,
+    //            password: this.config._password
+    //        }
+    //    };
 
-        const authenticationReq: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v1/token`,
-            method: 'POST',
-            json: true,
-            body: {
-                username: this.paiClusterConfig.userName,
-                password: this.paiClusterConfig.passWord
-            }
-        };
+    //    request(authenticationReq, (error: Error, response: request.Response, body: any) => {
+    //        if (error !== undefined && error !== null) {
+    //            this.log.error(`Get PAI token failed: ${error.message}`);
+    //            deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+    //        } else {
+    //            if (response.statusCode !== 200) {
+    //                this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
+    //                deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
+    //            }
+    //            this.paiToken = body.token;
+    //            this.paiTokenUpdateTime = new Date().getTime();
+    //            deferred.resolve();
+    //        }
+    //    });
 
-        request(authenticationReq, (error: Error, response: request.Response, body: any) => {
-            if (error !== undefined && error !== null) {
-                this.log.error(`Get PAI token failed: ${error.message}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-            } else {
-                if (response.statusCode !== 200) {
-                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
-                }
-                this.paiToken = body.token;
-                this.paiTokenUpdateTime = new Date().getTime();
-                deferred.resolve();
-            }
-        });
+    //    let timeoutId: NodeJS.Timer;
+    //    const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
+    //        // Set timeout and reject the promise once reach timeout (5 seconds)
+    //        timeoutId = setTimeout(
+    //            () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+    //            5000);
+    //    });
 
-        let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
-        });
-
-        return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => { clearTimeout(timeoutId); });
-    }
+    //    return Promise.race([timeoutDelay, deferred.promise])
+    //        .finally(() => { clearTimeout(timeoutId); });
+    //}
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
-
-            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiJobRestServer = new PAIJobRestServer(component.get(PAITrainingService));
-                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                this.paiToken = this.paiClusterConfig.token;
-                break;
-
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                if (this.paiClusterConfig === undefined) {
-                    this.log.error('pai cluster config is not initialized');
-                    break;
-                }
-                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
-                // Validate to make sure codeDir doesn't have too many files
-                await validateCodeDir(this.paiTrialConfig.codeDir);
-                const nniManagerNFSExpCodeDir = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, 'nni-code');
-                await execMkdir(nniManagerNFSExpCodeDir);
-                //Copy codeDir files to local working folder
-                this.log.info(`Starting copy codeDir data from ${this.paiTrialConfig.codeDir} to ${nniManagerNFSExpCodeDir}`);
-                this.copyExpCodeDirPromise = execCopydir(this.paiTrialConfig.codeDir, nniManagerNFSExpCodeDir);
-                if (this.paiTrialConfig.paiConfigPath) {
-                    this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                }
-                break;
-            }
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                this.nniVersion = this.versionCheck ? await getVersion() : '';
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                this.isMultiPhase = (value === 'true' || value === 'True');
-                break;
-            default:
-                //Reject for unknown keys
-                this.log.error(`Uknown key: ${key}`);
-        }
     }
 
     // update trial parameters for multi-phase
@@ -369,21 +313,14 @@ class PAITrainingService implements TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        if (this.paiClusterConfig === undefined) {
-            throw new Error(`paiClusterConfig not initialized!`);
-        }
-        if (this.paiTrialConfig === undefined) {
-            throw new Error(`paiTrialConfig not initialized!`);
-        }
-
         this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
 
         const trialJobId: string = uniqueString(5);
         //TODO: use HDFS working folder instead
         const trialWorkingFolder: string = path.join(this.expRootDir, 'trials', trialJobId);
         const paiJobName: string = `nni_exp_${this.experimentId}_trial_${trialJobId}`;
-        const logPath: string = path.join(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId, trialJobId);
-        const paiJobDetailUrl: string = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${paiJobName}`;
+        const logPath: string = path.join(this.config.localStorageMountPoint, this.experimentId, trialJobId);
+        const paiJobDetailUrl: string = `${this.config.host}/job-detail.html?username=${this.config.username}&jobName=${paiJobName}`;
         const trialJobDetail: PAITrialJobDetail = new PAITrialJobDetail(
             trialJobId,
             'WAITING',
@@ -401,12 +338,8 @@ class PAITrainingService implements TrainingService {
     }
 
     private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string): string {
-        if (this.paiTrialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
-        const containerNFSExpCodeDir = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/nni-code`;
-        const containerWorkingDir: string = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}/${trialJobDetail.id}`;
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const containerNFSExpCodeDir = `${this.config.containerStorageMountPoint}/${this.experimentId}/nni-code`;
+        const containerWorkingDir: string = `${this.config.containerStorageMountPoint}/${this.experimentId}/${trialJobDetail.id}`;
         const nniPaiTrialCommand: string = String.Format(
             PAI_TRIAL_COMMAND_FORMAT,
             `${containerWorkingDir}`,
@@ -414,10 +347,10 @@ class PAITrainingService implements TrainingService {
             trialJobDetail.id,
             this.experimentId,
             trialJobDetail.form.sequenceId,
-            this.isMultiPhase,
+            false,  // multi-phase
             containerNFSExpCodeDir,
             command,
-            nniManagerIp,
+            this.config.nniManagerIp || getIPV4Address(),
             this.paiRestServerPort,
             this.nniVersion,
             this.logCollection
@@ -429,14 +362,11 @@ class PAITrainingService implements TrainingService {
     }
 
     private generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail): any {
-        if (this.paiTrialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         const jobName = `nni_exp_${this.experimentId}_trial_${trialJobDetail.id}`
 
         let nniJobConfig: any = undefined;
-        if (this.paiTrialConfig.paiConfigPath) {
-            nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
+        if (this.config.openpaiConfig !== undefined) {
+            nniJobConfig = JSON.parse(JSON.stringify(this.config.openpaiConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             // Each taskRole will generate new command in NNI's command format
             // Each command will be formatted to NNI style
@@ -455,7 +385,7 @@ class PAITrainingService implements TrainingService {
                 prerequisites: [
                     {
                         type: 'dockerimage',
-                        uri: this.paiTrialConfig.image,
+                        uri: this.config.dockerImage,
                         name: 'docker_image_0'
                     }
                 ],
@@ -469,29 +399,29 @@ class PAITrainingService implements TrainingService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.paiTrialConfig.gpuNum,
-                            cpu: this.paiTrialConfig.cpuNum,
-                            memoryMB: this.paiTrialConfig.memoryMB
+                            gpu: this.config.trialGpuNumber,
+                            cpu: this.config.trialCpuNumber,
+                            memoryMB: toMegaBytes(this.config.trialMemorySize)
                         },
                         commands: [
-                            this.generateNNITrialCommand(trialJobDetail, this.paiTrialConfig.command)
+                            this.generateNNITrialCommand(trialJobDetail, this.config.trialCommand)
                         ]
                     }
                 },
                 extras: {
                     'storages': [
                         {
-                            name: this.paiTrialConfig.paiStorageConfigName
+                            name: this.config.storageConfigName
                         }
                     ],
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.paiTrialConfig.virtualCluster) {
-                nniJobConfig.defaults = {
-                    virtualCluster: this.paiTrialConfig.virtualCluster
-                }
-            }
+            //if (this.config._virtualCluster) {
+            //    nniJobConfig.defaults = {
+            //        virtualCluster: this.config._virtualCluster
+            //    }
+            //}
         }
         return yaml.safeDump(nniJobConfig);
     }
@@ -502,16 +432,6 @@ class PAITrainingService implements TrainingService {
 
         if (trialJobDetail === undefined) {
             throw new Error(`Failed to find PAITrialJobDetail for job ${trialJobId}`);
-        }
-
-        if (this.paiClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
-        }
-        if (this.paiTrialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
-        if (this.paiToken === undefined) {
-            throw new Error('PAI token is not initialized');
         }
 
         if (this.paiJobRestServer === undefined) {
@@ -546,7 +466,7 @@ class PAITrainingService implements TrainingService {
         // Step 2. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API
         const submitJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
+            uri: `${this.config.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
             followAllRedirects: true,

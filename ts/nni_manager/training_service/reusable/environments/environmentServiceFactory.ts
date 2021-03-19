@@ -14,8 +14,8 @@ export class EnvironmentServiceFactory {
                 return new RemoteEnvironmentService(config);
             //case 'aml':
             //    return new AMLEnvironmentService();
-            //case 'pai':
-            //    return new OpenPaiEnvironmentService();
+            case 'openpai':
+                return new OpenPaiEnvironmentService(config);
             default:
                 throw new Error(`${name} not supported!`);
         }

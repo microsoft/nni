@@ -156,12 +156,24 @@ const timeUnits = { d: 24 * 3600, h: 3600, m: 60, s: 1 };
 
 export function toSeconds(time: string): number {
     for (const [unit, factor] of Object.entries(timeUnits)) {
-        if (time.endsWith(unit)) {
+        if (time.toLowerCase().endsWith(unit)) {
             const digits = time.slice(0, -1);
             return Number(digits) * factor;
         }
     }
     throw new Error(`Bad time string "${time}"`);
+}
+
+const sizeUnits = { tb: 1024 * 1024, gb: 1024 * 1024, mb: 1, kb: 1 / 1024 };
+
+export function toMegaBytes(size: string): number {
+    for (const [unit, factor] of Object.entries(sizeUnits)) {
+        if (size.toLowerCase().endsWith(unit)) {
+            const digits = size.slice(0, -2);
+            return Math.floor(Number(digits) * factor);
+        }
+    }
+    throw new Error(`Bad size string "${size}"`);
 }
 
 export function toCudaVisibleDevices(gpuIndices?: number[]): string {

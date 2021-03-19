@@ -7,11 +7,12 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig, RemoteConfig } from '../../common/experimentConfig';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
+import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -31,8 +32,10 @@ class RouterTrainingService implements TrainingService {
     constructor(config: ExperimentConfig) {
         this.log = getLogger();
         const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
-        if (platform === 'remote' && !(config.trainingService as RemoteConfig).reuseMode) {
+        if (platform === 'remote' && !(<RemoteConfig>config.trainingService).reuseMode) {
             this.internalTrainingService = new RemoteMachineTrainingService(config);
+        } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
+            this.internalTrainingService = new PAITrainingService(config);
         } else {
             this.internalTrainingService = new TrialDispatcher(config);
         }
@@ -47,18 +50,6 @@ class RouterTrainingService implements TrainingService {
         //    }
         //    await this.internalTrainingService.setClusterMetadata('platform_list', 
         //        heterogenousConfig.trainingServicePlatforms.join(','));
-        //} else if (key === TrialConfigMetadataKey.PAI_CLUSTER_CONFIG) {
-        //    const config = <PAIClusterConfig>JSON.parse(value);
-        //    if (config.reuse === true) {
-        //        this.log.info(`reuse flag enabled, use EnvironmentManager.`);
-        //        // TODO to support other storages later.
-        //        Container.bind(StorageService)
-        //            .to(MountedStorageService)
-        //            .scope(Scope.Singleton);
-        //        await this.internalTrainingService.setClusterMetadata('platform_list', 'pai');
-        //    } else {
-        //        ...
-        //    }
         //} else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
         //    await this.internalTrainingService.setClusterMetadata('platform_list', 'aml');
     }
