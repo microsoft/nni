@@ -8,13 +8,14 @@ from tempfile import NamedTemporaryFile
 from typing import Any, Dict, List
 
 from .common import ExperimentConfig, AlgorithmConfig, CustomAlgorithmConfig
+from .remote import RemoteConfig, RemoteMachineConfig
 from . import util
 
 _logger = logging.getLogger(__name__)
 
 def to_v2(v1) -> ExperimentConfig:
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local']
+    assert platform in ['local', 'remote']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -23,7 +24,7 @@ def to_v2(v1) -> ExperimentConfig:
     _move_field(v1, v2, 'trialConcurrency', 'trial_concurrency')
     _move_field(v1, v2, 'maxExecDuration', 'max_experiment_duration')
     _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
-    v2.search_space_file = util.canonical_path(v1.pop('searchSpacePath', None))
+    _move_field(v1, v2, 'searchSpacePath', 'search_space_file')
     _drop_field(v1, 'multiPhase')
     _drop_field(v1, 'multiThread')
     _move_field(v1, v2, 'nniManagerIp', 'nni_manager_ip')
@@ -76,9 +77,30 @@ def to_v2(v1) -> ExperimentConfig:
         _move_field(local_config, ts, 'useActiveGpu', 'use_active_gpu')
         assert not local_config, local_config
 
+    if platform == 'remote':
+        remote_config = v1.pop('remoteConfig', {})
+        _move_field(remote_config, ts, 'reuse', 'reuse_mode')
+        assert not remote_config, remote_config
+
+        ts.machine_list = []
+        for v1_machine in v1.pop('machineList'):
+            v2_machine = RemoteMachineConfig()
+            ts.machine_list.append(v2_machine)
+            _move_field(v1_machine, v2_machine, 'ip', 'host')
+            _move_field(v1_machine, v2_machine, 'port', 'port')
+            _move_field(v1_machine, v2_machine, 'username', 'user')
+            _move_field(v1_machine, v2_machine, 'sshKeyPath', 'ssh_key_file')
+            _move_field(v1_machine, v2_machine, 'passphrase', 'ssh_passphrase')
+            _move_field(v1_machine, v2_machine, 'gpuIndices', 'gpu_indices')
+            _move_field(v1_machine, v2_machine, 'maxTrialNumPerGpu', 'max_trial_number_per_gpu')
+            _move_field(v1_machine, v2_machine, 'useActiveGpu', 'use_active_gpu')
+            _move_field(v1_machine, v2_machine, 'pythonPath', 'python_path')
+            _move_field(v1_machine, v2_machine, 'passwd', 'password')
+            assert not v1_machine, v1_machine
+
     assert not v1_trial, v1_trial
     assert not v1, v1
-    return v2
+    return v2.canonical()
 
 def _drop_field(v1, key):
     if key in v1:
