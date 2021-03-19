@@ -71,4 +71,4 @@
 
 
   * 图片需要通过嵌入的 HTML 语法来格式化，则需要使用绝对链接，如 ``https://user-images.githubusercontent.com/44491713/51381727-e3d0f780-1b4f-11e9-96ab-d26b9198ba65.png``。可以通过将图片拖拽到 `Github Issue <https://github.com/Microsoft/nni/issues/new>`__ 框中来生成这样的链接。
-  * 如果不能被 sphinx 重新格式化，如源代码等，则需要使用绝对链接。 如果源码连接到本代码库，使用 ``https://github.com/Microsoft/nni/tree/master/`` 作为根目录 (例如 :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>` )。
+  * 如果不能被 sphinx 重新格式化，如源代码等，则需要使用绝对链接。 For source code that links to our github repo, please use URLs rooted at ``https://github.com/Microsoft/nni/tree/v2.1/`` (:githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>` for example).

@@ -188,7 +188,7 @@ SMAC
    名称：**SMAC**
 
 
-当前 SMAC 不支持在 WIndows 下运行。 原因参考：`GitHub issue <https://github.com/automl/SMAC3/issues/483>`__ 
+**当前 SMAC 不支持在 WIndows 下运行。** 原因参考：`GitHub issue <https://github.com/automl/SMAC3/issues/483>`__ 
 
 **安装**
 

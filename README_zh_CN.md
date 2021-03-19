@@ -21,10 +21,10 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 ## **最新消息！** &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)
 
-* **最新版本**：[v2.0 已发布](https://github.com/microsoft/nni/releases) - *2021年1月14日*
+* **New release**: [v2.1 is available](https://github.com/microsoft/nni/releases) - *released on Mar-10-2021*
 * **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年2月19日*
 
-* **最新案例分享**：[利用 AdaptDL 和 NNI 集成方案实现经济高效超参调优](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - *2021年2月23日发布*
+* **最新案例分享**：[利用 AdaptDL 和 NNI 集成方案实现经济高效超参调优 ](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - *2021年2月23日发布*
 
 ## **NNI 功能一览**
 
@@ -247,7 +247,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
     
     ```bash
-    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    git clone -b v2.1 https://github.com/Microsoft/nni.git
     ```
 
 * 运行 MNIST 示例。

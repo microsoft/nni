@@ -124,4 +124,9 @@ amlConfig 需要的信息可以从步骤 5 下载的 ``config.json`` 找到。
 
    nnictl create --config config_aml.yml
 
-将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v2.0``。
+Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.1``.
+
+Monitor your code in the cloud by using the studio
+--------------------------------------------------
+
+To monitor your job's code, you need to visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run and can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.

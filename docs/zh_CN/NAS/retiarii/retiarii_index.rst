@@ -8,6 +8,8 @@ Retiarii 概览
     :maxdepth: 2
 
     快速入门 <Tutorial>
-    自定义 Trainer <WriteTrainer>
+    Write a Model Evaluator <WriteTrainer>
+    One-shot NAS <OneshotTrainer>
+    Advanced Tutorial <Advanced>
     自定义 Strategy <WriteStrategy>
     Retiarii APIs <ApiReference>

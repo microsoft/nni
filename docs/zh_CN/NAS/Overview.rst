@@ -61,7 +61,7 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
    * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. 这是专门用于文本表示的神经网络架构搜索算法。
    * - `Cream <Cream.rst>`__
-     - `Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search  <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__. 一种新的 NAS 算法，无需使用进化算法即可提取搜索空间中的优先路径。 在 ImageNet 上的性能具有竞争力，特别是对于小模型（例如： FLOPs < 200 M 时）。
+     - `Cream of the Crop: Distilling Prioritized Paths For One-Shot Neural Architecture Search <https://papers.nips.cc/paper/2020/file/d072677d210ac4c03ba046120f0802ec-Paper.pdf>`__. 一种新的 NAS 算法，无需使用进化算法即可提取搜索空间中的优先路径。 在 ImageNet 上的性能具有竞争力，特别是对于小模型（例如： <200 M FLOPs).
 
 
 One-shot 算法 **独立运行，不需要 nnictl**。 NNI 支持 PyTorch 和 TensorFlow 2.x。

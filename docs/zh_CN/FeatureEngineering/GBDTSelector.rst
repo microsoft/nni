@@ -22,7 +22,7 @@ GBDTSelector 基于 `LightGBM <https://github.com/microsoft/LightGBM>`__，这�
 
 .. code-block:: python
 
-   from nni.feature_engineering.gbdt_selector import GBDTSelector
+   from nni.algorithms.feature_engineering.gbdt_selector import GBDTSelector
 
    # 下载数据
    ...

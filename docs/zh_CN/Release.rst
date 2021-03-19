@@ -5,6 +5,71 @@
 更改日志
 ==========
 
+Release 2.1 - 3/10/2021
+-----------------------
+
+主要更新
+^^^^^^^^^^^^^
+
+神经网络架构搜索
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Improved Experimental)
+
+  * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
+  * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
+  * Improve the design and implementation of Model Evaluator (#3359 #3404)
+  * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+训练平台
+""""""""""""""""
+
+* Support shared storage for reuse mode (#3354)
+* Support Windows as the local training service in hybrid mode (#3353)
+* Remove PAIYarn training service (#3327)
+* Add "recently-idle" scheduling algorithm (#3375)
+* Deprecate ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
+* Refactor reuse mode temp folder (#3374)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Migrate ``nnicli`` to new Python API ``nni.experiment`` (#3334)
+* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with ``nnictl`` (#3419)
+
+Web 界面
+""""""""""
+
+* Support showing the assigned training service of each trial in hybrid mode on WebUI (#3261 #3391)
+* Support multiple selection for filter status in experiments management page (#3351)
+* Improve overview page (#3316 #3317 #3352)
+* Support copy trial id in the table (#3378)
+
+文档
+^^^^^^^^^^^^^
+
+* Improve model compression examples and documentation (#3326 #3371)
+* Add Python API examples and documentation (#3396)
+* Add SECURITY doc (#3358)
+* Add 'What's NEW!' section in README (#3395) 
+* Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
+
+修复的 Bug
+^^^^^^^^^^^^^^^^^^
+
+* Fix AML outputs path and python process not killed (#3321)
+* Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
+* Fix import path of network morphism example (#3333)
+* Fix bug in the tuple unpack (#3340)
+* Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
+* Fix ``NoneType`` error on jupyter notebook (#3337, thanks external contributor @tczhangzhi)
+* Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
+* Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
+* Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
+* Fix bug in ruamel import (#3430, thanks external contributor @rushtehrani)
+
+
 发布 2.0 - 1/14/2021
 -----------------------
 
@@ -153,10 +218,10 @@ UT & IT
 发布 1.8 - 8/27/2020
 -----------------------
 
-主要更新
+Major updates
 ^^^^^^^^^^^^^
 
-训练平台
+Training service
 """"""""""""""""
 
 
@@ -180,7 +245,7 @@ Web 界面，nnictl 和 nnicli
 * 增加了依据最高/最低指标列出 Trial 的 `命令 <https://github.com/microsoft/nni/blob/v1.8/docs/zh_CN/Tutorial/Nnictl.rst#nnictl-trial>`__ (#2747)
 * 提升了 `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/zh_CN/nnicli_ref.rst>`__ 的用户体验，并附上 `示例 <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
 
-神经网络架构搜索
+Neural architecture search
 """"""""""""""""""""""""""
 
 
@@ -230,7 +295,7 @@ Web 界面，nnictl 和 nnicli
 * 增加对 Colab 进行支持的教程 (#2700)
 * 改进模型压缩的文档结构 (#2676)
 
-修复的 Bug
+Bug fixes
 ^^^^^^^^^^^^^^^^^^
 
 
@@ -296,7 +361,7 @@ Web 界面，nnictl 和 nnicli
 * `允许自定义 Tuner、Assessor、Advisor 被安装为内置算法 <https://github.com/microsoft/nni/blob/v1.7/docs/zh_CN/Tutorial/InstallCustomizedAlgos.md>`__.
 
 Web 界面
-""""""""""
+"""""
 
 
 * 支持更友好的嵌套搜索空间可视化。
@@ -479,7 +544,7 @@ NAS 更新
 * 为新的 OpenPAI 模式（又称，paiK8S）增加示例配置 YAML 文件
 * 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
 
-Web 界面
+WebUI
 ^^^^^^^^^^
 
 
@@ -504,7 +569,7 @@ Web 界面
 * 改进 `EfficientNet 的文档 <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrialExample/EfficientNet.md>`__
 
 修复的 Bug
-^^^^^^^^^^^^^^^^^^
+^^^^^^^^^
 
 
 * 修复在指标数据和 JSON 格式中对 NaN 的支持
@@ -943,7 +1008,7 @@ Bug 修复和其它更新
 * 支持配置 `log 目录 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__ 
 * 支持 `不同级别的日志 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__，使其更易于调试。
 
-文档
+Documentation
 ^^^^^^^^^^^^^
 
 

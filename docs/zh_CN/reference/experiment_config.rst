@@ -538,10 +538,16 @@ gpuIndices
 这用作环境变量 ``CUDA_VISIBLE_DEVICES``。
 
 
-trialPrepareCommand
+pythonPath
 -------------------
 
-启动 Trial 之前运行的命令。
+Specify a python environment, this path will insert at the front of PATH. Here are some examples: 
+   - (linux) pythonPath: /opt/python3.7/bin
+   - (windows) pythonPath: C:/Python37
+
+Notice: If you are working on anaconda，there are some difference. You have to add "../script" and "../Library/bin" to this and separated by ";" on windows, example as below:
+   - (linux anaconda) pythonPath: /home/yourname/anaconda3/envs/myenv/bin/
+   - (windows anaconda) pythonPath: C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin
 
 类型：``Optional[str]``
 

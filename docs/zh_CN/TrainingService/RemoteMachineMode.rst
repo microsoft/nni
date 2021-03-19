@@ -144,7 +144,7 @@ Windows
 配置 python 环境
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-默认情况下，命令和脚本将在远程计算机的默认环境中执行。 如果远程机器上有多个 python 虚拟环境，并且想在特定环境中运行实验，请使用 **preCommand** 来指定远程计算机上的 python 环境。 
+默认情况下，命令和脚本将在远程计算机的默认环境中执行。 If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **pythonPath** to specify a python environment on your remote machine. 
 
 以 ``examples/trials/mnist-tfv2`` 为例。 示例文件 ``examples/trials/mnist-tfv2/config_remote.yml`` 的内容如下：
 

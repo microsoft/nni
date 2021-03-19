@@ -32,7 +32,7 @@ NAS 基准测试
       git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
       cd nni/examples/nas/benchmarks
 
-   将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v2.0``。
+   Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.1``.
 
 #. 
    通过 ``pip3 install -r xxx.requirements.txt`` 安装依赖。 ``xxx`` 可以是 ``nasbench101``\ ，``nasbench201`` ，``nds``。

@@ -51,4 +51,4 @@ hybridConfig:
 * trainingServicePlatforms. 必填。 该字段指定用于混合模式的平台，值使用 yaml 列表格式。 NNI 支持在此字段中设置 ``local``, ``remote``, ``aml``, ``pai`` 。
 
 
-.. Note:: 如果将平台设置为 trainingServicePlatforms 模式，则用户还应该为平台设置相应的配置。 例如，如果使用 ``remote`` 作为平台，还应设置 ``machineList`` 和 ``remoteConfig`` 配置。 混合模式下的本地平台暂时不支持Windows。
+.. Note:: 如果将平台设置为 trainingServicePlatforms 模式，则用户还应该为平台设置相应的配置。 例如，如果使用 ``remote`` 作为平台，还应设置 ``machineList`` 和 ``remoteConfig`` 配置。
