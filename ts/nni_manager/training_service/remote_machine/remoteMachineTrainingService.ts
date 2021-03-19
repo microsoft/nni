@@ -15,13 +15,14 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
-    HyperParameters, NNIManagerIpConfig, TrainingService, TrialJobApplicationForm,
+    HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
     getVersion, uniqueString
 } from '../../common/utils';
+import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../common/experimentConfig';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { TrialConfig } from '../common/trialConfig';
@@ -34,51 +35,60 @@ import {
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 
+interface FlattenRemoteConfig extends ExperimentConfig, RemoteConfig { }
+
 /**
  * Training Service implementation for Remote Machine (Linux)
  */
 @component.Singleton
 class RemoteMachineTrainingService implements TrainingService {
     private readonly initExecutorId = "initConnection";
-    private readonly machineExecutorManagerMap: Map<RemoteMachineMeta, ExecutorManager>; //machine excutor map
-    private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineMeta, Promise<void>>;
+    private readonly machineExecutorManagerMap: Map<RemoteMachineConfig, ExecutorManager>; //machine excutor map
+    private readonly machineCopyExpCodeDirPromiseMap: Map<RemoteMachineConfig, Promise<void>>;
     private readonly trialExecutorManagerMap: Map<string, ExecutorManager>; //trial excutor map
     private readonly trialJobsMap: Map<string, RemoteMachineTrialJobDetail>;
     private readonly expRootDir: string;
-    private trialConfig: TrialConfig | undefined;
     private gpuScheduler?: GPUScheduler;
     private readonly jobQueue: string[];
     private readonly timer: ObservableTimer;
     private stopping: boolean = false;
     private readonly metricsEmitter: EventEmitter;
     private readonly log: Logger;
-    private isMultiPhase: boolean = false;
     private remoteRestServerPort?: number;
-    private nniManagerIpConfig?: NNIManagerIpConfig;
     private versionCheck: boolean = true;
-    private logCollection: string;
+    private logCollection: string = 'none';
     private sshConnectionPromises: any[];
+    private config: FlattenRemoteConfig;
 
-    constructor(@component.Inject timer: ObservableTimer) {
+    constructor(config: ExperimentConfig) {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
-        this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineMeta, Promise<void>>();
-        this.machineExecutorManagerMap = new Map<RemoteMachineMeta, ExecutorManager>();
+        this.machineCopyExpCodeDirPromiseMap = new Map<RemoteMachineConfig, Promise<void>>();
+        this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.jobQueue = [];
         this.sshConnectionPromises = [];
         this.expRootDir = getExperimentRootDir();
-        this.timer = timer;
+        this.timer = component.get(ObservableTimer);
         this.log = getLogger();
-        this.logCollection = 'none';
         this.log.info('Construct remote machine training service.');
+        this.config = flattenConfig(config, 'remote');
+
+        if (!fs.lstatSync(this.config.trialCodeDirectory).isDirectory()) {
+            throw new Error(`codeDir ${this.config.trialCodeDirectory} is not a directory`);
+        }
+        validateCodeDir(this.config.trialCodeDirectory);
+
+        this.sshConnectionPromises = this.config.machineList.map(
+            machine => this.initRemoteMachineOnConnected(machine)
+        );
     }
 
     /**
      * Loop to launch trial jobs and collect trial metrics
      */
     public async run(): Promise<void> {
-        const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
+        const restServer = new RemoteMachineJobRestServer(this);
         await restServer.start();
         restServer.setEnableVersionCheck = this.versionCheck;
         this.log.info('Run remote machine training service.');
@@ -89,16 +99,13 @@ class RemoteMachineTrainingService implements TrainingService {
             this.sshConnectionPromises = [];
             // initialize gpuScheduler
             this.gpuScheduler = new GPUScheduler(this.machineExecutorManagerMap);
-            if (this.trialConfig ===  undefined) {
-                throw new Error("trial config not initialized!");
-            }
             // Copy codeDir to remote machine
-            for (const [rmMeta, executorManager] of this.machineExecutorManagerMap.entries()) {
+            for (const [machineConfig, executorManager] of this.machineExecutorManagerMap.entries()) {
                 const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
                 if (executor !== undefined) {
                     this.machineCopyExpCodeDirPromiseMap.set(
-                        rmMeta,
-                        executor.copyDirectoryToRemote(this.trialConfig.codeDir, executor.getRemoteCodePath(getExperimentId()))
+                        machineConfig,
+                        executor.copyDirectoryToRemote(this.config.trialCodeDirectory, executor.getRemoteCodePath(getExperimentId()))
                     );
                 }
             }
@@ -134,7 +141,7 @@ class RemoteMachineTrainingService implements TrainingService {
         if (trial.rmMeta === undefined) {
             throw new Error(`rmMeta not set in trial ${trial.id}`);
         }
-        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(trial.rmMeta);
+        const executorManager: ExecutorManager | undefined = this.machineExecutorManagerMap.get(trial.rmMeta.config);
         if (executorManager === undefined) {
             throw new Error(`executorManager not initialized`);
         }
@@ -225,10 +232,6 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param form trial job description form
      */
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
-
         // Generate trial job id(random)
         const trialJobId: string = uniqueString(5);
 
@@ -258,13 +261,6 @@ class RemoteMachineTrainingService implements TrainingService {
         await this.writeParameterFile(trialJobId, form.hyperParameters);
 
         return trialJobDetail;
-    }
-
-    /**
-     * Is multiphase job supported in current training service
-     */
-    public get isMultiPhaseJobSupported(): boolean {
-        return true;
     }
 
     /**
@@ -311,70 +307,7 @@ class RemoteMachineTrainingService implements TrainingService {
         }
     }
 
-    /**
-     * Set culster metadata
-     * @param key metadata key
-     * //1. MACHINE_LIST -- create executor of machine list
-     * //2. TRIAL_CONFIG -- trial configuration
-     * @param value metadata value
-     */
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
-                break;
-            case TrialConfigMetadataKey.MACHINE_LIST:
-                await this.setupConnections(value);
-                break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                const remoteMachineTrailConfig: TrialConfig = <TrialConfig>JSON.parse(value);
-                // Parse trial config failed, throw Error
-                if (remoteMachineTrailConfig === undefined) {
-                    throw new Error('trial config parsed failed');
-                }
-                // codeDir is not a valid directory, throw Error
-                if (!fs.lstatSync(remoteMachineTrailConfig.codeDir)
-                    .isDirectory()) {
-                    throw new Error(`codeDir ${remoteMachineTrailConfig.codeDir} is not a directory`);
-                }
-
-                try {
-                    // Validate to make sure codeDir doesn't have too many files
-                    await validateCodeDir(remoteMachineTrailConfig.codeDir);
-                } catch (error) {
-                    this.log.error(error);
-                    return Promise.reject(new Error(error));
-                }
-
-                this.trialConfig = remoteMachineTrailConfig;
-                break;
-            }
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                this.isMultiPhase = (value === 'true' || value === 'True');
-                break;
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.versionCheck = (value === 'true' || value === 'True');
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            case TrialConfigMetadataKey.REMOTE_CONFIG:
-                // Add remote_config in remoteEnvironmentService to set reuse mode, 
-                // this config need to be catched here, otherwise will throw Unknown key exception here
-                break;
-            default:
-                //Reject for unknown keys
-                throw new Error(`Uknown key: ${key}`);
-        }
-    }
-
-    /**
-     * Get culster metadata
-     * @param key metadata key
-     */
-    public async getClusterMetadata(_key: string): Promise<string> {
-        return "";
-    }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
 
     /**
      * cleanup() has a time out of 10s to clean remote connections
@@ -426,23 +359,12 @@ class RemoteMachineTrainingService implements TrainingService {
         }
     }
 
-    private async setupConnections(machineList: string): Promise<void> {
-        this.log.debug(`Connecting to remote machines: ${machineList}`);
-        //TO DO: verify if value's format is wrong, and json parse failed, how to handle error
-        const rmMetaList: RemoteMachineMeta[] = <RemoteMachineMeta[]>JSON.parse(machineList);
-
-        for (const rmMeta of rmMetaList) {
-            this.sshConnectionPromises.push(this.initRemoteMachineOnConnected(rmMeta));
-        }
-    }
-
-    private async initRemoteMachineOnConnected(rmMeta: RemoteMachineMeta): Promise<void> {
-        rmMeta.occupiedGpuIndexMap = new Map<number, number>();
-        const executorManager: ExecutorManager = new ExecutorManager(rmMeta);
-        this.log.info(`connecting to ${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`);
+    private async initRemoteMachineOnConnected(machineConfig: RemoteMachineConfig): Promise<void> {
+        const executorManager: ExecutorManager = new ExecutorManager(machineConfig);
+        this.log.info(`connecting to ${machineConfig.user}@${machineConfig.host}:${machineConfig.port}`);
         const executor: ShellExecutor = await executorManager.getExecutor(this.initExecutorId);
         this.log.debug(`reached ${executor.name}`);
-        this.machineExecutorManagerMap.set(rmMeta, executorManager);
+        this.machineExecutorManagerMap.set(machineConfig, executorManager);
         this.log.debug(`initializing ${executor.name}`);
 
         // Create root working directory after executor is ready
@@ -469,15 +391,15 @@ class RemoteMachineTrainingService implements TrainingService {
                     collectingCount.push(true);
                     const cmdresult = await executor.readLastLines(executor.joinPath(remoteGpuScriptCollectorDir, 'gpu_metrics'));
                     if (cmdresult !== "") {
-                        rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
-                        if (rmMeta.gpuSummary.gpuCount === 0) {
-                            this.log.warning(`No GPU found on remote machine ${rmMeta.ip}`);
+                        executorManager.rmMeta.gpuSummary = <GPUSummary>JSON.parse(cmdresult);
+                        if (executorManager.rmMeta.gpuSummary.gpuCount === 0) {
+                            this.log.warning(`No GPU found on remote machine ${machineConfig.host}`);
                             this.timer.unsubscribe(disposable);
                         }
                     }
                     if (this.stopping) {
                         this.timer.unsubscribe(disposable);
-                        this.log.debug(`Stopped GPU collector on ${rmMeta.ip}, since experiment is exiting.`);
+                        this.log.debug(`Stopped GPU collector on ${machineConfig.host}, since experiment is exiting.`);
                     }
                     collectingCount.pop();
                 }
@@ -488,9 +410,6 @@ class RemoteMachineTrainingService implements TrainingService {
     private async prepareTrialJob(trialJobId: string): Promise<boolean> {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
 
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         if (this.gpuScheduler === undefined) {
             throw new Error('gpuScheduler is not initialized');
         }
@@ -505,9 +424,9 @@ class RemoteMachineTrainingService implements TrainingService {
             return deferred.promise;
         }
         // get an executor from scheduler
-        const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.trialConfig.gpuNum, trialJobDetail);
+        const rmScheduleResult: RemoteMachineScheduleResult = this.gpuScheduler.scheduleMachine(this.config.trialGpuNumber, trialJobDetail);
         if (rmScheduleResult.resultType === ScheduleResultType.REQUIRE_EXCEED_TOTAL) {
-            const errorMessage: string = `Required GPU number ${this.trialConfig.gpuNum} is too large, no machine can meet`;
+            const errorMessage: string = `Required GPU number ${this.config.trialGpuNumber} is too large, no machine can meet`;
             this.log.error(errorMessage);
             deferred.reject();
             throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
@@ -516,7 +435,7 @@ class RemoteMachineTrainingService implements TrainingService {
             const rmScheduleInfo: RemoteMachineScheduleInfo = rmScheduleResult.scheduleInfo;
 
             trialJobDetail.rmMeta = rmScheduleInfo.rmMeta;
-            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(rmScheduleInfo.rmMeta);
+            const copyExpCodeDirPromise = this.machineCopyExpCodeDirPromiseMap.get(rmScheduleInfo.rmMeta.config);
             if (copyExpCodeDirPromise !== undefined) {
                 await copyExpCodeDirPromise;
             }
@@ -530,7 +449,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 trialJobId, trialJobDetail.form, rmScheduleInfo);
 
             trialJobDetail.status = 'RUNNING';
-            trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.ip}:${trialJobDetail.workingDirectory}`;
+            trialJobDetail.url = `file://${rmScheduleInfo.rmMeta.config.host}:${trialJobDetail.workingDirectory}`;
             trialJobDetail.startTime = Date.now();
 
             this.trialJobsMap.set(trialJobId, trialJobDetail);
@@ -547,9 +466,6 @@ class RemoteMachineTrainingService implements TrainingService {
 
     private async launchTrialOnScheduledMachine(trialJobId: string, form: TrialJobApplicationForm,
         rmScheduleInfo: RemoteMachineScheduleInfo): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         const cudaVisibleDevice: string = rmScheduleInfo.cudaVisibleDevice;
         const executor = await this.getExecutor(trialJobId);
         const trialJobDetail: RemoteMachineTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
@@ -568,7 +484,7 @@ class RemoteMachineTrainingService implements TrainingService {
         // Set CUDA_VISIBLE_DEVICES environment variable based on cudaVisibleDevice
         // If no valid cudaVisibleDevice is defined, set CUDA_VISIBLE_DEVICES to empty string to hide GPU device
         // If gpuNum is undefined, will not set CUDA_VISIBLE_DEVICES in script
-        if (this.trialConfig.gpuNum === undefined) {
+        if (this.config.trialGpuNumber === undefined) {
             cudaVisible = ""
         } else {
             if (typeof cudaVisibleDevice === 'string' && cudaVisibleDevice.length > 0) {
@@ -577,7 +493,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 cudaVisible = `CUDA_VISIBLE_DEVICES=" "`;
             }
         }
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.config.nniManagerIp ? this.config.nniManagerIp : getIPV4Address();
         if (this.remoteRestServerPort === undefined) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;
@@ -588,12 +504,13 @@ class RemoteMachineTrainingService implements TrainingService {
             trialJobId,
             getExperimentId(),
             trialJobDetail.form.sequenceId.toString(),
-            this.isMultiPhase,
-            this.trialConfig.command,
+            false,  // multi-phase
+            this.config.trialCommand,
             nniManagerIp,
             this.remoteRestServerPort,
             version,
-            this.logCollection, cudaVisible);
+            this.logCollection,
+            cudaVisible);
 
         //create tmp trial working folder locally.
         await execMkdir(path.join(trialLocalTempFolder, '.nni'));

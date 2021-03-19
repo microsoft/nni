@@ -43,24 +43,24 @@ class ShellExecutor {
         const deferred: Deferred<void> = new Deferred<void>();
 
         const connectConfig: ConnectConfig = {
-            host: rmMeta.ip,
-            port: rmMeta.port,
-            username: rmMeta.username,
+            host: rmMeta.config.host,
+            port: rmMeta.config.port,
+            username: rmMeta.config.user,
             tryKeyboard: true,
         };
-        this.pythonPath = rmMeta.pythonPath;
-        this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
-        if (rmMeta.passwd !== undefined) {
-            connectConfig.password = rmMeta.passwd;
-        } else if (rmMeta.sshKeyPath !== undefined) {
-            if (!fs.existsSync(rmMeta.sshKeyPath)) {
+        this.pythonPath = rmMeta.config.pythonPath;
+        this.name = `${rmMeta.config.user}@${rmMeta.config.host}:${rmMeta.config.port}`;
+        if (rmMeta.config.password !== undefined) {
+            connectConfig.password = rmMeta.config.password;
+        } else if (rmMeta.config.sshKeyFile !== undefined) {
+            if (!fs.existsSync(rmMeta.config.sshKeyFile)) {
                 //SSh key path is not a valid file, reject
-                deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
+                deferred.reject(new Error(`${rmMeta.config.sshKeyFile} does not exist.`));
             }
-            const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
+            const privateKey: string = fs.readFileSync(rmMeta.config.sshKeyFile, 'utf8');
 
             connectConfig.privateKey = privateKey;
-            connectConfig.passphrase = rmMeta.passphrase;
+            connectConfig.passphrase = rmMeta.config.sshPassphrase;
         } else {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
@@ -100,7 +100,7 @@ class ShellExecutor {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         }).on("keyboard-interactive", (_name, _instructions, _lang, _prompts, finish) => {
-            finish([rmMeta.passwd]);
+            finish([rmMeta.config.password || '']);
         }).connect(connectConfig);
 
         return deferred.promise;

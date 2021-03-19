@@ -6,6 +6,7 @@
 import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
+import { RemoteMachineConfig } from '../../common/experimentConfig';
 import { GPUInfo, parseGpuIndices, ScheduleResultType } from '../common/gpuData';
 import { ExecutorManager, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail } from './remoteMachineData';
 
@@ -16,7 +17,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
  */
 export class GPUScheduler {
 
-    private readonly machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>;
+    private readonly machineExecutorMap: Map<RemoteMachineConfig, ExecutorManager>;
     private readonly log: Logger = getLogger();
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
@@ -26,10 +27,10 @@ export class GPUScheduler {
      * Constructor
      * @param machineExecutorMap map from remote machine to executor
      */
-    constructor(machineExecutorMap: Map<RemoteMachineMeta, ExecutorManager>) {
+    constructor(machineExecutorMap: Map<RemoteMachineConfig, ExecutorManager>) {
         assert(machineExecutorMap.size > 0);
         this.machineExecutorMap = machineExecutorMap;
-        this.configuredRMs = Array.from(machineExecutorMap.keys());
+        this.configuredRMs = Array.from(machineExecutorMap.values(), manager => manager.rmMeta);
     }
 
     /**
@@ -41,7 +42,7 @@ export class GPUScheduler {
             requiredGPUNum = 0;
         }
         assert(requiredGPUNum >= 0);
-        const allRMs: RemoteMachineMeta[] = Array.from(this.machineExecutorMap.keys());
+        const allRMs: RemoteMachineMeta[] = Array.from(this.machineExecutorMap.values(), manager => manager.rmMeta);
         assert(allRMs.length > 0);
 
         // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
@@ -133,11 +134,12 @@ export class GPUScheduler {
      */
     private gpuResourceDetection(): Map<RemoteMachineMeta, GPUInfo[]> {
         const totalResourceMap: Map<RemoteMachineMeta, GPUInfo[]> = new Map<RemoteMachineMeta, GPUInfo[]>();
-        this.machineExecutorMap.forEach((executorManager: ExecutorManager, rmMeta: RemoteMachineMeta) => {
+        this.machineExecutorMap.forEach((executorManager: ExecutorManager, machineConfig: RemoteMachineConfig) => {
+            const rmMeta = executorManager.rmMeta;
             // Assgin totoal GPU count as init available GPU number
             if (rmMeta.gpuSummary !== undefined) {
                 const availableGPUs: GPUInfo[] = [];
-                const designatedGpuIndices: Set<number> | undefined = parseGpuIndices(rmMeta.gpuIndices);
+                const designatedGpuIndices: number[] | undefined = machineConfig.gpuIndices;
                 if (designatedGpuIndices !== undefined) {
                     for (const gpuIndex of designatedGpuIndices) {
                         if (gpuIndex >= rmMeta.gpuSummary.gpuCount) {
@@ -152,12 +154,11 @@ export class GPUScheduler {
                     // or trial number on a GPU reach max number,
                     // We should NOT allocate this GPU
                     // if users set useActiveGpu, use the gpu whether there is another activeProcess
-                    if (designatedGpuIndices === undefined || designatedGpuIndices.has(gpuInfo.index)) {
+                    if (designatedGpuIndices === undefined || designatedGpuIndices.includes(gpuInfo.index)) {
                         if (rmMeta.occupiedGpuIndexMap !== undefined) {
                             const num: number | undefined = rmMeta.occupiedGpuIndexMap.get(gpuInfo.index);
-                            const maxTrialNumPerGpu: number = rmMeta.maxTrialNumPerGpu ? rmMeta.maxTrialNumPerGpu : 1;
-                            if ((num === undefined && (!rmMeta.useActiveGpu && gpuInfo.activeProcessNum === 0 || rmMeta.useActiveGpu)) ||
-                                (num !== undefined && num < maxTrialNumPerGpu)) {
+                            if ((num === undefined && (!machineConfig.useActiveGpu && gpuInfo.activeProcessNum === 0 || machineConfig.useActiveGpu)) ||
+                                (num !== undefined && num < machineConfig.maxTrialNumberPerGpu)) {
                                 availableGPUs.push(gpuInfo);
                             }
                         } else {
@@ -209,7 +210,7 @@ export class GPUScheduler {
                 }
                 rmMeta.occupiedGpuIndexMap.set(gpuInfo.index, num + 1);
             } else {
-                throw new Error(`Machine ${rmMeta.ip} occupiedGpuIndexMap initialize error!`);
+                throw new Error(`Machine ${rmMeta.config.host} occupiedGpuIndexMap initialize error!`);
             }
         });
         trialJobDetail.gpuIndices = allocatedGPUs;

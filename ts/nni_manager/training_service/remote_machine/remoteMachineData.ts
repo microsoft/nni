@@ -14,52 +14,11 @@ import { ShellExecutor } from './shellExecutor';
 export class RemoteMachineMeta {
     public readonly config: RemoteMachineConfig;
     public gpuSummary: GPUSummary | undefined;
-    //TODO: initialize varialbe in constructor
-    public occupiedGpuIndexMap?: Map<number, number>;
+    public occupiedGpuIndexMap: Map<number, number>;
 
     constructor(config: RemoteMachineConfig) {
         this.config = config;
         this.occupiedGpuIndexMap = new Map<number, number>();
-    }
-
-    public get ip(): string {
-        return this.config.host;
-    }
-
-    public get port(): number {
-        return this.config.port;
-    }
-
-    public get username(): string {
-        return this.config.user;
-    }
-
-    public get passwd(): string {
-        return this.config.password || '';
-    }
-
-    public get sshKeyPath(): string | undefined {
-        return this.config.sshKeyFile;
-    }
-
-    public get passphrase(): string | undefined {
-        return this.config.sshPassphrase;
-    }
-
-    public get useActiveGpu(): boolean {
-        return this.config.useActiveGpu;
-    }
-
-    public get maxTrialNumPerGpu(): number {
-        return this.config.maxTrialNumberPerGpu;
-    }
-
-    public get gpuIndices(): string | undefined {
-        return this.config.gpuIndices === undefined ? undefined : this.config.gpuIndices.join(',');
-    }
-
-    public get pythonPath(): string | undefined {
-        return this.config.pythonPath;
     }
 }
 
@@ -111,17 +70,13 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
  * The remote machine executor manager
  */
 export class ExecutorManager {
+    public readonly rmMeta: RemoteMachineMeta;
     private readonly executorMap: Map<string, ShellExecutor> = new Map<string, ShellExecutor>();
-    private readonly rmMeta: RemoteMachineMeta;
 
     private executors: ShellExecutor[] = [];
 
-    constructor(config_or_meta: RemoteMachineConfig | RemoteMachineMeta) {
-        if (config_or_meta.constructor.name === 'RemoteMachineMeta') {
-            this.rmMeta = config_or_meta as RemoteMachineMeta;
-        } else {
-            this.rmMeta = new RemoteMachineMeta(config_or_meta as RemoteMachineConfig);
-        }
+    constructor(config: RemoteMachineConfig) {
+        this.rmMeta = new RemoteMachineMeta(config);
     }
 
     public async getExecutor(id: string): Promise<ShellExecutor> {

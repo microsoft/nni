@@ -7,15 +7,15 @@ import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig } from '../../common/experimentConfig';
+import { ExperimentConfig, RemoteConfig } from '../../common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
+import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
-import { RemoteConfig } from './remote/remoteConfig';
 import { HeterogenousConfig } from './heterogenous/heterogenousConfig';
 
 
@@ -30,7 +30,12 @@ class RouterTrainingService implements TrainingService {
 
     constructor(config: ExperimentConfig) {
         this.log = getLogger();
-        this.internalTrainingService = new TrialDispatcher(config);
+        const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
+        if (platform === 'remote' && !(config.trainingService as RemoteConfig).reuseMode) {
+            this.internalTrainingService = new RemoteMachineTrainingService(config);
+        } else {
+            this.internalTrainingService = new TrialDispatcher(config);
+        }
 
         //if (key === TrialConfigMetadataKey.HYBRID_CONFIG){
         //    const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
