@@ -13,7 +13,11 @@ if __name__ == '__main__':
         logger.debug(os.environ.get('NNI_OUTPUT_DIR'))
         filename = os.path.join(os.environ.get('NNI_OUTPUT_DIR'), 'checkingfile.txt')
         f = open(filename, "a")
-        f.write("this is the checking file.")
+        
+        tuner_params = nni.get_next_parameter()
+        f.write(str(tuner_params))
+        nni.report_final_result(1)
+        
         f.close()
     except Exception as exception:
         logger.exception(exception)
