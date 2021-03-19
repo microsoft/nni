@@ -21,6 +21,27 @@ def _setattr(model, name, module):
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
 
+def _delsimulatedattr(module):
+    if hasattr(module, 'old_weight'):
+        delattr(module, 'old_weight')
+    if hasattr(module, 'ema_decay'):
+        delattr(module, 'ema_decay')
+    if hasattr(module, 'tracked_min_biased'):
+        delattr(module, 'tracked_min_biased')
+    if hasattr(module, 'tracked_max_biased'):
+        delattr(module, 'tracked_max_biased')
+    if hasattr(module, 'tracked_min'):
+        delattr(module, 'tracked_min')
+    if hasattr(module, 'tracked_max'):
+        delattr(module, 'tracked_max')
+    if hasattr(module, 'scale'):
+        delattr(module, 'scale')
+    if hasattr(module, 'zero_point'):
+        delattr(module, 'zero_point')
+    if hasattr(module, 'weight_bit'):
+        delattr(module, 'weight_bit')
+    if hasattr(module, 'activation_bit'):
+        delattr(module, 'activation_bit')
 
 class Compressor:
     """
@@ -572,6 +593,19 @@ class Quantizer(Compressor):
                 assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+
+    def export_model(self, model_path, calibration_path=None):
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model_path : str
+            path to save pruned model state_dict
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        """
+        raise NotImplementedError('Quantizer must overload export_model()')
 
     def step_with_optimizer(self):
         pass

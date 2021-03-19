@@ -110,6 +110,27 @@ def get_bits_length(config, quant_type):
     else:
         return config["quant_bits"].get(quant_type)
 
+def del_simulated_attr(module):
+    if hasattr(module, 'old_weight'):
+        delattr(module, 'old_weight')
+    if hasattr(module, 'ema_decay'):
+        delattr(module, 'ema_decay')
+    if hasattr(module, 'tracked_min_biased'):
+        delattr(module, 'tracked_min_biased')
+    if hasattr(module, 'tracked_max_biased'):
+        delattr(module, 'tracked_max_biased')
+    if hasattr(module, 'tracked_min'):
+        delattr(module, 'tracked_min')
+    if hasattr(module, 'tracked_max'):
+        delattr(module, 'tracked_max')
+    if hasattr(module, 'scale'):
+        delattr(module, 'scale')
+    if hasattr(module, 'zero_point'):
+        delattr(module, 'zero_point')
+    if hasattr(module, 'weight_bit'):
+        delattr(module, 'weight_bit')
+    if hasattr(module, 'activation_bit'):
+        delattr(module, 'activation_bit')
 
 class QATGrad(QuantGrad):
     @staticmethod
@@ -153,7 +174,10 @@ class QAT_Quantizer(Quantizer):
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
             layer.module.register_buffer("scale", torch.Tensor([1.0]))
+            if "weight" in config.get("quant_types", []):
+                layer.module.register_buffer('weight_bit', torch.zeros(1))
             if "output" in config.get("quant_types", []):
+                layer.module.register_buffer('activation_bit', torch.zeros(1))
                 layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
                 layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_min', torch.zeros(1))
@@ -256,6 +280,7 @@ class QAT_Quantizer(Quantizer):
         module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
         weight = self._quantize(weight_bits, module, weight)
         weight = self._dequantize(module, weight)
+        module.weight_bit = torch.Tensor([weight_bits])
         wrapper.module.weight = weight
         return weight
 
@@ -263,6 +288,7 @@ class QAT_Quantizer(Quantizer):
         config = wrapper.config
         module = wrapper.module
         output_bits = get_bits_length(config, 'output')
+        module.activation_bit = torch.Tensor([output_bits])
         quant_start_step = config.get('quant_start_step', 0)
         assert output_bits >= 1, "quant bits length should be at least 1"
 
@@ -281,6 +307,45 @@ class QAT_Quantizer(Quantizer):
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
+
+    def export_model(self, model_path, calibration_path=None):
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model_path : str
+            path to save pruned model state_dict
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        """
+        assert model_path is not None, 'model_path must be specified'
+        self._unwrap_model()
+        calibration_config = {}
+        support_op = [torch.nn.Conv2d, torch.nn.Linear, torch.nn.ReLU6]
+
+        for name, module in self.bound_model.named_modules():
+            if type(module) not in support_op:
+                del_simulated_attr(module)
+                continue
+            if hasattr(module, 'weight_bit') or hasattr(module, 'activation_bit'):
+                calibration_config[name] = {}
+            if hasattr(module, 'weight_bit'):
+                calibration_config[name]['weight_bit'] = int(module.weight_bit)
+            if hasattr(module, 'activation_bit'):
+                calibration_config[name]['activation_bit'] = int(module.activation_bit)
+                calibration_config[name]['tracked_min'] = float(module.tracked_min_biased)
+                calibration_config[name]['tracked_max'] = float(module.tracked_max_biased)
+            del_simulated_attr(module)
+
+        torch.save(self.bound_model.state_dict(), model_path)
+        logger.info('Model state_dict saved to %s', model_path)
+        if calibration_path is not None:
+            torch.save(calibration_config, calibration_path)
+            logger.info('Mask dict saved to %s', calibration_path)
+
+        return calibration_config
+
 
     def fold_bn(self, config, **kwargs):
         # TODO simulate folded weight
