@@ -111,6 +111,9 @@ def get_bits_length(config, quant_type):
         return config["quant_bits"].get(quant_type)
 
 def del_simulated_attr(module):
+    """
+    delete redundant parameters in quantize module
+    """
     if hasattr(module, 'old_weight'):
         delattr(module, 'old_weight')
     if hasattr(module, 'ema_decay'):
@@ -310,12 +313,12 @@ class QAT_Quantizer(Quantizer):
 
     def export_model(self, model_path, calibration_path=None):
         """
-        Export pruned model weights, masks and onnx model(optional)
+        Export quantized model weights and calibration parameters(optional)
 
         Parameters
         ----------
         model_path : str
-            path to save pruned model state_dict
+            path to save quantized model weight
         calibration_path : str
             (optional) path to save quantize parameters after calibration
         """
