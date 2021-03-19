@@ -9,7 +9,6 @@ interface MonacoEditorProps {
 }
 
 class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
-
     constructor(props: MonacoEditorProps) {
         super(props);
     }
@@ -40,17 +39,17 @@ class MonacoHTML extends React.Component<MonacoEditorProps, {}> {
                     </Spinner>
                 ) : (
                     <MonacoEditor
-                            width='100%'
-                            height={height}
-                            language='json'
-                            value={content}
-                            options={{
-                                minimap: { enabled: false },
-                                readOnly: true,
-                                automaticLayout: true,
-                                wordWrap: 'on'
-                            }}
-                        />
+                        width='100%'
+                        height={height}
+                        language='json'
+                        value={content}
+                        options={{
+                            minimap: { enabled: false },
+                            readOnly: true,
+                            automaticLayout: true,
+                            wordWrap: 'on'
+                        }}
+                    />
                 )}
             </React.Fragment>
         );
