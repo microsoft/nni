@@ -582,6 +582,13 @@ class Quantizer(Compressor):
             path to save quantized model weight
         calibration_path : str
             (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
         """
         raise NotImplementedError('Quantizer must overload export_model()')
 

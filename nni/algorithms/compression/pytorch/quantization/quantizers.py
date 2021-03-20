@@ -379,6 +379,10 @@ class DoReFaQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            if "weight" in config.get("quant_types", []):
+                layer.module.register_buffer('weight_bit', torch.zeros(1))
 
     def del_simulated_attr(self, module):
         """
