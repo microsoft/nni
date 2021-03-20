@@ -572,7 +572,7 @@ class Quantizer(Compressor):
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
-    def export_model(self, model_path, calibration_path=None):
+    def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
         Export quantized model weights and calibration parameters
 
