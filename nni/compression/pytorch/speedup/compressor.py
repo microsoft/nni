@@ -7,11 +7,11 @@ import torch
 import torch.nn as nn
 import numpy as np
 import copy
-from nni.compression.torch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
+from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-
 from ..utils.shape_dependency import ADD_TYPES, CAT_TYPE, MUL_TYPES
 from ..utils import rand_like_with_shape
 from .sparsity_conflicts import calc_unmask, calc_padding
@@ -251,6 +251,7 @@ class ModelSpeedup:
         # update the mask tensor and the internal output of the submodules
         # after manually unpack the tuple/list of tensors, the number of the outputs
         # of each node should always be one
+
         assert len(
             node.outputs) == 1, "The number of the outputs of %s is not 1" % module_name
         out_debugname = node.outputs[0]

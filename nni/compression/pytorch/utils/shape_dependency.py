@@ -2,17 +2,33 @@
 # Licensed under the MIT license.
 
 import csv
+import numpy as np
 import logging
 
-__all__ = ['ChannelDependency', 'GroupDependency',
-           'CatPaddingDependency', 'InputChannelDependency']
+
+__all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
+MUL_TYPES = ['aten::mul', 'atem::mul_']
 CAT_TYPE = 'aten::cat'
 logger = logging.getLogger('Shape_Dependency')
 RESHAPE_OPS = [CAT_TYPE, 'aten::view',
                'aten::reshape', 'aten::flatten', 'aten::mean']
+
+
+def lcm_list(L):
+    lcm = 1
+    for i in L:
+        lcm = np.lcm(lcm, i)
+    return lcm
+
+
+def gcd_list(L):
+    gcd = L[0]
+    for i in L:
+        gcd = np.gcd(gcd, i)
+    return gcd
 
 
 class Dependency:
@@ -36,6 +52,35 @@ class Dependency:
 
     def export(self, filepath):
         raise NotImplementedError
+
+
+def reshape_break_channel_dependency(op_node):
+    """
+    The reshape operations such as (reshape, view, flatten) may break
+    the channel dependency. We need to check the input parameters of
+    these reshape operations to check if this reshape node will break
+    the channel dependency. However, it's complicated to analyze the the input
+    parameters for each reshape function and infer if it will break the channel
+    dependency. So currently, we just check if the input channel and the output
+    channel is the same, if so, then we can say the original reshape function
+    doesn't want to change the number of the channels, which means the channel
+    dependency is not broken. In contrast, the original reshap operation wants
+    to change the number of channels, so it breaks the channel dependency.
+
+    Parameters
+    ----------
+    opnode: NodePyOP
+        A Op node of the graph.
+    Returns
+    -------
+    bool
+        If this operation will break the channel dependency.
+    """
+    in_shape = op_node.auxiliary['in_shape']
+    out_shape = op_node.auxiliary['out_shape']
+    in_channel = in_shape[1]
+    out_channel = out_shape[1]
+    return in_channel != out_channel
 
 
 class ChannelDependency(Dependency):
@@ -80,6 +125,9 @@ class ChannelDependency(Dependency):
                 # find the first met conv
                 parent_layers.append(curnode.name)
                 continue
+            elif curnode.op_type in RESHAPE_OPS:
+                if reshape_break_channel_dependency(curnode):
+                    continue
             parents = self.graph.find_predecessors(curnode.unique_name)
             parents = [self.graph.name_to_node[name] for name in parents]
             for parent in parents:
@@ -176,7 +224,7 @@ class ChannelDependency(Dependency):
         d_sets = []
         visited = set()
         for node in self.graph.nodes_py.nodes_op:
-            if node.op_type != 'Conv2d' or node in visited:
+            if (node.op_type != 'Conv2d' and node.op_type != 'Linear') or node in visited:
                 continue
             tmp_set = set()
             if node.name not in self.dependency:
@@ -188,35 +236,6 @@ class ChannelDependency(Dependency):
                     tmp_set.add(other)
             d_sets.append(tmp_set)
         return d_sets
-
-
-def reshape_break_channel_dependency(op_node):
-    """
-    The reshape operations such as (reshape, view, flatten) may break
-    the channel dependency. We need to check the input parameters of
-    these reshape operations to check if this reshape node will break
-    the channel dependency. However, it's complicated to analyze the the input
-    parameters for each reshape function and infer if it will break the channel
-    dependency. So currently, we just check if the input channel and the output
-    channel is the same, if so, then we can say the original reshape function
-    doesn't want to change the number of the channels, which means the channel
-    dependency is not broken. In contrast, the original reshap operation wants
-    to change the number of channels, so it breaks the channel dependency.
-
-    Parameters
-    ----------
-    opnode: NodePyOP
-        A Op node of the graph.
-    Returns
-    -------
-    bool
-        If this operation will break the channel dependency.
-    """
-    in_shape = op_node.auxiliary['in_shape']
-    out_shape = op_node.auxiliary['out_shape']
-    in_channel = in_shape[1]
-    out_channel = out_shape[1]
-    return in_channel != out_channel
 
 
 class InputChannelDependency(ChannelDependency):
@@ -295,67 +314,6 @@ class InputChannelDependency(ChannelDependency):
                 self.dependency[layer] = dependency_set
 
 
-class CatPaddingDependency(ChannelDependency):
-    def __init__(self, model=None, dummy_input=None, traced_model=None):
-        super(CatPaddingDependency, self).__init__(
-            model, dummy_input, traced_model)
-
-    def build_dependency(self):
-        """
-        Build the cat padding dependencies.
-        If the output features of several layers are stitched together
-        by cat operation, then these layers have cat padding dependencies.
-        This is because when inferring the cat mask, we need all the input
-        masks for the cat operation. At this time we need to know the source
-        of all input vectors of a cat operation.
-        """
-        for node in self.graph.nodes_py.nodes_op:
-            parent_layers = []
-            if node.op_type == CAT_TYPE:
-                parent_layers = self._get_parent_layers(node)
-                dependency_set = set(parent_layers)
-                # merge the dependencies
-                for parent in parent_layers:
-                    if parent in self.dependency:
-                        dependency_set.update(self.dependency[parent])
-                # save the dependencies
-                for _node in dependency_set:
-                    self.dependency[_node] = dependency_set
-
-    @property
-    def dependency_sets(self):
-        d_sets = []
-        visited = set()
-        for nodename in self.dependency:
-            if nodename in visited:
-                continue
-            d_sets.append(self.dependency[nodename])
-        return d_sets
-
-    def export(self, filepath):
-        """
-        Export the dependencies into a file.
-        In the output file, each line contains a set of layers
-        whose output features are stitched together by the cat
-        operation.
-
-        output example:
-        Dependency Set, Layers
-        set1, Conv1, Conv2
-        set2, Conv3, Conv4
-        """
-        header = ['Dependency Set', 'Layers']
-        setid = 0
-        with open(filepath, 'w') as csvf:
-            csv_w = csv.writer(csvf, delimiter=',')
-            csv_w.writerow(header)
-            for layers in self.dependency_sets:
-                setid += 1
-                row = ['Set %d' % setid]
-                row.extend(list(layers))
-                csv_w.writerow(row)
-
-
 class GroupDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
@@ -372,6 +330,7 @@ class GroupDependency(Dependency):
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
         """
+        self.min_groups = {}
         super(GroupDependency, self).__init__(model, dummy_input, traced_model)
 
     def _get_parent_convs(self, node):
@@ -451,27 +410,33 @@ class GroupDependency(Dependency):
             key: the name of conv layers, value: the minimum value that the number of
             filters should be divisible to.
         """
+        self.groups = {}
         for node in self.graph.nodes_py.nodes_op:
             if node.op_type == 'Conv2d' or node.op_type == 'ConvTranspose2d':
                 group = self._get_conv_groups(node)
-
-                if node.name in self.dependency:
+                if node.name in self.groups:
                     # the conv layer whose group is larger than 1 will require that
                     # it's number of output channel to be divisible by the number of group.
-                    self.dependency[node.name] = max(
-                        self.dependency[node.name], group)
+                    self.groups[node.name].append(group)
                 else:
-                    self.dependency[node.name] = group
+                    self.groups[node.name] = [group]
                 if group > 1:
                     # for the conv layer whose group is larger than 1, it will require the number
                     # of output channels of their parent conv layer to be divisible by group.
                     parent_convs = self._get_parent_convs(node)
                     for parent in parent_convs:
-                        if parent in self.dependency:
-                            self.dependency[parent] = max(
-                                self.dependency[parent], group)
+                        if parent in self.groups:
+                            self.groups[parent].append(group)
                         else:
-                            self.dependency[parent] = group
+                            self.groups[parent] = [group]
+        # self.dependency = {name: np.lcm(self.groups[name]) for name in self.groups}
+        for name in self.groups:
+            self.dependency[name] = lcm_list(self.groups[name])
+            if min(self.groups[name]) == gcd_list(self.groups[name]):
+                self.min_groups[name] = min(self.groups[name])
+            else:
+                self.min_groups[name] = 1
+        # self.min_groups = {name: min(self.groups[name]) if min(self.groups[name])== np.gcd(self.groups[name]) else 1 for name in self.groups}
         return self.dependency
 
     def export(self, filepath):
