@@ -12,7 +12,7 @@ _execution_engine = None
 _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
-           'submit_models', 'wait_models', 'query_available_resources',
+           'list_models', 'submit_models', 'wait_models', 'query_available_resources',
            'set_execution_engine', 'is_stopped_exec']
 
 def set_execution_engine(engine) -> None:

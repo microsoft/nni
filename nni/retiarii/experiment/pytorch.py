@@ -261,11 +261,20 @@ class RetiariiExperiment(Experiment):
 
     def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'code') -> Any:
         """
-        export several top performing models
+        Export several top performing models.
+
+        For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` asnd ``formater`` is
+        available for customization.
+
+        top_k : int
+            How many models are intended to be exported.
+        optimize_mode : str
+            ``maximize`` or ``minimize``. Not supported by one-shot algorithms.
+        formatter : str
+            Only model code is supported for now. Not supported by one-shot algorithms.
         """
-        if top_k != 1:
-            _logger.warning('Only support top_k is 1 for now.')
         if isinstance(self.trainer, BaseOneShotTrainer):
+            assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.trainer.export()
         else:
             all_models = filter(lambda m: m.metric is not None, list_models())
