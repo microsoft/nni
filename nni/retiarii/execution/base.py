@@ -1,32 +1,33 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import os
 import random
 import string
-from typing import Dict, Any, List
+from typing import Dict, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData
+from ..graph import Model, ModelStatus, MetricData, Evaluator
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
-    def __init__(self, model_script: str, training_module: str, training_kwargs: Dict[str, Any]) -> None:
+    def __init__(self, model_script: str, evaluator: Evaluator) -> None:
         self.model_script = model_script
-        self.training_module = training_module
-        self.training_kwargs = training_kwargs
+        self.evaluator = evaluator
 
     def dump(self) -> dict:
         return {
             'model_script': self.model_script,
-            'training_module': self.training_module,
-            'training_kwargs': self.training_kwargs
+            'evaluator': self.evaluator
         }
 
     @staticmethod
-    def load(data):
-        return BaseGraphData(data['model_script'], data['training_module'], data['training_kwargs'])
+    def load(data) -> 'BaseGraphData':
+        return BaseGraphData(data['model_script'], data['evaluator'])
 
 
 class BaseExecutionEngine(AbstractExecutionEngine):
@@ -57,8 +58,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model),
-                                 model.training_config.module, model.training_config.kwargs)
+            data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
             self._running_models[send_trial(data.dump())] = model
 
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
@@ -66,13 +66,14 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def _send_trial_callback(self, paramater: dict) -> None:
         if self.resources <= 0:
-            _logger.warning('There is no available resource, but trial is submitted.')
+            # FIXME: should be a warning message here
+            _logger.debug('There is no available resource, but trial is submitted.')
         self.resources -= 1
-        _logger.info('on_resource_used: %d', self.resources)
+        _logger.debug('Resource used. Remaining: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
         self.resources += num_trials
-        _logger.info('on_resource_available: %d', self.resources)
+        _logger.debug('New resource available. Remaining: %d', self.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]
@@ -105,11 +106,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
         random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        file_name = f'_generated_model_{random_str}.py'
+        file_name = f'_generated_model/{random_str}.py'
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
-        trainer_cls = utils.import_(graph_data.training_module)
-        model_cls = utils.import_(f'_generated_model_{random_str}._model')
-        trainer_instance = trainer_cls(model=model_cls(), **graph_data.training_kwargs)
-        trainer_instance.fit()
+        model_cls = utils.import_(f'_generated_model.{random_str}._model')
+        graph_data.evaluator._execute(model_cls)
         os.remove(file_name)

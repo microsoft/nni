@@ -40,29 +40,26 @@
 
   .. code-block:: bat
 
-       git clone -b v1.9 https://github.com/Microsoft/nni.git
+       git clone -b v2.0 https://github.com/Microsoft/nni.git
        cd nni
-       powershell -ExecutionPolicy Bypass -file install.ps1
+       python setup.py develop
 
 验证安装
 -------------------
-
-以下示例基于 TensorFlow 1.x 构建。 确保运行环境中使用的是 **TensorFlow 1.x**。
-
 
 * 
   克隆源代码中的示例。
 
   .. code-block:: bat
 
-       git clone -b v1.9 https://github.com/Microsoft/nni.git
+       git clone -b v2.0 https://github.com/Microsoft/nni.git
 
 * 
   运行 MNIST 示例。
 
   .. code-block:: bat
 
-       nnictl create --config nni\examples\trials\mnist-tfv1\config_windows.yml
+       nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
 
     注意：如果熟悉其它框架，可选择 ``examples\trials`` 目录下对应的示例。 需要将示例 YAML 文件中 Trial 命令的 ``python3`` 改为 ``python``，这是因为默认安装的 Python 可执行文件是 ``python.exe``，没有 ``python3.exe``。
 
@@ -146,7 +143,7 @@
 
 
 常见问答
----
+------------
 
 安装 NNI 时出现 simplejson 错误
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -182,7 +179,7 @@ Web 界面上的 Trial 错误
 无法在 Windows 上使用 BOHB
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-确保安装了 C ++ 14.0 编译器然后尝试运行 ``nnictl package install --name=BOHB`` 来安装依赖项。
+确保安装了 C ++ 14.0 编译器然后尝试运行 ``pip install nni[BOHB]`` 来安装依赖项。
 
 Windows 上不支持的 Tuner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

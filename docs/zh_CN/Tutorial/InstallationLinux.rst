@@ -20,38 +20,53 @@
 
   如果对某个或最新版本的代码感兴趣，可通过源代码安装 NNI。
 
-  先决条件：``python 64-bit >=3.6``\ , ``git``\ , ``wget``
+  先决条件：``python 64-bit >=3.6``, ``git``
 
 .. code-block:: bash
 
-     git clone -b v1.9 https://github.com/Microsoft/nni.git
+     git clone -b v2.0 https://github.com/Microsoft/nni.git
      cd nni
-     ./install.sh
+     python3 -m pip install --upgrade pip setuptools
+     python3 setup.py develop
+
+从 NNI 源代码构建 Wheel 包
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+上一节介绍了如何在 `开发模式 <https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html>`__ 下安装NNI。
+如果要执行持久安装，建议您构建自己的 wheel 软件包并从wheel 安装。
+
+.. code-block:: bash
+
+    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    cd nni
+    export NNI_RELEASE=2.0
+    python3 -m pip install --upgrade pip setuptools wheel
+    python3 setup.py clean --all
+    python3 setup.py build_ts
+    python3 setup.py bdist_wheel -p manylinux1_x86_64
+    python3 -m pip install dist/nni-2.0-py3-none-manylinux1_x86_64.whl
 
 在 Docker 映像中使用 NNI
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-  也可将 NNI 安装到 docker 映像中。 参考 :githublink:`这里 <deployment/docker/README.rst>` 来生成 NNI 的 docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 ``docker pull msranni/nni:latest``。
+  也可将 NNI 安装到 docker 映像中。 参考 `这里 <../Tutorial/HowToUseDocker.rst>`__ 来生成 NNI 的 docker 映像。 也可通过此命令从 Docker Hub 中直接拉取 NNI 的映像 ``docker pull msranni/nni:latest``。
 
 验证安装
 -------------------
-
-以下示例基于 TensorFlow 1.x 构建。 确保运行环境中使用的是 **TensorFlow 1.x**。
-
 
 * 
   通过克隆源代码下载示例。
 
   .. code-block:: bash
 
-     git clone -b v1.9 https://github.com/Microsoft/nni.git
+     git clone -b v2.0 https://github.com/Microsoft/nni.git
 
 * 
   运行 MNIST 示例。
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
 * 
   在命令行中等待输出 ``INFO: Successfully started experiment!`` 。 此消息表明实验已成功启动。 通过命令行输出的 Web UI url 来访问 Experiment 的界面。

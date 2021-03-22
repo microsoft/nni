@@ -78,7 +78,7 @@ NNI 在 Windows 上的问题
 参考 `在 Windows 上 安装 NNI <InstallationWin.rst>`__
 
 更多常见问题解答
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 `标有常见问题标签的 Issue <https://github.com/microsoft/nni/labels/FAQ>`__
 

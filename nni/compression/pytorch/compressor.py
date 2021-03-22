@@ -422,8 +422,8 @@ class Pruner(Compressor):
         """
         Load the state dict saved from unwrapped model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         model_state : dict
             state dict saved from unwrapped model
         """

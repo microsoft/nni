@@ -3,6 +3,7 @@
 
 import json
 import os
+from pathlib import Path
 import sys
 import string
 import random
@@ -314,6 +315,19 @@ def set_hybrid_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
+def set_shared_storage(experiment_config, port, config_file_name):
+    if 'sharedStorage' in experiment_config:
+        response = rest_put(cluster_metadata_url(port), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
+        err_message = None
+        if not response or not response.status_code == 200:
+            if response is not None:
+                err_message = response.text
+                _, stderr_full_path = get_log_path(config_file_name)
+                with open(stderr_full_path, 'a+') as fout:
+                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+            return False, err_message
+    return True, None
+
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
@@ -330,6 +344,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     if experiment_config.get('multiThread'):
         request_data['multiThread'] = experiment_config.get('multiThread')
+    if experiment_config.get('nniManagerIp'):
+        request_data['nniManagerIp'] = experiment_config.get('nniManagerIp')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
         if request_data['advisor'].get('gpuNum'):
@@ -406,6 +422,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
                 request_data['clusterMetaData'].append(request_dict[platform])
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'adl':
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
@@ -442,6 +461,8 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
+    if config_result:
+        config_result, err_msg = set_shared_storage(experiment_config, port, config_file_name)
     if config_result:
         print_normal('Successfully set {0} config!'.format(platform))
     else:
@@ -570,14 +591,14 @@ def create_experiment(args):
     except Exception:
         print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
         try:
-            config = ExperimentConfig(**experiment_config)
+            config = ExperimentConfig(_base_path=Path(config_path).parent, **experiment_config)
             experiment_config = convert.to_v1_yaml(config)
         except Exception as e:
-            print_error(f'Conversion from v2 format failed: {repr(e)}')
+            print_error(f'Config in v2 format validation failed, the config error in v2 format is: {repr(e)}')
         try:
             validate_all_content(experiment_config, config_path)
         except Exception as e:
-            print_error(f'Config in v1 format validation failed. {repr(e)}')
+            print_error(f'Config in v1 format validation failed, the config error in v1 format is: {repr(e)}')
             exit(1)
 
     try:

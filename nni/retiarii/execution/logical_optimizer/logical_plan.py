@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import copy
 from typing import Dict, Tuple, List, Any
 
@@ -145,11 +148,11 @@ class LogicalPlan:
         # Add a flag to mark multi-model in graph json.
         # Multi-model has a list of training configs in kwargs['model_kwargs']
         if len(multi_model_placement) > 1:
-            phy_model.training_config.kwargs['is_multi_model'] = True
-            phy_model.training_config.kwargs['model_cls'] = phy_graph.name
-            phy_model.training_config.kwargs['model_kwargs'] = []
+            phy_model.evaluator.kwargs['is_multi_model'] = True
+            phy_model.evaluator.kwargs['model_cls'] = phy_graph.name
+            phy_model.evaluator.kwargs['model_kwargs'] = []
             # FIXME: allow user to specify
-            phy_model.training_config.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
+            phy_model.evaluator.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
 
         # merge sub-graphs
         for model in multi_model_placement:
@@ -160,7 +163,7 @@ class LogicalPlan:
 
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
-        training_config_slot = {}  # Model ID -> Slot ID
+        evaluator_slot = {}  # Model ID -> Slot ID
         input_slot_mapping = {}
         output_slot_mapping = {}
         # Replace all logical nodes to executable physical nodes
@@ -181,25 +184,25 @@ class LogicalPlan:
                 new_node, placement = node.assemble(multi_model_placement)
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
-                    if model_id not in training_config_slot:
-                        phy_model.training_config.kwargs['model_kwargs'].append(new_node.graph.model.training_config.kwargs.copy())
-                        training_config_slot[model_id] = len(phy_model.training_config.kwargs['model_kwargs']) - 1
-                        slot = training_config_slot[model_id]
-                        phy_model.training_config.kwargs['model_kwargs'][slot]['model_id'] = model_id
-                        phy_model.training_config.kwargs['model_kwargs'][slot]['use_input'] = False
-                        phy_model.training_config.kwargs['model_kwargs'][slot]['use_output'] = False
+                    if model_id not in evaluator_slot:
+                        phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
+                        evaluator_slot[model_id] = len(phy_model.evaluator.kwargs['model_kwargs']) - 1
+                        slot = evaluator_slot[model_id]
+                        phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
+                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
+                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = False
                     else:
-                        slot = training_config_slot[model_id]
+                        slot = evaluator_slot[model_id]
                     # If a model's inputs/outputs are not used in the multi-model
                     # the codegen and trainer should not generate and use them
                     # "use_input" and "use_output" are used to mark whether
                     # an input/output of a model is used in a multi-model
                     if new_node.operation.type == '_inputs':
                         input_slot_mapping[new_node] = slot
-                        phy_model.training_config.kwargs['model_kwargs'][slot]['use_input'] = True
+                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = True
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
-                        phy_model.training_config.kwargs['model_kwargs'][slot]['use_output'] = True
+                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = True
 
                 self.node_replace(node, new_node)
 

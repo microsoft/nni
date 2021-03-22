@@ -19,6 +19,7 @@ export class TrialDetail implements TrialJobDetail {
     public form: TrialJobApplicationForm;
     public isEarlyStopped?: boolean;
     public environment?: EnvironmentInformation;
+    public message?: string;
 
     // init settings of trial
     public settings = {};

@@ -46,6 +46,7 @@ interface TableRecord {
     id: string;
     duration: number;
     status: string;
+    message: string;
     intermediateCount: number;
     accuracy?: number | any;
     latestAccuracy: number | undefined;
@@ -135,6 +136,7 @@ interface TrialJobInfo {
     trialJobId: string;
     sequenceId: number;
     status: string;
+    message: string;
     startTime?: number;
     endTime?: number;
     hyperParameters?: string[];

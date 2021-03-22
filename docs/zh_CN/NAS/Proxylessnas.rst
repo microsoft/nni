@@ -56,8 +56,7 @@ NNI 上的 ProxylessNAS
 
 在NNI上的实现基于 `官方实现 <https://github.com/mit-han-lab/ProxylessNAS>`__ 。 官方实现支持两种搜索方法：梯度下降和强化学习，还支持不同的硬件，包括 'mobile', 'cpu', 'gpu8', 'flops'。 在当前的 NNI 实现中，支持梯度下降训练方法，不支持不同的硬件。 完整支持正在进行中。
 
-下面将介绍实现的细节。 像 NNI 上其它 one-shot NAS 算法一样，ProxylessNAS 由两部分组成：*搜索空间* 和 *训练方法*。 为了让用户灵活地定义自己的搜索空间并使用内置的 ProxylessNAS 训练方法，我们将指定的搜索空间放在  :githublink:`示例代码 <examples/nas/proxylessnas>` 使用 :githublink:`NNI NAS 接口<src/sdk/pynni/nni/nas/pytorch/proxylessnas>`。
-
+下面将介绍实现的细节。 像 NNI 上其它 one-shot NAS 算法一样，ProxylessNAS 由两部分组成：*搜索空间* 和 *训练方法*。 为了让用户灵活地定义自己的搜索空间并使用内置的 ProxylessNAS 训练方法，我们将指定的搜索空间放在 :githublink:`示例代码 <examples/nas/proxylessnas>` 使用 :githublink:`NNI NAS 接口 <nni/algorithms/nas/pytorch/proxylessnas>`。
 
 .. image:: ../../img/proxylessnas.png
    :target: ../../img/proxylessnas.png

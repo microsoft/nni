@@ -4,6 +4,8 @@
 # email: haodu8-c@my.cityu.edu.hk and houwen.peng@microsoft.com
 
 import sys
+import logging
+import torch
 import argparse
 import torch.nn as nn
 

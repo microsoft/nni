@@ -15,7 +15,7 @@
 
   * :githublink:`MNIST-pytorch <examples/trials/mnist-distributed-pytorch>`
   * `CIFAR-10 <./TrialExample/Cifar10Examples.rst>`__
-  * :githublink:`TGS salt identification chanllenge <examples/trials/kaggle-tgs-salt/README.md>`
+  * :githublink:`TGS 盐识别挑战 <examples/trials/kaggle-tgs-salt/README.md>`
   * :githublink:`Network_morphism <examples/trials/network_morphism/README.md>`
 
 * `TensorFlow <https://github.com/tensorflow/tensorflow>`__
@@ -31,17 +31,18 @@
 
 * `MXNet <https://github.com/apache/incubator-mxnet>`__
 * `Caffe2 <https://github.com/BVLC/caffe>`__
-* `CNTK (Python language) <https://github.com/microsoft/CNTK>`__
+* `CNTK（Python） <https://github.com/microsoft/CNTK>`__
 * `Spark MLlib <http://spark.apache.org/mllib/>`__
 * `Chainer <https://chainer.org/>`__
 * `Theano <https://pypi.org/project/Theano/>`__
 
-鼓励您为其他的 NNI 用户\ `贡献更多示例 <Tutorial/Contributing.rst>`__  
+鼓励您 `贡献更多示例 <Tutorial/Contributing.rst>`__ 为其他的 NNI 用户 
 
 支持的库
 -----------------
 
 NNI 也支持其它 Python 库，包括一些基于 GBDT 的算法：XGBoost, CatBoost 以及 lightGBM。
+
 
 * `Scikit-learn <https://scikit-learn.org/stable/>`__
 

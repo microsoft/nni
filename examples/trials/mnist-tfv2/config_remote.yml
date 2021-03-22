@@ -24,9 +24,9 @@ machineList:
   - ip: ${replace_to_your_remote_machine_ip}
     username: ${replace_to_your_remote_machine_username}
     sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
-    # Pre-command will be executed before the remote machine executes other commands.
-    # Below is an example of specifying python environment.
-    # If you want to execute multiple commands, please use "&&" to connect them.
-    # preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
-    # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
-    preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
+    # Below are examples of specifying python environment.
+    # pythonPath: /opt/python3.7/bin
+    # pythonPath: C:/Python37
+    # Below is an example of specifying python environment for windows anaconda user. Multiple paths separated by ';'. 
+    # pythonPath: C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin
+    pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}

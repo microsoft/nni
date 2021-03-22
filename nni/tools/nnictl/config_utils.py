@@ -71,8 +71,14 @@ def _inverse_cluster_metadata(platform: str, metadata_config: list) -> dict:
                 inverse_config['amlConfig'] = kv['value']
             elif kv['key'] == 'trial_config':
                 inverse_config['trial'] = kv['value']
+    elif platform == 'adl':
+        for kv in metadata_config:
+            if kv['key'] == 'adl_config':
+                inverse_config['adlConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
     else:
-        raise RuntimeError('training service platform not found')
+        raise RuntimeError('training service platform {} not found'.format(platform))
     return inverse_config
 
 class Config:

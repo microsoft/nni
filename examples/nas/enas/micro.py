@@ -48,7 +48,7 @@ class Cell(nn.Module):
         ], key=cell_name + "_op")
 
     def forward(self, prev_layers):
-        from nni.retiarii.trainer.pytorch.random import PathSamplingInputChoice
+        from nni.retiarii.oneshot.pytorch.random import PathSamplingInputChoice
         out = self.input_choice(prev_layers)
         if isinstance(self.input_choice, PathSamplingInputChoice):
             # Retiarii pattern

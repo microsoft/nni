@@ -1,0 +1,38 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+trainingServicePlatform: aml
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  image: msranni/nni
+amlConfig:
+  subscriptionId: ${replace_to_your_subscriptionId}
+  resourceGroup: ${replace_to_your_resourceGroup}
+  workspaceName: ${replace_to_your_workspaceName}
+  computeTarget: ${replace_to_your_computeTarget}
+sharedStorage:
+  storageType: AzureBlob
+  localMountPoint: ${your/local/mount/point}
+  remoteMountPoint: ${your/remote/mount/point}
+  storageAccountName: ${replace_to_your_storageAccountName}
+  storageAccountKey: ${replace_to_your_storageAccountKey}
+  # If you did not set storageAccountKey, you need use `az login` with Azure CLI at first and set resourceGroupName.
+  # resourceGroupName: ${replace_to_your_resourceGroupName}
+  containerName: ${replace_to_your_containerName}
+  # usermount means you have already mount this storage on localMountPoint
+  # nnimount means nni will try to mount this storage on localMountPoint
+  # nomount means storage will not mount in local machine, will support partial storages in the future 
+  localMounted: nnimount

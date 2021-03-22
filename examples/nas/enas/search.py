@@ -66,7 +66,7 @@ if __name__ == "__main__":
             trainer.enable_visualization()
         trainer.train()
     else:
-        from nni.retiarii.trainer.pytorch.enas import EnasTrainer
+        from nni.retiarii.oneshot.pytorch.enas import EnasTrainer
         trainer = EnasTrainer(model,
                               loss=criterion,
                               metrics=accuracy,
