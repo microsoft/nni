@@ -107,7 +107,7 @@ class FileExistValidator(ITValidator):
         metrics = requests.get(METRICS_URL).json()
         for metric in metrics:
             trial_id = metric['trialJobId']
-            checkpath = osp.join(rootpath, 'nni\\', exp_id, 'trials\\', trial_id, 'nnioutput\\', 'checkingfile.txt')
+            checkpath = osp.join(rootpath, 'nni', exp_id, 'trials', trial_id, 'nnioutput', 'checkingfile.txt')
             print('Checking shared storage log exists on trial ',trial_id)
             assert osp.exists(checkpath)
 
