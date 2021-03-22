@@ -572,7 +572,8 @@ class Quantizer(Compressor):
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
-    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None, input_shape=None, device=None):
+    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None, \
+        input_shape=None, device=None):
         """
         This method helps save pytorch model, calibration config, onnx model in quantizer.
 
