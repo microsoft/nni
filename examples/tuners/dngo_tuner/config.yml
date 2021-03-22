@@ -1,0 +1,18 @@
+authorName: Ayan Mao
+experimentName: arch2vec_dngo_general_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 100
+trainingServicePlatform: local  # choices: local, remote, pai
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  codeDir: /home/v-ayanmao/tmp/nni/examples/tuners/dngo_tuner
+  classFileName: dngo_tuner.py
+  className: DngoTuner
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example
+trial:
+  codeDir: /nni/examples/trials/mnist-pytorch
+  command: python mnist.py
+  gpuNum: 1
