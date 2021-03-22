@@ -162,30 +162,15 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('tracked_max_biased', torch.zeros(1))
                 layer.module.register_buffer('tracked_max', torch.zeros(1))
 
-    def del_simulated_attr(self, module):
+    def _del_simulated_attr(self, module):
         """
         delete redundant parameters in quantize module
         """
-        if hasattr(module, 'old_weight'):
-            delattr(module, 'old_weight')
-        if hasattr(module, 'ema_decay'):
-            delattr(module, 'ema_decay')
-        if hasattr(module, 'tracked_min_biased'):
-            delattr(module, 'tracked_min_biased')
-        if hasattr(module, 'tracked_max_biased'):
-            delattr(module, 'tracked_max_biased')
-        if hasattr(module, 'tracked_min'):
-            delattr(module, 'tracked_min')
-        if hasattr(module, 'tracked_max'):
-            delattr(module, 'tracked_max')
-        if hasattr(module, 'scale'):
-            delattr(module, 'scale')
-        if hasattr(module, 'zero_point'):
-            delattr(module, 'zero_point')
-        if hasattr(module, 'weight_bit'):
-            delattr(module, 'weight_bit')
-        if hasattr(module, 'activation_bit'):
-            delattr(module, 'activation_bit')
+        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_biased', 'tracked_max_biased', 'tracked_min', \
+        'tracked_max', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        for attr in del_attr_list:
+            if hasattr(module, attr):
+                delattr(module, attr)
 
     def validate_config(self, model, config_list):
         """
@@ -328,6 +313,10 @@ class QAT_Quantizer(Quantizer):
         device : torch.device
             device of the model, used to place the dummy input tensor for exporting onnx file.
             the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
         """
         assert model_path is not None, 'model_path must be specified'
         self._unwrap_model()
@@ -342,21 +331,9 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['activation_bit'] = int(module.activation_bit)
                 calibration_config[name]['tracked_min'] = float(module.tracked_min_biased)
                 calibration_config[name]['tracked_max'] = float(module.tracked_max_biased)
-            self.del_simulated_attr(module)
+            self._del_simulated_attr(module)
 
-        torch.save(self.bound_model.state_dict(), model_path)
-        logger.info('Model state_dict saved to %s', model_path)
-        if calibration_path is not None:
-            torch.save(calibration_config, calibration_path)
-            logger.info('Mask dict saved to %s', calibration_path)
-        if onnx_path is not None:
-            assert input_shape is not None, 'input_shape must be specified to export onnx model'
-            # input info needed
-            if device is None:
-                device = torch.device('cpu')
-            input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
-            logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+        self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path, input_shape, device)
 
         return calibration_config
 
@@ -384,14 +361,14 @@ class DoReFaQuantizer(Quantizer):
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bit', torch.zeros(1))
 
-    def del_simulated_attr(self, module):
+    def _del_simulated_attr(self, module):
         """
         delete redundant parameters in quantize module
         """
-        if hasattr(module, 'old_weight'):
-            delattr(module, 'old_weight')
-        if hasattr(module, 'weight_bit'):
-            delattr(module, 'weight_bit')
+        del_attr_list = ['old_weight', 'weight_bit']
+        for attr in del_attr_list:
+            if hasattr(module, attr):
+                delattr(module, attr)
 
     def validate_config(self, model, config_list):
         """
@@ -447,6 +424,10 @@ class DoReFaQuantizer(Quantizer):
         device : torch.device
             device of the model, used to place the dummy input tensor for exporting onnx file.
             the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
         """
         assert model_path is not None, 'model_path must be specified'
         self._unwrap_model()
@@ -456,21 +437,9 @@ class DoReFaQuantizer(Quantizer):
             if hasattr(module, 'weight_bit'):
                 calibration_config[name] = {}
                 calibration_config[name]['weight_bit'] = int(module.weight_bit)
-            self.del_simulated_attr(module)
+            self._del_simulated_attr(module)
 
-        torch.save(self.bound_model.state_dict(), model_path)
-        logger.info('Model state_dict saved to %s', model_path)
-        if calibration_path is not None:
-            torch.save(calibration_config, calibration_path)
-            logger.info('Mask dict saved to %s', calibration_path)
-        if onnx_path is not None:
-            assert input_shape is not None, 'input_shape must be specified to export onnx model'
-            # input info needed
-            if device is None:
-                device = torch.device('cpu')
-            input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
-            logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+        self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path, input_shape, device)
 
         return calibration_config
 
@@ -492,6 +461,19 @@ class BNNQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
         self.quant_grad = ClipGrad
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            if "weight" in config.get("quant_types", []):
+                layer.module.register_buffer('weight_bit', torch.zeros(1))
+
+    def _del_simulated_attr(self, module):
+        """
+        delete redundant parameters in quantize module
+        """
+        del_attr_list = ['old_weight', 'weight_bit']
+        for attr in del_attr_list:
+            if hasattr(module, attr):
+                delattr(module, attr)
 
     def validate_config(self, model, config_list):
         """
@@ -520,6 +502,7 @@ class BNNQuantizer(Quantizer):
         # remove zeros
         weight[weight == 0] = 1
         wrapper.module.weight = weight
+        wrapper.module.weight_bit = torch.Tensor([1.0])
         return weight
 
     def quantize_output(self, output, wrapper, **kwargs):
@@ -545,19 +528,21 @@ class BNNQuantizer(Quantizer):
         device : torch.device
             device of the model, used to place the dummy input tensor for exporting onnx file.
             the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
         """
         assert model_path is not None, 'model_path must be specified'
         self._unwrap_model()
+        calibration_config = {}
 
-        torch.save(self.bound_model.state_dict(), model_path)
-        logger.info('Model state_dict saved to %s', model_path)
-        if calibration_path is not None:
-            logger.info('No calibration config will be saved because no calibration data in BNN quantizer')
-        if onnx_path is not None:
-            assert input_shape is not None, 'input_shape must be specified to export onnx model'
-            # input info needed
-            if device is None:
-                device = torch.device('cpu')
-            input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
-            logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+        for name, module in self.bound_model.named_modules():
+            if hasattr(module, 'weight_bit'):
+                calibration_config[name] = {}
+                calibration_config[name]['weight_bit'] = int(module.weight_bit)
+            self._del_simulated_attr(module)
+
+        self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path, input_shape, device)
+
+        return calibration_config
