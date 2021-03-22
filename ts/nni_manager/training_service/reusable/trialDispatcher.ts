@@ -82,7 +82,6 @@ class TrialDispatcher implements TrainingService {
     private fileCopyCompleted: boolean = false;
 
     private config: ExperimentConfig;
-    //private initialized: Deferred<void> = new Deferred<void>();
 
     constructor(config: ExperimentConfig) {
         this.log = getLogger();
@@ -134,14 +133,7 @@ class TrialDispatcher implements TrainingService {
             this.commandChannelSet.add(env.getCommandChannel);
         }
 
-        //case TrialConfigMetadataKey.SHARED_STORAGE_CONFIG:
-        //    if (this.useSharedStorage === false) {
-        //        await this.initializeSharedStorage(key, value);
-        //    } else {
-        //        const errorMessage = `Already has set shared storage.`;
-        //        this.log.error(errorMessage);
-        //    }
-        //    break;
+        // FIXME: storage config
     }
 
     public async listTrialJobs(): Promise<TrialDetail[]> {
@@ -302,6 +294,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async getClusterMetadata(_key: string): Promise<string> { return ""; }
 
     public async cleanUp(): Promise<void> {
         if (this.commandEmitter === undefined) {

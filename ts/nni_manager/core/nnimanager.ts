@@ -46,6 +46,7 @@ class NNIManager implements Manager {
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
     private readonly: boolean;
+    private config!: ExperimentConfig;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
 
@@ -401,24 +402,24 @@ class NNIManager implements Manager {
     }
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
+        this.config = config;
         let platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
 
-        //if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
-        if (['remote'].includes(platform)) {
+        if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return new module_.RouterTrainingService(config);
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
-        //} else if (platform === 'kubeflow') {
-        //    const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
-        //    return new module_.KubeflowTrainingService(config);
-        //} else if (platform === 'frameworkcontroller') {
-        //    const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
-        //    return new module_.FrameworkControllerTrainingService(config);
-        //} else if (platform === 'adl') {
-        //    const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
-        //    return new module_.AdlTrainingService(config);
+        } else if (platform === 'kubeflow') {
+            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
+            return new module_.KubeflowTrainingService(config);
+        } else if (platform === 'frameworkcontroller') {
+            const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
+            return new module_.FrameworkControllerTrainingService();
+        } else if (platform === 'adl') {
+            const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
+            return new module_.AdlTrainingService();
         }
 
         throw new Error(`Unsupported training service platform "${platform}"`);
@@ -436,10 +437,7 @@ class NNIManager implements Manager {
             newCwd = cwd;
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
-        //let includeIntermediateResultsEnv: boolean | undefined = false;
-        //if (this.experimentProfile.params.tuner !== undefined) {
-        //    includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
-        //}
+        const includeIntermediateResultsEnv = !!(this.config.deprecated && this.config.deprecated.includeIntermediateResults);
 
         const nniEnv = {
             SDK_PROCESS: 'dispatcher',
@@ -447,7 +445,7 @@ class NNIManager implements Manager {
             NNI_CHECKPOINT_DIRECTORY: dataDirectory,
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
-            //NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
+            NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
             CUDA_VISIBLE_DEVICES: toCudaVisibleDevices(this.experimentProfile.params.tunerGpuIndices)
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
@@ -713,15 +711,16 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        //if (this.experimentProfile.params.multiThread) {
-        //    // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
-        //    // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
-        //    // sequentially.
-        //    for (let i: number = 0; i < jobNum; i++) {
-        //        this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
-        //    }
-        //} else {
-        this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(jobNum));
+        if (this.config.deprecated && this.config.deprecated.multiThread) {
+            // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
+            // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
+            // sequentially.
+            for (let i: number = 0; i < jobNum; i++) {
+                this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, '1');
+            }
+        } else {
+            this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(jobNum));
+        }
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {

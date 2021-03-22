@@ -23,7 +23,7 @@
           "final1": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
           "final2": {"_type": "choice", "_value": ["normal", "inf", "neginf", "nan", "string", "dict-empty", "dict-normal", "dict-nodefault", "dict-defaultdict"]},
           "final_count": {"_type": "choice", "_value": [0, 1, 2]}
-      }",
+      },
       "trainingService": {
          "platform": "local"
       },

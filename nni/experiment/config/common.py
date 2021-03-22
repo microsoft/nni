@@ -55,7 +55,7 @@ class ExperimentConfig(ConfigBase):
     trial_command: str
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
-    trial_gpu_number: Optional[int] = None
+    trial_gpu_number: Optional[int] = None  # TODO: in openpai cannot be None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
@@ -68,6 +68,7 @@ class ExperimentConfig(ConfigBase):
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
+    _deprecated: Optional[str, Any] = None
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
         base_path = kwargs.pop('_base_path', None)

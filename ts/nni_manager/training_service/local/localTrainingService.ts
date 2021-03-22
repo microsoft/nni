@@ -115,7 +115,6 @@ class LocalTrainingService implements TrainingService {
         this.rootDir = getExperimentRootDir();
         if (!fs.existsSync(this.rootDir)) {
             throw new Error('root dir not created');
-            //await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
         }
         this.initialized = true;
     }
@@ -252,9 +251,8 @@ class LocalTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
-        // for backward compatibility
-    }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping local machine training service...');

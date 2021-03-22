@@ -16,6 +16,7 @@ import { MethodNotImplementedError } from '../../common/errors';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
+import { ExperimentConfig } from '../../common/experimentConfig';
 import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
 import { AzureStorageClientUtility } from './azureStorageClientUtils';
 import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
@@ -45,11 +46,11 @@ abstract class KubernetesTrainingService {
     protected azureStorageAccountName?: string;
     protected nniManagerIpConfig?: NNIManagerIpConfig;
     protected readonly genericK8sClient: GeneralK8sClient;
-    protected kubernetesCRDClient?: KubernetesCRDClient;
-    protected kubernetesJobRestServer?: KubernetesJobRestServer;
+    protected kubernetesCRDClient!: KubernetesCRDClient;
+    protected kubernetesJobRestServer!: KubernetesJobRestServer;
     protected kubernetesClusterConfig?: KubernetesClusterConfig;
     protected versionCheck: boolean = true;
-    protected logCollection: string;
+    protected logCollection: string = 'none';
     protected copyExpCodeDirPromise?: Promise<string>;
     protected expContainerCodeFolder: string;
 
@@ -62,7 +63,6 @@ abstract class KubernetesTrainingService {
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.expContainerCodeFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId, 'nni-code');
         this.genericK8sClient = new GeneralK8sClient();
-        this.logCollection = 'none';
     }
 
     public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {

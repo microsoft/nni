@@ -40,18 +40,7 @@ class RouterTrainingService implements TrainingService {
             this.internalTrainingService = new TrialDispatcher(config);
         }
 
-        //if (key === TrialConfigMetadataKey.HYBRID_CONFIG){
-        //    const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
-        //    // Initialize storageService for pai, only support singleton for now, need refactor
-        //    if (heterogenousConfig.trainingServicePlatforms.includes('pai')) {
-        //        Container.bind(StorageService)
-        //            .to(MountedStorageService)
-        //            .scope(Scope.Singleton);
-        //    }
-        //    await this.internalTrainingService.setClusterMetadata('platform_list', 
-        //        heterogenousConfig.trainingServicePlatforms.join(','));
-        //} else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
-        //    await this.internalTrainingService.setClusterMetadata('platform_list', 'aml');
+        // FIXME: storage service
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -108,6 +97,7 @@ class RouterTrainingService implements TrainingService {
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {
         if (this.internalTrainingService === undefined) {

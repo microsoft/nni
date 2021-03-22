@@ -308,6 +308,7 @@ class RemoteMachineTrainingService implements TrainingService {
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async getClusterMetadata(_key: string): Promise<string> { return ""; }
 
     /**
      * cleanup() has a time out of 10s to clean remote connections

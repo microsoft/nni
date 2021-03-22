@@ -190,10 +190,6 @@ class PAITrainingService implements TrainingService {
         return deferred.promise;
     }
 
-    public getClusterMetadata(_key: string): Promise<string> {
-        throw new Error('Not implemented!');
-    }
-
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping PAI training service...');
         this.stopping = true;
@@ -230,13 +226,13 @@ class PAITrainingService implements TrainingService {
 
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            //if (this.config._password) {
-            //    try {
-            //        await this.updatePaiToken();
-            //    } catch (error) {
-            //        this.log.error(`${error}`);
-            //    }
-            //}
+            if (this.config.deprecated && this.config.deprecated.password) {
+                try {
+                    await this.updatePaiToken();
+                } catch (error) {
+                    this.log.error(`${error}`);
+                }
+            }
             await this.paiJobCollector.retrieveTrialStatus(this.protocol, this.paiToken, this.config);
             if (this.paiJobRestServer === undefined) {
                 throw new Error('paiBaseJobRestServer not implemented!');
@@ -251,54 +247,54 @@ class PAITrainingService implements TrainingService {
     /**
      * Update pai token by the interval time or initialize the pai token
      */
-    //protected async updatePaiToken(): Promise<void> {
-    //    const deferred: Deferred<void> = new Deferred<void>();
+    protected async updatePaiToken(): Promise<void> {
+        const deferred: Deferred<void> = new Deferred<void>();
 
-    //    const currentTime: number = new Date().getTime();
-    //    //If pai token initialized and not reach the interval time, do not update
-    //    if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-    //        return Promise.resolve();
-    //    }
+        const currentTime: number = new Date().getTime();
+        //If pai token initialized and not reach the interval time, do not update
+        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
+            return Promise.resolve();
+        }
 
-    //    const authenticationReq: request.Options = {
-    //        uri: `${this.config.host}/rest-server/api/v1/token`,
-    //        method: 'POST',
-    //        json: true,
-    //        body: {
-    //            username: this.config.username,
-    //            password: this.config._password
-    //        }
-    //    };
+        const authenticationReq: request.Options = {
+            uri: `${this.config.host}/rest-server/api/v1/token`,
+            method: 'POST',
+            json: true,
+            body: {
+                username: this.config.username,
+                password: this.config.deprecated.password
+            }
+        };
 
-    //    request(authenticationReq, (error: Error, response: request.Response, body: any) => {
-    //        if (error !== undefined && error !== null) {
-    //            this.log.error(`Get PAI token failed: ${error.message}`);
-    //            deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-    //        } else {
-    //            if (response.statusCode !== 200) {
-    //                this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-    //                deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
-    //            }
-    //            this.paiToken = body.token;
-    //            this.paiTokenUpdateTime = new Date().getTime();
-    //            deferred.resolve();
-    //        }
-    //    });
+        request(authenticationReq, (error: Error, response: request.Response, body: any) => {
+            if (error !== undefined && error !== null) {
+                this.log.error(`Get PAI token failed: ${error.message}`);
+                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
+            } else {
+                if (response.statusCode !== 200) {
+                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
+                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
+                }
+                this.paiToken = body.token;
+                this.paiTokenUpdateTime = new Date().getTime();
+                deferred.resolve();
+            }
+        });
 
-    //    let timeoutId: NodeJS.Timer;
-    //    const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
-    //        // Set timeout and reject the promise once reach timeout (5 seconds)
-    //        timeoutId = setTimeout(
-    //            () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-    //            5000);
-    //    });
+        let timeoutId: NodeJS.Timer;
+        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
+            // Set timeout and reject the promise once reach timeout (5 seconds)
+            timeoutId = setTimeout(
+                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
+                5000);
+        });
 
-    //    return Promise.race([timeoutDelay, deferred.promise])
-    //        .finally(() => { clearTimeout(timeoutId); });
-    //}
-
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
+        return Promise.race([timeoutDelay, deferred.promise])
+            .finally(() => { clearTimeout(timeoutId); });
     }
+
+    public async setClusterMetadata(key: string, value: string): Promise<void> { }
+    public async getClusterMetadata(key: string): Promise<string> { return ""; }
 
     // update trial parameters for multi-phase
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
@@ -417,11 +413,11 @@ class PAITrainingService implements TrainingService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            //if (this.config._virtualCluster) {
-            //    nniJobConfig.defaults = {
-            //        virtualCluster: this.config._virtualCluster
-            //    }
-            //}
+            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+                nniJobConfig.defaults = {
+                    virtualCluster: this.config.deprecated.virtualCluster
+                }
+            }
         }
         return yaml.safeDump(nniJobConfig);
     }

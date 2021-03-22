@@ -12,8 +12,8 @@ export class EnvironmentServiceFactory {
                 return new LocalEnvironmentService(config);
             case 'remote':
                 return new RemoteEnvironmentService(config);
-            //case 'aml':
-            //    return new AMLEnvironmentService();
+            case 'aml':
+                return new AMLEnvironmentService();
             case 'openpai':
                 return new OpenPaiEnvironmentService(config);
             default:

@@ -41,6 +41,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
 
+        // FIXME
         //const storageService = component.get<StorageService>(StorageService);
         //const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
         //storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
@@ -305,11 +306,11 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            //if (this.config._virtualCluster) {
-            //    nniJobConfig.defaults = {
-            //        virtualCluster: this.config._virtualCluster
-            //    }
-            //}
+            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+                nniJobConfig.defaults = {
+                    virtualCluster: this.config.deprecated.virtualCluster
+                }
+            }
         }
         return yaml.safeDump(nniJobConfig);
     }

@@ -331,8 +331,8 @@ async function getVersion(): Promise<string> {
     const deferred: Deferred<string> = new Deferred<string>();
     import(path.join(__dirname, '..', 'package.json')).then((pkg) => {
         deferred.resolve(pkg.version);
-    }).catch((error) => {
-        deferred.reject(error);
+    }).catch(() => {
+        deferred.resolve('999.0.0-developing');
     });
     return deferred.promise;
 }

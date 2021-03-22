@@ -69,6 +69,7 @@ export interface AmlConfig extends TrainingServiceConfig {
 
 /* Kubeflow */
 
+// FIXME: use storage config instead
 export interface KubeflowStorageConfig {
     storage: string;
     server?: string;
@@ -139,7 +140,7 @@ export interface ExperimentConfig {
     maxExperimentDuration?: string;
     maxTrialNumber?: number;
     nniManagerIp?: string;
-    //useAnnotation: boolean;
+    //useAnnotation: boolean;  // dealed inside nnictl
     debug: boolean;
     logLevel?: string;
     experimentWorkingDirectory?: string;
@@ -148,6 +149,7 @@ export interface ExperimentConfig {
     assessor?: AlgorithmConfig;
     advisor?: AlgorithmConfig;
     trainingService: TrainingServiceConfig | TrainingServiceConfig[];
+    deprecated?: any;  // configs that are not yet natively supported by v2, dirty workaround
 }
 
 /* util functions */

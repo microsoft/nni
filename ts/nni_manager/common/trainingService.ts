@@ -83,6 +83,7 @@ abstract class TrainingService {
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
+    public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract cleanUp(): Promise<void>;
     public abstract run(): Promise<void>;
 }

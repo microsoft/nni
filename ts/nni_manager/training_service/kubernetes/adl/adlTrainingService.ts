@@ -356,5 +356,9 @@ python3 -m nni.tools.trial_tool.trial_keeper --trial_command '{8}' \
 
         return Promise.resolve(result);
     }
+
+    public async updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+        throw new Error('Not supported');
+    }
 }
 export { AdlTrainingService };

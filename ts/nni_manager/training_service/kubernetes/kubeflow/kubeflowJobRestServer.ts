@@ -16,7 +16,7 @@ export class KubeflowJobRestServer extends KubernetesJobRestServer {
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
-    constructor() {
-        super(component.get(KubeflowTrainingService));
+    constructor(kubeflowTrainingService: KubeflowTrainingService) {
+        super(kubeflowTrainingService);
     }
 }
