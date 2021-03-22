@@ -33,6 +33,7 @@ class DngoTuner(Tuner):
         self.random_state = None
         self.model = DNGO(do_mcmc=False)
         self.first_flag = True
+        self.first_flag2 = True
         self.x = []
         self.y = []
 
@@ -64,10 +65,14 @@ class DngoTuner(Tuner):
             self.x.append(list(first_x2.values()))
             return first_x2
         
+        print("!!!!!! x !!!!!!!!!")
+        print(self.x)
+        print("!!!!!! y !!!!!!!!!")
+        print(self.y)
         self.model.train(np.array(self.x), np.array(self.y), do_optimize=True)
         # random samples
         candidate_x = []
-        for i in range(1000):
+        for _ in range(1000):
             a = random_archi_generator(self.searchspace_json, self.random_state)
             candidate_x.append(a)
         
@@ -84,6 +89,8 @@ class DngoTuner(Tuner):
         
         indices = torch.argsort(ei)
         rev_indices = reversed(indices)
+        # index = next(rev_indices).item()
+        # print(index)
         new_x = candidate_x[0]
         self.x.append(list(new_x.values()))
 

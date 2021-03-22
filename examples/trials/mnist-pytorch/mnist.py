@@ -53,7 +53,7 @@ def train(args, model, device, train_loader, optimizer, epoch):
             logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
-
+        break
 
 def test(args, model, device, test_loader):
     model.eval()
@@ -118,6 +118,7 @@ def main(args):
         nni.report_intermediate_result(test_acc)
         logger.debug('test accuracy %g', test_acc)
         logger.debug('Pipe send intermediate result done.')
+        break
 
     # report final result
     nni.report_final_result(test_acc)
