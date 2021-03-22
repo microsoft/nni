@@ -34,14 +34,9 @@ testCases:
   # check status of experiment before calling validator
   experimentStatusCheck: True
 
-- name: shared-storage
-  configFile: test/config/examples/config_sharedstorage_azureblob.yml
+- name: shared-storage-remote-azureblob
+  configFile: test/config/examples/config_sharedstorage_remote_azureblob.yml
   config:
-    amlConfig:
-      subscriptionId: ${replace_to_your_subscriptionId}
-      resourceGroup: ${replace_to_your_resourceGroup}
-      workspaceName: ${replace_to_your_workspaceName}
-      computeTarget: ${replace_to_your_computeTarget}
     sharedStorage:
       localMountPoint: /tmp/nnimount/testlocalrootpath
       remoteMountPoint: /tmp/nnimount/testremoterootpath
@@ -52,6 +47,19 @@ testCases:
     class: FileExistValidator
     kwargs:
       rootpath: /tmp/nnimount/testlocalrootpath
+      
+#- name: shared-storage-remote-nfs
+#  configFile: test/config/examples/config_sharedstorage_remote_nfs.yml
+#  config:
+#    sharedStorage:
+#      localMountPoint: /tmp/nnimount/testlocalrootpath
+#      remoteMountPoint: /tmp/nnimount/testremoterootpath
+#      nfsServer: ${NFS_IP}
+#      exportedDirectory: /mntnni/nfs_share
+#  validator:
+#    class: FileExistValidator
+#    kwargs:
+#      rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
