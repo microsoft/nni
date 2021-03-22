@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import time
+from typing import Iterable
 
 from ..graph import Model, ModelStatus
 from .interface import AbstractExecutionEngine
@@ -41,6 +42,12 @@ def submit_models(*models: Model) -> None:
     engine = get_execution_engine()
     get_and_register_default_listener(engine)
     engine.submit_models(*models)
+
+
+def list_models(*models: Model) -> Iterable[Model]:
+    engine = get_execution_engine()
+    get_and_register_default_listener(engine)
+    return engine.list_models()
 
 
 def wait_models(*models: Model) -> None:

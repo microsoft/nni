@@ -53,3 +53,4 @@ if __name__ == '__main__':
     exp_config.training_service.use_active_gpu = False
 
     exp.run(exp_config, 8081 + random.randint(0, 100))
+    print('Final model\n', exp.export_top_models())
