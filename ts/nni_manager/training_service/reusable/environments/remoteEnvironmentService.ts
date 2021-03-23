@@ -20,7 +20,6 @@ import {
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
-import { SharedStorageService } from '../sharedStorage'
 
 
 @component.Singleton
@@ -129,7 +128,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.log.debug(`initializing ${executor.name}`);
 
         // Create root working directory after executor is ready
-        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni-experiments');
+        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni');
         await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
 
         // the directory to store temp scripts in remote machine
@@ -248,20 +247,13 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
-            if (environment.useSharedStorage) {
-                const environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                environment.runnerWorkingFolder = executor.joinPath(environmentRoot, 'envs', environment.id)
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
-                await executor.executeScript(remoteMountCommand, false, false);
-            } else {
-                environment.runnerWorkingFolder = 
-                    executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
-                    'envs', environment.id)
-            }
-            environment.command = `cd ${environment.runnerWorkingFolder} && \
-                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+            environment.runnerWorkingFolder = 
+                executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
+                'envs', environment.id)
+            environment.command = `cd ${executor.getRemoteExperimentRootDir(getExperimentId())} && \
+${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
             return Promise.resolve(true);
         }
     }
@@ -272,13 +264,13 @@ export class RemoteEnvironmentService extends EnvironmentService {
         }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, "environment-temp")
+            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
         environment.command, { encoding: 'utf8' });
         // Copy files in codeDir to remote working directory
-        await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
+        await executor.copyDirectoryToRemote(environmentLocalTempFolder, executor.getRemoteExperimentRootDir(getExperimentId()));
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
             executor.getScriptName("run")), true, true);
@@ -297,10 +289,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
-        if (environment.isAlive === false) {
-            return Promise.resolve();
-        }
-
         const executor = await this.getExecutor(environment.id);
 
         if (environment.status === 'UNKNOWN') {
