@@ -78,9 +78,7 @@ pai:
     nniManagerNFSMountPath: 
     containerNFSMountPath: 
     paiStorageConfigName: 
-remote:
-  remoteConfig:
-    reuse: false
+remote:  
   machineList:
   - ip:
     passwd:
