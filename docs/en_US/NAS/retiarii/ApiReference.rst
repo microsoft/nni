@@ -39,8 +39,8 @@ Graph Mutation APIs
 ..  autoclass:: nni.retiarii.Operation
     :members:
 
-Trainers
---------
+Evaluators
+----------
 
 ..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
     :members:

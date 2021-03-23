@@ -29,7 +29,10 @@ def canonical_path(path: Optional[PathLike]) -> Optional[str]:
 def count(*values) -> int:
     return sum(value is not None and value is not False for value in values)
 
-def training_service_config_factory(platform: Union[str, List[str]] = None, config: Union[List, Dict] = None): # -> TrainingServiceConfig
+def training_service_config_factory(
+        platform: Union[str, List[str]] = None,
+        config: Union[List, Dict] = None,
+        base_path: Optional[Path] = None): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
     ts_configs = []
     if platform is not None:
@@ -47,7 +50,7 @@ def training_service_config_factory(platform: Union[str, List[str]] = None, conf
         for conf in configs:
             if conf['platform'] not in supported_platforms:
                 raise RuntimeError(f'Unrecognized platform {conf["platform"]}')
-            ts_configs.append(supported_platforms[conf['platform']](**conf))
+            ts_configs.append(supported_platforms[conf['platform']](_base_path=base_path, **conf))
     return ts_configs if len(ts_configs) > 1 else ts_configs[0]
 
 def load_config(Type, value):

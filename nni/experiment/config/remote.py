@@ -23,7 +23,7 @@ class RemoteMachineConfig(ConfigBase):
     use_active_gpu: bool = False
     max_trial_number_per_gpu: int = 1
     gpu_indices: Optional[Union[List[int], str]] = None
-    trial_prepare_command: Optional[str] = None
+    python_path: Optional[str] = None
 
     _canonical_rules = {
         'ssh_key_file': util.canonical_path,

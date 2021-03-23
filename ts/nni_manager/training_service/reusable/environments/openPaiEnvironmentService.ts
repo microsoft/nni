@@ -182,7 +182,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         let environmentRoot: string;
         if (environment.useSharedStorage) {
             environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand} && cd ${environmentRoot} && ${environment.command}`;
+            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `)} && cd ${environmentRoot} && ${environment.command}`;
         } else {
             environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
             environment.command = `cd ${environmentRoot} && ${environment.command}`;

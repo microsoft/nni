@@ -1,11 +1,15 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import abc
 import functools
 import inspect
+import types
 from typing import Any
 
 import json_tricks
 
-from .utils import get_full_class_name, get_module_name, import_
+from .utils import get_importable_name, get_module_name, import_
 
 
 def get_init_parameters_or_fail(obj, silently=False):
@@ -29,7 +33,7 @@ def _serialize_class_instance_encode(obj, primitives=False):
     try:  # FIXME: raise error
         if hasattr(obj, '__class__'):
             return {
-                '__type__': get_full_class_name(obj.__class__),
+                '__type__': get_importable_name(obj.__class__),
                 'arguments': get_init_parameters_or_fail(obj)
             }
     except ValueError:
@@ -46,7 +50,11 @@ def _serialize_class_instance_decode(obj):
 def _type_encode(obj, primitives=False):
     assert not primitives, 'Encoding with primitives is not supported.'
     if isinstance(obj, type):
-        return {'__typename__': get_full_class_name(obj, relocate_module=True)}
+        return {'__typename__': get_importable_name(obj, relocate_module=True)}
+    if isinstance(obj, (types.FunctionType, types.BuiltinFunctionType)):
+        # This is not reliable for cases like closure, `open`, or objects that is callable but not intended to be serialized.
+        # https://stackoverflow.com/questions/624926/how-do-i-detect-whether-a-python-variable-is-a-function
+        return {'__typename__': get_importable_name(obj, relocate_module=True)}
     return obj
 
 

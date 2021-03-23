@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import collections
 import dataclasses
 import logging
@@ -122,7 +125,7 @@ class RegularizedEvolution(BaseStrategy):
                 break
 
     def _submit_config(self, config, base_model, mutators):
-        _logger.info('Model submitted to running queue: %s', config)
+        _logger.debug('Model submitted to running queue: %s', config)
         model = get_targeted_model(base_model, mutators, config)
         submit_models(model)
         self._running_models.append((config, model))
@@ -138,7 +141,7 @@ class RegularizedEvolution(BaseStrategy):
                 metric = model.metric
             if metric is not None:
                 individual = Individual(config, metric)
-                _logger.info('Individual created: %s', str(individual))
+                _logger.debug('Individual created: %s', str(individual))
                 self._population.append(individual)
                 if len(self._population) > self.population_size:
                     self._population.popleft()
