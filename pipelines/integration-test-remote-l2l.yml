@@ -96,7 +96,7 @@ jobs:
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
     displayName: Integration test
 
-- script: |
+  - script: |
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts remote \
