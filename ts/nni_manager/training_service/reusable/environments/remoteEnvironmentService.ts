@@ -20,6 +20,7 @@ import {
 } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
+import { SharedStorageService } from '../sharedStorage'
 
 
 @component.Singleton
@@ -33,6 +34,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly log: Logger;
     private sshConnectionPromises: any[];
     private experimentRootDir: string;
+    private remoteExperimentRootDir: string = "";
     private experimentId: string;
 
     constructor() {
@@ -128,7 +130,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.log.debug(`initializing ${executor.name}`);
 
         // Create root working directory after executor is ready
-        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni');
+        const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni-experiments');
         await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
 
         // the directory to store temp scripts in remote machine
@@ -247,13 +249,18 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
-            environment.runnerWorkingFolder = 
-                executor.joinPath(executor.getRemoteExperimentRootDir(getExperimentId()), 
-                'envs', environment.id)
-            environment.command = `cd ${executor.getRemoteExperimentRootDir(getExperimentId())} && \
-${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-&& echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+            if (environment.useSharedStorage) {
+                this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
+                await executor.executeScript(remoteMountCommand, false, false);
+            } else {
+                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
+            }
+            environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
+            environment.command = `cd ${this.remoteExperimentRootDir} && \
+                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
             return Promise.resolve(true);
         }
     }
@@ -264,13 +271,13 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
         }
         const executor = await this.getExecutor(environment.id);
         const environmentLocalTempFolder: string =  
-            path.join(this.experimentRootDir, this.experimentId, "environment-temp")
+            path.join(this.experimentRootDir, "environment-temp")
         await executor.createFolder(environment.runnerWorkingFolder);
         await execMkdir(environmentLocalTempFolder);
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
         environment.command, { encoding: 'utf8' });
         // Copy files in codeDir to remote working directory
-        await executor.copyDirectoryToRemote(environmentLocalTempFolder, executor.getRemoteExperimentRootDir(getExperimentId()));
+        await executor.copyDirectoryToRemote(environmentLocalTempFolder, this.remoteExperimentRootDir);
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
             executor.getScriptName("run")), true, true);
@@ -289,6 +296,10 @@ ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (environment.isAlive === false) {
+            return Promise.resolve();
+        }
+
         const executor = await this.getExecutor(environment.id);
 
         if (environment.status === 'UNKNOWN') {
