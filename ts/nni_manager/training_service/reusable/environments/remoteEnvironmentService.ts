@@ -257,20 +257,19 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
-            let remoteWorkingRoot: string;
+            let remoteWorkingRootDir: string;
             if (environment.useSharedStorage) {
-                remoteWorkingRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRoot, 'envs', environment.id);
+                remoteWorkingRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
                 const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
                 const result = await executor.executeScript(remoteMountCommand, false, false);
                 if (result.exitCode !== 0) {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
                 }
             } else {
-                remoteWorkingRoot = executor.getRemoteExperimentRootDir(getExperimentId());
-                environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRoot, 'envs', environment.id);
+                remoteWorkingRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
             }
-            environment.command = `cd ${remoteWorkingRoot} && \
+            environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRootDir, 'envs', environment.id);
+            environment.command = `cd ${remoteWorkingRootDir} && \
                 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
                 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
                 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;

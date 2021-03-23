@@ -350,7 +350,7 @@ class TrialDispatcher implements TrainingService {
         }
         if (this.useSharedStorage) {
             this.log.info(`stopping shared storage...`)
-            component.get<SharedStorageService>(SharedStorageService).cleanUp();
+            await component.get<SharedStorageService>(SharedStorageService).cleanUp();
             this.log.info(`shared storage stopped.`)
         }
     }

@@ -227,7 +227,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
                 throw new Error(result.stderr);
             }
         } catch (error) {
-            const errorMessage: string = `${this.storageType} Shared Storage: get account key failed, error is ${error}`;
+            const errorMessage: string = `${this.storageType} Shared Storage: Umount ${this.localMountPoint}  failed, error is ${error}`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
