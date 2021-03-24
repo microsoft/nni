@@ -41,7 +41,7 @@ testCases:
       localMountPoint: /tmp/nnimount/testlocalrootpath
       remoteMountPoint: /tmp/nnimount/testremoterootpath
       storageAccountName: nennistorage
-      storageAccountKey: ${azureblob_token_test}
+      storageAccountKey: $(azureblob_token_test)
       containerName: nni
   validator:
     class: FileExistValidator
@@ -54,7 +54,7 @@ testCases:
 #    sharedStorage:
 #      localMountPoint: /tmp/nnimount/testlocalrootpath
 #      remoteMountPoint: /tmp/nnimount/testremoterootpath
-#      nfsServer: ${NFS_IP}
+#      nfsServer: $(NFS_IP)
 #      exportedDirectory: /mntnni/nfs_share
 #  validator:
 #    class: FileExistValidator
