@@ -40,7 +40,7 @@ testCases:
     sharedStorage:
       localMountPoint: /tmp/nnimount/testlocalrootpath
       remoteMountPoint: /tmp/nnimount/testremoterootpath
-      storageAccountName: jsblobtest
+      storageAccountName: nniazurestorage
       storageAccountKey: ${azureblob_token}
       containerName: nni
   validator:
