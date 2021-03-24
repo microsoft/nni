@@ -87,6 +87,8 @@ remote:
     port:
     username:
   trainingServicePlatform: remote
+  sharedStorage:
+    storageAccountKey:
 adl:
   maxExecDuration: 15m
   nniManagerIp:
