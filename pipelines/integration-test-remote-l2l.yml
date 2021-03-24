@@ -105,7 +105,7 @@ jobs:
           --remote_host $(worker_ip) \
           --remote_port $(docker_port) \
           --remote_pwd $(password_in_docker) \
-          --nni_manager_ip $(manager_ip)
+          --nni_manager_ip $(manager_ip) \
           --azurestoragetoken $(azureblob_token_test)
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
     displayName: Integration test (reuse mode)
