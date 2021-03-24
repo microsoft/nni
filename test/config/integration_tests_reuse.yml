@@ -42,7 +42,7 @@ testCases:
       remoteMountPoint: /tmp/nnimount/testremoterootpath
       storageAccountName: nennistorage
       storageAccountKey: $(azureblob_token_test)
-      containerName: nni
+      containerName: sharedstorage
   validator:
     class: FileExistValidator
     kwargs:
