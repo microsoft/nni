@@ -13,6 +13,8 @@ def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
     if args.nni_manager_ip is not None:
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
+    if args.azurestoragetoken is not None:
+        config[args.ts]['sharedStorage']['storageAccountKey'] = args.azurestoragetoken
     if args.ts == 'pai':
         if args.pai_user is not None:
             config[args.ts]['paiConfig']['userName'] = args.pai_user
@@ -97,6 +99,7 @@ if __name__ == '__main__':
     parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
+    parser.add_argument("--azurestoragetoken", type=str)
     # args for PAI
     parser.add_argument("--pai_user", type=str)
     parser.add_argument("--pai_pwd", type=str)
