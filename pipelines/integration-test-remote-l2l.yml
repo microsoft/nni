@@ -83,18 +83,18 @@ jobs:
       commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
     displayName: Install NNI and run docker on Linux worker
 
-  - script: |
-      cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
-          --ts remote \
-          --remote_reuse false \
-          --remote_user nni \
-          --remote_host $(worker_ip) \
-          --remote_port $(docker_port) \
-          --remote_pwd $(password_in_docker) \
-          --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
-    displayName: Integration test
+#  - script: |
+#      cd test
+#      python3 nni_test/nnitest/generate_ts_config.py \
+#          --ts remote \
+#          --remote_reuse false \
+#          --remote_user nni \
+#          --remote_host $(worker_ip) \
+#          --remote_port $(docker_port) \
+#          --remote_pwd $(password_in_docker) \
+#          --nni_manager_ip $(manager_ip)
+#      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+#    displayName: Integration test
 
   - script: |
       cd test
