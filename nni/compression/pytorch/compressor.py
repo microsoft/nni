@@ -21,7 +21,6 @@ def _setattr(model, name, module):
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
 
-
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -572,6 +571,67 @@ class Quantizer(Compressor):
                 assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+
+    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None, \
+        input_shape=None, device=None):
+        """
+        This method helps save pytorch model, calibration config, onnx model in quantizer.
+
+        Parameters
+        ----------
+        model : pytorch model
+            pytorch model to be saved
+        model_path : str
+            path to save pytorch
+        calibration_config: dict
+            (optional) config of calibration parameters
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
+        """
+        torch.save(model.state_dict(), model_path)
+        _logger.info('Model state_dict saved to %s', model_path)
+        if calibration_path is not None:
+            torch.save(calibration_config, calibration_path)
+            _logger.info('Mask dict saved to %s', calibration_path)
+        if onnx_path is not None:
+            assert input_shape is not None, 'input_shape must be specified to export onnx model'
+            # input info needed
+            if device is None:
+                device = torch.device('cpu')
+            input_data = torch.Tensor(*input_shape)
+            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
+            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+
+    def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
+        """
+        Export quantized model weights and calibration parameters
+
+        Parameters
+        ----------
+        model_path : str
+            path to save quantized model weight
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
+        """
+        raise NotImplementedError('Quantizer must overload export_model()')
 
     def step_with_optimizer(self):
         pass

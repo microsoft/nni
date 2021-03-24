@@ -274,6 +274,55 @@ class CompressorTestCase(TestCase):
         assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)
         assert math.isclose(model.relu.module.tracked_max_biased, 0.00998, abs_tol=eps)
 
+    def test_torch_quantizer_export(self):
+        config_list_qat = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types': ['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 8,
+            'quant_start_step': 0,
+            'op_types': ['ReLU']
+        }]
+        config_list_dorefa = [{
+            'quant_types': ['weight'],
+            'quant_bits': {
+                'weight': 8,
+            }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+            'op_types':['Conv2d', 'Linear']
+        }]
+        config_list_bnn = [{
+            'quant_types': ['weight'],
+            'quant_bits': 1,
+            'op_types': ['Conv2d', 'Linear']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': 1,
+            'op_types': ['ReLU']
+        }]
+        config_set = [config_list_qat, config_list_dorefa, config_list_bnn]
+        quantize_algorithm_set = [torch_quantizer.QAT_Quantizer, torch_quantizer.DoReFaQuantizer, torch_quantizer.BNNQuantizer]
+
+        for config, quantize_algorithm in zip(config_set, quantize_algorithm_set):
+            model = TorchModel()
+            model.relu = torch.nn.ReLU()
+            quantizer = quantize_algorithm(model, config)
+            quantizer.compress()
+
+            x = torch.rand((1, 1, 28, 28), requires_grad=True)
+            y = model(x)
+            y.backward(torch.ones_like(y))
+
+            model_path = "test_model.pth"
+            calibration_path = "test_calibration.pth"
+            onnx_path = "test_model.onnx"
+            input_shape = (1, 1, 28, 28)
+            device = torch.device("cpu")
+
+            calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
+            assert calibration_config is not None
+
     def test_torch_pruner_validation(self):
         # test bad configuraiton
         pruner_classes = [torch_pruner.__dict__[x] for x in \
