@@ -1,64 +1,87 @@
+$pageMargin: 24px;
+
 .expBackground {
-	background: #f2f2f2;
-	height: 100%;
-	.content {
-		background: #fff;
-	}
+    background: #f2f2f2;
+    height: 100%;
+
+    .content {
+        /* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
+        margin-top: 32px;
+        margin-bottom: $pageMargin;
+        background: #fff;
+    }
 }
 
 .experimentList {
-	padding: 42px;
+    padding: $pageMargin 42px;
 
-	.box {
-		.search {
-			width: 90%;
-			&-input {
-				width: 330px;
-			}
-		}
+    .ms-DetailsRow {
+        &:hover,
+        &:focus {
+            background: #f3f2f1 !important;
+        }
+    }
 
-		.filter {
-			width: 10%;
-			text-align: right;
+    .box {
+        margin-top: 20px;
 
-			&-button-open {
-				background: #f3f2f1;
-			}
-		}
-	}
+        .search {
+            width: 90%;
 
-	.filter-condition {
-		margin-top: 26px;
-		.reset {
-			width: 80px;
-			position: relative;
-			top: 29px;
-		}
+            &-input {
+                width: 330px;
+            }
+        }
 
-		&-status {
-			width: 194px;
-		}
-		&-platform {
-			width: 150px;
-		}
-	}
+        .filter {
+            width: 10%;
+            text-align: right;
 
-	.hidden {
-		display: none;
-	}
+            &-button-open {
+                background: #f3f2f1;
+            }
+        }
+    }
 
-	.margin {
-		margin-left: 10px;
-	}
+    .filter-condition {
+        margin-top: 26px;
 
-	.tagContainer {
-		width: 100%;
+        .reset {
+            width: 80px;
+            position: relative;
+            top: 29px;
+        }
 
-		.tag {
-			font-weight: 500;
-			background: #f2f2f2;
-			margin: 0 4px;
-			padding: 0 6px;
-		}
-	}
+        &-status {
+            width: 194px;
+        }
+
+        &-platform {
+            width: 150px;
+        }
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .margin {
+        margin-left: 10px;
+    }
+
+    .idColor {
+        color: #615f5d !important;
+    }
+
+    .toAnotherExp {
+        color: #0071bc !important;
+    }
+
+    .ms-DetailsRow:focus {
+        background: #e1dfdd;
+    }
+}
+
+.gray-port {
+    color: #bebebe;
 }

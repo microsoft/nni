@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from dataclasses import dataclass
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Dict, Optional
 
 from .base import PathLike
@@ -17,6 +17,9 @@ class OpenpaiConfig(TrainingServiceConfig):
     host: str
     username: str
     token: str
+    trial_cpu_number: int
+    trial_memory_size: str
+    storage_config_name: str
     docker_image: str = 'msranni/nni:latest'
     local_storage_mount_point: PathLike
     container_storage_mount_point: str
@@ -34,7 +37,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     _validation_rules = {
         'platform': lambda value: (value == 'openpai', 'cannot be modified'),
         'local_storage_mount_point': lambda value: Path(value).is_dir(),
-        'container_storage_mount_point': lambda value: (Path(value).is_absolute(), 'is not absolute'),
+        'container_storage_mount_point': lambda value: (PurePosixPath(value).is_absolute(), 'is not absolute'),
         'openpai_config_file': lambda value: Path(value).is_file()
     }
 

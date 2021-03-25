@@ -59,22 +59,6 @@ frameworkcontroller:
 
 local:
   trainingServicePlatform: local
-paiYarn:
-  nniManagerIp:
-  maxExecDuration: 15m
-  paiYarnConfig:
-    host:
-    passWord:
-    userName:
-  trainingServicePlatform: paiYarn
-  trial:
-    gpuNum: 1
-    cpuNum: 1
-    dataDir:
-    image:
-    memoryMB: 8192
-    outputDir:
-    virtualCluster:
 pai:
   nniManagerIp:
   maxExecDuration: 15m

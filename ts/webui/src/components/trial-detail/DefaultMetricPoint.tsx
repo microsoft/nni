@@ -24,7 +24,9 @@ const EmptyGraph = {
 
 interface DefaultPointProps {
     trialIds: string[];
-    visible: boolean;
+    chartHeight: number;
+    hasBestCurve: boolean;
+    changeExpandRowIDs: Function;
 }
 
 interface DefaultPointState {
@@ -47,10 +49,6 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         this.setState({ bestCurveEnabled: checked });
     };
 
-    shouldComponentUpdate(nextProps: DefaultPointProps): boolean {
-        return nextProps.visible;
-    }
-
     metricDataZoom = (e: EventMap): void => {
         if (e.batch !== undefined) {
             this.setState(() => ({
@@ -60,19 +58,25 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
         }
     };
 
-    generateGraphConfig(maxSequenceId: number): any {
+    pointClick = (params: any): void => {
+        // [hasBestCurve: true]: is detail page, otherwise, is overview page
+        const { hasBestCurve } = this.props;
+        if (!hasBestCurve) {
+            this.props.changeExpandRowIDs(params.data[2], 'chart');
+        }
+    };
+
+    generateGraphConfig(_maxSequenceId: number): any {
         const { startY, endY } = this.state;
+        const { hasBestCurve } = this.props;
         return {
             grid: {
                 left: '8%'
             },
             tooltip: {
                 trigger: 'item',
-                enterable: true,
-                position: (point: number[], data: TooltipForAccuracy): number[] => [
-                    data.data[0] < maxSequenceId ? point[0] : point[0] - 300,
-                    80
-                ],
+                enterable: hasBestCurve,
+                confine: true, // confirm always show tooltip box rather than hidden by background
                 formatter: (data: TooltipForAccuracy): React.ReactNode => {
                     return (
                         '<div class="tooldetailAccuracy">' +
@@ -149,24 +153,27 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
     }
 
     render(): React.ReactNode {
+        const { hasBestCurve, chartHeight } = this.props;
         const graph = this.generateGraph();
         const accNodata = graph === EmptyGraph ? 'No data' : '';
-        const onEvents = { dataZoom: this.metricDataZoom };
+        const onEvents = { dataZoom: this.metricDataZoom, click: this.pointClick };
 
         return (
             <div>
-                <Stack horizontalAlign='end' className='default-metric'>
-                    <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
-                </Stack>
+                {hasBestCurve && (
+                    <Stack horizontalAlign='end' className='default-metric'>
+                        <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
+                    </Stack>
+                )}
                 <div className='default-metric-graph'>
                     <ReactEcharts
                         option={graph}
                         style={{
                             width: '100%',
-                            height: 402,
+                            height: chartHeight,
                             margin: '0 auto'
                         }}
-                        theme='my_theme'
+                        theme='nni_theme'
                         notMerge={true} // update now
                         onEvents={onEvents}
                     />

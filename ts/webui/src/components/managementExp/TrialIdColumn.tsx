@@ -1,4 +1,6 @@
 import * as React from 'react';
+import { Stack } from '@fluentui/react';
+import CopyButton from '../public-child/CopyButton';
 
 interface TrialIdColumnProps {
     port: number;
@@ -17,15 +19,21 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
         const protocol = window.location.protocol;
         const webuiPortal = `${protocol}//${hostname}:${port}/oview`;
         return (
-            <div className='succeed-padding ellipsis'>
+            <Stack horizontal className='ellipsis idCopy'>
                 {status === 'STOPPED' ? (
-                    <div>{id}</div>
+                    <div className='idColor'>{id}</div>
                 ) : (
-                    <a href={webuiPortal} className='link' target='_blank' rel='noopener noreferrer'>
+                    <a
+                        href={webuiPortal}
+                        className='link toAnotherExp idColor'
+                        target='_blank'
+                        rel='noopener noreferrer'
+                    >
                         {id}
                     </a>
                 )}
-            </div>
+                <CopyButton value={id} />
+            </Stack>
         );
     }
 }

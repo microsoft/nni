@@ -9,12 +9,11 @@ from typing import Optional, Tuple
 
 import colorama
 
+import nni_node  # pylint: disable=import-error
 import nni.runtime.protocol
-import nni_node
 
 from .config import ExperimentConfig
 from .config import convert
-from . import management
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments
@@ -22,18 +21,48 @@ from ..tools.nnictl.config_utils import Experiments
 _logger = logging.getLogger('nni.experiment')
 
 
-def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[Popen, Pipe]:
+def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
+    proc = None
+
+    config.validate(initialized_tuner=False)
+    _ensure_port_idle(port)
+    if isinstance(config.training_service, list): # hybrid training service
+        _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
+    elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
+        _ensure_port_idle(port + 1, f'{config.training_service.platform} requires an additional port')
+
+    try:
+        _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
+        start_time, proc = _start_rest_server(config, port, debug, exp_id)
+        _logger.info('Statring web server...')
+        _check_rest_server(port)
+        platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
+        _save_experiment_information(exp_id, port, start_time, platform,
+                                     config.experiment_name, proc.pid, config.experiment_working_directory)
+        _logger.info('Setting up...')
+        _init_experiment(config, port, debug)
+        return proc
+
+    except Exception as e:
+        _logger.error('Create experiment failed')
+        if proc is not None:
+            with contextlib.suppress(Exception):
+                proc.kill()
+        raise e
+
+def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
     pipe = None
     proc = None
 
     config.validate(initialized_tuner=True)
     _ensure_port_idle(port)
-    if config.training_service.platform == 'openpai':
-        _ensure_port_idle(port + 1, 'OpenPAI requires an additional port')
-    exp_id = management.generate_experiment_id()
+    if isinstance(config.training_service, list): # hybrid training service
+        _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
+    elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
+        _ensure_port_idle(port + 1, f'{config.training_service.platform} requires an additional port')
 
     try:
-        _logger.info('Creating experiment %s%s', colorama.Fore.CYAN, exp_id)
+        _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         pipe = Pipe(exp_id)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
@@ -42,7 +71,8 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
         nni.runtime.protocol._out_file = pipe_file
         _logger.info('Statring web server...')
         _check_rest_server(port)
-        _save_experiment_information(exp_id, port, start_time, config.training_service.platform,
+        platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
+        _save_experiment_information(exp_id, port, start_time, platform,
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
         _init_experiment(config, port, debug)
@@ -58,7 +88,6 @@ def start_experiment(config: ExperimentConfig, port: int, debug: bool) -> Tuple[
                 pipe.close()
         raise e
 
-
 def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
     sock = socket.socket()
     if sock.connect_ex(('localhost', port)) == 0:
@@ -67,10 +96,13 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
         raise RuntimeError(f'Port {port} is not idle {message}')
 
 
-def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str) -> Tuple[int, Popen]:
-    ts = config.training_service.platform
-    if ts == 'openpai':
-        ts = 'pai'
+def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str = None) -> Tuple[int, Popen]:
+    if isinstance(config.training_service, list):
+        ts = 'hybrid'
+    else:
+        ts = config.training_service.platform
+        if ts == 'openpai':
+            ts = 'pai'
 
     args = {
         'port': port,
@@ -78,8 +110,9 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         'experiment_id': experiment_id,
         'start_mode': 'new',
         'log_level': 'debug' if debug else 'info',
-        'dispatcher_pipe': pipe_path,
     }
+    if pipe_path is not None:
+        args['dispatcher_pipe'] = pipe_path
 
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
@@ -88,7 +121,17 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     for arg_key, arg_value in args.items():
         cmd.append('--' + arg_key)
         cmd.append(str(arg_value))
-    return int(time.time() * 1000), Popen(cmd, cwd=node_dir)
+
+    if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
+        proc = Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+    else:
+        if pipe_path is None:
+            import os
+            proc = Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
+        else:
+            proc = Popen(cmd, cwd=node_dir)
+    return int(time.time() * 1000), proc
 
 
 def _check_rest_server(port: int, retry: int = 3) -> None:
@@ -109,5 +152,5 @@ def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
 
 
 def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str, name: str, pid: int, logDir: str) -> None:
-    experiment_config = Experiments()
-    experiment_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)
+    experiments_config = Experiments()
+    experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)

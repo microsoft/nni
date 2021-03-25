@@ -17,7 +17,6 @@ from nni.retiarii import Model, Node
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.integration import RetiariiAdvisor
-from nni.retiarii.trainer import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
 from nni.retiarii.utils import import_
 
 
@@ -74,7 +73,7 @@ class DedupInputTest(unittest.TestCase):
         # sys.path.insert(0, 'generated')
         # multi_model = import_('debug_dedup_input.logical_0')
         # trainer = PyTorchMultiModelTrainer(
-        #     multi_model(), phy_models[0][0].training_config.kwargs
+        #     multi_model(), phy_models[0][0].evaluator.kwargs
         # )
         # trainer.fit()
 

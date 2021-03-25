@@ -1,6 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import inspect
+import warnings
 from collections import defaultdict
 from typing import Any
+from pathlib import Path
 
 
 def import_(target: str, allow_none: bool = False) -> Any:
@@ -11,86 +16,11 @@ def import_(target: str, allow_none: bool = False) -> Any:
     return getattr(module, identifier)
 
 
-_records = {}
-
-
-def get_records():
-    global _records
-    return _records
-
-
-def add_record(key, value):
-    """
-    """
-    global _records
-    if _records is not None:
-        assert key not in _records, '{} already in _records'.format(key)
-        _records[key] = value
-
-
-def _register_module(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
-
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            full_args[argname_list[i]] = arg
-        add_record(id(self), full_args)
-
-        orig_init(self, *args, **kws)  # Call the original __init__
-
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
-
-
-def register_module():
-    """
-    Register a module.
-    """
-    # use it as a decorator: @register_module()
-    def _register(cls):
-        m = _register_module(
-            original_class=cls)
-        return m
-
-    return _register
-
-
-def _register_trainer(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
-
-    full_class_name = original_class.__module__ + '.' + original_class.__name__
-
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            # TODO: support both pytorch and tensorflow
-            from .nn.pytorch import Module
-            if isinstance(args[i], Module):
-                # ignore the base model object
-                continue
-            full_args[argname_list[i]] = arg
-        add_record(id(self), {'modulename': full_class_name, 'args': full_args})
-
-        orig_init(self, *args, **kws)  # Call the original __init__
-
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
-
-
-def register_trainer():
-    def _register(cls):
-        m = _register_trainer(
-            original_class=cls)
-        return m
-
-    return _register
+def version_larger_equal(a: str, b: str) -> bool:
+    # TODO: refactor later
+    a = a.split('+')[0]
+    b = b.split('+')[0]
+    return tuple(map(int, a.split('.'))) >= tuple(map(int, b.split('.')))
 
 
 _last_uid = defaultdict(int)
@@ -99,3 +29,35 @@ _last_uid = defaultdict(int)
 def uid(namespace: str = 'default') -> int:
     _last_uid[namespace] += 1
     return _last_uid[namespace]
+
+
+def get_module_name(cls_or_func):
+    module_name = cls_or_func.__module__
+    if module_name == '__main__':
+        # infer the module name with inspect
+        for frm in inspect.stack():
+            if inspect.getmodule(frm[0]).__name__ == '__main__':
+                # main module found
+                main_file_path = Path(inspect.getsourcefile(frm[0]))
+                if main_file_path.parents[0] != Path('.'):
+                    raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
+                                       f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
+                module_name = main_file_path.stem
+                break
+    if module_name == '__main__':
+        warnings.warn('Callstack exhausted but main module still not found. This will probably cause issues that the '
+                      'function/class cannot be imported.')
+
+    # NOTE: this is hacky. As torchscript retrieves LSTM's source code to do something.
+    # to make LSTM's source code can be found, we should assign original LSTM's __module__ to
+    # the wrapped LSTM's __module__
+    # TODO: find out all the modules that have the same requirement as LSTM
+    if f'{cls_or_func.__module__}.{cls_or_func.__name__}' == 'torch.nn.modules.rnn.LSTM':
+        module_name = cls_or_func.__module__
+
+    return module_name
+
+
+def get_importable_name(cls, relocate_module=False):
+    module_name = get_module_name(cls) if relocate_module else cls.__module__
+    return module_name + '.' + cls.__name__

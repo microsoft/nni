@@ -6,8 +6,13 @@ import { isManagerExperimentPage } from './static/function';
 import NavCon from './components/NavCon';
 import MessageInfo from './components/modals/MessageInfo';
 import { SlideNavBtns } from './components/slideNav/SlideNavBtns';
+const echarts = require('echarts/lib/echarts');
+echarts.registerTheme('nni_theme', {
+    color: '#3c8dbc'
+});
 import './App.scss';
 import './static/style/common.scss';
+import './static/style/trialsDetail.scss';
 
 interface AppState {
     interval: number;
@@ -20,6 +25,7 @@ interface AppState {
     expWarningMessage: string;
     bestTrialEntries: string; // for overview page: best trial entreis
     isUpdate: boolean;
+    expandRowIDs: Set<string>;
 }
 
 export const AppContext = React.createContext({
@@ -30,6 +36,7 @@ export const AppContext = React.createContext({
     metricGraphMode: 'max',
     bestTrialEntries: '10',
     maxDurationUnit: 'm',
+    expandRowIDs: new Set(['']),
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeColumn: (_val: string[]): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
@@ -39,7 +46,9 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeEntries: (_val: string): void => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
-    updateOverviewPage: () => {}
+    updateOverviewPage: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    changeExpandRowIDs: (_val: string, _type?: string): void => {}
 });
 
 class App extends React.Component<{}, AppState> {
@@ -57,7 +66,8 @@ class App extends React.Component<{}, AppState> {
             isillegalFinal: false,
             expWarningMessage: '',
             bestTrialEntries: '10',
-            isUpdate: true
+            isUpdate: true,
+            expandRowIDs: new Set()
         };
     }
 
@@ -87,6 +97,20 @@ class App extends React.Component<{}, AppState> {
     // TODO: use local storage
     changeColumn = (columnList: string[]): void => {
         this.setState({ columnList: columnList });
+    };
+
+    changeExpandRowIDs = (id: string, type?: string): void => {
+        const currentExpandRowIDs = this.state.expandRowIDs;
+
+        if (!currentExpandRowIDs.has(id)) {
+            currentExpandRowIDs.add(id);
+        } else {
+            if (!(type !== undefined && type === 'chart')) {
+                currentExpandRowIDs.delete(id);
+            }
+        }
+
+        this.setState({ expandRowIDs: currentExpandRowIDs });
     };
 
     changeMetricGraphMode = (val: 'max' | 'min'): void => {
@@ -127,7 +151,8 @@ class App extends React.Component<{}, AppState> {
             isillegalFinal,
             expWarningMessage,
             bestTrialEntries,
-            maxDurationUnit
+            maxDurationUnit,
+            expandRowIDs
         } = this.state;
         if (experimentUpdateBroadcast === 0 || trialsUpdateBroadcast === 0) {
             return null; // TODO: render a loading page
@@ -181,7 +206,9 @@ class App extends React.Component<{}, AppState> {
                                         changeMetricGraphMode: this.changeMetricGraphMode,
                                         bestTrialEntries,
                                         changeEntries: this.changeEntries,
-                                        updateOverviewPage: this.updateOverviewPage
+                                        updateOverviewPage: this.updateOverviewPage,
+                                        expandRowIDs,
+                                        changeExpandRowIDs: this.changeExpandRowIDs
                                     }}
                                 >
                                     {this.props.children}

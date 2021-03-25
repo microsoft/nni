@@ -1,30 +1,31 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import time
-import os
-from typing import List
 
 from ..graph import Model, ModelStatus
-from .base import BaseExecutionEngine
-from .cgo_engine import CGOExecutionEngine
-from .interface import AbstractExecutionEngine, WorkerInfo
+from .interface import AbstractExecutionEngine
 from .listener import DefaultListener
 
 _execution_engine = None
 _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
-           'submit_models', 'wait_models', 'query_available_resources']
+           'submit_models', 'wait_models', 'query_available_resources',
+           'set_execution_engine', 'is_stopped_exec']
 
+def set_execution_engine(engine) -> None:
+    global _execution_engine
+    if _execution_engine is None:
+        _execution_engine = engine
+    else:
+        raise RuntimeError('execution engine is already set')
 
-def get_execution_engine() -> BaseExecutionEngine:
+def get_execution_engine() -> AbstractExecutionEngine:
     """
     Currently we assume the default execution engine is BaseExecutionEngine.
     """
     global _execution_engine
-    if _execution_engine is None:
-        if os.environ.get('CGO') == 'true':
-            _execution_engine = CGOExecutionEngine()
-        else:
-            _execution_engine = BaseExecutionEngine()
     return _execution_engine
 
 
@@ -51,6 +52,11 @@ def wait_models(*models: Model) -> None:
             break
 
 
-def query_available_resources() -> List[WorkerInfo]:
-    listener = get_and_register_default_listener(get_execution_engine())
-    return listener.resources
+def query_available_resources() -> int:
+    engine = get_execution_engine()
+    resources = engine.query_available_resource()
+    return resources if isinstance(resources, int) else len(resources)
+
+
+def is_stopped_exec(model: Model) -> bool:
+    return model.status in (ModelStatus.Trained, ModelStatus.Failed)

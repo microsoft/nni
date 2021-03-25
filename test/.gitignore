@@ -5,6 +5,8 @@ tuner_result.txt
 assessor_result.txt
 
 _generated_model.py
+_generated_model_*.py
+_generated_model
 data
 generated
-
+lightning_logs

@@ -32,7 +32,7 @@ To avoid storage and legality issues, we do not provide any prepared databases. 
       git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
       cd nni/examples/nas/benchmarks
 
-   Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v1.9``.
+   Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.1``.
 
 #. 
    Install dependencies via ``pip3 install -r xxx.requirements.txt``. ``xxx`` can be ``nasbench101``\ , ``nasbench201`` or ``nds``.

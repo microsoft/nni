@@ -32,7 +32,7 @@ class ShellExecutor {
     private tempPath: string = "";
     private isWindows: boolean = false;
     private channelDefaultOutputs: string[] = [];
-    private preCommand: string | undefined;
+    private pythonPath: string | undefined;
 
     constructor() {
         this.log = getLogger();
@@ -48,7 +48,7 @@ class ShellExecutor {
             username: rmMeta.username,
             tryKeyboard: true,
         };
-        this.preCommand = rmMeta.preCommand;
+        this.pythonPath = rmMeta.pythonPath;
         this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
         if (rmMeta.passwd !== undefined) {
             connectConfig.password = rmMeta.passwd;
@@ -358,7 +358,7 @@ class ShellExecutor {
 
         const commandIndex = randomInt(10000);
         if(this.osCommands !== undefined){
-            command = this.osCommands.addPreCommand(this.preCommand, command);
+            command = this.osCommands.setPythonPath(this.pythonPath, command);
         }
         this.log.debug(`remoteExeCommand(${commandIndex}): [${command}]`);
 

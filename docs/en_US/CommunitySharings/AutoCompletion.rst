@@ -25,7 +25,7 @@ Step 1. Download ``bash-completion``
    cd ~
    wget https://raw.githubusercontent.com/microsoft/nni/{nni-version}/tools/bash-completion
 
-Here, {nni-version} should by replaced by the version of NNI, e.g., ``master``\ , ``v1.9``. You can also check the latest ``bash-completion`` script :githublink:`here <tools/bash-completion>`.
+Here, {nni-version} should by replaced by the version of NNI, e.g., ``master``, ``v2.1``. You can also check the latest ``bash-completion`` script :githublink:`here <tools/bash-completion>`.
 
 .. cannot find :githublink:`here <tools/bash-completion>`.
 

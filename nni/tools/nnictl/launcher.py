@@ -3,6 +3,7 @@
 
 import json
 import os
+from pathlib import Path
 import sys
 import string
 import random
@@ -12,23 +13,23 @@ from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils import get_builtin_module_class_name
-import nni_node
+import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, \
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
 
-from .constants import NNICTL_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
+from .constants import NNI_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
 from .command_utils import check_output_command, kill_command
 from .nnictl_utils import update_experiment
 
 def get_log_path(experiment_id):
     '''generate stdout and stderr log path'''
-    os.makedirs(os.path.join(NNICTL_HOME_DIR, experiment_id, 'log'), exist_ok=True)
-    stdout_full_path = os.path.join(NNICTL_HOME_DIR, experiment_id, 'log', 'nnictl_stdout.log')
-    stderr_full_path = os.path.join(NNICTL_HOME_DIR, experiment_id, 'log', 'nnictl_stderr.log')
+    os.makedirs(os.path.join(NNI_HOME_DIR, experiment_id, 'log'), exist_ok=True)
+    stdout_full_path = os.path.join(NNI_HOME_DIR, experiment_id, 'log', 'nnictl_stdout.log')
+    stderr_full_path = os.path.join(NNI_HOME_DIR, experiment_id, 'log', 'nnictl_stderr.log')
     return stdout_full_path, stderr_full_path
 
 def print_log_content(config_file_name):
@@ -47,10 +48,10 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         'You could use \'nnictl create --help\' to get help information' % port)
         exit(1)
 
-    if (platform != 'local') and detect_port(int(port) + 1):
-        print_error('PAI mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
+    if (platform not in ['local', 'aml']) and detect_port(int(port) + 1):
+        print_error('%s mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
         'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % ((int(port) + 1), (int(port) + 1)))
+        'You could use \'nnictl create --help\' to get help information' % (platform, (int(port) + 1), (int(port) + 1)))
         exit(1)
 
     print_normal('Starting restful server...')
@@ -205,25 +206,6 @@ def set_pai_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_pai_yarn_config(experiment_config, port, config_file_name):
-    '''set paiYarn configuration'''
-    pai_yarn_config_data = dict()
-    pai_yarn_config_data['pai_yarn_config'] = experiment_config['paiYarnConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(pai_yarn_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
 def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration'''
     kubeflow_config_data = dict()
@@ -300,23 +282,25 @@ def set_aml_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_heterogeneous_config(experiment_config, port, config_file_name):
-    '''set heterogeneous configuration'''
-    heterogeneous_config_data = dict()
-    heterogeneous_config_data['heterogeneous_config'] = experiment_config['heterogeneousConfig']
-    platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+def set_hybrid_config(experiment_config, port, config_file_name):
+    '''set hybrid configuration'''
+    hybrid_config_data = dict()
+    hybrid_config_data['hybrid_config'] = experiment_config['hybridConfig']
+    platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
     for platform in platform_list:
         if platform == 'aml':
-            heterogeneous_config_data['aml_config'] = experiment_config['amlConfig']
+            hybrid_config_data['aml_config'] = experiment_config['amlConfig']
         elif platform ==  'remote':
             if experiment_config.get('remoteConfig'):
-                heterogeneous_config_data['remote_config'] = experiment_config['remoteConfig']
-            heterogeneous_config_data['machine_list'] = experiment_config['machineList']
+                hybrid_config_data['remote_config'] = experiment_config['remoteConfig']
+            hybrid_config_data['machine_list'] = experiment_config['machineList']
         elif platform == 'local' and experiment_config.get('localConfig'):
-            heterogeneous_config_data['local_config'] = experiment_config['localConfig']
+            hybrid_config_data['local_config'] = experiment_config['localConfig']
         elif platform == 'pai':
-            heterogeneous_config_data['pai_config'] = experiment_config['paiConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(heterogeneous_config_data), REST_TIME_OUT)
+            hybrid_config_data['pai_config'] = experiment_config['paiConfig']
+    # It needs to connect all remote machines, set longer timeout here to wait for restful server connection response.
+    time_out = 60 if 'remote' in platform_list else REST_TIME_OUT
+    response = rest_put(cluster_metadata_url(port), json.dumps(hybrid_config_data), time_out)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -330,6 +314,19 @@ def set_heterogeneous_config(experiment_config, port, config_file_name):
         return result, message
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), err_message
+
+def set_shared_storage(experiment_config, port, config_file_name):
+    if 'sharedStorage' in experiment_config:
+        response = rest_put(cluster_metadata_url(port), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
+        err_message = None
+        if not response or not response.status_code == 200:
+            if response is not None:
+                err_message = response.text
+                _, stderr_full_path = get_log_path(config_file_name)
+                with open(stderr_full_path, 'a+') as fout:
+                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+            return False, err_message
+    return True, None
 
 def set_experiment(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
@@ -347,6 +344,8 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['multiPhase'] = experiment_config.get('multiPhase')
     if experiment_config.get('multiThread'):
         request_data['multiThread'] = experiment_config.get('multiThread')
+    if experiment_config.get('nniManagerIp'):
+        request_data['nniManagerIp'] = experiment_config.get('nniManagerIp')
     if experiment_config.get('advisor'):
         request_data['advisor'] = experiment_config['advisor']
         if request_data['advisor'].get('gpuNum'):
@@ -373,10 +372,11 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         request_data['logCollection'] = experiment_config.get('logCollection')
     request_data['clusterMetaData'] = []
     if experiment_config['trainingServicePlatform'] == 'local':
+        if experiment_config.get('localConfig'):
+            request_data['clusterMetaData'].append(
+                {'key': 'local_config', 'value': experiment_config['localConfig']})
         request_data['clusterMetaData'].append(
-            {'key':'codeDir', 'value':experiment_config['trial']['codeDir']})
-        request_data['clusterMetaData'].append(
-            {'key': 'command', 'value': experiment_config['trial']['command']})
+            {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'remote':
         request_data['clusterMetaData'].append(
             {'key': 'machine_list', 'value': experiment_config['machineList']})
@@ -390,11 +390,6 @@ def set_experiment(experiment_config, mode, port, config_file_name):
     elif experiment_config['trainingServicePlatform'] == 'pai':
         request_data['clusterMetaData'].append(
             {'key': 'pai_config', 'value': experiment_config['paiConfig']})
-        request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'paiYarn':
-        request_data['clusterMetaData'].append(
-            {'key': 'pai_yarn_config', 'value': experiment_config['paiYarnConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     elif experiment_config['trainingServicePlatform'] == 'kubeflow':
@@ -412,10 +407,10 @@ def set_experiment(experiment_config, mode, port, config_file_name):
             {'key': 'aml_config', 'value': experiment_config['amlConfig']})
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'heterogeneous':
+    elif experiment_config['trainingServicePlatform'] == 'hybrid':
         request_data['clusterMetaData'].append(
-            {'key': 'heterogeneous_config', 'value': experiment_config['heterogeneousConfig']})
-        platform_list = experiment_config['heterogeneousConfig']['trainingServicePlatforms']
+            {'key': 'hybrid_config', 'value': experiment_config['hybridConfig']})
+        platform_list = experiment_config['hybridConfig']['trainingServicePlatforms']
         request_dict = {
             'aml': {'key': 'aml_config', 'value': experiment_config.get('amlConfig')},
             'remote': {'key': 'machine_list', 'value': experiment_config.get('machineList')},
@@ -425,6 +420,9 @@ def set_experiment(experiment_config, mode, port, config_file_name):
         for platform in platform_list:
             if request_dict.get(platform):
                 request_data['clusterMetaData'].append(request_dict[platform])
+        request_data['clusterMetaData'].append(
+            {'key': 'trial_config', 'value': experiment_config['trial']})
+    elif experiment_config['trainingServicePlatform'] == 'adl':
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
@@ -450,8 +448,6 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_remote_config(experiment_config, port, config_file_name)
     elif platform == 'pai':
         config_result, err_msg = set_pai_config(experiment_config, port, config_file_name)
-    elif platform == 'paiYarn':
-        config_result, err_msg = set_pai_yarn_config(experiment_config, port, config_file_name)
     elif platform == 'kubeflow':
         config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
     elif platform == 'frameworkcontroller':
@@ -460,11 +456,13 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
         config_result, err_msg = set_dlts_config(experiment_config, port, config_file_name)
     elif platform == 'aml':
         config_result, err_msg = set_aml_config(experiment_config, port, config_file_name)
-    elif platform == 'heterogeneous':
-        config_result, err_msg = set_heterogeneous_config(experiment_config, port, config_file_name)
+    elif platform == 'hybrid':
+        config_result, err_msg = set_hybrid_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
+    if config_result:
+        config_result, err_msg = set_shared_storage(experiment_config, port, config_file_name)
     if config_result:
         print_normal('Successfully set {0} config!'.format(platform))
     else:
@@ -477,7 +475,6 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
 
 def launch_experiment(args, experiment_config, mode, experiment_id):
     '''follow steps to start rest server and start experiment'''
-    nni_config = Config(experiment_id)
     # check packages for tuner
     package_name, module_name = None, None
     if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
@@ -497,7 +494,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else None
+    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
@@ -508,7 +505,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
     # start rest server
     rest_process, start_time = start_rest_server(args.port, experiment_config['trainingServicePlatform'], \
                                                  mode, experiment_id, foreground, log_dir, log_level)
-    nni_config.set_config('restServerPid', rest_process.pid)
+    # save experiment information
+    Experiments().add_experiment(experiment_id, args.port, start_time,
+                                 experiment_config['trainingServicePlatform'],
+                                 experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -546,11 +546,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 
     # start a new experiment
     print_normal('Starting experiment...')
-    # save experiment information
-    nnictl_experiment_config = Experiments()
-    nnictl_experiment_config.add_experiment(experiment_id, args.port, start_time,
-                                            experiment_config['trainingServicePlatform'],
-                                            experiment_config['experimentName'], pid=rest_process.pid, logDir=log_dir)
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
@@ -567,10 +562,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
     if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
+        web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
     else:
         web_ui_url_list = get_local_urls(args.port)
-    nni_config.set_config('webuiUrl', web_ui_url_list)
+    Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
@@ -585,31 +580,31 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
 def create_experiment(args):
     '''start a new experiment'''
     experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    nni_config = Config(experiment_id)
-    nni_config.set_config('experimentId', experiment_id)
     config_path = os.path.abspath(args.config)
     if not os.path.exists(config_path):
         print_error('Please set correct config path!')
         exit(1)
     experiment_config = get_yml_content(config_path)
-    try:
-        config = ExperimentConfig(**experiment_config)
-        experiment_config = convert.to_v1_yaml(config)
-    except Exception:
-        pass
+
     try:
         validate_all_content(experiment_config, config_path)
-    except Exception as e:
-        print_error(e)
-        exit(1)
+    except Exception:
+        print_warning('Validation with V1 schema failed. Trying to convert from V2 format...')
+        try:
+            config = ExperimentConfig(_base_path=Path(config_path).parent, **experiment_config)
+            experiment_config = convert.to_v1_yaml(config)
+        except Exception as e:
+            print_error(f'Config in v2 format validation failed, the config error in v2 format is: {repr(e)}')
+        try:
+            validate_all_content(experiment_config, config_path)
+        except Exception as e:
+            print_error(f'Config in v1 format validation failed, the config error in v1 format is: {repr(e)}')
+            exit(1)
 
-    nni_config.set_config('experimentConfig', experiment_config)
-    nni_config.set_config('restServerPort', args.port)
     try:
         launch_experiment(args, experiment_config, 'new', experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)
@@ -618,8 +613,8 @@ def create_experiment(args):
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''
     update_experiment()
-    experiment_config = Experiments()
-    experiment_dict = experiment_config.get_all_experiments()
+    experiments_config = Experiments()
+    experiments_dict = experiments_config.get_all_experiments()
     experiment_id = None
     #find the latest stopped experiment
     if not args.id:
@@ -627,22 +622,20 @@ def manage_stopped_experiment(args, mode):
         'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
         exit(1)
     else:
-        if experiment_dict.get(args.id) is None:
+        if experiments_dict.get(args.id) is None:
             print_error('Id %s not exist!' % args.id)
             exit(1)
-        if experiment_dict[args.id]['status'] != 'STOPPED':
+        if experiments_dict[args.id]['status'] != 'STOPPED':
             print_error('Only stopped experiments can be {0}ed!'.format(mode))
             exit(1)
         experiment_id = args.id
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
-    nni_config = Config(experiment_id)
-    experiment_config = nni_config.get_config('experimentConfig')
-    nni_config.set_config('restServerPort', args.port)
+    experiment_config = Config(experiment_id, experiments_dict[args.id]['logDir']).get_config()
+    experiments_config.update_experiment(args.id, 'port', args.port)
     try:
         launch_experiment(args, experiment_config, mode, experiment_id)
     except Exception as exception:
-        nni_config = Config(experiment_id)
-        restServerPid = nni_config.get_config('restServerPid')
+        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
             kill_command(restServerPid)
         print_error(exception)

@@ -1,16 +1,16 @@
-import inspect
-import logging
-from typing import Any, List
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import torch
 import torch.nn as nn
 
-from ...utils import add_record
+from ...serializer import basic_unit
+from ...serializer import transparent_serialize
+from ...utils import version_larger_equal
 
-_logger = logging.getLogger(__name__)
+# NOTE: support pytorch version >= 1.5.0
 
 __all__ = [
-    'LayerChoice', 'InputChoice', 'Placeholder',
     'Module', 'Sequential', 'ModuleList',  # TODO: 'ModuleDict', 'ParameterList', 'ParameterDict',
     'Identity', 'Linear', 'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d',
     'ConvTranspose2d', 'ConvTranspose3d', 'Threshold', 'ReLU', 'Hardtanh', 'ReLU6',
@@ -29,224 +29,131 @@ __all__ = [
     'ConstantPad3d', 'Bilinear', 'CosineSimilarity', 'Unfold', 'Fold',
     'AdaptiveLogSoftmaxWithLoss', 'TransformerEncoder', 'TransformerDecoder',
     'TransformerEncoderLayer', 'TransformerDecoderLayer', 'Transformer',
-    #'LazyLinear', 'LazyConv1d', 'LazyConv2d', 'LazyConv3d',
-    #'LazyConvTranspose1d', 'LazyConvTranspose2d', 'LazyConvTranspose3d',
-    #'Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss', 'ChannelShuffle',
-    'Flatten', 'Hardsigmoid', 'Hardswish'
+    'Flatten', 'Hardsigmoid'
 ]
 
+if version_larger_equal(torch.__version__, '1.6.0'):
+    __all__.append('Hardswish')
 
-class LayerChoice(nn.Module):
-    def __init__(self, op_candidates, reduction=None, return_mask=False, key=None):
-        super(LayerChoice, self).__init__()
-        self.candidate_ops = op_candidates
-        self.label = key
-        if reduction or return_mask:
-            _logger.warning('input arguments `reduction` and `return_mask` are deprecated!')
-
-    def forward(self, x):
-        return x
+if version_larger_equal(torch.__version__, '1.7.0'):
+    __all__.extend(['Unflatten', 'SiLU', 'TripletMarginWithDistanceLoss'])
 
 
-class InputChoice(nn.Module):
-    def __init__(self, n_candidates=None, choose_from=None, n_chosen=1,
-                 reduction="sum", return_mask=False, key=None):
-        super(InputChoice, self).__init__()
-        self.n_chosen = n_chosen
-        self.reduction = reduction
-        self.label = key
-        if n_candidates or choose_from or return_mask:
-            _logger.warning('input arguments `n_candidates`, `choose_from` and `return_mask` are deprecated!')
+Module = nn.Module
 
-    def forward(self, candidate_inputs: List[torch.Tensor]) -> torch.Tensor:
-        # fake return
-        return torch.tensor(candidate_inputs)  # pylint: disable=not-callable
+Sequential = transparent_serialize(nn.Sequential)
+ModuleList = transparent_serialize(nn.ModuleList)
 
+Identity = basic_unit(nn.Identity)
+Linear = basic_unit(nn.Linear)
+Conv1d = basic_unit(nn.Conv1d)
+Conv2d = basic_unit(nn.Conv2d)
+Conv3d = basic_unit(nn.Conv3d)
+ConvTranspose1d = basic_unit(nn.ConvTranspose1d)
+ConvTranspose2d = basic_unit(nn.ConvTranspose2d)
+ConvTranspose3d = basic_unit(nn.ConvTranspose3d)
+Threshold = basic_unit(nn.Threshold)
+ReLU = basic_unit(nn.ReLU)
+Hardtanh = basic_unit(nn.Hardtanh)
+ReLU6 = basic_unit(nn.ReLU6)
+Sigmoid = basic_unit(nn.Sigmoid)
+Tanh = basic_unit(nn.Tanh)
+Softmax = basic_unit(nn.Softmax)
+Softmax2d = basic_unit(nn.Softmax2d)
+LogSoftmax = basic_unit(nn.LogSoftmax)
+ELU = basic_unit(nn.ELU)
+SELU = basic_unit(nn.SELU)
+CELU = basic_unit(nn.CELU)
+GLU = basic_unit(nn.GLU)
+GELU = basic_unit(nn.GELU)
+Hardshrink = basic_unit(nn.Hardshrink)
+LeakyReLU = basic_unit(nn.LeakyReLU)
+LogSigmoid = basic_unit(nn.LogSigmoid)
+Softplus = basic_unit(nn.Softplus)
+Softshrink = basic_unit(nn.Softshrink)
+MultiheadAttention = basic_unit(nn.MultiheadAttention)
+PReLU = basic_unit(nn.PReLU)
+Softsign = basic_unit(nn.Softsign)
+Softmin = basic_unit(nn.Softmin)
+Tanhshrink = basic_unit(nn.Tanhshrink)
+RReLU = basic_unit(nn.RReLU)
+AvgPool1d = basic_unit(nn.AvgPool1d)
+AvgPool2d = basic_unit(nn.AvgPool2d)
+AvgPool3d = basic_unit(nn.AvgPool3d)
+MaxPool1d = basic_unit(nn.MaxPool1d)
+MaxPool2d = basic_unit(nn.MaxPool2d)
+MaxPool3d = basic_unit(nn.MaxPool3d)
+MaxUnpool1d = basic_unit(nn.MaxUnpool1d)
+MaxUnpool2d = basic_unit(nn.MaxUnpool2d)
+MaxUnpool3d = basic_unit(nn.MaxUnpool3d)
+FractionalMaxPool2d = basic_unit(nn.FractionalMaxPool2d)
+FractionalMaxPool3d = basic_unit(nn.FractionalMaxPool3d)
+LPPool1d = basic_unit(nn.LPPool1d)
+LPPool2d = basic_unit(nn.LPPool2d)
+LocalResponseNorm = basic_unit(nn.LocalResponseNorm)
+BatchNorm1d = basic_unit(nn.BatchNorm1d)
+BatchNorm2d = basic_unit(nn.BatchNorm2d)
+BatchNorm3d = basic_unit(nn.BatchNorm3d)
+InstanceNorm1d = basic_unit(nn.InstanceNorm1d)
+InstanceNorm2d = basic_unit(nn.InstanceNorm2d)
+InstanceNorm3d = basic_unit(nn.InstanceNorm3d)
+LayerNorm = basic_unit(nn.LayerNorm)
+GroupNorm = basic_unit(nn.GroupNorm)
+SyncBatchNorm = basic_unit(nn.SyncBatchNorm)
+Dropout = basic_unit(nn.Dropout)
+Dropout2d = basic_unit(nn.Dropout2d)
+Dropout3d = basic_unit(nn.Dropout3d)
+AlphaDropout = basic_unit(nn.AlphaDropout)
+FeatureAlphaDropout = basic_unit(nn.FeatureAlphaDropout)
+ReflectionPad1d = basic_unit(nn.ReflectionPad1d)
+ReflectionPad2d = basic_unit(nn.ReflectionPad2d)
+ReplicationPad2d = basic_unit(nn.ReplicationPad2d)
+ReplicationPad1d = basic_unit(nn.ReplicationPad1d)
+ReplicationPad3d = basic_unit(nn.ReplicationPad3d)
+CrossMapLRN2d = basic_unit(nn.CrossMapLRN2d)
+Embedding = basic_unit(nn.Embedding)
+EmbeddingBag = basic_unit(nn.EmbeddingBag)
+RNNBase = basic_unit(nn.RNNBase)
+RNN = basic_unit(nn.RNN)
+LSTM = basic_unit(nn.LSTM)
+GRU = basic_unit(nn.GRU)
+RNNCellBase = basic_unit(nn.RNNCellBase)
+RNNCell = basic_unit(nn.RNNCell)
+LSTMCell = basic_unit(nn.LSTMCell)
+GRUCell = basic_unit(nn.GRUCell)
+PixelShuffle = basic_unit(nn.PixelShuffle)
+Upsample = basic_unit(nn.Upsample)
+UpsamplingNearest2d = basic_unit(nn.UpsamplingNearest2d)
+UpsamplingBilinear2d = basic_unit(nn.UpsamplingBilinear2d)
+PairwiseDistance = basic_unit(nn.PairwiseDistance)
+AdaptiveMaxPool1d = basic_unit(nn.AdaptiveMaxPool1d)
+AdaptiveMaxPool2d = basic_unit(nn.AdaptiveMaxPool2d)
+AdaptiveMaxPool3d = basic_unit(nn.AdaptiveMaxPool3d)
+AdaptiveAvgPool1d = basic_unit(nn.AdaptiveAvgPool1d)
+AdaptiveAvgPool2d = basic_unit(nn.AdaptiveAvgPool2d)
+AdaptiveAvgPool3d = basic_unit(nn.AdaptiveAvgPool3d)
+TripletMarginLoss = basic_unit(nn.TripletMarginLoss)
+ZeroPad2d = basic_unit(nn.ZeroPad2d)
+ConstantPad1d = basic_unit(nn.ConstantPad1d)
+ConstantPad2d = basic_unit(nn.ConstantPad2d)
+ConstantPad3d = basic_unit(nn.ConstantPad3d)
+Bilinear = basic_unit(nn.Bilinear)
+CosineSimilarity = basic_unit(nn.CosineSimilarity)
+Unfold = basic_unit(nn.Unfold)
+Fold = basic_unit(nn.Fold)
+AdaptiveLogSoftmaxWithLoss = basic_unit(nn.AdaptiveLogSoftmaxWithLoss)
+TransformerEncoder = basic_unit(nn.TransformerEncoder)
+TransformerDecoder = basic_unit(nn.TransformerDecoder)
+TransformerEncoderLayer = basic_unit(nn.TransformerEncoderLayer)
+TransformerDecoderLayer = basic_unit(nn.TransformerDecoderLayer)
+Transformer = basic_unit(nn.Transformer)
+Flatten = basic_unit(nn.Flatten)
+Hardsigmoid = basic_unit(nn.Hardsigmoid)
 
-class ValueChoice:
-    """
-    The instance of this class can only be used as input argument,
-    when instantiating a pytorch module.
-    TODO: can also be used in training approach
-    """
+if version_larger_equal(torch.__version__, '1.6.0'):
+    Hardswish = basic_unit(nn.Hardswish)
 
-    def __init__(self, candidate_values: List[Any]):
-        self.candidate_values = candidate_values
-
-
-class Placeholder(nn.Module):
-    def __init__(self, label, related_info):
-        add_record(id(self), related_info)
-        self.label = label
-        self.related_info = related_info
-        super(Placeholder, self).__init__()
-
-    def forward(self, x):
-        return x
-
-
-class ChosenInputs(nn.Module):
-    def __init__(self, chosen: int):
-        super().__init__()
-        self.chosen = chosen
-
-    def forward(self, candidate_inputs):
-        # TODO: support multiple chosen inputs
-        return candidate_inputs[self.chosen]
-
-# the following are pytorch modules
-
-
-class Module(nn.Module):
-    def __init__(self):
-        super(Module, self).__init__()
-
-
-class Sequential(nn.Sequential):
-    def __init__(self, *args):
-        add_record(id(self), {})
-        super(Sequential, self).__init__(*args)
-
-
-class ModuleList(nn.ModuleList):
-    def __init__(self, *args):
-        add_record(id(self), {})
-        super(ModuleList, self).__init__(*args)
-
-
-def wrap_module(original_class):
-    orig_init = original_class.__init__
-    argname_list = list(inspect.signature(original_class).parameters.keys())
-    # Make copy of original __init__, so we can call it without recursion
-
-    def __init__(self, *args, **kws):
-        full_args = {}
-        full_args.update(kws)
-        for i, arg in enumerate(args):
-            full_args[argname_list[i]] = arg
-        add_record(id(self), full_args)
-
-        orig_init(self, *args, **kws)  # Call the original __init__
-
-    original_class.__init__ = __init__  # Set the class' __init__ to the new one
-    return original_class
-
-
-# TODO: support different versions of pytorch
-Identity = wrap_module(nn.Identity)
-Linear = wrap_module(nn.Linear)
-Conv1d = wrap_module(nn.Conv1d)
-Conv2d = wrap_module(nn.Conv2d)
-Conv3d = wrap_module(nn.Conv3d)
-ConvTranspose1d = wrap_module(nn.ConvTranspose1d)
-ConvTranspose2d = wrap_module(nn.ConvTranspose2d)
-ConvTranspose3d = wrap_module(nn.ConvTranspose3d)
-Threshold = wrap_module(nn.Threshold)
-ReLU = wrap_module(nn.ReLU)
-Hardtanh = wrap_module(nn.Hardtanh)
-ReLU6 = wrap_module(nn.ReLU6)
-Sigmoid = wrap_module(nn.Sigmoid)
-Tanh = wrap_module(nn.Tanh)
-Softmax = wrap_module(nn.Softmax)
-Softmax2d = wrap_module(nn.Softmax2d)
-LogSoftmax = wrap_module(nn.LogSoftmax)
-ELU = wrap_module(nn.ELU)
-SELU = wrap_module(nn.SELU)
-CELU = wrap_module(nn.CELU)
-GLU = wrap_module(nn.GLU)
-GELU = wrap_module(nn.GELU)
-Hardshrink = wrap_module(nn.Hardshrink)
-LeakyReLU = wrap_module(nn.LeakyReLU)
-LogSigmoid = wrap_module(nn.LogSigmoid)
-Softplus = wrap_module(nn.Softplus)
-Softshrink = wrap_module(nn.Softshrink)
-MultiheadAttention = wrap_module(nn.MultiheadAttention)
-PReLU = wrap_module(nn.PReLU)
-Softsign = wrap_module(nn.Softsign)
-Softmin = wrap_module(nn.Softmin)
-Tanhshrink = wrap_module(nn.Tanhshrink)
-RReLU = wrap_module(nn.RReLU)
-AvgPool1d = wrap_module(nn.AvgPool1d)
-AvgPool2d = wrap_module(nn.AvgPool2d)
-AvgPool3d = wrap_module(nn.AvgPool3d)
-MaxPool1d = wrap_module(nn.MaxPool1d)
-MaxPool2d = wrap_module(nn.MaxPool2d)
-MaxPool3d = wrap_module(nn.MaxPool3d)
-MaxUnpool1d = wrap_module(nn.MaxUnpool1d)
-MaxUnpool2d = wrap_module(nn.MaxUnpool2d)
-MaxUnpool3d = wrap_module(nn.MaxUnpool3d)
-FractionalMaxPool2d = wrap_module(nn.FractionalMaxPool2d)
-FractionalMaxPool3d = wrap_module(nn.FractionalMaxPool3d)
-LPPool1d = wrap_module(nn.LPPool1d)
-LPPool2d = wrap_module(nn.LPPool2d)
-LocalResponseNorm = wrap_module(nn.LocalResponseNorm)
-BatchNorm1d = wrap_module(nn.BatchNorm1d)
-BatchNorm2d = wrap_module(nn.BatchNorm2d)
-BatchNorm3d = wrap_module(nn.BatchNorm3d)
-InstanceNorm1d = wrap_module(nn.InstanceNorm1d)
-InstanceNorm2d = wrap_module(nn.InstanceNorm2d)
-InstanceNorm3d = wrap_module(nn.InstanceNorm3d)
-LayerNorm = wrap_module(nn.LayerNorm)
-GroupNorm = wrap_module(nn.GroupNorm)
-SyncBatchNorm = wrap_module(nn.SyncBatchNorm)
-Dropout = wrap_module(nn.Dropout)
-Dropout2d = wrap_module(nn.Dropout2d)
-Dropout3d = wrap_module(nn.Dropout3d)
-AlphaDropout = wrap_module(nn.AlphaDropout)
-FeatureAlphaDropout = wrap_module(nn.FeatureAlphaDropout)
-ReflectionPad1d = wrap_module(nn.ReflectionPad1d)
-ReflectionPad2d = wrap_module(nn.ReflectionPad2d)
-ReplicationPad2d = wrap_module(nn.ReplicationPad2d)
-ReplicationPad1d = wrap_module(nn.ReplicationPad1d)
-ReplicationPad3d = wrap_module(nn.ReplicationPad3d)
-CrossMapLRN2d = wrap_module(nn.CrossMapLRN2d)
-Embedding = wrap_module(nn.Embedding)
-EmbeddingBag = wrap_module(nn.EmbeddingBag)
-RNNBase = wrap_module(nn.RNNBase)
-RNN = wrap_module(nn.RNN)
-LSTM = wrap_module(nn.LSTM)
-GRU = wrap_module(nn.GRU)
-RNNCellBase = wrap_module(nn.RNNCellBase)
-RNNCell = wrap_module(nn.RNNCell)
-LSTMCell = wrap_module(nn.LSTMCell)
-GRUCell = wrap_module(nn.GRUCell)
-PixelShuffle = wrap_module(nn.PixelShuffle)
-Upsample = wrap_module(nn.Upsample)
-UpsamplingNearest2d = wrap_module(nn.UpsamplingNearest2d)
-UpsamplingBilinear2d = wrap_module(nn.UpsamplingBilinear2d)
-PairwiseDistance = wrap_module(nn.PairwiseDistance)
-AdaptiveMaxPool1d = wrap_module(nn.AdaptiveMaxPool1d)
-AdaptiveMaxPool2d = wrap_module(nn.AdaptiveMaxPool2d)
-AdaptiveMaxPool3d = wrap_module(nn.AdaptiveMaxPool3d)
-AdaptiveAvgPool1d = wrap_module(nn.AdaptiveAvgPool1d)
-AdaptiveAvgPool2d = wrap_module(nn.AdaptiveAvgPool2d)
-AdaptiveAvgPool3d = wrap_module(nn.AdaptiveAvgPool3d)
-TripletMarginLoss = wrap_module(nn.TripletMarginLoss)
-ZeroPad2d = wrap_module(nn.ZeroPad2d)
-ConstantPad1d = wrap_module(nn.ConstantPad1d)
-ConstantPad2d = wrap_module(nn.ConstantPad2d)
-ConstantPad3d = wrap_module(nn.ConstantPad3d)
-Bilinear = wrap_module(nn.Bilinear)
-CosineSimilarity = wrap_module(nn.CosineSimilarity)
-Unfold = wrap_module(nn.Unfold)
-Fold = wrap_module(nn.Fold)
-AdaptiveLogSoftmaxWithLoss = wrap_module(nn.AdaptiveLogSoftmaxWithLoss)
-TransformerEncoder = wrap_module(nn.TransformerEncoder)
-TransformerDecoder = wrap_module(nn.TransformerDecoder)
-TransformerEncoderLayer = wrap_module(nn.TransformerEncoderLayer)
-TransformerDecoderLayer = wrap_module(nn.TransformerDecoderLayer)
-Transformer = wrap_module(nn.Transformer)
-#LazyLinear = wrap_module(nn.LazyLinear)
-#LazyConv1d = wrap_module(nn.LazyConv1d)
-#LazyConv2d = wrap_module(nn.LazyConv2d)
-#LazyConv3d = wrap_module(nn.LazyConv3d)
-#LazyConvTranspose1d = wrap_module(nn.LazyConvTranspose1d)
-#LazyConvTranspose2d = wrap_module(nn.LazyConvTranspose2d)
-#LazyConvTranspose3d = wrap_module(nn.LazyConvTranspose3d)
-Flatten = wrap_module(nn.Flatten)
-#Unflatten = wrap_module(nn.Unflatten)
-Hardsigmoid = wrap_module(nn.Hardsigmoid)
-Hardswish = wrap_module(nn.Hardswish)
-#SiLU = wrap_module(nn.SiLU)
-#TripletMarginWithDistanceLoss = wrap_module(nn.TripletMarginWithDistanceLoss)
-#ChannelShuffle = wrap_module(nn.ChannelShuffle)
+if version_larger_equal(torch.__version__, '1.7.0'):
+    SiLU = basic_unit(nn.SiLU)
+    Unflatten = basic_unit(nn.Unflatten)
+    TripletMarginWithDistanceLoss = basic_unit(nn.TripletMarginWithDistanceLoss)

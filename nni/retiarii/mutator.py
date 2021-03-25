@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import (Any, Iterable, List, Optional)
 
 from .graph import Model
@@ -28,8 +31,10 @@ class Mutator:
     """
     Mutates graphs in model to generate new model.
     `Mutator` class will be used in two places:
-      1. Inherit `Mutator` to implement graph mutation logic.
-      2. Use `Mutator` subclass to implement NAS strategy.
+
+        1. Inherit `Mutator` to implement graph mutation logic.
+        2. Use `Mutator` subclass to implement NAS strategy.
+
     In scenario 1, the subclass should implement `Mutator.mutate()` interface with `Mutator.choice()`.
     In scenario 2, strategy should use constructor or `Mutator.bind_sampler()` to initialize subclass,
     and then use `Mutator.apply()` to mutate model.
@@ -103,33 +108,3 @@ class _RecorderSampler(Sampler):
     def choice(self, candidates: List[Choice], *args) -> Choice:
         self.recorded_candidates.append(candidates)
         return candidates[0]
-
-# the following is for inline mutation
-
-
-class LayerChoiceMutator(Mutator):
-    def __init__(self, node_name: str, candidates: List):
-        super().__init__()
-        self.node_name = node_name
-        self.candidates = candidates
-
-    def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        indexes = [i for i in range(len(self.candidates))]
-        chosen_index = self.choice(indexes)
-        chosen_cand = self.candidates[chosen_index]
-        target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
-
-
-class InputChoiceMutator(Mutator):
-    def __init__(self, node_name: str, n_chosen: int):
-        super().__init__()
-        self.node_name = node_name
-        self.n_chosen = n_chosen
-
-    def mutate(self, model):
-        target = model.get_node_by_name(self.node_name)
-        candidates = [i for i in range(self.n_chosen)]
-        chosen = self.choice(candidates)
-        target.update_operation('__torch__.nni.retiarii.nn.pytorch.nn.ChosenInputs',
-                                {'chosen': chosen})

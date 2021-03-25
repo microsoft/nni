@@ -11,7 +11,7 @@ import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetri
 import { delay } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../pai/paiConfig';
-import { PAIK8STrainingService } from '../pai/paiK8S/paiK8STrainingService';
+import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -95,8 +95,8 @@ class RouterTrainingService implements TrainingService {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         if (this.internalTrainingService === undefined) {
-            // Need to refactor configuration, remove heterogeneous_config field in the future
-            if (key === TrialConfigMetadataKey.HETEROGENEOUS_CONFIG){
+            // Need to refactor configuration, remove hybrid_config field in the future
+            if (key === TrialConfigMetadataKey.HYBRID_CONFIG){
                 this.internalTrainingService = component.get(TrialDispatcher);
                 const heterogenousConfig: HeterogenousConfig = <HeterogenousConfig>JSON.parse(value);
                 if (this.internalTrainingService === undefined) {
@@ -131,7 +131,7 @@ class RouterTrainingService implements TrainingService {
                     await this.internalTrainingService.setClusterMetadata('platform_list', 'pai');
                 } else {
                     this.log.debug(`caching metadata key:{} value:{}, as training service is not determined.`);
-                    this.internalTrainingService = component.get(PAIK8STrainingService);
+                    this.internalTrainingService = component.get(PAITrainingService);
                 }
             } else if (key === TrialConfigMetadataKey.AML_CLUSTER_CONFIG) {
                 this.internalTrainingService = component.get(TrialDispatcher);

@@ -1,233 +1,425 @@
 # To reduce debug cost, steps are sorted differently on each platform,
 # so that a bug in any module will cause at least one platform to fail quickly.
 
-jobs:
-- job: ubuntu_latest
-  pool:
-    # FIXME: In ubuntu-20.04 Python interpreter crashed during SMAC UT
-    vmImage: ubuntu-18.04
+stages:
+- stage: lint
+  jobs:
+  - job: docs
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+      displayName: Configure Python version
+    - script: |
+        sudo apt-get install -y pandoc
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        python -m pip install -r dependencies/required.txt
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
+      displayName: Install requirements
+    - script: |
+        cd docs/en_US
+        sphinx-build -M html . _build -W --keep-going -T
+      displayName: Sphinx  # TODO: rstcheck
 
-  # This platform tests lint and doc first.
+  - job: python
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+      displayName: Configure Python version
+    - script: |
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        python -m pip install -r dependencies/required.txt
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
+      displayName: Install requirements
+    - script: python -m pylint --rcfile pylintrc nni
+      displayName: pylint
+    - script: |
+        set -e
+        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      displayName: flake8
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.6
-    displayName: Configure Python version
-
-  - script: |
-      set -e
-      python3 -m pip install --upgrade pip setuptools
-      python3 -m pip install pytest coverage
-      python3 -m pip install pylint flake8
-      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: Install Python tools
-
-  - script: |
-      python3 setup.py develop
-    displayName: Install NNI
-
-  - script: |
-      set -e
-      cd ts/nni_manager
-      yarn eslint
-      cd ../webui
-      yarn eslint
-    displayName: ESLint
-
-  - script: |
-      set -e
-      sudo apt-get install -y pandoc
-      python3 -m pip install --upgrade pygments
-      python3 -m pip install --upgrade torch>=1.7.0+cpu torchvision>=0.8.1+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python3 -m pip install --upgrade tensorflow
-      python3 -m pip install --upgrade gym onnx peewee thop graphviz
-      python3 -m pip install sphinx==1.8.3 sphinx-argparse==0.2.5 sphinx-markdown-tables==0.0.9 sphinx-rtd-theme==0.4.2 sphinxcontrib-websupport==1.1.0 recommonmark==0.5.0 nbsphinx
-      sudo apt-get install swig -y
-      python3 -m pip install -e .[SMAC,BOHB]
-    displayName: Install extra dependencies
-
-  - script: |
-      set -e
-      python3 -m pylint --rcfile pylintrc nni
-      python3 -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-      EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-      python3 -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-    displayName: pylint and flake8
-
-  - script: |
-      cd docs/en_US
-      sphinx-build -M html . _build -W --keep-going -T
-    displayName: Check Sphinx documentation
-
-  - script: |
-      cd test
-      python3 -m pytest ut --ignore=ut/sdk/test_pruners.py --ignore=ut/sdk/test_compressor_tf.py
-      python3 -m pytest ut/sdk/test_pruners.py
-      python3 -m pytest ut/sdk/test_compressor_tf.py
-    displayName: Python unit test
-
-  - script: |
-      set -e
-      cd ts/nni_manager
-      yarn test
-      cd ../nasui
-      CI=true yarn test
-    displayName: TypeScript unit test
-
-  - script: |
-      cd test
-      python3 nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: Simple integration test
-
-
-- job: ubuntu_legacy
-  pool:
-    vmImage: ubuntu-18.04
-
-  # This platform runs integration test first.
-
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.6
-    displayName: Configure Python version
-
-  - script: |
-      set -e
-      python -m pip install --upgrade pip setuptools
-      python -m pip install pytest coverage
-      echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-    displayName: Install Python tools
-
-  - script: |
-      python setup.py develop
-    displayName: Install NNI
-
-  - script: |
-      set -e
-      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python -m pip install tensorflow==1.15.4
-      python -m pip install keras==2.1.6
-      python -m pip install gym onnx peewee
-      sudo apt-get install swig -y
-      python -m pip install -e .[SMAC,BOHB]
-    displayName: Install extra dependencies
-
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: Simple integration test
-
-  - script: |
-      cd test
-      python -m pytest ut
-    displayName: Python unit test
-
-  - script: |
-      set -e
-      cd ts/nni_manager
-      yarn test
-      cd ../nasui
-      CI=true yarn test
-    displayName: TypeScript unit test
+  - job: typescript
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+    steps:
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn
+        yarn eslint
+      displayName: ESLint (NNI Manager)
+    - script: |
+        set -e
+        cd ts/webui
+        yarn
+        yarn eslint
+      displayName: ESLint (WebUI)
 
 
-- job: macos
-  pool:
-    vmImage: macOS-10.15
+- stage: test
+  jobs:
+  - job: ubuntu_latest
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
-  # This platform runs TypeScript unit test first.
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+      displayName: Configure Python version
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+    - script: |
+        sudo apt-get install -y pandoc
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
 
-  - script: |
-      set -e
-      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      python -m pip install --upgrade pip setuptools wheel
-      python -m pip install pytest coverage
-    displayName: Install Python tools
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | latest | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
 
-  - script: |
-      python setup.py develop
-    displayName: Install NNI
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | latest | ts/**/yarn.lock, !**/node_modules/**'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
 
-  - script: |
-      set -e
-      export CI=true
-      (cd ts/nni_manager && yarn test)
-      (cd ts/nasui && yarn test)
-    displayName: TypeScript unit test
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      displayName: Install Python tools
 
-  - script: |
-      set -e
-      # pytorch Mac binary does not support CUDA, default is cpu version
-      python -m pip install torchvision==0.6.0 torch==1.5.0
-      python -m pip install tensorflow==2.3.1
-      brew install swig@3
-      rm -f /usr/local/bin/swig
-      ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      python -m pip install -e .[SMAC]
-    displayName: Install extra dependencies
+    - script: |
+        python setup.py develop
+      displayName: Install NNI
 
-  - script: |
-      cd test
-      python -m pytest ut
-    displayName: Python unit test
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+      displayName: Install extra dependencies
 
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: Simple integration test
+    # Need del later
+    - script: |
+        set -e
+        python interim_vision_patch.py
+      displayName: Vision MNIST Patch
+
+    - script: |
+        set -e
+        cd test
+        python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+          --ignore=ut/sdk/test_compressor_tf.py \
+          --ignore=ut/sdk/test_compressor_torch.py
+        python -m pytest ut/sdk/test_pruners.py
+        python -m pytest ut/sdk/test_compressor_tf.py
+        python -m pytest ut/sdk/test_compressor_torch.py
+      displayName: Python unit test
+
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn test
+        cd ../nasui
+        CI=true yarn test
+      displayName: TypeScript unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+  - job: ubuntu_legacy
+    pool:
+      vmImage: ubuntu-18.04
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+
+    # This platform runs integration test first.
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.6
+      displayName: Configure Python version
+
+    - script: |
+        sudo apt-get install -y pandoc
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | legacy | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | legacy | ts/**/yarn.lock, !**/node_modules/**'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop
+      displayName: Install NNI
+
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended_legacy.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python interim_vision_patch.py
+      displayName: Vision MNIST Patch
 
 
-# FIXME: Windows UT is still under debugging
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
 
-- job: windows
-  pool:
-    vmImage: windows-2019
+    - script: |
+        cd test
+        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
+          --ignore=ut/retiarii/test_convert_operators.py \
+          --ignore=ut/retiarii/test_convert_pytorch.py
+      displayName: Python unit test
 
-  # This platform runs Python unit test first.
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn test
+        cd ../nasui
+        CI=true yarn test
+      displayName: TypeScript unit test
 
-  steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.8
-    displayName: Configure Python version
+  - job: macos
+    pool:
+      vmImage: macOS-10.15
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
-  - script: |
-      python -m pip install --upgrade pip setuptools
-      python -m pip install pytest coverage
-    displayName: Install Python tools
+    # This platform runs TypeScript unit test first.
 
-  - script: |
-      python setup.py develop --no-user
-    displayName: Install NNI
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+      displayName: Configure Python version
 
-  - script: |
-      python -m pip install scikit-learn==0.23.2
-      python -m pip install torch==1.5.0+cpu torchvision==0.6.0+cpu -f https://download.pytorch.org/whl/torch_stable.html
-      python -m pip install tensorflow==2.3.1
-    displayName: Install extra dependencies
+    - script: |
+        brew install swig@3
+        rm -f /usr/local/bin/swig
+        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      displayName: Install brew packages
 
-  - script: |
-      cd test
-      python -m pytest ut
-    displayName: Python unit test
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
 
-  - script: |
-      cd ts/nni_manager
-      yarn test
-    displayName: TypeScript unit test
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
 
-  - script: |
-      cd test
-      python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-    displayName: Simple integration test
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop
+      displayName: Install NNI
+
+    - script: |
+        set -e
+        export CI=true
+        (cd ts/nni_manager && yarn test)
+        (cd ts/nasui && yarn test)
+      displayName: TypeScript unit test
+
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python interim_vision_patch.py
+      displayName: Vision MNIST Patch
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+  - job: windows
+    pool:
+      vmImage: windows-2019
+    variables:
+      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+
+    # This platform runs Python unit test first.
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.8
+      displayName: Configure Python version
+
+    - task: Cache@2
+      inputs:
+        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+        restoreKeys: | 
+          python | "$(Agent.OS)"
+          python
+        path: $(PIP_CACHE_DIR)
+      displayName: Cache pip packages
+
+    - task: Cache@2
+      inputs:
+        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
+        restoreKeys: |
+          yarn | "$(Agent.OS)"
+        path: $(YARN_CACHE_FOLDER)
+      displayName: Cache yarn packages
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop --no-user
+      displayName: Install NNI
+
+    - script: |
+        python -m pip install -r dependencies/recommended.txt
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python interim_vision_patch.py
+      displayName: Vision MNIST Patch
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        cd ts/nni_manager
+        yarn test
+      displayName: TypeScript unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
 
 
 trigger:

@@ -1,13 +1,20 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
+import os
 from typing import Any, Callable
 
-import json_tricks
-import nni
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
 from .graph import MetricData
+from .execution.base import BaseExecutionEngine
+from .execution.cgo_engine import CGOExecutionEngine
+from .execution.api import set_execution_engine
+from .integration_api import register_advisor
+from .serializer import json_dumps, json_loads
 
 _logger = logging.getLogger(__name__)
 
@@ -55,6 +62,15 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
         self.parameters_count = 0
 
+        engine = self._create_execution_engine()
+        set_execution_engine(engine)
+
+    def _create_execution_engine(self):
+        if os.environ.get('CGO') == 'true':
+            return CGOExecutionEngine()
+        else:
+            return BaseExecutionEngine()
+
     def handle_initialize(self, data):
         """callback for initializing the advisor
         Parameters
@@ -86,28 +102,31 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'parameters': parameters,
             'parameter_source': 'algorithm'
         }
-        _logger.info('New trial sent: %s', new_trial)
-        send(CommandType.NewTrialJob, json_tricks.dumps(new_trial))
+        _logger.debug('New trial sent: %s', new_trial)
+        send(CommandType.NewTrialJob, json_dumps(new_trial))
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
+    def mark_experiment_as_ending(self):
+        send(CommandType.NoMoreTrialJobs, '')
+
     def handle_request_trial_jobs(self, num_trials):
-        _logger.info('Request trial jobs: %s', num_trials)
+        _logger.debug('Request trial jobs: %s', num_trials)
         if self.request_trial_jobs_callback is not None:
             self.request_trial_jobs_callback(num_trials)  # pylint: disable=not-callable
 
     def handle_update_search_space(self, data):
-        _logger.info('Received search space: %s', data)
+        _logger.debug('Received search space: %s', data)
         self.search_space = data
 
     def handle_trial_end(self, data):
-        _logger.info('Trial end: %s', data)
-        self.trial_end_callback(json_tricks.loads(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
+        _logger.debug('Trial end: %s', data)
+        self.trial_end_callback(json_loads(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
                                 data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
-        _logger.info('Metric reported: %s', data)
+        _logger.debug('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
         elif data['type'] == MetricType.PERIODICAL:
@@ -119,41 +138,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float
-        value = json_tricks.loads(value)
+        value = json_loads(value)
         if isinstance(value, dict):
             if 'default' in value:
                 return value['default']
             else:
                 return value
         return value
-
-
-_advisor: RetiariiAdvisor = None
-
-
-def get_advisor() -> RetiariiAdvisor:
-    global _advisor
-    assert _advisor is not None
-    return _advisor
-
-
-def register_advisor(advisor: RetiariiAdvisor):
-    global _advisor
-    assert _advisor is None
-    _advisor = advisor
-
-
-def send_trial(parameters: dict) -> int:
-    """
-    Send a new trial. Executed on tuner end.
-    Return a ID that is the unique identifier for this trial.
-    """
-    return get_advisor().send_trial(parameters)
-
-
-def receive_trial_parameters() -> dict:
-    """
-    Received a new trial. Executed on trial end.
-    """
-    params = nni.get_next_parameter()
-    return params

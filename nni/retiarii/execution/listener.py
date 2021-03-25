@@ -1,13 +1,11 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from ..graph import Model, ModelStatus
 from .interface import MetricData, AbstractGraphListener
 
 
 class DefaultListener(AbstractGraphListener):
-    def __init__(self):
-        self.resources: int = 0 # simply resource count
-
-    def has_available_resource(self) -> bool:
-        return self.resources > 0
 
     def on_metric(self, model: Model, metric: MetricData) -> None:
         model.metric = metric
@@ -20,9 +18,3 @@ class DefaultListener(AbstractGraphListener):
             model.status = ModelStatus.Trained
         else:
             model.status = ModelStatus.Failed
-
-    def on_resource_available(self, resources: int) -> None:
-        self.resources += resources
-
-    def on_resource_used(self, resources: int) -> None:
-        self.resources -= resources

@@ -12,8 +12,9 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../../pai/paiConfig';
-import { NNIPAIK8STrialConfig } from '../../pai/paiK8S/paiK8SConfig';
+import { NNIPAITrialConfig } from '../../pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
+import { SharedStorageService } from '../sharedStorage';
 import { StorageService } from '../storageService';
 
 
@@ -25,7 +26,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger();
     private paiClusterConfig: PAIClusterConfig | undefined;
-    private paiTrialConfig: NNIPAIK8STrialConfig | undefined;
+    private paiTrialConfig: NNIPAITrialConfig | undefined;
     private paiJobConfig: any;
     private paiToken?: string;
     private protocol: string = 'http';
@@ -62,7 +63,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     this.log.error('pai cluster config is not initialized');
                     break;
                 }
-                this.paiTrialConfig = <NNIPAIK8STrialConfig>JSON.parse(value);
+                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
                 // Validate to make sure codeDir doesn't have too many files
 
                 const storageService = component.get<StorageService>(StorageService);
@@ -178,9 +179,15 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         }
 
         // Step 1. Prepare PAI job configuration
-        const environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+        let environmentRoot: string;
+        if (environment.useSharedStorage) {
+            environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+            environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `)} && cd ${environmentRoot} && ${environment.command}`;
+        } else {
+            environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+            environment.command = `cd ${environmentRoot} && ${environment.command}`;
+        }
         environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
-        environment.command = `cd ${environmentRoot} && ${environment.command}`;
         environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
         environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
         environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;
@@ -219,6 +226,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
+        if (environment.isAlive === false) {
+            return Promise.resolve();
+        }
         if (this.paiClusterConfig === undefined) {
             return Promise.reject(new Error('PAI Cluster config is not initialized'));
         }

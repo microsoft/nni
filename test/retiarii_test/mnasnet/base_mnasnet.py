@@ -1,3 +1,5 @@
+from nni.retiarii import basic_unit
+import nni.retiarii.nn.pytorch as nn
 import warnings
 
 import torch
@@ -8,8 +10,6 @@ import torch.nn.functional as F
 import sys
 from pathlib import Path
 sys.path.append(str(Path(__file__).resolve().parents[2]))
-import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import register_module
 
 # Paper suggests 0.9997 momentum, for TensorFlow. Equivalent PyTorch momentum is
 # 1.0 - tensorflow.
@@ -26,6 +26,7 @@ class _ResidualBlock(nn.Module):
 
     def forward(self, x):
         return self.net(x) + x
+
 
 class _InvertedResidual(nn.Module):
 
@@ -110,7 +111,7 @@ def _get_depths(depths, alpha):
     rather than down. """
     return [_round_to_multiple_of(depth * alpha, 8) for depth in depths]
 
-@register_module()
+
 class MNASNet(nn.Module):
     """ MNASNet, as described in https://arxiv.org/pdf/1807.11626.pdf. This
     implements the B1 variant of the model.
@@ -127,7 +128,7 @@ class MNASNet(nn.Module):
 
     def __init__(self, alpha, depths, convops, kernel_sizes, num_layers,
                  skips, num_classes=1000, dropout=0.2):
-        super(MNASNet, self).__init__()
+        super().__init__()
         assert alpha > 0.0
         assert len(depths) == len(convops) == len(kernel_sizes) == len(num_layers) == len(skips) == 7
         self.alpha = alpha
@@ -143,22 +144,22 @@ class MNASNet(nn.Module):
             nn.ReLU(inplace=True),
         ]
         count = 0
-        #for conv, prev_depth, depth, ks, skip, stride, repeat, exp_ratio in \
+        # for conv, prev_depth, depth, ks, skip, stride, repeat, exp_ratio in \
         #        zip(convops, depths[:-1], depths[1:], kernel_sizes, skips, strides, num_layers, exp_ratios):
         for filter_size, exp_ratio, stride in zip(base_filter_sizes, exp_ratios, strides):
             # TODO: restrict that "choose" can only be used within mutator
-            ph = nn.Placeholder(label=f'mutable_{count}', related_info={
-                           'kernel_size_options': [1, 3, 5],
-                           'n_layer_options': [1, 2, 3, 4],
-                           'op_type_options': ['__mutated__.base_mnasnet.RegularConv',
-                                               '__mutated__.base_mnasnet.DepthwiseConv',
-                                               '__mutated__.base_mnasnet.MobileConv'],
-                           #'se_ratio_options': [0, 0.25],
-                           'skip_options': ['identity', 'no'],
-                           'n_filter_options': [int(filter_size*x) for x in [0.75, 1.0, 1.25]],
-                           'exp_ratio': exp_ratio,
-                           'stride': stride,
-                           'in_ch': depths[0] if count == 0 else None
+            ph = nn.Placeholder(label=f'mutable_{count}', **{
+                'kernel_size_options': [1, 3, 5],
+                'n_layer_options': [1, 2, 3, 4],
+                'op_type_options': ['__mutated__.base_mnasnet.RegularConv',
+                                    '__mutated__.base_mnasnet.DepthwiseConv',
+                                    '__mutated__.base_mnasnet.MobileConv'],
+                # 'se_ratio_options': [0, 0.25],
+                'skip_options': ['identity', 'no'],
+                'n_filter_options': [int(filter_size*x) for x in [0.75, 1.0, 1.25]],
+                'exp_ratio': exp_ratio,
+                'stride': stride,
+                'in_ch': depths[0] if count == 0 else None
             })
             layers.append(ph)
             '''if conv == "mconv":
@@ -185,7 +186,7 @@ class MNASNet(nn.Module):
         #self.for_test = 10
 
     def forward(self, x):
-        #if self.for_test == 10:
+        # if self.for_test == 10:
         x = self.layers(x)
         # Equivalent to global avgpool and removing H and W dimensions.
         x = x.mean([2, 3])
@@ -196,7 +197,7 @@ class MNASNet(nn.Module):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 torch_nn.init.kaiming_normal_(m.weight, mode="fan_out",
-                                        nonlinearity="relu")
+                                              nonlinearity="relu")
                 if m.bias is not None:
                     torch_nn.init.zeros_(m.bias)
             elif isinstance(m, nn.BatchNorm2d):
@@ -204,15 +205,17 @@ class MNASNet(nn.Module):
                 torch_nn.init.zeros_(m.bias)
             elif isinstance(m, nn.Linear):
                 torch_nn.init.kaiming_uniform_(m.weight, mode="fan_out",
-                                         nonlinearity="sigmoid")
+                                               nonlinearity="sigmoid")
                 torch_nn.init.zeros_(m.bias)
 
 
 def test_model(model):
     model(torch.randn(2, 3, 224, 224))
 
-#====================definition of candidate op classes
+
+# ====================definition of candidate op classes
 BN_MOMENTUM = 1 - 0.9997
+
 
 class RegularConv(nn.Module):
     def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
@@ -233,6 +236,7 @@ class RegularConv(nn.Module):
         if self.skip == 'identity':
             out = out + x
         return out
+
 
 class DepthwiseConv(nn.Module):
     def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
@@ -257,6 +261,7 @@ class DepthwiseConv(nn.Module):
             out = out + x
         return out
 
+
 class MobileConv(nn.Module):
     def __init__(self, kernel_size, in_ch, out_ch, skip, exp_ratio, stride):
         super().__init__()
@@ -274,7 +279,7 @@ class MobileConv(nn.Module):
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True),
             # Depthwise
-            nn.Conv2d(mid_ch, mid_ch, kernel_size, padding= (kernel_size - 1) // 2,
+            nn.Conv2d(mid_ch, mid_ch, kernel_size, padding=(kernel_size - 1) // 2,
                       stride=stride, groups=mid_ch, bias=False),
             nn.BatchNorm2d(mid_ch, momentum=BN_MOMENTUM),
             nn.ReLU(inplace=True),
@@ -287,6 +292,7 @@ class MobileConv(nn.Module):
         if self.skip == 'identity':
             out = out + x
         return out
+
 
 # mnasnet0_5
 ir_module = _InvertedResidual(16, 16, 3, 1, 1, True)

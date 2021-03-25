@@ -84,6 +84,8 @@ abstract class Manager {
     public abstract startExperiment(experimentParams: ExperimentParams): Promise<string>;
     public abstract resumeExperiment(readonly: boolean): Promise<void>;
     public abstract stopExperiment(): Promise<void>;
+    public abstract stopExperimentTopHalf(): Promise<void>;
+    public abstract stopExperimentBottomHalf(): Promise<void>;
     public abstract getExperimentProfile(): Promise<ExperimentProfile>;
     public abstract updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void>;
     public abstract importData(data: string): Promise<void>;
@@ -105,7 +107,6 @@ abstract class Manager {
     public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
-    public abstract getTrialJobMessage(trialJobId: string): string | undefined;
     public abstract getStatus(): NNIManagerStatus;
 }
 

@@ -167,7 +167,7 @@ NNI supports a standalone mode for trial code to run without starting an NNI exp
    nni.get_trial_id # return "STANDALONE"
    nni.get_sequence_id # return 0
 
-You can try standalone mode with the :githublink:`mnist example <examples/trials/mnist-tfv1>`. Simply run ``python3 mnist.py`` under the code directory. The trial code should successfully run with the default hyperparameter values.
+You can try standalone mode with the :githublink:`mnist example <examples/trials/mnist-pytorch>`. Simply run ``python3 mnist.py`` under the code directory. The trial code should successfully run with the default hyperparameter values.
 
 For more information on debugging, please refer to `How to Debug <../Tutorial/HowToDebug.rst>`__
 

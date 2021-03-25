@@ -2,24 +2,167 @@
    :format: html
 
 
-ChangeLog
-=========
+Change Log
+==========
 
-Release 1.9 - 10/22/2020
-========================
+Release 2.1 - 3/10/2021
+-----------------------
 
 Major updates
--------------
+^^^^^^^^^^^^^
 
 Neural architecture search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Improved Experimental)
+
+  * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
+  * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
+  * Improve the design and implementation of Model Evaluator (#3359 #3404)
+  * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+Training service
+""""""""""""""""
+
+* Support shared storage for reuse mode (#3354)
+* Support Windows as the local training service in hybrid mode (#3353)
+* Remove PAIYarn training service (#3327)
+* Add "recently-idle" scheduling algorithm (#3375)
+* Deprecate ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
+* Refactor reuse mode temp folder (#3374)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Migrate ``nnicli`` to new Python API ``nni.experiment`` (#3334)
+* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with ``nnictl`` (#3419)
+
+WebUI
+"""""
+
+* Support showing the assigned training service of each trial in hybrid mode on WebUI (#3261 #3391)
+* Support multiple selection for filter status in experiments management page (#3351)
+* Improve overview page (#3316 #3317 #3352)
+* Support copy trial id in the table (#3378)
+
+Documentation
+^^^^^^^^^^^^^
+
+* Improve model compression examples and documentation (#3326 #3371)
+* Add Python API examples and documentation (#3396)
+* Add SECURITY doc (#3358)
+* Add 'What's NEW!' section in README (#3395) 
+* Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
+
+Bug fixes
+^^^^^^^^^
+
+* Fix AML outputs path and python process not killed (#3321)
+* Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
+* Fix import path of network morphism example (#3333)
+* Fix bug in the tuple unpack (#3340)
+* Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
+* Fix ``NoneType`` error on jupyter notebook (#3337, thanks external contributor @tczhangzhi)
+* Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
+* Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
+* Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
+* Fix bug in ruamel import (#3430, thanks external contributor @rushtehrani)
+
+
+Release 2.0 - 1/14/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural architecture search
+""""""""""""""""""""""""""
+
+* Support an improved NAS framework: Retiarii (experimental)
+
+  * Feature roadmap (`issue #3301 <https://github.com/microsoft/nni/issues/3301>`__)
+  * `Related issues and pull requests <https://github.com/microsoft/nni/issues?q=label%3Aretiarii-v2.0>`__
+  * Documentation (#3221 #3282 #3287)
+
+* Support a new NAS algorithm: Cream (#2705)
+* Add a new NAS benchmark for NLP model search (#3140)
+
+Training service
+""""""""""""""""
+
+* Support hybrid training service (#3097 #3251 #3252)
+* Support AdlTrainingService, a new training service based on Kubernetes (#3022, thanks external contributors Petuum @pw2393)
+
+
+Model compression
+"""""""""""""""""
+
+* Support pruning schedule for fpgm pruning algorithm (#3110)
+* ModelSpeedup improvement: support torch v1.7 (updated graph_utils.py) (#3076)
+* Improve model compression utility: model flops counter (#3048 #3265)
+
+
+WebUI & nnictl 
+""""""""""""""
+
+* Support experiments management on WebUI, add a web page for it (#3081 #3127)
+* Improve the layout of overview page (#3046 #3123)
+* Add navigation bar on the right for logs and configs; add expanded icons for table (#3069 #3103)
+
+
+Others
+""""""
+
+* Support launching an experiment from Python code (#3111 #3210 #3263)
+* Refactor builtin/customized tuner installation (#3134)
+* Support new experiment configuration V2 (#3138 #3248 #3251)
+* Reorganize source code directory hierarchy (#2962 #2987 #3037)
+* Change SIGKILL to SIGTERM in local mode when cancelling trial jobs (#3173)
+* Refector hyperband (#3040)
+
+
+Documentation
+^^^^^^^^^^^^^
+
+* Port markdown docs to reStructuredText docs and introduce ``githublink`` (#3107)
+* List related research and publications in doc (#3150)
+* Add tutorial of saving and loading quantized model (#3192)
+* Remove paiYarn doc and add description of ``reuse`` config in remote mode (#3253)
+* Update EfficientNet doc to clarify repo versions (#3158, thanks external contributor @ahundt)
+
+Bug fixes
+^^^^^^^^^
+
+* Fix exp-duration pause timing under NO_MORE_TRIAL status (#3043)
+* Fix bug in NAS SPOS trainer, apply_fixed_architecture (#3051, thanks external contributor @HeekangPark)
+* Fix ``_compute_hessian`` bug in NAS DARTS (PyTorch version) (#3058, thanks external contributor @hroken)
+* Fix bug of conv1d in the cdarts utils (#3073, thanks external contributor @athaker)
+* Fix the handling of unknown trials when resuming an experiment (#3096)
+* Fix bug of kill command under Windows (#3106)
+* Fix lazy logging (#3108, thanks external contributor @HarshCasper)
+* Fix checkpoint load and save issue in QAT quantizer (#3124, thanks external contributor @eedalong)
+* Fix quant grad function calculation error (#3160, thanks external contributor @eedalong)
+* Fix device assignment bug in quantization algorithm (#3212, thanks external contributor @eedalong)
+* Fix bug in ModelSpeedup and enhance UT for it (#3279)
+* and others (#3063 #3065 #3098 #3109 #3125 #3143 #3156 #3168 #3175 #3180 #3181 #3183 #3203 #3205 #3207 #3214 #3216 #3219 #3223 #3224 #3230 #3237 #3239 #3240 #3245 #3247 #3255 #3257 #3258 #3262 #3263 #3267 #3269 #3271 #3279 #3283 #3289 #3290 #3295)
+
+
+Release 1.9 - 10/22/2020
+------------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural architecture search
+""""""""""""""""""""""""""
 
 
 * Support regularized evolution algorithm for NAS scenario (#2802)
 * Add NASBench201 in search space zoo (#2766)
 
 Model compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * AMC pruner improvement: support resnet, support reproduction of the experiments (default parameters in our example code) in AMC paper (#2876 #2906)
@@ -29,7 +172,7 @@ Model compression
 * Support quantizing bias in QAT quantizer (#2914)
 
 Training service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Support configuring python environment using "preCommand" in remote mode (#2875)
@@ -37,7 +180,7 @@ Training service
 * Support reuse mode for remote training service (#2923)
 
 WebUI & nnictl
-^^^^^^^^^^^^^^
+""""""""""""""
 
 
 * The "Overview" page on WebUI is redesigned with new layout (#2914)
@@ -47,7 +190,7 @@ WebUI & nnictl
 * Support nnictl command auto-completion (#2857)
 
 UT & IT
--------
+^^^^^^^
 
 
 * Add integration test for experiment import and export (#2878)
@@ -55,13 +198,13 @@ UT & IT
 * Add unit test for nnictl (#2912)
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Refactor of the document for model compression (#2919)
 
 Bug fixes
----------
+^^^^^^^^^
 
 
 * Bug fix of naïve evolution tuner, correctly deal with trial fails (#2695)
@@ -72,13 +215,13 @@ Bug fixes
 * Support boolean type for "choice" hyper-parameter when customizing trial configuration on WebUI (#3003)
 
 Release 1.8 - 8/27/2020
-=======================
+-----------------------
 
 Major updates
--------------
+^^^^^^^^^^^^^
 
 Training service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Access trial log directly on WebUI (local mode only) (#2718)
@@ -89,7 +232,7 @@ Training service
 * Add more log information when copying data in OpenPAI mode (#2702)
 
 WebUI, nnictl and nnicli
-^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""
 
 
 * Improve hyper-parameter parallel coordinates plot (#2691) (#2759)
@@ -102,14 +245,14 @@ WebUI, nnictl and nnicli
 * Improve the user experience of `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/nnicli_ref.md>`__ with `examples <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
 
 Neural architecture search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""
 
 
 * `Search space zoo: ENAS and DARTS <https://github.com/microsoft/nni/blob/v1.8/docs/en_US/NAS/SearchSpaceZoo.md>`__ (#2589)
 * API to query intermediate results in NAS benchmark (#2728)
 
 Model compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * Support the List/Tuple Construct/Unpack operation for TorchModuleGraph (#2609)
@@ -120,26 +263,26 @@ Model compression
 * TensorFlow v2 support in model compression (#2755)
 
 Backward incompatible changes
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""""""""""""
 
 
 * Update the default experiment folder from ``$HOME/nni/experiments`` to ``$HOME/nni-experiments``. If you want to view the experiments created by previous NNI releases, you can move the experiments folders from  ``$HOME/nni/experiments`` to ``$HOME/nni-experiments`` manually. (#2686) (#2753)
 * Dropped support for Python 3.5 and scikit-learn 0.20 (#2778) (#2777) (2783) (#2787) (#2788) (#2790)
 
 Others
-^^^^^^
+""""""
 
 
 * Upgrade TensorFlow version in Docker image (#2732) (#2735) (#2720)
 
 Examples
---------
+^^^^^^^^
 
 
 * Remove gpuNum in assessor examples (#2641)
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Improve customized tuner documentation (#2628)
@@ -152,7 +295,7 @@ Documentation
 * Improve documentation structure for model compression (#2676)
 
 Bug fixes
----------
+^^^^^^^^^
 
 
 * Fix mkdir error in training service (#2673)
@@ -168,13 +311,13 @@ Bug fixes
 * Fix nnictl experiment delete (#2791)
 
 Release 1.7 - 7/8/2020
-======================
+----------------------
 
 Major Features
---------------
+^^^^^^^^^^^^^^
 
 Training Service
-^^^^^^^^^^^^^^^^
+""""""""""""""""
 
 
 * Support AML(Azure Machine Learning) platform as NNI training service.
@@ -182,7 +325,7 @@ Training Service
 * `Support ignoring files and folders in code directory with .nniignore when uploading code directory to training service <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrainingService/Overview.md#how-to-use-training-service>`__.
 
 Neural Architecture Search (NAS)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""
 
 
 * 
@@ -192,7 +335,7 @@ Neural Architecture Search (NAS)
   `Support Classic NAS (i.e., non-weight-sharing mode) on TensorFlow 2.X <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/NAS/ClassicNas.md>`__.
 
 Model Compression
-^^^^^^^^^^^^^^^^^
+"""""""""""""""""
 
 
 * Improve Model Speedup: track more dependencies among layers and automatically resolve mask conflict, support the speedup of pruned resnet.
@@ -205,19 +348,19 @@ Model Compression
   Update lottery ticket pruner to export winning ticket.
 
 Examples
-^^^^^^^^
+""""""""
 
 
 * Automatically optimize tensor operators on NNI with a new `customized tuner OpEvo <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/TrialExample/OpEvoExamples.md>`__.
 
 Built-in tuners/assessors/advisors
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+""""""""""""""""""""""""""""""""""
 
 
 * `Allow customized tuners/assessor/advisors to be installed as built-in algorithms <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Tutorial/InstallCustomizedAlgos.md>`__.
 
 WebUI
-^^^^^
+"""""
 
 
 * Support visualizing nested search space more friendly.
@@ -225,14 +368,14 @@ WebUI
 * Enhancements to trial duration display.
 
 Others
-^^^^^^
+""""""
 
 
 * Provide utility function to merge parameters received from NNI
 * Support setting paiStorageConfigName in pai mode
 
 Documentation
--------------
+^^^^^^^^^^^^^
 
 
 * Improve `documentation for model compression <https://github.com/microsoft/nni/blob/v1.7/docs/en_US/Compressor/Overview.md>`__
@@ -242,7 +385,7 @@ Documentation
 * Homepage migration to readthedoc.
 
 Bug Fixes
----------
+^^^^^^^^^
 
 
 * Fix bug for model graph with shared nn.Module

@@ -6,7 +6,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar
 
-from ruamel import yaml
+import ruamel.yaml as yaml
 
 from . import util
 
@@ -47,6 +47,8 @@ class ConfigBase:
         They will be converted to snake_case automatically.
         If a field is missing and don't have default value, it will be set to `dataclasses.MISSING`.
         """
+        if 'basepath' in kwargs:
+            _base_path = kwargs.pop('basepath')
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
         if _base_path is None:
             _base_path = Path()
@@ -70,7 +72,7 @@ class ConfigBase:
         Load config from YAML (or JSON) file.
         Keys in YAML file can either be camelCase or snake_case.
         """
-        data = yaml.safe_load(open(path))
+        data = yaml.load(open(path), Loader=yaml.SafeLoader)
         if not isinstance(data, dict):
             raise ValueError(f'Content of config file {path} is not a dict/object')
         return cls(**data, _base_path=Path(path).parent)

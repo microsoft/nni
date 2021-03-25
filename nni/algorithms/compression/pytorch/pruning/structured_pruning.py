@@ -42,6 +42,7 @@ class StructuredWeightMasker(WeightMasker):
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
         """
         calculate the mask for `wrapper`.
+
         Parameters
         ----------
         sparsity: float/list of float
@@ -292,6 +293,7 @@ class StructuredWeightMasker(WeightMasker):
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
         """
         Calculate the mask of given layer.
+
         Parameters
         ----------
         base_mask: dict
@@ -309,6 +311,7 @@ class StructuredWeightMasker(WeightMasker):
             mode, before calculating the masks for each layer, we will calculate a common
             mask for all the layers in the dependency set. For the pruners that doesnot
             support dependency-aware mode, they can just ignore this parameter.
+
         Returns
         -------
         dict

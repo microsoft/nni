@@ -299,7 +299,7 @@ class SensitivityPruner(Pruner):
         eval_args: list
         eval_kwargs: list& dict
             Parameters for the val_funtion, the val_function will be called like
-            evaluator(*eval_args, **eval_kwargs)
+            evaluator(\*eval_args, \*\*eval_kwargs)
         finetune_args: list
         finetune_kwargs: dict
             Parameters for the finetuner function if needed.

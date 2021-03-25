@@ -18,7 +18,7 @@ export namespace ValidationSchemas {
                 gpuIndices: joi.string(),
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean(),
-                preCommand: joi.string()
+                pythonPath: joi.string()
             })),
             local_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 gpuIndices: joi.string(),
@@ -183,7 +183,7 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean()
             }),
-            heterogeneous_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+            hybrid_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 trainingServicePlatforms: joi.array(),
             }),
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
@@ -191,6 +191,18 @@ export namespace ValidationSchemas {
             }),
             remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 reuse: joi.boolean()
+            }),
+            shared_storage_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                storageType: joi.string(),
+                localMountPoint: joi.string(),
+                remoteMountPoint: joi.string(),
+                nfsServer: joi.string(),
+                exportedDirectory: joi.string(),
+                storageAccountName: joi.string(),
+                storageAccountKey: joi.string(),
+                containerName: joi.string(),
+                resourceGroupName: joi.string(),
+                localMounted: joi.string()
             })
         }
     };
@@ -206,6 +218,7 @@ export namespace ValidationSchemas {
             maxExecDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
+            nniManagerIp: joi.string(),
             versionCheck: joi.boolean(),
             logCollection: joi.string(),
             advisor: joi.object({

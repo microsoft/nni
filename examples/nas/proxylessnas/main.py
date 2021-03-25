@@ -1,3 +1,4 @@
+import json
 import logging
 import os
 import sys
@@ -83,7 +84,7 @@ if __name__ == "__main__":
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
     if args.train_mode == 'search':
-        from nni.retiarii.trainer.pytorch import ProxylessTrainer
+        from nni.retiarii.oneshot.pytorch import ProxylessTrainer
         from torchvision.datasets import ImageNet
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
@@ -102,6 +103,7 @@ if __name__ == "__main__":
                                    log_frequency=10)
         trainer.fit()
         print('Final architecture:', trainer.export())
+        json.dump(trainer.export(), open('checkpoint.json', 'w'))
     elif args.train_mode == 'search_v1':
         # this is architecture search
         logger.info('Creating ProxylessNasTrainer...')
