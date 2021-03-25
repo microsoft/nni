@@ -10,7 +10,7 @@ variables:
 
 
 jobs:
-- job: hubrid
+- job: hybrid
   pool: NNI CI REMOTE CLI
   timeoutInMinutes: 120
 
@@ -83,7 +83,7 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts hybrid \
-          --remote_reuse false \
+          --remote_reuse true \
           --remote_user nni \
           --remote_host $(worker_ip) \
           --remote_port $(docker_port) \
