@@ -105,4 +105,19 @@ adl:
       storageClass:
       storageSize:
   trainingServicePlatform: adl
-
+aml:
+  nniManagerIp:
+  maxExecDuration: 15m
+  # PAI has job submission limitation, set maxTrialNum=1 to control trial job numbers for PAI 
+  maxTrialNum: 2
+  trialConcurrency: 2
+  trainingServicePlatform: aml
+  trial:
+    codeDir:
+    cpuNum: 1
+    image:
+  amlConfig:
+    subscriptionId:
+    resourceGroup:
+    workspaceName:
+    computeTarget:

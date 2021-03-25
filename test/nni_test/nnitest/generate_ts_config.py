@@ -88,13 +88,24 @@ def update_training_service_config(args):
             config[args.ts]['trial']['nfs']['server'] = args.adl_nfs_server
             config[args.ts]['trial']['nfs']['path'] = args.adl_nfs_path
             config[args.ts]['trial']['nfs']['container_mount_path'] = args.nadl_fs_container_mount_path
+    elif args.ts == 'aml':
+        if args.nni_docker_image is not None:
+            config[args.ts]['trial']['image'] = args.nni_docker_image
+        if args.subscription_id is not None:
+            config[args.ts]['amlConfig']['subscriptionId'] = args.subscriptionId
+        if args.resource_group is not None:
+            config[args.ts]['amlConfig']['resourceGroup'] = args.resourceGroup
+        if args.workspace_name is not None:
+            config[args.ts]['amlConfig']['workspaceName'] = args.workspaceName
+        if args.compute_target is not None:
+            config[args.ts]['amlConfig']['computeTarget'] = args.computeTarget
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl', 'aml'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
@@ -129,6 +140,11 @@ if __name__ == '__main__':
     parser.add_argument("--adl_nfs_server", type=str)
     parser.add_argument("--adl_nfs_path", type=str)
     parser.add_argument("--adl_nfs_container_mount_path", type=str)
+    # args for aml
+    parser.add_argument("--subscription_id", type=str)
+    parser.add_argument("--resource_group", type=str)
+    parser.add_argument("--workspace_name", type=str)
+    parser.add_argument("--compute_target", type=str)
     args = parser.parse_args()
 
     update_training_service_config(args)
