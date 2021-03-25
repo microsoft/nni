@@ -62,7 +62,7 @@ def update_training_service_config(args):
             config[args.ts]['frameworkcontrollerConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['taskRoles'][0]['image'] = args.nni_docker_image
-    elif args.ts == 'remote':
+    elif args.ts == 'remote' or args.ts == 'hybrid':
         if args.remote_user is not None:
             config[args.ts]['machineList'][0]['username'] = args.remote_user
         if args.remote_host is not None:
@@ -116,7 +116,7 @@ if __name__ == '__main__':
     parser.add_argument("--keyvault_name", type=str)
     parser.add_argument("--azs_account", type=str)
     parser.add_argument("--azs_share", type=str)
-    # args for remote
+    # args for remote and hybrid
     parser.add_argument("--remote_user", type=str)
     parser.add_argument("--remote_pwd", type=str)
     parser.add_argument("--remote_host", type=str)

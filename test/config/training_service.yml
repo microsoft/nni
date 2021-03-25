@@ -87,6 +87,27 @@ remote:
     port:
     username:
   trainingServicePlatform: remote
+hybrid:
+  maxExecDuration: 15m
+  nniManagerIp:
+  maxTrialNum: 2
+  trialConcurrency: 2
+  trial:
+    command:
+    codeDir:
+    gpuNum: 0
+  trainingServicePlatform: hybrid
+  hybridConfig:
+    trainingServicePlatforms:
+      - remote
+      - local
+  machineList:
+  - ip:
+    passwd:
+    port:
+    username:
+  remoteConfig:
+    reuse: true
 adl:
   maxExecDuration: 15m
   nniManagerIp:
