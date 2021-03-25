@@ -20,7 +20,9 @@ from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMaske
 from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# TODO !!!! Optimize the memory usage!!!!!!!
+device = torch.device('cpu')
 BATCH_SIZE = 2
 # the relative distance
 RELATIVE_THRESHOLD = 0.01
@@ -242,6 +244,13 @@ class SpeedupTestCase(TestCase):
         assert model.training
         assert model.features[2].out_channels == int(
             orig_model.features[2].out_channels * SPARSITY)
+        print(model.classifier[0].in_features)
+        print(int(orig_model.classifier[0].in_features * SPARSITY))
+        print("Original model")
+        print(orig_model)
+        print("speeduped model")
+        print(model)
+
         assert model.classifier[0].in_features == int(
             orig_model.classifier[0].in_features * SPARSITY)
 
@@ -313,7 +322,7 @@ class SpeedupTestCase(TestCase):
 
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
-        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121', 
+        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
                            # 'inception_v3' inception is too large and may fail the pipeline
                             'resnet50']:
                             
