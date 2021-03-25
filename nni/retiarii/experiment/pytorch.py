@@ -118,7 +118,7 @@ class RetiariiExperiment(Experiment):
 
         self._strategy_thread: Optional[Thread] = None
 
-    def _start_strategy(self):
+    def _preprocess_model(self):
         try:
             script_module = torch.jit.script(self.base_model)
         except Exception as e:
@@ -134,6 +134,10 @@ class RetiariiExperiment(Experiment):
                                'do not use mutators when you use LayerChoice/InputChoice')
         if mutators is not None:
             self.applied_mutators = mutators
+        return base_model_ir, mutators
+
+    def _start_strategy(self):
+        base_model_ir, _ = self._preprocess_model()
 
         _logger.info('Starting strategy...')
         # This is not intuitive and not friendly for debugging (setting breakpoints). Will refactor later.
@@ -193,6 +197,16 @@ class RetiariiExperiment(Experiment):
     def _strategy_monitor(self):
         self._strategy_thread.join()
         self._dispatcher.mark_experiment_as_ending()
+
+    def local_debug_run(self):
+        """
+        Locally run one trial for debug, then exit
+        """
+        base_model_ir, applied_mutators = self._preprocess_model()
+        from ..strategy import LocalDebugStrategy
+        strategy = LocalDebugStrategy()
+        strategy.run(base_model_ir, applied_mutators)
+        _logger.info('local debug completed!')
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
