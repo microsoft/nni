@@ -47,7 +47,7 @@ class ModelSpeedup:
     This class is to speedup the model with provided weight mask
     """
 
-    def __init__(self, model, dummy_input, masks_file, map_location=None, batch_dim=0, confidence=16, fold_bias=False, enable_compile=False):
+    def __init__(self, model, dummy_input, masks_file, map_location=None, batch_dim=0, confidence=8, fold_bias=False, enable_compile=False):
         """
         Parameters
         ----------

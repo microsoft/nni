@@ -19,7 +19,8 @@ replace_module = {
     'Dropout': lambda module, auto_infer: no_replace(module, auto_infer),
     'Dropout2d': lambda module, auto_infer: no_replace(module, auto_infer),
     'Dropout3d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'LayerNorm': lambda module, auto_infer: replace_layernorm(module, auto_infer)
+    'LayerNorm': lambda module, auto_infer: replace_layernorm(module, auto_infer),
+    'ConvTranspose2d': lambda module, auto_infer: replace_convtranspose2d(module, auto_infer)
 }
 
 # NEED_FOLD_BIAS = True
@@ -362,6 +363,10 @@ def replace_conv2d(conv, auto_infer):
     else:
         # print('Fuck me!!!', auto_infer.name)
         return new_conv
+
+def replace_convtranspose2d(module, auto_infer):
+    # TODO add the replace function for the convtranspose2d module
+    return module
 
 def replace_layernorm(layernorm, auto_infer):
     assert isinstance(layernorm, nn.LayerNorm)

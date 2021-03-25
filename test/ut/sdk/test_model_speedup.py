@@ -313,7 +313,7 @@ class SpeedupTestCase(TestCase):
 
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
-        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121' , 'densenet169', 
+        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121', 
                            # 'inception_v3' inception is too large and may fail the pipeline
                             'resnet50']:
                             

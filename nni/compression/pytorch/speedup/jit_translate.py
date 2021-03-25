@@ -224,6 +224,15 @@ def avgpool2d_python(node, speedup):
     new_avgpool = partial(torch.nn.functional.avg_pool2d, kernel_size=kernel_size, stride=stride, padding=padding)
     return new_avgpool
 
+
+def adaptive_avgpool_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    output_size = translate_list(inputs[1], speedup)
+    new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
+    # import pdb; pdb.set_trace()
+    return new_avgpool
+
 # def constructlist_python(node, speedup):
 #     class ListModule(torch.nn.Module):
 #         def forward(self, *args):
@@ -253,7 +262,9 @@ trans_from_jit_to_python = {
     'aten::contiguous': contiguous_python,
     'aten::gelu': gelu_python,
     'aten::cat': cat_python,
-    'aten::avg_pool2d' : avgpool2d_python
+    'aten::avg_pool2d' : avgpool2d_python,
+    'aten::max_pool2d': avgpool2d_python,
+    'aten::adaptive_avg_pool2d': adaptive_avgpool_python
 }
 
 
