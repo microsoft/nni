@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from collections import OrderedDict
-from typing import Any, List, Union, Dict
+import copy
 import warnings
+from collections import OrderedDict
+from typing import Any, Callable, List, Union, Dict, Tuple
 
 import torch
 import torch.nn as nn
@@ -283,6 +284,70 @@ class ValueChoice(Translatable, nn.Module):
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
+
+
+class VariableSequential(nn.Module):
+    """
+    Construct a chain and execute a variable prefix of the chain.
+
+    """
+    def __init__(self,
+                 blocks: Union[Callable, List[Callable], nn.Module, List[nn.Module]],
+                 depth: Union[int, Tuple[int, int]]):
+        self.min_depth = depth if isinstance(depth, int) else depth[0]
+        self.max_depth = depth if isinstance(depth, int) else depth[1]
+        assert self.max_depth >= self.min_depth > 0
+        if not isinstance(blocks, list):
+            if isinstance(blocks, nn.Module):
+                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(self.max_depth - 1)]
+            else:
+                blocks = [blocks for _ in range(self.max_depth)]
+        assert len(blocks) > 0
+        if not isinstance(blocks[0], nn.Module):
+            blocks = [b() for b in blocks]
+        self.blocks = blocks
+        self.depth = ValueChoice(candidates=list(range(self.min_depth, self.max_depth + 1)))
+
+    def forward(self, x):
+        pass
+
+
+class Cell(nn.Module):
+
+    def __init__(self,
+                 op_candidates: Union[Callable, nn.Module],
+                 num_nodes: int,
+                 num_ops_per_node: int,
+                 num_predecessors: int,
+                 merge_op: str,
+                 label: str = None):
+        self._label = f'cell_{uid()}' if label is None else label
+        self.op_candidates = nn.ModuleList()
+        self.input_candidates = nn.ModuleList()
+        self.num_nodes = num_nodes
+        self.num_ops_per_node = num_ops_per_node
+        for i in range(num_nodes):
+            self.op_candidates.append(nn.ModuleList())
+            for k in range(num_ops_per_node):
+                self.op_candidates[-1].append(LayerChoice(op_candidates, label=f'{self.label}/op_{i}_{k}'))
+                self.input_candidates[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
+        assert merge_op in ['all', 'loose_end']
+        self.merge_op = merge_op
+
+    @property
+    def label(self):
+        return self._label
+
+    def forward(self, x: Tuple[torch.Tensor]):
+        states = list(x)
+        for i in range(self.num_nodes):
+            current_state = []
+            for k in range(self.num_ops_per_node):
+                current_state.append(self.op_candidates[i][k](self.input_candidates[i][k](states)))
+            current_state = sum(current_state)
+        states.append(current_state)
+        # TODO: support loose ends
+        return torch.cat(states, 1)
 
 
 @basic_unit
