@@ -53,7 +53,6 @@ def train(args, model, device, train_loader, optimizer, epoch):
             logger.info('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
                 epoch, batch_idx * len(data), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()))
-        break
 
 def test(args, model, device, test_loader):
     model.eval()
