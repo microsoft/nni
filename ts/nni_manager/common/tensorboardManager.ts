@@ -15,7 +15,7 @@ interface TensorboardTaskInfo {
     readonly trialJobIdList: string[];
     readonly trialLogDirectoryList: string[];
     readonly pid?: number;
-    readonly url?: string;
+    readonly port?: string;
 }
 
 abstract class TensorboardManager {

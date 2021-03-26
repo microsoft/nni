@@ -20,7 +20,7 @@ class TensorboardTaskDetail implements TensorboardTaskInfo {
     public trialJobIdList: string[];
     public trialLogDirectoryList: string[];
     public pid?: number;
-    public url?: string;
+    public port?: string;
 
     constructor(id: string, status: TensorboardTaskStatus, trialJobIdList: string[], trialLogDirectoryList: string[]) {
         this.id = id;
@@ -68,7 +68,7 @@ class NNITensorboardManager implements TensorboardManager {
             const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
             this.tensorboardTaskMap.set(tensorboardTask.id, tensorboardTask);
             tensorboardTask.pid = tensorboardProc.pid;
-            tensorboardTask.url = `https://${host}:${port}`;
+            tensorboardTask.port = `${port}`;
             this.log.info(`tensorboard task id: ${tensorboardTask.id}`);
             this.updateTensorboardTask(tensorboardTask.id);
             deferred.resolve(tensorboardTask);
