@@ -117,7 +117,6 @@ def main(args):
         nni.report_intermediate_result(test_acc)
         logger.debug('test accuracy %g', test_acc)
         logger.debug('Pipe send intermediate result done.')
-        break
 
     # report final result
     nni.report_final_result(test_acc)
