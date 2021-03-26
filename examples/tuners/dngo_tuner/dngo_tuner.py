@@ -3,6 +3,7 @@ import torch
 import numpy as np
 
 from nni.tuner import Tuner
+import nni.parameter_expressions as parameter_expressions
 from torch.distributions import Normal
 from pybnn import DNGO
 
@@ -16,11 +17,26 @@ def random_archi_generator(nas_ss, random_state):
         if val['_type'] == 'choice':
             choices = val['_value']
             index = random_state.randint(len(choices))
-            chosen_arch[key] = choices[index]
+            # check values type
+            if type(choices[0]) == int or type(choices[0]) == float:
+                chosen_arch[key] = choices[index]
+            else:
+                chosen_arch[key] = index
         elif val['_type'] == 'uniform':
-            ranges = val['_value']
-            num = random.uniform(ranges[0], ranges[1])
-            chosen_arch[key] = num
+            chosen_arch[key] = random.uniform(val['_value'][0], val['_value'][1])
+        elif val['_type'] == 'randint':
+            chosen_arch[key] = random_state.randint(
+                    val['_value'][0], val['_value'][1], size=1)
+        elif val['_type'] == 'quniform':
+            chosen_arch[key] = parameter_expressions.quniform(
+                val['_value'][0], val['_value'][1], val['_value'][2], random_state)
+        elif val['_type'] == 'loguniform':
+            chosen_arch[key] = parameter_expressions.loguniform(
+                val['_value'][0], val['_value'][1], random_state)
+        elif val['_type'] == 'qloguniform':
+            chosen_arch[key] = parameter_expressions.qloguniform(
+                val['_value'][0], val['_value'][1], val['_value'][2], random_state)
+
         else:
             raise ValueError('Unknown key %s and value %s' % (key, val))
     return chosen_arch
@@ -33,7 +49,6 @@ class DngoTuner(Tuner):
         self.random_state = None
         self.model = DNGO(do_mcmc=False)
         self.first_flag = True
-        self.first_flag2 = True
         self.x = []
         self.y = []
 
@@ -45,7 +60,7 @@ class DngoTuner(Tuner):
         parameters: object created by 'generate_parameters()'
         value: final metrics of the trial, including default metric
         '''
-        # update DNGO model 
+        # update DNGO model
         self.y.append(value)
 
     def generate_parameters(self, parameter_id, **kwargs):
@@ -58,17 +73,7 @@ class DngoTuner(Tuner):
             first_x = random_archi_generator(self.searchspace_json, self.random_state)
             self.x.append(list(first_x.values()))
             return first_x
-
-        if self.first_flag2:
-            self.first_flag2 = False
-            first_x2 = random_archi_generator(self.searchspace_json, self.random_state)
-            self.x.append(list(first_x2.values()))
-            return first_x2
         
-        print("!!!!!! x !!!!!!!!!")
-        print(self.x)
-        print("!!!!!! y !!!!!!!!!")
-        print(self.y)
         self.model.train(np.array(self.x), np.array(self.y), do_optimize=True)
         # random samples
         candidate_x = []
@@ -89,9 +94,8 @@ class DngoTuner(Tuner):
         
         indices = torch.argsort(ei)
         rev_indices = reversed(indices)
-        # index = next(rev_indices).item()
-        # print(index)
-        new_x = candidate_x[0]
+        ind = rev_indices[0].item()
+        new_x = candidate_x[ind]
         self.x.append(list(new_x.values()))
 
         return new_x
