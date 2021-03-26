@@ -9,7 +9,7 @@ from ..utils import randomize_tensor, torch_float_dtype, torch_integer_dtype
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
-STD_DELTA = 1e-20
+STD_DELTA = 1e-8
 
 
 class AutoMaskInference:
@@ -80,7 +80,7 @@ class AutoMaskInference:
         # TODO support the other batch dimension in the future
         self.batch_dim = batch_dim
 
-    def random_init(self, start=0.1, end=1):
+    def random_init(self, start=0.1, end=10):
         """
         Random initialize the weights of the module. The value of
         the tensor will not affect the mask auto inference.
@@ -122,8 +122,12 @@ class AutoMaskInference:
                 self.weights[para_name].requires_grad_(flag)
 
     def apply_mask(self):
+        self.__apply_input_mask()
+        self.__apply_weight_mask()
+
+    def __apply_input_mask(self):
         """
-        Set the masked values to zero.
+        Apply the mask of the input tensor.
         """
         with torch.no_grad():
             # apply the input mask
@@ -134,6 +138,12 @@ class AutoMaskInference:
                         (1-self.in_masks[tid]) * self.in_constants[tid]
 
                     # print(in_tensor.data)
+
+    def __apply_weight_mask(self):
+        """
+        Apply the weight mask of this module.
+        """
+        with torch.no_grad():
             # apply the weight mask
             for para in self.weights:
                 if para in self.weight_mask:
@@ -238,9 +248,8 @@ class AutoMaskInference:
             # print(self.module.weight)
 
             self.module.load_state_dict(self.state_dict)
-            # print(self.module.weight)
-            # if self.name == 'bn1':
-            #     exit(2)
+            # apply weight mask
+            self.__apply_weight_mask()
             out = self.module(*self.dummy_input).clone().detach()
             if isinstance(out, torch.Tensor):
                 constant = torch.zeros_like(out)
@@ -353,6 +362,7 @@ class AutoMaskInference:
         # print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
     def update_direct_sparsity(self):
+        # import pdb; pdb.set_trace()
         with torch.no_grad():
             out_sparsity, out_constant = self.clac_out_sparsity()
             if isinstance(out_sparsity, torch.Tensor):
