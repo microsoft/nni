@@ -23,8 +23,17 @@ There are different keys in a ``dict``. Some of them are common keys supported b
 
 Some other keys are often specific to a certain algorithm, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
-A simple example of configuration is shown below:
+To prune all ``Conv2d`` layers with the sparsity of 0.6, the configuration can be write as:
+.. code-block:: python
 
+   [
+       {
+           'sparsity': 0.6,
+           'op_types': ['Conv2d']
+       },
+   ]
+
+To control the sparsity of specific layers, the configuration can be writed as:
 .. code-block:: python
 
    [
@@ -41,7 +50,6 @@ A simple example of configuration is shown below:
            'op_names': ['op_name3']
        }
    ]
-
 It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for ``op_name1`` and ``op_name2`` use sparsity 0.6, and do not compress ``op_name3``.
 
 Quantization specific keys
