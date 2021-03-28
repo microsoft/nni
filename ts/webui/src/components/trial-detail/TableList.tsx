@@ -368,16 +368,29 @@ class TableList extends React.Component<TableListProps, TableListState> {
             });
         }
         // operations column
-        columns.push({
-            name: 'Operation',
-            key: '_operation',
-            fieldName: 'operation',
-            minWidth: 150,
-            maxWidth: 160,
-            isResizable: true,
-            className: 'detail-table',
-            onRender: this._renderOperationColumn.bind(this)
-        });
+        columns.push(
+            {
+                name: 'Operation',
+                key: '_operation',
+                fieldName: 'operation',
+                minWidth: 150,
+                maxWidth: 160,
+                isResizable: true,
+                className: 'detail-table',
+                onRender: this._renderOperationColumn.bind(this)
+            },
+            {
+                name: 'setting', // add/remove columns setting
+                key: '_setting',
+                fieldName: '',
+                isIconOnly: true,
+                iconName: 'Settings',
+                minWidth: 20,
+                maxWidth: 20,
+                isResizable: false,
+                onColumnClick: (): void => this.setState({ customizeColumnsDialogVisible: true })
+            }
+        );
 
         const { sortInfo } = this.state;
         for (const column of columns) {
@@ -494,13 +507,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
-                            <DefaultButton
-                                className='allList-button-gap'
-                                text='Add/Remove columns'
-                                onClick={(): void => {
-                                    this.setState({ customizeColumnsDialogVisible: true });
-                                }}
-                            />
                             <Dropdown
                                 selectedKey={searchType}
                                 options={Object.entries(searchOptionLiterals).map(([k, v]) => ({
@@ -528,7 +534,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <PaginationTable
                         columns={columns.filter(
                             column =>
-                                displayedColumns.includes(column.key) || ['_expand', '_operation'].includes(column.key)
+                                displayedColumns.includes(column.key) ||
+                                ['_expand', '_operation', '_setting'].includes(column.key)
                         )}
                         items={displayedItems}
                         compact={true}
