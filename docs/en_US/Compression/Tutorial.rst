@@ -39,12 +39,12 @@ To control the sparsity of specific layers, the configuration can be writed as:
    [{
       'sparsity': 0.8,
       'op_types': ['default']
-   },
-    {
+   }, 
+   {
       'sparsity': 0.6,
       'op_names': ['op_name1', 'op_name2']
-   },
-    {
+   }, 
+   {
       'exclude': True,
       'op_names': ['op_name3']
    }]
@@ -69,10 +69,10 @@ bits length of quantization, key is the quantization type, value is the quantiza
 .. code-block:: bash
 
    {
-       quant_bits: {
-           'weight': 8,
-           'output': 4,
-           },
+      quant_bits: {
+         'weight': 8,
+         'output': 4,
+         },
    }
 
 when the value is int type, all quantization types share same bits length. eg. 
@@ -80,7 +80,7 @@ when the value is int type, all quantization types share same bits length. eg.
 .. code-block:: bash
 
    {
-       quant_bits: 8, # weight or output quantization are all 8 bits
+      quant_bits: 8, # weight or output quantization are all 8 bits
    }
 
 The following example shows a more complete ``config_list``\ , it uses ``op_names`` (or ``op_types``\ ) to specify the target layers along with the quantization bits for those layers.
@@ -88,25 +88,26 @@ The following example shows a more complete ``config_list``\ , it uses ``op_name
 .. code-block:: bash
 
    config_list = [{
-           'quant_types': ['weight'],        
-           'quant_bits': 8, 
-           'op_names': ['conv1']
-       }, {
-           'quant_types': ['weight'],
-           'quant_bits': 4,
-           'quant_start_step': 0,
-           'op_names': ['conv2']
-       }, {
-           'quant_types': ['weight'],
-           'quant_bits': 3,
-           'op_names': ['fc1']
-           },
-          {
-           'quant_types': ['weight'],
-           'quant_bits': 2,
-           'op_names': ['fc2']
-           }
-   ]
+      'quant_types': ['weight'],        
+      'quant_bits': 8, 
+      'op_names': ['conv1']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 4,
+      'quant_start_step': 0,
+      'op_names': ['conv2']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 3,
+      'op_names': ['fc1']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 2,
+      'op_names': ['fc2']
+   }]
 
 In this example, 'op_names' is the name of layer and four layers will be quantized to different quant_bits.
 
