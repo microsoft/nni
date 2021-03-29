@@ -389,7 +389,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 onRender: this._renderOperationColumn.bind(this)
             },
             {
-                name: '', // add/remove columns setting
+                name: 'Setting', // add/remove columns setting
                 key: '_setting',
                 fieldName: '',
                 isIconOnly: true,
