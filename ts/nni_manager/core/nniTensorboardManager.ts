@@ -57,22 +57,18 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     private async startTensorboardTaskProcess(trialJobIdList: string[], trialLogDirectoryList: string[]): Promise<TensorboardTaskDetail> {
-        try{
-            const host = 'localhost';
-            const port = await getFreePort(host, 6006, 65535);
-            const command = this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
-            this.log.info(`tensorboard start command: ${command}`);
-            const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env);
-            const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
-            this.tensorboardTaskMap.set(tensorboardTask.id, tensorboardTask);
-            tensorboardTask.pid = tensorboardProc.pid;
-            tensorboardTask.port = `${port}`;
-            this.log.info(`tensorboard task id: ${tensorboardTask.id}`);
-            this.updateTensorboardTask(tensorboardTask.id);
-            return tensorboardTask;
-        } catch (error) {
-            throw error;
-        }
+        const host = 'localhost';
+        const port = await getFreePort(host, 6006, 65535);
+        const command = this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
+        this.log.info(`tensorboard start command: ${command}`);
+        const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env);
+        const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
+        this.tensorboardTaskMap.set(tensorboardTask.id, tensorboardTask);
+        tensorboardTask.pid = tensorboardProc.pid;
+        tensorboardTask.port = `${port}`;
+        this.log.info(`tensorboard task id: ${tensorboardTask.id}`);
+        this.updateTensorboardTask(tensorboardTask.id);
+        return tensorboardTask;
     }
 
     private getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): string {
