@@ -278,7 +278,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 key: k,
                 fieldName: k,
                 minWidth: widths * 0.12,
-                // maxWidth: widths * 0.19,
                 isResizable: true,
                 onColumnClick: this._onColumnClick.bind(this),
                 ...(k === 'status' && {
