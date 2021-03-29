@@ -454,18 +454,18 @@ async function isPortOpen(host: string, port: number): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
         try{
             const stream = net.createConnection(port, host);
-            const id = setTimeout(function () {
+            const id = setTimeout(() => {
                 stream.destroy();
                 resolve(false);
             }, 1000);
 
-            stream.on('connect', function () {
+            stream.on('connect', () => {
                 clearTimeout(id);
                 stream.destroy();
                 resolve(true);
             });
 
-            stream.on('error', function () {
+            stream.on('error', () => {
                 clearTimeout(id);
                 stream.destroy();
                 resolve(false);
@@ -477,18 +477,14 @@ async function isPortOpen(host: string, port: number): Promise<boolean> {
 }
 
 async function getFreePort(host: string, start: number, end: number): Promise<number> {
-    const deferred = new Deferred<number>();
     if (start > end) {
-        deferred.reject(new Error(`no more free port`));
+        throw new Error(`no more free port`);
     }
-    isPortOpen(host, start).then((flag) => {
-        if (!flag) {
-            deferred.resolve(start);
-        } else {
-            getFreePort(host, start + 1, end).then(freePort=>deferred.resolve(freePort)).catch(err=>deferred.reject(err));
-        }
-    })
-    return deferred.promise;
+    if (await isPortOpen(host, start)) {
+        return start;
+    } else {
+        return await getFreePort(host, start + 1, end);
+    }
 }
 
 export {

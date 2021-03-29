@@ -6,7 +6,6 @@
 import * as fs from 'fs';
 import * as cp from 'child_process';
 import { ChildProcess } from 'child_process';
-import { Deferred } from 'ts-deferred';
 
 import * as component from '../common/component';
 import { getLogger, Logger } from '../common/log';
@@ -58,7 +57,6 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     private async startTensorboardTaskProcess(trialJobIdList: string[], trialLogDirectoryList: string[]): Promise<TensorboardTaskDetail> {
-        const deferred = new Deferred<TensorboardTaskDetail>();
         try{
             const host = 'localhost';
             const port = await getFreePort(host, 6006, 65535);
@@ -71,11 +69,10 @@ class NNITensorboardManager implements TensorboardManager {
             tensorboardTask.port = `${port}`;
             this.log.info(`tensorboard task id: ${tensorboardTask.id}`);
             this.updateTensorboardTask(tensorboardTask.id);
-            deferred.resolve(tensorboardTask);
+            return tensorboardTask;
         } catch (error) {
-            deferred.reject(error);
+            throw error;
         }
-        return deferred.promise
     }
 
     private getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): string {
@@ -109,23 +106,24 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     private setTensorboardVersion(): void {
-        let command = 'python3 -m pip show tensorboard | grep Version:';
+        let command = `python3 -c 'import tensorboard ; print(tensorboard.__version__)'`;
         if (process.platform === 'win32') {
-            command = 'python -m pip show tensorboard | findstr Version:';
+            command = `python -c 'import tensorboard ; print(tensorboard.__version__)'`;
         }
         try {
-            const tensorboardVersion = cp.execSync(command).toString().split(': ')[1].replace(/[\r\n]/g,"");
-            this.tensorboardVersion = tensorboardVersion;
+            const tensorboardVersion = cp.execSync(command).toString();
+            if (/\d+(.\d+)*/.test(tensorboardVersion)) {
+                this.tensorboardVersion = tensorboardVersion;
+            }
         } catch (error) {
             this.log.warning(`Tensorboard may not installed, if you want to use tensorboard, please check if tensorboard installed.`);
         }
     }
 
     public async getTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskDetail> {
-        const deferred = new Deferred<TensorboardTaskDetail>();
         const tensorboardTask: TensorboardTaskDetail | undefined = this.tensorboardTaskMap.get(tensorboardTaskId);
         if (tensorboardTask === undefined) {
-            deferred.reject(new Error('Tensorboard task not found'));
+            throw new Error('Tensorboard task not found');
         }
         else{
             if (tensorboardTask.status !== 'STOPPED'){
@@ -134,9 +132,8 @@ class NNITensorboardManager implements TensorboardManager {
                     this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
                 }
             }
-            deferred.resolve(tensorboardTask);
+            return tensorboardTask;
         }
-        return deferred.promise;
     }
 
     public async listTensorboardTasks(): Promise<TensorboardTaskDetail[]> {
@@ -155,12 +152,11 @@ class NNITensorboardManager implements TensorboardManager {
         }
     }
 
-    private async downloadDataFinished(tensorboardTask: TensorboardTaskDetail): Promise<void> {
+    private downloadDataFinished(tensorboardTask: TensorboardTaskDetail): void {
         this.setTensorboardTaskStatus(tensorboardTask, 'RUNNING');
     }
 
     public async updateTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo> {
-        const deferred = new Deferred<TensorboardTaskDetail>();
         const tensorboardTask: TensorboardTaskDetail = await this.getTensorboardTask(tensorboardTaskId);
         if (['RUNNING', 'FAIL_DOWNLOAD_DATA'].includes(tensorboardTask.status)){
             this.setTensorboardTaskStatus(tensorboardTask, 'DOWNLOADING_DATA');
@@ -172,24 +168,21 @@ class NNITensorboardManager implements TensorboardManager {
                 this.setTensorboardTaskStatus(tensorboardTask, 'FAIL_DOWNLOAD_DATA');
                 this.log.error(`${error.message}`);
             });
-            deferred.resolve(tensorboardTask);
+            return tensorboardTask;
         } else {
-            deferred.reject(new Error('only tensorboard task with RUNNING or FAIL_DOWNLOAD_DATA can update data'));
+            throw new Error('only tensorboard task with RUNNING or FAIL_DOWNLOAD_DATA can update data');
         }
-        return deferred.promise;
     }
 
     public async stopTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo>{
-        const deferred = new Deferred<TensorboardTaskDetail>();
         const tensorboardTask = await this.getTensorboardTask(tensorboardTaskId);
         if (['RUNNING', 'FAIL_DOWNLOAD_DATA'].includes(tensorboardTask.status)){
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPING');
             this.killTensorboardTaskProc(tensorboardTask);
-            deferred.resolve(tensorboardTask);
+            return tensorboardTask;
         } else {
-            deferred.reject(new Error('Only RUNNING FAIL_DOWNLOAD_DATA task can be stopped'));
+            throw new Error('Only RUNNING FAIL_DOWNLOAD_DATA task can be stopped');
         }
-        return deferred.promise;
     }
 
     private async killTensorboardTaskProc(tensorboardTask: TensorboardTaskDetail): Promise<void> {
@@ -207,9 +200,9 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     public async stop(): Promise<void> {
-        this.tensorboardTaskMap.forEach(async (value) => {
-            await this.killTensorboardTaskProc(value);
-        });
+        for (const task of this.tensorboardTaskMap) {
+            await this.killTensorboardTaskProc(task[1]);
+        }
         this.log.info('Tensorboard manager stopped.');
     }
 }
