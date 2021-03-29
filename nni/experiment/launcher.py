@@ -22,7 +22,7 @@ from ..tools.nnictl.nnictl_utils import update_experiment
 _logger = logging.getLogger('nni.experiment')
 
 
-def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool, mode: str = 'create') -> Popen:
+def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool, mode: str = 'new') -> Popen:
     proc = None
 
     config.validate(initialized_tuner=False)
