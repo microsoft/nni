@@ -237,7 +237,7 @@ Windows
 python -m pip install --upgrade nni
 ```
 
-If you want to try stable code, please [install NNI](https://nni.readthedocs.io/en/stable/installation.html) from source code.
+If you want to try latest code, please [install NNI](https://nni.readthedocs.io/en/stable/installation.html) from source code.
 
 For detail system requirements of NNI, please refer to [here](https://nni.readthedocs.io/en/stable/Tutorial/InstallationLinux.html#system-requirements) for Linux & macOS, and [here](https://nni.readthedocs.io/en/stable/Tutorial/InstallationWin.html#system-requirements) for Windows.
 

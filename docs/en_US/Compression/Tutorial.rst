@@ -29,7 +29,7 @@ To prune all ``Conv2d`` layers with the sparsity of 0.6, the configuration can b
    [{
     'sparsity': 0.6,
     'op_types': ['Conv2d']
-    }]
+   }]
 
 To control the sparsity of specific layers, the configuration can be writed as:
 .. code-block:: python
