@@ -76,8 +76,11 @@ class Compressor:
 
         # a layer can be referenced in multiple attributes of a model,
         # but should only be instrumented once
-        if id(layer) in self._wrappers:
-            return self._wrappers[id(layer)]
+        wrapper = self._wrappers.get(id(layer))
+        if wrapper is not None:
+            if not wrapper._instrumented:
+                self._instrument(layer)
+            return wrapper
 
         config = self._select_config(layer)
         if config is not None:
@@ -85,6 +88,18 @@ class Compressor:
             self._wrappers[id(layer)] = wrapper
             return wrapper
 
+        return layer
+
+    def _uninstrument(self, layer):
+        # note that ``self._wrappers`` cache is not cleared here,
+        # so the same wrapper objects will be recovered in next ``self._instrument()`` call
+        if isinstance(self, LayerWrapper):
+            layer._instrumented = False
+            return self._uninstrument(layer.layer)
+        if isinstance(layer, tf.keras.Sequential):
+            return self._uninstrument_sequential(layer)
+        if isinstance(layer, tf.keras.Model):
+            return self._uninstrument_model(layer)
         return layer
 
     def _instrument_sequential(self, seq):
@@ -96,6 +111,16 @@ class Compressor:
                 layers[i] = new_layer
                 need_rebuild = True
         return tf.keras.Sequential(layers) if need_rebuild else seq
+
+    def _uninstrument_sequential(self, seq):
+        layers = list(seq.layers)
+        rebuilt = False
+        for i, layer in enumerate(layers):
+            orig_layer = self._uninstrument(layer)
+            if orig_layer is not layer:
+                layers[i] = orig_layer
+                rebuilt = True
+        return tf.keras.Sequential(layers) if rebuilt else seq
 
     def _instrument_model(self, model):
         for key, value in list(model.__dict__.items()):  # avoid "dictionary keys changed during iteration"
@@ -109,6 +134,17 @@ class Compressor:
                         value[i] = self._instrument(item)
         return model
 
+    def _uninstrument_layer(self, model):
+        for key, value in list(model.__dict__.items()):
+            if isinstance(value, tf.keras.layers.Layer):
+                orig_layer = self._uninstrument(value)
+                if orig_layer is not value:
+                    setattr(model, key, orig_layer)
+            elif isinstance(value, list):
+                for i, item in enumerate(value):
+                    if isinstance(item, tf.keras.layers.Layer):
+                        value[i] = self._uninstrument(item)
+        return model
 
     def _select_config(self, layer):
         # Find the last matching config block for given layer.
@@ -127,6 +163,17 @@ class Compressor:
         if last_match is None or 'exclude' in last_match:
             return None
         return last_match
+
+
+class LayerWrapper(tf.keras.Model):
+    """
+    Abstract base class of layer wrappers.
+
+    Concrete layer wrapper classes must inherit this to support ``isinstance`` check.
+    """
+    def __init__(self):
+        super().__init__()
+        self._instrumented = True
 
 
 class Pruner(Compressor):
@@ -167,6 +214,25 @@ class Pruner(Compressor):
         self._update_mask()
         return self.compressed_model
 
+    def export_model(self, model_path, mask_path=None):
+        """
+        Export pruned model and optionally mask tensors.
+        """
+        _logger.info('Saving model to %s', model_path)
+        model = self._uninstrument(self.compressed_model)
+        model.save(model_path)
+        self._instrument(model)
+
+        if mask_path is not None:
+            _logger.info('Saving masks to %s', mask_path)
+            # can't find "save raw weights" API in tensorflow, so build a simple model
+            mask_model = tf.keras.Model()
+            for wrapper in self.wrappers:
+                setattr(mask_model, wrapper.layer.name, wrapper.masks)
+            mask_model.save_weights(mask_path)
+
+        _logger.info('Done')
+
     def calc_masks(self, wrapper, **kwargs):
         """
         Abstract method to be overridden by algorithm. End users should ignore it.
@@ -199,7 +265,7 @@ class Pruner(Compressor):
                 wrapper.masks = masks
 
 
-class PrunerLayerWrapper(tf.keras.Model):
+class PrunerLayerWrapper(LayerWrapper):
     """
     Instrumented TF layer.
 
@@ -210,8 +276,6 @@ class PrunerLayerWrapper(tf.keras.Model):
 
     Attributes
     ----------
-    layer_info : LayerInfo
-        All static information of the original layer.
     layer : tf.keras.layers.Layer
         The original layer.
     config : JSON object
@@ -233,6 +297,10 @@ class PrunerLayerWrapper(tf.keras.Model):
         _logger.info('Layer detected to compress: %s', self.layer.name)
 
     def call(self, *inputs):
+        self._update_weights()
+        return self.layer(*inputs)
+
+    def _update_weights(self):
         new_weights = []
         for weight in self.layer.weights:
             mask = self.masks.get(weight.name)
@@ -243,7 +311,6 @@ class PrunerLayerWrapper(tf.keras.Model):
         if new_weights and not hasattr(new_weights[0], 'numpy'):
             raise RuntimeError('NNI: Compressed model can only run in eager mode')
         self.layer.set_weights([weight.numpy() for weight in new_weights])
-        return self.layer(*inputs)
 
 
 # TODO: designed to replace `patch_optimizer`
