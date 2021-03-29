@@ -5,8 +5,6 @@ import os
 import tensorrt as trt
 import pycuda.driver as cuda
 
-
-
 class Calibrator(trt.IInt8Calibrator):
     def __init__(self, training_data, cache_file, batch_size=64, algorithm=trt.CalibrationAlgoType.ENTROPY_CALIBRATION_2):
         """

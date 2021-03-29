@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 import numpy as np
 
+from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 
 class Mnist(torch.nn.Module):
@@ -85,14 +86,46 @@ def main():
 
     model = Mnist()
 
-    config = {
-        'conv1':{'weight_bit':8, 'activation_bit':8},
-        'conv2':{'weight_bit':32, 'activation_bit':32},
-        'fc1':{'weight_bit':16, 'activation_bit':16},
-        'fc2':{'weight_bit':8, 'activation_bit':8},
-    }
+    configure_list = [{
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu1']
+        }, {
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['conv2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu2']
+        }, {
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['fc1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu3']
+        }, {
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['fc2']
+        }
+    ]
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    model.to(device)
+    for epoch in range(1):
+        print('# Epoch {} #'.format(epoch))
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+
+    quantizer = QAT_Quantizer(model, configure_list, optimizer)
+    quantizer.compress()
 
     model.to(device)
     for epoch in range(1):
@@ -100,11 +133,15 @@ def main():
         train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
 
+    model_path = "mnist_model.pth"
+    calibration_path = "mnist_calibration.pth"
+    calibration_config = quantizer.export_model(model_path, calibration_path)
+
     batch_size = 32
     input_shape = (batch_size, 1, 28, 28)
     test_set, test_labels = get_testset(trans, test_loader)
 
-    engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data=test_set, batchsize=batch_size)
+    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=batch_size)
     engine.compress()
     output, time = engine.inference(test_set)
 

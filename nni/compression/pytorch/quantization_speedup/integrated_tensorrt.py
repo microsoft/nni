@@ -10,6 +10,7 @@ from . import calibrator as calibrator
 from . import common as common
 from .backend import BaseModelSpeedup
 
+# TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
 TRT_LOGGER = trt.Logger()
 
 class CalibrateType:
@@ -24,9 +25,8 @@ Precision_Dict = {
     32: trt.float32
 }
 
-def build_engine(model_file, calib, config=None, extra_layer_bit='float32', strict_datatype=False):
-    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network,\
-        trt.OnnxParser(network, TRT_LOGGER) as parser:
+def build_engine(model_file, calib, config=None, extra_layer_bit=32, strict_datatype=False):
+    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
         """
         This function builds an engine from an onnx model.
         """
@@ -60,16 +60,75 @@ def build_engine(model_file, calib, config=None, extra_layer_bit='float32', stri
                 break
             layer = network.get_layer(i)
             if layer.name in config:
-                bitset = config[layer.name]
-                layer.precision = Precision_Dict[bitset]
-                layer.set_output_type(0, Precision_Dict[bitset])
+                w_bit = config[layer.name]['weight_bit']
+                a_bit = config[layer.name]['activation_bit']
+                layer.precision = Precision_Dict[w_bit]
+                layer.set_output_type(0, Precision_Dict[a_bit])
+        # Build engine and do int8 calibration.
+        engine = builder.build_cuda_engine(network)
+        return engine
+
+def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, strict_datatype=False):
+    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, trt.OnnxParser(network, TRT_LOGGER) as parser:
+        """
+        This function builds an engine from an onnx model.
+        """
+        # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
+        builder.max_batch_size = 1
+        builder.max_workspace_size = common.GiB(1)
+
+        if extra_layer_bit == 32 and config is None:
+            pass
+        elif extra_layer_bit == 8 and config is None:
+            # entire model in 8bit mode
+            builder.int8_mode = True
+        else:
+            pass
+            builder.int8_mode = True
+            builder.fp16_mode = True
+            builder.strict_type_constraints = strict_datatype
+
+        # Parse onnx model
+        with open(model_file, 'rb') as model:
+            if not parser.parse(model.read()):
+                print ('ERROR: Fail to parse the ONNX file.')
+                for error in range(parser.num_errors):
+                    print (parser.get_error(error))
+                return None
+
+        input_tensor = network.get_input(0)
+        input_tensor.dynamic_range = (-100, 100)
+        # This design may not be correct if output more than one
+        for i in range(network.num_layers):
+            if config is None:
+                break
+            layer = network.get_layer(i)
+            if layer.name in config and 'weight_bit' in config[layer.name]:
+                w_bit = config[layer.name]['weight_bit']
+                a_bit = config[layer.name]['activation_bit']
+                tracked_min = config[layer.name]['tracked_min']
+                tracked_max = config[layer.name]['tracked_max']
+                layer.precision = Precision_Dict[w_bit]
+                # layer.set_output_type(0, Precision_Dict[a_bit])
+                # layer.set_output_type(0, trt.int32)
+                tensor = layer.get_output(0)
+                tensor.dynamic_range = (tracked_min, tracked_max)                
+            if  layer.name in config and 'weight_bit' not in config[layer.name]:
+                a_bit = config[layer.name]['activation_bit']
+                tracked_min = config[layer.name]['tracked_min']
+                tracked_max = config[layer.name]['tracked_max']
+                layer.precision = Precision_Dict[a_bit]
+                # layer.set_output_type(0, Precision_Dict[a_bit])
+                # layer.set_output_type(0, trt.int32)
+                tensor = layer.get_output(0)
+                tensor.dynamic_range = (tracked_min, tracked_max)
         # Build engine and do int8 calibration.
         engine = builder.build_cuda_engine(network)
         return engine
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
-    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx", extra_layer_bit=32, strict_datatype=True,
-        calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = "calibration.cache", batchsize=1,
+    def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx", extra_layer_bit=32, strict_datatype=True,  
+        calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = "calibration.cache", batchsize=1, 
         input_names=["actual_input_1"], output_names=["output1"]):
         """
         Parameters
@@ -85,7 +144,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         extra_layer_bit : int
             Other layers which are not in config will be quantized to corresponding bit number.
         strict_datatype : bool
-            Whether constrain layer bit to the number given in config or not. If true, all the layer
+            Whether constrain layer bit to the number given in config or not. If true, all the layer 
             will be set to given bit strictly. Otherwise, these layers will be set automatically by
             tensorrt.
         calibrate_type : tensorrt.tensorrt.CalibrationAlgoType
@@ -127,19 +186,24 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         assert self.input_shape is not None
 
         # Convert pytorch model to onnx model and save onnx model in onnx_path
-        _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape,
+        _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape, 
             model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
 
         if self.calib_data is not None:
             assert self.calibrate_type is not None
             context = self.tensorrt_build_withcalib(self.onnx_path)
         else:
-            raise NameError('quantized without calibrate has not been supported.')
+            context = self.tensorrt_build_withoutcalib(self.onnx_path)
+            # raise NameError('quantized without calibrate has not been supported.')
         self.context = context
 
     def tensorrt_build_withcalib(self, onnx_path):
         calib = calibrator.Calibrator(self.calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
         engine = build_engine(onnx_path, calib, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
+        return engine.create_execution_context()
+
+    def tensorrt_build_withoutcalib(self, onnx_path):
+        engine = build_engine_without_calib(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
     def inference(self, test_data):
