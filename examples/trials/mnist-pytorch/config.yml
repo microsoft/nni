@@ -1,8 +1,8 @@
 authorName: default
 experimentName: example_mnist_pytorch
-trialConcurrency: 3
-maxExecDuration: 10000h
-maxTrialNum: 10000
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
 #choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
@@ -11,11 +11,11 @@ useAnnotation: false
 tuner:
   #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
   #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: SMAC
+  builtinTunerName: TPE
   classArgs:
     #choice: maximize, minimize
     optimize_mode: maximize
 trial:
   command: python3 mnist.py
   codeDir: .
-  gpuNum: 1
+  gpuNum: 0
