@@ -16,7 +16,7 @@ from .base import BaseGraphData
 _logger = logging.getLogger(__name__)
 
 
-class CGOExecutionEngine(AbstractExecutionEngine):
+class CGOExecutionEngine(AbstractExecutionEngine):  # pylint: disable=abstract-class-instantiated
     def __init__(self, n_model_per_graph=4) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
