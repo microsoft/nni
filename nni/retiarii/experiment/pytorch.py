@@ -188,13 +188,13 @@ class RetiariiExperiment(Experiment):
         Thread(target=self._check_exp_status).start()
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
-        #_logger.info('Strategy exits. Waiting for submitted trial jobs to finish...')
-        _logger.info('Strategy exits. Waiting for experiment to become DONE...')
+        # _logger.info('Waiting for submitted trial jobs to finish...')
+        _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
 
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def local_debug_run(self, gpu_indices=None):
+    def local_debug_run(self):
         """
         Locally run only one trial without launching an experiment for debug purpose, then exit.
         For example, it can be used to quickly check shape mismatch.
