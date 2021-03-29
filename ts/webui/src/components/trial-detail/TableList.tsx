@@ -278,14 +278,20 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 key: k,
                 fieldName: k,
                 minWidth: widths * 0.12,
-                maxWidth: widths * 0.19,
+                // maxWidth: widths * 0.19,
                 isResizable: true,
                 onColumnClick: this._onColumnClick.bind(this),
                 ...(k === 'status' && {
                     // color status
+                    minWidth: 193,
+                    maxWidth: 267,
                     onRender: (record): React.ReactNode => (
                         <span className={`${record.status} commonStyle`}>{record.status}</span>
                     )
+                }),
+                ...(k === 'sequenceId' && {
+                    minWidth: 142,
+                    maxWidth: 202
                 }),
                 ...(k === 'message' && {
                     onRender: (record): React.ReactNode =>
@@ -331,6 +337,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 }),
                 ...(k === 'latestAccuracy' && {
                     // FIXME: this is ad-hoc
+                    minWidth: 243,
+                    maxWidth: 301,
                     onRender: (record): React.ReactNode => (
                         <TooltipHost
                             content={record._formattedLatestAccuracy}
@@ -358,6 +366,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     )
                 }),
                 ...(k === 'id' && {
+                    minWidth: 189,
+                    maxWidth: 272,
                     onRender: (record): React.ReactNode => (
                         <Stack horizontal className='idCopy'>
                             <div>{record.id}</div>
@@ -374,19 +384,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 key: '_operation',
                 fieldName: 'operation',
                 minWidth: 150,
-                maxWidth: 160,
+                maxWidth: 150,
                 isResizable: true,
                 className: 'detail-table',
                 onRender: this._renderOperationColumn.bind(this)
             },
             {
-                name: 'setting', // add/remove columns setting
+                name: '', // add/remove columns setting
                 key: '_setting',
                 fieldName: '',
                 isIconOnly: true,
                 iconName: 'Settings',
-                minWidth: 20,
-                maxWidth: 20,
+                headerClassName: 'addRemoveIcon',
+                // title: 'Add/Remove columns',
+                minWidth: 22,
+                maxWidth: 40,
                 isResizable: false,
                 onColumnClick: (): void => this.setState({ customizeColumnsDialogVisible: true })
             }

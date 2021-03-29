@@ -59,3 +59,13 @@
     max-height: 335px;
     overflow-y: auto;
 }
+
+.addRemoveIcon {
+    i { font-size: 20px; }
+
+    &:hover {
+        i {
+            color: #0071bc;
+        }
+    }
+}
