@@ -198,6 +198,9 @@ class RetiariiExperiment(Experiment):
         """
         Locally run only one trial without launching an experiment for debug purpose, then exit.
         For example, it can be used to quickly check shape mismatch.
+
+        Specifically, it applies mutators (default to choose the first candidate for the choices)
+        to generate a new model, then run this model locally.
         """
         base_model_ir, applied_mutators = self._preprocess_model()
         from ..strategy import LocalDebugStrategy

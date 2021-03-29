@@ -197,6 +197,8 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 The complete code of a simple MNIST example can be found :githublink:`here <test/retiarii_test/mnist/test.py>`.
 
+**Local Debug Mode**: When running an experiment, it is easy to get some trivial errors in trial code, such as shape mismatch, undefined variable. To quickly fix these kinds of errors, we provide local debug mode which locally applies mutators once and runs only that generated model. To use local debug mode, users can simply replace ``exp.run(exp_config, 8081)`` in above code snippet with ``exp.local_debug_run()``.
+
 Visualize the Experiment
 ------------------------
 
