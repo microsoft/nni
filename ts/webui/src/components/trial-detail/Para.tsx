@@ -114,7 +114,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.01', text: 'Top 1%' },
                             { key: '0.05', text: 'Top 5%' },
                             { key: '0.2', text: 'Top 20%' },
-                            { key: '1', text: 'Topxx 100%' }
+                            { key: '1', text: 'Top 100%' }
                         ]}
                         styles={{ dropdown: { width: 120 } }}
                         className='para-filter-percent'
