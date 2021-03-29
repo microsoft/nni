@@ -14,7 +14,7 @@ NNI provides a model compression toolkit to help user compress and speed up thei
 * Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
 * Concise interface for users to customize their own compression algorithms.
 
-*Note that NNI compresses the model through a simulation process. To obtain a truly compact model, users should conduct model speedup. The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.*
+.. Note:: NNI compresses the model through a simulation process. To obtain a truly compact model, users should conduct model speedup. The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.
 
 
 Supported Algorithms
