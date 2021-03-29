@@ -47,7 +47,7 @@ class Trial:
 
         nni_log(LogType.Info, "%s: start to run trial" % self.name)
 
-        trial_working_dir = os.path.realpath(os.path.join(os.curdir, "trials", self.id))
+        trial_working_dir = os.path.realpath(os.path.join(os.curdir, "..", "..", "trials", self.id))
         self.trial_output_dir = os.path.join(trial_working_dir, trial_output_path_name)
         trial_code_dir = os.path.join(trial_working_dir, "code")
         trial_nnioutput_dir = os.path.join(trial_working_dir, "nnioutput")
