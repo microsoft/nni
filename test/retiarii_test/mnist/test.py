@@ -52,5 +52,5 @@ if __name__ == '__main__':
     exp_config.max_trial_number = 10
     exp_config.training_service.use_active_gpu = False
 
-    #exp.run(exp_config, 8081 + random.randint(0, 100))
-    exp.local_debug_run()
+    exp.run(exp_config, 8081 + random.randint(0, 100))
+    #exp.local_debug_run()

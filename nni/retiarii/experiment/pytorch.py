@@ -116,8 +116,6 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-        self._strategy_thread: Optional[Thread] = None
-
     def _preprocess_model(self):
         try:
             script_module = torch.jit.script(self.base_model)
@@ -139,12 +137,10 @@ class RetiariiExperiment(Experiment):
     def _start_strategy(self):
         base_model_ir, _ = self._preprocess_model()
 
-        _logger.info('Starting strategy...')
-        # This is not intuitive and not friendly for debugging (setting breakpoints). Will refactor later.
-        self._strategy_thread = Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators))
-        self._strategy_thread.start()
-        _logger.info('Strategy started!')
-        Thread(target=self._strategy_monitor).start()
+        _logger.info('Start strategy...')
+        self.strategy.run(base_model_ir, self.applied_mutators)
+        _logger.info('Strategy exit')
+        self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -189,24 +185,27 @@ class RetiariiExperiment(Experiment):
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
+        Thread(target=self._check_exp_status).start()
         self._start_strategy()
+        # TODO: the experiment should be completed, when strategy exits and there is no running job
+        #_logger.info('Strategy exits. Waiting for submitted trial jobs to finish...')
+        _logger.info('Strategy exits. Waiting for experiment to become DONE...')
 
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def _strategy_monitor(self):
-        self._strategy_thread.join()
-        self._dispatcher.mark_experiment_as_ending()
-
-    def local_debug_run(self):
+    def local_debug_run(self, gpu_indices=None):
         """
-        Locally run one trial for debug, then exit
+        Locally run only one trial without launching an experiment for debug purpose, then exit.
+        For example, it can be used to quickly check shape mismatch.
         """
         base_model_ir, applied_mutators = self._preprocess_model()
         from ..strategy import LocalDebugStrategy
         strategy = LocalDebugStrategy()
         strategy.run(base_model_ir, applied_mutators)
         _logger.info('local debug completed!')
+        self._dispatcher.stopping = True
+        self._dispatcher = None
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
@@ -218,15 +217,14 @@ class RetiariiExperiment(Experiment):
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
-            self._run(port, debug)
+            self.start(port, debug)
 
-    def _run(self, port: int = 8080, debug: bool = False) -> bool:
+    def _check_exp_status(self) -> bool:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         Return `True` when experiment done; or return `False` when experiment failed.
         """
-        self.start(port, debug)
         try:
             while True:
                 time.sleep(10)

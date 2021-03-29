@@ -5,7 +5,6 @@ import logging
 import os
 import random
 import string
-import time
 
 from .. import Sampler, codegen, utils
 from ..execution.base import BaseGraphData
