@@ -270,6 +270,7 @@ class RetiariiExperiment(Experiment):
             How many models are intended to be exported.
         optimize_mode : str
             ``maximize`` or ``minimize``. Not supported by one-shot algorithms.
+            ``optimize_mode`` is likely to be removed and defined in strategy in future.
         formatter : str
             Only model code is supported for now. Not supported by one-shot algorithms.
         """
