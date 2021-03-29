@@ -51,7 +51,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
-            chosenDimensions: []
+            chosenDimensions:
+                localStorage.getItem('paraColumns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('paraColumns')!)
+                    : []
         };
     }
 
@@ -110,7 +114,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             { key: '0.01', text: 'Top 1%' },
                             { key: '0.05', text: 'Top 5%' },
                             { key: '0.2', text: 'Top 20%' },
-                            { key: '1', text: 'Top 100%' }
+                            { key: '1', text: 'Topxx 100%' }
                         ]}
                         styles={{ dropdown: { width: 120 } }}
                         className='para-filter-percent'
@@ -130,6 +134,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
                         minSelected={2}
+                        whichComponent='para'
                     />
                 )}
                 <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />
