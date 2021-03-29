@@ -59,7 +59,7 @@ class NNITensorboardManager implements TensorboardManager {
     private async startTensorboardTaskProcess(trialJobIdList: string[], trialLogDirectoryList: string[]): Promise<TensorboardTaskDetail> {
         const host = 'localhost';
         const port = await getFreePort(host, 6006, 65535);
-        const command = this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
+        const command = await this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
         this.log.info(`tensorboard start command: ${command}`);
         const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env);
         const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
@@ -71,7 +71,7 @@ class NNITensorboardManager implements TensorboardManager {
         return tensorboardTask;
     }
 
-    private getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): string {
+    private async getTensorboardStartCommand(trialJobIdList: string[], trialLogDirectoryList: string[], port: number): Promise<string> {
         if (this.tensorboardVersion === undefined) {
             this.setTensorboardVersion();
             if (this.tensorboardVersion === undefined) {
@@ -90,10 +90,11 @@ class NNITensorboardManager implements TensorboardManager {
         }
         try {
             const logRealPaths: string[] = [];
-            trialJobIdList.forEach((trialJobId, idx) => {
+            for (const idx in trialJobIdList) {
                 const realPath = fs.realpathSync(trialLogDirectoryList[idx]);
-                logRealPaths.push(`${trialJobId}:${realPath}`);
-            });
+                const trialJob = await this.nniManager.getTrialJob(trialJobIdList[idx]);
+                logRealPaths.push(`${trialJob.sequenceId}-${trialJobIdList[idx]}:${realPath}`);
+            }
             const command = `tensorboard ${logdirCmd}=${logRealPaths.join(',')} --port=${port}`;
             return command;
         } catch (error){
