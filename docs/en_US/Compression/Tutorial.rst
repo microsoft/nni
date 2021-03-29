@@ -17,7 +17,7 @@ The ``dict``\ s in the ``list`` are applied one by one, that is, the configurati
 
 There are different keys in a ``dict``. Some of them are common keys supported by all the compression algorithms:
 
-* **op_types**\ : This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
+* **op_types**\ : This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting. All suported module types are defined in :githublink:`default_layers.py <nni/compression/pytorch/default_layers.py>` for pytorch.
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
