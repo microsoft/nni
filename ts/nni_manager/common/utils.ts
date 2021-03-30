@@ -481,9 +481,9 @@ async function getFreePort(host: string, start: number, end: number): Promise<nu
         throw new Error(`no more free port`);
     }
     if (await isPortOpen(host, start)) {
-        return start;
-    } else {
         return await getFreePort(host, start + 1, end);
+    } else {
+        return start;
     }
 }
 
