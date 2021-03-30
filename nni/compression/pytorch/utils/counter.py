@@ -43,7 +43,13 @@ class ModelProfiler:
             nn.ConvTranspose1d: self._count_convNd,
             nn.ConvTranspose2d: self._count_convNd,
             nn.ConvTranspose3d: self._count_convNd,
-            nn.Linear: self._count_linear
+            nn.Linear: self._count_linear,
+            nn.RNNCell: self._count_rnn_cell,
+            nn.GRUCell: self._count_gru_cell,
+            nn.LSTMCell: self._count_lstm_cell,
+            nn.RNN: self._count_rnn,
+            nn.GRU: self._count_gru,
+            nn.LSTM: self._count_lstm
         }
         self._count_bias = False
         if mode == 'full':
@@ -60,13 +66,7 @@ class ModelProfiler:
                 nn.AdaptiveAvgPool3d: self._count_adap_avgpool,
                 nn.Upsample: self._count_upsample,
                 nn.UpsamplingBilinear2d: self._count_upsample,
-                nn.UpsamplingNearest2d: self._count_upsample,
-                nn.RNNCell: self._count_rnn_cell,
-                nn.GRUCell: self._count_gru_cell,
-                nn.LSTMCell: self._count_lstm_cell,
-                nn.RNN: self._count_rnn,
-                nn.GRU: self._count_gru,
-                nn.LSTM: self._count_lstm,
+                nn.UpsamplingNearest2d: self._count_upsample
             })
             self._count_bias = True
 
