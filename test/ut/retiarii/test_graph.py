@@ -23,7 +23,7 @@ def _test_file(json_path):
 
     # add default values to JSON, so we can compare with `==`
     for graph_name, graph in orig_ir.items():
-        if graph_name == '_training_config':
+        if graph_name == '_evaluator':
             continue
         if 'inputs' not in graph:
             graph['inputs'] = None

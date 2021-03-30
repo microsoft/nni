@@ -1,31 +1,54 @@
 $themeBlue: #0071bc;
 
 .ellipsis {
-	overflow: hidden;
-	white-space: nowrap;
-	text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
 }
 
 .link {
-	outline: none;
-	color: #333 !important;
-	text-decoration: none;
-	
-	&:hover {
-		color: #0071bc !important;
-		text-decoration: underline;
-	}
-	&:active,
-	&:visited {
-		color: #0071bc;
-	}
+    outline: none;
+    color: #333 !important;
+    text-decoration: none;
+
+    &:hover {
+        color: #0071bc !important;
+        text-decoration: underline;
+    }
+
+    &:active,
+    &:visited {
+        color: #0071bc;
+    }
 }
 
 .cursor {
-	&:hover,
-	& i:hover {
-		cursor: pointer;
-	}
+    &:hover,
+    & i:hover {
+        cursor: pointer;
+    }
+}
+
+.idCopy {
+    .ms-Button--icon {
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+    }
+
+    i {
+        color: #33333c;
+    }
+}
+
+.ms-DetailsRow {
+    height: 32px;
+}
+
+/* for graph tooltip style */
+.graph > div > div {
+    padding: 0 !important;
+    border: none !important;
 }
 
 .elementMarginLeft {

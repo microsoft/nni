@@ -25,6 +25,7 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
+import { NNIRestServer } from '../rest_server/nniRestServer';
 
 /**
  * NNIManager which implements Manager interface
@@ -296,10 +297,74 @@ class NNIManager implements Manager {
     }
 
     public async stopExperiment(): Promise<void> {
+        await this.stopExperimentTopHalf();
+        await this.stopExperimentBottomHalf();
+    }
+
+    public async stopExperimentTopHalf(): Promise<void> {
         this.setStatus('STOPPING');
         this.log.info('Stopping experiment, cleaning up ...');
-        await this.experimentDoneCleanUp();
+
+        if (this.dispatcher === undefined) {
+            this.log.error('Tuner has not been setup');
+            return;
+        }
+
+        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
+        if (this.dispatcherPid > 0) {
+            this.dispatcher.sendCommand(TERMINATE);
+            // gracefully terminate tuner and assessor here, wait at most 30 seconds.
+            for (let i: number = 0; i < 30; i++) {
+                if (!await isAlive(this.dispatcherPid)) {
+                    break;
+                }
+                await delay(1000);
+            }
+            await killPid(this.dispatcherPid);
+        }
+        this.dispatcher = undefined;
+    }
+
+    public async stopExperimentBottomHalf(): Promise<void> {
+        try {
+            const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
+
+            // DON'T try to make it in parallel, the training service may not handle it well.
+            // If there is performance concern, consider to support batch cancellation on training service.
+            for (const trialJob of trialJobList) {
+                if (trialJob.status === 'RUNNING' ||
+                    trialJob.status === 'WAITING') {
+                    try {
+                        this.log.info(`cancelTrialJob: ${trialJob.id}`);
+                        await this.trainingService.cancelTrialJob(trialJob.id);
+                    } catch (error) {
+                        this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
+                    }
+                }
+            }
+            await this.trainingService.cleanUp();
+        } catch (err) {
+            this.log.error(`${err.stack}`);
+        }
+        if (this.experimentProfile.endTime === undefined) {
+            this.setEndtime();
+        }
+        await this.storeExperimentProfile();
+        this.setStatus('STOPPED');
         this.log.info('Experiment stopped.');
+
+        let hasError: boolean = false;
+        try {
+            await this.experimentManager.stop();
+            await this.dataStore.close();
+            await component.get<NNIRestServer>(NNIRestServer).stop();
+        } catch (err) {
+            hasError = true;
+            this.log.error(`${err.stack}`);
+        } finally {
+            this.log.close();
+            process.exit(hasError ? 1 : 0);
+        }
     }
 
     public async getMetricData(trialJobId?: string, metricType?: MetricType): Promise<MetricDataRecord[]> {
@@ -351,14 +416,6 @@ class NNIManager implements Manager {
 
     public getStatus(): NNIManagerStatus {
         return this.status;
-    }
-
-    public getTrialJobMessage(trialJobId: string): string | undefined {
-        const trialJob = this.trialJobs.get(trialJobId);
-        if (trialJob !== undefined){
-            return trialJob.message
-        }
-        return undefined
     }
 
     public async listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
@@ -443,45 +500,6 @@ class NNIManager implements Manager {
         this.experimentProfile.params.maxTrialNum = maxTrialNum;
 
         return;
-    }
-
-    private async experimentDoneCleanUp(): Promise<void> {
-        if (this.dispatcher === undefined) {
-            throw new Error('Error: tuner has not been setup');
-        }
-        this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
-        if (this.dispatcherPid > 0) {
-            this.dispatcher.sendCommand(TERMINATE);
-            let tunerAlive: boolean = true;
-            // gracefully terminate tuner and assessor here, wait at most 30 seconds.
-            for (let i: number = 0; i < 30; i++) {
-                if (!tunerAlive) { break; }
-                tunerAlive = await isAlive(this.dispatcherPid);
-                await delay(1000);
-            }
-            await killPid(this.dispatcherPid);
-        }
-        const trialJobList: TrialJobDetail[] = await this.trainingService.listTrialJobs();
-
-        // DON'T try to make it in parallel, the training service may not handle it well.
-        // If there is performance concern, consider to support batch cancellation on training service.
-        for (const trialJob of trialJobList) {
-            if (trialJob.status === 'RUNNING' ||
-                trialJob.status === 'WAITING') {
-                try {
-                    this.log.info(`cancelTrialJob: ${trialJob.id}`);
-                    await this.trainingService.cancelTrialJob(trialJob.id);
-                } catch (error) {
-                    this.log.debug(`ignorable error on canceling trial ${trialJob.id}. ${error}`);
-                }
-            }
-        }
-        await this.trainingService.cleanUp();
-        if (this.experimentProfile.endTime === undefined) {
-            this.setEndtime();
-        }
-        await this.storeExperimentProfile();
-        this.setStatus('STOPPED');
     }
 
     private async periodicallyUpdateExecDuration(): Promise<void> {
@@ -631,8 +649,9 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
-                    this.trialJobs.set(trialJobDetail.id, Object.assign({}, trialJobDetail));
+                    this.trialJobs.set(trialJobDetail.id, Snapshot);
                     const trialJobDetailSnapshot: TrialJobDetail | undefined = this.trialJobs.get(trialJobDetail.id);
                     if (trialJobDetailSnapshot != undefined) {
                         await this.dataStore.storeTrialJobEvent(

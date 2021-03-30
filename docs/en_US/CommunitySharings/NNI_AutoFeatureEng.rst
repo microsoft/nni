@@ -137,5 +137,6 @@ Conclusion: NNI could offer users some inspirations of design and it is a good o
 
 Tips: Because the scripts of open source projects are compiled based on gcc7, Mac system may encounter problems of gcc (GNU Compiler Collection). The solution is as follows:
 
-brew install libomp
-===================
+.. code-block:: bash
+
+   brew install libomp

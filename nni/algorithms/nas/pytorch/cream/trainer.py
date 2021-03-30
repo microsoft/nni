@@ -230,7 +230,7 @@ class CreamSupernetTrainer(Trainer):
         self.optimizer.zero_grad()
         grad_student_val = torch.autograd.grad(
             validation_loss,
-            self.model.module.rand_parameters(self.random_cand),
+            self.model.module.rand_parameters(self.current_student_arch),
             retain_graph=True)
 
         grad_teacher = torch.autograd.grad(
@@ -385,7 +385,7 @@ class CreamSupernetTrainer(Trainer):
                             step + 1, len(self.train_loader), meters)
 
         if self.main_proc and self.num_epochs == epoch + 1:
-            for idx, i in enumerate(self.best_children_pool):
+            for idx, i in enumerate(self.prioritized_board):
                 logger.info("No.%s %s", idx, i[:4])
 
     def validate_one_epoch(self, epoch):
@@ -396,9 +396,9 @@ class CreamSupernetTrainer(Trainer):
                 self.mutator.reset()
                 logits = self.model(x)
                 loss = self.val_loss(logits, y)
-                prec1, prec5 = self.accuracy(logits, y, topk=(1, 5))
+                prec1, prec5 = accuracy(logits, y, topk=(1, 5))
                 metrics = {"prec1": prec1, "prec5": prec5, "loss": loss}
-                metrics = self.reduce_metrics(metrics, self.distributed)
+                metrics = reduce_metrics(metrics)
                 meters.update(metrics)
 
                 if self.log_frequency is not None and step % self.log_frequency == 0:

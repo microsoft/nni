@@ -26,6 +26,7 @@ import Tensorboard from '../modals/tensorboard/Tensorboard';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
+import CopyButton from '../public-child/CopyButton';
 import { Trial } from '../../static/model/trial';
 import DialogDetail from '../modals/tensorboard/DialogDetail';
 import '../../static/style/button.scss';
@@ -58,6 +59,8 @@ function _inferColumnTitle(columnKey: string): string {
         return 'ID';
     } else if (columnKey === 'intermediateCount') {
         return 'Intermediate results (#)';
+    } else if (columnKey === 'message') {
+        return 'Message';
     } else if (columnKey.startsWith('space/')) {
         return columnKey.split('/', 2)[1] + ' (space)';
     } else if (columnKey === 'latestAccuracy') {
@@ -105,7 +108,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             displayedItems: [],
-            displayedColumns: defaultDisplayedColumns,
+            displayedColumns:
+                localStorage.getItem('columns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('columns')!)
+                    : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
             searchText: '',
@@ -195,6 +202,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 endTime: (trial as Trial).info.endTime,
                 duration: trial.duration,
                 status: trial.status,
+                message: (trial as Trial).info.message || '--',
                 intermediateCount: trial.intermediates.length,
                 _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
             };
@@ -290,6 +298,28 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <span className={`${record.status} commonStyle`}>{record.status}</span>
                     )
                 }),
+                ...(k === 'message' && {
+                    onRender: (record): React.ReactNode =>
+                        record.message.length > 15 ? (
+                            <TooltipHost
+                                content={record.message}
+                                directionalHint={DirectionalHint.bottomCenter}
+                                tooltipProps={{
+                                    calloutProps: {
+                                        styles: {
+                                            beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                        }
+                                    }
+                                }}
+                            >
+                                <div>{record.message}</div>
+                            </TooltipHost>
+                        ) : (
+                            <div>{record.message}</div>
+                        )
+                }),
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
                     onRender: (record): React.ReactNode => (
@@ -336,6 +366,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'duration' && {
                     onRender: (record): React.ReactNode => (
                         <span className='durationsty'>{convertDuration(record[k])}</span>
+                    )
+                }),
+                ...(k === 'id' && {
+                    onRender: (record): React.ReactNode => (
+                        <Stack horizontal className='idCopy'>
+                            <div>{record.id}</div>
+                            <CopyButton value={record.id} />
+                        </Stack>
                     )
                 })
             });

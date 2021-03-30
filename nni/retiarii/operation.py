@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import (Any, Dict, List)
 
 from . import debug_configs
@@ -83,6 +86,31 @@ class Operation:
 
 
 class PyTorchOperation(Operation):
+    @classmethod
+    def _find_subclass(cls, subclass_name):
+        if cls.to_class_name(subclass_name) is not None:
+            subclass_name = 'ModuleOperator'
+        if cls.is_functional(subclass_name):
+            subclass_name = 'FunctionalOperator'
+        for subclass in cls.__subclasses__():
+            if hasattr(subclass, '_ori_type_name') and \
+                subclass_name in subclass._ori_type_name:
+                return subclass
+        return cls
+
+    @classmethod
+    def to_class_name(cls, type_name) -> str:
+        if type_name.startswith('__torch__.'):
+            return type_name[len('__torch__.'):]
+        elif type_name.startswith('__mutated__.'):
+            return type_name[len('__mutated__.'):]
+        else:
+            return None
+
+    @classmethod
+    def is_functional(cls, type_name) -> bool:
+        return type_name.startswith('Function.')
+
     def _to_class_name(self) -> str:
         if self.type.startswith('__torch__.'):
             return self.type[len('__torch__.'):]
@@ -106,54 +134,27 @@ class PyTorchOperation(Operation):
             return f'self.{field} = {self._to_class_name()}({kw_params})'
         return None
 
-    def to_forward_code(self, field: str, output: str, inputs: List[str]) -> str:
-        from .converter.op_types import OpTypeName
-        if self._to_class_name() is not None:
-            return f'{output} = self.{field}({", ".join(inputs)})'
-        elif self.type.startswith('Function.'):
-            func_name = self.type[len('Function.'):]
-            return f'{output} = F.{func_name}({", ".join(inputs)})'
-        elif self.type == 'prim::Constant':
-            if self.parameters:
-                value = self.parameters['value']
-            else:
-                value = None
-            return f'{output} = {value}'
-        elif self.type == 'prim::ListConstruct':
-            return f'{output} = [{", ".join(inputs)}]'
-        elif self.type == 'prim::GetAttr':
-            return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
-        elif self.type == 'aten::mean':
-            return f'{output} = torch.mean({inputs[0]}, {", ".join(inputs[1:-1])}, out={inputs[-1]})'
-        elif self.type == 'aten::__getitem__':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]}[{inputs[1]}]'
-        elif self.type == 'aten::append':
-            assert len(inputs) == 2
-            return f'_, {output} = {inputs[0]}.append({inputs[1]}), {inputs[0]}'
-        elif self.type == 'aten::cat':
-            assert len(inputs) == 2
-            return f'{output} = torch.cat({inputs[0]}, dim={inputs[1]})'
-        elif self.type == 'aten::add':
-            return f'{output} = ' + ' + '.join(inputs)
-        elif self.type == OpTypeName.MergedSlice:
-            assert (len(inputs) - 1) % 4 == 0
-            slices = []
-            dim = int((len(inputs) - 1) / 4)
-            for i in range(dim):
-                slices.append(f'{inputs[i*4+2]}:{inputs[i*4+3]}:{inputs[i*4+4]}')
-            slice_str = ','.join(slices)
-            return f'{output} = {inputs[0]}[{slice_str}]'
-        elif self.type == 'aten::size':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]}.size({inputs[1]})'
-        elif self.type == 'aten::view':
-            assert len(inputs) == 2
-            return f'{output} = {inputs[0]}.view({inputs[1]})'
-        elif self.type == 'aten::slice':
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        """
+        Parameters
+        ----------
+        field : str
+            the name of member submodule
+        output : str
+            the output name (lvalue) of this line of code
+        inputs : List[str]
+            variables used in this line of code
+        inputs_value : List[Any]
+            some variables are actually constant, their real values are recorded in ```inputs_value```.
+            if not constant, we simply put None at the corresponding index
+
+        Returns
+        -------
+        str
+            generated code line
+        """
+        if self.type == 'aten::slice':
             raise RuntimeError('not supposed to have aten::slice operation')
-        elif self.type == 'aten::Bool':
-            return f'{output} = bool({inputs[0]})'
         else:
             raise RuntimeError(f'unsupported operation type: {self.type} ? {self._to_class_name()}')
 
@@ -207,6 +208,8 @@ class Cell(PyTorchOperation):
         # TODO: ugly, think about how to refactor this part
         return _convert_name(self.cell_name)
 
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = self.{field}({", ".join(inputs)})'
 
 class _IOPseudoOperation(Operation):
     """

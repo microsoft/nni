@@ -92,6 +92,14 @@ def main():
         train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)
 
+    model_path = "mnist_model.pth"
+    calibration_path = "mnist_calibration.pth"
+    onnx_path = "mnist_model.onnx"
+    input_shape = (1, 1, 28, 28)
+    device = torch.device("cuda")
+
+    calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
+    print("Generated calibration config is: ", calibration_config)
 
 if __name__ == '__main__':
     main()

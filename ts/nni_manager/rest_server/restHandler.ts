@@ -64,6 +64,7 @@ class NNIRestHandler {
         this.getTrialLog(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
+        this.stop(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any) => {
@@ -213,7 +214,6 @@ class NNIRestHandler {
             this.nniManager.listTrialJobs(req.query.status).then((jobInfos: TrialJobInfo[]) => {
                 jobInfos.forEach((trialJob: TrialJobInfo) => {
                     this.setErrorPathForFailedJob(trialJob);
-                    this.setMessageforJob(trialJob);
                 });
                 res.send(jobInfos);
             }).catch((err: Error) => {
@@ -226,7 +226,6 @@ class NNIRestHandler {
         router.get('/trial-jobs/:id', (req: Request, res: Response) => {
             this.nniManager.getTrialJob(req.params.id).then((jobDetail: TrialJobInfo) => {
                 const jobInfo: TrialJobInfo = this.setErrorPathForFailedJob(jobDetail);
-                this.setMessageforJob(jobInfo);
                 res.send(jobInfo);
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -319,6 +318,15 @@ class NNIRestHandler {
         });
     }
 
+    private stop(router: Router): void {
+        router.delete('/experiment', (req: Request, res: Response) => {
+            this.nniManager.stopExperimentTopHalf().then(() => {
+                res.send();
+                this.nniManager.stopExperimentBottomHalf();
+            });
+        });
+    }
+
     private setErrorPathForFailedJob(jobInfo: TrialJobInfo): TrialJobInfo {
         if (jobInfo === undefined || jobInfo.status !== 'FAILED' || jobInfo.logPath === undefined) {
             return jobInfo;
@@ -326,14 +334,6 @@ class NNIRestHandler {
         jobInfo.stderrPath = path.join(jobInfo.logPath, 'stderr');
 
         return jobInfo;
-    }
-
-    private setMessageforJob(jobInfo: TrialJobInfo): TrialJobInfo {
-        if (jobInfo === undefined){
-            return jobInfo
-        }
-        jobInfo.message = this.nniManager.getTrialJobMessage(jobInfo.trialJobId);
-        return jobInfo
     }
 }
 

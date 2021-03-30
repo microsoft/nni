@@ -8,5 +8,4 @@ Python API Reference
 
     Auto Tune <autotune_ref>
     NAS <NAS/NasReference>
-    Compression Utilities <Compression/CompressionReference>
-    NNI Client <nnicli_ref>
+    Compression <Compression/CompressionReference>

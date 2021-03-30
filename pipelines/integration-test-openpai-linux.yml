@@ -79,7 +79,7 @@ jobs:
           --pai_reuse true \
           --pai_host https://ne.openpai.org \
           --pai_user $(pai_user) \
-          --nni_docker_image nnidev/nni-it-pai:latest \
+          --nni_docker_image nnidev/nni-nightly \
           --pai_storage_config_name confignfs-data \
           --pai_token $(pai_token) \
           --nni_manager_nfs_mount_path /home/quzha/mnt-pai-ne/shinyang3 \

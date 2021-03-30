@@ -10,7 +10,7 @@ NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/
 
 步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。
 
-步骤 3. 在机器上安装 Azure CLI，参照 `此 <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 安装指南。
+步骤 3. 在机器上安装 Azure CLI，参照 `此 <https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 安装指南。
 
 步骤 4. 从 CLI 验证您的 Azure 订阅。 要进行交互式身份验证，请打开命令行或终端并使用以下命令：
 
@@ -42,7 +42,7 @@ NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/
 运行实验
 -----------------
 
-以 ``examples/trials/mnist-tfv1`` 为例。 NNI 的 YAML 配置文件如下：
+以 ``examples/trials/mnist-pytorch`` 为例。 NNI 的 YAML 配置文件如下：
 
 .. code-block:: yaml
 
@@ -81,9 +81,8 @@ NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/
 * image
 
   * 必填。 作业中使用的 Docker 映像名称。 NNI 支持 ``msranni/nni`` 的映像来跑 jobs。
-    .. code-block:: bash
 
-       注意：映像是基于 cuda 环境来打包的，可能并不适用于 aml 模式 CPU 集群。
+.. Note:: 映像是基于 cuda 环境来打包的，可能并不适用于 aml 模式 CPU 集群。
 
 amlConfig:
 
@@ -119,10 +118,10 @@ amlConfig 需要的信息可以从步骤 5 下载的 ``config.json`` 找到。
 .. code-block:: bash
 
    git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
-   cd nni/examples/trials/mnist-tfv1
+   cd nni/examples/trials/mnist-pytorch
 
    # modify config_aml.yml ...
 
    nnictl create --config config_aml.yml
 
-将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v1.9``。
+将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v2.0``。
