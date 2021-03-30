@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
@@ -16,7 +16,7 @@ from .base import BaseGraphData
 _logger = logging.getLogger(__name__)
 
 
-class CGOExecutionEngine(AbstractExecutionEngine):  # pylint: disable=abstract-class-instantiated
+class CGOExecutionEngine(AbstractExecutionEngine):
     def __init__(self, n_model_per_graph=4) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
@@ -57,6 +57,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):  # pylint: disable=abstract-c
         #     data = BaseGraphData(codegen.model_to_pytorch_script(model),
         #                          model.config['trainer_module'], model.config['trainer_kwargs'])
         #     self._running_models[send_trial(data.dump())] = model
+
+    def list_models(self) -> Iterable[Model]:
+        raise NotImplementedError
 
     def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice]]:
         # unique_models = set()
