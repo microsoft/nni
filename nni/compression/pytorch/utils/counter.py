@@ -8,7 +8,7 @@ from prettytable import PrettyTable
 import torch
 import torch.nn as nn
 from nni.compression.pytorch.compressor import PrunerModuleWrapper
-
+from torch.nn.utils.rnn import PackedSequence
 
 __all__ = ['count_flops_params']
 
@@ -39,14 +39,14 @@ class ModelProfiler:
             nn.Conv1d: self._count_convNd,
             nn.Conv2d: self._count_convNd,
             nn.Conv3d: self._count_convNd,
+            nn.ConvTranspose1d: self._count_convNd,
+            nn.ConvTranspose2d: self._count_convNd,
+            nn.ConvTranspose3d: self._count_convNd,
             nn.Linear: self._count_linear
         }
         self._count_bias = False
         if mode == 'full':
             self.ops.update({
-                nn.ConvTranspose1d: self._count_convNd,
-                nn.ConvTranspose2d: self._count_convNd,
-                nn.ConvTranspose3d: self._count_convNd,
                 nn.BatchNorm1d: self._count_bn,
                 nn.BatchNorm2d: self._count_bn,
                 nn.BatchNorm3d: self._count_bn,
@@ -59,7 +59,13 @@ class ModelProfiler:
                 nn.AdaptiveAvgPool3d: self._count_adap_avgpool,
                 nn.Upsample: self._count_upsample,
                 nn.UpsamplingBilinear2d: self._count_upsample,
-                nn.UpsamplingNearest2d: self._count_upsample
+                nn.UpsamplingNearest2d: self._count_upsample,
+                nn.RNNCell: self._count_rnn_cell,
+                nn.GRUCell: self._count_gru_cell,
+                nn.LSTMCell: self._count_lstm_cell,
+                nn.RNN: self._count_rnn,
+                nn.GRU: self._count_gru,
+                nn.LSTM: self._count_lstm,
             })
             self._count_bias = True
 
@@ -86,9 +92,9 @@ class ModelProfiler:
 
     def _count_convNd(self, m, x, y):
         cin = m.in_channels
-        kernel_ops = m.weight.size()[2] * m.weight.size()[3]
+        kernel_ops = torch.zeros(m.weight.size()[2:]).numel()
         output_size = torch.zeros(y.size()[2:]).numel()
-        cout = y.size()[1]
+        cout = y.size()[1] 
 
         if hasattr(m, 'weight_mask'):
             cout = m.weight_mask.sum() // (cin * kernel_ops)
@@ -156,13 +162,143 @@ class ModelProfiler:
 
         return self._get_result(m, total_ops)
 
+    def _count_cell_flops(self, input_size, hidden_size, cell_type):
+        state_ops = hidden_size * (input_size + hidden_size) + hidden_size
+        if self._count_bias:
+            state_ops += hidden_size * 2
+
+        if cell_type == 'rnn':
+            return state_ops
+        
+        total_ops = 0
+        if cell_type == 'gru':
+            total_ops += state_ops * 2
+            total_ops += (hidden_size + input_size) * hidden_size + hidden_size
+            if self._count_bias:
+                total_ops += hidden_size * 2
+
+            total_ops += hidden_size * 4
+        
+        elif cell_type == 'lstm':
+            total_ops += state_ops * 4
+            total_ops += hidden_size * 4
+        
+        return total_ops
+
+
+    def _count_rnn_cell(self, m, x, y):
+        total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'rnn')
+        batch_size = x[0].size(0)
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+    def _count_gru_cell(self, m, x, y):
+        total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'gru')
+        batch_size = x[0].size(0)
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+    def _count_lstm_cell(self, m, x, y):
+        total_ops = self._count_cell_flops(m.input_size, m.hidden_size, 'lstm')
+        batch_size = x[0].size(0)
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+    def _get_bsize_nsteps(self, m, x):
+        if isinstance(x[0], PackedSequence):
+            batch_size = torch.max(x[0].batch_sizes)
+            num_steps = x[0].batch_sizes.size(0)
+        else:
+            if m.batch_first:
+                batch_size = x[0].size(0)
+                num_steps = x[0].size(1)
+            else:
+                batch_size = x[0].size(1)
+                num_steps = x[0].size(0)
+
+        return batch_size, num_steps
+
+    def _count_rnn(self, m, x, y):
+        input_size = m.input_size
+        hidden_size = m.hidden_size
+        num_layers = m.num_layers
+
+        batch_size, num_steps = self._get_bsize_nsteps(m, x)
+        total_ops = self._count_cell_flops(input_size, hidden_size, 'rnn')
+
+        if m.bidirectional:
+            total_ops *= 2
+
+        for i in range(num_layers - 1):
+            if m.bidirectional:
+                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size, 'rnn') * 2
+            else:
+                cell_flops = self._count_cell_flops(hidden_size, hidden_size,'rnn')
+            total_ops += cell_flops
+
+        total_ops *= num_steps
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+    def _count_gru(self, m, x, y):
+        hidden_size = m.hidden_size
+        num_layers = m.num_layers
+
+        batch_size, num_steps = self._get_bsize_nsteps(m, x)
+        total_ops = self._count_cell_flops(hidden_size * 2, hidden_size, 'gru')
+        if m.bidirectional:
+            total_ops *= 2
+
+        for i in range(num_layers - 1):
+            if m.bidirectional:
+                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
+                                            'gru') * 2
+            else:
+                cell_flops = self._count_cell_flops(hidden_size, hidden_size, 'gru')
+            total_ops += cell_flops
+
+        total_ops *= num_steps
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+    def _count_lstm(self, m, x, y):
+        hidden_size = m.hidden_size
+        num_layers = m.num_layers
+        batch_size, num_steps = self._get_bsize_nsteps(m, x)
+
+        total_ops = self._count_cell_flops(hidden_size * 2, hidden_size,
+                                            'lstm')
+        if m.bidirectional:
+            total_ops *= 2 
+        
+        for i in range(num_layers - 1):
+            if m.bidirectional:
+                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
+                                            'lstm') * 2
+            else:
+                cell_flops = self._count_cell_flops(hidden_size, hidden_size, 'lstm')
+            total_ops += cell_flops
+
+        total_ops *= num_steps
+        total_ops *= batch_size
+
+        return self._get_result(m, total_ops)
+
+
     def count_module(self, m, x, y, name):
         # assume x is tuple of single tensor
         result = self.ops[type(m)](m, x, y)
+        output_size = y[0].size() if isinstance(y, tuple) else y.size()
+
         total_result = {
             'name': name,
             'input_size': tuple(x[0].size()),
-            'output_size': tuple(y.size()),
+            'output_size': tuple(output_size),
             'module_type': type(m).__name__,
             **result
         }
@@ -279,10 +415,6 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
         model(*x)
 
     # restore origin status
-    for name, m in model.named_modules():
-        if hasattr(m, 'weight_mask'):
-            delattr(m, 'weight_mask')
-
     model.train(training).to(original_device)
     for handler in handler_collection:
         handler.remove()
