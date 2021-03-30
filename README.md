@@ -297,7 +297,7 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* Open the `Web UI url` in your browser, you can view detail information of the experiment and all the submitted trial jobs as shown below. [Here](https://nni.readthedocs.io/en/stable/Tutorial/WebUI.html) are more Web UI pages.
+* Open the `Web UI url` in your browser, you can view detailed information of the experiment and all the submitted trial jobs as shown below. [Here](https://nni.readthedocs.io/en/stable/Tutorial/WebUI.html) are more Web UI pages.
 
 <table style="border: none">
     <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
