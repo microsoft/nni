@@ -5,7 +5,7 @@ Model Compression with NNI
 
 As larger neural networks with more layers and nodes are considered, reducing their storage and computational cost becomes critical, especially for some real-time applications. Model compression can be used to address this problem.
 
-NNI provides a model compression toolkit to help user compress and speed up their model with state-of-the-art compression algorithms and strategies. The algorithms simulate the process of pruning and quantization without truly compressing model and reducing latency. There are several core features supported by NNI model compression:
+NNI provides a model compression toolkit to help user compress and speed up their model with state-of-the-art compression algorithms and strategies. There are several core features supported by NNI model compression:
 
 
 * Support many popular pruning and quantization algorithms.
