@@ -7,8 +7,9 @@ from prettytable import PrettyTable
 
 import torch
 import torch.nn as nn
-from nni.compression.pytorch.compressor import PrunerModuleWrapper
 from torch.nn.utils.rnn import PackedSequence
+from nni.compression.pytorch.compressor import PrunerModuleWrapper
+
 
 __all__ = ['count_flops_params']
 
@@ -94,7 +95,7 @@ class ModelProfiler:
         cin = m.in_channels
         kernel_ops = torch.zeros(m.weight.size()[2:]).numel()
         output_size = torch.zeros(y.size()[2:]).numel()
-        cout = y.size()[1] 
+        cout = y.size()[1]
 
         if hasattr(m, 'weight_mask'):
             cout = m.weight_mask.sum() // (cin * kernel_ops)
@@ -169,7 +170,7 @@ class ModelProfiler:
 
         if cell_type == 'rnn':
             return state_ops
-        
+
         total_ops = 0
         if cell_type == 'gru':
             total_ops += state_ops * 2
@@ -178,11 +179,11 @@ class ModelProfiler:
                 total_ops += hidden_size * 2
 
             total_ops += hidden_size * 4
-        
+
         elif cell_type == 'lstm':
             total_ops += state_ops * 4
             total_ops += hidden_size * 4
-        
+
         return total_ops
 
 
@@ -232,7 +233,7 @@ class ModelProfiler:
         if m.bidirectional:
             total_ops *= 2
 
-        for i in range(num_layers - 1):
+        for _ in range(num_layers - 1):
             if m.bidirectional:
                 cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size, 'rnn') * 2
             else:
@@ -253,7 +254,7 @@ class ModelProfiler:
         if m.bidirectional:
             total_ops *= 2
 
-        for i in range(num_layers - 1):
+        for _ in range(num_layers - 1):
             if m.bidirectional:
                 cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
                                             'gru') * 2
@@ -274,9 +275,9 @@ class ModelProfiler:
         total_ops = self._count_cell_flops(hidden_size * 2, hidden_size,
                                             'lstm')
         if m.bidirectional:
-            total_ops *= 2 
-        
-        for i in range(num_layers - 1):
+            total_ops *= 2
+
+        for _ in range(num_layers - 1):
             if m.bidirectional:
                 cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
                                             'lstm') * 2
