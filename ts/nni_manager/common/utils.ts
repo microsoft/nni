@@ -341,11 +341,9 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess {
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any, newShell: boolean = true, isDetached: boolean = false): ChildProcess {
     let cmd: string = command;
     let arg: string[] = [];
-    let newShell: boolean = true;
-    let isDetached: boolean = false;
     if (process.platform === "win32") {
         cmd = command.split(" ", 1)[0];
         arg = command.substr(cmd.length + 1).split(" ");

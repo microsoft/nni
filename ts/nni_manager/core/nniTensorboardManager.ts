@@ -54,7 +54,7 @@ class NNITensorboardManager implements TensorboardManager {
             trialLogDirectoryList.push(trialTensorboardDataPath);
         }));
         this.log.info(`tensorboard: ${trialJobIdList} ${trialLogDirectoryList}`);
-        return this.startTensorboardTaskProcess(trialJobIdList, trialLogDirectoryList);
+        return await this.startTensorboardTaskProcess(trialJobIdList, trialLogDirectoryList);
     }
 
     private async startTensorboardTaskProcess(trialJobIdList: string[], trialLogDirectoryList: string[]): Promise<TensorboardTaskDetail> {
@@ -62,7 +62,7 @@ class NNITensorboardManager implements TensorboardManager {
         const port = await getFreePort(host, 6006, 65535);
         const command = await this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
         this.log.info(`tensorboard start command: ${command}`);
-        const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env);
+        const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env, true, true);
         const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
         this.tensorboardTaskMap.set(tensorboardTask.id, tensorboardTask);
         tensorboardTask.pid = tensorboardProc.pid;
@@ -191,7 +191,9 @@ class NNITensorboardManager implements TensorboardManager {
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
         } else {
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPING');
-            await killPid(tensorboardTask.pid);
+            if (tensorboardTask.pid) {
+                process.kill(-tensorboardTask.pid);
+            }
             this.log.debug(`Tensorboard task ${tensorboardTask.id} stopped.`);
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPED');
         }
