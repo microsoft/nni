@@ -6,9 +6,9 @@ import copy
 import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantGrad, QuantType
+from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer']
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
 
 logger = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ def update_ema(biased_ema, value, decay):
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    return biased_ema 
+    return biased_ema
 
 
 def update_quantization_param(bits, rmin, rmax):
@@ -146,7 +146,7 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
-        self.quant_grad = QATGrad
+        self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
@@ -474,7 +474,7 @@ class BNNQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        self.quant_grad = ClipGrad
+        self.quant_grad = ClipGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
@@ -560,3 +560,77 @@ class BNNQuantizer(Quantizer):
         self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path, input_shape, device)
 
         return calibration_config
+
+
+class LsqQuantizer(Quantizer):
+    """Quantizer defined in:
+       Learned Step Size Quantization (ICLR 2020)
+       https://arxiv.org/pdf/1902.08153.pdf
+       """
+
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
+        self.quant_grad = QuantForward()
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            layer.module.register_parameter("zero_point", torch.nn.Parameter(torch.Tensor([0.0])))
+            layer.module.register_parameter("scale", torch.nn.Parameter(torch.Tensor([1.0])))
+            if "weight" in config.get("quant_types", []):
+                # todo: support per-channel quantization for weight since TensorRT it for conv weight
+                q_bit = get_bits_length(config, "weight")
+                qmax = 2 ** (q_bit - 1) - 1
+                qmin = -2 ** (q_bit - 1)
+                init_weight_scale = layer.module.weight.data.detach().abs().mean() * 2 / (qmax ** 0.5)
+                layer.module.scale = torch.nn.Parameter(init_weight_scale)
+                layer.module.register_buffer('weight_qmax', torch.Tensor(qmax))
+                layer.module.register_buffer('weight_qmin', torch.Tensor(qmin))
+
+            # todo: in the origin paper, the initial value of activation is calculated from first input batch
+            if "output" in config.get("quant_types", []):
+                q_bit = get_bits_length(config, "")
+                qmax = 2 ** (q_bit - 1) - 1
+                qmin = -2 ** (q_bit - 1)
+                layer.module.register_buffer('activation_qmax', torch.Tensor(qmax))
+                layer.module.register_buffer('activation_qmin', torch.Tensor(qmin))
+
+    @staticmethod
+    def grad_scale(x, scale):
+        """
+            Used to scale the gradient
+        """
+        y = x
+        y_grad = x * scale
+        return (y - y_grad).detach() + y_grad
+
+    @staticmethod
+    def round_pass(x):
+        """
+            A simple way to execute `round` operation with grad set to 1
+        """
+        y = x.round()
+        y_grad = x
+        return (y - y_grad).detach() + y_grad
+
+    def quantize(self, x, scale, zero_point, qmin, qmax):
+        grad_scale_factor = 1.0 / ((qmax * x.numel()) ** 0.5)
+        scale = self.grad_scale(scale, grad_scale_factor)
+        x = x / scale + zero_point
+        x = torch.clamp(x, qmin, qmax)
+        x = self.round_pass(x)
+        x = (x - zero_point) * scale
+        return x
+
+    def quantize_weight(self, wrapper, **kwargs):
+        module = wrapper.module
+
+        # todo: add support for quantize bias. If we use TensorRT as backend, there is no need to quantize
+        # bias
+        old_weight = module.old_weight
+        weight = self.quantize(old_weight, module.scale, module.zero_point, module.weight_qmin, module.weight_qmax)
+        module.weight = weight
+        return weight
+
+    def quantize_output(self, output, wrapper, **kwargs):
+        module = wrapper.module
+        output = self.quantize(output, module.scale, module.zero_point, module.activation_qmin, module.activation_qmax)
+        return output
