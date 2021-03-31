@@ -9,7 +9,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as ts from 'tail-stream';
 import * as tkill from 'tree-kill';
-import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
+import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
