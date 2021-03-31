@@ -275,7 +275,7 @@ class TestHighLevelAPI(unittest.TestCase):
             for mutator in mutators:
                 model_new = mutator.bind_sampler(sampler).apply(model_new)
             sz_counter[self._get_converted_pytorch_model(model_new)(torch.randn(1, 3)).size(1)] += 1
-        print(sz_counter)
+        self.assertEqual(len(sz_counter), 4)
 
     def test_shared(self):
         class Net(nn.Module):

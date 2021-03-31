@@ -343,7 +343,7 @@ class GraphConverter:
                         subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                         if isinstance(submodule_obj, Placeholder):
                             subcell.update_label(submodule_obj.label)
-                        elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
+                        elif isinstance(submodule_obj, InputChoice):
                             subcell.update_label(sub_m_attrs['label'])
                     else:
                         # Graph already created, create Cell for it

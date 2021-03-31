@@ -75,14 +75,6 @@ class ParameterChoiceMutator(Mutator):
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
 
-    lc_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'layerchoice',
-                                      model.get_nodes_by_type('_cell')))
-    for node_list in lc_nodes:
-        assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
-            'Layer choice with the same label must have the same number of candidates.'
-        mutator = LayerChoiceMutator(node_list)
-        applied_mutators.append(mutator)
-
     ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
     for node_list in ic_nodes:
         assert _is_all_equal(map(lambda node: node.operation.parameters['n_candidates'], node_list)) and \
@@ -109,6 +101,16 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
             'Value choice with the same label must have the same candidates.'
         mutator = ParameterChoiceMutator(node_list, node_list[0][0].operation.parameters[node_list[0][1]].candidates)
         applied_mutators.append(mutator)
+
+    # apply layer choice at last as it will delete some nodes
+    lc_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'layerchoice',
+                                      model.get_nodes_by_type('_cell')))
+    for node_list in lc_nodes:
+        assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
+            'Layer choice with the same label must have the same number of candidates.'
+        mutator = LayerChoiceMutator(node_list)
+        applied_mutators.append(mutator)
+
 
     if applied_mutators:
         return applied_mutators
