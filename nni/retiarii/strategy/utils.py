@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import collections
 from typing import Dict, Any, List
 from ..graph import Model

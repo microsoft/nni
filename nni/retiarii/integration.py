@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import os
 from typing import Any, Callable
@@ -99,28 +102,31 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'parameters': parameters,
             'parameter_source': 'algorithm'
         }
-        _logger.info('New trial sent: %s', new_trial)
+        _logger.debug('New trial sent: %s', new_trial)
         send(CommandType.NewTrialJob, json_dumps(new_trial))
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
+    def mark_experiment_as_ending(self):
+        send(CommandType.NoMoreTrialJobs, '')
+
     def handle_request_trial_jobs(self, num_trials):
-        _logger.info('Request trial jobs: %s', num_trials)
+        _logger.debug('Request trial jobs: %s', num_trials)
         if self.request_trial_jobs_callback is not None:
             self.request_trial_jobs_callback(num_trials)  # pylint: disable=not-callable
 
     def handle_update_search_space(self, data):
-        _logger.info('Received search space: %s', data)
+        _logger.debug('Received search space: %s', data)
         self.search_space = data
 
     def handle_trial_end(self, data):
-        _logger.info('Trial end: %s', data)
+        _logger.debug('Trial end: %s', data)
         self.trial_end_callback(json_loads(data['hyper_params'])['parameter_id'],  # pylint: disable=not-callable
                                 data['event'] == 'SUCCEEDED')
 
     def handle_report_metric_data(self, data):
-        _logger.info('Metric reported: %s', data)
+        _logger.debug('Metric reported: %s', data)
         if data['type'] == MetricType.REQUEST_PARAMETER:
             raise ValueError('Request parameter not supported')
         elif data['type'] == MetricType.PERIODICAL:

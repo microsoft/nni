@@ -1,4 +1,5 @@
 import json
+import math
 from pathlib import Path
 import re
 import sys
@@ -84,6 +85,8 @@ def test_type():
     assert json_dumps(torch.optim.Adam) == '{"__typename__": "torch.optim.adam.Adam"}'
     assert json_loads('{"__typename__": "torch.optim.adam.Adam"}') == torch.optim.Adam
     assert re.match(r'{"__typename__": "(.*)test_serializer.Foo"}', json_dumps(Foo))
+    assert json_dumps(math.floor) == '{"__typename__": "math.floor"}'
+    assert json_loads('{"__typename__": "math.floor"}') == math.floor
 
 
 if __name__ == '__main__':

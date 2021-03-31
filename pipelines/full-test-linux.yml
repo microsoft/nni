@@ -38,6 +38,12 @@ jobs:
       sudo apt-get install swig -y
     displayName: Install extra dependencies
 
+  # Need del later
+  - script: |
+      set -e
+      python3 interim_vision_patch.py
+    displayName: Vision MNIST Patch
+
   - script: |
       set -e
       cd examples/tuners/customized_tuner

@@ -13,59 +13,50 @@ Since ``nni v2.0``, we provide a new way to launch experiments. Before that, you
 
 Run a New Experiment
 --------------------
-After successfully installing ``nni``, you can start the experiment with a python script in the following 3 steps.
+After successfully installing ``nni``, you can start the experiment with a python script in the following 2 steps.
 
 ..
 
-    Step 1 - Initialize a tuner you want to use
-
-
-.. code-block:: python
-
-    from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
-    tuner = HyperoptTuner('tpe')
-
-Very simple, you have successfully initialized a ``HyperoptTuner`` instance called ``tuner``.
-
-See all real `builtin tuners <../builtin_tuner.rst>`__ supported in NNI.
-
-..
-
-    Step 2 - Initialize an experiment instance and configure it
+    Step 1 - Initialize an experiment instance and configure it
 
 .. code-block:: python
 
-    experiment = Experiment(tuner=tuner, training_service='local')
+    from nni.experiment import Experiment
+    experiment = Experiment('local')
 
-Now, you have a ``Experiment`` instance with ``tuner`` you have initialized in the previous step, and this experiment will launch trials on your local machine due to ``training_service='local'``.
+Now, you have a ``Experiment`` instance, and this experiment will launch trials on your local machine due to ``training_service='local'``.
 
 See all `training services <../training_services.rst>`__ supported in NNI.
 
 .. code-block:: python
 
-    experiment.config.experiment_name = 'test'
+    experiment.config.experiment_name = 'MNIST example'
     experiment.config.trial_concurrency = 2
-    experiment.config.max_trial_number = 5
+    experiment.config.max_trial_number = 10
     experiment.config.search_space = search_space
     experiment.config.trial_command = 'python3 mnist.py'
     experiment.config.trial_code_directory = Path(__file__).parent
+    experiment.config.tuner.name = 'TPE'
+    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
     experiment.config.training_service.use_active_gpu = True
 
 Use the form like ``experiment.config.foo = 'bar'`` to configure your experiment.
+
+See all real `builtin tuners <../builtin_tuner.rst>`__ supported in NNI.
 
 See `parameter configuration <../reference/experiment_config.rst>`__ required by different training services.
 
 ..
 
-    Step 3 - Just run
+    Step 2 - Just run
 
 .. code-block:: python
 
-    experiment.run(port=8081)
+    experiment.run(port=8080)
 
-Now, you have successfully launched an NNI experiment. And you can type ``localhost:8081`` in your browser to observe your experiment in real time.
+Now, you have successfully launched an NNI experiment. And you can type ``localhost:8080`` in your browser to observe your experiment in real time.
 
-.. Note:: In this way, experiment will run in the foreground and will automatically exit when the experiment finished. If you want to run an experiment in an interactive way, use ``start()`` in Step 3. 
+.. Note:: In this way, experiment will run in the foreground and will automatically exit when the experiment finished. If you want to run an experiment in an interactive way, use ``start()`` in Step 2. 
 
 Example
 ^^^^^^^
@@ -74,10 +65,8 @@ Below is an example for this new launching approach. You can also find this code
 .. code-block:: python
 
     from pathlib import Path
-    from nni.experiment import Experiment
-    from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
-    tuner = HyperoptTuner('tpe')
+    from nni.experiment import Experiment
 
     search_space = {
         "dropout_rate": { "_type": "uniform", "_value": [0.5, 0.9] },
@@ -87,16 +76,18 @@ Below is an example for this new launching approach. You can also find this code
         "learning_rate": { "_type": "choice", "_value": [0.0001, 0.001, 0.01, 0.1] }
     }
 
-    experiment = Experiment(tuner, 'local')
-    experiment.config.experiment_name = 'test'
+    experiment = Experiment('local')
+    experiment.config.experiment_name = 'MNIST example'
     experiment.config.trial_concurrency = 2
-    experiment.config.max_trial_number = 5
+    experiment.config.max_trial_number = 10
     experiment.config.search_space = search_space
     experiment.config.trial_command = 'python3 mnist.py'
     experiment.config.trial_code_directory = Path(__file__).parent
+    experiment.config.tuner.name = 'TPE'
+    experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
     experiment.config.training_service.use_active_gpu = True
 
-    experiment.run(8081)
+    experiment.run(8080)
 
 Start and Manage a New Experiment
 ---------------------------------
