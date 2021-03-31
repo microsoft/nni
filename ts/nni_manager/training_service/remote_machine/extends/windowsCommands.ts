@@ -134,6 +134,18 @@ class WindowsCommands extends OsCommands {
     public fileExistCommand(filePath: string): string {
         return `powershell Test-Path ${filePath} -PathType Leaf`;
     }
+
+    public reusableStartcommand(envId: string, isDeveloping: boolean): string {
+        const prepare = `envs\\install_nni.cmd && mkdir envs\\${envId} && cd envs\\${envId}`;
+        const startrun = `cd .. && install_nni.cmd && cd ${envId} && python -m nni.tools.trial_tool.trial_runner`
+
+        if(isDeveloping){
+            const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
+            return `${prepare} && ${developingScript} && ${startrun}`;
+        }
+
+        return `${prepare} && ${startrun}`;
+    }
 }
 
 export { WindowsCommands };

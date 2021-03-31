@@ -64,6 +64,7 @@ export class EnvironmentInformation {
     public workingFolder: string = "";
     public runnerWorkingFolder: string = "";
     public command: string = "";
+    public command_win: string = "";
     public nodeCount: number = 1;
 
     // it's used to aggregate node status for multiple node trial

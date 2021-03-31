@@ -67,8 +67,7 @@ class ShellExecutor {
 
         this.sshClient.on('ready', async () => {
             // check OS type: windows or else
-            const result = await this.execute("ver");
-            if (result.exitCode == 0 && result.stdout.search("Windows") > -1) {
+            if(await this.GetIsWindows()){
                 this.osCommands = new WindowsCommands();
                 this.isWindows = true;
 
@@ -108,6 +107,15 @@ class ShellExecutor {
 
     public close(): void {
         this.sshClient.end();
+    }
+
+    public async GetIsWindows(): Promise<boolean>{
+        const result = await this.execute("ver")
+        if (result.exitCode == 0 && result.stdout.search("Windows") > -1) {
+            return true;
+        }
+
+        return false;
     }
 
     public addUsage(): boolean {

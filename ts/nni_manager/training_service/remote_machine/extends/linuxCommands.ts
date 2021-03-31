@@ -146,6 +146,18 @@ class LinuxCommands extends OsCommands {
     public fileExistCommand(filePath: string): string {
         return `test -e ${filePath} && echo True || echo False`;
     }
+
+    public reusableStartcommand(envId: string, isDeveloping: boolean): string {
+        const prepare = `mkdir -p envs/${envId} && cd envs/${envId}`;
+        const startrun = `sh ../install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`
+
+        if(isDeveloping){
+            const developingScript = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
+            return `${prepare} && ${developingScript} && ${startrun}`;
+        }
+
+        return `${prepare} && ${startrun}`;
+    }
 }
 
 export { LinuxCommands };

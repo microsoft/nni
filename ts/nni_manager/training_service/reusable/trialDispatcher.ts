@@ -18,6 +18,7 @@ import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, m
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { ScheduleResultType } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
@@ -31,6 +32,8 @@ import { SharedStorageService, SharedStorageConfig } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
+import { LinuxCommands } from "../remote_machine/extends/linuxCommands";
+import { WindowsCommands } from '../remote_machine/extends/windowsCommands';
 
 
 /**
@@ -225,8 +228,10 @@ class TrialDispatcher implements TrainingService {
             const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
             storageService.rename(codeFileName, "nni-code.tar.gz");
 
-            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+            const installFileName = storageService.joinPath(envDir, `install_nni.sh`);
+            const installFileName_forWin = storageService.joinPath(envDir, `install_nni.cmd`);
             await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN, installFileName_forWin);
 
             const runnerSettingsConfig = storageService.joinPath(envDir, "settings.json");
             await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
@@ -682,14 +687,8 @@ class TrialDispatcher implements TrainingService {
         const environment = environmentService.createEnvironmentInformation(envId, envName);
         environment.environmentService = environmentService;
         this.log.info(`Assign environment service ${environmentService.getName} to environment ${envId}`);
-        environment.command = `sh ../install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`;
-
-        if (this.isDeveloping) {
-            environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
-        }
-
-        environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
-
+        environment.command = new LinuxCommands().reusableStartcommand(envId, this.isDeveloping);
+        environment.command_win = new WindowsCommands().reusableStartcommand(envId, this.isDeveloping);
         environment.useSharedStorage = this.useSharedStorage;
 
         await environmentService.startEnvironment(environment);
