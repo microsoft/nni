@@ -14,13 +14,12 @@ class LayerChoiceMutator(Mutator):
         self.nodes = nodes
 
     def mutate(self, model):
-        n_candidates = len(self.nodes[0].operation.parameters['candidates'])
-        indices = list(range(n_candidates))
-        chosen_index = self.choice(indices)
+        candidates = self.nodes[0].operation.parameters['candidates']
+        chosen = self.choice(candidates)
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
-            chosen_cand = node.operation.parameters['candidates'][chosen_index]
-            target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
+            target = model.graphs[node.operation.cell_name]
+            target.add_edge(('input', None), (chosen, None))
+            target.add_edge((chosen, None), ('output', None))
 
 
 class InputChoiceMutator(Mutator):

@@ -348,6 +348,7 @@ class GraphConverter:
                     else:
                         # Graph already created, create Cell for it
                         new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
+                        print(new_cell)
                         subcell = ir_graph.add_node(submodule_full_name, new_cell)
                     shared_module_index[submodule_full_name] = subcell
                 node_index[node] = subcell
@@ -536,16 +537,6 @@ class GraphConverter:
         self.remove_unconnected_nodes(ir_graph, targeted_type='prim::GetAttr')
         self.merge_aten_slices(ir_graph)
 
-    def _handle_layerchoice(self, module):
-        choices = []
-        for cand in list(module):
-            cand_type = '__torch__.' + get_importable_name(cand.__class__)
-            choices.append({'type': cand_type, 'parameters': get_init_parameters_or_fail(cand)})
-        return {
-            'candidates': choices,
-            'label': module.label
-        }
-
     def _handle_inputchoice(self, module):
         return {
             'n_candidates': module.n_candidates,
@@ -590,7 +581,15 @@ class GraphConverter:
         if original_type_name in MODULE_EXCEPT_LIST:
             pass  # do nothing
         elif original_type_name == OpTypeName.LayerChoice:
-            m_attrs = self._handle_layerchoice(module)
+            graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
+            for cand_name in module.names:
+                cand = module[cand_name]
+                cand_type = '__torch__.' + get_importable_name(cand.__class__)
+                graph.add_node(cand_name, cand_type, get_init_parameters_or_fail(cand))
+                graph._add_input('input')
+                graph._add_output('output')
+            graph._register()
+            return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': module.candidates}
         elif original_type_name == OpTypeName.InputChoice:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.ValueChoice:
