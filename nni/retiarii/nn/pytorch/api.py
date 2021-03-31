@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
+import warnings
 from collections import OrderedDict
 from typing import Any, List, Union, Dict
-import warnings
 
 import torch
 import torch.nn as nn
@@ -268,6 +269,7 @@ class ValueChoice(Translatable, nn.Module):
         super().__init__()
         self.candidates = candidates
         self._label = label if label is not None else f'valuechoice_{uid()}'
+        self._accessor = []
 
     @property
     def label(self):
@@ -279,10 +281,28 @@ class ValueChoice(Translatable, nn.Module):
 
     def _translate(self):
         # Will function as a value when used in serializer.
-        return self.candidates[0]
+        return self.access(self.candidates[0])
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
+
+    def access(self, value):
+        if not self._accessor:
+            return value
+        try:
+            v = value
+            for a in self._accessor:
+                v = v[a]
+        except KeyError:
+            raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
+        return v
+
+    def __getitem__(self, item):
+        access = copy.deepcopy(self)
+        access._accessor.append(item)
+        for candidate in self.candidates:
+            access.access(candidate)
+        return access
 
 
 @basic_unit

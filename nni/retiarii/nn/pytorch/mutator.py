@@ -68,8 +68,9 @@ class ParameterChoiceMutator(Mutator):
     def mutate(self, model):
         chosen = self.choice(self.candidates)
         for node, argname in self.nodes:
+            chosen_value = node.operation.parameters[argname].access(chosen)
             target = model.get_node_by_name(node.name)
-            target.update_operation(target.operation.type, {**target.operation.parameters, argname: chosen})
+            target.update_operation(target.operation.type, {**target.operation.parameters, argname: chosen_value})
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
@@ -99,7 +100,8 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     for node_list in pc_nodes:
         assert _is_all_equal([node.operation.parameters[name].candidates for node, name in node_list]), \
             'Value choice with the same label must have the same candidates.'
-        mutator = ParameterChoiceMutator(node_list, node_list[0][0].operation.parameters[node_list[0][1]].candidates)
+        first_node, first_argname = node_list[0]
+        mutator = ParameterChoiceMutator(node_list, first_node.operation.parameters[first_argname].candidates)
         applied_mutators.append(mutator)
 
     # apply layer choice at last as it will delete some nodes

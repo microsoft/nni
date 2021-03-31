@@ -319,3 +319,63 @@ class TestHighLevelAPI(unittest.TestCase):
                 failed_count += 1
         self.assertGreater(failed_count, 0)
         self.assertLess(failed_count, 30)
+
+    def test_valuechoice_access(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                vc = nn.ValueChoice([(6, 3), (8, 5)])
+                self.conv = nn.Conv2d(3, vc[0], kernel_size=vc[1])
+
+            def forward(self, x):
+                return self.conv(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutators[0].bind_sampler(EnumerateSampler())
+        input = torch.randn(1, 3, 5, 5)
+        self.assertEqual(self._get_converted_pytorch_model(mutators[0].apply(model))(input).size(),
+                         torch.Size([1, 6, 3, 3]))
+        self.assertEqual(self._get_converted_pytorch_model(mutators[0].apply(model))(input).size(),
+                         torch.Size([1, 8, 1, 1]))
+
+        class Net2(nn.Module):
+            def __init__(self):
+                super().__init__()
+                choices = [
+                    {'b': [3], 'bp': [6]},
+                    {'b': [6], 'bp': [12]}
+                ]
+                self.conv = nn.Conv2d(3, nn.ValueChoice(choices, label='a')['b'][0], 1)
+                self.conv1 = nn.Conv2d(nn.ValueChoice(choices, label='a')['bp'][0], 3, 1)
+
+            def forward(self, x):
+                x = self.conv(x)
+                return self.conv1(torch.cat((x, x), 1))
+
+        model = self._convert_to_ir(Net2())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutators[0].bind_sampler(EnumerateSampler())
+        input = torch.randn(1, 3, 5, 5)
+        self._get_converted_pytorch_model(mutators[0].apply(model))(input)
+
+    def test_valuechoice_access_functional(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.dropout_rate = nn.ValueChoice([[0.,], [1.,]])
+
+            def forward(self, x):
+                return F.dropout(x, self.dropout_rate()[0])
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
+        self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)

@@ -547,7 +547,8 @@ class GraphConverter:
     def _handle_valuechoice(self, module):
         return {
             'candidates': module.candidates,
-            'label': module.label
+            'label': module.label,
+            'accessor': module._accessor
         }
 
     def convert_module(self, script_module, module, module_name, ir_model):
