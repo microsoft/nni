@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import * as cp from 'child_process';
+import * as path from 'path';
 import { ChildProcess } from 'child_process';
 
 import * as component from '../common/component';
@@ -47,10 +48,10 @@ class NNITensorboardManager implements TensorboardManager {
         const trialJobIdList: string[] = [];
         const trialLogDirectoryList: string[] = [];
         await Promise.all(trialJobIds.split(',').map(async (trialJobId) => {
-            const trialDataPath = await this.nniManager.getTrialOutputLocalPath(trialJobId);
-            mkDirPSync(trialDataPath);
+            const trialTensorboardDataPath = path.join(await this.nniManager.getTrialOutputLocalPath(trialJobId), 'tensorboard');
+            mkDirPSync(trialTensorboardDataPath);
             trialJobIdList.push(trialJobId);
-            trialLogDirectoryList.push(trialDataPath);
+            trialLogDirectoryList.push(trialTensorboardDataPath);
         }));
         this.log.info(`tensorboard: ${trialJobIdList} ${trialLogDirectoryList}`);
         return this.startTensorboardTaskProcess(trialJobIdList, trialLogDirectoryList);
