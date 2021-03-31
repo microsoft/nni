@@ -71,6 +71,7 @@ class NNIRestHandler {
         this.getTensorboardTask(router);
         this.updateTensorboardTask(router);
         this.stopTensorboardTask(router);
+        this.stopAllTensorboardTask(router);
         this.listTensorboardTask(router);
         this.stop(router);
 
@@ -361,6 +362,16 @@ class NNIRestHandler {
         router.delete('/tensorboard/:id', (req: Request, res: Response) => {
             this.tensorboardManager.stopTensorboardTask(req.params.id).then((taskDetail: TensorboardTaskInfo) => {
                 res.send(Object.assign({}, taskDetail));
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private stopAllTensorboardTask(router: Router): void {
+        router.delete('/tensorboard-tasks', (req: Request, res: Response) => {
+            this.tensorboardManager.stopAllTensorboardTask().then(() => {
+                res.send();
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });

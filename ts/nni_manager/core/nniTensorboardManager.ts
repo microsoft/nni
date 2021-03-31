@@ -172,10 +172,9 @@ class NNITensorboardManager implements TensorboardManager {
         }
     }
 
-    public async stopTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo>{
+    public async stopTensorboardTask(tensorboardTaskId: string): Promise<TensorboardTaskInfo> {
         const tensorboardTask = await this.getTensorboardTask(tensorboardTaskId);
         if (['RUNNING', 'FAIL_DOWNLOAD_DATA'].includes(tensorboardTask.status)){
-            this.setTensorboardTaskStatus(tensorboardTask, 'STOPPING');
             this.killTensorboardTaskProc(tensorboardTask);
             return tensorboardTask;
         } else {
@@ -191,16 +190,23 @@ class NNITensorboardManager implements TensorboardManager {
         if (!alive) {
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
         } else {
+            this.setTensorboardTaskStatus(tensorboardTask, 'STOPPING');
             await killPid(tensorboardTask.pid);
             this.log.debug(`Tensorboard task ${tensorboardTask.id} stopped.`);
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPED');
         }
     }
 
-    public async stop(): Promise<void> {
+    public async stopAllTensorboardTask(): Promise<void> {
+        this.log.info('Stopping all tensorboard task.')
         for (const task of this.tensorboardTaskMap) {
             await this.killTensorboardTaskProc(task[1]);
         }
+        this.log.info('All tensorboard task stopped.')
+    }
+
+    public async stop(): Promise<void> {
+        await this.stopAllTensorboardTask();
         this.log.info('Tensorboard manager stopped.');
     }
 }
