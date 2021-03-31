@@ -1,5 +1,6 @@
 import random
 import unittest
+from collections import Counter
 
 import nni.retiarii.nn.pytorch as nn
 import torch
@@ -252,6 +253,30 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
 
+    def test_value_choice_in_layer_choice(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.linear = nn.LayerChoice([
+                    nn.Linear(3, nn.ValueChoice([10, 20])),
+                    nn.Linear(3, nn.ValueChoice([30, 40]))
+                ])
+
+            def forward(self, x):
+                return self.linear(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 3)
+        sz_counter = Counter()
+        sampler = RandomSampler()
+        for i in range(100):
+            model_new = model
+            for mutator in mutators:
+                model_new = mutator.bind_sampler(sampler).apply(model_new)
+            sz_counter[self._get_converted_pytorch_model(model_new)(torch.randn(1, 3)).size(1)] += 1
+        print(sz_counter)
+
     def test_shared(self):
         class Net(nn.Module):
             def __init__(self, shared=True):
@@ -284,11 +309,12 @@ class TestHighLevelAPI(unittest.TestCase):
         # repeat test. Expectation: sometimes succeeds, sometimes fails.
         failed_count = 0
         for i in range(30):
+            model_new = model
             for mutator in mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
+                model_new = mutator.bind_sampler(sampler).apply(model_new)
             self.assertEqual(sampler.counter, 2 * (i + 1))
             try:
-                self._get_converted_pytorch_model(model)(torch.randn(1, 3, 3, 3))
+                self._get_converted_pytorch_model(model_new)(torch.randn(1, 3, 3, 3))
             except RuntimeError:
                 failed_count += 1
         self.assertGreater(failed_count, 0)

@@ -4,7 +4,7 @@
 from typing import Any, List, Optional, Tuple
 
 from ...mutator import Mutator
-from ...graph import Model, Node
+from ...graph import Cell, Model, Node
 from .api import ValueChoice
 
 
@@ -18,8 +18,16 @@ class LayerChoiceMutator(Mutator):
         chosen = self.choice(candidates)
         for node in self.nodes:
             target = model.graphs[node.operation.cell_name]
-            target.add_edge(('input', None), (chosen, None))
-            target.add_edge((chosen, None), ('output', None))
+            chosen_node = target.get_node_by_name(chosen)
+            assert chosen_node is not None
+            target.add_edge((target.input_node, 0), (chosen_node, None))
+            target.add_edge((chosen_node, None), (target.output_node, None))
+            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+
+            # remove redundant nodes
+            for rm_node in target.hidden_nodes:
+                if rm_node.name != chosen_node.name:
+                    rm_node.remove()
 
 
 class InputChoiceMutator(Mutator):
@@ -67,7 +75,8 @@ class ParameterChoiceMutator(Mutator):
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
 
-    lc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice'))
+    lc_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'layerchoice',
+                                      model.get_nodes_by_type('_cell')))
     for node_list in lc_nodes:
         assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
             'Layer choice with the same label must have the same number of candidates.'

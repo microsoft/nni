@@ -348,7 +348,6 @@ class GraphConverter:
                     else:
                         # Graph already created, create Cell for it
                         new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
-                        print(new_cell)
                         subcell = ir_graph.add_node(submodule_full_name, new_cell)
                     shared_module_index[submodule_full_name] = subcell
                 node_index[node] = subcell
@@ -582,14 +581,12 @@ class GraphConverter:
             pass  # do nothing
         elif original_type_name == OpTypeName.LayerChoice:
             graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
-            for cand_name in module.names:
-                cand = module[cand_name]
+            candidate_name_list = [f'layerchoice_{module.label}_{cand_name}' for cand_name in module.names]
+            for cand_name, cand in zip(candidate_name_list, module):
                 cand_type = '__torch__.' + get_importable_name(cand.__class__)
                 graph.add_node(cand_name, cand_type, get_init_parameters_or_fail(cand))
-                graph._add_input('input')
-                graph._add_output('output')
             graph._register()
-            return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': module.candidates}
+            return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': candidate_name_list}
         elif original_type_name == OpTypeName.InputChoice:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.ValueChoice:
