@@ -582,16 +582,19 @@ class LsqQuantizer(Quantizer):
                 qmin = -2 ** (q_bit - 1)
                 init_weight_scale = layer.module.weight.data.detach().abs().mean() * 2 / (qmax ** 0.5)
                 layer.module.scale = torch.nn.Parameter(init_weight_scale)
-                layer.module.register_buffer('weight_qmax', torch.Tensor(qmax))
-                layer.module.register_buffer('weight_qmin', torch.Tensor(qmin))
+                layer.module.weight_qmax = qmax
+                layer.module.weight_qmin = qmin
 
             # todo: in the origin paper, the initial value of activation is calculated from first input batch
             if "output" in config.get("quant_types", []):
                 q_bit = get_bits_length(config, "")
                 qmax = 2 ** (q_bit - 1) - 1
                 qmin = -2 ** (q_bit - 1)
-                layer.module.register_buffer('activation_qmax', torch.Tensor(qmax))
-                layer.module.register_buffer('activation_qmin', torch.Tensor(qmin))
+                layer.module.activation_qmax = qmax
+                layer.module.activation_qmin = qmin
+            # add zero_point and scale to optimizer since they are updated through the gradient
+            self.optimizer.add_param_group({"params": layer.module.zero_point})
+            self.optimizer.add_param_group({"params": layer.module.scale})
 
     @staticmethod
     def grad_scale(x, scale):
