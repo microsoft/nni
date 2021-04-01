@@ -573,8 +573,6 @@ class LsqQuantizer(Quantizer):
         self.quant_grad = QuantForward()
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
-            # the way that lsq simulates quantization will make the gradient of zero point always
-            # equal to 0. So there may be no need to set it.
             layer.module.register_parameter("zero_point", torch.nn.Parameter(torch.Tensor([0.0])))
             layer.module.register_parameter("scale", torch.nn.Parameter(torch.Tensor([1.0])))
             if "weight" in config.get("quant_types", []):
