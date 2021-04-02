@@ -113,8 +113,8 @@ aml:
   trialConcurrency: 2
   trainingServicePlatform: aml
   trial:
-    codeDir:
     cpuNum: 1
+    gpuNum: 1
     image:
   amlConfig:
     subscriptionId:
