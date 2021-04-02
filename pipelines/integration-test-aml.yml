@@ -55,7 +55,7 @@ jobs:
           --subscription_id $(subscriptionId) \
           --resource_group $(resourceGroup) \
           --workspace_name $(workspaceName) \
-          --compute_target $(computerTarget) \
+          --compute_target $(computeTarget) \
           --nni_manager_ip $(manager_ip)
 
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
