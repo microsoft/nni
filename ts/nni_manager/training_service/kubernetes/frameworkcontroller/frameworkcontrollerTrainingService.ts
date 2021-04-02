@@ -178,12 +178,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         return Promise.resolve();
     }
 
-    public async getClusterMetadata(_key: string): Promise<string> { return ""; }
-
-    public async updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        throw new Error('Not supported');
-    }
-
     /**
      * upload local folder to nfs or azureStroage
      */
@@ -446,6 +440,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 spec: spec
             }
         };
+    }
+
+    public async updateTrialJob(_1: any, _2: any): Promise<TrialJobDetail> {
+        throw new Error('not supported');
     }
 }
 

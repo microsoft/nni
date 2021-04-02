@@ -10,7 +10,7 @@ import { AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesCluste
 } from '../kubernetesConfig';
 
 // operator types that kubeflow supported
-export type KubeflowOperator = string;  // 'tf-operator' | 'pytorch-operator'
+export type KubeflowOperator = 'tf-operator' | 'pytorch-operator' ;
 export type DistTrainRole = 'worker' | 'ps' | 'master';
 export type KubeflowJobStatus = 'Created' | 'Running' | 'Failed' | 'Succeeded';
 export type OperatorApiVersion = 'v1alpha2' | 'v1beta1' | 'v1beta2' | 'v1';

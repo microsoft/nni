@@ -138,7 +138,7 @@ def to_v2(v1) -> ExperimentConfig:
     if platform == 'kubeflow':
         kf_config = v1.pop('kubeflowConfig')
         _move_field(kf_config, ts, 'operator', 'operator')
-        ps_name = 'ps' if ts.operator != 'pytorch-operator' else 'master':
+        ps_name = 'ps' if ts.operator != 'pytorch-operator' else 'master'
         _move_field(kf_config, ts, 'apiVersion', 'api_version')
 
         # FIXME: use storage service
