@@ -92,13 +92,13 @@ def update_training_service_config(args):
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
         if args.subscription_id is not None:
-            config[args.ts]['amlConfig']['subscriptionId'] = args.subscriptionId
+            config[args.ts]['amlConfig']['subscriptionId'] = args.subscription_id
         if args.resource_group is not None:
-            config[args.ts]['amlConfig']['resourceGroup'] = args.resourceGroup
+            config[args.ts]['amlConfig']['resourceGroup'] = args.resource_group
         if args.workspace_name is not None:
-            config[args.ts]['amlConfig']['workspaceName'] = args.workspaceName
+            config[args.ts]['amlConfig']['workspaceName'] = args.workspace_name
         if args.compute_target is not None:
-            config[args.ts]['amlConfig']['computeTarget'] = args.computeTarget
+            config[args.ts]['amlConfig']['computeTarget'] = args.compute_target
 
     dump_yml_content(TRAINING_SERVICE_FILE, config)
 
