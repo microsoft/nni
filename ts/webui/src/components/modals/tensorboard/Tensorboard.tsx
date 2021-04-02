@@ -1,169 +1,54 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import PropTypes from 'prop-types';
-import axios from 'axios';
-import { Stack, Panel, StackItem, PrimaryButton, DetailsList, IColumn, IconButton } from '@fluentui/react';
-import DialogDetail from './DialogDetail';
-import { MANAGER_IP } from '../../../static/const';
-import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
-// import { caclMonacoEditorHeight } from '../../../static/function';
-import '../../../static/style/tensorboard.scss';
+import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react';
 
-function Tensorboard(props): any {
+function StartTensorboardDialog(props): any {
 
-    const { onHideDialog, trialIDs } = props;
-    const [deleteIDs, setDeleteIDs] = useState([] as string[]);
-    const [trialCount, setTrialCount] = useState(trialIDs.length - deleteIDs.length);
-    const [source, setSource] = useState([]);
-    const [dialogContent, setDialogContent] = useState(''); // trial tensorboard api error
-    const [visibleDialog, setVisibleDialog] = useState(false);
+    const { isReaptedTensorboard, onHideDialog, item } = props;
 
-    const columns: IColumn[] = [
-        {
-            name: 'ID',
-            key: 'id',
-            fieldName: 'id',
-            minWidth: 60,
-            maxWidth: 120,
-            isResizable: true,
-            className: 'tableHead leftTitle',
-            data: 'string',
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
-        },
-        {
-            name: 'Operation',
-            key: '_operation',
-            fieldName: 'operation',
-            minWidth: 90,
-            maxWidth: 90,
-            isResizable: true,
-            className: 'detail-table',
-            onRender: _renderOperationColumn
-        }
-    ];
+    const dialogContentProps = {
+        type: DialogType.normal,
+        title: 'Tensorboard',
+        closeButtonAriaLabel: 'OK',
+    };
 
-    useEffect(() => {
-        console.info(trialIDs); // eslint-diable-line
-        const realIDs = trialIDs.filter(item => !(deleteIDs.includes(item)));
-        setSource(realIDs.map(id => ({ id })));
-        // console.info(realIDs.map(id => ({id}))); // eslint-disable-line
-        // setSource(trialIDs.toString());
-
-    // }, [trialCount]); // trialCount发生改变时触发页面更新
-    }, []); // trialCount发生改变时触发页面更新
-
-    // const { experiment, expDrawerHeight } = state;
-    const tableHeight = caclMonacoEditorHeight(window.innerHeight);
-
-    function _renderOperationColumn(record: any): React.ReactNode {
-        return (
-            <Stack className='operationBtn' horizontal>
-                <IconButton
-                    iconProps={{ iconName: 'OpenInNewWindow' }}
-                    title="open"
-                    onClick={(): Promise<void> => openTrialTensorboard(record.id)}
-                />
-                <IconButton
-                    iconProps={{ iconName: 'Delete' }}
-                    title="delete"
-                    onClick={(): Promise<void> => deleteOneTrialTensorboard(record.id)}
-                />
-            </Stack>
-        );
+    function gotoTensorboard(): void {
+        const hostname = window.location.hostname;
+        const protocol = window.location.protocol;
+        window.open(`${protocol}//${hostname}:${item.port}`);
+        onHideDialog();
     }
 
-    async function openTrialTensorboard(id: string): Promise<void> {
-        /** Get tensorboard status
-            Request: Get /api/v1/tensorboard/:id
-            Response if success:
-            Status:200
-            {
-                "status": "downloading data | running | stopping | stopped"
-                "url": "tensorboard url"
-            }
-        */
-        //    效果演示代码
-        //    await setStatus('downloag');
-        //    await setVisibleDialog(true);
-        // console.info(id);
-        await requestAxios(`${MANAGER_IP}/tensorboard/${id}`)
-            .then(data => {
-                if (data.status !== 'downloading data') {
-                    // trial 启动成功
-                    window.open(data.url);
-                } else {
-                    // 提示trial正在起tensorboard, 展示当前状态，
-                    setDialogContent(`Please waiting some time to see tensorboard because this trial's tensorboard status is ${status}`);
-                    setVisibleDialog(true);
-                }
-            })
-            .catch(error => {
-                // 提示有问题，请重新点击
-                setDialogContent(error.message);
-                setVisibleDialog(true);
-            });
-
-        // window.open('https://developer.microsoft.com/en-us/fluentui#/styles/web/icons');
-    }
-
-    async function deleteOneTrialTensorboard(id: string): Promise<void> {
-        /**
-         * 	4. Stop tensorboard
-                Request: DELETE /api/v1/tensorboard/:id
-                Response if success
-                {
-                    status: "stopping"
-                }
-        */
-
-        const response = await axios.delete(`${MANAGER_IP}/tensorboard/:${id}`);
-        if (response.status === 200) {
-            const a = deleteIDs;
-            a.push(id);
-            setDeleteIDs(a);
-            setTrialCount(trialIDs.length - a.length);
-            setDialogContent(`Had stopped trial ${id}'s tensorboard`);
-        } else {
-            setDialogContent(`Failed to stopped trial ${id}'s tensorboard`);
-        }
-        setVisibleDialog(true);
-    }
-
-    console.info(source); // eslint-disable-line
-    // const a = [{id: 'some-split-string-id-part'}];
     return (
-        <Panel isOpen={true} hasCloseButton={false} isLightDismiss={true} onLightDismissClick={onHideDialog}>
-            <div className='panel'>
-                <div className='panelName'>
-                    <span>Tensorboard</span>
-                    <span className='circle'>{trialCount}</span>
+        <Dialog
+            hidden={false}
+            dialogContentProps={dialogContentProps}
+            className='dialog'
+        >
+            {
+                isReaptedTensorboard
+                ?
+                <div>
+                    You had started this tensorboard with these trials: <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+                    <div className='line-height'>Its tensorboard id: <span className='bold'>{item.id}</span></div>
                 </div>
-                <DetailsList
-                    columns={columns}
-                    items={source}
-                    setKey='set'
-                    compact={true}
-                    selectionMode={0}
-                    className='succTable'
-                    styles={{ root: { height: tableHeight } }}
-                />
-                <Stack horizontal className='buttons'>
-                    <StackItem grow={12} className='close'>
-                        <PrimaryButton text='Close' onClick={onHideDialog} />
-                    </StackItem>
-                </Stack>
-            </div>
-            {visibleDialog &&
-                <DialogDetail
-                    message={dialogContent}
-                    func={setVisibleDialog}
-                />}
-        </Panel>
+    :
+                <div>
+                    You are starting a new Tensorboard with trials: <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+                    <div className='line-height'>Tensorboard id: <span className='bold'>{item.id}</span></div>
+                </div>
+            }
+            <DialogFooter>
+                <PrimaryButton onClick={gotoTensorboard} text="OK" />
+            </DialogFooter>
+        </Dialog>
     );
 }
 
-Tensorboard.propTypes = {
-    trialIDs: PropTypes.array,
-    onHideDialog: PropTypes.func
+StartTensorboardDialog.propTypes = {
+    isReaptedTensorboard: PropTypes.bool,
+    onHideDialog: PropTypes.func,
+    item: PropTypes.object
 };
 
-export default Tensorboard;
+export default StartTensorboardDialog;

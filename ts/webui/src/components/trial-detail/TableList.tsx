@@ -11,7 +11,8 @@ import {
     Stack,
     StackItem,
     TooltipHost,
-    DirectionalHint
+    DirectionalHint,
+    IContextualMenuProps
 } from '@fluentui/react';
 import axios from 'axios';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
@@ -23,12 +24,13 @@ import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
 import Customize from '../modals/CustomizedTrial';
 import Tensorboard from '../modals/tensorboard/Tensorboard';
+import ShowTensorBoardDetail from '../modals/tensorboard/ShowTensorBoardDetail';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
 import CopyButton from '../public-child/CopyButton';
 import { Trial } from '../../static/model/trial';
-import DialogDetail from '../modals/tensorboard/DialogDetail';
+// import DialogDetail from '../modals/tensorboard/RepeatTensorDialog';
 import '../../static/style/button.scss';
 import '../../static/style/logPath.scss';
 import '../../static/style/openRow.scss';
@@ -36,11 +38,21 @@ import '../../static/style/pagination.scss';
 import '../../static/style/search.scss';
 import '../../static/style/table.scss';
 import '../../static/style/tableStatus.css';
+import '../../static/style/tensorboard.scss';
 import '../../static/style/overview/overviewTitle.scss';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
 require('echarts/lib/component/title');
+
+interface Tensorboard {
+    id: string;
+    status: string;
+    trialJobIdList: string[];
+    trialLogDirectoryList: string[];
+    pid: number;
+    port: string;
+};
 
 type SearchOptionType = 'id' | 'trialnum' | 'status' | 'parameters';
 const searchOptionLiterals = {
@@ -91,17 +103,22 @@ interface TableListState {
     customizeColumnsDialogVisible: boolean;
     compareDialogVisible: boolean;
     tensorboardPanelVisible: boolean;
+    detailTensorboardPanelVisible: boolean;
     intermediateDialogTrial: TableObj | undefined;
     copiedTrialId: string | undefined;
     sortInfo: SortInfo;
     visibleDialog: boolean;
     dialogContent: string;
-    startTensorId: string;
+    isReaptedTensorboard: boolean;
+    queryTensorboardList: Tensorboard[];
+    selectedTensorboard?: Tensorboard;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
     private _selection: Selection;
     private _expandedTrialIds: Set<string>;
+    private refreshTensorboard!: number | undefined;
+    private tableListComponent: boolean = false;
 
     constructor(props: TableListProps) {
         super(props);
@@ -111,7 +128,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             displayedColumns:
                 localStorage.getItem('columns') !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                      JSON.parse(localStorage.getItem('columns')!)
+                    JSON.parse(localStorage.getItem('columns')!)
                     : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
@@ -119,13 +136,15 @@ class TableList extends React.Component<TableListProps, TableListState> {
             customizeColumnsDialogVisible: false,
             compareDialogVisible: false,
             tensorboardPanelVisible: false,
+            detailTensorboardPanelVisible: false,
             selectedRowIds: [],
             intermediateDialogTrial: undefined,
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
             visibleDialog: false,
             dialogContent: '',
-            startTensorId: ''
+            isReaptedTensorboard: false,
+            queryTensorboardList: []
         };
 
         this._selection = new Selection({
@@ -447,8 +466,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         {blocked}
                     </PrimaryButton>
                 ) : (
-                        <KillJob trial={record} />
-                    )}
+                    <KillJob trial={record} />
+                )}
                 <PrimaryButton
                     className='detail-button-operation'
                     title='Customized trial'
@@ -463,49 +482,90 @@ class TableList extends React.Component<TableListProps, TableListState> {
         );
     }
 
-    private seeTrialTensorboard = (): void => {
-        /**
-         * 	1. Start new tensorboard
-                Request: POST /api/v1/tensorboard
-                Parameters:
-                {
-                    "trials": "trialId1, trialId2"
-                }
-                Response if success:
-                Status:201
-                {
-                tensorboardId: "id"
-                }
-                Response if failed:
-                Status 400
-                {
-                Message:"error message"
-                }
-
-        */
-        const { selectedRowIds } = this.state;
-        this.setState({ tensorboardPanelVisible: true });
-        axios(`${MANAGER_IP}/tensorboard`, {
-            method: 'POST',
+    private clearAllTensorboard = (): void => {
+        // clear all 所有状态
+        axios(`${MANAGER_IP}/tensorboard-tasks`, {
+            method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
-            data: {
-                trials: selectedRowIds.join(',')
-            }
         })
             .then(res => {
                 if (res.status === 200) {
-                    console.info(res); // eslint-diable-line
-                    setTimeout(() => {this.setState({ startTensorId: res.data.id, tensorboardPanelVisible: true }), 2000});
-                    
+                    // 成功停掉了所有在运行的tensorboard，状态一律称为 stopped
+                    // 提示所有的tensorboard都已经停掉了，清掉所有的query, 关掉定时器
+                    this.setState(() => ({ queryTensorboardList: [] }));
+                    window.clearTimeout(this.refreshTensorboard);
                 }
             })
-            .catch(error => {
-                this.setState({ visibleDialog: true, dialogContent: error.message || 'Tensorboard start failed' });
-            });
+    }
+
+    private queryAllTensorboard = (): void => {
+        // 查询所有trial tensorboard 状态
+        // TODO: 加error场景
+        if(this.tableListComponent){
+            axios(`${MANAGER_IP}/tensorboard-tasks`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(res => {
+                    if (res.status === 200) {
+                        this.setState(() => ({ queryTensorboardList: res.data.filter(item => item.status !== 'STOPPED') }));
+                    }
+                })
+                .catch(error => {
+                    console.info(error);
+                });
+            this.refreshTensorboard = window.setTimeout(this.queryAllTensorboard, 10000);
+        }
+    }
+
+    private startTrialTensorboard = (): void => {
+        const { selectedRowIds } = this.state;
+        // 查询所有 trial tensorboard 状态
+        axios(`${MANAGER_IP}/tensorboard-tasks`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+        })
+            .then(res => {
+                if (res.status === 200) {
+                    const data = res.data;
+                    // ??? 程序一开始空的时候
+                    const result = data.filter(item => item.status !== 'STOPPED' && item.trialJobIdList.join(',') === selectedRowIds.join(','));
+                    if (result.length > 0) {
+                        this.setState({ isReaptedTensorboard: true, selectedTensorboard: result[0], tensorboardPanelVisible: true });
+                    } else {
+                        axios(`${MANAGER_IP}/tensorboard`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            data: {
+                                trials: selectedRowIds.join(',')
+                            }
+                        })
+                            .then(res => {
+                                if (res.status === 200) {
+
+                                    // setTimeout((): void => {
+                                    this.setState({ isReaptedTensorboard: false, selectedTensorboard: res.data, tensorboardPanelVisible: true });
+                                    // }, 500);
+                                    // 每10s刷一次表单数据
+                                    // 如果表单没显示出来也会默默刷新
+                                    this.queryAllTensorboard();
+                                }
+                            })
+                            .catch(error => {
+                                this.setState({ isReaptedTensorboard: false, visibleDialog: true, dialogContent: error.message || 'Tensorboard start failed' });
+                            });
+                    }
+                }
+            })
     }
 
     private closeDialog = (): void => {
-        this.setState({ visibleDialog: false});
+        this.setState({ visibleDialog: false });
+    }
+
+    private seeTensorboardWebportal = (item: Tensorboard): void => {
+        // 加弹窗再提醒一下消息
+        this.setState({ detailTensorboardPanelVisible: true, selectedTensorboard:  item});
     }
 
     componentDidUpdate(prevProps: TableListProps): void {
@@ -515,7 +575,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
     }
 
     componentDidMount(): void {
+        this.tableListComponent = true;
         this._updateTableSource();
+        this.queryAllTensorboard();
+    }
+
+    componentWillUnmount(): void {
+        this.tableListComponent = false;
+        window.clearTimeout(this.refreshTensorboard);
     }
 
     render(): React.ReactNode {
@@ -526,15 +593,47 @@ class TableList extends React.Component<TableListProps, TableListState> {
             customizeColumnsDialogVisible,
             compareDialogVisible,
             tensorboardPanelVisible,
+            detailTensorboardPanelVisible,
             displayedColumns,
             selectedRowIds,
             intermediateDialogTrial,
             copiedTrialId,
-            visibleDialog,
-            dialogContent,
-            startTensorId
+            // visibleDialog,
+            // dialogContent,
+            isReaptedTensorboard,
+            queryTensorboardList,
+            selectedTensorboard
         } = this.state;
-        console.info(startTensorId); // eslint-diable-line
+        const some: Array<object> = [];
+        if (queryTensorboardList.length !== 0) {
+            some.push({
+                key: 'delete',
+                text: 'Stop all tensorBoard',
+                className: 'clearAll',
+                onClick: this.clearAllTensorboard
+            });
+            queryTensorboardList.forEach(item => {
+                some.push({
+                    key: item.id,
+                    text: `${item.id} ${item.port}`,
+                    className: `CommandBarButton-${item.status}`,
+                    onClick: this.seeTensorboardWebportal.bind(this, item)
+                });
+            })
+            
+        }
+        const tensorboardMenu: IContextualMenuProps = {
+            items: some.reverse() as any
+        };
+        // disable tensorboard btn logic
+        let flag = true;
+        if (selectedRowIds.length !== 0) {
+            flag = false;
+        }
+            
+        if (selectedRowIds.length === 0 && queryTensorboardList.length !== 0) {
+            flag = false;
+        }
         return (
             <div id='tableList'>
                 <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>
@@ -552,11 +651,21 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             disabled={selectedRowIds.length === 0}
                         />
                         <DefaultButton
-                            text='Tensorboard'
-                            className='allList-compare elementMarginLeft'
-                            onClick={(): void => this.seeTrialTensorboard()}
-                            disabled={selectedRowIds.length === 0}
+                            text='TensorBoard'
+                            className='elementMarginLeft'
+                            split
+                            splitButtonAriaLabel="See 2 options"
+                            aria-roledescription="split button"
+                            menuProps={tensorboardMenu}
+                            onClick={(): void => this.startTrialTensorboard()}
+                            disabled={flag}
                         />
+                        {
+                            queryTensorboardList.length !== 0 ?
+                                <span className='circle'>{queryTensorboardList.length}</span>
+                                : null
+                        }
+
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -580,8 +689,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
                                 type='text'
                                 className='allList-search-input'
                                 placeholder={`Search by ${['id', 'trialnum'].includes(searchType)
-                                        ? searchOptionLiterals[searchType]
-                                        : searchType
+                                    ? searchOptionLiterals[searchType]
+                                    : searchType
                                     }`}
                                 onChange={this._updateSearchText.bind(this)}
                                 style={{ width: 230 }}
@@ -618,10 +727,18 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 )}
                 {tensorboardPanelVisible && (
                     <Tensorboard
-                        trialIDs={[startTensorId]}
-                        // trialIDs={selectedRowIds}
+                        isReaptedTensorboard={isReaptedTensorboard}
+                        item={selectedTensorboard}
                         onHideDialog={(): void => {
                             this.setState({ tensorboardPanelVisible: false });
+                        }}
+                    />
+                )}
+                {detailTensorboardPanelVisible && (
+                    <ShowTensorBoardDetail
+                        item={selectedTensorboard}
+                        onHideDialog={(): void => {
+                            this.setState({ detailTensorboardPanelVisible: false });
                         }}
                     />
                 )}
@@ -657,11 +774,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     }}
                 />
                 {/* for all trials tensorboard failed modal */}
-                {visibleDialog &&
+                {/* {visibleDialog &&
                     <DialogDetail
                         message={dialogContent}
                         func={this.closeDialog}
-                    />}
+                    />} */}
             </div>
         );
     }

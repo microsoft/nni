@@ -3,6 +3,8 @@ const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const MANAGER_IP = `http://13.77.78.63:9999/api/v1/nni`;
+// const MANAGER_IP = `http://127.0.0.1:9999/api/v1/nni`;
+// const MANAGER_IP = `http://192.168.199.1:9999/api/v1/nni`;
 const DOWNLOAD_IP = `/logs`;
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
 const trialJobStatus = [
