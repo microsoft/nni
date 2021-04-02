@@ -250,7 +250,7 @@ class QAT_Quantizer(Quantizer):
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
         # we dont update weight in evaluation stage
-        if quant_start_step > self.bound_model.steps:
+        if quant_start_step > self.bound_model.steps or not wrapper.training:
             module.tracked_min_input, module.tracked_max_input = torch.min(input), torch.max(input)
             return weight
 

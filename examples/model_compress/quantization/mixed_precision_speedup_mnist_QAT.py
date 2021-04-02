@@ -116,57 +116,8 @@ def main():
             'quant_types': ['weight', 'output'],
             'quant_bits': {'weight':8, 'output':8},
             'op_names': ['fc2']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['maxpool1']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['maxpool2']
         }
     ]
-
-    """
-    configure_list = [{
-            'quant_types': ['weight'],
-            'quant_bits': {'weight':8},
-            'op_names': ['conv1']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['relu1']
-        }, {
-            'quant_types': ['weight'],
-            'quant_bits': {'weight':8},
-            'op_names': ['conv2']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['relu2']
-        }, {
-            'quant_types': ['weight'],
-            'quant_bits': {'weight':8},
-            'op_names': ['fc1']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['relu3']
-        }, {
-            'quant_types': ['weight'],
-            'quant_bits': {'weight':8},
-            'op_names': ['fc2']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['maxpool1']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['maxpool2']
-        }
-    ]
-    """
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     quantizer = QAT_Quantizer(model, configure_list, optimizer)

@@ -15,12 +15,14 @@ class Mnist(torch.nn.Module):
         self.relu1 = torch.nn.ReLU6()
         self.relu2 = torch.nn.ReLU6()
         self.relu3 = torch.nn.ReLU6()
+        self.max_pool1 = torch.nn.MaxPool2d(2, 2)
+        self.max_pool2 = torch.nn.MaxPool2d(2, 2)
 
     def forward(self, x):
         x = self.relu1(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
+        x = self.max_pool1(x)
         x = self.relu2(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
+        x = self.max_pool2(x)
         x = x.view(-1, 4 * 4 * 50)
         x = self.relu3(self.fc1(x))
         x = self.fc2(x)
@@ -69,7 +71,8 @@ def check_accuracy(preds, labels):
         num_correct = np.count_nonzero(np.equal(pred, labels[start_idx:start_idx+effective_shape]))
         num_correct_all = num_correct_all + num_correct
         start_idx = start_idx + effective_shape
-    print("accuracy: ", 100 * num_correct_all / 1000)
+    accuracy = 100 * num_correct_all / 1000
+    return accuracy
 
 def main():
     torch.manual_seed(0)
@@ -89,7 +92,7 @@ def main():
         'conv1':{'weight_bit':8, 'activation_bit':8},
         'conv2':{'weight_bit':32, 'activation_bit':32},
         'fc1':{'weight_bit':16, 'activation_bit':16},
-        'fc2':{'weight_bit':8, 'activation_bit':8},
+        'fc2':{'weight_bit':8, 'activation_bit':8}
     }
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
@@ -108,8 +111,9 @@ def main():
     engine.compress()
     output, time = engine.inference(test_set)
 
-    check_accuracy(output, test_labels)
-    print("elapsed_time: ", time)
+    accuracy = check_accuracy(output, test_labels)
+    print("Inference accuracy (whole dataset): {}%".format(accuracy))
+    print("Inference elapsed_time (whole dataset): {}s".format(time))
 
 if __name__ == '__main__':
     main()

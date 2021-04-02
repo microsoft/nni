@@ -112,6 +112,15 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
                 tracked_max_input = config[layer.name]['tracked_max_input']
                 layer.precision = Precision_Dict[w_bit]
                 in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                if layer.name[0:4] == "Gemm":
+                    pre_layer = network.get_layer(i-1)
+                    pre_layer.precision = Precision_Dict[w_bit]
+                    pre_in_tensor = pre_layer.get_input(0)
+                    pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                    next_layer = network.get_layer(i+1)
+                    next_layer.precision = Precision_Dict[w_bit]
+                    next_in_tensor = next_layer.get_input(0)
+                    next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
             if 'activation_bit' in config[layer.name]:
                 out_tensor = layer.get_output(0)
                 a_bit = config[layer.name]['activation_bit']
@@ -119,6 +128,15 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
                 tracked_max_activation = config[layer.name]['tracked_max_activation']
                 layer.set_output_type(0, Precision_Dict[a_bit])
                 out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                if layer.name[0:4] == "Gemm":
+                    pre_layer = network.get_layer(i-1)
+                    pre_layer.set_output_type(0, Precision_Dict[a_bit])
+                    pre_out_tensor = pre_layer.get_output(0)
+                    pre_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                    next_layer = network.get_layer(i+1)
+                    next_layer.set_output_type(0, Precision_Dict[a_bit])
+                    next_out_tensor = next_layer.get_output(0)
+                    next_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
                 
         # Build engine and do int8 calibration.
         engine = builder.build_cuda_engine(network)
