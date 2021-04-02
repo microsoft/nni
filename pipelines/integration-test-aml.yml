@@ -52,9 +52,9 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts aml \
-          --subscriptionId \
-          --resourceGroup \
-          --workspaceName \
-          --computeTarget
+          --subscription_id \
+          --resource_group \
+          --workspace_name \
+          --compute_target
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
     displayName: Integration test
