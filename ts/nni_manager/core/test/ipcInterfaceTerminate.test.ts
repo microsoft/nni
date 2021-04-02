@@ -30,7 +30,7 @@ function startProcess(): void {
             trialConcurrency: 1,
             maxTrialNumber: 5,
             tuner: {
-                className: 'dummmy_tuner.DummyTuner',
+                className: 'dummy_tuner.DummyTuner',
                 codeDirectory: '.'
             },
             assessor: {

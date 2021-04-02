@@ -68,7 +68,7 @@ class ExperimentConfig(ConfigBase):
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
-    _deprecated: Optional[str, Any] = None
+    _deprecated: Optional[Dict[str, Any]] = None
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
         base_path = kwargs.pop('_base_path', None)

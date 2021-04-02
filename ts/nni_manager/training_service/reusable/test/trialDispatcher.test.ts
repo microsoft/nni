@@ -170,13 +170,13 @@ async function waitEnvironment(waitCount: number,
 }
 
 const config = {
-    searchSpace: undefined,
-    trialCommand: 'echo',
+    searchSpace: { },
+    trialCommand: 'echo hi',
     trialCodeDirectory: path.dirname(__filename),
     trialConcurrency: 0,
     nniManagerIp: '127.0.0.1',
     trainingService: {
-        platform: ''
+        platform: 'local'
     },
     debug: true
 };
@@ -227,7 +227,6 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     it('reuse env', async () => {
-
         let trialDetail = await newTrial(trialDispatcher);
         await waitEnvironment(1, previousEnvironments, environmentService, commandChannel);
         await verifyTrialRunning(commandChannel, trialDetail);

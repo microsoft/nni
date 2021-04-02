@@ -23,7 +23,6 @@ import * as path from 'path';
 
 async function initContainer(): Promise<void> {
     prepareUnitTest();
-    Container.bind(TrainingService).to(MockedTrainingService).scope(Scope.Singleton);
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
@@ -34,7 +33,7 @@ async function initContainer(): Promise<void> {
 describe('Unit test for nnimanager', function () {
     this.timeout(10000);
 
-    let nniManager: Manager;
+    let nniManager: NNIManager;
 
     let ClusterMetadataKey = 'mockedMetadataKey';
 
@@ -46,7 +45,7 @@ describe('Unit test for nnimanager', function () {
         trainingService: {
             platform: 'local'
         },
-        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
+        searchSpace: {'lr': {'_type': 'choice', '_value': [0.01,0.001]}},
         tuner: {
             name: 'TPE',
             classArgs: {
@@ -56,7 +55,7 @@ describe('Unit test for nnimanager', function () {
         assessor: {
             name: 'Medianstop'
         },
-        trialCommand: '',
+        trialCommand: 'echo hello',
         trialCodeDirectory: '',
         debug: true
     }
@@ -79,7 +78,7 @@ describe('Unit test for nnimanager', function () {
         assessor: {
             name: 'Medianstop'
         },
-        trialCommand: '',
+        trialCommand: 'echo hello',
         trialCodeDirectory: '',
         debug: true
     }
@@ -115,8 +114,21 @@ describe('Unit test for nnimanager', function () {
         const experimentsManager: ExperimentManager = component.get(ExperimentManager);
         experimentsManager.setExperimentPath('.experiment.test');
         nniManager = component.get(Manager);
+
         const expId: string = await nniManager.startExperiment(experimentParams);
         assert.strictEqual(expId, 'unittest');
+
+        // TODO:
+        // In current architecture we cannot prevent NNI manager from creating a training service.
+        // The training service must be manually stopped here or its callbacks will block exit.
+        // I'm planning on a custom training service register system similar to custom tuner,
+        // and when that is done we can let NNI manager to use MockedTrainingService through config.
+        const manager = nniManager as any;
+        manager.trainingService.removeTrialJobMetricListener(manager.trialJobMetricListener);
+        manager.trainingService.cleanUp();
+
+        manager.trainingService = new MockedTrainingService();
+        manager.stopExperiment = () => manager.trainingService.cleanUp();
     })
 
     after(async () => {
@@ -161,28 +173,11 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test getClusterMetadata', () => {
-        //default value is "default"
-        return nniManager.getClusterMetadata(ClusterMetadataKey).then(function (value) {
-            expect(value).to.equal("default");
-        });
-    })
-
-    it('test setClusterMetadata and getClusterMetadata', () => {
-        //set a valid key
-        return nniManager.setClusterMetadata(ClusterMetadataKey, "newdata").then(() => {
-            return nniManager.getClusterMetadata(ClusterMetadataKey).then(function (value) {
-                expect(value).to.equal("newdata");
-            });
-        }).catch((error) => {
-            console.log(error);
-        })
-    })
-
     it('test cancelTrialJobByUser', () => {
         return nniManager.cancelTrialJobByUser('1234').then(() => {
 
         }).catch((error) => {
+            console.log(error);
             assert.fail(error);
         })
     })
@@ -210,7 +205,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxExperimentDuration).to.be.equal(6);
+                expect(updateProfile.params.maxExperimentDuration).to.be.equal('6s');
             });
         }).catch((error) => {
             assert.fail(error);
