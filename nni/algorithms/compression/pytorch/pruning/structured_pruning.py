@@ -677,13 +677,6 @@ class SlimPrunerMasker(WeightMasker):
 
     def __init__(self, model, pruner, **kwargs):
         super().__init__(model, pruner)
-        weight_list = []
-        for (layer, _) in pruner.get_modules_to_compress():
-            weight_list.append(layer.module.weight.data.abs().clone())
-        all_bn_weights = torch.cat(weight_list)
-        k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
-        self.global_threshold = torch.topk(
-            all_bn_weights.view(-1), k, largest=False)[0].max()
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
@@ -705,7 +698,6 @@ class SlimPrunerMasker(WeightMasker):
             mask = {'weight_mask': mask_weight.detach(
             ), 'bias_mask': mask_bias.detach()}
         return mask
-
 
 def least_square_sklearn(X, Y):
     from sklearn.linear_model import LinearRegression

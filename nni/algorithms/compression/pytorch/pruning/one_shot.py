@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import torch
 from schema import And, Optional, SchemaError
 from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
@@ -124,8 +125,11 @@ class SlimPruner(OneshotPruner):
             Optimizer used to train model
     """
 
-    def __init__(self, model, config_list, optimizer=None):
-        super().__init__(model, config_list, pruning_algorithm='slim', optimizer=optimizer)
+    def __init__(self, model, config_list, trainer, training_epochs=5, scale=0.0001):
+        super().__init__(model, config_list, pruning_algorithm='slim')
+        self.scale = scale
+        self._trainer = trainer
+        self._training_epochs = training_epochs
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
@@ -138,6 +142,43 @@ class SlimPruner(OneshotPruner):
 
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
+    
+    def _get_global_threshold(self):
+        weight_list = []
+        for (layer, _) in self.get_modules_to_compress():
+            weight_list.append(layer.module.weight.data.abs().clone())
+        all_bn_weights = torch.cat(weight_list)
+        k = int(all_bn_weights.shape[0] * self.config_list[0]['sparsity'])
+        self.masker.global_threshold = torch.topk(
+            all_bn_weights.view(-1), k, largest=False)[0].max()
+
+    def compress(self):
+        """
+        Compress the model with Network Slimming.
+
+        Returns
+        -------
+        torch.nn.Module
+            model with specified modules compressed.
+        """
+        logger.info('Starting Network Slimming...')
+
+        optimizer = torch.optim.SGD(
+            self.bound_model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
+        
+        def callback():
+            for i, wrapper in enumerate(self.get_modules_wrapper()):
+                 wrapper.module.weight.grad.data.add_(self.scale * torch.sign( wrapper.module.weight.data))
+
+        criterion = torch.nn.CrossEntropyLoss()
+        for epoch in range(self._training_epochs):
+            self._trainer(self.bound_model, optimizer=optimizer,
+                criterion=criterion, epoch=epoch, callback=callback)
+
+        self._get_global_threshold()
+        self.update_mask()
+
+        return self.bound_model
 
 
 class _StructuredFilterPruner(OneshotPruner):
