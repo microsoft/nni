@@ -76,11 +76,8 @@ class Compressor:
 
         # a layer can be referenced in multiple attributes of a model,
         # but should only be instrumented once
-        wrapper = self._wrappers.get(id(layer))
-        if wrapper is not None:
-            if not wrapper._instrumented:
-                self._instrument(layer)
-            return wrapper
+        if id(layer) in self._wrappers:
+            return self._wrappers[id(layer)]
 
         config = self._select_config(layer)
         if config is not None:
@@ -93,7 +90,7 @@ class Compressor:
     def _uninstrument(self, layer):
         # note that ``self._wrappers`` cache is not cleared here,
         # so the same wrapper objects will be recovered in next ``self._instrument()`` call
-        if isinstance(self, LayerWrapper):
+        if isinstance(layer, LayerWrapper):
             layer._instrumented = False
             return self._uninstrument(layer.layer)
         if isinstance(layer, tf.keras.Sequential):
@@ -134,7 +131,7 @@ class Compressor:
                         value[i] = self._instrument(item)
         return model
 
-    def _uninstrument_layer(self, model):
+    def _uninstrument_model(self, model):
         for key, value in list(model.__dict__.items()):
             if isinstance(value, tf.keras.layers.Layer):
                 orig_layer = self._uninstrument(value)
@@ -217,9 +214,27 @@ class Pruner(Compressor):
     def export_model(self, model_path, mask_path=None):
         """
         Export pruned model and optionally mask tensors.
+
+        Parameters
+        ----------
+        model_path : path-like
+            The path passed to ``Model.save()``.
+            You can use ".h5" extension name to export HDF5 format.
+        mask_path : path-like or None
+            Export masks to the path when set.
+            Because Keras cannot save tensors without a ``Model``,
+            this will create a model, set all masks as its weights, and then save that model.
+            Masks in saved model will be named by corresponding layer name in compressed model.
+
+        Returns
+        -------
+        None
         """
         _logger.info('Saving model to %s', model_path)
+        input_shape = self.compressed_model._build_input_shape  # cannot find a public API
         model = self._uninstrument(self.compressed_model)
+        if input_shape:
+            model.build(input_shape)
         model.save(model_path)
         self._instrument(model)
 
