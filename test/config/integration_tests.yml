@@ -78,6 +78,10 @@ testCases:
 - name: cifar10-pytorch-adl
   configFile: test/config/examples/cifar10-pytorch-adl.yml
   trainingService: adl
+  config:
+    maxExecDuration: 10m
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 #- name: nested-ss
 #  configFile: test/config/examples/mnist-nested-search-space.yml
