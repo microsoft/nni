@@ -56,7 +56,8 @@ jobs:
           --resource_group $(resourceGroup) \
           --workspace_name $(workspaceName) \
           --compute_target $(computeTarget) \
-          --nni_manager_ip $(manager_ip)
+          --nni_manager_ip $(manager_ip) \
+          --nni_docker_image $(nnidev/nni-nightly)
 
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
     displayName: Integration test
