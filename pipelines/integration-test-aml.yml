@@ -52,10 +52,10 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts aml \
-          --subscription_id $(subscription_id)\
-          --resource_group $(resource_group)\
-          --workspace_name $(workspace_name)\
-          --compute_target $(computer_target)
+          --subscription_id $(subscriptionId)\
+          --resource_group $(resourceGroup)\
+          --workspace_name $(workspaceName)\
+          --compute_target $(computerTarget)
           --nni_manager_ip $(manager_ip)
 
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts aml
