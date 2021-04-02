@@ -113,7 +113,6 @@ aml:
   trialConcurrency: 2
   trainingServicePlatform: aml
   trial:
-    cpuNum: 1
     gpuNum: 1
     image:
   amlConfig:
