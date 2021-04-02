@@ -16,12 +16,14 @@ class Mnist(torch.nn.Module):
         self.relu1 = torch.nn.ReLU6()
         self.relu2 = torch.nn.ReLU6()
         self.relu3 = torch.nn.ReLU6()
+        self.maxpool1 = torch.nn.MaxPool2d(2, 2)
+        self.maxpool2 = torch.nn.MaxPool2d(2, 2)
 
     def forward(self, x):
         x = self.relu1(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
+        x = self.maxpool1(x)
         x = self.relu2(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
+        x = self.maxpool2(x)
         x = x.view(-1, 4 * 4 * 50)
         x = self.relu3(self.fc1(x))
         x = self.fc2(x)
@@ -114,16 +116,59 @@ def main():
             'quant_types': ['weight', 'output'],
             'quant_bits': {'weight':8, 'output':8},
             'op_names': ['fc2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['maxpool1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['maxpool2']
         }
     ]
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    model.to(device)
-    for epoch in range(1):
-        print('# Epoch {} #'.format(epoch))
-        train(model, device, train_loader, optimizer)
-        test(model, device, test_loader)
+    """
+    configure_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': {'weight':8},
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu1']
+        }, {
+            'quant_types': ['weight'],
+            'quant_bits': {'weight':8},
+            'op_names': ['conv2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu2']
+        }, {
+            'quant_types': ['weight'],
+            'quant_bits': {'weight':8},
+            'op_names': ['fc1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu3']
+        }, {
+            'quant_types': ['weight'],
+            'quant_bits': {'weight':8},
+            'op_names': ['fc2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['maxpool1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['maxpool2']
+        }
+    ]
+    """
 
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     quantizer = QAT_Quantizer(model, configure_list, optimizer)
     quantizer.compress()
 
@@ -136,6 +181,10 @@ def main():
     model_path = "mnist_model.pth"
     calibration_path = "mnist_calibration.pth"
     calibration_config = quantizer.export_model(model_path, calibration_path)
+
+    test(model, device, test_loader)
+
+    print("calibration_config: ", calibration_config)
 
     batch_size = 32
     input_shape = (batch_size, 1, 28, 28)

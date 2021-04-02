@@ -31,7 +31,7 @@ class NaiveQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, wrapper, **kwargs):
+    def quantize_weight(self, input, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
@@ -152,22 +152,23 @@ class QAT_Quantizer(Quantizer):
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
             layer.module.register_buffer("scale", torch.Tensor([1.0]))
+            layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bit', torch.zeros(1))
+                layer.module.register_buffer('tracked_min_input', torch.zeros(1))
+                layer.module.register_buffer('tracked_max_input', torch.zeros(1))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('activation_bit', torch.zeros(1))
-                layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
-                layer.module.register_buffer('tracked_min_biased', torch.zeros(1))
-                layer.module.register_buffer('tracked_min', torch.zeros(1))
-                layer.module.register_buffer('tracked_max_biased', torch.zeros(1))
-                layer.module.register_buffer('tracked_max', torch.zeros(1))
+                layer.module.register_buffer('tracked_min_activation', torch.zeros(1))
+                layer.module.register_buffer('tracked_max_activation', torch.zeros(1))
+                
 
     def _del_simulated_attr(self, module):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_biased', 'tracked_max_biased', 'tracked_min', \
-        'tracked_max', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
+        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -240,7 +241,7 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
-    def quantize_weight(self, wrapper, **kwargs):
+    def quantize_weight(self, input, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -249,8 +250,16 @@ class QAT_Quantizer(Quantizer):
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
         # we dont update weight in evaluation stage
-        if quant_start_step > self.bound_model.steps or not wrapper.training:
+        if quant_start_step > self.bound_model.steps:
+            module.tracked_min_input, module.tracked_max_input = torch.min(input), torch.max(input)
             return weight
+
+        if wrapper.training:
+            current_min, current_max = torch.min(input), torch.max(input)
+            module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
+                                                                       module.ema_decay)
+            module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
+                                                                       module.ema_decay)
 
         # if bias exists, quantize bias to uint32
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -281,17 +290,17 @@ class QAT_Quantizer(Quantizer):
         assert output_bits >= 1, "quant bits length should be at least 1"
 
         if quant_start_step > self.bound_model.steps:
-            module.tracked_min_biased, module.tracked_max_biased = torch.min(output), torch.max(output)
+            module.tracked_min_activation, module.tracked_max_activation = torch.min(output), torch.max(output)
             return output
 
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
             current_min, current_max = torch.min(output), torch.max(output)
-            module.tracked_min_biased = update_ema(module.tracked_min_biased, current_min,
+            module.tracked_min_activation = update_ema(module.tracked_min_activation, current_min,
                                                                        module.ema_decay)
-            module.tracked_max_biased = update_ema(module.tracked_max_biased, current_max,
+            module.tracked_max_activation = update_ema(module.tracked_max_activation, current_max,
                                                                        module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_biased, module.tracked_max_biased)
+            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_activation, module.tracked_max_activation)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -327,10 +336,12 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name] = {}
             if hasattr(module, 'weight_bit'):
                 calibration_config[name]['weight_bit'] = int(module.weight_bit)
+                calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
+                calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
             if hasattr(module, 'activation_bit'):
                 calibration_config[name]['activation_bit'] = int(module.activation_bit)
-                calibration_config[name]['tracked_min'] = float(module.tracked_min_biased)
-                calibration_config[name]['tracked_max'] = float(module.tracked_max_biased)
+                calibration_config[name]['tracked_min_activation'] = float(module.tracked_min_activation)
+                calibration_config[name]['tracked_max_activation'] = float(module.tracked_max_activation)
             self._del_simulated_attr(module)
 
         self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path, input_shape, device)
@@ -390,7 +401,7 @@ class DoReFaQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, wrapper, **kwargs):
+    def quantize_weight(self, input, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
@@ -496,7 +507,7 @@ class BNNQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, wrapper, **kwargs):
+    def quantize_weight(self, input, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight = torch.sign(weight)
         # remove zeros

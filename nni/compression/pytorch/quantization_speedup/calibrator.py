@@ -27,7 +27,7 @@ class Calibrator(trt.IInt8Calibrator):
         self.algorithm = algorithm
         self.cache_file = cache_file
 
-        # Every time get_batch is called, the next batch of size batch_size will be copied to the device and returned.
+        # The next batch of size batch_size will be copied to the device and returned every time get_batch is called.
         self.data = training_data
         self.batch_size = batch_size
         self.current_index = 0

@@ -20,7 +20,7 @@ class CalibrateType:
     MINMAX = trt.CalibrationAlgoType.MINMAX_CALIBRATION
 
 Precision_Dict = {
-    8: trt.int8,
+    8: trt.float32,
     16: trt.float16,
     32: trt.float32
 }
@@ -79,6 +79,8 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
 
         if extra_layer_bit == 32 and config is None:
             pass
+        elif extra_layer_bit == 16 and config is None:
+            builder.fp16_mode = True
         elif extra_layer_bit == 8 and config is None:
             # entire model in 8bit mode
             builder.int8_mode = True
@@ -96,32 +98,28 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
                     print (parser.get_error(error))
                 return None
 
-        input_tensor = network.get_input(0)
-        input_tensor.dynamic_range = (-100, 100)
-        # This design may not be correct if output more than one
+        # This implementation may be incorrect if output number > 1
         for i in range(network.num_layers):
             if config is None:
                 break
             layer = network.get_layer(i)
-            if layer.name in config and 'weight_bit' in config[layer.name]:
+            if layer.name not in config:
+                continue
+            if 'weight_bit' in config[layer.name]:
+                in_tensor = layer.get_input(0)
                 w_bit = config[layer.name]['weight_bit']
-                a_bit = config[layer.name]['activation_bit']
-                tracked_min = config[layer.name]['tracked_min']
-                tracked_max = config[layer.name]['tracked_max']
+                tracked_min_input = config[layer.name]['tracked_min_input']
+                tracked_max_input = config[layer.name]['tracked_max_input']
                 layer.precision = Precision_Dict[w_bit]
-                # layer.set_output_type(0, Precision_Dict[a_bit])
-                # layer.set_output_type(0, trt.int32)
-                tensor = layer.get_output(0)
-                tensor.dynamic_range = (tracked_min, tracked_max)                
-            if  layer.name in config and 'weight_bit' not in config[layer.name]:
+                in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+            if 'activation_bit' in config[layer.name]:
+                out_tensor = layer.get_output(0)
                 a_bit = config[layer.name]['activation_bit']
-                tracked_min = config[layer.name]['tracked_min']
-                tracked_max = config[layer.name]['tracked_max']
-                layer.precision = Precision_Dict[a_bit]
-                # layer.set_output_type(0, Precision_Dict[a_bit])
-                # layer.set_output_type(0, trt.int32)
-                tensor = layer.get_output(0)
-                tensor.dynamic_range = (tracked_min, tracked_max)
+                tracked_min_activation = config[layer.name]['tracked_min_activation']
+                tracked_max_activation = config[layer.name]['tracked_max_activation']
+                layer.set_output_type(0, Precision_Dict[a_bit])
+                out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                
         # Build engine and do int8 calibration.
         engine = builder.build_cuda_engine(network)
         return engine

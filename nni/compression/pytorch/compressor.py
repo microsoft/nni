@@ -483,7 +483,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
             self.quantizer.quant_grad.apply(
                 self.module.old_weight,
                 QuantType.QUANT_WEIGHT,
-                self)
+                self, inputs[0])
             result = self.module(*inputs)
         else:
             result = self.module(*inputs)
@@ -720,11 +720,11 @@ class QuantGrad(torch.autograd.Function):
         return grad_output
 
     @staticmethod
-    def forward(ctx, tensor, quant_type, wrapper, **kwargs):
+    def forward(ctx, tensor, quant_type, wrapper, tensor_alt=None, **kwargs):
         if quant_type == QuantType.QUANT_INPUT:
             output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
-            output = wrapper.quantizer.quantize_weight(wrapper, **kwargs)
+            output = wrapper.quantizer.quantize_weight(tensor_alt, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_OUTPUT:
             output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:
