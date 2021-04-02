@@ -25,7 +25,7 @@ def to_v2(v1) -> ExperimentConfig:
     _move_field(v1, v2, 'maxExecDuration', 'max_experiment_duration')
     _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
     _move_field(v1, v2, 'searchSpacePath', 'search_space_file')
-    assert not v1.get('multiPhase'), 'Multi-phase is no longer supported'
+    assert not v1.pop('multiPhase', None), 'Multi-phase is no longer supported'
     _deprecate(v1, v2, 'multiThread')
     _move_field(v1, v2, 'nniManagerIp', 'nni_manager_ip')
     _move_field(v1, v2, 'logDir', 'experiment_working_directory')
