@@ -79,7 +79,7 @@ testCases:
   configFile: test/config/examples/cifar10-pytorch-adl.yml
   trainingService: adl
   config:
-    maxExecDuration: 10m
+    maxExecDuration: 15m
     maxTrialNum: 1
     trialConcurrency: 1
 

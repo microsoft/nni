@@ -55,6 +55,10 @@ testCases:
 - name: cifar10-pytorch-adl
   configFile: test/config/examples/cifar10-pytorch-adl.yml
   trainingService: adl
+  config:
+    maxExecDuration: 15m
+    maxTrialNum: 1
+    trialConcurrency: 1
 
 - name: classic-nas-gen-ss
   configFile: test/config/examples/classic-nas-tf2.yml
