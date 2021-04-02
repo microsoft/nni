@@ -6,7 +6,7 @@ import re
 import torch
 
 from ..graph import Graph, Model, Node
-from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
+from ..nn.pytorch import InputChoice, Placeholder
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
 from ..utils import get_importable_name
