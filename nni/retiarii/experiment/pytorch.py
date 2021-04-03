@@ -26,7 +26,9 @@ from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
 
+from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
+from ..execution import list_models
 from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
@@ -257,16 +259,31 @@ class RetiariiExperiment(Experiment):
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 
-    def export_top_models(self, top_n: int = 1):
+    def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'code') -> Any:
         """
-        export several top performing models
+        Export several top performing models.
+
+        For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` asnd ``formater`` is
+        available for customization.
+
+        top_k : int
+            How many models are intended to be exported.
+        optimize_mode : str
+            ``maximize`` or ``minimize``. Not supported by one-shot algorithms.
+            ``optimize_mode`` is likely to be removed and defined in strategy in future.
+        formatter : str
+            Only model code is supported for now. Not supported by one-shot algorithms.
         """
-        if top_n != 1:
-            _logger.warning('Only support top_n is 1 for now.')
         if isinstance(self.trainer, BaseOneShotTrainer):
+            assert top_k == 1, 'Only support top_k is 1 for now.'
             return self.trainer.export()
         else:
-            _logger.info('For this experiment, you can find out the best one from WebUI.')
+            all_models = filter(lambda m: m.metric is not None, list_models())
+            assert optimize_mode in ['maximize', 'minimize']
+            all_models = sorted(all_models, key=lambda m: m.metric, reverse=optimize_mode == 'maximize')
+            assert formatter == 'code', 'Export formatter other than "code" is not supported yet.'
+            if formatter == 'code':
+                return [model_to_pytorch_script(model) for model in all_models[:top_k]]
 
     def retrain_model(self, model):
         """
