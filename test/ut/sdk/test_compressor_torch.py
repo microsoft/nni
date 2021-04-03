@@ -265,14 +265,14 @@ class CompressorTestCase(TestCase):
         eps = 1e-7
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_biased, 0, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_biased, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_activation, 0, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_activation, 0.002, abs_tol=eps)
 
         quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_biased, 0.002, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_biased, 0.00998, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_activation, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_activation, 0.00998, abs_tol=eps)
 
     def test_torch_quantizer_export(self):
         config_list_qat = [{
