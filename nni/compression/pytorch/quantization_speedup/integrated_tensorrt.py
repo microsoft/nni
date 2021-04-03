@@ -4,6 +4,7 @@
 import time
 import tensorrt as trt
 import numpy as np
+import torch
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
@@ -29,7 +30,7 @@ def build_engine(model_file, calib, config=None, extra_layer_bit=32, strict_data
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
         trt.OnnxParser(network, TRT_LOGGER) as parser:
         """
-        This function builds an engine from an onnx model.
+        This function builds an engine from an onnx model with calibration process.
         """
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
         builder.max_batch_size = 1
@@ -73,7 +74,8 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
         trt.OnnxParser(network, TRT_LOGGER) as parser:
         """
-        This function builds an engine from an onnx model.
+        This function builds an engine from an onnx model without calibration process. Users must provide config
+        which contains quantization parameters for tensorrt to generate low bit inference engine.
         """
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
         builder.max_batch_size = 1
@@ -100,20 +102,27 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
                     print (parser.get_error(error))
                 return None
 
-        # This implementation may be incorrect if output number > 1
+        # This implementation may be incorrect when output number > 1
         for i in range(network.num_layers):
             if config is None:
+                # no low bit layer need to be set, keep original model
                 break
             layer = network.get_layer(i)
             if layer.name not in config:
                 continue
+
+            # If weight_bit exists in config, set layer precision and layer's input tensor dynamic range.
+            # If layer's type is Gemm, do the same thing to layers before and after it.
             if 'weight_bit' in config[layer.name]:
-                in_tensor = layer.get_input(0)
+                assert 'tracked_min_input' in config[layer.name]
+                assert 'tracked_max_input' in config[layer.name]
                 w_bit = config[layer.name]['weight_bit']
                 tracked_min_input = config[layer.name]['tracked_min_input']
                 tracked_max_input = config[layer.name]['tracked_max_input']
                 layer.precision = Precision_Dict[w_bit]
+                in_tensor = layer.get_input(0)
                 in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                # Gemm will generate two shuffle layers before and after itself, need specific setting
                 if layer.name[0:4] == "Gemm":
                     pre_layer = network.get_layer(i-1)
                     pre_layer.precision = Precision_Dict[w_bit]
@@ -123,13 +132,19 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
                     next_layer.precision = Precision_Dict[w_bit]
                     next_in_tensor = next_layer.get_input(0)
                     next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+
+            # If activation exists in config, set layer output type and layer's output tensor dynamic range.
+            # If layer's type is Gemm, do the same thing to layers before and after it.
             if 'activation_bit' in config[layer.name]:
-                out_tensor = layer.get_output(0)
+                assert 'tracked_min_activation' in config[layer.name]
+                assert 'tracked_max_activation' in config[layer.name]
                 a_bit = config[layer.name]['activation_bit']
                 tracked_min_activation = config[layer.name]['tracked_min_activation']
                 tracked_max_activation = config[layer.name]['tracked_max_activation']
                 layer.set_output_type(0, Precision_Dict[a_bit])
+                out_tensor = layer.get_output(0)
                 out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                # Gemm will generate two shuffle layers before and after itself, need specific setting
                 if layer.name[0:4] == "Gemm":
                     pre_layer = network.get_layer(i-1)
                     pre_layer.set_output_type(0, Precision_Dict[a_bit])
@@ -146,7 +161,7 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
     def __init__(self, model, input_shape, config=None, onnx_path="default_model.onnx", extra_layer_bit=32, strict_datatype=True,
-        calibrate_type=CalibrateType.ENTROPY2, calib_data=None, calibration_cache = "calibration.cache", batchsize=1,
+        calibrate_type=CalibrateType.ENTROPY2, calib_data_loader=None, calibration_cache = "calibration.cache", batchsize=1,
         input_names=["actual_input_1"], output_names=["output1"]):
         """
         Parameters
@@ -187,7 +202,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         self.extra_layer_bit = extra_layer_bit
         self.strict_datatype = strict_datatype
         self.calibrate_type = calibrate_type
-        self.calib_data = calib_data
+        self.calib_data_loader = calib_data_loader
         self.calibration_cache = calibration_cache
         self.batchsize = batchsize
         self.input_names = input_names
@@ -207,20 +222,27 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         _, self.onnx_config = fonnx.torch_to_onnx(self.model, self.config, input_shape=self.input_shape,
             model_path=self.onnx_path, input_names=self.input_names, output_names=self.output_names)
 
-        if self.calib_data is not None:
+        if self.calib_data_loader is not None:
             assert self.calibrate_type is not None
             context = self.tensorrt_build_withcalib(self.onnx_path)
         else:
             context = self.tensorrt_build_withoutcalib(self.onnx_path)
-            # raise NameError('quantized without calibrate has not been supported.')
         self.context = context
 
     def tensorrt_build_withcalib(self, onnx_path):
-        calib = calibrator.Calibrator(self.calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
+        # convert pytorch tensor to numpy darray
+        calib_data_set = []
+        for data, _ in self.calib_data_loader:
+            calib_data_set.append(data)
+        calib_data = np.concatenate(calib_data_set)
+        calib = calibrator.Calibrator(calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
+
+        # build inference engine with calibration
         engine = build_engine(onnx_path, calib, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
     def tensorrt_build_withoutcalib(self, onnx_path):
+        # build inference engine without calibration
         engine = build_engine_without_calib(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
@@ -228,6 +250,8 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         """
         Do inference by tensorrt builded engine.
         """
+        # convert pytorch tensor to numpy darray
+        test_data = test_data.numpy()
         # Numpy dtype should be float32
         assert test_data.dtype == np.float32
         elapsed_time = 0
@@ -243,9 +267,11 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
             inputs[0].host = test_data[start_idx:start_idx + effective_batch_size]
             t1 = time.time()
             [output] = common.do_inference_v2(self.context, bindings=bindings, inputs=inputs, outputs=outputs, stream=stream)
-            shape = output.shape[0]
-            output = output[0:int(shape * effective_batch_size / self.batchsize)]
             elapsed_time += time.time() - t1
+            shape = output.shape[0]
+            output = output[0:int(shape * effective_batch_size / self.batchsize)].reshape(effective_batch_size, -1)
             result.append(output.copy())
             # Use argmax to get predictions and then check accuracy
+        # convert numpy darray to pytorch tensor
+        result = torch.Tensor(np.concatenate(result))
         return result, elapsed_time

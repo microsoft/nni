@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.optim.lr_scheduler import MultiStepLR
-import numpy as np
 from torchvision import datasets, transforms
 
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
@@ -203,16 +202,6 @@ def _resnet(block, layers, **kwargs):
 def resnet18(**kwargs):
     return _resnet(BasicBlock, [2, 2, 2, 2], **kwargs)
 
-def get_testset():
-    test_loader = torch.utils.data.DataLoader(
-    datasets.CIFAR10('data.cifar10', train=False,download=True, transform=transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
-    ])),
-    batch_size=10000, shuffle=False)
-    test_set, test_labels = next(iter(test_loader))[0].numpy(), next(iter(test_loader))[1].numpy()
-    return test_set, test_labels
-
 def train(model, device, train_loader, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -243,16 +232,21 @@ def test(model, device, test_loader):
     print('Loss: {}  Accuracy: {}%)\n'.format(
         test_loss, 100 * correct / len(test_loader.dataset)))
 
-def check_accuracy(preds, labels):
-    start_idx = 0
-    num_correct_all = 0
-    for pred in preds:
-        pred = np.argmax(pred.reshape(-1, 10), axis=1)
-        effective_shape = pred.shape[0]
-        num_correct = np.count_nonzero(np.equal(pred, labels[start_idx:start_idx+effective_shape]))
-        num_correct_all = num_correct_all + num_correct
-        start_idx = start_idx + effective_shape
-    print("accuracy: ", 100 * num_correct_all / 10000)
+def test_trt(engine, test_loader):
+    test_loss = 0
+    correct = 0
+    time_elasped = 0
+    for data, target in test_loader:
+        output, time = engine.inference(data)
+        test_loss += F.nll_loss(output, target, reduction='sum').item()
+        pred = output.argmax(dim=1, keepdim=True)
+        correct += pred.eq(target.view_as(pred)).sum().item()
+        time_elasped += time
+    test_loss /= len(test_loader.dataset)
+
+    print('Loss: {}  Accuracy: {}%'.format(
+        test_loss, 100 * correct / len(test_loader.dataset)))
+    print("Inference elapsed_time (whole dataset): {}s".format(time_elasped))
 
 def main():
     torch.manual_seed(0)
@@ -280,7 +274,7 @@ def main():
     for epoch in range(train_epoch):
         train(model, device, train_loader, optimizer, epoch)
         scheduler.step()
-        acc = test(model, device, test_loader)
+        test(model, device, test_loader)
 
     config = {
         'conv1':{'weight_bit':8, 'activation_bit':8},
@@ -306,14 +300,10 @@ def main():
     # parameter init
     batch_size = 32
     input_shape = (batch_size, 3, 32, 32)
-    test_set, test_labels = get_testset()
 
-    engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data=test_set, batchsize=batch_size)
+    engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data_loader=train_loader, batchsize=batch_size)
     engine.compress()
-    output, time = engine.inference(test_set)
-
-    check_accuracy(output, test_labels)
-    print("elapsed_time: ", time)
+    test_trt(engine, test_loader)
     
 if __name__ == '__main__':
     main()
