@@ -511,7 +511,7 @@ class Quantizer(Compressor):
                     # and it is trainable, therefore, it should be added to optimizer.
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
@@ -724,7 +724,7 @@ class QuantGrad(torch.autograd.Function):
         if quant_type == QuantType.QUANT_INPUT:
             output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
-            output = wrapper.quantizer.quantize_weight(tensor_alt, wrapper, **kwargs)
+            output = wrapper.quantizer.quantize_weight(wrapper, tensor_alt=tensor_alt, **kwargs)
         elif quant_type == QuantType.QUANT_OUTPUT:
             output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:

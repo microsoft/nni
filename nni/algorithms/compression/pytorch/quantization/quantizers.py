@@ -31,7 +31,7 @@ class NaiveQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, input, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
@@ -241,9 +241,10 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
-    def quantize_weight(self, input, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
+        input = kwargs['tensor_alt']
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
@@ -401,7 +402,7 @@ class DoReFaQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, input, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
@@ -507,7 +508,7 @@ class BNNQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, input, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight = torch.sign(weight)
         # remove zeros

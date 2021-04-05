@@ -2,6 +2,7 @@ import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 
+from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 
 class Mnist(torch.nn.Module):
@@ -72,18 +73,7 @@ def test_trt(engine, test_loader):
         test_loss, 100 * correct / len(test_loader.dataset)))
     print("Inference elapsed_time (whole dataset): {}s".format(time_elasped))
 
-def main():
-    torch.manual_seed(0)
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=True, download=True, transform=trans),
-        batch_size=64, shuffle=True)
-    test_loader = torch.utils.data.DataLoader(
-        datasets.MNIST('data', train=False, transform=trans),
-        batch_size=1000, shuffle=True)
-
+def post_training_quantization_example(train_loader, test_loader, device):
     model = Mnist()
 
     config = {
@@ -107,6 +97,73 @@ def main():
     engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data_loader=train_loader, batchsize=batch_size)
     engine.compress()
     test_trt(engine, test_loader)
+
+def quantization_aware_training_example(train_loader, test_loader, device):
+    model = Mnist()
+
+    configure_list = [{
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu1']
+        }, {
+            'quant_types': ['weight', 'output'],
+            'quant_bits': {'weight':8, 'output':8},
+            'op_names': ['conv2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output':8},
+            'op_names': ['relu2']
+        }
+    ]
+
+    # finetune the model by using QAT
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer)
+    quantizer.compress()
+
+    model.to(device)
+    for epoch in range(1):
+        print('# Epoch {} #'.format(epoch))
+        train(model, device, train_loader, optimizer)
+        test(model, device, test_loader)
+
+    model_path = "mnist_model.pth"
+    calibration_path = "mnist_calibration.pth"
+    calibration_config = quantizer.export_model(model_path, calibration_path)
+
+    test(model, device, test_loader)
+
+    print("calibration_config: ", calibration_config)
+
+    batch_size = 32
+    input_shape = (batch_size, 1, 28, 28)
+
+    engine = ModelSpeedupTensorRT(model, input_shape, config=calibration_config, batchsize=batch_size)
+    engine.compress()
+
+    test_trt(engine, test_loader)
+
+def main():
+    torch.manual_seed(0)
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+    trans = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+    train_loader = torch.utils.data.DataLoader(
+        datasets.MNIST('data', train=True, download=True, transform=trans),
+        batch_size=64, shuffle=True)
+    test_loader = torch.utils.data.DataLoader(
+        datasets.MNIST('data', train=False, transform=trans),
+        batch_size=1000, shuffle=True)
+
+    # post-training quantization on TensorRT
+    post_training_quantization_example(train_loader, test_loader, device)
+
+    # combine NNI quantization algorithm QAT with backend framework TensorRT
+    quantization_aware_training_example(train_loader, test_loader, device)
 
 if __name__ == '__main__':
     main()

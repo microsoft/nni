@@ -8,7 +8,7 @@ import torch
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
-from . import common as common
+from . import trt_pycuda as common
 from .backend import BaseModelSpeedup
 
 # TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
