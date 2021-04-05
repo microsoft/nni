@@ -5,6 +5,7 @@ import time
 import tensorrt as trt
 import numpy as np
 import torch
+from torch.functional import Tensor
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
@@ -231,10 +232,16 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
 
     def _tensorrt_build_withcalib(self, onnx_path):
         # convert pytorch tensor to numpy darray
-        calib_data_set = []
-        for data, _ in self.calib_data_loader:
-            calib_data_set.append(data)
-        calib_data = np.concatenate(calib_data_set)
+        calib_data = None
+        if type(self.calib_data_loader) == torch.utils.data.dataloader.DataLoader:
+            calib_data_set = []
+            for data, _ in self.calib_data_loader:
+                calib_data_set.append(data)
+            calib_data = np.concatenate(calib_data_set)
+        elif type(self.calib_data_loader) == torch.Tensor:
+            calib_data = self.calib_data_loader.numpy()
+        else:
+            raise ValueError("Not support calibration datatype")
         calib = calibrator.Calibrator(calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
 
         # build inference engine with calibration
