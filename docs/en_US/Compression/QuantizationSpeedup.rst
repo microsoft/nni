@@ -37,11 +37,11 @@ The bit config is a dictionary whose key is layer name and value is bit width of
 
 
 Second option is quantization aware training combining NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
-Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\ for detail).
+Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\  ).
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
 
 
-After getting mixed precision engine, users can do inference with given input data.
+After getting mixed precision engine, users can do inference with input data.
 
 
 Prerequisite
@@ -52,7 +52,7 @@ TensorRT version >= 7.2
 
 Usage
 -----
-First option, post-training quantiation
+First option, post-training quantiation:
 
 .. code-block:: python
 
@@ -74,7 +74,7 @@ First option, post-training quantiation
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
-Second option, quantization aware training
+Second option, quantization aware training:
 
 .. code-block:: python
 
@@ -101,6 +101,8 @@ Second option, quantization aware training
     output, time = engine.inference(data)
 
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist_QAT.py>`.
+
+
 For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :githublink:`the code <nni/compression/pytorch/speedup/quantization_speedup/integrated_tensorrt.py>`.
 
 
