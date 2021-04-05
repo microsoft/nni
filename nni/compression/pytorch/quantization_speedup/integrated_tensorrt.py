@@ -5,7 +5,6 @@ import time
 import tensorrt as trt
 import numpy as np
 import torch
-from torch.functional import Tensor
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
