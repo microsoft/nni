@@ -71,7 +71,6 @@ First option, post-training quantiation:
     # data should be pytorch tensor
     output, time = engine.inference(data)
 
-For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
 Second option, quantization aware training:
@@ -100,7 +99,7 @@ Second option, quantization aware training:
     # data should be pytorch tensor
     output, time = engine.inference(data)
 
-For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist_QAT.py>`.
+For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
 For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :githublink:`the code <nni/compression/pytorch/speedup/quantization_speedup/integrated_tensorrt.py>`.
