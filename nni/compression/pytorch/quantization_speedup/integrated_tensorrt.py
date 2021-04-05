@@ -224,12 +224,12 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
 
         if self.calib_data_loader is not None:
             assert self.calibrate_type is not None
-            context = self.tensorrt_build_withcalib(self.onnx_path)
+            context = self._tensorrt_build_withcalib(self.onnx_path)
         else:
-            context = self.tensorrt_build_withoutcalib(self.onnx_path)
+            context = self._tensorrt_build_withoutcalib(self.onnx_path)
         self.context = context
 
-    def tensorrt_build_withcalib(self, onnx_path):
+    def _tensorrt_build_withcalib(self, onnx_path):
         # convert pytorch tensor to numpy darray
         calib_data_set = []
         for data, _ in self.calib_data_loader:
@@ -241,7 +241,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         engine = build_engine(onnx_path, calib, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
-    def tensorrt_build_withoutcalib(self, onnx_path):
+    def _tensorrt_build_withoutcalib(self, onnx_path):
         # build inference engine without calibration
         engine = build_engine_without_calib(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
@@ -275,3 +275,15 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         # convert numpy darray to pytorch tensor
         result = torch.Tensor(np.concatenate(result))
         return result, elapsed_time
+    
+    def export_quantized_model(self, path):
+        assert path is not None
+        with open(path, "wb") as f:
+            f.write(self.context.engine.serialize())
+            print("TensorRT engine has been saved to", path)
+
+    def load_quantized_model(self, path):
+        assert path is not None
+        with open(path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
+            engine = runtime.deserialize_cuda_engine(f.read())
+            self.context = engine.create_execution_context()
