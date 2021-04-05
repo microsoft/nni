@@ -275,7 +275,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         # convert numpy darray to pytorch tensor
         result = torch.Tensor(np.concatenate(result))
         return result, elapsed_time
-    
+
     def export_quantized_model(self, path):
         assert path is not None
         with open(path, "wb") as f:
