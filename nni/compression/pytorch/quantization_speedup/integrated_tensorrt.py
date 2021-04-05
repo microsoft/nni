@@ -287,3 +287,4 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         with open(path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
             self.context = engine.create_execution_context()
+            print("Load TensorRT engine from {} successfully".format(path))
