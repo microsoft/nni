@@ -258,7 +258,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
             this.environmentExecutorManagerMap.set(environment.id, executorManager);
             const executor = await this.getExecutor(environment.id);
-            let remoteWorkingRootDir: string;
             if (environment.useSharedStorage) {
                 this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
                 const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
