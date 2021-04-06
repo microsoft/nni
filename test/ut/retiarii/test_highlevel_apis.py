@@ -379,3 +379,24 @@ class TestHighLevelAPI(unittest.TestCase):
         self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
+
+    def test_valuechoice_access_functional_expression(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.dropout_rate = nn.ValueChoice([[1.05,], [1.1,]])
+
+            def forward(self, x):
+                # if expression failed, the exception would be:
+                # ValueError: dropout probability has to be between 0 and 1, but got 1.05
+                return F.dropout(x, self.dropout_rate()[0] - .1)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
+        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
+        self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
