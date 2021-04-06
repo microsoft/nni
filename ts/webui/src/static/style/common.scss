@@ -28,17 +28,23 @@
 }
 
 .idCopy {
-	.ms-Button--icon {
-		width: 18px;
-    	height: 18px;
-		margin-left: 4px;
-	}
+    .ms-Button--icon {
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+    }
 
     i {
-        color: #33333C;
+        color: #33333c;
     }
 }
 
 .ms-DetailsRow {
     height: 32px;
+}
+
+/* for graph tooltip style */
+.graph > div > div {
+    padding: 0 !important;
+    border: none !important;
 }
