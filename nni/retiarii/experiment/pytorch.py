@@ -100,6 +100,47 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
+def preprocess_model(base_model, trainer, applied_mutators):
+        try:
+            script_module = torch.jit.script(base_model)
+        except Exception as e:
+            _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
+            raise e
+        base_model_ir = convert_to_graph(script_module, base_model)
+        base_model_ir.evaluator = trainer
+
+        # handle inline mutations
+        mutators = process_inline_mutation(base_model_ir)
+        if mutators is not None and applied_mutators:
+            raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
+                               'do not use mutators when you use LayerChoice/InputChoice')
+        if mutators is not None:
+            applied_mutators = mutators
+        return base_model_ir, applied_mutators
+
+def debug_mutated_model(base_model, trainer, applied_mutators):
+    """
+    Locally run only one trial without launching an experiment for debug purpose, then exit.
+    For example, it can be used to quickly check shape mismatch.
+
+    Specifically, it applies mutators (default to choose the first candidate for the choices)
+    to generate a new model, then run this model locally.
+
+    Parameters
+    ----------
+    base_model : nni.retiarii.nn.pytorch.nn.Module
+        the base model
+    trainer : nni.retiarii.evaluator
+        the training class of the generated models
+    applied_mutators : list
+        a list of mutators that will be applied on the base model for generating a new model
+    """
+    base_model_ir, applied_mutators = preprocess_model(base_model, trainer, applied_mutators)
+    from ..strategy import _LocalDebugStrategy
+    strategy = _LocalDebugStrategy()
+    strategy.run(base_model_ir, applied_mutators)
+    _logger.info('local debug completed!')
+
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
@@ -118,31 +159,13 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-        self._strategy_thread: Optional[Thread] = None
-
     def _start_strategy(self):
-        try:
-            script_module = torch.jit.script(self.base_model)
-        except Exception as e:
-            _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
-            raise e
-        base_model_ir = convert_to_graph(script_module, self.base_model)
-        base_model_ir.evaluator = self.trainer
+        base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.trainer, self.applied_mutators)
 
-        # handle inline mutations
-        mutators = process_inline_mutation(base_model_ir)
-        if mutators is not None and self.applied_mutators:
-            raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
-                               'do not use mutators when you use LayerChoice/InputChoice')
-        if mutators is not None:
-            self.applied_mutators = mutators
-
-        _logger.info('Starting strategy...')
-        # This is not intuitive and not friendly for debugging (setting breakpoints). Will refactor later.
-        self._strategy_thread = Thread(target=self.strategy.run, args=(base_model_ir, self.applied_mutators))
-        self._strategy_thread.start()
-        _logger.info('Strategy started!')
-        Thread(target=self._strategy_monitor).start()
+        _logger.info('Start strategy...')
+        self.strategy.run(base_model_ir, self.applied_mutators)
+        _logger.info('Strategy exit')
+        self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -187,14 +210,14 @@ class RetiariiExperiment(Experiment):
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
+        Thread(target=self._check_exp_status).start()
         self._start_strategy()
+        # TODO: the experiment should be completed, when strategy exits and there is no running job
+        # _logger.info('Waiting for submitted trial jobs to finish...')
+        _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
 
     def _create_dispatcher(self):
         return self._dispatcher
-
-    def _strategy_monitor(self):
-        self._strategy_thread.join()
-        self._dispatcher.mark_experiment_as_ending()
 
     def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
         """
@@ -206,15 +229,14 @@ class RetiariiExperiment(Experiment):
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
             self.config = config
-            self._run(port, debug)
+            self.start(port, debug)
 
-    def _run(self, port: int = 8080, debug: bool = False) -> bool:
+    def _check_exp_status(self) -> bool:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         Return `True` when experiment done; or return `False` when experiment failed.
         """
-        self.start(port, debug)
         try:
             while True:
                 time.sleep(10)

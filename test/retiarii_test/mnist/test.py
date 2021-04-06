@@ -5,7 +5,7 @@ import nni.retiarii.strategy as strategy
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn.functional as F
 from nni.retiarii import serialize
-from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment, debug_mutated_model
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -41,6 +41,10 @@ if __name__ == '__main__':
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=2)
+
+    # uncomment the following two lines to debug a generated model
+    #debug_mutated_model(base_model, trainer, [])
+    #exit(0)
 
     simple_strategy = strategy.Random()
 

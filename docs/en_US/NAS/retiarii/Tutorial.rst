@@ -1,7 +1,7 @@
 Neural Architecture Search with Retiarii (Alpha)
 ================================================
 
-*This is a pre-release, its interfaces may subject to minor changes. The roadmap of this figure is: experimental in V2.0 -> alpha version in V2.1 -> beta version in V2.2 -> official release in V2.3. Feel free to give us your comments and suggestions.*
+*This is a pre-release, its interfaces may subject to minor changes. The roadmap of this feature is: experimental in V2.0 -> alpha version in V2.1 -> beta version in V2.2 -> official release in V2.3. Feel free to give us your comments and suggestions.*
 
 `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ is a new framework to support neural architecture search and hyper-parameter tuning. It allows users to express various search space with high flexibility, to reuse many SOTA search algorithms, and to leverage system level optimizations to speed up the search process. This framework provides the following new user experiences.
 
@@ -196,6 +196,8 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp.run(exp_config, 8081)
 
 The complete code of a simple MNIST example can be found :githublink:`here <test/retiarii_test/mnist/test.py>`.
+
+**Local Debug Mode**: When running an experiment, it is easy to get some trivial errors in trial code, such as shape mismatch, undefined variable. To quickly fix these kinds of errors, we provide local debug mode which locally applies mutators once and runs only that generated model. To use local debug mode, users can simply invoke the API `debug_mutated_model(base_model, trainer, applied_mutators)`.
 
 Visualize the Experiment
 ------------------------
