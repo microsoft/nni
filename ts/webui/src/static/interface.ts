@@ -234,6 +234,16 @@ interface AllExperimentList {
     webuiUrl: string[];
     logDir: string[];
 }
+
+interface Tensorboard {
+    id: string;
+    status: string;
+    trialJobIdList: string[];
+    trialLogDirectoryList: string[];
+    pid: number;
+    port: string;
+};
+
 export {
     TableObj,
     TableRecord,
@@ -257,5 +267,6 @@ export {
     SingleAxis,
     MultipleAxes,
     SortInfo,
-    AllExperimentList
+    AllExperimentList,
+    Tensorboard
 };

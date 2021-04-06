@@ -1,9 +1,6 @@
 import React from 'react';
-// import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
-// import { MANAGER_IP } from '../../../static/const';
 import { PrimaryButton, Dialog, DialogType, DialogFooter } from '@fluentui/react';
-// import { caclMonacoEditorHeight, requestAxios } from '../../../static/function';
 
 function ShowTensorBoardDetail(props): any {
 
