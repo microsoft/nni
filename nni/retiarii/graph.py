@@ -144,7 +144,7 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
-        if 'evaluator' in ir:
+        if '_evaluator' in ir:
             model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
         return model
 

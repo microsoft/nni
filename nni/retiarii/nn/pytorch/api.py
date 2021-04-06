@@ -298,6 +298,13 @@ class ValueChoice(Translatable, nn.Module):
         return v
 
     def __getitem__(self, item):
+        """
+        Get a sub-element of value choice.
+
+        The underlying implementation is to clone the current instance, and append item to "accessor", which records all
+        the history getitem calls. For example, when accessor is ``[a, b, c]``, the value choice will return ``vc[a][b][c]``
+        where ``vc`` is the original value choice.
+        """
         access = copy.deepcopy(self)
         access._accessor.append(item)
         for candidate in self.candidates:

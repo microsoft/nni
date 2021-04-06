@@ -17,6 +17,9 @@ class LayerChoiceMutator(Mutator):
         candidates = self.nodes[0].operation.parameters['candidates']
         chosen = self.choice(candidates)
         for node in self.nodes:
+            # Each layer choice corresponds to a cell, which is unconnected in the base graph.
+            # We add the connections here in the mutation logic.
+            # Thus, the mutated model should not be mutated again. Everything should be based on the original base graph.
             target = model.graphs[node.operation.cell_name]
             chosen_node = target.get_node_by_name(chosen)
             assert chosen_node is not None
