@@ -10,7 +10,7 @@ import { ChildProcess } from 'child_process';
 
 import * as component from '../common/component';
 import { getLogger, Logger } from '../common/log';
-import { getTunerProc, isAlive, killPid, uniqueString, mkDirPSync, getFreePort } from '../common/utils';
+import { getTunerProc, isAlive, uniqueString, mkDirPSync, getFreePort } from '../common/utils';
 import { Manager } from '../common/manager';
 import { TensorboardParams, TensorboardTaskStatus, TensorboardTaskInfo, TensorboardManager } from '../common/tensorboardManager';
 
