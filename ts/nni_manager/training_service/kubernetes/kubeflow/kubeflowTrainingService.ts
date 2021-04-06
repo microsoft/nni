@@ -202,8 +202,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, azureKubeflowClusterConfig.uploadRetryCount);
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
-            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
+            await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalTempFolder}/${destDirectory}/.`);
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
             return `nfs://${nfsConfig.server}:${destDirectory}`;
@@ -426,7 +426,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             }]);
         }
         // The config spec for container field
-        const containersSpecMap: Map<string, object> = new Map<string, object>(); 
+        const containersSpecMap: Map<string, object> = new Map<string, object>();
         containersSpecMap.set('containers', [
         {
                 // Kubeflow tensorflow operator requires that containers' name must be tensorflow

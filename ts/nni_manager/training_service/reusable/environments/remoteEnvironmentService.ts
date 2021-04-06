@@ -34,6 +34,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly log: Logger;
     private sshConnectionPromises: any[];
     private experimentRootDir: string;
+    private remoteExperimentRootDir: string = "";
     private experimentId: string;
 
     constructor() {
@@ -259,17 +260,17 @@ export class RemoteEnvironmentService extends EnvironmentService {
             const executor = await this.getExecutor(environment.id);
             let remoteWorkingRootDir: string;
             if (environment.useSharedStorage) {
-                remoteWorkingRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
+                this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
                 const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
                 const result = await executor.executeScript(remoteMountCommand, false, false);
                 if (result.exitCode !== 0) {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
                 }
             } else {
-                remoteWorkingRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
+                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
             }
-            environment.runnerWorkingFolder = executor.joinPath(remoteWorkingRootDir, 'envs', environment.id);
-            environment.command = `cd ${remoteWorkingRootDir} && \
+            environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
+            environment.command = `cd ${this.remoteExperimentRootDir} && \
                 ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
                 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
                 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
@@ -289,7 +290,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, executor.getScriptName("run")),
         environment.command, { encoding: 'utf8' });
         // Copy files in codeDir to remote working directory
-        await executor.copyDirectoryToRemote(environmentLocalTempFolder, environment.runnerWorkingFolder);
+        await executor.copyDirectoryToRemote(environmentLocalTempFolder, this.remoteExperimentRootDir);
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
         executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
             executor.getScriptName("run")), true, true);

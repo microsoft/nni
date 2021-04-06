@@ -77,24 +77,14 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                 trigger: 'item',
                 enterable: hasBestCurve,
                 confine: true, // confirm always show tooltip box rather than hidden by background
-                formatter: (data: TooltipForAccuracy): React.ReactNode => {
-                    return (
-                        '<div class="tooldetailAccuracy">' +
-                        '<div>Trial No.: ' +
-                        data.data[0] +
-                        '</div>' +
-                        '<div>Trial ID: ' +
-                        data.data[2] +
-                        '</div>' +
-                        '<div>Default metric: ' +
-                        data.data[1] +
-                        '</div>' +
-                        '<div>Parameters: <pre>' +
-                        JSON.stringify(data.data[3], null, 4) +
-                        '</pre></div>' +
-                        '</div>'
-                    );
-                }
+                formatter: (data: TooltipForAccuracy): React.ReactNode => `
+                    <div class="tooldetailAccuracy">
+                        <div>Trial No.: ${data.data[0]}</div>
+                        <div>Trial ID: ${data.data[2]}</div>
+                        <div>Default metric: ${data.data[1]}</div>
+                        <div>Parameters: <pre>${JSON.stringify(data.data[3], null, 4)}</pre></div>
+                    </div>
+                `
             },
             dataZoom: [
                 {
@@ -165,7 +155,7 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                         <Toggle label='Optimization curve' inlineLabel onChange={this.loadDefault} />
                     </Stack>
                 )}
-                <div className='default-metric-graph'>
+                <div className='default-metric-graph graph'>
                     <ReactEcharts
                         option={graph}
                         style={{

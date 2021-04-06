@@ -100,6 +100,11 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
+    # For frameworkcontroller a custom configuration path may be specified
+    if experiment_config.get('frameworkcontrollerConfig'):
+        if experiment_config['frameworkcontrollerConfig'].get('configPath'):
+            parse_relative_path(root_path, experiment_config['frameworkcontrollerConfig'], 'configPath')
+
 def set_default_values(experiment_config):
     if experiment_config.get('maxExecDuration') is None:
         experiment_config['maxExecDuration'] = '999d'

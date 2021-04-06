@@ -37,6 +37,9 @@ class MockExecutionEngine(AbstractExecutionEngine):
             self._resource_left -= 1
             threading.Thread(target=self._model_complete, args=(model, )).start()
 
+    def list_models(self) -> List[Model]:
+        return self.models
+
     def query_available_resource(self) -> Union[List[WorkerInfo], int]:
         return self._resource_left
 

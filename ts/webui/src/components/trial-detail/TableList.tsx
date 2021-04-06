@@ -571,6 +571,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onHideDialog={(): void => {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
+                        whichComponent='table'
                     />
                 )}
                 {/* Clone a trial and customize a set of new parameters */}
