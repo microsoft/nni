@@ -16,7 +16,10 @@ class ChooseFirstSampler(Sampler):
     def choice(self, candidates, mutator, model, index):
         return candidates[0]
 
-class LocalDebugStrategy(BaseStrategy):
+class _LocalDebugStrategy(BaseStrategy):
+    """
+    This class is supposed to be used internally, for debugging trial mutation
+    """
 
     def run_one_model(self, model):
         graph_data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
