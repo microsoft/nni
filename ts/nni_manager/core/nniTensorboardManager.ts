@@ -62,10 +62,20 @@ class NNITensorboardManager implements TensorboardManager {
         const port = await getFreePort(host, 6006, 65535);
         const command = await this.getTensorboardStartCommand(trialJobIdList, trialLogDirectoryList, port);
         this.log.info(`tensorboard start command: ${command}`);
-        const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env, true, true);
         const tensorboardTask = new TensorboardTaskDetail(uniqueString(5), 'RUNNING', trialJobIdList, trialLogDirectoryList);
         this.tensorboardTaskMap.set(tensorboardTask.id, tensorboardTask);
+
+        const tensorboardProc: ChildProcess = getTunerProc(command, 'ignore', process.cwd(), process.env, true, true);
+        tensorboardProc.on('error', async (error) => {
+            this.log.error(error);
+            const alive: boolean = await isAlive(tensorboardProc.pid);
+            if (alive) {
+                process.kill(-tensorboardProc.pid);
+            }
+            this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
+        });
         tensorboardTask.pid = tensorboardProc.pid;
+
         tensorboardTask.port = `${port}`;
         this.log.info(`tensorboard task id: ${tensorboardTask.id}`);
         this.updateTensorboardTask(tensorboardTask.id);
@@ -196,11 +206,12 @@ class NNITensorboardManager implements TensorboardManager {
             }
             this.log.debug(`Tensorboard task ${tensorboardTask.id} stopped.`);
             this.setTensorboardTaskStatus(tensorboardTask, 'STOPPED');
+            this.tensorboardTaskMap.delete(tensorboardTask.id);
         }
     }
 
     public async stopAllTensorboardTask(): Promise<void> {
-        this.log.info('Stopping all tensorboard task.')
+        this.log.info('Forced stopping all tensorboard task.')
         for (const task of this.tensorboardTaskMap) {
             await this.killTensorboardTaskProc(task[1]);
         }
