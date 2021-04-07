@@ -220,14 +220,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
     private async getScript(environment: EnvironmentInformation): Promise<string> {
         const executor = await this.getExecutor(environment.id);
-        const logLevel = getLogLevel();
+        const isDebug = getLogLevel() == "debug";
         let script: string = environment.command;
         if (executor.isWindows) {
             const prepare = `mkdir envs\\${environment.id} 2>NUL & cd envs\\${environment.id}`;
             const startrun = `powershell ..\\install_nni.ps1 && python -m nni.tools.trial_tool.trial_runner`;
             const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
 
-            script = logLevel == "debug" ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
+            script = isDebug ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
         }
 
         environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
