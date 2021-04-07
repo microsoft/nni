@@ -32,7 +32,7 @@ def to_v2(v1) -> ExperimentConfig:
     _deprecate(v1, v2, 'versionCheck')
     _move_field(v1, v2, 'logLevel', 'log_level')
     _deprecate(v1, v2, 'logCollection')
-    _drop_field(v1, 'useAnnotation')  # TODO: how to handle annotation in nni.Experiment?
+    v1.pop('useAnnotation', None)  # TODO: how to handle annotation in nni.Experiment?
 
     if 'trial' in v1:
         v1_trial = v1.pop('trial')
