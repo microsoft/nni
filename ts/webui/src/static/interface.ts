@@ -242,7 +242,7 @@ interface Tensorboard {
     trialLogDirectoryList: string[];
     pid: number;
     port: string;
-};
+}
 
 export {
     TableObj,

@@ -106,7 +106,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             displayedColumns:
                 localStorage.getItem('columns') !== null
                     ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    JSON.parse(localStorage.getItem('columns')!)
+                      JSON.parse(localStorage.getItem('columns')!)
                     : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
@@ -493,7 +493,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             disabled={selectedRowIds.length === 0}
                         />
-                        <TensorboardUI selectedRowIds={selectedRowIds}/>
+                        <TensorboardUI selectedRowIds={selectedRowIds} />
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -516,10 +516,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             <input
                                 type='text'
                                 className='allList-search-input'
-                                placeholder={`Search by ${['id', 'trialnum'].includes(searchType)
-                                    ? searchOptionLiterals[searchType]
-                                    : searchType
-                                    }`}
+                                placeholder={`Search by ${
+                                    ['id', 'trialnum'].includes(searchType)
+                                        ? searchOptionLiterals[searchType]
+                                        : searchType
+                                }`}
                                 onChange={this._updateSearchText.bind(this)}
                                 style={{ width: 230 }}
                             />

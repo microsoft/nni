@@ -307,13 +307,13 @@ function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: bool
     });
 }
 
-function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tensorboard[]): boolean{
+function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tensorboard[]): boolean {
     let flag = true;
 
     if (selectedRowIds.length !== 0) {
         flag = false;
     }
-        
+
     if (selectedRowIds.length === 0 && queryTensorboardList.length !== 0) {
         flag = false;
     }
@@ -321,7 +321,7 @@ function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tens
     return flag;
 }
 
-function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDetailFunc): IContextualMenuProps{
+function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDetailFunc): IContextualMenuProps {
     const result: Array<object> = [];
     if (queryTensorboardList.length !== 0) {
         result.push({
@@ -337,7 +337,7 @@ function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDe
                 className: `CommandBarButton-${item.status}`,
                 onClick: (): void => seeDetailFunc(item)
             });
-        })
+        });
     }
     const tensorboardMenu: IContextualMenuProps = {
         items: result.reverse() as any
