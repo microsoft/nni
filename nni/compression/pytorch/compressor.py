@@ -517,8 +517,6 @@ class Quantizer(Compressor):
         This method is effectively hooked to :meth:`forward` of the model.
         Parameters
         ----------
-        weight : Tensor
-            weight that needs to be quantized
         wrapper : QuantizerModuleWrapper
             the wrapper for origin module
         """
@@ -720,11 +718,11 @@ class QuantGrad(torch.autograd.Function):
         return grad_output
 
     @staticmethod
-    def forward(ctx, tensor, quant_type, wrapper, tensor_alt=None, **kwargs):
+    def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
         if quant_type == QuantType.QUANT_INPUT:
             output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
         elif quant_type == QuantType.QUANT_WEIGHT:
-            output = wrapper.quantizer.quantize_weight(wrapper, tensor_alt=tensor_alt, **kwargs)
+            output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
         elif quant_type == QuantType.QUANT_OUTPUT:
             output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
         else:

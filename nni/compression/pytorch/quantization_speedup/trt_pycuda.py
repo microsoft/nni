@@ -15,6 +15,15 @@ def GiB(val):
 # Simple helper data class that's a little nicer to use than a 2-tuple.
 class HostDeviceMem(object):
     def __init__(self, host_mem, device_mem):
+        """
+        This function builds an engine from an onnx model with calibration process.
+        Parameters
+        ----------
+        host_mem : host memory
+            Memory buffers of host
+        device_mem : device memory
+            Memory buffers of device
+        """
         self.host = host_mem
         self.device = device_mem
 
@@ -24,8 +33,24 @@ class HostDeviceMem(object):
     def __repr__(self):
         return self.__str__()
 
-# Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
 def allocate_buffers(engine):
+    """
+    Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
+    Parameters
+    ----------
+    engine : tensorrt.ICudaEngine
+        An ICudaEngine for executing inference on a built network
+    Returns
+    -------
+    inputs : list
+        All input HostDeviceMem of an engine
+    outputs : list
+        All output HostDeviceMem of an engine
+    bindings : GPU bindings
+        Device bindings
+    stream : GPU stream
+        A stream is a sequence of commands (possibly issued by different host threads) that execute in order
+    """
     inputs = []
     outputs = []
     bindings = []

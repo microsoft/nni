@@ -5,6 +5,7 @@ import time
 import tensorrt as trt
 import numpy as np
 import torch
+import logging
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator
@@ -13,6 +14,7 @@ from .backend import BaseModelSpeedup
 
 # TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
 TRT_LOGGER = trt.Logger()
+logger = logging.getLogger(__name__)
 
 class CalibrateType:
     LEGACY = trt.CalibrationAlgoType.LEGACY_CALIBRATION
@@ -26,60 +28,48 @@ Precision_Dict = {
     32: trt.float32
 }
 
-def build_engine(model_file, calib, config=None, extra_layer_bit=32, strict_datatype=False):
+def valid_config(config=None):
+    """
+    This function validates the bit setting configuration
+    """
+    if config is None:
+        return
+    support_bit = [8, 16, 32]
+    for name in config.keys():
+        if 'weight_bit' in config[name]:
+            w_bit = config[name]['weight_bit']
+            assert w_bit in support_bit, "weight bit should be 8, 16, 32"
+        if 'activation_bit' in config[name]:
+            a_bit = config[name]['activation_bit']
+            assert a_bit in support_bit, "activation bit should be 8, 16, 32"
+
+def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=False, calib=None):
+    """
+    This function builds an engine from an onnx model with calibration process.
+    Parameters
+    ----------
+    model_file : str
+        The path of onnx model
+    config : dict
+        Config recording bit number and name of layers
+    extra_layer_bit : int
+        Other layers which are not in config will be quantized to corresponding bit number
+    strict_datatype : bool
+        Whether constrain layer bit to the number given in config or not. If true, all the layer
+        will be set to given bit strictly. Otherwise, these layers will be set automatically by
+        tensorrt
+    calib : numpy array
+        The data using to calibrate quantization model
+    Returns
+    -------
+    engine : tensorrt.ICudaEngine
+        An ICudaEngine for executing inference on a built network
+    """
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
         trt.OnnxParser(network, TRT_LOGGER) as parser:
-        """
-        This function builds an engine from an onnx model with calibration process.
-        """
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
         builder.max_batch_size = 1
-        builder.max_workspace_size = common.GiB(1)
-
-        if extra_layer_bit == 32 and config is None:
-            pass
-        elif extra_layer_bit == 8 and config is None:
-            # entire model in 8bit mode
-            builder.int8_mode = True
-            builder.int8_calibrator = calib
-        else:
-            builder.int8_mode = True
-            builder.fp16_mode = True
-            builder.int8_calibrator = calib
-            builder.strict_type_constraints = strict_datatype
-
-        # Parse onnx model
-        with open(model_file, 'rb') as model:
-            if not parser.parse(model.read()):
-                print ('ERROR: Fail to parse the ONNX file.')
-                for error in range(parser.num_errors):
-                    print (parser.get_error(error))
-                return None
-
-        # This design may not be correct if output more than one
-        for i in range(network.num_layers):
-            if config is None:
-                break
-            layer = network.get_layer(i)
-            if layer.name in config:
-                w_bit = config[layer.name]['weight_bit']
-                a_bit = config[layer.name]['activation_bit']
-                layer.precision = Precision_Dict[w_bit]
-                layer.set_output_type(0, Precision_Dict[a_bit])
-        # Build engine and do int8 calibration.
-        engine = builder.build_cuda_engine(network)
-        return engine
-
-def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, strict_datatype=False):
-    with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
-        trt.OnnxParser(network, TRT_LOGGER) as parser:
-        """
-        This function builds an engine from an onnx model without calibration process. Users must provide config
-        which contains quantization parameters for tensorrt to generate low bit inference engine.
-        """
-        # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
-        builder.max_batch_size = 1
-        builder.max_workspace_size = common.GiB(1)
+        builder.max_workspace_size = common.GiB(4)
 
         if extra_layer_bit == 32 and config is None:
             pass
@@ -89,7 +79,6 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
             # entire model in 8bit mode
             builder.int8_mode = True
         else:
-            pass
             builder.int8_mode = True
             builder.fp16_mode = True
             builder.strict_type_constraints = strict_datatype
@@ -97,64 +86,78 @@ def build_engine_without_calib(model_file, config=None, extra_layer_bit=32, stri
         # Parse onnx model
         with open(model_file, 'rb') as model:
             if not parser.parse(model.read()):
-                print ('ERROR: Fail to parse the ONNX file.')
+                logger.error('ERROR: Fail to parse the ONNX file.')
                 for error in range(parser.num_errors):
-                    print (parser.get_error(error))
+                    logger.error(parser.get_error(error))
                 return None
 
-        # This implementation may be incorrect when output number > 1
-        for i in range(network.num_layers):
-            if config is None:
-                # no low bit layer need to be set, keep original model
-                break
-            layer = network.get_layer(i)
-            if layer.name not in config:
-                continue
+        if calib is not None:
+            builder.int8_calibrator = calib
+            # This design may not be correct if output more than one
+            for i in range(network.num_layers):
+                if config is None:
+                    break
+                valid_config(config)
+                layer = network.get_layer(i)
+                if layer.name in config:
+                    w_bit = config[layer.name]['weight_bit']
+                    a_bit = config[layer.name]['activation_bit']
+                    layer.precision = Precision_Dict[w_bit]
+                    layer.set_output_type(0, Precision_Dict[a_bit])
+        else:
+            # This implementation may be incorrect when output number > 1
+            for i in range(network.num_layers):
+                if config is None:
+                    # no low bit layer need to be set, keep original model
+                    break
+                valid_config(config)
+                layer = network.get_layer(i)
+                if layer.name not in config:
+                    continue
 
-            # If weight_bit exists in config, set layer precision and layer's input tensor dynamic range.
-            # If layer's type is Gemm, do the same thing to layers before and after it.
-            if 'weight_bit' in config[layer.name]:
-                assert 'tracked_min_input' in config[layer.name]
-                assert 'tracked_max_input' in config[layer.name]
-                w_bit = config[layer.name]['weight_bit']
-                tracked_min_input = config[layer.name]['tracked_min_input']
-                tracked_max_input = config[layer.name]['tracked_max_input']
-                layer.precision = Precision_Dict[w_bit]
-                in_tensor = layer.get_input(0)
-                in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
-                # Gemm will generate two shuffle layers before and after itself, need specific setting
-                if layer.name[0:4] == "Gemm":
-                    pre_layer = network.get_layer(i-1)
-                    pre_layer.precision = Precision_Dict[w_bit]
-                    pre_in_tensor = pre_layer.get_input(0)
-                    pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
-                    next_layer = network.get_layer(i+1)
-                    next_layer.precision = Precision_Dict[w_bit]
-                    next_in_tensor = next_layer.get_input(0)
-                    next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                # If weight_bit exists in config, set layer precision and layer's input tensor dynamic range.
+                # If layer's type is Gemm, do the same thing to layers before and after it.
+                if 'weight_bit' in config[layer.name]:
+                    assert 'tracked_min_input' in config[layer.name]
+                    assert 'tracked_max_input' in config[layer.name]
+                    w_bit = config[layer.name]['weight_bit']
+                    tracked_min_input = config[layer.name]['tracked_min_input']
+                    tracked_max_input = config[layer.name]['tracked_max_input']
+                    layer.precision = Precision_Dict[w_bit]
+                    in_tensor = layer.get_input(0)
+                    in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                    # Gemm will generate two shuffle layers before and after itself, need specific setting
+                    if layer.name[0:4] == "Gemm":
+                        pre_layer = network.get_layer(i-1)
+                        pre_layer.precision = Precision_Dict[w_bit]
+                        pre_in_tensor = pre_layer.get_input(0)
+                        pre_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
+                        next_layer = network.get_layer(i+1)
+                        next_layer.precision = Precision_Dict[w_bit]
+                        next_in_tensor = next_layer.get_input(0)
+                        next_in_tensor.dynamic_range = (tracked_min_input, tracked_max_input)
 
-            # If activation exists in config, set layer output type and layer's output tensor dynamic range.
-            # If layer's type is Gemm, do the same thing to layers before and after it.
-            if 'activation_bit' in config[layer.name]:
-                assert 'tracked_min_activation' in config[layer.name]
-                assert 'tracked_max_activation' in config[layer.name]
-                a_bit = config[layer.name]['activation_bit']
-                tracked_min_activation = config[layer.name]['tracked_min_activation']
-                tracked_max_activation = config[layer.name]['tracked_max_activation']
-                layer.set_output_type(0, Precision_Dict[a_bit])
-                out_tensor = layer.get_output(0)
-                out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
-                # Gemm will generate two shuffle layers before and after itself, need specific setting
-                if layer.name[0:4] == "Gemm":
-                    pre_layer = network.get_layer(i-1)
-                    pre_layer.set_output_type(0, Precision_Dict[a_bit])
-                    pre_out_tensor = pre_layer.get_output(0)
-                    pre_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
-                    next_layer = network.get_layer(i+1)
-                    next_layer.set_output_type(0, Precision_Dict[a_bit])
-                    next_out_tensor = next_layer.get_output(0)
-                    next_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
-
+                # If activation exists in config, set layer output type and layer's output tensor dynamic range.
+                # If layer's type is Gemm, do the same thing to layers before and after it.
+                if 'activation_bit' in config[layer.name]:
+                    assert 'tracked_min_activation' in config[layer.name]
+                    assert 'tracked_max_activation' in config[layer.name]
+                    a_bit = config[layer.name]['activation_bit']
+                    tracked_min_activation = config[layer.name]['tracked_min_activation']
+                    tracked_max_activation = config[layer.name]['tracked_max_activation']
+                    layer.set_output_type(0, Precision_Dict[a_bit])
+                    out_tensor = layer.get_output(0)
+                    out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                    # Gemm will generate two shuffle layers before and after itself, need specific setting
+                    if layer.name[0:4] == "Gemm":
+                        pre_layer = network.get_layer(i-1)
+                        pre_layer.set_output_type(0, Precision_Dict[a_bit])
+                        pre_out_tensor = pre_layer.get_output(0)
+                        pre_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
+                        next_layer = network.get_layer(i+1)
+                        next_layer.set_output_type(0, Precision_Dict[a_bit])
+                        next_out_tensor = next_layer.get_output(0)
+                        next_out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
         # Build engine and do int8 calibration.
         engine = builder.build_cuda_engine(network)
         return engine
@@ -230,7 +233,17 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         self.context = context
 
     def _tensorrt_build_withcalib(self, onnx_path):
-        # convert pytorch tensor to numpy darray
+        """
+        Convert pytorch tensor to numpy darray
+        Parameters
+        ----------
+        onnx_path : str
+            The path of onnx model
+        Returns
+        -------
+        context : tensorrt.IExecutionContext
+            Context for executing inference using an ICudaEngine
+        """
         calib_data = None
         if type(self.calib_data_loader) == torch.utils.data.dataloader.DataLoader:
             calib_data_set = []
@@ -244,17 +257,31 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         calib = calibrator.Calibrator(calib_data, self.calibration_cache, self.batchsize, self.calibrate_type)
 
         # build inference engine with calibration
-        engine = build_engine(onnx_path, calib, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
+        engine = build_engine(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype, calib)
         return engine.create_execution_context()
 
     def _tensorrt_build_withoutcalib(self, onnx_path):
-        # build inference engine without calibration
-        engine = build_engine_without_calib(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
+        """
+        Build inference engine without calibration
+        Parameters
+        ----------
+        onnx_path : str
+            The path of onnx model
+        Returns
+        -------
+        context : tensorrt.IExecutionContext
+            Context for executing inference using an ICudaEngine
+        """
+        engine = build_engine(onnx_path, self.onnx_config, self.extra_layer_bit, self.strict_datatype)
         return engine.create_execution_context()
 
     def inference(self, test_data):
         """
         Do inference by tensorrt builded engine.
+        Parameters
+        ----------
+        test_data : pytorch tensor
+            Model input tensor
         """
         # convert pytorch tensor to numpy darray
         test_data = test_data.numpy()
@@ -283,14 +310,28 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         return result, elapsed_time
 
     def export_quantized_model(self, path):
+        """
+        Export TensorRT quantized model engine which only can be loaded by TensorRT deserialize API.
+        Parameters
+        ----------
+        path : str
+            The path of export model
+        """
         assert path is not None
         with open(path, "wb") as f:
             f.write(self.context.engine.serialize())
-            print("TensorRT engine has been saved to", path)
+            logger.info("TensorRT engine has been saved to", path)
 
     def load_quantized_model(self, path):
+        """
+        Load TensorRT quantized model engine from specific path.
+        Parameters
+        ----------
+        path : str
+            The path of export model
+        """
         assert path is not None
         with open(path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
             self.context = engine.create_execution_context()
-            print("Load TensorRT engine from {} successfully".format(path))
+            logger.info("Load TensorRT engine from {} successfully".format(path))

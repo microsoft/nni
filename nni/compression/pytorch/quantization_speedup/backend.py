@@ -39,11 +39,11 @@ class BaseModelSpeedup:
         This function should be overrided by subclass to build inference
         engine which will be used to process input data
         """
-        raise NotImplementedError('Backend engine must overload build()')
+        raise NotImplementedError('Backend engine must overload compress()')
 
     def export_quantized_model(self, path):
         """
         This function should be overrided by subclass to build inference
         engine which will be used to process input data
         """
-        raise NotImplementedError('Backend engine must overload export_engine()')
+        raise NotImplementedError('Backend engine must overload export_quantized_model()')

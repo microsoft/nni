@@ -244,7 +244,7 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
-        input = kwargs['tensor_alt']
+        input = kwargs['input_tensor']
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
