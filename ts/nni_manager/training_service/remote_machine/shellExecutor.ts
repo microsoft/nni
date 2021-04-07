@@ -30,9 +30,10 @@ class ShellExecutor {
     private readonly sshClient: Client;
     private readonly log: Logger;
     private tempPath: string = "";
-    private isWindows: boolean = false;
     private channelDefaultOutputs: string[] = [];
     private pythonPath: string | undefined;
+
+    public isWindows: boolean = false;
 
     constructor() {
         this.log = getLogger();

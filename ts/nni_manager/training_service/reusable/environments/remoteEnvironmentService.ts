@@ -10,7 +10,7 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import {
-    getExperimentRootDir,
+    getExperimentRootDir, getLogLevel
 } from '../../../common/utils';
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
@@ -218,6 +218,30 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.remoteMachineMetaOccupiedMap.set(remoteEnvironment.rmMachineMeta, false);
     }
 
+    private async getScript(environment: EnvironmentInformation): Promise<string> {
+        const executor = await this.getExecutor(environment.id);
+        const isDebug = getLogLevel() == "debug";
+        let script: string = environment.command;
+        environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
+
+        let codeScript = `echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+        if (executor.isWindows) {
+            const prepare = `mkdir envs\\${environment.id} 2>NUL & cd envs\\${environment.id}`;
+            const startrun = `powershell ..\\install_nni.ps1 && python -m nni.tools.trial_tool.trial_runner`;
+            const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
+
+            script = isDebug ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
+            codeScript = `powershell -command "Write $? " " (((New-TimeSpan -Start (Get-Date "01/01/1970") -End (Get-Date).ToUniversalTime()).TotalMilliseconds).ToString("0")) | Out-file ${path.join(environment.runnerWorkingFolder, 'code')} -Append -NoNewline -encoding utf8"`;
+        }
+
+        script = `cd ${this.remoteExperimentRootDir} && \
+            ${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+            1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+            && ${codeScript}`;
+
+        return script;
+    }
+
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         if (this.sshConnectionPromises.length > 0) {
             await Promise.all(this.sshConnectionPromises);
@@ -268,11 +292,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
             } else {
                 this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
             }
-            environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
-            environment.command = `cd ${this.remoteExperimentRootDir} && \
-                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+
+            environment.command = await this.getScript(environment);
             return Promise.resolve(true);
         }
     }
@@ -291,7 +312,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, this.remoteExperimentRootDir);
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
-        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
+        executor.executeScript(executor.joinPath(this.remoteExperimentRootDir,
             executor.getScriptName("run")), true, true);
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
