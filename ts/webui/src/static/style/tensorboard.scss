@@ -19,7 +19,7 @@ $size: 24px;
 .CommandBarButton {
     &-RUNNING {
         .ms-ContextualMenu-itemText::after {
-            content: '(RUNNING)';
+            content: 'RUNNING';
             color: #0071bc;
             margin-left: 15px;
         }
@@ -27,7 +27,7 @@ $size: 24px;
 
     &-STOPPED {
         .ms-ContextualMenu-itemText::after {
-            content: '(STOPPED)';
+            content: 'STOPPED';
             color: green;
             margin-left: 15px;
         }
@@ -35,7 +35,7 @@ $size: 24px;
 
     &-STOPPING {
         .ms-ContextualMenu-itemText::after {
-            content: '(STOPPING)';
+            content: 'STOPPING';
             color: green;
             margin-left: 15px;
         }
@@ -43,7 +43,7 @@ $size: 24px;
 
     &-DOWNLOADING_DATA {
         .ms-ContextualMenu-itemText::after {
-            content: '(DOWNLOADING_DATA)';
+            content: 'DOWNLOADING_DATA';
             color: green;
             margin-left: 15px;
         }
@@ -51,7 +51,7 @@ $size: 24px;
 
     &-ERROR {
         .ms-ContextualMenu-itemText::after {
-            content: '(ERROR)';
+            content: 'ERROR';
             color: red;
             margin-left: 15px;
         }
@@ -59,7 +59,7 @@ $size: 24px;
 
     &-FAIL_DOWNLOAD_DATA {
         .ms-ContextualMenu-itemText::after {
-            content: '(FAIL_DOWNLOAD_DATA)';
+            content: 'FAIL_DOWNLOAD_DATA';
             color: red;
             margin-left: 15px;
         }

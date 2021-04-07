@@ -7,7 +7,7 @@ function TensorboardDialog(props): any {
 
     const dialogContentProps = {
         type: DialogType.normal,
-        title: `${isShowTensorboardDetail ? item.id : 'Tensorboard'}`
+        title: `${isShowTensorboardDetail ? item.id : 'TensorBoard'}`
     };
 
     function gotoTensorboard(): void {
@@ -19,18 +19,18 @@ function TensorboardDialog(props): any {
 
     const startTensorboard = isReaptedStartTensorboard ? (
         <div>
-            You had started this tensorboard with these trials:
+            You had started this tensorBoard with these trials:
             <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
             <div className='line-height'>
-                Its tensorboard id: <span className='bold'>{item.id}</span>
+                Its tensorBoard id: <span className='bold'>{item.id}</span>
             </div>
         </div>
     ) : (
         <div>
-            You are starting a new Tensorboard with trials:
+            You are starting a new TensorBoard with trials:
             <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
             <div className='line-height'>
-                Tensorboard id: <span className='bold'>{item.id}</span>
+                TensorBoard id: <span className='bold'>{item.id}</span>
             </div>
         </div>
     );
@@ -39,11 +39,11 @@ function TensorboardDialog(props): any {
         <Dialog hidden={false} dialogContentProps={dialogContentProps} modalProps={{ className: 'dialog' }}>
             {errorMessage.error ? (
                 <div>
-                    <span>Failed to start tensorboard! Error message: {errorMessage.message}</span>.
+                    <span>Failed to start tensorBoard! Error message: {errorMessage.message}</span>.
                 </div>
             ) : isShowTensorboardDetail ? (
                 <div>
-                    This tensorboard with trials: <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+                    This tensorBoard with trials: <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
                 </div>
             ) : (
                 startTensorboard
@@ -56,7 +56,7 @@ function TensorboardDialog(props): any {
                 <DialogFooter>
                     <PrimaryButton
                         onClick={gotoTensorboard}
-                        text={`${isShowTensorboardDetail ? 'See tensorboard' : 'Ok'}`}
+                        text={`${isShowTensorboardDetail ? 'See tensorBoard' : 'Ok'}`}
                     />
                 </DialogFooter>
             )}
