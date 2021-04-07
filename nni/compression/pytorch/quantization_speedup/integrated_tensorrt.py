@@ -320,7 +320,7 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         assert path is not None
         with open(path, "wb") as f:
             f.write(self.context.engine.serialize())
-            logger.info("TensorRT engine has been saved to", path)
+            logger.info("TensorRT engine has been saved to %s", path)
 
     def load_quantized_model(self, path):
         """
@@ -334,4 +334,4 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
         with open(path, "rb") as f, trt.Runtime(TRT_LOGGER) as runtime:
             engine = runtime.deserialize_cuda_engine(f.read())
             self.context = engine.create_execution_context()
-            logger.info("Load TensorRT engine from {} successfully".format(path))
+            logger.info("Load TensorRT engine from %s successfully.", path)
