@@ -29,12 +29,10 @@ class _AlgorithmConfig(ConfigBase):
         super().validate()
         _validate_algo(self)
 
-
 @dataclass(init=False)
 class AlgorithmConfig(_AlgorithmConfig):
     name: str
     class_args: Optional[Dict[str, Any]] = None
-
 
 @dataclass(init=False)
 class CustomAlgorithmConfig(_AlgorithmConfig):
@@ -45,6 +43,12 @@ class CustomAlgorithmConfig(_AlgorithmConfig):
 
 class TrainingServiceConfig(ConfigBase):
     platform: str
+
+class SharedStorageConfig(ConfigBase):
+    storage_type: str
+    local_mount_point: str
+    remote_mount_point: str
+    local_mounted: str
 
 
 @dataclass(init=False)
@@ -68,6 +72,7 @@ class ExperimentConfig(ConfigBase):
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
+    shared_storage: Optional[SharedStorageConfig] = None
     _deprecated: Optional[Dict[str, Any]] = None
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):

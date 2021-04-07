@@ -11,7 +11,7 @@ import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { getExperimentRootDir } from '../../../common/utils';
 import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
-import { execMkdir, validateCodeDir } from '../../common/util';
+import { execMkdir } from '../../common/util';
 import { ExecutorManager } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';

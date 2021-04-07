@@ -403,7 +403,7 @@ class NNIManager implements Manager {
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
         this.config = config;
-        let platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
+        const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
 
         if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
             const module_ = await import('../training_service/reusable/routerTrainingService');

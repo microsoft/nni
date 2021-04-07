@@ -3,21 +3,15 @@
 
 'use strict';
 
-import { Container, Scope } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
 import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { PAIClusterConfig } from '../pai/paiConfig';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
-import { MountedStorageService } from './storages/mountedStorageService';
-import { StorageService } from './storageService';
 import { TrialDispatcher } from './trialDispatcher';
-import { HeterogenousConfig } from './heterogenous/heterogenousConfig';
 
 
 /**
@@ -39,8 +33,6 @@ class RouterTrainingService implements TrainingService {
         } else {
             this.internalTrainingService = new TrialDispatcher(config);
         }
-
-        // FIXME: storage service
     }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
@@ -96,7 +88,7 @@ class RouterTrainingService implements TrainingService {
         await this.internalTrainingService.cancelTrialJob(trialJobId, isEarlyStopped);
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
     public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {

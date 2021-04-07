@@ -7,7 +7,7 @@ import * as assert from 'assert';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { RemoteMachineConfig } from '../../common/experimentConfig';
-import { GPUInfo, parseGpuIndices, ScheduleResultType } from '../common/gpuData';
+import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { ExecutorManager, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail } from './remoteMachineData';
 
 type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';

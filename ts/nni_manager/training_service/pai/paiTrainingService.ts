@@ -25,10 +25,9 @@ import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
 import { String } from 'typescript-string-operations';
 import {
     generateParamFileName,
-    getIPV4Address, getVersion, uniqueString
+    getIPV4Address, uniqueString
 } from '../../common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
 const yaml = require('js-yaml');
@@ -293,8 +292,8 @@ class PAITrainingService implements TrainingService {
             .finally(() => { clearTimeout(timeoutId); });
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> { }
-    public async getClusterMetadata(key: string): Promise<string> { return ""; }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
+    public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     // update trial parameters for multi-phase
     public async updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
