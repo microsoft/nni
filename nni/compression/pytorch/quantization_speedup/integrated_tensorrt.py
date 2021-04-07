@@ -2,10 +2,10 @@
 # Licensed under the MIT license.
 
 import time
+import logging
 import tensorrt as trt
 import numpy as np
 import torch
-import logging
 
 from . import frontend_to_onnx as fonnx
 from . import calibrator as calibrator

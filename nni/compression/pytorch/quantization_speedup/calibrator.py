@@ -63,7 +63,7 @@ class Calibrator(trt.IInt8Calibrator):
 
         current_batch = int(self.current_index / self.batch_size)
         if current_batch % 10 == 0:
-            logger.info("Calibrating batch %d, containing %d images".format(current_batch, self.batch_size))
+            logger.info("Calibrating batch %d, containing %d images", current_batch, self.batch_size)
 
         batch = self.data[self.current_index:self.current_index + self.batch_size].ravel()
         cuda.memcpy_htod(self.device_input, batch)
