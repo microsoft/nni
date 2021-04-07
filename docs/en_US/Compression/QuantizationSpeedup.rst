@@ -9,7 +9,7 @@ Deep learning network has been computational intensive and memory intensive
 which increases the difficulty of deploying deep neural network model. Quantization is a 
 fundamental technology which is widely used to reduce memory footprint and speed up inference 
 process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantiation. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
+quantization. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
 not speed up the inference process. To get real speedup of mixed precision quantization and 
 help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI to connect different 
 DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
@@ -28,17 +28,12 @@ representation. In this way, we convert PyTorch model to onnx model, then Tensor
 model to generate inference engine. 
 
 
-For the purpose of getting mixed precision speedup engine, users have two options. 
-
-
-First option is post-training quantization leveraging TensorRT. 
-Users need to provide a PyTorch model, calibration dataset and corresponded bit config. The calibration dataset is used to calibrate quantized module. 
-The bit config is a dictionary whose key is layer name and value is bit width of weight and activation. 
-
-
-Second option is quantization aware training combining NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
+Quantization aware training combines NNI quantization algorithm 'QAT' and NNI quantization speedup tool.
 Users should set config to train quantized model using QAT algorithm(please refer to `NNI Quantization Algorithms <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__\  ).
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
+
+
+User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
 
 
 After getting mixed precision engine, users can do inference with input data.
@@ -52,28 +47,7 @@ TensorRT version >= 7.2
 
 Usage
 -----
-First option, post-training quantiation:
-
-.. code-block:: python
-
-    # arrange bit config for quantized layer
-    config = {
-        'conv1':{'weight_bit':8, 'activation_bit':8},
-        'conv2':{'weight_bit':32, 'activation_bit':32},
-        'fc1':{'weight_bit':16, 'activation_bit':16},
-        'fc2':{'weight_bit':8, 'activation_bit':8}
-    }
-
-    # need calibration dataset in post-training quantization
-    engine = ModelSpeedupTensorRT(model, input_shape, config=config, calib_data_loader=train_loader, batchsize=batch_size)
-    # build tensorrt inference engine
-    engine.compress()
-    # data should be pytorch tensor
-    output, time = engine.inference(data)
-
-
-
-Second option, quantization aware training:
+quantization aware training:
 
 .. code-block:: python
 
@@ -99,14 +73,17 @@ Second option, quantization aware training:
     # data should be pytorch tensor
     output, time = engine.inference(data)
 
+
+Note that NNI also supports post-training quantiation directly, please refer to complete examples for detail.
+
+
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
 For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :githublink:`the code <nni/compression/pytorch/speedup/quantization_speedup/integrated_tensorrt.py>`.
 
 
-
-Mnist Example
+Mnist test
 ^^^^^^^^^^^^^^^^^^^
 
 on one GTX2080 GPU,
@@ -130,7 +107,7 @@ input tensor: ``torch.randn(128, 1, 28, 28)``
      - 93.7%
 
 
-Cifar10 resnet18 example(train one epoch)
+Cifar10 resnet18 test(train one epoch)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
