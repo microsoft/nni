@@ -19,16 +19,16 @@ function TensorboardDialog(props): any {
 
     const startTensorboard = isReaptedStartTensorboard ? (
         <div>
-            You had started this tensorboard with these trials:{' '}
-            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+            You had started this tensorboard with these trials:
+            <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
             <div className='line-height'>
                 Its tensorboard id: <span className='bold'>{item.id}</span>
             </div>
         </div>
     ) : (
         <div>
-            You are starting a new Tensorboard with trials:{' '}
-            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+            You are starting a new Tensorboard with trials:
+            <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
             <div className='line-height'>
                 Tensorboard id: <span className='bold'>{item.id}</span>
             </div>
@@ -36,7 +36,7 @@ function TensorboardDialog(props): any {
     );
 
     return (
-        <Dialog hidden={false} dialogContentProps={dialogContentProps} className='dialog'>
+        <Dialog hidden={false} dialogContentProps={dialogContentProps} modalProps={{ className: 'dialog' }}>
             {errorMessage.error ? (
                 <div>
                     <span>Failed to start tensorboard! Error message: {errorMessage.message}</span>.

@@ -1,11 +1,18 @@
 import * as React from 'react';
-import { Stack, TooltipHost, ProgressIndicator, DirectionalHint } from '@fluentui/react';
+import { Stack, TooltipHost, ProgressIndicator, DirectionalHint, IStackTokens } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
 import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../../static/const';
 import { EditExperimentParam } from './EditExperimentParam';
 import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
 import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
+
+const line1Tokens: IStackTokens = {
+    childrenGap: 60
+};
+const line2Tokens: IStackTokens = {
+    childrenGap: 80
+};
 
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
@@ -52,7 +59,7 @@ export const TrialCount = (): any => {
                         </Stack>
                         <Stack horizontal className='marginTop'>
                             <div style={leftProgress}>
-                                <Stack horizontal className='status-count' gap={60}>
+                                <Stack horizontal className='status-count' tokens={line1Tokens}>
                                     <div>
                                         <span>Running</span>
                                         <p>{count.get('RUNNING')}</p>
@@ -66,7 +73,7 @@ export const TrialCount = (): any => {
                                         <p>{stoppedCount}</p>
                                     </div>
                                 </Stack>
-                                <Stack horizontal className='status-count marginTop' gap={80}>
+                                <Stack horizontal className='status-count marginTop' tokens={line2Tokens}>
                                     <div>
                                         <span>Failed</span>
                                         <p>{count.get('FAILED')}</p>

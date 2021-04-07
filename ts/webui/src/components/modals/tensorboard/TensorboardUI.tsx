@@ -20,62 +20,49 @@ function TensorboardUI(props): any {
 
     function startTrialTensorboard(): void {
         const { selectedRowIds } = props;
-        setIsShowTensorboardDetail(false);
-        const result = queryTensorboardList.filter(
-            (item: Tensorboard) => item.trialJobIdList.join(',') === selectedRowIds.join(',')
-        );
-        if (result.length > 0) {
-            setReaptedTensorboard(true);
-            setSelectedTensorboard(result[0]);
+        if (selectedRowIds.length > 0) {
+            setIsShowTensorboardDetail(false);
+            const result = queryTensorboardList.filter(
+                (item: Tensorboard) => item.trialJobIdList.join(',') === selectedRowIds.join(',')
+            );
+            if (result.length > 0) {
+                setReaptedTensorboard(true);
+                setSelectedTensorboard(result[0]);
+            } else {
+                const startTensorboard = axios.post(`${MANAGER_IP}/tensorboard`, { trials: selectedRowIds.join(',') });
+                startTensorboard
+                    .then(res => {
+                        if (res.status === 200) {
+                            setSelectedTensorboard(res.data);
+                            queryAllTensorboard();
+                        }
+                    })
+                    .catch(error => {
+                        setErrorMessage({
+                            error: true,
+                            message: error.message || 'Tensorboard start failed'
+                        });
+                    });
+                setReaptedTensorboard(false);
+            }
             setTensorboardPanelVisible(true);
         } else {
-            const startTensorboard = axios.post(`${MANAGER_IP}/tensorboard`, { trials: selectedRowIds.join(',') });
-            startTensorboard
-                .then(res => {
-                    if (res.status === 200) {
-                        setSelectedTensorboard(res.data);
-                        setTensorboardPanelVisible(true);
-                        queryAllTensorboard();
-                    }
-                })
-                .catch(error => {
-                    setTensorboardPanelVisible(true);
-                    setErrorMessage({
-                        error: true,
-                        message: error.message || 'Tensorboard start failed'
-                    });
-                });
-            setReaptedTensorboard(false);
+            alert('Please select trials first!');
         }
     }
 
-    function initQueryTensorboard(): void {
+    function queryAllTensorboard(): void {
         const queryTensorboard = axios.get(`${MANAGER_IP}/tensorboard-tasks`);
         queryTensorboard.then(res => {
             if (res.status === 200) {
                 setQueryTensorboardList(res.data);
+                refreshTensorboard = window.setTimeout(queryAllTensorboard, 10000);
+                const temp = timerList;
+                temp.push(refreshTensorboard);
+                setTimerList(temp);
+                console.info('------query-------'); // eslint-disable-line
             }
         });
-    }
-
-    function queryAllTensorboard(): void {
-        // if(this.tableListComponent){
-        const queryTensorboard = axios.get(`${MANAGER_IP}/tensorboard-tasks`);
-        queryTensorboard
-            .then(res => {
-                if (res.status === 200) {
-                    setQueryTensorboardList(res.data);
-                    closeTimer();
-                    refreshTensorboard = window.setTimeout(queryAllTensorboard, 10000);
-                    const temp = timerList;
-                    temp.push(refreshTensorboard);
-                    setTimerList(temp);
-                }
-            })
-            .catch(_error => {
-                alert('Failed to start tensorboard');
-            });
-        // }
     }
 
     function closeTimer(): void {
@@ -108,7 +95,13 @@ function TensorboardUI(props): any {
     );
 
     useEffect(() => {
-        initQueryTensorboard();
+        queryAllTensorboard();
+        // clear timer when component is unmounted
+        return function closeTimer(): void {
+            timerList.forEach(item => {
+                window.clearTimeout(item);
+            });
+        };
     }, []);
 
     return (
