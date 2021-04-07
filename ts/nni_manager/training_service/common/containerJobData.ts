@@ -14,8 +14,8 @@ else
 fi`;
 
 export const CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN: string =
-`echo off
-python -c "import nni" 2>nul
-if not %ERRORLEVEL% EQU 0 (
-    python -m pip install --user --upgrade nni
-)`;
+`python -c "import nni" 2>$error
+if ($error -ne ''){
+  python -m pip install --user --upgrade nni
+}
+exit`;

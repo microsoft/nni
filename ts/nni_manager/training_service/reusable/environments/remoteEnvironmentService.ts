@@ -10,7 +10,7 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import {
-    getExperimentRootDir,
+    getExperimentRootDir, getLogLevel,
 } from '../../../common/utils';
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
@@ -218,6 +218,27 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.remoteMachineMetaOccupiedMap.set(remoteEnvironment.rmMachineMeta, false);
     }
 
+    private async getScript(environment: EnvironmentInformation): Promise<string> {
+        const executor = await this.getExecutor(environment.id);
+        const logLevel = getLogLevel();
+        let script: string = environment.command;
+
+        if (executor.isWindows) {
+            const prepare = `mkdir envs\\${environment.id} && cd envs\\${environment.id}`;
+            const startrun = `powershell ..\\install_nni.ps1 && python -m nni.tools.trial_tool.trial_runner`;
+            const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
+
+            script = logLevel == "debug" ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
+        }
+
+        script = `cd ${environment.runnerWorkingFolder} && \
+                ${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+
+        return script;
+    }
+
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         if (this.sshConnectionPromises.length > 0) {
             await Promise.all(this.sshConnectionPromises);
@@ -268,11 +289,8 @@ export class RemoteEnvironmentService extends EnvironmentService {
             } else {
                 this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
             }
-            environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
-            environment.command = `cd ${this.remoteExperimentRootDir} && \
-                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
-                && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
+
+            environment.command = await this.getScript(environment);
             return Promise.resolve(true);
         }
     }

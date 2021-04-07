@@ -229,9 +229,9 @@ class TrialDispatcher implements TrainingService {
             storageService.rename(codeFileName, "nni-code.tar.gz");
 
             const installFileName = storageService.joinPath(envDir, `install_nni.sh`);
-            const installFileName_forWin = storageService.joinPath(envDir, `install_nni.cmd`);
+            const installFileNameForWin = storageService.joinPath(envDir, `install_nni.ps1`);
             await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
-            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN, installFileName_forWin);
+            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN, installFileNameForWin);
 
             const runnerSettingsConfig = storageService.joinPath(envDir, "settings.json");
             await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
