@@ -10,29 +10,29 @@ testCases:
 #######################################################################
 # nni examples test
 #######################################################################
-#- name: sklearn-classification
+- name: sklearn-classification
   # test case config yml file relative to nni source code directory
-#  configFile: test/config/examples/sklearn-classification.yml
+  configFile: test/config/examples/sklearn-classification.yml
 
   # test case specific config, the content of configFile will be overrided
   # by config section
-#  config:
+  config:
 
   # validator is called after experiment is done
   # validator class needs to be implemented in nni_test/nnitest/validators.py
-#  validator:
+  validator:
 
   # launch command, default launch command is 'nnictl create --config $configFile'
-#  launchCommand: nnictl create --config $configFile --debug
+  launchCommand: nnictl create --config $configFile --debug
 
   # stop command, default stop command is 'nnictl stop', empty means no stop command
-#  stopCommand: nnictl stop
+  stopCommand: nnictl stop
 
   # set experiment ID into variable, variable name should start with $, such as $expId
-#  setExperimentIdtoVar: $expId
+  setExperimentIdtoVar: $expId
 
   # check status of experiment before calling validator
-#  experimentStatusCheck: True
+  experimentStatusCheck: True
 
 - name: shared-storage-remote-azureblob
   configFile: test/config/examples/config_sharedstorage_remote_azureblob.yml
