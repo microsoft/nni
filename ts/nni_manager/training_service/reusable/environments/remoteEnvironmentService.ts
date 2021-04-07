@@ -10,7 +10,7 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import {
-    getExperimentRootDir, getLogLevel,
+    getExperimentRootDir, getLogLevel, getNewLine
 } from '../../../common/utils';
 import { TrialConfig } from '../../common/trialConfig';
 import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
@@ -222,23 +222,30 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const executor = await this.getExecutor(environment.id);
         const isDebug = getLogLevel() == "debug";
         let script: string = environment.command;
+        const scripts: string[] = [];
+        environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
+
         if (executor.isWindows) {
             const prepare = `mkdir envs\\${environment.id} 2>NUL & cd envs\\${environment.id}`;
             const startrun = `powershell ..\\install_nni.ps1 && python -m nni.tools.trial_tool.trial_runner`;
             const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
 
             script = isDebug ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
-        }
 
-        environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
-        script = `cd ${this.remoteExperimentRootDir} && \
+            let codeScript = `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds; \
+                $NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString(); \
+                Write $? " " $NOW_DATE  | Out-File "${path.join(environment.runnerWorkingFolder, 'code')}" -NoNewline -encoding utf8` ;
+
+            return `cd ${this.remoteExperimentRootDir} && \
                 ${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
                 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
+                && powershell "${codeScript}"`;
+        } else {
+            return `cd ${this.remoteExperimentRootDir} && \
+                ${environment.command} --job_pid_file ${environment.runnerWorkingFolder}/pid \
+                1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
                 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-                
-                
-        this.log.info(script);
-        return script;
+        }
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
