@@ -181,7 +181,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                         } else {
                             environment.setStatus('FAILED');
                         }
-                        this.releaseEnvironmentResource(environment);
+                        await this.releaseEnvironmentResource(environment);
                     }
                 }
             }
@@ -194,7 +194,16 @@ export class RemoteEnvironmentService extends EnvironmentService {
      * If a environment is finished, release the connection resource
      * @param environment remote machine environment job detail
      */
-    private releaseEnvironmentResource(environment: EnvironmentInformation): void {
+    private async releaseEnvironmentResource(environment: EnvironmentInformation): Promise<void> {
+        if (environment.useSharedStorage) {
+            const executor = await this.getExecutor(environment.id);
+            const remoteUmountCommand = component.get<SharedStorageService>(SharedStorageService).remoteUmountCommand;
+            const result = await executor.executeScript(remoteUmountCommand, false, false);
+            if (result.exitCode !== 0) {
+                this.log.error(`Umount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
+            }
+        }
+
         const executorManager = this.environmentExecutorManagerMap.get(environment.id);
         if (executorManager === undefined) {
             throw new Error(`ExecutorManager is not assigned for environment ${environment.id}`);
@@ -251,8 +260,11 @@ export class RemoteEnvironmentService extends EnvironmentService {
             const executor = await this.getExecutor(environment.id);
             if (environment.useSharedStorage) {
                 this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand;
-                await executor.executeScript(remoteMountCommand, false, false);
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
+                const result = await executor.executeScript(remoteMountCommand, false, false);
+                if (result.exitCode !== 0) {
+                    throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
+                }
             } else {
                 this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
             }
@@ -304,14 +316,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
         if (environment.status === 'UNKNOWN') {
             environment.status = 'USER_CANCELED';
-            this.releaseEnvironmentResource(environment);
+            await this.releaseEnvironmentResource(environment);
             return
         }
 
         const jobpidPath: string = `${environment.runnerWorkingFolder}/pid`;
         try {
             await executor.killChildProcesses(jobpidPath);
-            this.releaseEnvironmentResource(environment);
+            await this.releaseEnvironmentResource(environment);
         } catch (error) {
             this.log.error(`stopEnvironment: ${error}`);
         }

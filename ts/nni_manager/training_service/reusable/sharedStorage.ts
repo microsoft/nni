@@ -20,6 +20,8 @@ export abstract class SharedStorageService {
     public abstract get storageService(): StorageService;
     public abstract get localMountCommand(): string;
     public abstract get remoteMountCommand(): string;
+    public abstract get remoteUmountCommand(): string;
     public abstract get localWorkingRoot(): string;
     public abstract get remoteWorkingRoot(): string;
+    public abstract cleanUp(): Promise<void>;
 }

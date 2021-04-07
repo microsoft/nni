@@ -348,6 +348,11 @@ class TrialDispatcher implements TrainingService {
         for (const commandChannel of this.commandChannelSet) {
             await commandChannel.stop();
         }
+        if (this.useSharedStorage) {
+            this.log.info(`stopping shared storage...`)
+            await component.get<SharedStorageService>(SharedStorageService).cleanUp();
+            this.log.info(`shared storage stopped.`)
+        }
     }
 
     private async environmentMaintenanceLoop(): Promise<void> {
