@@ -32,9 +32,6 @@ import { SharedStorageService, SharedStorageConfig } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
-import { LinuxCommands } from "../remote_machine/extends/linuxCommands";
-import { WindowsCommands } from '../remote_machine/extends/windowsCommands';
-
 
 /**
  * It uses to manage jobs on training platforms 
@@ -687,8 +684,14 @@ class TrialDispatcher implements TrainingService {
         const environment = environmentService.createEnvironmentInformation(envId, envName);
         environment.environmentService = environmentService;
         this.log.info(`Assign environment service ${environmentService.getName} to environment ${envId}`);
-        environment.command = new LinuxCommands().reusableStartcommand(envId, this.isDeveloping);
-        environment.command_win = new WindowsCommands().reusableStartcommand(envId, this.isDeveloping);
+        environment.command = `sh ../install_nni.sh && python3 -m nni.tools.trial_tool.trial_runner`;
+
+        if (this.isDeveloping) {
+            environment.command = "[ -d \"nni_trial_tool\" ] && echo \"nni_trial_tool exists already\" || (mkdir ./nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets && " + environment.command;
+        }
+
+        environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
+
         environment.useSharedStorage = this.useSharedStorage;
 
         await environmentService.startEnvironment(environment);
