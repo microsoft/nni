@@ -164,25 +164,41 @@ class ModelProfiler:
         return self._get_result(m, total_ops)
 
     def _count_cell_flops(self, input_size, hidden_size, cell_type):
-        state_ops = hidden_size * (input_size + hidden_size) + hidden_size
+        # h' = \tanh(W_{ih} x + b_{ih}  +  W_{hh} h + b_{hh})
+        total_ops = hidden_size * (input_size + hidden_size) + hidden_size
+
         if self._count_bias:
-            state_ops += hidden_size * 2
+            total_ops += hidden_size * 2
 
         if cell_type == 'rnn':
-            return state_ops
+            return total_ops
 
-        total_ops = 0
         if cell_type == 'gru':
-            total_ops += state_ops * 2
-            total_ops += (hidden_size + input_size) * hidden_size + hidden_size
-            if self._count_bias:
-                total_ops += hidden_size * 2
+            # r = \sigma(W_{ir} x + b_{ir} + W_{hr} h + b_{hr}) \\
+            # z = \sigma(W_{iz} x + b_{iz} + W_{hz} h + b_{hz}) \\
+            # n = \tanh(W_{in} x + b_{in} + r * (W_{hn} h + b_{hn})) \\
+            total_ops *= 3
 
-            total_ops += hidden_size * 4
+            # r hadamard : r * (~)
+            total_ops += hidden_size
+
+            # h' = (1 - z) * n + z * h
+            # hadamard hadamard add
+            total_ops += hidden_size * 3
 
         elif cell_type == 'lstm':
-            total_ops += state_ops * 4
-            total_ops += hidden_size * 4
+            # i = \sigma(W_{ii} x + b_{ii} + W_{hi} h + b_{hi}) \\
+            # f = \sigma(W_{if} x + b_{if} + W_{hf} h + b_{hf}) \\
+            # o = \sigma(W_{io} x + b_{io} + W_{ho} h + b_{ho}) \\
+            # g = \tanh(W_{ig} x + b_{ig} + W_{hg} h + b_{hg}) \\
+            total_ops *= 4
+
+            # c' = f * c + i * g 
+            # hadamard hadamard add
+            total_ops += hidden_size * 3
+
+            # h' = o * \tanh(c') 
+            total_ops += hidden_size
 
         return total_ops
 
@@ -222,71 +238,37 @@ class ModelProfiler:
 
         return batch_size, num_steps
 
-    def _count_rnn(self, m, x, y):
+    def _count_rnn_module(self, m, x, y, module_name):
         input_size = m.input_size
         hidden_size = m.hidden_size
         num_layers = m.num_layers
 
         batch_size, num_steps = self._get_bsize_nsteps(m, x)
-        total_ops = self._count_cell_flops(input_size, hidden_size, 'rnn')
-
-        if m.bidirectional:
-            total_ops *= 2
+        total_ops = self._count_cell_flops(input_size, hidden_size, module_name)
 
         for _ in range(num_layers - 1):
             if m.bidirectional:
-                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size, 'rnn') * 2
+                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size, module_name) * 2
             else:
-                cell_flops = self._count_cell_flops(hidden_size, hidden_size,'rnn')
+                cell_flops = self._count_cell_flops(hidden_size, hidden_size,module_name)
             total_ops += cell_flops
 
         total_ops *= num_steps
         total_ops *= batch_size
+        return total_ops
+
+    def _count_rnn(self, m, x, y):
+        total_ops = self._count_rnn_module(m, x, y, 'rnn')
 
         return self._get_result(m, total_ops)
 
     def _count_gru(self, m, x, y):
-        hidden_size = m.hidden_size
-        num_layers = m.num_layers
-
-        batch_size, num_steps = self._get_bsize_nsteps(m, x)
-        total_ops = self._count_cell_flops(hidden_size * 2, hidden_size, 'gru')
-        if m.bidirectional:
-            total_ops *= 2
-
-        for _ in range(num_layers - 1):
-            if m.bidirectional:
-                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
-                                            'gru') * 2
-            else:
-                cell_flops = self._count_cell_flops(hidden_size, hidden_size, 'gru')
-            total_ops += cell_flops
-
-        total_ops *= num_steps
-        total_ops *= batch_size
+        total_ops = self._count_rnn_module(m, x, y, 'gru')
 
         return self._get_result(m, total_ops)
 
     def _count_lstm(self, m, x, y):
-        hidden_size = m.hidden_size
-        num_layers = m.num_layers
-        batch_size, num_steps = self._get_bsize_nsteps(m, x)
-
-        total_ops = self._count_cell_flops(hidden_size * 2, hidden_size,
-                                            'lstm')
-        if m.bidirectional:
-            total_ops *= 2
-
-        for _ in range(num_layers - 1):
-            if m.bidirectional:
-                cell_flops = self._count_cell_flops(hidden_size * 2, hidden_size,
-                                            'lstm') * 2
-            else:
-                cell_flops = self._count_cell_flops(hidden_size, hidden_size, 'lstm')
-            total_ops += cell_flops
-
-        total_ops *= num_steps
-        total_ops *= batch_size
+        total_ops = self._count_rnn_module(m, x, y, 'lstm')
 
         return self._get_result(m, total_ops)
 
