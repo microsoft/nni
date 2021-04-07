@@ -74,7 +74,7 @@ quantization aware training:
     output, time = engine.inference(data)
 
 
-Note that NNI also supports post-training quantiation directly, please refer to complete examples for detail.
+Note that NNI also supports post-training quantization directly, please refer to complete examples for detail.
 
 
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
