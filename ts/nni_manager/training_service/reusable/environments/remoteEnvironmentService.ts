@@ -222,20 +222,22 @@ export class RemoteEnvironmentService extends EnvironmentService {
         const executor = await this.getExecutor(environment.id);
         const logLevel = getLogLevel();
         let script: string = environment.command;
-
         if (executor.isWindows) {
-            const prepare = `mkdir envs\\${environment.id} && cd envs\\${environment.id}`;
+            const prepare = `mkdir envs\\${environment.id} 2>NUL & cd envs\\${environment.id}`;
             const startrun = `powershell ..\\install_nni.ps1 && python -m nni.tools.trial_tool.trial_runner`;
             const developingScript = "IF EXIST nni_trial_tool (ECHO \"nni_trial_tool exists already\") ELSE (mkdir nni_trial_tool && tar -xof ../nni_trial_tool.tar.gz -C ./nni_trial_tool) && pip3 install websockets";
 
             script = logLevel == "debug" ? `${prepare} && ${developingScript} && ${startrun}` : `${prepare} && ${startrun}`;
         }
 
-        script = `cd ${environment.runnerWorkingFolder} && \
+        environment.runnerWorkingFolder = executor.joinPath(this.remoteExperimentRootDir, 'envs', environment.id);
+        script = `cd ${this.remoteExperimentRootDir} && \
                 ${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
                 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr \
                 && echo $? \`date +%s%3N\` >${environment.runnerWorkingFolder}/code`;
-
+                
+                
+        this.log.info(script);
         return script;
     }
 
@@ -309,7 +311,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         // Copy files in codeDir to remote working directory
         await executor.copyDirectoryToRemote(environmentLocalTempFolder, this.remoteExperimentRootDir);
         // Execute command in remote machine, set isInteractive=true to run script in conda environment
-        executor.executeScript(executor.joinPath(environment.runnerWorkingFolder,
+        executor.executeScript(executor.joinPath(this.remoteExperimentRootDir,
             executor.getScriptName("run")), true, true);
         if (environment.rmMachineMeta === undefined) {
             throw new Error(`${environment.id} rmMachineMeta not initialized!`);
