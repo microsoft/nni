@@ -63,14 +63,14 @@ export namespace ValidationSchemas {
                     command: joi.string().min(1).required()
                 }),
                 ps: joi.object({
-                        replicas: joi.number().min(1).required(),
-                        image: joi.string().min(1),
-                        privateRegistryAuthPath: joi.string().min(1),
-                        outputDir: joi.string(),
-                        cpuNum: joi.number().min(1),
-                        memoryMB: joi.number().min(100),
-                        gpuNum: joi.number().min(0).required(),
-                        command: joi.string().min(1).required()
+                    replicas: joi.number().min(1).required(),
+                    image: joi.string().min(1),
+                    privateRegistryAuthPath: joi.string().min(1),
+                    outputDir: joi.string(),
+                    cpuNum: joi.number().min(1),
+                    memoryMB: joi.number().min(100),
+                    gpuNum: joi.number().min(0).required(),
+                    command: joi.string().min(1).required()
                 }),
                 master: joi.object({
                     replicas: joi.number().min(1).required(),
@@ -152,6 +152,10 @@ export namespace ValidationSchemas {
             frameworkcontroller_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 storage: joi.string().min(1),
                 serviceAccountName: joi.string().min(1),
+                pvc: joi.object({
+                    path: joi.string().min(1).required()
+                }),
+                configPath: joi.string().min(1),
                 nfs: joi.object({
                     server: joi.string().min(1).required(),
                     path: joi.string().min(1).required()
@@ -164,14 +168,15 @@ export namespace ValidationSchemas {
                     accountName: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,31}$/),
                     azureShare: joi.string().regex(/^([0-9]|[a-z]|[A-Z]|-){3,63}$/)
                 }),
-                uploadRetryCount: joi.number().min(1)
+                uploadRetryCount: joi.number().min(1),
+                namespace: joi.string().min(1)
             }),
             dlts_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 dashboard: joi.string().min(1),
-              
+
                 cluster: joi.string().min(1),
                 team: joi.string().min(1),
-              
+
                 email: joi.string().min(1),
                 password: joi.string().min(1)
             }),
