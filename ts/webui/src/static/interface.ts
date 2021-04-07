@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { ExperimentConfig } from './experimentConfig'
+import { ExperimentConfig } from './experimentConfig';
 
 /**
  * Definition of single dimension in search space.
