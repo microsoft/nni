@@ -28,13 +28,16 @@ function TensorboardUI(props): any {
             if (result.length > 0) {
                 setReaptedTensorboard(true);
                 setSelectedTensorboard(result[0]);
+                setTensorboardPanelVisible(true);
             } else {
                 const startTensorboard = axios.post(`${MANAGER_IP}/tensorboard`, { trials: selectedRowIds.join(',') });
                 startTensorboard
                     .then(res => {
                         if (res.status === 200) {
                             setSelectedTensorboard(res.data);
+                            closeTimer();
                             queryAllTensorboard();
+                            setTensorboardPanelVisible(true);
                         }
                     })
                     .catch(error => {
@@ -42,10 +45,10 @@ function TensorboardUI(props): any {
                             error: true,
                             message: error.message || 'Tensorboard start failed'
                         });
+                        setTensorboardPanelVisible(true);
                     });
                 setReaptedTensorboard(false);
             }
-            setTensorboardPanelVisible(true);
         } else {
             alert('Please select trials first!');
         }
@@ -56,11 +59,12 @@ function TensorboardUI(props): any {
         queryTensorboard.then(res => {
             if (res.status === 200) {
                 setQueryTensorboardList(res.data);
-                refreshTensorboard = window.setTimeout(queryAllTensorboard, 10000);
-                const temp = timerList;
-                temp.push(refreshTensorboard);
-                setTimerList(temp);
-                console.info('------query-------'); // eslint-disable-line
+                if (res.data.length !== 0) {
+                    refreshTensorboard = window.setTimeout(queryAllTensorboard, 10000);
+                    const temp = timerList;
+                    temp.push(refreshTensorboard);
+                    setTimerList(temp);
+                }
             }
         });
     }
@@ -107,7 +111,7 @@ function TensorboardUI(props): any {
     return (
         <React.Fragment>
             <DefaultButton
-                text='TensorBoard'
+                text='TensorBoardcc'
                 className='elementMarginLeft'
                 split
                 splitButtonAriaLabel='See 2 options'

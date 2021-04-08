@@ -20,7 +20,7 @@ function TensorboardDialog(props): any {
     const startTensorboard = isReaptedStartTensorboard ? (
         <div>
             You had started this tensorBoard with these trials:
-            <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
+            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
             <div className='line-height'>
                 Its tensorBoard id: <span className='bold'>{item.id}</span>
             </div>
@@ -28,7 +28,7 @@ function TensorboardDialog(props): any {
     ) : (
         <div>
             You are starting a new TensorBoard with trials:
-            <span className='bold'>{item.trialJobIdList.join(' ,')}</span>.
+            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
             <div className='line-height'>
                 TensorBoard id: <span className='bold'>{item.id}</span>
             </div>
