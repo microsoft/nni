@@ -73,9 +73,10 @@ RUN python3 -m pip --no-cache-dir install scikit-learn==0.24.1
 RUN python3 -m pip --no-cache-dir install pandas==1.1 lightgbm==2.2.2
 
 #
-# pandas==0.23.4 lightgbm==2.2.2
+# Install NNI
 #
-RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
+COPY dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl .
+RUN python3 -m pip install nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl
 
 # 
 # Vision patch. Need del later
