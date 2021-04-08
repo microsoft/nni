@@ -46,13 +46,15 @@ class Calibrator(trt.IInt8Calibrator):
     def get_batch(self, names):
         """
         This function is used to define the way of feeding calibrating data each batch.
+
         Parameters
         ----------
         names : str
              The names of the network inputs for each object in the bindings array
+
         Returns
         -------
-        memory_pointers : list
+        list
             A list of device memory pointers set to the memory containing each network
             input data, or an empty list if there are no more batches for calibration.
             You can allocate these device buffers with pycuda, for example, and then
@@ -74,9 +76,10 @@ class Calibrator(trt.IInt8Calibrator):
     def read_calibration_cache(self):
         """
         If there is a cache, use it instead of calibrating again. Otherwise, implicitly return None.
+
         Returns
         -------
-        f.read() : cache object
+        cache object
             A cache object which contains calibration parameters for quantization
         """
         if os.path.exists(self.cache_file):
@@ -86,6 +89,7 @@ class Calibrator(trt.IInt8Calibrator):
     def write_calibration_cache(self, cache):
         """
         Write calibration cache to specific path.
+
         Parameters
         ----------
         cache : str

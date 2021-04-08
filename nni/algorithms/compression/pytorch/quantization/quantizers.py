@@ -251,16 +251,18 @@ class QAT_Quantizer(Quantizer):
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
         # we dont update weight in evaluation stage
-        if quant_start_step > self.bound_model.steps or not wrapper.training:
+        if quant_start_step > self.bound_model.steps:
             module.tracked_min_input, module.tracked_max_input = torch.min(input), torch.max(input)
             return weight
 
-        if wrapper.training:
-            current_min, current_max = torch.min(input), torch.max(input)
-            module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
-                                                                       module.ema_decay)
-            module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
-                                                                       module.ema_decay)
+        if not wrapper.training:
+            return weight
+
+        current_min, current_max = torch.min(input), torch.max(input)
+        module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
+                                                                    module.ema_decay)
+        module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
+                                                                    module.ema_decay)
 
         # if bias exists, quantize bias to uint32
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:

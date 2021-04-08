@@ -2,10 +2,8 @@
 # Licensed under the MIT license.
 
 import pycuda.driver as cuda
-import pycuda.autoinit
+import pycuda.autoinit        # pylint: disable=unused-import
 import tensorrt as trt
-
-pycuda.autoinit
 
 EXPLICIT_BATCH = 1
 
@@ -17,6 +15,7 @@ class HostDeviceMem(object):
     def __init__(self, host_mem, device_mem):
         """
         This function builds an engine from an onnx model with calibration process.
+
         Parameters
         ----------
         host_mem : host memory
@@ -36,19 +35,21 @@ class HostDeviceMem(object):
 def allocate_buffers(engine):
     """
     Allocates all buffers required for an engine, i.e. host/device inputs/outputs.
+
     Parameters
     ----------
     engine : tensorrt.ICudaEngine
         An ICudaEngine for executing inference on a built network
+
     Returns
     -------
-    inputs : list
+    list
         All input HostDeviceMem of an engine
-    outputs : list
+    list
         All output HostDeviceMem of an engine
-    bindings : GPU bindings
+    GPU bindings
         Device bindings
-    stream : GPU stream
+    GPU stream
         A stream is a sequence of commands (possibly issued by different host threads) that execute in order
     """
     inputs = []

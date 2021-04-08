@@ -21,15 +21,17 @@ class BaseModelSpeedup:
         """
         This function should be overrided by subclass to provide inference ability,
         which should return output and inference time.
+
         Parameters
         ----------
         test_data : numpy data
             test data given to the inference engine
+
         Returns
         -------
-        output : numpy data
+        numpy data
             output data will be generated after inference
-        latency : float
+        float
             latency of such inference process
         """
         raise NotImplementedError('Backend engine must overload inference()')

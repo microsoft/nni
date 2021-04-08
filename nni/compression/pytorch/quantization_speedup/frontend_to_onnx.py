@@ -51,6 +51,7 @@ def _setattr(model, name, module):
 def unwrapper(model_onnx, index2name, config):
     """
     Fill onnx config and remove wrapper node in onnx
+
     Parameters
     ----------
     model_onnx : onnx model
@@ -59,11 +60,12 @@ def unwrapper(model_onnx, index2name, config):
         Dictionary of layer index and name
     config : dict
         Config recording name of layers and calibration parameters
+
     Returns
     -------
-    model_onnx : onnx model
+    onnx model
         Onnx model which is converted from pytorch model
-    onnx_config : dict
+    dict
         The configuration of onnx model layers and calibration parameters
     """
     # Support Gemm, Conv, Relu, Clip(Relu6) and Maxpool
@@ -92,6 +94,7 @@ def unwrapper(model_onnx, index2name, config):
 def torch_to_onnx(model, config, input_shape, model_path, input_names, output_names):
     """
     Convert torch model to onnx model and get layer bit config of onnx model.
+
     Parameters
     ----------
     model : pytorch model
@@ -106,11 +109,12 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
         Input name of onnx model providing for torch.onnx.export to generate onnx model
     output_name : list
         Output name of onnx model providing for torch.onnx.export to generate onnx model
+
     Returns
     -------
-    model_onnx : onnx model
+    onnx model
         Onnx model which is converted from pytorch model
-    onnx_config : dict
+    dict
         The configuration of onnx model layers and calibration parameters
     """
     # Support Gemm, Conv, Relu, Clip(Relu6) and MaxPool
