@@ -37,6 +37,7 @@ function TensorboardUI(props): any {
                             setSelectedTensorboard(res.data);
                             closeTimer();
                             queryAllTensorboard();
+                            setErrorMessage({ error: false, message: '' });
                             setTensorboardPanelVisible(true);
                         }
                     })
