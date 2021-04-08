@@ -92,4 +92,9 @@ RUN python3 -m pip --no-cache-dir install azureml-sdk
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
 
+# nni
+# enable sudo for nni
+#
+RUN echo 'nni ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
+
 WORKDIR /root
