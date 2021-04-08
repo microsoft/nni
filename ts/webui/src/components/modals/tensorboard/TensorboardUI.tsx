@@ -62,9 +62,9 @@ function TensorboardUI(props): any {
                 setQueryTensorboardList(res.data);
                 if (res.data.length !== 0) {
                     refreshTensorboard = window.setTimeout(queryAllTensorboard, 10000);
-                    const temp = timerList;
-                    temp.push(refreshTensorboard);
-                    setTimerList(temp);
+                    const storeTimerList = timerList;
+                    storeTimerList.push(refreshTensorboard);
+                    setTimerList(storeTimerList);
                 }
             }
         });
