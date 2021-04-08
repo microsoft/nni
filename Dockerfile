@@ -77,11 +77,6 @@ RUN python3 -m pip --no-cache-dir install pandas==1.1 lightgbm==2.2.2
 #
 RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
 
-#
-# Install lsb_release
-#
-RUN python3 -m pip install lsb_release
-
 # 
 # Vision patch. Need del later
 # 
