@@ -202,8 +202,6 @@ class Experiment:
         ----------
         experiment_id
             The stopped experiment id.
-        port
-            The port of web UI.
         """
         experiment = Experiment()
         experiment.mode = 'resume'
@@ -218,8 +216,6 @@ class Experiment:
         ----------
         experiment_id
             The stopped experiment id.
-        port
-            The port of web UI.
         """
         experiment = Experiment()
         experiment.mode = 'view'
