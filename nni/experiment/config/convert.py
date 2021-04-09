@@ -1,21 +1,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import json
 import logging
-from pathlib import Path
-from tempfile import NamedTemporaryFile
-from typing import Any, Dict, List
 
 from .common import ExperimentConfig, AlgorithmConfig, CustomAlgorithmConfig
-from .remote import RemoteConfig, RemoteMachineConfig
+from .remote import RemoteMachineConfig
+from .kubeflow import KubeflowRoleConfig, KubeflowNfsConfig, KubeflowAzureStorageConfig
+from .frameworkcontroller import FrameworkControllerRoleConfig
+from .shared_storage import NfsConfig, AzureBlobConfig
 from . import util
 
 _logger = logging.getLogger(__name__)
 
 def to_v2(v1) -> ExperimentConfig:
+    v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local', 'remote', 'openpai']
+    assert platform in ['local', 'remote', 'openpai', 'aml']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
