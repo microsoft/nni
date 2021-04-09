@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import time
+from typing import Iterable
 
 from ..graph import Model, ModelStatus
 from .interface import AbstractExecutionEngine
@@ -11,7 +12,7 @@ _execution_engine = None
 _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
-           'submit_models', 'wait_models', 'query_available_resources',
+           'list_models', 'submit_models', 'wait_models', 'query_available_resources',
            'set_execution_engine', 'is_stopped_exec']
 
 def set_execution_engine(engine) -> None:
@@ -41,6 +42,12 @@ def submit_models(*models: Model) -> None:
     engine = get_execution_engine()
     get_and_register_default_listener(engine)
     engine.submit_models(*models)
+
+
+def list_models(*models: Model) -> Iterable[Model]:
+    engine = get_execution_engine()
+    get_and_register_default_listener(engine)
+    return engine.list_models()
 
 
 def wait_models(*models: Model) -> None:

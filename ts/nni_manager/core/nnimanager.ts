@@ -12,10 +12,12 @@ import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import {
-    ExperimentParams, ExperimentProfile, Manager, ExperimentStatus,
+    ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
+import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
 import { ExperimentManager } from '../common/experimentManager';
+import { TensorboardManager } from '../common/tensorboardManager';
 import {
     TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../common/trainingService';
@@ -31,29 +33,28 @@ import { NNIRestServer } from '../rest_server/nniRestServer';
  * NNIManager which implements Manager interface
  */
 class NNIManager implements Manager {
-    private trainingService: TrainingService;
+    private trainingService!: TrainingService;
     private dispatcher: IpcInterface | undefined;
     private experimentManager: ExperimentManager;
     private currSubmittedTrialNum: number;  // need to be recovered
     private trialConcurrencyChange: number; // >0: increase, <0: decrease
     private log: Logger;
     private dataStore: DataStore;
-    private experimentProfile: ExperimentProfile;
+    private experimentProfile!: ExperimentProfile;
     private dispatcherPid: number;
     private status: NNIManagerStatus;
     private waitingTrials: TrialJobApplicationForm[];
     private trialJobs: Map<string, TrialJobDetail>;
     private trialDataForTuner: string;
     private readonly: boolean;
+    private config!: ExperimentConfig;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
         this.trialConcurrencyChange = 0;
-        this.trainingService = component.get(TrainingService);
         this.experimentManager = component.get(ExperimentManager);
-        assert(this.trainingService);
         this.dispatcherPid = 0;
         this.waitingTrials = [];
         this.trialJobs = new Map<string, TrialJobDetail>();
@@ -62,7 +63,6 @@ class NNIManager implements Manager {
 
         this.log = getLogger();
         this.dataStore = component.get(DataStore);
-        this.experimentProfile = this.createEmptyExperimentProfile();
         this.status = {
             status: 'INITIALIZED',
             errors: []
@@ -88,13 +88,13 @@ class NNIManager implements Manager {
                 this.updateTrialConcurrency(experimentProfile.params.trialConcurrency);
                 break;
             case 'MAX_EXEC_DURATION':
-                this.updateMaxExecDuration(experimentProfile.params.maxExecDuration);
+                this.experimentProfile.params.maxExperimentDuration = experimentProfile.params.maxExperimentDuration;
                 break;
             case 'SEARCH_SPACE':
                 this.updateSearchSpace(experimentProfile.params.searchSpace);
                 break;
             case 'MAX_TRIAL_NUM':
-                this.updateMaxTrialNum(experimentProfile.params.maxTrialNum);
+                this.experimentProfile.params.maxTrialNumber = experimentProfile.params.maxTrialNumber;
                 break;
             default:
                 throw new Error('Error: unrecognized updateType');
@@ -129,7 +129,7 @@ class NNIManager implements Manager {
         if (this.readonly) {
             return Promise.reject(new Error('Error: can not add customized trial job in readonly mode!'));
         }
-        if (this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+        if (this.currSubmittedTrialNum >= this.maxTrialNum) {
             return Promise.reject(new Error('reach maxTrialNum'));
         }
 
@@ -164,35 +164,30 @@ class NNIManager implements Manager {
         await this.dataStore.storeTrialJobEvent('USER_TO_CANCEL', trialJobId, '');
     }
 
-    public async startExperiment(expParams: ExperimentParams): Promise<string> {
+    public async startExperiment(config: ExperimentConfig): Promise<string> {
+        this.experimentProfile = {
+            params: config,
+            id: getExperimentId(),
+            execDuration: 0,
+            logDir: getExperimentRootDir(),
+            startTime: Date.now(),
+            endTime: undefined,
+            nextSequenceId: 0,
+            revision: 0
+        };
+
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
-        this.experimentProfile.params = expParams;
         await this.storeExperimentProfile();
-        this.log.debug('Setup tuner...');
 
-        // Set up multiphase config
-        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
-            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
-        }
-        // Set up versionCheck config
-        if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
-        }
-        // Set up logCollection config
-        if (expParams.logCollection !== undefined) {
-            this.trainingService.setClusterMetadata('log_collection', expParams.logCollection.toString());
-        }
+        this.log.info('Setup training service...');
+        this.trainingService = await this.initTrainingService(config);
 
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
+        this.log.info('Setup tuner...');
+        const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(
-            dispatcherCommand,
-            undefined,
-            'start',
-            checkpointDir);
+        this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
 
-        this.experimentProfile.startTime = Date.now();
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -211,26 +206,16 @@ class NNIManager implements Manager {
         if (readonly) {
             return Promise.resolve();
         }
-        const expParams: ExperimentParams = this.experimentProfile.params;
 
-        // Set up multiphase config
-        if (expParams.multiPhase && this.trainingService.isMultiPhaseJobSupported) {
-            this.trainingService.setClusterMetadata('multiPhase', expParams.multiPhase.toString());
-        }
+        this.log.info('Setup training service...');
+        const config: ExperimentConfig = this.experimentProfile.params;
+        this.trainingService = await this.initTrainingService(config);
 
-        // Set up versionCheck config
-        if (expParams.versionCheck !== undefined) {
-            this.trainingService.setClusterMetadata('version_check', expParams.versionCheck.toString());
-        }
-
-        const dispatcherCommand: string = getMsgDispatcherCommand(expParams);
+        this.log.info('Setup tuner...');
+        const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
-        this.setupTuner(
-            dispatcherCommand,
-            undefined,
-            'resume',
-            checkpointDir);
+        this.setupTuner(dispatcherCommand, undefined, 'resume', checkpointDir);
 
         const allTrialJobs: TrialJobInfo[] = await this.dataStore.listTrialJobs();
 
@@ -252,8 +237,8 @@ class NNIManager implements Manager {
         }
         this.trialDataForTuner = JSON.stringify(trialData);
 
-        if (this.experimentProfile.execDuration < this.experimentProfile.params.maxExecDuration &&
-            this.currSubmittedTrialNum < this.experimentProfile.params.maxTrialNum &&
+        if (this.experimentProfile.execDuration < this.maxDuration &&
+            this.currSubmittedTrialNum < this.maxTrialNum &&
             this.experimentProfile.endTime) {
             delete this.experimentProfile.endTime;
         }
@@ -269,27 +254,12 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJob(trialJobId);
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        if (this.readonly) {
-            return Promise.reject(new Error('Error: can not set cluster metadata in readonly mode!'));
-        }
-        this.log.info(`NNIManager setClusterMetadata, key: ${key}, value: ${value}`);
-        let timeoutId: NodeJS.Timer;
-        // TO DO: move timeout value to constants file
-        const delay1: Promise<{}> = new Promise((resolve: Function, reject: Function): void => {
-            timeoutId = setTimeout(
-                () => { reject(new Error('TrainingService setClusterMetadata timeout. Please check your config file.')); },
-                30000);
-        });
-        await Promise.race([delay1, this.trainingService.setClusterMetadata(key, value)]).finally(() => {
-            clearTimeout(timeoutId);
-        });
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
+        throw new Error('Calling removed API setClusterMetadata');
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
-        return Promise.resolve(
-            this.trainingService.getClusterMetadata(key)
-        );
+    public getClusterMetadata(_key: string): Promise<string> {
+        throw new Error('Calling removed API getClusterMetadata');
     }
 
     public async getTrialJobStatistics(): Promise<TrialJobStatistics[]> {
@@ -356,6 +326,7 @@ class NNIManager implements Manager {
         let hasError: boolean = false;
         try {
             await this.experimentManager.stop();
+            await component.get<TensorboardManager>(TensorboardManager).stop();
             await this.dataStore.close();
             await component.get<NNIRestServer>(NNIRestServer).stop();
         } catch (err) {
@@ -422,6 +393,40 @@ class NNIManager implements Manager {
         return this.dataStore.listTrialJobs(status);
     }
 
+    private get maxDuration(): number {
+        const value = this.experimentProfile.params.maxExperimentDuration;
+        return (value === undefined ? Infinity : toSeconds(value));
+    }
+
+    private get maxTrialNum(): number {
+        const value = this.experimentProfile.params.maxTrialNumber;
+        return (value === undefined ? Infinity : value);
+    }
+
+    private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
+        this.config = config;
+        const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
+
+        if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return new module_.RouterTrainingService(config);
+        } else if (platform === 'local') {
+            const module_ = await import('../training_service/local/localTrainingService');
+            return new module_.LocalTrainingService(config);
+        } else if (platform === 'kubeflow') {
+            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
+            return new module_.KubeflowTrainingService();
+        } else if (platform === 'frameworkcontroller') {
+            const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
+            return new module_.FrameworkControllerTrainingService();
+        } else if (platform === 'adl') {
+            const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
+            return new module_.AdlTrainingService();
+        }
+
+        throw new Error(`Unsupported training service platform "${platform}"`);
+    }
+
     private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {
         if (this.dispatcher !== undefined) {
             return;
@@ -434,10 +439,7 @@ class NNIManager implements Manager {
             newCwd = cwd;
         }
         // TO DO: add CUDA_VISIBLE_DEVICES
-        let includeIntermediateResultsEnv: boolean | undefined = false;
-        if (this.experimentProfile.params.tuner !== undefined) {
-            includeIntermediateResultsEnv = this.experimentProfile.params.tuner.includeIntermediateResults;
-        }
+        const includeIntermediateResultsEnv = !!(this.config.deprecated && this.config.deprecated.includeIntermediateResults);
 
         const nniEnv = {
             SDK_PROCESS: 'dispatcher',
@@ -446,7 +448,7 @@ class NNIManager implements Manager {
             NNI_LOG_DIRECTORY: getLogDir(),
             NNI_LOG_LEVEL: getLogLevel(),
             NNI_INCLUDE_INTERMEDIATE_RESULTS: includeIntermediateResultsEnv,
-            CUDA_VISIBLE_DEVICES: this.getGpuEnvvarValue()
+            CUDA_VISIBLE_DEVICES: toCudaVisibleDevices(this.experimentProfile.params.tunerGpuIndices)
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
@@ -454,22 +456,6 @@ class NNIManager implements Manager {
         this.dispatcher = createDispatcherInterface(tunerProc);
 
         return;
-    }
-
-    private getGpuEnvvarValue(): string {
-        let cudaDevices: string | undefined;
-
-        if (this.experimentProfile.params.advisor !== undefined) {
-            cudaDevices = this.experimentProfile.params.advisor.gpuIndices;
-        } else if (this.experimentProfile.params.tuner !== undefined) {
-            cudaDevices = this.experimentProfile.params.tuner.gpuIndices;
-        }
-
-        if (cudaDevices === undefined) {
-            return '';
-        } else {
-            return cudaDevices;
-        }
     }
 
     private updateTrialConcurrency(trialConcurrency: number): void {
@@ -480,24 +466,12 @@ class NNIManager implements Manager {
         return;
     }
 
-    private updateMaxExecDuration(duration: number): void {
-        this.experimentProfile.params.maxExecDuration = duration;
-
-        return;
-    }
-
     private updateSearchSpace(searchSpace: string): void {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
         this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
         this.experimentProfile.params.searchSpace = searchSpace;
-
-        return;
-    }
-
-    private updateMaxTrialNum(maxTrialNum: number): void {
-        this.experimentProfile.params.maxTrialNum = maxTrialNum;
 
         return;
     }
@@ -617,8 +591,8 @@ class NNIManager implements Manager {
                 this.status.status === 'DONE' ||
                 this.status.status === 'NO_MORE_TRIAL' ||
                 this.status.status === 'TUNER_NO_MORE_TRIAL', `Actual status: ${this.status.status}`);
-            if (this.experimentProfile.execDuration > this.experimentProfile.params.maxExecDuration ||
-                this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+            if (this.experimentProfile.execDuration > this.maxDuration ||
+                this.currSubmittedTrialNum >= this.maxTrialNum) {
                 if (this.status.status !== 'DONE') {
                     this.setStatus('NO_MORE_TRIAL');
                     waitSubmittedToFinish = this.currSubmittedTrialNum;
@@ -642,7 +616,7 @@ class NNIManager implements Manager {
                 }
                 for (let i: number = this.trialJobs.size; i < this.experimentProfile.params.trialConcurrency; i++) {
                     if (this.waitingTrials.length === 0 ||
-                        this.currSubmittedTrialNum >= this.experimentProfile.params.maxTrialNum) {
+                        this.currSubmittedTrialNum >= this.maxTrialNum) {
                         break;
                     }
                     const form = this.waitingTrials.shift() as TrialJobApplicationForm;
@@ -716,7 +690,7 @@ class NNIManager implements Manager {
         }
         this.log.debug(`Send tuner command: INITIALIZE: ${this.experimentProfile.params.searchSpace}`);
         // Tuner need to be initialized with search space before generating any hyper parameters
-        this.dispatcher.sendCommand(INITIALIZE, this.experimentProfile.params.searchSpace);
+        this.dispatcher.sendCommand(INITIALIZE, JSON.stringify(this.experimentProfile.params.searchSpace));
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
@@ -739,7 +713,7 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        if (this.experimentProfile.params.multiThread) {
+        if (this.config.deprecated && this.config.deprecated.multiThread) {
             // Send multiple requests to ensure multiple hyper parameters are generated in non-blocking way.
             // For a single REQUEST_TRIAL_JOBS request, hyper parameters are generated one by one
             // sequentially.
@@ -844,42 +818,19 @@ class NNIManager implements Manager {
         this.experimentManager.setExperimentInfo(this.experimentProfile.id, 'endTime', this.experimentProfile.endTime);
     }
 
-    private createEmptyExperimentProfile(): ExperimentProfile {
-        return {
-            id: getExperimentId(),
-            revision: 0,
-            execDuration: 0,
-            logDir: getExperimentRootDir(),
-            nextSequenceId: 0,
-            params: {
-                authorName: '',
-                experimentName: '',
-                trialConcurrency: 0,
-                maxExecDuration: 0, // unit: second
-                maxTrialNum: 0, // maxTrialNum includes all the submitted trial jobs
-                trainingServicePlatform: '',
-                searchSpace: ''
-            }
-        };
-    }
-
     private async createCheckpointDir(): Promise<string> {
         // TODO: test
         const chkpDir: string = getCheckpointDir();
-        // create checkpoint directory
         await mkDirP(chkpDir);
-        // assign this directory to exp profile's checkpointDir
-        if (this.experimentProfile.params.advisor) {
-            this.experimentProfile.params.advisor.checkpointDir = chkpDir;
-        }
-        if (this.experimentProfile.params.tuner) {
-            this.experimentProfile.params.tuner.checkpointDir = chkpDir;
-        }
-        if (this.experimentProfile.params.assessor) {
-            this.experimentProfile.params.assessor.checkpointDir = chkpDir;
-        }
+        return chkpDir;
+    }
 
-        return Promise.resolve(chkpDir);
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        return this.trainingService.getTrialOutputLocalPath(trialJobId);
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        return this.trainingService.fetchTrialOutput(trialJobId, subpath);
     }
 }
 

@@ -28,6 +28,16 @@ Prerequisite for Azure Kubernetes Service
 #. Follow the `guideline <https://docs.microsoft.com/en-us/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ to create azure file storage account. If you use Azure Kubernetes Service, NNI need Azure Storage Service to store code files and the output files.
 #. To access Azure storage service, NNI need the access key of the storage account, and NNI uses `Azure Key Vault <https://azure.microsoft.com/en-us/services/key-vault/>`__ Service to protect your private key. Set up Azure Key Vault Service, add a secret to Key Vault to store the access key of Azure storage account. Follow this `guideline <https://docs.microsoft.com/en-us/azure/key-vault/quick-create-cli>`__ to store the access key.
 
+
+Prerequisite for PVC storage mode
+-----------------------------------------
+In order to use persistent volume claims instead of NFS or Azure storage, related storage must
+be created manually, in the namespace your trials will run later. This restriction is due to the
+fact, that persistent volume claims are hard to recycle and thus can quickly mess with a cluster's
+storage management. Persistent volume claims can be created by e.g. using kubectl. Please refer
+to the official Kubernetes documentation for `further information <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__.
+
+
 Setup FrameworkController
 -------------------------
 
@@ -115,6 +125,37 @@ Trial configuration in frameworkcontroller mode have the following configuration
   * memoryMB: the memory limitaion to be specified in container.
   * image: the docker image used to create pod and run the program.
   * frameworkAttemptCompletionPolicy: the policy to run framework, please refer the `user-manual <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy>`__ to get the specific information. Users could use the policy to control the pod, for example, if ps does not stop, only worker stops, The completion policy could helps stop ps.
+
+NNI also offers the possibility to include a customized frameworkcontroller template similar
+to the aforementioned tensorflow example. A valid configuration the may look like:
+
+.. code-block:: yaml
+
+    experimentName: example_mnist_pytorch
+    trialConcurrency: 1
+    maxExecDuration: 1h
+    maxTrialNum: 2
+    logLevel: trace
+    trainingServicePlatform: frameworkcontroller
+    searchSpacePath: search_space.json
+    tuner:
+      builtinTunerName: TPE
+      classArgs:
+        optimize_mode: maximize
+    assessor:
+      builtinAssessorName: Medianstop
+      classArgs:
+        optimize_mode: maximize
+    trial:
+      codeDir: .
+    frameworkcontrollerConfig:
+      configPath: fc_template.yml
+      storage: pvc
+      namespace: twin-pipelines
+      pvc:
+        path: /mnt/data
+
+Note that in this example a persistent volume claim has been used, that must be created manually in the specified namespace beforehand. Stick to the mnist-pytorch example (:githublink: `<examples/trials/mnist-pytorch>`__) for a more detailed config (:githublink: `<examples/trials/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) and frameworkcontroller template (:githublink: `<examples/trials/fc_template.yml>`__).
 
 How to run example
 ------------------

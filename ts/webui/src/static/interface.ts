@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+import { ExperimentConfig } from './experimentConfig';
+
 /**
  * Definition of single dimension in search space.
  */
@@ -145,62 +150,16 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
-interface ExperimentParams {
-    authorName: string;
-    experimentName: string;
-    description?: string;
-    trialConcurrency: number;
-    maxExecDuration: number; // seconds
-    maxTrialNum: number;
-    searchSpace: string;
-    trainingServicePlatform: string;
-    multiThread?: boolean;
-    versionCheck?: boolean;
-    logCollection?: string;
-    tuner?: {
-        className: string;
-        builtinTunerName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        gpuNum?: number;
-        includeIntermediateResults?: boolean;
-    };
-    assessor?: {
-        className: string;
-        builtinAssessorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        gpuNum?: number;
-    };
-    advisor?: {
-        className: string;
-        builtinAdvisorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        gpuNum?: number;
-    };
-    clusterMetaData?: {
-        key: string;
-        value: string | ClusterItem;
-    }[];
-}
-
 interface ClusterItem {
     command?: string;
 }
 
 interface ExperimentProfile {
-    params: ExperimentParams;
+    params: ExperimentConfig;
     id: string;
     execDuration: number;
-    logDir?: string;
-    startTime?: number;
+    logDir: string;
+    startTime: number;
     endTime?: number;
     maxSequenceId: number;
     revision: number;
@@ -234,6 +193,16 @@ interface AllExperimentList {
     webuiUrl: string[];
     logDir: string[];
 }
+
+interface Tensorboard {
+    id: string;
+    status: string;
+    trialJobIdList: string[];
+    trialLogDirectoryList: string[];
+    pid: number;
+    port: string;
+}
+
 export {
     TableObj,
     TableRecord,
@@ -250,12 +219,12 @@ export {
     Intermedia,
     MetricDataRecord,
     TrialJobInfo,
-    ExperimentParams,
     ExperimentProfile,
     NNIManagerStatus,
     EventMap,
     SingleAxis,
     MultipleAxes,
     SortInfo,
-    AllExperimentList
+    AllExperimentList,
+    Tensorboard
 };

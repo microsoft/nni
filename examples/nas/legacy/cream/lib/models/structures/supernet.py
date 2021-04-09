@@ -131,12 +131,12 @@ class SuperNet(nn.Module):
                 yield param
 
         if not meta:
-            for layer, layer_arch in zip(self.blocks, architecture):
-                for blocks, arch in zip(layer, layer_arch):
-                    if arch == -1:
+            for choice_blocks, choice_name in zip(self.blocks, architecture):
+                choice_sample = architecture[choice_name]
+                for block, arch in zip(choice_blocks, choice_sample):
+                    if not arch:
                         continue
-                    for name, param in blocks[arch].named_parameters(
-                            recurse=True):
+                    for name, param in block.named_parameters(recurse=True):
                         yield param
 
 

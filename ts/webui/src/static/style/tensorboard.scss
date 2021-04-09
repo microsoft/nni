@@ -1,0 +1,75 @@
+$cicleBg: #009ee7;
+$size: 24px;
+
+.circle {
+    display: inline-block;
+    width: $size;
+    height: $size;
+    border-radius: 50%;
+    color: #fff;
+    line-height: $size;
+    text-align: center;
+    background: $cicleBg;
+    margin-left: 4px;
+    position: relative;
+    top: -16px;
+    left: -20px;
+}
+
+.CommandBarButton {
+    &-RUNNING {
+        .ms-ContextualMenu-itemText::after {
+            content: 'RUNNING';
+            color: #0071bc;
+            margin-left: 15px;
+        }
+    }
+
+    &-STOPPED {
+        .ms-ContextualMenu-itemText::after {
+            content: 'STOPPED';
+            color: green;
+            margin-left: 15px;
+        }
+    }
+
+    &-STOPPING {
+        .ms-ContextualMenu-itemText::after {
+            content: 'STOPPING';
+            color: green;
+            margin-left: 15px;
+        }
+    }
+
+    &-DOWNLOADING_DATA {
+        .ms-ContextualMenu-itemText::after {
+            content: 'DOWNLOADING_DATA';
+            color: green;
+            margin-left: 15px;
+        }
+    }
+
+    &-ERROR {
+        .ms-ContextualMenu-itemText::after {
+            content: 'ERROR';
+            color: red;
+            margin-left: 15px;
+        }
+    }
+
+    &-FAIL_DOWNLOAD_DATA {
+        .ms-ContextualMenu-itemText::after {
+            content: 'FAIL_DOWNLOAD_DATA';
+            color: red;
+            margin-left: 15px;
+        }
+    }
+}
+
+.clearAll {
+    border-top: 1px solid #ccc;
+
+    .ms-ContextualMenu-itemText {
+        text-align: center;
+    }
+}

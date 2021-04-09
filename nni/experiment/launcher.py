@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import contextlib
 import logging
 from pathlib import Path
@@ -13,7 +16,6 @@ import nni_node  # pylint: disable=import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
-from .config import convert
 from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.config_utils import Experiments, Config
@@ -44,7 +46,7 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         if mode != 'view':
             _logger.info('Setting up...')
-            _init_experiment(config, port, debug)
+            rest.post(port, '/experiment', config.json())
         return proc
 
     except Exception as e:
@@ -79,7 +81,7 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
         _save_experiment_information(exp_id, port, start_time, platform,
                                      config.experiment_name, proc.pid, config.experiment_working_directory)
         _logger.info('Setting up...')
-        _init_experiment(config, port, debug)
+        rest.post(port, '/experiment', config.json())
         return proc, pipe
 
     except Exception as e:
@@ -151,12 +153,6 @@ def _check_rest_server(port: int, retry: int = 3) -> None:
             _logger.warning('Timeout, retry...')
         time.sleep(1)
     rest.get(port, '/check-status')
-
-
-def _init_experiment(config: ExperimentConfig, port: int, debug: bool) -> None:
-    for cluster_metadata in convert.to_cluster_metadata(config):
-        rest.put(port, '/experiment/cluster-metadata', cluster_metadata)
-    rest.post(port, '/experiment', convert.to_rest_json(config))
 
 
 def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str, name: str, pid: int, logDir: str) -> None:
