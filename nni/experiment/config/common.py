@@ -66,7 +66,7 @@ class ExperimentConfig(ConfigBase):
     use_annotation: bool = False
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: Optional[PathLike] = None
+    experiment_working_directory: PathLike = '~/nni-experiments'
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
     tuner: Optional[_AlgorithmConfig] = None
     assessor: Optional[_AlgorithmConfig] = None
