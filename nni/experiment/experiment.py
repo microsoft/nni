@@ -194,7 +194,7 @@ class Experiment:
         return experiment
 
     @classmethod
-    def resume_mode(cls, experiment_id: str, debug: bool = False):
+    def resume(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
         """
         Resume a stopped experiment.
 
@@ -205,10 +205,14 @@ class Experiment:
         """
         experiment = Experiment()
         experiment.mode = 'resume'
-        return experiment
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
 
     @classmethod
-    def view_mode(cls, experiment_id: str, debug: bool = False):
+    def view(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
         """
         View a stopped experiment.
 
@@ -219,7 +223,11 @@ class Experiment:
         """
         experiment = Experiment()
         experiment.mode = 'view'
-        return experiment
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
 
     def get_status(self) -> str:
         """
