@@ -9,9 +9,9 @@ Deep learning network has been computational intensive and memory intensive
 which increases the difficulty of deploying deep neural network model. Quantization is a 
 fundamental technology which is widely used to reduce memory footprint and speed up inference 
 process. Many frameworks begin to support quantization, but few of them support mixed precision 
-quantization. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
+quantization and get real speedup. Frameworks like `HAQ: Hardware-Aware Automated Quantization with Mixed Precision <https://arxiv.org/pdf/1811.08886.pdf>`__\, only support simulated mixed precision quantization which will 
 not speed up the inference process. To get real speedup of mixed precision quantization and 
-help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI to connect different 
+help people get the real feedback from hardware, we design a general framework with simple interface to allow NNI quantization algorithms to connect different 
 DL model optimization backends (e.g., TensorRT, NNFusion), which gives users an end-to-end experience that after quantizing their model 
 with quantization algorithms, the quantized model can be directly speeded up with the connected optimization backend. NNI connects 
 TensorRT at this stage, and will support more backends in the future.
@@ -33,10 +33,14 @@ Users should set config to train quantized model using QAT algorithm(please refe
 After quantization aware training, users can get new config with calibration parameters and model with quantized weight. By passing new config and model to quantization speedup tool, users can get real mixed precision speedup engine to do inference.
 
 
-User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
-
-
 After getting mixed precision engine, users can do inference with input data.
+
+
+Note
+
+
+* User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
+* Not all op types are supported right now. At present, NNI supports Conv, Linear, Relu and MaxPool. More op types will be supported in the following release.
 
 
 Prerequisite
@@ -80,7 +84,7 @@ Note that NNI also supports post-training quantization directly, please refer to
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
-For more parameters about the class 'TensorRTModelSpeedUp', you can refer to :githublink:`the code <nni/compression/pytorch/speedup/quantization_speedup/integrated_tensorrt.py>`.
+For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/model_compression.html#quantization-speedup>`.
 
 
 Mnist test

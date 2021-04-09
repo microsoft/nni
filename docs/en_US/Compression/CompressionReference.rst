@@ -103,6 +103,20 @@ Quantizers
 ..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
     :members:
 
+Model Speedup
+-------------
+
+Quantization Speedup
+^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.backend.BaseModelSpeedup
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.integrated_tensorrt.ModelSpeedupTensorRT
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.calibrator.Calibrator
+    :members:
 
 
 Compression Utilities
