@@ -63,7 +63,7 @@ Below is a very simple example of defining a base model, it is almost the same a
 
 The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user-defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <./Advanced.rst>`__.
 
-Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>` for more complicated examples.
+Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>` for more complicated examples.
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -195,7 +195,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
 
-The complete code of a simple MNIST example can be found :githublink:`here <test/retiarii_test/mnist/test.py>`.
+The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`.
 
 **Local Debug Mode**: When running an experiment, it is easy to get some trivial errors in trial code, such as shape mismatch, undefined variable. To quickly fix these kinds of errors, we provide local debug mode which locally applies mutators once and runs only that generated model. To use local debug mode, users can simply invoke the API `debug_mutated_model(base_model, trainer, applied_mutators)`.
 

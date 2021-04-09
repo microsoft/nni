@@ -34,7 +34,7 @@ This is CDARTS based on the NNI platform, which currently supports CIFAR10 searc
 Examples
 --------
 
-`Example code <https://github.com/microsoft/nni/tree/master/examples/nas/cdarts>`__
+`Example code <https://github.com/microsoft/nni/tree/master/examples/nas/legacy/cdarts>`__
 
 .. code-block:: bash
 
@@ -47,7 +47,7 @@ Examples
    python setup.py install --cpp_ext --cuda_ext
 
    # search the best architecture
-   cd examples/nas/cdarts
+   cd examples/nas/legacy/cdarts
    bash run_search_cifar.sh
 
    # train the best architecture.

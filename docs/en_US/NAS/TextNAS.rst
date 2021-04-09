@@ -57,7 +57,7 @@ Examples
 Search Space
 ^^^^^^^^^^^^
 
-:githublink:`Example code <examples/nas/textnas>`
+:githublink:`Example code <examples/nas/legacy/textnas>`
 
 .. code-block:: bash
 
@@ -65,7 +65,7 @@ Search Space
    git clone https://github.com/Microsoft/nni.git
 
    # search the best architecture
-   cd examples/nas/textnas
+   cd examples/nas/legacy/textnas
 
    # view more options for search
    python3 search.py -h
@@ -83,7 +83,7 @@ retrain
    git clone https://github.com/Microsoft/nni.git
 
    # search the best architecture
-   cd examples/nas/textnas
+   cd examples/nas/legacy/textnas
 
    # default to retrain on sst-2
    sh run_retrain.sh
