@@ -19,6 +19,7 @@ import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentCo
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { ScheduleResultType } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
@@ -31,7 +32,6 @@ import { SharedStorageService } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
-
 
 /**
  * It uses to manage jobs on training platforms 
@@ -251,8 +251,10 @@ class TrialDispatcher implements TrainingService {
             const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
             storageService.rename(codeFileName, "nni-code.tar.gz");
 
-            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+            const installFileName = storageService.joinPath(envDir, `install_nni.sh`);
+            const installFileNameForWin = storageService.joinPath(envDir, `install_nni.ps1`);
             await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN, installFileNameForWin);
 
             const runnerSettingsConfig = storageService.joinPath(envDir, "settings.json");
             await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
@@ -317,6 +319,11 @@ class TrialDispatcher implements TrainingService {
         this.commandEmitter.off("command", this.handleCommand);
         for (const commandChannel of this.commandChannelSet) {
             await commandChannel.stop();
+        }
+        if (this.useSharedStorage) {
+            this.log.info(`stopping shared storage...`)
+            await component.get<SharedStorageService>(SharedStorageService).cleanUp();
+            this.log.info(`shared storage stopped.`)
         }
     }
 

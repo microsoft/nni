@@ -39,6 +39,7 @@ export class NFSSharedStorageService extends SharedStorageService {
     private log: Logger;
     private internalStorageService: MountedStorageService;
     private experimentId: string;
+    private localMounted?: string;
 
     private storageType?: SharedStorageType;
     private nfsServer?: string;
@@ -61,9 +62,10 @@ export class NFSSharedStorageService extends SharedStorageService {
         this.storageType = nfsConfig.storageType;
         this.nfsServer = nfsConfig.nfsServer;
         this.exportedDirectory = nfsConfig.exportedDirectory;
-        if (nfsConfig.localMounted === 'nnimount') {
+        this.localMounted = nfsConfig.localMounted;
+        if (this.localMounted === 'nnimount') {
             await this.helpLocalMount();
-        } else if (nfsConfig.localMounted === 'nomount') {
+        } else if (this.localMounted === 'nomount') {
             const errorMessage = `${this.storageType} Shared Storage:  ${this.storageType} not Support 'nomount'.`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
@@ -93,6 +95,15 @@ export class NFSSharedStorageService extends SharedStorageService {
     public get remoteMountCommand(): string {
         if (this.remoteMountPoint) {
             return this.getCommand(this.remoteMountPoint);
+        } else {
+            this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
+            return '';
+        }
+    }
+
+    public get remoteUmountCommand(): string {
+        if (this.remoteMountPoint) {
+            return `sudo umount -f -l ${this.remoteMountPoint}`;
         } else {
             this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
             return '';
@@ -132,6 +143,23 @@ export class NFSSharedStorageService extends SharedStorageService {
             return Promise.reject(errorMessage);
         }
 
+        return Promise.resolve();
+    }
+
+    public async cleanUp(): Promise<void> {
+        if (this.localMounted !== 'nnimount') {
+            return Promise.resolve();
+        }
+        try {
+            const result = await cpp.exec(`sudo umount -f -l ${this.localMountPoint}`);
+            if (result.stderr) {
+                throw new Error(result.stderr);
+            }
+        } catch (error) {
+            const errorMessage: string = `${this.storageType} Shared Storage: Umount ${this.localMountPoint} failed, error is ${error}`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
         return Promise.resolve();
     }
 }

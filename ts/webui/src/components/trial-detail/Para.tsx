@@ -51,7 +51,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
-            chosenDimensions: []
+            chosenDimensions:
+                localStorage.getItem('paraColumns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('paraColumns')!)
+                    : []
         };
     }
 
@@ -130,6 +134,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
                         minSelected={2}
+                        whichComponent='para'
                     />
                 )}
                 <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />

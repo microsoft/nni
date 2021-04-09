@@ -78,7 +78,7 @@ class Overview extends React.Component<{}, OverviewState> {
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
                         <div className='overview'>
-                            <div className='wrapper'>
+                            <div className='overviewWrapper'>
                                 {/* exp params */}
                                 <div className='overviewBasicInfo'>
                                     <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
