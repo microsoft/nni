@@ -2,7 +2,6 @@
 // Licensed under the MIT license.
 
 'use strict';
-import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { EventEmitter } from 'events';
 import * as fs from 'fs';
@@ -19,8 +18,7 @@ import {
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
 } from '../../common/utils';
-import { TrialConfig } from '../common/trialConfig';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
+import { ExperimentConfig, LocalConfig, flattenConfig } from '../../common/experimentConfig';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -75,30 +73,13 @@ class LocalTrialJobDetail implements TrialJobDetail {
     }
 }
 
-/**
- * Local training service config
- */
-export class LocalConfig {
-    public maxTrialNumPerGpu?: number;
-    public gpuIndices?: string;
-    public useActiveGpu?: boolean;
-    constructor(gpuIndices?: string, maxTrialNumPerGpu?: number, useActiveGpu?: boolean) {
-        if (gpuIndices !== undefined) {
-            this.gpuIndices = gpuIndices;
-        }
-        if (maxTrialNumPerGpu !== undefined) {
-            this.maxTrialNumPerGpu = maxTrialNumPerGpu;
-        }
-        if (useActiveGpu !== undefined) {
-            this.useActiveGpu = useActiveGpu;
-        }
-    }
-}
+interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { }
 
 /**
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
+    private readonly config: FlattenLocalConfig;
     private readonly eventEmitter: EventEmitter;
     private readonly jobMap: Map<string, LocalTrialJobDetail>;
     private readonly jobQueue: string[];
@@ -108,29 +89,34 @@ class LocalTrainingService implements TrainingService {
     private readonly experimentId!: string;
     private gpuScheduler!: GPUScheduler;
     private readonly occupiedGpuIndexNumMap: Map<number, number>;
-    private designatedGpuIndices!: Set<number>;
     private readonly log: Logger;
-    private localTrialConfig?: TrialConfig;
-    private localConfig?: LocalConfig;
-    private isMultiPhase: boolean;
     private readonly jobStreamMap: Map<string, ts.Stream>;
-    private maxTrialNumPerGpu: number;
-    private useActiveGpu: boolean;
 
-    constructor() {
+    constructor(config: ExperimentConfig) {
+        this.config = flattenConfig<FlattenLocalConfig>(config, 'local');
         this.eventEmitter = new EventEmitter();
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];
-        this.initialized = false;
         this.stopping = false;
         this.log = getLogger();
         this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
         this.occupiedGpuIndexNumMap = new Map<number, number>();
-        this.maxTrialNumPerGpu = 1;
-        this.useActiveGpu = false;
-        this.isMultiPhase = false;
+
+        if (this.config.trialGpuNumber !== undefined && this.config.trialGpuNumber > 0) {
+            this.gpuScheduler = new GPUScheduler();
+        }
+
+        if (this.config.gpuIndices === []) {
+            throw new Error('gpuIndices cannot be empty when specified.');
+        }
+
+        this.rootDir = getExperimentRootDir();
+        if (!fs.existsSync(this.rootDir)) {
+            throw new Error('root dir not created');
+        }
+        this.initialized = true;
     }
 
     public async run(): Promise<void> {
@@ -236,13 +222,6 @@ class LocalTrainingService implements TrainingService {
         return trialJobDetail;
     }
 
-    /**
-     * Is multiphase job supported in current training service
-     */
-    public get isMultiPhaseJobSupported(): boolean {
-        return true;
-    }
-
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
         const trialJob: LocalTrialJobDetail | undefined = this.jobMap.get(trialJobId);
         if (trialJob === undefined) {
@@ -272,69 +251,8 @@ class LocalTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        if (!this.initialized) {
-            this.rootDir = getExperimentRootDir();
-            if (!fs.existsSync(this.rootDir)) {
-                await cpp.exec(`powershell.exe mkdir ${this.rootDir}`);
-            }
-            this.initialized = true;
-        }
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.localTrialConfig = <TrialConfig>JSON.parse(value);
-                // Parse trial config failed, throw Error
-                if (this.localTrialConfig === undefined) {
-                    throw new Error('trial config parsed failed');
-                }
-                if (this.localTrialConfig.gpuNum !== undefined) {
-                    this.log.info(`required GPU number is ${this.localTrialConfig.gpuNum}`);
-                    if (this.gpuScheduler === undefined && this.localTrialConfig.gpuNum > 0) {
-                        this.gpuScheduler = new GPUScheduler();
-                    }
-                }
-                break;
-            case TrialConfigMetadataKey.LOCAL_CONFIG:
-                this.localConfig = <LocalConfig>JSON.parse(value);
-                this.log.info(`Specified GPU indices: ${this.localConfig.gpuIndices}`);
-                if (this.localConfig.gpuIndices !== undefined) {
-                    this.designatedGpuIndices = new Set(this.localConfig.gpuIndices.split(',')
-                            .map((x: string) => parseInt(x, 10)));
-                    if (this.designatedGpuIndices.size === 0) {
-                        throw new Error('gpuIndices can not be empty if specified.');
-                    }
-                }
-                if (this.localConfig.maxTrialNumPerGpu !== undefined) {
-                    this.maxTrialNumPerGpu = this.localConfig.maxTrialNumPerGpu;
-                }
-
-                if (this.localConfig.useActiveGpu !== undefined) {
-                    this.useActiveGpu = this.localConfig.useActiveGpu;
-                }
-                break;
-            case TrialConfigMetadataKey.MULTI_PHASE:
-                this.isMultiPhase = (value === 'true' || value === 'True');
-                break;
-            default:
-        }
-    }
-
-    public getClusterMetadata(key: string): Promise<string> {
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                let getResult: Promise<string>;
-                if (this.localTrialConfig === undefined) {
-                    getResult = Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, `${key} is never set yet`));
-                } else {
-                    getResult = Promise.resolve(JSON.stringify(this.localTrialConfig));
-                }
-
-                return getResult;
-            }
-            default:
-                return Promise.reject(new NNIError(NNIErrorNames.NOT_FOUND, 'Key not found'));
-        }
-    }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
+    public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {
         this.log.info('Stopping local machine training service...');
@@ -386,9 +304,6 @@ class LocalTrainingService implements TrainingService {
         trialJobDetail: TrialJobDetail,
         resource: { gpuIndices: number[] },
         gpuNum: number | undefined): { key: string; value: string }[] {
-            if (this.localTrialConfig === undefined) {
-                throw new Error('localTrialConfig is not initialized!');
-            }
             const envVariables: { key: string; value: string }[] = [
                 { key: 'NNI_PLATFORM', value: 'local' },
                 { key: 'NNI_EXP_ID', value: this.experimentId },
@@ -396,8 +311,7 @@ class LocalTrainingService implements TrainingService {
                 { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
                 { key: 'NNI_OUTPUT_DIR', value: trialJobDetail.workingDirectory },
                 { key: 'NNI_TRIAL_SEQ_ID', value: trialJobDetail.form.sequenceId.toString() },
-                { key: 'MULTI_PHASE', value: this.isMultiPhase.toString() },
-                { key: 'NNI_CODE_DIR', value: this.localTrialConfig.codeDir}
+                { key: 'NNI_CODE_DIR', value: this.config.trialCodeDirectory}
             ];
             if (gpuNum !== undefined) {
                 envVariables.push({
@@ -414,34 +328,30 @@ class LocalTrainingService implements TrainingService {
     }
 
     private tryGetAvailableResource(): [boolean, { gpuIndices: number[]}] {
-        if (this.localTrialConfig === undefined) {
-            throw new Error('localTrialConfig is not initialized!');
-        }
-
         const resource: { gpuIndices: number[] } = { gpuIndices: [] };
         if (this.gpuScheduler === undefined) {
             return [true, resource];
         }
 
         let selectedGPUIndices: number[] = [];
-        const availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.useActiveGpu, this.occupiedGpuIndexNumMap);
+        const availableGpuIndices: number[] = this.gpuScheduler.getAvailableGPUIndices(this.config.useActiveGpu, this.occupiedGpuIndexNumMap);
         for (const index of availableGpuIndices) {
             const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
-            if (num === undefined || num < this.maxTrialNumPerGpu) {
+            if (num === undefined || num < this.config.maxTrialNumberPerGpu) {
                 selectedGPUIndices.push(index);
             }
         }
 
-        if (this.designatedGpuIndices !== undefined) {
+        if (this.config.gpuIndices !== undefined) {
             this.checkSpecifiedGpuIndices();
-            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.designatedGpuIndices.has(index));
+            selectedGPUIndices = selectedGPUIndices.filter((index: number) => this.config.gpuIndices!.includes(index));
         }
 
-        if (selectedGPUIndices.length < this.localTrialConfig.gpuNum) {
+        if (selectedGPUIndices.length < this.config.trialGpuNumber!) {
             return [false, resource];
         }
 
-        selectedGPUIndices.splice(this.localTrialConfig.gpuNum);
+        selectedGPUIndices.splice(this.config.trialGpuNumber!);
         Object.assign(resource, { gpuIndices: selectedGPUIndices });
 
         return [true, resource];
@@ -449,8 +359,8 @@ class LocalTrainingService implements TrainingService {
 
     private checkSpecifiedGpuIndices(): void {
         const gpuCount: number | undefined = this.gpuScheduler.getSystemGpuCount();
-        if (this.designatedGpuIndices !== undefined && gpuCount !== undefined) {
-            for (const index of this.designatedGpuIndices) {
+        if (this.config.gpuIndices !== undefined && gpuCount !== undefined) {
+            for (const index of this.config.gpuIndices) {
                 if (index >= gpuCount) {
                     throw new Error(`Specified GPU index not found: ${index}`);
                 }
@@ -499,18 +409,18 @@ class LocalTrainingService implements TrainingService {
         }
     }
 
-    private getScript(localTrialConfig: TrialConfig, workingDirectory: string): string[] {
+    private getScript(workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
             script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
-                `cmd.exe /c ${localTrialConfig.command} 2>&1 | Out-File "${path.join(workingDirectory, 'stderr')}" -encoding utf8`,
+                `cmd.exe /c ${this.config.trialCommand} 2>&1 | Out-File "${path.join(workingDirectory, 'stderr')}" -encoding utf8`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
             script.push(`cd $NNI_CODE_DIR`);
-            script.push(`eval ${localTrialConfig.command} 2>"${path.join(workingDirectory, 'stderr')}"`);
+            script.push(`eval ${this.config.trialCommand} 2>"${path.join(workingDirectory, 'stderr')}"`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
@@ -525,14 +435,8 @@ class LocalTrainingService implements TrainingService {
 
     private async runTrialJob(trialJobId: string, resource: {gpuIndices: number[]}): Promise<void> {
         const trialJobDetail: LocalTrialJobDetail = <LocalTrialJobDetail>this.jobMap.get(trialJobId);
-        if (this.localTrialConfig === undefined) {
-            throw new Error(`localTrialConfig not initialized!`);
-        }
-        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource, this.localTrialConfig.gpuNum);
+        const variables: { key: string; value: string }[] = this.getEnvironmentVariables(trialJobDetail, resource, this.config.trialGpuNumber);
 
-        if (this.localTrialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         const runScriptContent: string[] = [];
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
@@ -542,7 +446,7 @@ class LocalTrainingService implements TrainingService {
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
         }
-        const scripts: string[] = this.getScript(this.localTrialConfig, trialJobDetail.workingDirectory);
+        const scripts: string[] = this.getScript(trialJobDetail.workingDirectory);
         scripts.forEach((script: string) => {
             runScriptContent.push(script);
         });

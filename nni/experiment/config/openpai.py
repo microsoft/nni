@@ -23,7 +23,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     docker_image: str = 'msranni/nni:latest'
     local_storage_mount_point: PathLike
     container_storage_mount_point: str
-    reuse_mode: bool = False
+    reuse_mode: bool = True
 
     openpai_config: Optional[Dict[str, Any]] = None
     openpai_config_file: Optional[PathLike] = None

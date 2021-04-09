@@ -13,6 +13,7 @@ import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingSer
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { LocalTrainingService } from '../local/localTrainingService';
+import { ExperimentConfig } from '../../common/experimentConfig';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name.split('\\').join('\\\\');
@@ -20,9 +21,23 @@ const mockedTrialPath: string = './training_service/test/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for LocalTrainingService', () => {
-    let trialConfig: any = `{"command":"sleep 1h && echo hello","codeDir":"${localCodeDir}","gpuNum":1}`
+    const config = <ExperimentConfig>{
+        trialCommand: 'sleep 1h && echo hello',
+        trialCodeDirectory: `${localCodeDir}`,
+        trialGpuNumber: 1,
+        trainingService: {
+            platform: 'local'
+        }
+    };
 
-    let localTrainingService: LocalTrainingService;
+    const config2 = <ExperimentConfig>{
+        trialCommand: 'python3 mockedTrial.py',
+        trialCodeDirectory: `${localCodeDir}`,
+        trialGpuNumber: 0,
+        trainingService: {
+            platform: 'local'
+        }
+    };
 
     before(() => {
         chai.should();
@@ -34,29 +49,19 @@ describe('Unit Test for LocalTrainingService', () => {
         cleanupUnitTest();
     });
 
-    beforeEach(() => {
-        localTrainingService = component.get(LocalTrainingService);
+    it('List empty trial jobs', async () => {
+        const localTrainingService = new LocalTrainingService(config);
         localTrainingService.run();
-    });
 
-    afterEach(() => {
+        //trial jobs should be empty, since there are no submitted jobs
+        chai.expect(await localTrainingService.listTrialJobs()).to.be.empty;
+
         localTrainingService.cleanUp();
     });
 
-    it('List empty trial jobs', async () => {
-        //trial jobs should be empty, since there are no submitted jobs
-        chai.expect(await localTrainingService.listTrialJobs()).to.be.empty;
-    });
-
-    it('setClusterMetadata and getClusterMetadata', async () => {
-        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
-        localTrainingService.getClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG).then((data)=>{
-            chai.expect(data).to.be.equals(trialConfig);
-        });
-    });
-
     it('Submit job and Cancel job', async () => {
-        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+        const localTrainingService = new LocalTrainingService(config);
+        localTrainingService.run();
 
         // submit job
         const form: TrialJobApplicationForm = {
@@ -70,10 +75,13 @@ describe('Unit Test for LocalTrainingService', () => {
         chai.expect(jobDetail.status).to.be.equals('WAITING');
         await localTrainingService.cancelTrialJob(jobDetail.id);
         chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
+
+        localTrainingService.cleanUp();
     }).timeout(20000);
 
     it('Get trial log', async () => {
-        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+        const localTrainingService = new LocalTrainingService(config);
+        localTrainingService.run();
 
         // submit job
         const form: TrialJobApplicationForm = {
@@ -100,13 +108,14 @@ describe('Unit Test for LocalTrainingService', () => {
         fs.rmdirSync(path.join(rootDir, 'trials'))
 
         await localTrainingService.cancelTrialJob(jobDetail.id);
+        localTrainingService.cleanUp();
     }).timeout(20000);
 
     it('Read metrics, Add listener, and remove listener', async () => {
-        // set meta data
-        const trialConfig: string = `{\"command\":\"python3 mockedTrial.py\", \"codeDir\":\"${localCodeDir}\",\"gpuNum\":0}`
-        await localTrainingService.setClusterMetadata(TrialConfigMetadataKey.TRIAL_CONFIG, trialConfig);
+        const localTrainingService = new LocalTrainingService(config2);
+        localTrainingService.run();
 
+        // set meta data
         // submit job
         const form: TrialJobApplicationForm = {
             sequenceId: 0,
@@ -130,9 +139,6 @@ describe('Unit Test for LocalTrainingService', () => {
 
         await localTrainingService.cancelTrialJob(jobDetail.id);
         localTrainingService.removeTrialJobMetricListener(listener1);
+        localTrainingService.cleanUp();
     }).timeout(20000);
-
-    it('Test multiphaseSupported', () => {
-        chai.expect(localTrainingService.isMultiPhaseJobSupported).to.be.equals(true)
-    })
 });

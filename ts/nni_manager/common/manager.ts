@@ -5,6 +5,7 @@
 
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus, LogType } from './trainingService';
+import { ExperimentConfig } from './experimentConfig';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
@@ -13,58 +14,12 @@ namespace ExperimentStartUpMode {
     export const RESUME = 'resume';
 }
 
-interface ExperimentParams {
-    authorName: string;
-    experimentName: string;
-    description?: string;
-    trialConcurrency: number;
-    maxExecDuration: number; //seconds
-    maxTrialNum: number;
-    searchSpace: string;
-    trainingServicePlatform: string;
-    multiPhase?: boolean;
-    multiThread?: boolean;
-    versionCheck?: boolean;
-    logCollection?: string;
-    tuner?: {
-        className?: string;
-        builtinTunerName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        includeIntermediateResults?: boolean;
-        gpuIndices?: string;
-    };
-    assessor?: {
-        className?: string;
-        builtinAssessorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-    };
-    advisor?: {
-        className?: string;
-        builtinAdvisorName?: string;
-        codeDir?: string;
-        classArgs?: any;
-        classFileName?: string;
-        checkpointDir: string;
-        gpuIndices?: string;
-    };
-    clusterMetaData?: {
-        key: string;
-        value: string;
-    }[];
-}
-
 interface ExperimentProfile {
-    params: ExperimentParams;
+    params: ExperimentConfig;
     id: string;
     execDuration: number;
-    logDir?: string;
-    startTime?: number;
+    logDir: string;
+    startTime: number;
     endTime?: number;
     nextSequenceId: number;
     revision: number;
@@ -81,7 +36,7 @@ interface NNIManagerStatus {
 }
 
 abstract class Manager {
-    public abstract startExperiment(experimentParams: ExperimentParams): Promise<string>;
+    public abstract startExperiment(experimentConfig: ExperimentConfig): Promise<string>;
     public abstract resumeExperiment(readonly: boolean): Promise<void>;
     public abstract stopExperiment(): Promise<void>;
     public abstract stopExperimentTopHalf(): Promise<void>;
@@ -113,4 +68,4 @@ abstract class Manager {
     public abstract fetchTrialOutput(trialJobId: string, subpath: string): Promise<void>;
 }
 
-export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };
+export { Manager, ExperimentConfig, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

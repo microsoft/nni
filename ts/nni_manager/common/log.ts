@@ -17,8 +17,14 @@ const INFO: number = 4;
 const DEBUG: number = 5;
 const TRACE: number = 6;
 
-const logLevelNameMap: Map<string, number> = new Map([['fatal', FATAL],
-    ['error', ERROR], ['warning', WARNING], ['info', INFO], ['debug', DEBUG], ['trace', TRACE]]);
+const logLevelNameMap: Map<string, number> = new Map([
+    ['fatal', FATAL],
+    ['error', ERROR],
+    ['warning', WARNING],
+    ['info', INFO],
+    ['debug', DEBUG],
+    ['trace', TRACE]
+]);
 
 class BufferSerialEmitter {
     private buffer: Buffer;

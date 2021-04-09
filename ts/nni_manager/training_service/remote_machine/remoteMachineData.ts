@@ -4,6 +4,7 @@
 'use strict';
 
 import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
+import { RemoteMachineConfig } from '../../common/experimentConfig';
 import { GPUInfo, GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
 
@@ -11,19 +12,14 @@ import { ShellExecutor } from './shellExecutor';
  * Metadata of remote machine for configuration and statuc query
  */
 export class RemoteMachineMeta {
-    public readonly ip: string = '';
-    public readonly port: number = 22;
-    public readonly username: string = '';
-    public readonly passwd: string = '';
-    public readonly sshKeyPath?: string;
-    public readonly passphrase?: string;
+    public readonly config: RemoteMachineConfig;
     public gpuSummary: GPUSummary | undefined;
-    public readonly gpuIndices?: string;
-    public readonly maxTrialNumPerGpu?: number;
-    //TODO: initialize varialbe in constructor
-    public occupiedGpuIndexMap?: Map<number, number>;
-    public readonly useActiveGpu?: boolean = false;
-    public readonly pythonPath?: string;
+    public occupiedGpuIndexMap: Map<number, number>;
+
+    constructor(config: RemoteMachineConfig) {
+        this.config = config;
+        this.occupiedGpuIndexMap = new Map<number, number>();
+    }
 }
 
 /**
@@ -74,13 +70,13 @@ export class RemoteMachineTrialJobDetail implements TrialJobDetail {
  * The remote machine executor manager
  */
 export class ExecutorManager {
+    public readonly rmMeta: RemoteMachineMeta;
     private readonly executorMap: Map<string, ShellExecutor> = new Map<string, ShellExecutor>();
-    private readonly rmMeta: RemoteMachineMeta;
 
     private executors: ShellExecutor[] = [];
 
-    constructor(rmMeta: RemoteMachineMeta) {
-        this.rmMeta = rmMeta;
+    constructor(config: RemoteMachineConfig) {
+        this.rmMeta = new RemoteMachineMeta(config);
     }
 
     public async getExecutor(id: string): Promise<ShellExecutor> {

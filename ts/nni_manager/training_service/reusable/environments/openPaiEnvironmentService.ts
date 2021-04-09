@@ -3,20 +3,20 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
 import { getLogger, Logger } from '../../../common/log';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../../pai/paiConfig';
 import { NNIPAITrialConfig } from '../../pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { SharedStorageService } from '../sharedStorage';
-import { StorageService } from '../storageService';
+import { MountedStorageService } from '../storages/mountedStorageService';
 
+interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
@@ -27,15 +27,22 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     private readonly log: Logger = getLogger();
     private paiClusterConfig: PAIClusterConfig | undefined;
     private paiTrialConfig: NNIPAITrialConfig | undefined;
-    private paiJobConfig: any;
-    private paiToken?: string;
-    private protocol: string = 'http';
-
+    private paiToken: string;
+    private protocol: string;
     private experimentId: string;
+    private config: FlattenOpenpaiConfig;
 
-    constructor() {
+    constructor(config: ExperimentConfig) {
         super();
         this.experimentId = getExperimentId();
+        this.config = flattenConfig(config, 'openpai');
+        this.paiToken = this.config.token;
+        this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
+
+        // FIXME: only support MountedStorageService
+        const storageService = new MountedStorageService();
+        const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
+        storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -50,58 +57,15 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         return 'pai';
     }
 
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.PAI_CLUSTER_CONFIG:
-                this.paiClusterConfig = <PAIClusterConfig>JSON.parse(value);
-                this.paiClusterConfig.host = this.formatPAIHost(this.paiClusterConfig.host);
-                this.paiToken = this.paiClusterConfig.token;
-                break;
-
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                if (this.paiClusterConfig === undefined) {
-                    this.log.error('pai cluster config is not initialized');
-                    break;
-                }
-                this.paiTrialConfig = <NNIPAITrialConfig>JSON.parse(value);
-                // Validate to make sure codeDir doesn't have too many files
-
-                const storageService = component.get<StorageService>(StorageService);
-                const remoteRoot = storageService.joinPath(this.paiTrialConfig.nniManagerNFSMountPath, this.experimentId);
-                storageService.initialize(this.paiTrialConfig.nniManagerNFSMountPath, remoteRoot);
-
-                if (this.paiTrialConfig.paiConfigPath) {
-                    this.paiJobConfig = yaml.safeLoad(fs.readFileSync(this.paiTrialConfig.paiConfigPath, 'utf8'));
-                }
-
-                if (this.paiClusterConfig.gpuNum === undefined) {
-                    this.paiClusterConfig.gpuNum = this.paiTrialConfig.gpuNum;
-                }
-                if (this.paiClusterConfig.cpuNum === undefined) {
-                    this.paiClusterConfig.cpuNum = this.paiTrialConfig.cpuNum;
-                }
-                if (this.paiClusterConfig.memoryMB === undefined) {
-                    this.paiClusterConfig.memoryMB = this.paiTrialConfig.memoryMB;
-                }
-                break;
-            }
-            default:
-                this.log.debug(`OpenPAI not proccessed metadata key: '${key}', value: '${value}'`);
-        }
-    }
-
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
-        if (this.paiClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
-        }
         if (this.paiToken === undefined) {
             throw new Error('PAI token is not initialized');
         }
 
         const getJobInfoRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs?username=${this.paiClusterConfig.userName}`,
+            uri: `${this.config.host}/rest-server/api/v2/jobs?username=${this.config.username}`,
             method: 'GET',
             json: true,
             headers: {
@@ -168,29 +132,22 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
 
-        if (this.paiClusterConfig === undefined) {
-            throw new Error('PAI Cluster config is not initialized');
-        }
         if (this.paiToken === undefined) {
             throw new Error('PAI token is not initialized');
         }
-        if (this.paiTrialConfig === undefined) {
-            throw new Error('PAI trial config is not initialized');
-        }
-
         // Step 1. Prepare PAI job configuration
         let environmentRoot: string;
         if (environment.useSharedStorage) {
             environmentRoot = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
             environment.command = `${component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `)} && cd ${environmentRoot} && ${environment.command}`;
         } else {
-            environmentRoot = `${this.paiTrialConfig.containerNFSMountPath}/${this.experimentId}`;
+            environmentRoot = `${this.config.containerStorageMountPoint}/${this.experimentId}`;
             environment.command = `cd ${environmentRoot} && ${environment.command}`;
         }
         environment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
-        environment.trackingUrl = `${this.protocol}://${this.paiClusterConfig.host}/job-detail.html?username=${this.paiClusterConfig.userName}&jobName=${environment.envId}`;
-        environment.useActiveGpu = this.paiClusterConfig.useActiveGpu;
-        environment.maxTrialNumberPerGpu = this.paiClusterConfig.maxTrialNumPerGpu;
+        environment.trackingUrl = `${this.config.host}/job-detail.html?username=${this.config.username}&jobName=${environment.envId}`;
+        environment.useActiveGpu = false;  // does openpai supports these?
+        environment.maxTrialNumberPerGpu = 1;
 
         // Step 2. Generate Job Configuration in yaml format
         const paiJobConfig = this.generateJobConfigInYamlFormat(environment);
@@ -198,7 +155,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
 
         // Step 3. Submit PAI job via Rest call
         const submitJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs`,
+            uri: `${this.config.host}/rest-server/api/v2/jobs`,
             method: 'POST',
             body: paiJobConfig,
             followAllRedirects: true,
@@ -229,15 +186,12 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         if (environment.isAlive === false) {
             return Promise.resolve();
         }
-        if (this.paiClusterConfig === undefined) {
-            return Promise.reject(new Error('PAI Cluster config is not initialized'));
-        }
         if (this.paiToken === undefined) {
             return Promise.reject(Error('PAI token is not initialized'));
         }
 
         const stopJobRequest: request.Options = {
-            uri: `${this.protocol}://${this.paiClusterConfig.host}/rest-server/api/v2/jobs/${this.paiClusterConfig.userName}~${environment.envId}/executionType`,
+            uri: `${this.config.host}/rest-server/api/v2/jobs/${this.config.username}~${environment.envId}/executionType`,
             method: 'PUT',
             json: true,
             body: { value: 'STOP' },
@@ -278,14 +232,11 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     }
 
     private generateJobConfigInYamlFormat(environment: EnvironmentInformation): any {
-        if (this.paiTrialConfig === undefined) {
-            throw new Error('trial config is not initialized');
-        }
         const jobName = environment.envId;
 
         let nniJobConfig: any = undefined;
-        if (this.paiTrialConfig.paiConfigPath) {
-            nniJobConfig = JSON.parse(JSON.stringify(this.paiJobConfig)); //Trick for deep clone in Typescript
+        if (this.config.openpaiConfig !== undefined) {
+            nniJobConfig = JSON.parse(JSON.stringify(this.config.openpaiConfig)); //Trick for deep clone in Typescript
             nniJobConfig.name = jobName;
             if (nniJobConfig.taskRoles) {
 
@@ -313,19 +264,6 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             }
 
         } else {
-            if (this.paiClusterConfig === undefined) {
-                throw new Error('PAI Cluster config is not initialized');
-            }
-            if (this.paiClusterConfig.gpuNum === undefined) {
-                throw new Error('PAI Cluster gpuNum is not initialized');
-            }
-            if (this.paiClusterConfig.cpuNum === undefined) {
-                throw new Error('PAI Cluster cpuNum is not initialized');
-            }
-            if (this.paiClusterConfig.memoryMB === undefined) {
-                throw new Error('PAI Cluster memoryMB is not initialized');
-            }
-
             nniJobConfig = {
                 protocolVersion: 2,
                 name: jobName,
@@ -334,7 +272,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 prerequisites: [
                     {
                         type: 'dockerimage',
-                        uri: this.paiTrialConfig.image,
+                        uri: this.config.dockerImage,
                         name: 'docker_image_0'
                     }
                 ],
@@ -348,9 +286,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.paiClusterConfig.gpuNum,
-                            cpu: this.paiClusterConfig.cpuNum,
-                            memoryMB: this.paiClusterConfig.memoryMB
+                            gpu: this.config.trialGpuNumber,
+                            cpu: this.config.trialCpuNumber,
+                            memoryMB: toMegaBytes(this.config.trialMemorySize)
                         },
                         commands: [
                             environment.command
@@ -360,15 +298,15 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 extras: {
                     'storages': [
                         {
-                            name: this.paiTrialConfig.paiStorageConfigName
+                            name: this.config.storageConfigName
                         }
                     ],
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.paiTrialConfig.virtualCluster) {
+            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.paiTrialConfig.virtualCluster
+                    virtualCluster: this.config.deprecated.virtualCluster
                 }
             }
         }

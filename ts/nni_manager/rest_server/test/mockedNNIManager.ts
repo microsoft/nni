@@ -9,7 +9,7 @@ import { Provider } from 'typescript-ioc';
 import { MetricDataRecord, MetricType, TrialJobInfo } from '../../common/datastore';
 import { MethodNotImplementedError } from '../../common/errors';
 import {
-    ExperimentParams, ExperimentProfile, Manager, ProfileUpdateType,
+    ExperimentConfig, ExperimentProfile, Manager, ProfileUpdateType,
     TrialJobStatistics, NNIManagerStatus
 } from '../../common/manager';
 import {
@@ -90,7 +90,7 @@ export class MockedNNIManager extends Manager {
         return Promise.resolve('METAVALUE1');
     }
 
-    public startExperiment(experimentParams: ExperimentParams): Promise<string> {
+    public startExperiment(experimentParams: ExperimentConfig): Promise<string> {
         return Promise.resolve('id-1234');
     }
 
@@ -135,20 +135,24 @@ export class MockedNNIManager extends Manager {
     public getExperimentProfile(): Promise<ExperimentProfile> {
         const profile: ExperimentProfile = {
             params: {
-                authorName: 'test',
                 experimentName: 'exp1',
                 trialConcurrency: 2,
-                maxExecDuration: 30,
-                maxTrialNum: 3,
-                trainingServicePlatform: 'local',
+                maxExperimentDuration: '30s',
+                maxTrialNumber: 3,
+                trainingService: {
+                    platform: 'local'
+                },
                 searchSpace: '{lr: 0.01}',
                 tuner: {
                     className: 'testTuner',
-                    checkpointDir: ''
-                }
+                },
+                trialCommand: '',
+                trialCodeDirectory: '',
+                debug: true
             },
             id: '2345',
             execDuration: 0,
+            logDir: '',
             startTime: Date.now(),
             endTime: Date.now(),
             nextSequenceId: 0,

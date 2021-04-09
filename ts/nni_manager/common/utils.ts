@@ -20,7 +20,7 @@ import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { ExperimentParams, Manager } from './manager';
+import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 import { logLevelNameMap } from './log';
@@ -159,7 +159,7 @@ function getCmdPy(): string {
  * @param expParams: experiment startup parameters
  *
  */
-function getMsgDispatcherCommand(expParams: ExperimentParams): string {
+function getMsgDispatcherCommand(expParams: ExperimentConfig): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
     return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
@@ -332,8 +332,8 @@ async function getVersion(): Promise<string> {
     const deferred: Deferred<string> = new Deferred<string>();
     import(path.join(__dirname, '..', 'package.json')).then((pkg) => {
         deferred.resolve(pkg.version);
-    }).catch((error) => {
-        deferred.reject(error);
+    }).catch(() => {
+        deferred.resolve('999.0.0-developing');
     });
     return deferred.promise;
 }

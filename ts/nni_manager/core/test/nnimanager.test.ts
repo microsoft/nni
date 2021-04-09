@@ -25,7 +25,6 @@ import * as path from 'path';
 
 async function initContainer(): Promise<void> {
     prepareUnitTest();
-    Container.bind(TrainingService).to(MockedTrainingService).scope(Scope.Singleton);
     Container.bind(Manager).to(NNIManager).scope(Scope.Singleton);
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
@@ -37,58 +36,62 @@ async function initContainer(): Promise<void> {
 describe('Unit test for nnimanager', function () {
     this.timeout(10000);
 
-    let nniManager: Manager;
+    let nniManager: NNIManager;
 
     let ClusterMetadataKey = 'mockedMetadataKey';
 
     let experimentParams = {
-        authorName: 'zql',
         experimentName: 'naive_experiment',
         trialConcurrency: 3,
-        maxExecDuration: 5,
-        maxTrialNum: 3,
-        trainingServicePlatform: 'local',
-        searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
+        maxExperimentDuration: '5s',
+        maxTrialNumber: 3,
+        trainingService: {
+            platform: 'local'
+        },
+        searchSpace: {'lr': {'_type': 'choice', '_value': [0.01,0.001]}},
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
-            },
-            checkpointDir: '',
+            }
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
-        }
+            name: 'Medianstop'
+        },
+        trialCommand: 'sleep 2',
+        trialCodeDirectory: '',
+        debug: true
     }
 
     let updateExperimentParams = {
-        authorName: '',
         experimentName: 'another_experiment',
         trialConcurrency: 2,
-        maxExecDuration: 6,
-        maxTrialNum: 2,
-        trainingServicePlatform: 'local',
+        maxExperimentDuration: '6s',
+        maxTrialNumber: 2,
+        trainingService: {
+            platform: 'local'
+        },
         searchSpace: '{"lr": {"_type": "choice", "_value": [0.01,0.001]}}',
         tuner: {
-            builtinTunerName: 'TPE',
+            name: 'TPE',
             classArgs: {
                 optimize_mode: 'maximize'
-            },
-            checkpointDir: '',
-            gpuNum: 0
+            }
         },
         assessor: {
-            builtinAssessorName: 'Medianstop',
-            checkpointDir: '',
-            gpuNum: 1
-        }
+            name: 'Medianstop'
+        },
+        trialCommand: 'sleep 2',
+        trialCodeDirectory: '',
+        debug: true
     }
 
     let experimentProfile = {
         params: updateExperimentParams,
         id: 'test',
         execDuration: 0,
+        logDir: '',
+        startTime: 0,
         nextSequenceId: 0,
         revision: 0
     }
@@ -114,8 +117,20 @@ describe('Unit test for nnimanager', function () {
         const experimentsManager: ExperimentManager = component.get(ExperimentManager);
         experimentsManager.setExperimentPath('.experiment.test');
         nniManager = component.get(Manager);
+
         const expId: string = await nniManager.startExperiment(experimentParams);
         assert.strictEqual(expId, 'unittest');
+
+        // TODO:
+        // In current architecture we cannot prevent NNI manager from creating a training service.
+        // The training service must be manually stopped here or its callbacks will block exit.
+        // I'm planning on a custom training service register system similar to custom tuner,
+        // and when that is done we can let NNI manager to use MockedTrainingService through config.
+        const manager = nniManager as any;
+        manager.trainingService.removeTrialJobMetricListener(manager.trialJobMetricListener);
+        manager.trainingService.cleanUp();
+
+        manager.trainingService = new MockedTrainingService();
     })
 
     after(async () => {
@@ -160,28 +175,11 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test getClusterMetadata', () => {
-        //default value is "default"
-        return nniManager.getClusterMetadata(ClusterMetadataKey).then(function (value) {
-            expect(value).to.equal("default");
-        });
-    })
-
-    it('test setClusterMetadata and getClusterMetadata', () => {
-        //set a valid key
-        return nniManager.setClusterMetadata(ClusterMetadataKey, "newdata").then(() => {
-            return nniManager.getClusterMetadata(ClusterMetadataKey).then(function (value) {
-                expect(value).to.equal("newdata");
-            });
-        }).catch((error) => {
-            console.log(error);
-        })
-    })
-
     it('test cancelTrialJobByUser', () => {
         return nniManager.cancelTrialJobByUser('1234').then(() => {
 
         }).catch((error) => {
+            console.log(error);
             assert.fail(error);
         })
     })
@@ -209,7 +207,7 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxExecDuration).to.be.equal(6);
+                expect(updateProfile.params.maxExperimentDuration).to.be.equal('6s');
             });
         }).catch((error) => {
             assert.fail(error);
@@ -229,9 +227,9 @@ describe('Unit test for nnimanager', function () {
     it('test updateExperimentProfile MAX_TRIAL_NUM',  () => {
         return nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM').then(() => {
             nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxTrialNum).to.be.equal(2);
+                expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
             });
-        }).catch((error) => {
+        }).catch((error: any) => {
             assert.fail(error);
         })
     })
@@ -276,8 +274,8 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test addCustomizedTrialJob reach maxTrialNum', () => {
-        // test currSubmittedTrialNum reach maxTrialNum
+    it('test addCustomizedTrialJob reach maxTrialNumber', () => {
+        // test currSubmittedTrialNum reach maxTrialNumber
         return nniManager.addCustomizedTrialJob('"hyperParam"').then(() => {
             nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
                 if (trialJobStatistics[0].trialJobStatus === 'WAITING')
