@@ -187,7 +187,7 @@ def create_customized_class_instance(class_params):
         Returns customized class instance.
     """
 
-    code_dir = class_params.get('codeDirectory')
+    code_dir = class_params.get('classDirectory')
     qualified_class_name = class_params.get('className')
     class_args = class_params.get('classArgs')
 

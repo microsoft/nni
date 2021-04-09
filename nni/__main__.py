@@ -61,10 +61,10 @@ def main():
 
 
 def _run_advisor(exp_params):
-    if exp_params.get('advisor').get('builtinAdvisorName'):
+    if exp_params.get('advisor').get('name'):
         dispatcher = create_builtin_class_instance(
-            exp_params.get('advisor').get('builtinAdvisorName'),
-            exp_params.get('advisor').get('classArgs'),
+            exp_params['advisor']['name'],
+            exp_params['advisor'].get('classArgs'),
             'advisors')
     else:
         dispatcher = create_customized_class_instance(exp_params.get('advisor'))

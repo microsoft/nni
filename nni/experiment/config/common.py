@@ -37,7 +37,7 @@ class AlgorithmConfig(_AlgorithmConfig):
 @dataclass(init=False)
 class CustomAlgorithmConfig(_AlgorithmConfig):
     class_name: str
-    class_directory: Optional[PathLike] = None
+    class_directory: Optional[PathLike] = '.'
     class_args: Optional[Dict[str, Any]] = None
 
 
