@@ -29,10 +29,8 @@ def main():
     exp_params = json.loads(exp_params_decode)
     logger.debug('exp_params json obj: [%s]', json.dumps(exp_params, indent=4))
 
-    if exp_params.get('multiThread'):
+    if exp_params.get('deprecated', {}).get('multiThread'):
         enable_multi_thread()
-    if exp_params.get('multiPhase'):
-        enable_multi_phase()
 
     if exp_params.get('advisor') is not None:
         # advisor is enabled and starts to run
