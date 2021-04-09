@@ -102,7 +102,8 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
         raise RuntimeError(f'Port {port} is not idle {message}')
 
 
-def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str = None, mode: str = 'new') -> Tuple[int, Popen]:
+def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str = None,
+                       mode: str = 'new') -> Tuple[int, Popen]:
     if isinstance(config.training_service, list):
         ts = 'hybrid'
     else:
