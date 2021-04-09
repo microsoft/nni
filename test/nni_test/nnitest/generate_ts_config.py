@@ -94,7 +94,7 @@ def update_training_service_config(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl'], default='pai')
+    parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl', 'hybrid'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
