@@ -53,7 +53,7 @@ The training with 16 Gpus is a little bit superior than 8 Gpus, as below.
 Examples
 --------
 
-`Example code <https://github.com/microsoft/nni/tree/master/examples/nas/cream>`__
+`Example code <https://github.com/microsoft/nni/tree/master/examples/nas/legacy/cream>`__
 
 Please run the following scripts in the example folder.
 

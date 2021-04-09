@@ -4,7 +4,7 @@ P-DARTS
 Examples
 --------
 
-:githublink:`Example code <examples/nas/pdarts>`
+:githublink:`Example code <examples/nas/legacy/pdarts>`
 
 .. code-block:: bash
 
@@ -12,7 +12,7 @@ Examples
    git clone https://github.com/Microsoft/nni.git
 
    # search the best architecture
-   cd examples/nas/pdarts
+   cd examples/nas/legacy/pdarts
    python3 search.py
 
    # train the best architecture, it's the same progress as darts.
