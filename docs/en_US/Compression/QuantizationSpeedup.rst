@@ -84,7 +84,7 @@ Note that NNI also supports post-training quantization directly, please refer to
 For complete examples please refer to :githublink:`the code <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`.
 
 
-For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/model_compression.html#quantization-speedup>`__\.
+For more parameters about the class 'TensorRTModelSpeedUp', you can refer to `Model Compression API Reference <https://nni.readthedocs.io/en/stable/Compression/CompressionReference.html#quantization-speedup>`__\.
 
 
 Mnist test
