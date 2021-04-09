@@ -13,14 +13,13 @@ import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
-import { ExperimentConfig, TrainingServiceConfig } from '../../common/experimentConfig';
+import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentConfig';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { ScheduleResultType } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
@@ -28,7 +27,7 @@ import { EnvironmentServiceFactory } from './environments/environmentServiceFact
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
-import { SharedStorageService, SharedStorageConfig } from './sharedStorage';
+import { SharedStorageService } from './sharedStorage';
 import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
 import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
@@ -133,7 +132,9 @@ class TrialDispatcher implements TrainingService {
             this.commandChannelSet.add(env.getCommandChannel);
         }
 
-        // FIXME: storage config
+        if (this.config.sharedStorage !== undefined) {
+            this.initializeSharedStorage(this.config.sharedStorage);
+        }
     }
 
     public async listTrialJobs(): Promise<TrialDetail[]> {
@@ -293,7 +294,7 @@ class TrialDispatcher implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
     public async getClusterMetadata(_key: string): Promise<string> { return ""; }
 
     public async cleanUp(): Promise<void> {
@@ -876,9 +877,8 @@ class TrialDispatcher implements TrainingService {
         this.shouldUpdateTrials = true;
     }
 
-    private async initializeSharedStorage(key: string, value: string): Promise<void> {
-        const storageType = (<SharedStorageConfig>JSON.parse(value)).storageType;
-        switch (storageType) {
+    private async initializeSharedStorage(config: SharedStorageConfig): Promise<void> {
+        switch (config.storageType) {
             case 'NFS':
                 Container.bind(SharedStorageService)
                          .to(NFSSharedStorageService)
@@ -890,12 +890,12 @@ class TrialDispatcher implements TrainingService {
                          .scope(Scope.Singleton);
                 break;
             default: {
-                const errorMessage = `Shared storage type '${storageType}' not support.`;
+                const errorMessage = `Shared storage type '${config.storageType}' not support.`;
                 this.log.error(errorMessage)
                 return Promise.reject(errorMessage);
             }
         }
-        await component.get<SharedStorageService>(SharedStorageService).config(key, value);
+        await component.get<SharedStorageService>(SharedStorageService).config(config);
         this.useSharedStorage = true;
         return Promise.resolve();
     }

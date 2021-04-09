@@ -6,7 +6,7 @@ import * as glob from 'glob';
 
 glob.sync('**/*.ts').forEach((file) => {
     if (file.indexOf('node_modules/') < 0 && file.indexOf('types/') < 0
-        && file.indexOf('.test.ts') < 0 && file.indexOf('main.ts')) {
+        && file.indexOf('.test.ts') < 0 && file.indexOf('dlts') < 0 && file.indexOf('main.ts')) {
         try {
             import('../../' + file);
         } catch(err) {

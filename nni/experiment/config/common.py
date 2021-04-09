@@ -29,12 +29,10 @@ class _AlgorithmConfig(ConfigBase):
         super().validate()
         _validate_algo(self)
 
-
 @dataclass(init=False)
 class AlgorithmConfig(_AlgorithmConfig):
     name: str
     class_args: Optional[Dict[str, Any]] = None
-
 
 @dataclass(init=False)
 class CustomAlgorithmConfig(_AlgorithmConfig):
@@ -45,6 +43,12 @@ class CustomAlgorithmConfig(_AlgorithmConfig):
 
 class TrainingServiceConfig(ConfigBase):
     platform: str
+
+class SharedStorageConfig(ConfigBase):
+    storage_type: str
+    local_mount_point: str
+    remote_mount_point: str
+    local_mounted: str
 
 
 @dataclass(init=False)
@@ -68,6 +72,7 @@ class ExperimentConfig(ConfigBase):
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
+    shared_storage: Optional[SharedStorageConfig] = None
     _deprecated: Optional[Dict[str, Any]] = None
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
@@ -126,9 +131,9 @@ _canonical_rules = {
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
     'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
-    'tuner': lambda config: None if config is None or config.name == '_none_' else config,
-    'assessor': lambda config: None if config is None or config.name == '_none_' else config,
-    'advisor': lambda config: None if config is None or config.name == '_none_' else config,
+    'tuner': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
+    'assessor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
+    'advisor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
 }
 
 _validation_rules = {

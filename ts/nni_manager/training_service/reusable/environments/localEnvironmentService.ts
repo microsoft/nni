@@ -10,9 +10,7 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { ExperimentConfig } from '../../../common/experimentConfig';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { TrialConfig } from '../../common/trialConfig';
 import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
 import { SharedStorageService } from '../sharedStorage'

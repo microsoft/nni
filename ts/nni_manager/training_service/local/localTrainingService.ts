@@ -251,7 +251,7 @@ class LocalTrainingService implements TrainingService {
         return Promise.resolve();
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
     public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {

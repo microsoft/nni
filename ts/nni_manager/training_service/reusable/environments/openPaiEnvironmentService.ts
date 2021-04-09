@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as request from 'request';
 import { Deferred } from 'ts-deferred';
@@ -11,12 +10,11 @@ import * as component from '../../../common/component';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
 import { getLogger, Logger } from '../../../common/log';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { PAIClusterConfig } from '../../pai/paiConfig';
 import { NNIPAITrialConfig } from '../../pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { SharedStorageService } from '../sharedStorage';
-import { StorageService } from '../storageService';
+import { MountedStorageService } from '../storages/mountedStorageService';
 
 interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 
@@ -41,10 +39,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
 
-        // FIXME
-        //const storageService = component.get<StorageService>(StorageService);
-        //const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
-        //storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
+        // FIXME: only support MountedStorageService
+        const storageService = new MountedStorageService();
+        const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
+        storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
     }
 
     public get environmentMaintenceLoopInterval(): number {

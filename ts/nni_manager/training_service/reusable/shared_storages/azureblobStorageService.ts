@@ -6,11 +6,11 @@
 import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
-import { SharedStorageService, SharedStorageConfig, SharedStorageType, LocalMountedType } from '../sharedStorage'
+import { SharedStorageService, SharedStorageType } from '../sharedStorage'
 import { MountedStorageService } from '../storages/mountedStorageService';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { getLogger, Logger } from '../../../common/log';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { AzureBlobConfig } from '../../../common/experimentConfig';
 
 const INSTALL_BLOBFUSE = `
 #!/bin/bash
@@ -50,31 +50,6 @@ else
 fi
 `
 
-class AzureBlobSharedStorageConfig implements SharedStorageConfig {
-    public storageType: SharedStorageType;
-    public localMountPoint?: string;
-    public remoteMountPoint: string;
-
-    public resourceGroupName?: string;
-    public storageAccountName: string;
-    public storageAccountKey?: string;
-    public containerName: string;
-
-    public localMounted: LocalMountedType;
-
-    constructor(storageType: SharedStorageType,  remoteMountPoint: string, storageAccountName: string, containerName: string,
-                localMounted: LocalMountedType, localMountPoint?: string, resourceGroupName?: string, storageAccountKey?: string) {
-        this.storageType = storageType;
-        this.localMountPoint = localMountPoint;
-        this.remoteMountPoint = remoteMountPoint;
-        this.resourceGroupName = resourceGroupName;
-        this.storageAccountName = storageAccountName;
-        this.storageAccountKey = storageAccountKey;
-        this.containerName = containerName;
-        this.localMounted = localMounted;
-    }
-}
-
 export class AzureBlobSharedStorageService extends SharedStorageService {
     private log: Logger;
     private internalStorageService: MountedStorageService;
@@ -95,36 +70,33 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
         this.experimentId = getExperimentId();
     }
 
-    public async config(key: string, value: string): Promise<void> {
-        if (key === TrialConfigMetadataKey.SHARED_STORAGE_CONFIG) {
-            const azureblobConfig = <AzureBlobSharedStorageConfig>JSON.parse(value);
-            this.localMountPoint = azureblobConfig.localMountPoint;
-            this.remoteMountPoint = azureblobConfig.remoteMountPoint;
+    public async config(azureblobConfig: AzureBlobConfig): Promise<void> {
+        this.localMountPoint = azureblobConfig.localMountPoint;
+        this.remoteMountPoint = azureblobConfig.remoteMountPoint;
 
-            this.storageType = azureblobConfig.storageType;
-            this.storageAccountName = azureblobConfig.storageAccountName;
-            this.containerName = azureblobConfig.containerName;
-            if (azureblobConfig.storageAccountKey !== undefined) {
-                this.storageAccountKey =azureblobConfig.storageAccountKey;
-            } else if (azureblobConfig.resourceGroupName !== undefined) {
-                await this.setAccountKey(azureblobConfig.resourceGroupName);
-            } else {
-                const errorMessage = `${this.storageType} Shared Storage: must set one of 'storageAccountKey' or 'resourceGroupName'.`;
-                this.log.error(errorMessage);
-                return Promise.reject(errorMessage);
-            }
+        this.storageType = azureblobConfig.storageType as SharedStorageType;
+        this.storageAccountName = azureblobConfig.storageAccountName;
+        this.containerName = azureblobConfig.containerName;
+        if (azureblobConfig.storageAccountKey !== undefined) {
+            this.storageAccountKey =azureblobConfig.storageAccountKey;
+        } else if (azureblobConfig.resourceGroupName !== undefined) {
+            await this.setAccountKey(azureblobConfig.resourceGroupName);
+        } else {
+            const errorMessage = `${this.storageType} Shared Storage: must set one of 'storageAccountKey' or 'resourceGroupName'.`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
 
-            if (azureblobConfig.localMounted === 'nnimount') {
-                await this.helpLocalMount();
-            } else if (azureblobConfig.localMounted === 'nomount') {
-                const errorMessage = `${this.storageType} Shared Storage: ${this.storageType} not Support 'nomount' yet.`;
-                this.log.error(errorMessage);
-                return Promise.reject(errorMessage);
-            }
+        if (azureblobConfig.localMounted === 'nnimount') {
+            await this.helpLocalMount();
+        } else if (azureblobConfig.localMounted === 'nomount') {
+            const errorMessage = `${this.storageType} Shared Storage: ${this.storageType} not Support 'nomount' yet.`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
 
-            if (this.canLocalMounted && this.localMountPoint) {
-                this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
-            }
+        if (this.canLocalMounted && this.localMountPoint) {
+            this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         }
     }
 

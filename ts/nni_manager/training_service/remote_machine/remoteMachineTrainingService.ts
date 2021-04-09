@@ -25,13 +25,10 @@ import {
 import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../common/experimentConfig';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary, ScheduleResultType } from '../common/gpuData';
-import { TrialConfig } from '../common/trialConfig';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { execMkdir, validateCodeDir } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 import {
-    ExecutorManager, RemoteMachineMeta,
-    RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
+    ExecutorManager, RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
 
@@ -307,8 +304,8 @@ class RemoteMachineTrainingService implements TrainingService {
         }
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> { }
-    public async getClusterMetadata(_key: string): Promise<string> { return ""; }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
+    public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     /**
      * cleanup() has a time out of 10s to clean remote connections

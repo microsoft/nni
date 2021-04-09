@@ -55,7 +55,7 @@ describe('Unit test for nnimanager', function () {
         assessor: {
             name: 'Medianstop'
         },
-        trialCommand: 'echo hello',
+        trialCommand: 'sleep 2',
         trialCodeDirectory: '',
         debug: true
     }
@@ -78,7 +78,7 @@ describe('Unit test for nnimanager', function () {
         assessor: {
             name: 'Medianstop'
         },
-        trialCommand: 'echo hello',
+        trialCommand: 'sleep 2',
         trialCodeDirectory: '',
         debug: true
     }
@@ -128,7 +128,6 @@ describe('Unit test for nnimanager', function () {
         manager.trainingService.cleanUp();
 
         manager.trainingService = new MockedTrainingService();
-        manager.stopExperiment = () => manager.trainingService.cleanUp();
     })
 
     after(async () => {

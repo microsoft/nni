@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
 import logging
 
 from .common import ExperimentConfig, AlgorithmConfig, CustomAlgorithmConfig
@@ -33,7 +34,7 @@ def to_v2(v1) -> ExperimentConfig:
     _deprecate(v1, v2, 'versionCheck')
     _move_field(v1, v2, 'logLevel', 'log_level')
     _deprecate(v1, v2, 'logCollection')
-    _drop_field(v1, 'useAnnotation')  # TODO: how to handle annotation in nni.Experiment?
+    v1.pop('useAnnotation', None)  # TODO: how to handle annotation in nni.Experiment?
 
     if 'trial' in v1:
         v1_trial = v1.pop('trial')
@@ -165,7 +166,7 @@ def to_v2(v1) -> ExperimentConfig:
         for role_name in [ps_name, 'worker']:
             if role_name not in v1_trial:
                 continue
-            v1_role = v1_trial.pop(role)
+            v1_role = v1_trial.pop(role_name)
             v2_role = KubeflowRoleConfig()
             if role_name == 'worker':
                 ts.worker = v2_role
@@ -185,7 +186,6 @@ def to_v2(v1) -> ExperimentConfig:
         fc_config = v1.pop('frameworkcontroller')
         _deprecate(fc_config, v2, 'serviceAccountName')
 
-        # FIXME: use storage service
         storage_name = fc_config.pop('storage', None)
         if storage_name is None:
             storage_name = 'nfs' if 'nfs' in fc_config else 'azureStorage'
@@ -221,10 +221,20 @@ def to_v2(v1) -> ExperimentConfig:
             _move_field(v1_role, v2_role, 'cpuNum', 'cpu_number')
             v2_role.memory_size = str(v1_role.pop('memoryMB')) + 'mb'
             _move_field(v1_role, v2_role, 'image', 'docker_image')
-            _deprecate_field(v1_role, v2, 'privateRegistryAuthPath')
+            _deprecate(v1_role, v2, 'privateRegistryAuthPath')
             assert not v1_role, v1_role
 
     # hybrid mode should always use v2 schema, so no need to handle here
+
+    v1_storage = v1.pop('sharedStorage', None)
+    if v1_storage:
+        type_ = v1_storage.pop('storageType')
+        if type_ == 'NFS':
+            v2.shared_storage = NfsConfig(**v1_storage)
+        elif type_ == 'AzureBlob':
+            v2.shared_storage = AzureBlobConfig(**v1_storage)
+        else:
+            raise ValueError(f'bad storage type: {type_}')
 
     assert not v1_trial, v1_trial
     assert not v1, v1
@@ -241,6 +251,7 @@ def _drop_field(v1, key):
         logging.warning(f'Configuration field {key} is no longer supported and has been ignored')
         v1.pop(key)
 
+# NOTE: fields not yet supported by v2 are also (temporarily) placed here
 def _deprecate(v1, v2, key):
     if key in v1:
         if v2._deprecated is None:

@@ -69,7 +69,7 @@ export interface AmlConfig extends TrainingServiceConfig {
 
 /* Kubeflow */
 
-// FIXME: use storage config instead
+// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
     storage: string;
     server?: string;
@@ -121,6 +121,28 @@ export interface FrameworkControllerConfig extends TrainingServiceConfig {
     taskRoles: FrameworkControllerRoleConfig[];
 }
 
+/* shared storage */
+
+export interface SharedStorageConfig {
+    storageType: string;
+    localMountPoint: string;
+    remoteMountPoint: string;
+    localMounted: string;
+}
+
+export interface NfsConfig extends SharedStorageConfig {
+    storageType: 'NFS';
+    nfsServer: string;
+    exportedDirectory: string;
+}
+
+export interface AzureBlobConfig extends SharedStorageConfig {
+    storageAccountName: string;
+    storageAccountKey?: string;
+    resourceGroupName?: string;
+    containerName: string;
+}
+
 /* common */
 
 export interface AlgorithmConfig {
@@ -149,7 +171,8 @@ export interface ExperimentConfig {
     assessor?: AlgorithmConfig;
     advisor?: AlgorithmConfig;
     trainingService: TrainingServiceConfig | TrainingServiceConfig[];
-    deprecated?: any;  // configs that are not yet natively supported by v2, dirty workaround
+    sharedStorage?: SharedStorageConfig;
+    deprecated?: any;  // configs that are not yet natively supported by v2 (workaround)
 }
 
 /* util functions */
