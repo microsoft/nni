@@ -1,13 +1,3 @@
-'''Script for ENAS retrain in nni using pytorch
-Author: jiaojiaoye2016@gmail.com
-
-Env:
-* nni 1.9
-* torch 1.4
-* linux
-* local
-'''
-#
 import os
 import logging
 import random
@@ -28,7 +18,6 @@ from utils import accuracy, reward_accuracy
 from nni.nas.pytorch.utils import AverageMeterGroup, to_device
 import json
 
-# TODO:
 def set_random_seed(seed):
     # logger.info("set random seed for data reading: {}".format(seed))
     random.seed(seed)
@@ -41,7 +30,7 @@ def set_random_seed(seed):
         torch.backends.cudnn.deterministic = True
 
 
-# TODO: parser args
+# parser args
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument(
@@ -195,7 +184,6 @@ def eval_once(child_model, device, eval_set, criterion, valid_dataloader=None, t
         logger.info("Error in calculating final_acc")
     return final_acc, loss
 
-# TODO: learning rate scheduler
 def update_lr(
         optimizer,
         epoch,
@@ -258,7 +246,7 @@ def train(child_model, device, output_dir='./output'):
     num_epochs = FLAGS.num_epochs
     child_grad_bound = FLAGS.child_grad_bound #5.0
     child_l2_reg = FLAGS.child_l2_reg #3e-6
-    child_lr_max = FLAGS.child_lr_max #0.002 ???TODO
+    child_lr_max = FLAGS.child_lr_max #0.002
     child_lr_min = FLAGS.child_lr_min #0.001
     child_lr_decay_scheme = FLAGS.child_lr_decay_scheme
     child_lr_T_0 = FLAGS.child_lr_T_0 # 10
@@ -306,7 +294,6 @@ def train(child_model, device, output_dir='./output'):
     best_acc = 0
     start_epoch = 0
 
-    # TODO: load checkpoints
     # load model
     if FLAGS.load_checkpoint:
         print('** Load model **')
@@ -411,7 +398,6 @@ def dump_global_result(res_path,global_result, sort_keys = False):
 def main():
     parse_args()
 
-    os.environ['CUDA_VISIBLE_DEVICES'] = '4'
     device = torch.device("cuda" if FLAGS.is_cuda else "cpu")
 
     set_random_seed(FLAGS.global_seed)
