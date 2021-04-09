@@ -98,6 +98,7 @@ hybrid:
     gpuNum: 0
   trainingServicePlatform: hybrid
   hybridConfig:
+    # TODO: Add more platforms
     trainingServicePlatforms:
       - remote
       - local
