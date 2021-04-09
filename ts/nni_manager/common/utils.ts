@@ -9,6 +9,7 @@ import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
 import * as fs from 'fs';
+import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
 import * as lockfile from 'lockfile';
@@ -340,11 +341,9 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess {
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any, newShell: boolean = true, isDetached: boolean = false): ChildProcess {
     let cmd: string = command;
     let arg: string[] = [];
-    let newShell: boolean = true;
-    let isDetached: boolean = false;
     if (process.platform === "win32") {
         cmd = command.split(" ", 1)[0];
         arg = command.substr(cmd.length + 1).split(" ");
@@ -449,8 +448,45 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
     return result;
 }
 
+async function isPortOpen(host: string, port: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        try{
+            const stream = net.createConnection(port, host);
+            const id = setTimeout(() => {
+                stream.destroy();
+                resolve(false);
+            }, 1000);
+
+            stream.on('connect', () => {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(true);
+            });
+
+            stream.on('error', () => {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(false);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+async function getFreePort(host: string, start: number, end: number): Promise<number> {
+    if (start > end) {
+        throw new Error(`no more free port`);
+    }
+    if (await isPortOpen(host, start)) {
+        return await getFreePort(host, start + 1, end);
+    } else {
+        return start;
+    }
+}
+
 export {
     countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

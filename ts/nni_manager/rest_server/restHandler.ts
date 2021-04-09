@@ -13,6 +13,7 @@ import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
+import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardManager';
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
@@ -23,11 +24,13 @@ class NNIRestHandler {
     private restServer: NNIRestServer;
     private nniManager: Manager;
     private experimentsManager: ExperimentManager;
+    private tensorboardManager: TensorboardManager;
     private log: Logger;
 
     constructor(rs: NNIRestServer) {
         this.nniManager = component.get(Manager);
         this.experimentsManager = component.get(ExperimentManager);
+        this.tensorboardManager = component.get(TensorboardManager);
         this.restServer = rs;
         this.log = getLogger();
     }
@@ -64,6 +67,12 @@ class NNIRestHandler {
         this.getTrialLog(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
+        this.startTensorboardTask(router);
+        this.getTensorboardTask(router);
+        this.updateTensorboardTask(router);
+        this.stopTensorboardTask(router);
+        this.stopAllTensorboardTask(router);
+        this.listTensorboardTask(router);
         this.stop(router);
 
         // Express-joi-validator configuration
@@ -312,6 +321,67 @@ class NNIRestHandler {
         router.get('/experiments-info', (req: Request, res: Response) => {
             this.experimentsManager.getExperimentsInfo().then((experimentInfo: JSON) => {
                 res.send(JSON.stringify(experimentInfo));
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private startTensorboardTask(router: Router): void {
+        router.post('/tensorboard', (req: Request, res: Response) => {
+            this.tensorboardManager.startTensorboardTask(req.body).then((taskDetail: TensorboardTaskInfo) => {
+                this.log.info(taskDetail);
+                res.send(Object.assign({}, taskDetail));
+            }).catch((err: Error) => {
+                this.handleError(err, res, false, 400);
+            });
+        });
+    }
+
+    private getTensorboardTask(router: Router): void {
+        router.get('/tensorboard/:id', (req: Request, res: Response) => {
+            this.tensorboardManager.getTensorboardTask(req.params.id).then((taskDetail: TensorboardTaskInfo) => {
+                res.send(Object.assign({}, taskDetail));
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private updateTensorboardTask(router: Router): void {
+        router.put('/tensorboard/:id', (req: Request, res: Response) => {
+            this.tensorboardManager.updateTensorboardTask(req.params.id).then((taskDetail: TensorboardTaskInfo) => {
+                res.send(Object.assign({}, taskDetail));
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private stopTensorboardTask(router: Router): void {
+        router.delete('/tensorboard/:id', (req: Request, res: Response) => {
+            this.tensorboardManager.stopTensorboardTask(req.params.id).then((taskDetail: TensorboardTaskInfo) => {
+                res.send(Object.assign({}, taskDetail));
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private stopAllTensorboardTask(router: Router): void {
+        router.delete('/tensorboard-tasks', (req: Request, res: Response) => {
+            this.tensorboardManager.stopAllTensorboardTask().then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private listTensorboardTask(router: Router): void {
+        router.get('/tensorboard-tasks', (req: Request, res: Response) => {
+            this.tensorboardManager.listTensorboardTasks().then((taskDetails: TensorboardTaskInfo[]) => {
+                res.send(taskDetails);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });

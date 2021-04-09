@@ -108,6 +108,9 @@ abstract class Manager {
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;
+
+    public abstract getTrialOutputLocalPath(trialJobId: string): Promise<string>;
+    public abstract fetchTrialOutput(trialJobId: string, subpath: string): Promise<void>;
 }
 
 export { Manager, ExperimentParams, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

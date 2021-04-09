@@ -189,4 +189,12 @@ export class MockedNNIManager extends Manager {
 
         return Promise.resolve([job1, job2]);
     }
+
+    public async getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public async fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
