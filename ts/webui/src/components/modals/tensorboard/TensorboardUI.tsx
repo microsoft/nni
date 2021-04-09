@@ -112,7 +112,7 @@ function TensorboardUI(props): any {
     return (
         <React.Fragment>
             <DefaultButton
-                text='TensorBoardcc'
+                text='TensorBoard'
                 className='elementMarginLeft'
                 split
                 splitButtonAriaLabel='See 2 options'
