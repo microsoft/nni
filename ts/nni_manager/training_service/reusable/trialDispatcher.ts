@@ -906,6 +906,29 @@ class TrialDispatcher implements TrainingService {
         this.useSharedStorage = true;
         return Promise.resolve();
     }
+
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        // TODO: support non shared storage
+        if (this.useSharedStorage) {
+            const localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+            return Promise.resolve(path.join(localWorkingRoot, 'trials', trialJobId));
+        } else {
+            return Promise.reject(new Error('Only support shared storage right now.'));
+        }
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string | undefined): Promise<void> {
+        // TODO: support non shared storage
+        let trialLocalPath = await this.getTrialOutputLocalPath(trialJobId);
+        if (subpath !== undefined) {
+            trialLocalPath = path.join(trialLocalPath, subpath);
+        }
+        if (fs.existsSync(trialLocalPath)) {
+            return Promise.resolve();
+        } else {
+            return Promise.reject(new Error('Trial local path not exist.'));
+        }
+    }
 }
 
 export { TrialDispatcher };

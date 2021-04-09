@@ -18,6 +18,8 @@ import { MockedTrainingService } from '../../core/test/mockedTrainingService';
 import { NNIRestServer } from '../nniRestServer';
 import { testManagerProvider } from './mockedNNIManager';
 import { testExperimentManagerProvider } from './mockedExperimentManager';
+import { TensorboardManager } from '../../common/tensorboardManager';
+import { NNITensorboardManager } from '../../core/nniTensorboardManager';
 
 describe('Unit test for rest server', () => {
 
@@ -28,7 +30,8 @@ describe('Unit test for rest server', () => {
         Container.bind(Manager).provider(testManagerProvider);
         Container.bind(DataStore).to(MockedDataStore);
         Container.bind(TrainingService).to(MockedTrainingService);
-        Container.bind(ExperimentManager).provider(testExperimentManagerProvider)
+        Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
+        Container.bind(TensorboardManager).to(NNITensorboardManager);
         const restServer: NNIRestServer = component.get(NNIRestServer);
         restServer.start().then(() => {
             ROOT_URL = `${restServer.endPoint}/api/v1/nni`;

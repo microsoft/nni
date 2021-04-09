@@ -594,6 +594,14 @@ class RemoteMachineTrainingService implements TrainingService {
 
         await executor.copyFileToRemote(localFilepath, executor.joinPath(trialWorkingFolder, fileName));
     }
+
+    public getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 
 export { RemoteMachineTrainingService };

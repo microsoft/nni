@@ -106,6 +106,20 @@ class RouterTrainingService implements TrainingService {
         }
         return await this.internalTrainingService.run();
     }
+
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        if (this.internalTrainingService === undefined) {
+            throw new Error("TrainingService is not assigned!");
+        }
+        return this.internalTrainingService.getTrialOutputLocalPath(trialJobId);
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        if (this.internalTrainingService === undefined) {
+            throw new Error("TrainingService is not assigned!");
+        }
+        return this.internalTrainingService.fetchTrialOutput(trialJobId, subpath);
+    }
 }
 
 export { RouterTrainingService };

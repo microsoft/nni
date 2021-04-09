@@ -487,6 +487,22 @@ class LocalTrainingService implements TrainingService {
         const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
     }
+
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        return Promise.resolve(path.join(this.rootDir, 'trials', trialJobId));
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string): Promise<void> {
+        let trialLocalPath = await this.getTrialOutputLocalPath(trialJobId);
+        if (subpath !== undefined) {
+            trialLocalPath = path.join(trialLocalPath, subpath);
+        }
+        if (fs.existsSync(trialLocalPath)) {
+            return Promise.resolve();
+        } else {
+            return Promise.reject(new Error('Trial local path not exist.'));
+        }
+    }
 }
 
 export { LocalTrainingService };

@@ -19,6 +19,8 @@ import { NNIManager } from '../nnimanager';
 import { SqlDB } from '../sqlDatabase';
 import { MockedTrainingService } from './mockedTrainingService';
 import { MockedDataStore } from './mockedDatastore';
+import { TensorboardManager } from '../../common/tensorboardManager';
+import { NNITensorboardManager } from '../../core/nniTensorboardManager';
 import * as path from 'path';
 
 async function initContainer(): Promise<void> {
@@ -27,6 +29,7 @@ async function initContainer(): Promise<void> {
     Container.bind(Database).to(SqlDB).scope(Scope.Singleton);
     Container.bind(DataStore).to(MockedDataStore).scope(Scope.Singleton);
     Container.bind(ExperimentManager).to(NNIExperimentsManager).scope(Scope.Singleton);
+    Container.bind(TensorboardManager).to(NNITensorboardManager).scope(Scope.Singleton);
     await component.get<DataStore>(DataStore).init();
 }
 

@@ -491,6 +491,14 @@ class PAITrainingService implements TrainingService {
         const filepath: string = path.join(directory, generateParamFileName(hyperParameters));
         await fs.promises.writeFile(filepath, hyperParameters.value, { encoding: 'utf8' });
     }
+
+    public getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 
 export { PAITrainingService };
