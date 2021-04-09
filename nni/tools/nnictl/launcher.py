@@ -331,7 +331,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     if config_version == 1:
         platform = experiment_config['trainingServicePlatform']
     else:
-        platofrm = experiment_config['trainingService']['platform']
+        platform = experiment_config['trainingService']['platform']
 
     rest_process, start_time = start_rest_server(args.port, platform, \
                                                  mode, experiment_id, foreground, log_dir, log_level)
@@ -422,7 +422,7 @@ def create_experiment(args):
 
     try:
         config = ExperimentConfig(_base_path=Path(config_path).parent, **config_yml)
-        experiment_config = config.json()
+        config_v2 = config.json()
     except Exception as error_v2:
         print_warning('Validation with V2 schema failed. Trying to convert from V1 format...')
         try:
@@ -435,10 +435,10 @@ def create_experiment(args):
         config_v2 = convert.to_v2(config_yml).json()
 
     try:
-        if getattr(config_v2.training_service, 'platform', None) in k8s_training_services:
+        if getattr(config_v2['trainingService'], 'platform', None) in k8s_training_services:
             launch_experiment(args, config_yml, 'new', experiment_id, 1)
         else:
-            launch_experiment(args, experiment_config, 'new', experiment_id, 2)
+            launch_experiment(args, config_v2, 'new', experiment_id, 2)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
