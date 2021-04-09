@@ -7,7 +7,7 @@ import logging
 import json
 import base64
 
-from .runtime.common import enable_multi_thread, enable_multi_phase
+from .runtime.common import enable_multi_thread
 from .runtime.msg_dispatcher import MsgDispatcher
 from .tools.package_utils import create_builtin_class_instance, create_customized_class_instance
 
