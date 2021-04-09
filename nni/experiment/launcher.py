@@ -173,3 +173,4 @@ def get_stopped_experiment_config(exp_id: str, mode: str) -> None:
         return
     experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
     config = ExperimentConfig(**experiment_config)
+    return config
