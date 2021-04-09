@@ -468,8 +468,12 @@ def manage_stopped_experiment(args, mode):
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
     experiment_config = Config(experiment_id, experiments_dict[args.id]['logDir']).get_config()
     experiments_config.update_experiment(args.id, 'port', args.port)
+    assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
-        launch_experiment(args, experiment_config, mode, experiment_id)
+        if 'trainingService' in experiment_config:
+            launch_experiment(args, experiment_config, mode, experiment_id, 2)
+        else:
+            launch_experiment(args, experiment_config, mode, experiment_id, 1)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
