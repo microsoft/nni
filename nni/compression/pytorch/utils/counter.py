@@ -193,11 +193,11 @@ class ModelProfiler:
             # g = \tanh(W_{ig} x + b_{ig} + W_{hg} h + b_{hg}) \\
             total_ops *= 4
 
-            # c' = f * c + i * g 
+            # c' = f * c + i * g
             # hadamard hadamard add
             total_ops += hidden_size * 3
 
-            # h' = o * \tanh(c') 
+            # h' = o * \tanh(c')
             total_ops += hidden_size
 
         return total_ops
