@@ -80,7 +80,7 @@ def json2parameter(in_x, parameter, name=NodeType.ROOT):
                 }
             else:
                 if _type in ['quniform', 'qloguniform']:
-                    out_y = float(np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1])
+                    out_y = float(np.clip(parameter[name], in_x[NodeType.VALUE][0], in_x[NodeType.VALUE][1]))
                 elif _type == 'randint':
                     out_y = parameter[name] + in_x[NodeType.VALUE][0]
                 else:
