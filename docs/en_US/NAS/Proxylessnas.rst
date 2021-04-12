@@ -24,7 +24,7 @@ To use ProxylessNAS training/searching approach, users need to specify search sp
    trainer.train()
    trainer.export(args.arch_path)
 
-The complete example code can be found :githublink:`here <examples/nas/proxylessnas>`.
+The complete example code can be found :githublink:`here <examples/nas/oneshot/proxylessnas>`.
 
 **Input arguments of ProxylessNasTrainer**
 
@@ -56,7 +56,7 @@ Implementation
 
 The implementation on NNI is based on the `offical implementation <https://github.com/mit-han-lab/ProxylessNAS>`__. The official implementation supports two training approaches: gradient descent and RL based, and support different targeted hardware, including 'mobile', 'cpu', 'gpu8', 'flops'. In our current implementation on NNI, gradient descent training approach is supported, but has not supported different hardwares. The complete support is ongoing.
 
-Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in :githublink:`example code <examples/nas/proxylessnas>` using :githublink:`NNI NAS interface <nni/algorithms/nas/pytorch/proxylessnas>`.
+Below we will describe implementation details. Like other one-shot NAS algorithms on NNI, ProxylessNAS is composed of two parts: *search space* and *training approach*. For users to flexibly define their own search space and use built-in ProxylessNAS training approach, we put the specified search space in :githublink:`example code <examples/nas/oneshot/proxylessnas>` using :githublink:`NNI NAS interface <nni/algorithms/nas/pytorch/proxylessnas>`.
 
 .. image:: ../../img/proxylessnas.png
    :target: ../../img/proxylessnas.png

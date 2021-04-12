@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from pathlib import Path
+import tempfile
 import unittest
 
 import numpy as np
@@ -27,6 +29,9 @@ import tensorflow as tf
 # This tensor is used as input of 10x10 linear layer, the first dimension is batch size
 tensor1x10 = tf.constant([[1.0] * 10])
 
+# This tensor is used as input of CNN models
+image_tensor = tf.zeros([1, 10, 10, 3])
+
 
 @unittest.skipIf(tf.__version__[0] != '2', 'Skip TF 1.x setup')
 class TfCompressorTestCase(unittest.TestCase):
@@ -42,13 +47,37 @@ class TfCompressorTestCase(unittest.TestCase):
         layer_types = sorted(type(wrapper.layer).__name__ for wrapper in pruner.wrappers)
         assert layer_types == ['Conv2D', 'Dense', 'Dense'], layer_types
 
-    def test_level_pruner(self):
+    def test_level_pruner_and_export_correctness(self):
         # prune 90% : 9.0 + 9.1 + ... + 9.9 = 94.5
         model = build_naive_model()
-        pruners['level'](model).compress()
+        pruner = pruners['level'](model)
+        model = pruner.compress()
+
         x = model(tensor1x10)
         assert x.numpy() == 94.5
 
+        temp_dir = Path(tempfile.gettempdir())
+        pruner.export_model(temp_dir / 'model', temp_dir / 'mask')
+
+        # because exporting will uninstrument and re-instrument the model,
+        # we must test the model again
+        x = model(tensor1x10)
+        assert x.numpy() == 94.5
+
+        # load and test exported model
+        exported_model = tf.keras.models.load_model(temp_dir / 'model')
+        x = exported_model(tensor1x10)
+        assert x.numpy() == 94.5
+
+    def test_export_not_crash(self):
+        for model in [CnnModel(), build_sequential_model()]:
+            pruner = pruners['level'](model)
+            model = pruner.compress()
+            # cannot use model.build(image_tensor.shape) here
+            # it fails even without compression
+            # seems TF's bug, not ours
+            model(image_tensor)
+            pruner.export_model(tempfile.TemporaryDirectory().name)
 
 try:
     from tensorflow.keras import Model, Sequential

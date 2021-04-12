@@ -165,7 +165,7 @@ class CreamSupernetTrainer(Trainer):
                 (val_prec1,
                  prec1,
                  flops,
-                 self.current_teacher_arch,
+                 self.current_student_arch,
                  training_data,
                  torch.nn.functional.softmax(
                      features,
@@ -174,8 +174,6 @@ class CreamSupernetTrainer(Trainer):
                 self.prioritized_board, reverse=True)
 
         if len(self.prioritized_board) > self.pool_size:
-            self.prioritized_board = sorted(
-                self.prioritized_board, reverse=True)
             del self.prioritized_board[-1]
 
     # only update student network weights

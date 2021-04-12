@@ -5,7 +5,7 @@ import nni.retiarii.strategy as strategy
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn.functional as F
 from nni.retiarii import serialize
-from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
+from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment, debug_mutated_model
 from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
@@ -42,6 +42,10 @@ if __name__ == '__main__':
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=2)
 
+    # uncomment the following two lines to debug a generated model
+    #debug_mutated_model(base_model, trainer, [])
+    #exit(0)
+
     simple_strategy = strategy.Random()
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
@@ -49,7 +53,10 @@ if __name__ == '__main__':
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'
     exp_config.trial_concurrency = 2
-    exp_config.max_trial_number = 10
+    exp_config.max_trial_number = 2
     exp_config.training_service.use_active_gpu = False
 
     exp.run(exp_config, 8081 + random.randint(0, 100))
+    print('Final model:')
+    for model_code in exp.export_top_models():
+        print(model_code)

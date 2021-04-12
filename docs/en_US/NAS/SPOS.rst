@@ -13,7 +13,7 @@ Examples
 
 Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
 
-:githublink:`Example code <examples/nas/spos>`
+:githublink:`Example code <examples/nas/oneshot/spos>`
 
 Requirements
 ^^^^^^^^^^^^

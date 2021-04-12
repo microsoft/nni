@@ -4,11 +4,17 @@
 import json
 import logging
 import os
+
 import netifaces
-from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_registered_algo_meta
-from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
+from nni.tools.package_utils import (
+    create_validator_instance,
+    get_all_builtin_names,
+    get_registered_algo_meta,
+)
+from schema import And, Optional, Or, Regex, Schema, SchemaError
+
 from .common_utils import get_yml_content, print_warning
+from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
 
 
 def setType(key, valueType):
@@ -183,9 +189,9 @@ pai_yarn_trial_schema = {
         Optional('virtualCluster'): setType('virtualCluster', str),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('portList'): [{
-            "label": setType('label', str),
-            "beginAt": setType('beginAt', int),
-            "portNumber": setType('portNumber', int)
+            'label': setType('label', str),
+            'beginAt': setType('beginAt', int),
+            'portNumber': setType('portNumber', int)
         }]
     }
 }
@@ -376,7 +382,7 @@ kubeflow_config_schema = {
 frameworkcontroller_trial_schema = {
     'trial': {
         'codeDir':  setPathCheck('codeDir'),
-        'taskRoles': [{
+        Optional('taskRoles'): [{
             'name': setType('name', str),
             'taskNum': setType('taskNum', int),
             'frameworkAttemptCompletionPolicy': {
@@ -395,14 +401,22 @@ frameworkcontroller_trial_schema = {
 
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig': Or({
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
-        }
+        },
+        Optional('namespace'): setType('namespace', str),
+        Optional('configPath'): setType('configPath', str),
     }, {
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
+        Optional('serviceAccountName'): setType('serviceAccountName', str),
+        'configPath': setType('configPath', str),
+        'pvc': {'path': setType('server', str)},
+        Optional('namespace'): setType('namespace', str),
+    }, {
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
             'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
@@ -416,7 +430,9 @@ frameworkcontroller_config_schema = {
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
                               error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
-        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
+        Optional('namespace'): setType('namespace', str),
+        Optional('configPath'): setType('configPath', str),
     })
 }
 
@@ -479,6 +495,7 @@ class NNIConfigSchema:
         self.validate_kubeflow_operators(experiment_config)
         self.validate_eth0_device(experiment_config)
         self.validate_hybrid_platforms(experiment_config)
+        self.validate_frameworkcontroller_trial_config(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -588,7 +605,7 @@ class NNIConfigSchema:
                 and not experiment_config.get('nniManagerIp') \
                 and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
-    
+
     def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {
             'remote': 'machineList',
@@ -600,4 +617,25 @@ class NNIConfigSchema:
                 config_name = required_config_name_map.get(platform)
                 if config_name and not experiment_config.get(config_name):
                     raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
-                
+
+    def validate_frameworkcontroller_trial_config(self, experiment_config):
+        if experiment_config.get('trainingServicePlatform') == 'frameworkcontroller':
+            if not experiment_config.get('trial').get('taskRoles'):
+                if not experiment_config.get('frameworkcontrollerConfig').get('configPath'):
+                    raise SchemaError("""If no taskRoles are specified a valid custom frameworkcontroller config should
+                                         be set using the configPath attribute in frameworkcontrollerConfig!""")
+                config_content = get_yml_content(experiment_config.get('frameworkcontrollerConfig').get('configPath'))
+                if not config_content.get('spec').get('taskRoles') or not len(config_content.get('spec').get('taskRoles')):
+                    raise SchemaError('Invalid frameworkcontroller config! No taskRoles were specified!')
+                if not config_content.get('spec').get('taskRoles')[0].get('task'):
+                    raise SchemaError('Invalid frameworkcontroller config! No task was specified for taskRole!')
+                names = []
+                for taskRole in config_content.get('spec').get('taskRoles'):
+                    if not "name" in taskRole:
+                        raise SchemaError('Invalid frameworkcontroller config! Name is missing for taskRole!')
+                    names.append(taskRole.get("name"))
+                if len(names) > len(set(names)):
+                    raise SchemaError('Invalid frameworkcontroller config! Duplicate taskrole names!')
+                if not config_content.get('metadata').get('name'):
+                    raise SchemaError('Invalid frameworkcontroller config! No experiment name was specified!')
+

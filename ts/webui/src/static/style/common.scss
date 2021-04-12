@@ -1,3 +1,5 @@
+$themeBlue: #0071bc;
+
 .ellipsis {
     overflow: hidden;
     white-space: nowrap;
@@ -28,17 +30,46 @@
 }
 
 .idCopy {
-	.ms-Button--icon {
-		width: 18px;
-    	height: 18px;
-		margin-left: 4px;
-	}
+    .ms-Button--icon {
+        width: 18px;
+        height: 18px;
+        margin-left: 4px;
+    }
 
     i {
-        color: #33333C;
+        color: #33333c;
     }
 }
 
 .ms-DetailsRow {
     height: 32px;
+}
+
+/* for graph tooltip style */
+.graph > div > div {
+    padding: 0 !important;
+    border: none !important;
+}
+
+.elementMarginLeft {
+    margin-left: 10px;
+}
+
+.operationBtn {
+    i {
+        color: $themeBlue;
+    }
+}
+
+/* for table row border */
+.ms-List-cell {
+    border-bottom: 1px solid #eeecea;
+}
+
+.line-height {
+    line-height: 30px;
+}
+
+.bold {
+    font-weight: bold;
 }

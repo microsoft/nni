@@ -75,6 +75,7 @@ class Experiment:
         self.id: Optional[str] = None
         self.port: Optional[int] = None
         self._proc: Optional[Popen] = None
+        self.mode = 'new'
 
         args = [config, training_service]  # deal with overloading
         if isinstance(args[0], (str, list)):
@@ -101,7 +102,10 @@ class Experiment:
         """
         atexit.register(self.stop)
 
-        self.id = management.generate_experiment_id()
+        if self.mode == 'new':
+            self.id = management.generate_experiment_id()
+        else:
+            self.config = launcher.get_stopped_experiment_config(self.id, self.mode)
 
         if self.config.experiment_working_directory is not None:
             log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
@@ -109,7 +113,7 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.id, self.config, port, debug)
+        self._proc = launcher.start_experiment(self.id, self.config, port, debug, mode=self.mode)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -188,6 +192,42 @@ class Experiment:
             experiment._proc = psutil.Process(pid)
         _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, experiment.id, status)
         return experiment
+
+    @classmethod
+    def resume(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+        """
+        Resume a stopped experiment.
+
+        Parameters
+        ----------
+        experiment_id
+            The stopped experiment id.
+        """
+        experiment = Experiment()
+        experiment.mode = 'resume'
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
+
+    @classmethod
+    def view(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+        """
+        View a stopped experiment.
+
+        Parameters
+        ----------
+        experiment_id
+            The stopped experiment id.
+        """
+        experiment = Experiment()
+        experiment.mode = 'view'
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
 
     def get_status(self) -> str:
         """
