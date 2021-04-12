@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import os
-import json
+import json_tricks
 import shutil
 import sqlite3
 import time
@@ -92,7 +92,7 @@ class Config:
         '''refresh to get latest config'''
         sql = 'select params from ExperimentProfile where id=? order by revision DESC'
         args = (self.experiment_id,)
-        self.config = config_v0_to_v1(json.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
+        self.config = config_v0_to_v1(json_tricks.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
 
     def get_config(self):
         '''get a value according to key'''
@@ -155,7 +155,7 @@ class Experiments:
         '''save config to local file'''
         try:
             with open(self.experiment_file, 'w') as file:
-                json.dump(self.experiments, file, indent=4)
+                json_tricks.dump(self.experiments, file, indent=4)
         except IOError as error:
             print('Error:', error)
             return ''
@@ -165,7 +165,7 @@ class Experiments:
         if os.path.exists(self.experiment_file):
             try:
                 with open(self.experiment_file, 'r') as file:
-                    return json.load(file)
+                    return json_tricks.load(file)
             except ValueError:
                 return {}
         return {}

@@ -198,9 +198,9 @@ class NNIManager implements Manager {
     }
 
     public async resumeExperiment(readonly: boolean): Promise<void> {
-        this.log.info(`Resuming experiment: ${this.experimentProfile.id}`);
         //Fetch back the experiment profile
         const experimentId: string = getExperimentId();
+        this.log.info(`Resuming experiment: ${experimentId}`);
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         this.readonly = readonly;
         if (readonly) {

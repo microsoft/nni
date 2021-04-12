@@ -43,10 +43,9 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,
-                                     config.experiment_name, proc.pid, config.experiment_working_directory)
-        if mode != 'view':
-            _logger.info('Setting up...')
-            rest.post(port, '/experiment', config.json())
+                                     config.experiment_name, proc.pid, str(config.experiment_working_directory))
+        _logger.info('Setting up...')
+        rest.post(port, '/experiment', config.json())
         return proc
 
     except Exception as e:
