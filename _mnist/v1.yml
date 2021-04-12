@@ -1,0 +1,17 @@
+authorName: NNI Example
+experimentName: MNIST TF v2.x with assessor
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 50
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+useAnnotation: false
+tuner:
+  builtinTunerName: TPE
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
+debug: true

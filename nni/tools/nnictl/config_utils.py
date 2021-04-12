@@ -123,7 +123,7 @@ class Experiments:
             self.experiments[expId]['tag'] = tag
             self.experiments[expId]['pid'] = pid
             self.experiments[expId]['webuiUrl'] = webuiUrl
-            self.experiments[expId]['logDir'] = logDir
+            self.experiments[expId]['logDir'] = str(logDir)
             self.write_file()
 
     def update_experiment(self, expId, key, value):
