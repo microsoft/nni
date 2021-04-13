@@ -106,6 +106,12 @@ Please refer to `example usage <./python_api_connect.rst>`__ and code file :gith
 
 .. Note:: You can use ``stop()`` to stop the experiment when connecting to an existing experiment.
 
+Resume/View and Manage a Stopped Experiment
+-------------------------------------------
+
+You can use ``Experiment.resume()`` and ``Experiment.view()`` to resume and view a stopped experiment, these functions behave like ``nnictl resume`` and ``nnictl view``.
+If you want to manage the experiment, set ``wait_completion`` as ``False`` and the functions will return an ``Experiment`` instance. For more parameters, please refer to API.
+
 API
 ---
 
