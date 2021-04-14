@@ -146,6 +146,10 @@ class LinuxCommands extends OsCommands {
     public fileExistCommand(filePath: string): string {
         return `test -e ${filePath} && echo True || echo False`;
     }
+
+    public getHomePath(): string {
+        return `pwd`;
+    }
 }
 
 export { LinuxCommands };

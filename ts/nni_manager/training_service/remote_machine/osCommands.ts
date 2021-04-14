@@ -30,6 +30,7 @@ abstract class OsCommands {
     public abstract executeScript(script: string, isFile: boolean): string;
     public abstract setPythonPath(pythonPath: string | undefined, command: string | undefined): string | undefined;
     public abstract fileExistCommand(filePath: string): string | undefined;
+    public abstract getHomePath(): string;
 
     public joinPath(...paths: string[]): string {
         let dir: string = paths.filter((path: any) => path !== '').join(this.pathSpliter);

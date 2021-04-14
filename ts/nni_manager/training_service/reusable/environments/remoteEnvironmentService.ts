@@ -238,7 +238,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
             const executor = await this.getExecutor(environment.id);
             if (environment.useSharedStorage) {
                 this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
+                if (!this.remoteExperimentRootDir.startsWith('/')) {
+                    this.remoteExperimentRootDir = executor.joinPath((await executor.getHomePath()).trim(), this.remoteExperimentRootDir);
+                }
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `).replace(/\\\$/g, `\\\\\\$`);
                 const result = await executor.executeScript(remoteMountCommand, false, false);
                 if (result.exitCode !== 0) {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);

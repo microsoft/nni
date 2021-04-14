@@ -134,6 +134,10 @@ class WindowsCommands extends OsCommands {
     public fileExistCommand(filePath: string): string {
         return `powershell Test-Path ${filePath} -PathType Leaf`;
     }
+
+    public getHomePath(): string {
+        return `chdir`;
+    }
 }
 
 export { WindowsCommands };
