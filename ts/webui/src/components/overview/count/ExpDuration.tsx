@@ -50,7 +50,7 @@ export const ExpDuration = (): any => (
                         <EditExpeParamContext.Provider
                             value={{
                                 editType: CONTROLTYPE[0],
-                                field: 'maxExecDuration',
+                                field: 'maxExperimentDuration',
                                 title: 'Max duration',
                                 maxExecDuration: maxExecDurationStr,
                                 maxTrialNum: EXPERIMENT.maxTrialNumber,
