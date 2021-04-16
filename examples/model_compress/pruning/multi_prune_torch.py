@@ -23,42 +23,68 @@ import nni
 _logger = logging.getLogger('mnist_example')
 _logger.setLevel(logging.INFO)
 
-def train(args, model, device, train_loader, optimizer, epoch):
-    model.train()
-    for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
-        optimizer.zero_grad()
-        output = model(data)
-        loss = F.nll_loss(output, target)
-        loss.backward()
-        optimizer.step()
-        if batch_idx % args.log_interval == 0:
-            print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-                epoch, batch_idx * len(data), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()))
-            if args.dry_run:
-                break
-                
+class Trainer:
+    def __init__(self, device, train_loader, test_loader, epochs, log_interval=10):
+        self.device = device
+        self.train_loader = train_loader
+        self.test_loader = test_loader
+        self.epochs = epochs
 
-def test(model, device, test_loader):
-    model.eval()
-    test_loss = 0
-    correct = 0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
+        self.log_interval = log_interval
+
+    def pretrain(self, model, optimizer):
+        print('start pre-training')
+        scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
+        for epoch in range(1, self.epochs + 1):
+            self.__train(model, optimizer, epoch)
+            self.__test(model)
+            scheduler.step()
+
+    def finetune(self, model, optimizer, pruner):
+        best_top1 = 0
+        for epoch in range(1, args.epochs + 1):
+            self.__train(model, optimizer, epoch)
+            top1 = self.__test(model)
+
+            if top1 > best_top1:
+                best_top1 = top1
+                # Export the best model, 'model_path' stores state_dict of the pruned model,
+                # mask_path stores mask_dict of the pruned model
+                pruner.export_model(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt')
+
+    def __train(self, model, optimizer, epoch):
+        model.train()
+        for batch_idx, (data, target) in enumerate(self.train_loader):
+            data, target = data.to(self.device), target.to(self.device)
+            optimizer.zero_grad()
             output = model(data)
-            test_loss += F.nll_loss(output, target, reduction='sum').item()
-            pred = output.argmax(dim=1, keepdim=True)
-            correct += pred.eq(target.view_as(pred)).sum().item()
+            loss = F.nll_loss(output, target)
+            loss.backward()
+            optimizer.step()
+            if batch_idx % self.log_interval == 0:
+                print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+                    epoch, batch_idx * len(data), len(self.train_loader.dataset),
+                    100. * batch_idx / len(self.train_loader), loss.item()))
 
-    test_loss /= len(test_loader.dataset)
-    acc = 100 * correct / len(test_loader.dataset)
+    def __test(self, model):
+        model.eval()
+        test_loss = 0
+        correct = 0
+        with torch.no_grad():
+            for data, target in self.test_loader:
+                data, target = data.to(self.device), target.to(self.device)
+                output = model(data)
+                test_loss += F.nll_loss(output, target, reduction='sum').item()
+                pred = output.argmax(dim=1, keepdim=True)
+                correct += pred.eq(target.view_as(pred)).sum().item()
 
-    print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
-        test_loss, correct, len(test_loader.dataset), acc))
+        test_loss /= len(self.test_loader.dataset)
+        acc = 100 * correct / len(self.test_loader.dataset)
 
-    return acc
+        print('\nTest set: Average loss: {:.4f}, Accuracy: {}/{} ({:.0f}%)\n'.format(
+            test_loss, correct, len(self.test_loader.dataset), acc))
+
+        return acc
 
 def main(args):
     torch.manual_seed(args.seed)
@@ -85,48 +111,61 @@ def main(args):
     train_loader = torch.utils.data.DataLoader(dataset1, **train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
 
+    epochs = args.epochs
+    log_interval = args.log_interval
+
+    trainer = Trainer(device, train_loader, test_loader, epochs, log_interval)
+
     model = LeNet().to(device)
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
 
-    print('start pre-training')
-    scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer, epoch)
-        test(model, device, test_loader)
-        scheduler.step()
+    trainer.pretrain(model, optimizer)
 
     torch.save(model.state_dict(), "pretrain_mnist_lenet.pt")
-
-    # model.load_state_dict(torch.load("pretrain_mnist_lenet.pt"))
 
     print('start pruning')
     optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01)
 
     # create pruner
+    configure_list = [{
+        'quant_types': ['weight'],
+        'quant_bits': {
+            'weight': 8,
+        },  # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
+        'op_types': ['Conv2d', 'Linear']
+    }, {
+        'quant_types': ['output'],
+        'quant_bits': 8,
+        'quant_start_step': 1000,
+        'op_types':['ReLU6']
+    }]
+
     prune_config = [
         {
-            'config_list': [{'sparsity': 0.9, 'op_types': ['default']}],
+            'config_list': [{'sparsity': args.sparsity, 'op_types': ['Linear']}],
             'pruner': {
                 'type': 'level',
+                'args': {}
+            }
+        },
+        {
+            'config_list': [{'sparsity': args.sparsity, 'op_types': ['Conv2d']}],
+            'pruner': {
+                'type': 'l1',
+                'args': {}
+            }
+        },
+        {
+            'config_list': configure_list,
+            'quantizer': {
+                'type': 'qat',
                 'args': {}
             }
         }
     ]
 
-    pruner = MultiCompressor(model, prune_config, optimizer_finetune)
+    pruner = MultiCompressor(model, prune_config, optimizer_finetune, trainer)
     model = pruner.compress()
-
-    # fine-tuning
-    best_top1 = 0
-    for epoch in range(1, args.epochs + 1):
-        train(args, model, device, train_loader, optimizer_finetune, epoch)
-        top1 = test(model, device, test_loader)
-
-        if top1 > best_top1:
-            best_top1 = top1
-            # Export the best model, 'model_path' stores state_dict of the pruned model,
-            # mask_path stores mask_dict of the pruned model
-            pruner.export_model(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt')
 
 if __name__ == '__main__':
      # Training settings
