@@ -411,6 +411,21 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             kill_command(rest_process.pid)
             print_normal('Stopping experiment...')
 
+def _validate_v1(config, path):
+    try:
+        validate_all_content(config, path)
+    except Exception as e:
+        print_error(f'Config V1 validation failed: {repr(e)}')
+        exit(1)
+
+def _validate_v2(config, path):
+    base_path = Path(path).parent
+    try:
+        conf = ExperimentConfig(_base_path=base_path, **config)
+        return conf.json()
+    except Exception as e:
+        print_error(f'Config V2 validation failed: {repr(e)}')
+
 def create_experiment(args):
     '''start a new experiment'''
     experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
@@ -420,23 +435,23 @@ def create_experiment(args):
         exit(1)
     config_yml = get_yml_content(config_path)
 
-    try:
-        config = ExperimentConfig(_base_path=Path(config_path).parent, **config_yml)
-        config_v2 = config.json()
-    except Exception as error_v2:
-        print_warning('Validation with V2 schema failed. Trying to convert from V1 format...')
-        try:
-            validate_all_content(config_yml, config_path)
-        except Exception as error_v1:
-            print_error(f'Convert from v1 format failed: {repr(error_v1)}')
-            print_error(f'Config in v2 format validation failed: {repr(error_v2)}')
-            exit(1)
-        from nni.experiment.config import convert
-        config_v2 = convert.to_v2(config_yml).json()
+    if 'trainingServicePlatform' in config_yml:
+        _validate_v1(config_yml, config_path)
+        platform = config_yml['trainingServicePlatform']
+        if platform in k8s_training_services:
+            schema = 1
+            config_v1 = config_yml
+        else:
+            schema = 2
+            from nni.experiment.config import convert
+            config_v2 = convert.to_v2(config_yml).json()
+    else:
+        config_v2 = _validate_v2(config_yml, config_path)
+        schema = 2
 
     try:
-        if getattr(config_v2['trainingService'], 'platform', None) in k8s_training_services:
-            launch_experiment(args, config_yml, 'new', experiment_id, 1)
+        if schema == 1:
+            launch_experiment(args, config_v1, 'new', experiment_id, 1)
         else:
             launch_experiment(args, config_v2, 'new', experiment_id, 2)
     except Exception as exception:
