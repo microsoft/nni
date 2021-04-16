@@ -101,13 +101,7 @@ export const EditExperimentParam = (): any => {
         }
         if (isMaxDuration) {
             const maxDura = JSON.parse(editInputVal);
-            if (unit === 'm') {
-                newProfile.params[field] = maxDura * 60;
-            } else if (unit === 'h') {
-                newProfile.params[field] = maxDura * 3600;
-            } else {
-                newProfile.params[field] = maxDura * 24 * 60 * 60;
-            }
+            newProfile.params[field] = `${maxDura}${unit}`;
         } else {
             newProfile.params[field] = parseInt(editInputVal, 10);
         }
@@ -162,7 +156,7 @@ export const EditExperimentParam = (): any => {
                     <EditExpeParamContext.Consumer>
                         {(value): React.ReactNode => {
                             let editClassName = '';
-                            if (value.field === 'maxExecDuration') {
+                            if (value.field === 'maxExperimentDuration') {
                                 editClassName = isShowPencil ? 'noEditDuration' : 'editDuration';
                             }
                             return (

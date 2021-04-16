@@ -89,7 +89,7 @@ export const TrialCount = (): any => {
                                 <EditExpeParamContext.Provider
                                     value={{
                                         title: MAX_TRIAL_NUMBERS,
-                                        field: 'maxTrialNum',
+                                        field: 'maxTrialNumber',
                                         editType: CONTROLTYPE[1],
                                         maxExecDuration: '',
                                         maxTrialNum: EXPERIMENT.maxTrialNumber,
