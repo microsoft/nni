@@ -135,7 +135,7 @@ class WindowsCommands extends OsCommands {
         return `powershell Test-Path ${filePath} -PathType Leaf`;
     }
 
-    public getHomePath(): string {
+    public getCurrentPath(): string {
         return `chdir`;
     }
 }

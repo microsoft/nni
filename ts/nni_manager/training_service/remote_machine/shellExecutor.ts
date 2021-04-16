@@ -169,8 +169,8 @@ class ShellExecutor {
         return this.tempPath;
     }
 
-    public async getHomePath(): Promise<string> {
-        const commandText = this.osCommands && this.osCommands.getHomePath();
+    public async getCurrentPath(): Promise<string> {
+        const commandText = this.osCommands && this.osCommands.getCurrentPath();
         const commandResult = await this.execute(commandText);
         if (commandResult.exitCode == 0) {
             return commandResult.stdout;

@@ -239,7 +239,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
             if (environment.useSharedStorage) {
                 this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
                 if (!this.remoteExperimentRootDir.startsWith('/')) {
-                    this.remoteExperimentRootDir = executor.joinPath((await executor.getHomePath()).trim(), this.remoteExperimentRootDir);
+                    this.remoteExperimentRootDir = executor.joinPath((await executor.getCurrentPath()).trim(), this.remoteExperimentRootDir);
                 }
                 const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `).replace(/\\\$/g, `\\\\\\$`);
                 const result = await executor.executeScript(remoteMountCommand, false, false);

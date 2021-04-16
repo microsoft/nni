@@ -147,7 +147,7 @@ class LinuxCommands extends OsCommands {
         return `test -e ${filePath} && echo True || echo False`;
     }
 
-    public getHomePath(): string {
+    public getCurrentPath(): string {
         return `pwd`;
     }
 }
