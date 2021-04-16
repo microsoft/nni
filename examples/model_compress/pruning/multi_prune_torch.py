@@ -165,7 +165,8 @@ def main(args):
     ]
 
     pruner = MultiCompressor(model, prune_config, optimizer_finetune, trainer)
-    model = pruner.compress()
+    model = pruner.compress(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt',
+                            calibration_path='calibration_mnist_lenet.pt', input_shape=[10, 1, 28, 28])
 
 if __name__ == '__main__':
      # Training settings
