@@ -202,8 +202,15 @@ class Experiment:
         ----------
         experiment_id
             The stopped experiment id.
+        port
+            The port of web UI.
+        wait_completion
+            If true, run in the foreground. If false, run in the background.
+        debug
+            Whether to start in debug mode.
         """
         experiment = Experiment()
+        experiment.id = experiment_id
         experiment.mode = 'resume'
         if wait_completion:
             experiment.run(port, debug)
@@ -212,7 +219,7 @@ class Experiment:
             return experiment
 
     @classmethod
-    def view(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+    def view(cls, experiment_id: str, port: int, wait_completion: bool = True):
         """
         View a stopped experiment.
 
@@ -220,8 +227,14 @@ class Experiment:
         ----------
         experiment_id
             The stopped experiment id.
+        port
+            The port of web UI.
+        wait_completion
+            If true, run in the foreground. If false, run in the background.
         """
+        debug = False
         experiment = Experiment()
+        experiment.id = experiment_id
         experiment.mode = 'view'
         if wait_completion:
             experiment.run(port, debug)
