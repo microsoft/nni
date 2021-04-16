@@ -5,6 +5,62 @@
 Change Log
 ==========
 
+Release 2.2 - 4/21/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural architecture search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Alpha Release)
+
+  * Support debug mode for easy debuggability (#3476)
+  * Support nesting ``ValueChoice`` in ``LayerChoice`` (#3508)
+  * Support dict/list type in ``ValueChoice`` (#3508)
+  * Improve the format of export architectures (#3464)
+  * Refactor of NAS examples (#3513)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+Model Compression
+"""""""""""""""""
+
+* Support speedup for mixed precision quantization model (Experimental) (#3488 #3512)
+* Support model export for quantization algorithm (#3458 #3473)
+* Support model export in model compression for TensorFlow (#3487)
+* Improve documentation (#3482)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Add native support for v2 config (#3466)
+* Add resume and view mode in nni.experiment (#3490 #3524)
+
+Training service
+""""""""""""""""
+
+* Support umount in remote training service for shared storage (#3456)
+* Support Windows as the remote training service in reuse mode (#3500)
+* Remove duplicated env folder in remote training service (#3472)
+* Add log information for GPU collector (#3506)
+
+WebUI
+"""""
+
+* Support launching TensorBoard on WebUI (#3454 #3361 #3531)
+* Minor improvements (#3457 #3461)
+
+Bug fixes
+^^^^^^^^^
+
+* Fix bug of FLOPs counter (#3497)
+* Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
+* Fix bug that monaco editor search text is not displayed completely (#3492)
+* Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
+* Fix typos in docs (#3448, thanks the external contributor @OliverShang)
+
+
 Release 2.1 - 3/10/2021
 -----------------------
 
@@ -289,7 +345,7 @@ Documentation
 * Fix several typos and grammar mistakes in documentation (#2637 #2638, thanks @tomzx)
 * Improve AzureML training service documentation (#2631)
 * Improve CI of Chinese translation (#2654)
-* Improve OpenPAI training service documenation (#2685)
+* Improve OpenPAI training service documentation (#2685)
 * Improve documentation of community sharing (#2640)
 * Add tutorial of Colab support (#2700)
 * Improve documentation structure for model compression (#2676)
