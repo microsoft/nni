@@ -49,7 +49,8 @@ WebUI
 """""
 
 * Support launching TensorBoard on WebUI (#3454 #3361 #3531)
-* Minor improvements (#3457 #3461)
+* Upgrade echarts-for-react to v5 (#3457)
+* Add wrap for dispatcher/nnimanager log monaco editor (#3461)
 
 Bug fixes
 ^^^^^^^^^
