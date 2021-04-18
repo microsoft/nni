@@ -720,7 +720,7 @@ class QuantGrad(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
-        output = quantize_helper(tensor, quant_type, wrapper, **kwargs)
+        output = quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
 
         bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
         qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
