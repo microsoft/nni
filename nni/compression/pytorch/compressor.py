@@ -744,11 +744,11 @@ def _check_weight(module):
     except AttributeError:
         return False
 
-def quantize_helper(tensor, quant_type, wrapper, **kwargs):
+def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
     if quant_type == QuantType.QUANT_INPUT:
         output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
     elif quant_type == QuantType.QUANT_WEIGHT:
-        output = wrapper.quantizer.quantize_weight(wrapper, **kwargs)
+        output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
     elif quant_type == QuantType.QUANT_OUTPUT:
         output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
     else:
@@ -762,5 +762,5 @@ class QuantForward(torch.nn.Module):
     that do not need to customize gradient.
     """
 
-    def forward(self, tensor, quant_type, wrapper, **kwargs):
-        return quantize_helper(tensor, quant_type, wrapper, **kwargs)
+    def forward(self, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+        return quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
