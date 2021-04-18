@@ -569,6 +569,25 @@ class LsqQuantizer(Quantizer):
        """
 
     def __init__(self, model, config_list, optimizer=None):
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+            the model to be quantized
+        config_list : list of dict
+            list of configurations for quantization
+            supported keys for dict:
+                - quant_types : list of string
+                    type of quantization you want to apply, currently support 'weight', 'input', 'output'
+                - quant_bits : int or dict of {str : int}
+                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
+                    when the type is int, all quantization types share same bits length
+                - quant_start_step : int
+                    disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
+                    state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
+                - op_types : list of string
+                    types of nn.module you want to apply quantization, eg. 'Conv2d'
+        """
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantForward()
         modules_to_compress = self.get_modules_to_compress()
