@@ -719,7 +719,7 @@ class QuantGrad(torch.autograd.Function):
         return grad_output
 
     @staticmethod
-    def forward(ctx, tensor, quant_type, wrapper, **kwargs):
+    def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
         output = quantize_helper(tensor, quant_type, wrapper, **kwargs)
 
         bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
