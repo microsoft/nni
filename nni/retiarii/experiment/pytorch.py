@@ -210,11 +210,13 @@ class RetiariiExperiment(Experiment):
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
-        Thread(target=self._check_exp_status).start()
+        exp_status_checker = Thread(target=self._check_exp_status)
+        exp_status_checker.start()
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         # _logger.info('Waiting for submitted trial jobs to finish...')
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
+        exp_status_checker.join()
 
     def _create_dispatcher(self):
         return self._dispatcher
