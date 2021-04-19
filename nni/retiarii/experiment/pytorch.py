@@ -165,7 +165,8 @@ class RetiariiExperiment(Experiment):
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
-        self._dispatcher.mark_experiment_as_ending()
+        # TODO: find out a proper way to show no more trial message on WebUI
+        #self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
