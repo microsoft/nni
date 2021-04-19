@@ -563,6 +563,10 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             }
         };
     }
+
+    public async updateTrialJob(_1: any, _2: any): Promise<TrialJobDetail> {
+        throw new Error('not supported');
+    }
 }
 
 export {FrameworkControllerTrainingService};

@@ -46,7 +46,7 @@ class RemoteMachineConfig(ConfigBase):
 @dataclass(init=False)
 class RemoteConfig(TrainingServiceConfig):
     platform: str = 'remote'
-    reuse_mode: bool = False
+    reuse_mode: bool = True
     machine_list: List[RemoteMachineConfig]
 
     def __init__(self, **kwargs):

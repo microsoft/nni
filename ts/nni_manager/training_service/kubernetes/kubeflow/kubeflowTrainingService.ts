@@ -463,5 +463,9 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             }
         }
     }
+
+    public async updateTrialJob(_1: any, _2: any): Promise<TrialJobDetail> {
+        throw new Error('not supported');
+    }
 }
 export { KubeflowTrainingService };

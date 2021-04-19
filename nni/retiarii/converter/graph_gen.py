@@ -6,7 +6,7 @@ import re
 import torch
 
 from ..graph import Graph, Model, Node
-from ..nn.pytorch import InputChoice, LayerChoice, Placeholder
+from ..nn.pytorch import InputChoice, Placeholder
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
 from ..utils import get_importable_name
@@ -343,7 +343,7 @@ class GraphConverter:
                         subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
                         if isinstance(submodule_obj, Placeholder):
                             subcell.update_label(submodule_obj.label)
-                        elif isinstance(submodule_obj, (LayerChoice, InputChoice)):
+                        elif isinstance(submodule_obj, InputChoice):
                             subcell.update_label(sub_m_attrs['label'])
                     else:
                         # Graph already created, create Cell for it
@@ -536,16 +536,6 @@ class GraphConverter:
         self.remove_unconnected_nodes(ir_graph, targeted_type='prim::GetAttr')
         self.merge_aten_slices(ir_graph)
 
-    def _handle_layerchoice(self, module):
-        choices = []
-        for cand in list(module):
-            cand_type = '__torch__.' + get_importable_name(cand.__class__)
-            choices.append({'type': cand_type, 'parameters': get_init_parameters_or_fail(cand)})
-        return {
-            'candidates': choices,
-            'label': module.label
-        }
-
     def _handle_inputchoice(self, module):
         return {
             'n_candidates': module.n_candidates,
@@ -557,7 +547,8 @@ class GraphConverter:
     def _handle_valuechoice(self, module):
         return {
             'candidates': module.candidates,
-            'label': module.label
+            'label': module.label,
+            'accessor': module._accessor
         }
 
     def convert_module(self, script_module, module, module_name, ir_model):
@@ -590,7 +581,13 @@ class GraphConverter:
         if original_type_name in MODULE_EXCEPT_LIST:
             pass  # do nothing
         elif original_type_name == OpTypeName.LayerChoice:
-            m_attrs = self._handle_layerchoice(module)
+            graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
+            candidate_name_list = [f'layerchoice_{module.label}_{cand_name}' for cand_name in module.names]
+            for cand_name, cand in zip(candidate_name_list, module):
+                cand_type = '__torch__.' + get_importable_name(cand.__class__)
+                graph.add_node(cand_name, cand_type, get_init_parameters_or_fail(cand))
+            graph._register()
+            return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': candidate_name_list}
         elif original_type_name == OpTypeName.InputChoice:
             m_attrs = self._handle_inputchoice(module)
         elif original_type_name == OpTypeName.ValueChoice:

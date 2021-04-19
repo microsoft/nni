@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
+from ruamel.yaml import YAML
+
 from .base import ConfigBase, PathLike
 from . import util
 
@@ -27,22 +29,26 @@ class _AlgorithmConfig(ConfigBase):
         super().validate()
         _validate_algo(self)
 
-
 @dataclass(init=False)
 class AlgorithmConfig(_AlgorithmConfig):
     name: str
     class_args: Optional[Dict[str, Any]] = None
 
-
 @dataclass(init=False)
 class CustomAlgorithmConfig(_AlgorithmConfig):
     class_name: str
-    class_directory: Optional[PathLike] = None
+    class_directory: Optional[PathLike] = '.'
     class_args: Optional[Dict[str, Any]] = None
 
 
 class TrainingServiceConfig(ConfigBase):
     platform: str
+
+class SharedStorageConfig(ConfigBase):
+    storage_type: str
+    local_mount_point: str
+    remote_mount_point: str
+    local_mounted: str
 
 
 @dataclass(init=False)
@@ -53,19 +59,21 @@ class ExperimentConfig(ConfigBase):
     trial_command: str
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
-    trial_gpu_number: Optional[int] = None
+    trial_gpu_number: Optional[int] = None  # TODO: in openpai cannot be None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     use_annotation: bool = False
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: Optional[PathLike] = None
+    experiment_working_directory: PathLike = '~/nni-experiments'
     tuner_gpu_indices: Optional[Union[List[int], str]] = None
     tuner: Optional[_AlgorithmConfig] = None
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
     training_service: Union[TrainingServiceConfig, List[TrainingServiceConfig]]
+    shared_storage: Optional[SharedStorageConfig] = None
+    _deprecated: Optional[Dict[str, Any]] = None
 
     def __init__(self, training_service_platform: Optional[Union[str, List[str]]] = None, **kwargs):
         base_path = kwargs.pop('_base_path', None)
@@ -100,6 +108,12 @@ class ExperimentConfig(ConfigBase):
             if self.training_service.use_active_gpu is None:
                 raise ValueError('Please set "use_active_gpu"')
 
+    def json(self) -> Dict[str, Any]:
+        obj = super().json()
+        if obj.get('searchSpaceFile'):
+            obj['searchSpace'] = YAML().load(open(obj.pop('searchSpaceFile')))
+        return obj
+
 ## End of public API ##
 
     @property
@@ -117,9 +131,9 @@ _canonical_rules = {
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
     'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
-    'tuner': lambda config: None if config is None or config.name == '_none_' else config,
-    'assessor': lambda config: None if config is None or config.name == '_none_' else config,
-    'advisor': lambda config: None if config is None or config.name == '_none_' else config,
+    'tuner': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
+    'assessor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
+    'advisor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
 }
 
 _validation_rules = {

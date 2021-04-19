@@ -62,11 +62,11 @@ class Net(nn.Module):
         self.fc1 = nn.LayerChoice([
             nn.Linear(4*4*50, hidden_size, bias=True),
             nn.Linear(4*4*50, hidden_size, bias=False)
-        ])
+        ], label='fc1')
         self.fc2 = nn.LayerChoice([
             nn.Linear(hidden_size, 10, bias=False),
             nn.Linear(hidden_size, 10, bias=True)
-        ])
+        ], label='fc2')
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
@@ -97,8 +97,8 @@ def test_grid_search():
     selection = set()
     for model in engine.models:
         selection.add((
-            model.get_node_by_name('_model__fc1').operation.parameters['bias'],
-            model.get_node_by_name('_model__fc2').operation.parameters['bias']
+            model.graphs['_model__fc1'].hidden_nodes[0].operation.parameters['bias'],
+            model.graphs['_model__fc2'].hidden_nodes[0].operation.parameters['bias']
         ))
     assert len(selection) == 4
     _reset_execution_engine()
@@ -113,8 +113,8 @@ def test_random_search():
     selection = set()
     for model in engine.models:
         selection.add((
-            model.get_node_by_name('_model__fc1').operation.parameters['bias'],
-            model.get_node_by_name('_model__fc2').operation.parameters['bias']
+            model.graphs['_model__fc1'].hidden_nodes[0].operation.parameters['bias'],
+            model.graphs['_model__fc2'].hidden_nodes[0].operation.parameters['bias']
         ))
     assert len(selection) == 4
     _reset_execution_engine()

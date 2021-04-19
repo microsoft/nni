@@ -60,7 +60,6 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
 
         return (
@@ -96,7 +95,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </TitleContext.Provider>
                                     <ExpDurationContext.Provider
                                         value={{
-                                            maxExecDuration,
+                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
                                             execDuration,
                                             updateOverviewPage,
                                             maxDurationUnit,
@@ -112,7 +111,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </TitleContext.Provider>
                                     <ExpDurationContext.Provider
                                         value={{
-                                            maxExecDuration,
+                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
                                             execDuration,
                                             updateOverviewPage,
                                             maxDurationUnit,
