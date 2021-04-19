@@ -4,8 +4,6 @@
 import time
 from typing import Iterable
 
-from nni.experiment import rest
-
 from ..graph import Model, ModelStatus
 from ..integration_api import get_advisor
 from .interface import AbstractExecutionEngine
