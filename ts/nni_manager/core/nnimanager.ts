@@ -198,9 +198,9 @@ class NNIManager implements Manager {
     }
 
     public async resumeExperiment(readonly: boolean): Promise<void> {
-        this.log.info(`Resuming experiment: ${this.experimentProfile.id}`);
         //Fetch back the experiment profile
         const experimentId: string = getExperimentId();
+        this.log.info(`Resuming experiment: ${experimentId}`);
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         this.readonly = readonly;
         if (readonly) {
@@ -254,12 +254,15 @@ class NNIManager implements Manager {
         return this.dataStore.getTrialJob(trialJobId);
     }
 
-    public async setClusterMetadata(_key: string, _value: string): Promise<void> {
-        throw new Error('Calling removed API setClusterMetadata');
+    public async setClusterMetadata(key: string, value: string): Promise<void> {
+        while (this.trainingService === undefined) {
+            await delay(1000);
+        }
+        this.trainingService.setClusterMetadata(key, value);
     }
 
-    public getClusterMetadata(_key: string): Promise<string> {
-        throw new Error('Calling removed API getClusterMetadata');
+    public getClusterMetadata(key: string): Promise<string> {
+        return this.trainingService.getClusterMetadata(key);
     }
 
     public async getTrialJobStatistics(): Promise<TrialJobStatistics[]> {
