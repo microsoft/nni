@@ -204,7 +204,7 @@ class NNIManager implements Manager {
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
         this.readonly = readonly;
         if (readonly) {
-            this.setStatus('STOPPED');
+            this.setStatus('VIEWED');
             return Promise.resolve();
         }
 
