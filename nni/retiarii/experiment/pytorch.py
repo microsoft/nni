@@ -215,7 +215,6 @@ class RetiariiExperiment(Experiment):
         exp_status_checker.start()
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
-        # _logger.info('Waiting for submitted trial jobs to finish...')
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
         exp_status_checker.join()
 
@@ -243,7 +242,12 @@ class RetiariiExperiment(Experiment):
         try:
             while True:
                 time.sleep(10)
-                status = self.get_status()
+                # this if is to deal with the situation that
+                # nnimanager is cleaned up by ctrl+c first
+                if self._proc.poll() is None:
+                    status = self.get_status()
+                else:
+                    return False
                 if status == 'DONE' or status == 'STOPPED':
                     return True
                 if status == 'ERROR':
@@ -264,7 +268,10 @@ class RetiariiExperiment(Experiment):
             nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
             try:
-                rest.delete(self.port, '/experiment')
+                # this if is to deal with the situation that
+                # nnimanager is cleaned up by ctrl+c first
+                if self._proc.poll() is None:
+                    rest.delete(self.port, '/experiment')
             except Exception as e:
                 _logger.exception(e)
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
