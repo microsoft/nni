@@ -114,6 +114,7 @@ export const EditExperimentParam = (): any => {
             if (res.status === 200) {
                 showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
                 changeMaxDurationUnit(unit);
+                updateOverviewPage();
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
@@ -128,7 +129,6 @@ export const EditExperimentParam = (): any => {
             setEditValInput(defaultVal);
         }
         showPencil();
-        updateOverviewPage();
     }
 
     function cancelEdit(): void {
