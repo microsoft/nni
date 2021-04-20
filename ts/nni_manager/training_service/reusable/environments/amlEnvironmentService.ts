@@ -117,7 +117,9 @@ export class AMLEnvironmentService extends EnvironmentService {
             environmentLocalTempFolder
         );
         amlEnvironment.id = await amlClient.submit();
+        this.log.debug('aml: before getTrackingUrl');
         amlEnvironment.trackingUrl = await amlClient.getTrackingUrl();
+        this.log.debug('aml: after getTrackingUrl');
         amlEnvironment.amlClient = amlClient;
     }
 
