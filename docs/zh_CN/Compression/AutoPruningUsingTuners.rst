@@ -64,7 +64,7 @@ op_type 'Conv2d' 表示在 PyTorch 框架下定义在 :githublink:`default_layer
     trialConcurrency: 1
     trialGpuNumber: 0
     tuner:
-      name: GridSearch
+      name: grid
 
 完整实验代码在 :githublink:`这里 <examples/model_compress/pruning/config.yml>`
 
