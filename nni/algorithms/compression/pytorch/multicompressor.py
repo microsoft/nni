@@ -105,7 +105,7 @@ class MultiCompressor:
             saved_path = self.trainer.finetune(self.bound_model, self.optimizer, self)
             if saved_path is not None:
                 self.bound_model = torch.load(saved_path)
-            calibration_config = self._export_quantized_model()
+            # calibration_config = self._export_quantized_model()
 
         return self.bound_model
 
