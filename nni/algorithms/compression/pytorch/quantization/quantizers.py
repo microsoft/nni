@@ -59,7 +59,7 @@ def update_ema(biased_ema, value, decay):
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    return biased_ema 
+    return biased_ema
 
 
 def update_quantization_param(bits, rmin, rmax):

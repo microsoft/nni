@@ -48,9 +48,9 @@ class Trainer:
 
             if top1 > best_top1:
                 best_top1 = top1
-                # Export the best model, 'model_path' stores state_dict of the pruned model,
-                # mask_path stores mask_dict of the pruned model
-                pruner.export_model(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt')
+                pruner.save_bound_model('bound_model.pt')
+
+        return 'bound_model.pt'
 
     def __train(self, model, optimizer, epoch):
         model.train()
@@ -165,8 +165,9 @@ def main(args):
     ]
 
     pruner = MultiCompressor(model, prune_config, optimizer_finetune, trainer)
-    model = pruner.compress(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt',
-                            calibration_path='calibration_mnist_lenet.pt', input_shape=[10, 1, 28, 28])
+    pruner.set_config(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt',
+                      calibration_path='calibration_mnist_lenet.pt', input_shape=[10, 1, 28, 28], device=device)
+    model = pruner.compress()
 
 if __name__ == '__main__':
      # Training settings
