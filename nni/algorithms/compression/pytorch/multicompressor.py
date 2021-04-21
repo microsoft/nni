@@ -8,21 +8,29 @@ import torch
 
 from nni.compression.pytorch.compressor import Compressor
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.algorithms.compression.pytorch.pruning.one_shot import LevelPruner, L1FilterPruner, L2FilterPruner
-from nni.algorithms.compression.pytorch.quantization.quantizers import NaiveQuantizer, QAT_Quantizer
+from nni.algorithms.compression.pytorch.pruning.one_shot import LevelPruner, SlimPruner, L1FilterPruner, L2FilterPruner, FPGMPruner,
+                                        TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, ActivationMeanRankFilterPruner
+from nni.algorithms.compression.pytorch.quantization.quantizers import NaiveQuantizer, QAT_Quantizer, DoReFaQuantizer, BNNQuantizer
 
 _logger = logging.getLogger(__name__)
 
 
 PRUNER_DICT = {
     'level': LevelPruner,
+    'slim': SlimPruner,
     'l1': L1FilterPruner,
-    'l2': L2FilterPruner
+    'l2': L2FilterPruner,
+    'fpgm': FPGMPruner,
+    'taylorfo': TaylorFOWeightFilterPruner,
+    'apoz': ActivationAPoZRankFilterPruner,
+    'mean_activation': ActivationMeanRankFilterPruner
 }
 
 QUANTIZER_DICT = {
     'naive': NaiveQuantizer,
-    'qat': QAT_Quantizer
+    'qat': QAT_Quantizer,
+    'dorefa': DoReFaQuantizer,
+    'bnn': BNNQuantizer
 }
 
 CONCFIG_LIST_TYPE = List[Tuple[str, dict, list]]
