@@ -130,6 +130,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def query_available_resource(self) -> List[WorkerInfo]:
         raise NotImplementedError  # move the method from listener to here?
 
+    def budget_exhausted(self) -> bool:
+        raise NotImplementedError
+
     @classmethod
     def trial_execute_graph(cls) -> None:
         """

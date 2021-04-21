@@ -5,7 +5,6 @@ import time
 from typing import Iterable
 
 from ..graph import Model, ModelStatus
-from ..integration_api import get_advisor
 from .interface import AbstractExecutionEngine
 from .listener import DefaultListener
 
@@ -72,5 +71,5 @@ def is_stopped_exec(model: Model) -> bool:
 
 
 def budget_exhausted() -> bool:
-    advisor = get_advisor()
-    return advisor.stopping
+    engine = get_execution_engine()
+    return engine.budget_exhausted()
