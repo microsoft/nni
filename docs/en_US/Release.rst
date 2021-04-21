@@ -11,12 +11,12 @@ Release 2.2 - 4/21/2021
 Major updates
 ^^^^^^^^^^^^^
 
-Neural architecture search
+Neural Architecture Search
 """"""""""""""""""""""""""
 
 * Improve NAS 2.0 (Retiarii) Framework (Alpha Release)
 
-  * Support debug mode for easy debuggability (#3476)
+  * Support local debug mode (#3476)
   * Support nesting ``ValueChoice`` in ``LayerChoice`` (#3508)
   * Support dict/list type in ``ValueChoice`` (#3508)
   * Improve the format of export architectures (#3464)
@@ -34,13 +34,13 @@ Model Compression
 nnictl & nni.experiment
 """""""""""""""""""""""
 
-* Add native support for v2 config (#3466)
-* Add resume and view mode in nni.experiment (#3490 #3524)
+* Add native support for v2 config (#3466 #3540)
+* Add resume and view mode in ``nni.experiment`` (#3490 #3524 #3545)
 
-Training service
+Training Service
 """"""""""""""""
 
-* Support umount in remote training service for shared storage (#3456)
+* Support umount for shared storage in remote training service (#3456)
 * Support Windows as the remote training service in reuse mode (#3500)
 * Remove duplicated env folder in remote training service (#3472)
 * Add log information for GPU collector (#3506)
@@ -52,10 +52,9 @@ WebUI
 * Upgrade echarts-for-react to v5 (#3457)
 * Add wrap for dispatcher/nnimanager log monaco editor (#3461)
 
-Bug fixes
+Bug Fixes
 ^^^^^^^^^
 
-* Fix bug of FLOPs counter (#3497)
 * Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
 * Fix bug that monaco editor search text is not displayed completely (#3492)
 * Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
