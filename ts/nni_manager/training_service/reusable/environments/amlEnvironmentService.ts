@@ -10,7 +10,6 @@ import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { getExperimentRootDir } from '../../../common/utils';
 import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
