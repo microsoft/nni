@@ -13,7 +13,7 @@ _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'list_models', 'submit_models', 'wait_models', 'query_available_resources',
-           'set_execution_engine', 'is_stopped_exec']
+           'set_execution_engine', 'is_stopped_exec', 'budget_exhausted']
 
 def set_execution_engine(engine) -> None:
     global _execution_engine
@@ -21,6 +21,7 @@ def set_execution_engine(engine) -> None:
         _execution_engine = engine
     else:
         raise RuntimeError('execution engine is already set')
+
 
 def get_execution_engine() -> AbstractExecutionEngine:
     """
@@ -67,3 +68,8 @@ def query_available_resources() -> int:
 
 def is_stopped_exec(model: Model) -> bool:
     return model.status in (ModelStatus.Trained, ModelStatus.Failed)
+
+
+def budget_exhausted() -> bool:
+    engine = get_execution_engine()
+    return engine.budget_exhausted()
