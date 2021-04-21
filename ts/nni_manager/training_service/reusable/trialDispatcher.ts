@@ -500,7 +500,7 @@ class TrialDispatcher implements TrainingService {
                         const reuseMode = Array.isArray(this.config.trainingService) || (this.config.trainingService as any).reuseMode;
                         if (
                             0 === environment.runningTrialCount &&
-                            !reuseMode &&
+                            reuseMode === false &&
                             environment.assignedTrialCount > 0
                         ) {
                             if (environment.environmentService === undefined) {

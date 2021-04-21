@@ -134,7 +134,7 @@ def to_v2(v1) -> ExperimentConfig:
         _move_field(aml_config, ts, 'resourceGroup', 'resource_group')
         _move_field(aml_config, ts, 'workspaceName', 'workspace_name')
         _move_field(aml_config, ts, 'computeTarget', 'compute_target')
-        _deprecate(aml_config, v2, 'maxTrialNumPerGpu')
+        _move_field(aml_config, ts, 'maxTrialNumPerGpu', 'max_trial_number_per_gpu')
         _deprecate(aml_config, v2, 'useActiveGpu')
         assert not aml_config, aml_config
 
