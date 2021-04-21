@@ -102,7 +102,7 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
         amlEnvironment.useActiveGpu = false;
-        amlEnvironment.maxTrialNumberPerGpu = 1;
+        amlEnvironment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
