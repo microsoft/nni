@@ -319,7 +319,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    if config_version == 1:
+        log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    else:
+        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
@@ -486,8 +489,10 @@ def manage_stopped_experiment(args, mode):
     assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
         if 'trainingService' in experiment_config:
+            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 2)
         else:
+            experiment_config['logDir'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 1)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
