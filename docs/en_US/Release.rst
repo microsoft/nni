@@ -34,8 +34,8 @@ Model Compression
 nnictl & nni.experiment
 """""""""""""""""""""""
 
-* Add native support for v2 config (#3466 #3540)
-* Add resume and view mode in ``nni.experiment`` (#3490 #3524 #3545)
+* Add native support for experiment config V2 (#3466 #3540 #3552)
+* Add resume and view mode in Python API ``nni.experiment`` (#3490 #3524 #3545)
 
 Training Service
 """"""""""""""""
@@ -43,7 +43,7 @@ Training Service
 * Support umount for shared storage in remote training service (#3456)
 * Support Windows as the remote training service in reuse mode (#3500)
 * Remove duplicated env folder in remote training service (#3472)
-* Add log information for GPU collector (#3506)
+* Add log information for GPU metric collector (#3506)
 
 WebUI
 """""
@@ -55,10 +55,12 @@ WebUI
 Bug Fixes
 ^^^^^^^^^
 
+* Fix bug of FLOPs counter (#3497)
 * Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
 * Fix bug that monaco editor search text is not displayed completely (#3492)
 * Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
 * Fix typos in docs (#3448, thanks the external contributor @OliverShang)
+* Fix typo in NAS 1.0 (#3538, thanks the external contributor @ankitaggarwal23)
 
 
 Release 2.1 - 3/10/2021
