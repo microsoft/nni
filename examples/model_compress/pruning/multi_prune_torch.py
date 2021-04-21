@@ -48,9 +48,9 @@ class Trainer:
 
             if top1 > best_top1:
                 best_top1 = top1
-                pruner.save_bound_model('bound_model.pt')
+                pruner.save('multicompressor_dict.pkl')
 
-        return 'bound_model.pt'
+        return 'multicompressor_dict.pkl'
 
     def __train(self, model, optimizer, epoch):
         model.train()

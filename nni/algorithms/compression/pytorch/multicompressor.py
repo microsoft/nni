@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from enum import Enum
 import logging
+import pickle
 from typing import Tuple, List, Optional, Union
 import torch
 
@@ -26,13 +26,6 @@ QUANTIZER_DICT = {
 }
 
 CONCFIG_LIST_TYPE = List[Tuple[str, dict, list]]
-
-class Trainer:
-    def __init__(self):
-        pass
-
-    def finetune(self):
-        pass
 
 
 class MultiCompressor:
@@ -92,7 +85,7 @@ class MultiCompressor:
             if self.trainer:
                 saved_path = self.trainer.finetune(self.bound_model, self.optimizer, self)
                 if saved_path is not None:
-                    self.bound_model = torch.load(saved_path)
+                    self.load(saved_path)
 
         for quantizer_name, quantizer_args, config_list in self.quantizer_config_list:
             quantizer = QUANTIZER_DICT[quantizer_name](self.bound_model, config_list, self.optimizer, **quantizer_args)
@@ -104,16 +97,18 @@ class MultiCompressor:
         if self.trainer and len(self.quantizer_config_list) > 0:
             saved_path = self.trainer.finetune(self.bound_model, self.optimizer, self)
             if saved_path is not None:
-                self.bound_model = torch.load(saved_path)
-            # calibration_config = self._export_quantized_model()
+                self.load(saved_path)
+            calibration_config = self._export_quantized_model()
 
         return self.bound_model
 
-    def save_bound_model(self, path: str):
-        torch.save(self.bound_model, path)
+    def save(self, path: str):
+        with open(path, 'wb') as f:
+            pickle.dump(self.__dict__, f)
 
-    def load_bound_model(self, path: str):
-        self.bound_model = torch.load(path)
+    def load(self, path: str):
+        with open(path, 'rb') as f:
+            self.__dict__ = pickle.load(f)
 
     def _export_pruned_model(self):
         assert self.model_path is not None, 'model_path must be specified'
