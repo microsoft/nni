@@ -33,10 +33,11 @@ def main():
         enable_multi_thread()
 
     if 'trainingServicePlatform' in exp_params:  # config schema is v1
+        from types import SimpleNamespace
         from .experiment.config.convert import convert_algo
         for algo_type in ['tuner', 'assessor', 'advisor']:
             if algo_type in exp_params:
-                convert_algo(algo_type, exp_params, exp_params)
+                exp_params[algo_type] = convert_algo(algo_type, exp_params, SimpleNamespace()).json()
 
     if exp_params.get('advisor') is not None:
         # advisor is enabled and starts to run
