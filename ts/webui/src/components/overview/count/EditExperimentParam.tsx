@@ -30,6 +30,7 @@ export const EditExperimentParam = (): any => {
     const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
         EditExpeParamContext
     );
+    const originMaxDurationStr = EXPERIMENT.profile.params.maxExperimentDuration;
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);
     let defaultVal = '';
@@ -112,8 +113,10 @@ export const EditExperimentParam = (): any => {
                 params: { update_type: editType }
             });
             if (res.status === 200) {
+                if (isMaxDuration) {
+                    changeMaxDurationUnit(unit);
+                }
                 showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
-                changeMaxDurationUnit(unit);
                 updateOverviewPage();
             }
         } catch (error) {
@@ -127,6 +130,12 @@ export const EditExperimentParam = (): any => {
                 showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
             }
             setEditValInput(defaultVal);
+            // confirm trial config panel val
+            if (isMaxDuration) {
+                newProfile.params[field] = originMaxDurationStr;
+            } else {
+                newProfile.params[field] = beforeParam;
+            }
         }
         showPencil();
     }
