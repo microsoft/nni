@@ -375,10 +375,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
-    if config_version == 1 and mode != 'view':
-        # set platform configuration
-        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
-                            experiment_id, rest_process)
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -400,12 +396,15 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
+    if config_version == 1 and mode != 'view':
+        # set platform configuration
+        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
+                            experiment_id, rest_process)
     if experiment_config.get('nniManagerIp'):
         web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
     else:
         web_ui_url_list = get_local_urls(args.port)
     Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
-
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
         try:
