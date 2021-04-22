@@ -203,6 +203,8 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
+    # hack for hotfix, fix config.trainingService undefined error, need refactor
+    request_data['trainingService'] = {'platform': experiment_config.get('trainingServicePlatform')}
     if experiment_config.get('description'):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
