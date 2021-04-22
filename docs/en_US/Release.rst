@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.2 - 4/21/2021
+Release 2.2 - 4/22/2021
 -----------------------
 
 Major updates
