@@ -9,7 +9,6 @@ import time
 import socket
 import string
 import random
-import traceback
 import ruamel.yaml as yaml
 import psutil
 import filelock
