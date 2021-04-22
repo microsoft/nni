@@ -405,6 +405,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     else:
         web_ui_url_list = get_local_urls(args.port)
     Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
+
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
     if mode != 'view' and args.foreground:
         try:
