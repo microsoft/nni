@@ -104,6 +104,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     def query_available_resource(self) -> int:
         return self.resources
 
+    def budget_exhausted(self) -> bool:
+        advisor = get_advisor()
+        return advisor.stopping
+
     @classmethod
     def trial_execute_graph(cls) -> None:
         """

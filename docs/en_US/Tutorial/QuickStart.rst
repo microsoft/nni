@@ -260,6 +260,7 @@ Related Topic
 -------------
 
 
+* `Launch Tensorboard on WebUI <Tensorboard.rst>`__
 * `Try different Tuners <../Tuner/BuiltinTuner.rst>`__
 * `Try different Assessors <../Assessor/BuiltinAssessor.rst>`__
 * `How to use command line tool nnictl <Nnictl.rst>`__

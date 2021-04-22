@@ -122,7 +122,6 @@ class TrialDispatcher implements TrainingService {
             this.environmentServiceList.push(env);
         }
 
-        // FIXME: max?
         this.environmentMaintenceLoopInterval = Math.max(
             ...this.environmentServiceList.map((env) => env.environmentMaintenceLoopInterval)
         );
@@ -211,6 +210,7 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async run(): Promise<void> {
+        await Promise.all(this.environmentServiceList.map(env => env.init()));
         for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
@@ -497,9 +497,10 @@ class TrialDispatcher implements TrainingService {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isRunnerReady) {
                         // if environment is not reusable and used, stop and not count as idle;
+                        const reuseMode = Array.isArray(this.config.trainingService) || (this.config.trainingService as any).reuseMode;
                         if (
                             0 === environment.runningTrialCount &&
-                            !(this.config as any).reuseMode &&
+                            reuseMode === false &&
                             environment.assignedTrialCount > 0
                         ) {
                             if (environment.environmentService === undefined) {

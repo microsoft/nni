@@ -13,7 +13,7 @@ export class EnvironmentServiceFactory {
             case 'remote':
                 return new RemoteEnvironmentService(config);
             case 'aml':
-                return new AMLEnvironmentService();
+                return new AMLEnvironmentService(config);
             case 'openpai':
                 return new OpenPaiEnvironmentService(config);
             default:

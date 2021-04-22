@@ -169,6 +169,16 @@ class ShellExecutor {
         return this.tempPath;
     }
 
+    public async getCurrentPath(): Promise<string> {
+        const commandText = this.osCommands && this.osCommands.getCurrentPath();
+        const commandResult = await this.execute(commandText);
+        if (commandResult.exitCode == 0) {
+            return commandResult.stdout;
+        } else {
+            throw Error(commandResult.stderr);
+        }
+    }
+
     public getRemoteScriptsPath(experimentId: string): string {
         return this.joinPath(this.getRemoteExperimentRootDir(experimentId), 'scripts');
     }
