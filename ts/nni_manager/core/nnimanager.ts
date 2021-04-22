@@ -409,7 +409,17 @@ class NNIManager implements Manager {
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
         this.config = config;
-        const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
+        let platform: string;
+        if (Array.isArray(config.trainingService)) {
+            platform = 'hybrid';
+        } else if (config.trainingService.platform) {
+            platform = config.trainingService.platform;
+        } else {
+            platform = (config as any).trainingServicePlatform;
+        }
+        if (!platform) {
+            throw new Error('Cannot detect training service platform');
+        }
 
         if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
             const module_ = await import('../training_service/reusable/routerTrainingService');

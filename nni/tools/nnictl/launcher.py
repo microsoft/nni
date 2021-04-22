@@ -333,6 +333,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     # start rest server
     if config_version == 1:
         platform = experiment_config['trainingServicePlatform']
+    elif isinstance(experiment_config['trainingService'], list):
+        platform = 'hybrid'
     else:
         platform = experiment_config['trainingService']['platform']
 
