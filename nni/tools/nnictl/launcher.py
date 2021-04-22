@@ -119,6 +119,18 @@ def set_trial_config(experiment_config, port, config_file_name):
 
 def set_adl_config(experiment_config, port, config_file_name):
     '''set adl configuration'''
+    adl_config_data = dict()
+    # hack for supporting v2 config, need refactor
+    adl_config_data['adl_config'] = {}
+    response = rest_put(cluster_metadata_url(port), json.dumps(adl_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
@@ -377,6 +389,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         except Exception:
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
+    if config_version == 1 and mode != 'view':
+        # set platform configuration
+        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
+                            experiment_id, rest_process)
 
     # start a new experiment
     print_normal('Starting experiment...')
@@ -398,10 +414,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
-    if config_version == 1 and mode != 'view':
-        # set platform configuration
-        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
-                            experiment_id, rest_process)
     if experiment_config.get('nniManagerIp'):
         web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
     else:
