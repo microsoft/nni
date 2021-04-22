@@ -35,6 +35,7 @@ Local Mode
     trialCommand: python mnist.py
     trialCodeDirectory: .
     trialGpuNumber: 1
+    trialConcurrency: 2
     maxExperimentDuration: 24h
     maxTrialNumber: 100
     tuner:
@@ -59,6 +60,7 @@ Local Mode (Inline Search Space)
         _value: [0.0001, 0.1]
     trialCommand: python mnist.py
     trialGpuNumber: 1
+    trialConcurrency: 2
     tuner:
       name: TPE
       classArgs:
@@ -77,6 +79,7 @@ Remote Mode
     trialCommand: python mnist.py
     trialCodeDirectory: .
     trialGpuNumber: 1
+    trialConcurrency: 2
     maxExperimentDuration: 24h
     maxTrialNumber: 100
     tuner:
