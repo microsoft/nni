@@ -40,6 +40,7 @@ testCases:
 - name: mnist-tensorflow
   configFile: test/config/examples/mnist-tfv2.yml
   config:
+    maxExecDuration: 10m # This example will use longger time in remote mode, set max_duration to 10m to avoid timeout error.
     maxTrialNum: 1
     trialConcurrency: 1
   trainingService: local remote # FIXME: timeout on pai, looks like tensorflow failed to link CUDA
