@@ -84,7 +84,7 @@ class Mutator(BaseMutator):
         data = dict()
         for k, v in self._cache.items():
             if torch.is_tensor(v):
-                v = v.detach().cpu().numpy()
+                v = v.detach().cpu().numpy().tolist()
             if isinstance(v, np.ndarray):
                 v = v.astype(np.float32).tolist()
             data[k] = v
