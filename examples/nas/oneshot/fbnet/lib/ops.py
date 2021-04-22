@@ -410,12 +410,18 @@ class MBBlock(nn.Module):
 class SingleOperation(nn.Module):
     """Single operation for sampled path."""
 
-    def __init__(self, layers_configs, stage_ops, sampled_op="", io_ch=[]):
+    def __init__(self, layers_configs, stage_ops, sampled_op=""):
+        """
+        Parameters
+        ----------
+        layers_configs : list
+            the layer config: [input_channel, output_channel, stride, height]
+        stage_ops : dict
+            the pairs of op name and layer operator
+        sampled_op : str
+            the searched layer name
+        """
         super(SingleOperation, self).__init__()
-
-        if io_ch:
-            assert len(io_ch) == 2, "io_ch should have two elements"
-            layers_configs[0:2] = io_ch
         fm = {"fm_size": layers_configs[3]}
         ops_names = [op_name for op_name in stage_ops]
         sampled_op = sampled_op if sampled_op else ops_names[0]
@@ -428,9 +434,23 @@ class SingleOperation(nn.Module):
 
 
 def choice_blocks(layers_configs, stage_ops):
-    """ Create list of layer candidates for NNI one-shot NAS"""
+    """
+    Create list of layer candidates for NNI one-shot NAS.
+
+    Parameters
+    ----------
+    layers_configs : list
+        the layer config: [input_channel, output_channel, stride, height]
+    stage_ops : dict
+        the pairs of op name and layer operator
+
+    Returns
+    -------
+    output: list
+        list of layer operators
+    """
     ops_names = [op for op in stage_ops]
     fm = {"fm_size": layers_configs[3]}
-
     op_list = [stage_ops[op](*layers_configs[0:3], **fm) for op in ops_names]
+
     return op_list

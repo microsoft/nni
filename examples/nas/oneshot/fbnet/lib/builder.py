@@ -17,7 +17,20 @@ LUT_FILE = "lut.npy"
 
 
 def supernet_sample(model, state_dict, sampled_arch=[], lookup_table=None):
-    """Initialize the searched sub-model from supernet."""
+    """
+    Initialize the searched sub-model from supernet.
+
+    Parameters
+    ----------
+    model : pytorch model
+        the created subnet
+    state_dict : checkpoint
+        the checkpoint of supernet, including the pre-trained params
+    sampled_arch : list of str
+        the searched layer names of the subnet
+    lookup_table : class
+        to manage the candidate ops, layer information and layer performance
+    """
     replace = list()
     stages = [stage for stage in lookup_table.layer_num]
     stage_lnum = [lookup_table.layer_num[stage] for stage in stages]
@@ -44,6 +57,12 @@ class LookUpTable:
     """Build look-up table for NAS."""
 
     def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : class
+            to manage the configuration for NAS training, and search space etc.
+        """
         # definition of search blocks and space
         self.search_space = config.search_space
         # layers for NAS

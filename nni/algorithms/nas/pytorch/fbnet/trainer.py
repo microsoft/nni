@@ -23,12 +23,31 @@ class RegularizerLoss(nn.Module):
     """Auxilliary loss for hardware-aware NAS."""
 
     def __init__(self, config):
+        """
+        Parameters
+        ----------
+        config : class
+            to manage the configuration for NAS training, and search space etc.
+        """
         super(RegularizerLoss, self).__init__()
         self.mode = config.mode
         self.alpha = config.alpha
         self.beta = config.beta
 
     def forward(self, perf_cost, batch_size=1):
+        """
+        Parameters
+        ----------
+        perf_cost : tensor
+            the accumulated performance cost
+        batch_size : int
+            batch size for normalization
+
+        Returns
+        -------
+        output: tensor
+            the hardware-aware constraint loss
+        """
         if self.mode == "mul":
             log_loss = torch.log(perf_cost / batch_size) ** self.beta
             return self.alpha * log_loss

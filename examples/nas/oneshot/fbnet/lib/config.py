@@ -12,6 +12,7 @@ LUT_PATH = "lut"
 
 search_space = {
     # multi-stage definition for candidate layers
+    # here two stages are defined for PFLD searching
     "stages": {
         "stage_0": {
             "ops": [
@@ -43,6 +44,7 @@ search_space = {
         },
     },
     # necessary information of layers for NAS
+    # the basic information is as (input_channels, height, width)
     "input_shape": [
         (32, 14, 14),
         (32, 14, 14),
@@ -50,8 +52,11 @@ search_space = {
         (64, 7, 7),
         (64, 7, 7),
     ],
+    # output channels for each layer
     "channel_size": [32, 32, 64, 64, 64],
+    # stride for each layer
     "strides": [1, 1, 2, 1, 1],
+    # height of feature map for each layer
     "fm_size": [14, 14, 7, 7, 7],
 }
 
@@ -66,14 +71,15 @@ class NASConfig:
         nas_lr=0.01,
         nas_weight_decay=5e-4,
         mode="mul",
-        alpha=0.18,
-        beta=0.6,
+        alpha=0.25,
+        beta=0.8,
         start_epoch=50,
         init_temperature=5.0,
         exp_anneal_rate=np.exp(-0.045),
         search_space=None,
     ):
         # LUT of performance metric
+        # flops means the multiplies, latency means the time cost on platform
         self.perf_metric = perf_metric
         assert perf_metric in [
             "flops",

@@ -13,7 +13,7 @@ from torch.utils import data
 
 
 def flip(img, annotation):
-    # parse
+    """ Flip the image. """
     img = np.fliplr(img).copy()
     h, w = img.shape[:2]
     x_min, y_min, x_max, y_max = annotation[0:4]
@@ -37,14 +37,17 @@ def flip(img, annotation):
 
 
 def channel_shuffle(img, annotation):
+    """ Channel shuffle. """
     if img.shape[2] == 3:
         ch_arr = [0, 1, 2]
         np.random.shuffle(ch_arr)
         img = img[..., ch_arr]
+
     return img, annotation
 
 
 def random_noise(img, annotation, limit=[0, 0.2], p=0.5):
+    """ Add the random noise to the image. """
     if random.random() < p:
         H, W = img.shape[:2]
         noise = np.random.uniform(limit[0], limit[1], size=(H, W)) * 255
@@ -56,43 +59,51 @@ def random_noise(img, annotation, limit=[0, 0.2], p=0.5):
 
 
 def random_brightness(img, annotation, brightness=0.3):
+    """ Change the brightness randomly. """
     alpha = 1 + np.random.uniform(-brightness, brightness)
     img = alpha * img
     img = np.clip(img, 0, 255).astype(np.uint8)
+
     return img, annotation
 
 
 def random_contrast(img, annotation, contrast=0.3):
-    # rgb to gray (YCbCr)
+    """ Change the contrast randomly. """
     coef = np.array([[[0.114, 0.587, 0.299]]])
     alpha = 1.0 + np.random.uniform(-contrast, contrast)
     gray = img * coef
     gray = (3.0 * (1.0 - alpha) / gray.size) * np.sum(gray)
     img = alpha * img + gray
     img = np.clip(img, 0, 255).astype(np.uint8)
+
     return img, annotation
 
 
 def random_saturation(img, annotation, saturation=0.5):
+    """ Change the saturation randomly. """
     coef = np.array([[[0.299, 0.587, 0.114]]])
     alpha = np.random.uniform(-saturation, saturation)
     gray = img * coef
     gray = np.sum(gray, axis=2, keepdims=True)
     img = alpha * img + (1.0 - alpha) * gray
     img = np.clip(img, 0, 255).astype(np.uint8)
+
     return img, annotation
 
 
 def random_hue(image, annotation, hue=0.5):
+    """ Change the hue randomly. """
     h = int(np.random.uniform(-hue, hue) * 180)
 
     hsv = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
     hsv[:, :, 0] = (hsv[:, :, 0].astype(int) + h) % 180
     image = cv2.cvtColor(hsv, cv2.COLOR_HSV2BGR)
+
     return image, annotation
 
 
 def scale(img, annotation):
+    """ Resize the image randomly. """
     f_xy = np.random.uniform(-0.4, 0.8)
     origin_h, origin_w = img.shape[:2]
 
@@ -118,7 +129,7 @@ def scale(img, annotation):
 
 
 def rotate(img, annotation, alpha=30):
-
+    """ Rotate the image. """
     bbox = annotation[0:4]
     landmark_x = annotation[4::2]
     landmark_y = annotation[(4 + 1)::2]
@@ -150,7 +161,21 @@ def rotate(img, annotation, alpha=30):
 
 
 class PFLDDatasets(data.Dataset):
+    """ Dataset to manage the data loading, augmentation and generation. """
+
     def __init__(self, file_list, transforms=None, data_root="", img_size=112):
+        """
+        Parameters
+        ----------
+        file_list : list
+            a list of file path and annotations
+        transforms : function
+            function for data augmentation
+        data_root : str
+            the root path of dataset
+        img_size : int
+            the size of image height or width
+        """
         self.line = None
         self.path = None
         self.img_size = img_size
@@ -162,6 +187,7 @@ class PFLDDatasets(data.Dataset):
             self.lines = f.readlines()
 
     def __getitem__(self, index):
+        """ Get the data sample and labels with the index. """
         self.line = self.lines[index].strip().split()
         # load image
         if self.data_root:
@@ -177,7 +203,9 @@ class PFLDDatasets(data.Dataset):
         # augmentation
         if self.transforms:
             self.img = self.transforms(self.img)
+
         return self.img, self.land, self.angle
 
     def __len__(self):
+        """ Get the size of dataset. """
         return len(self.lines)

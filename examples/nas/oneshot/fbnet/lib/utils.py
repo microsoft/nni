@@ -192,27 +192,20 @@ def model_init(model, state_dict, replace=[]):
             if isinstance(m, nn.BatchNorm2d):
                 shape = m.running_mean.shape
                 if shape == param_dict[name + ".running_mean"].shape:
-                    print("Init OK with pretrained model: {}".format(name))
                     if m.weight is not None:
                         m.weight.data = param_dict[name + ".weight"]
                         m.bias.data = param_dict[name + ".bias"]
                     m.running_mean = param_dict[name + ".running_mean"]
                     m.running_var = param_dict[name + ".running_var"]
-                else:
-                    print("Init random: {}".format(name))
 
             elif isinstance(m, nn.Conv2d) or isinstance(m, nn.Linear):
                 shape = m.weight.data.shape
                 if shape == param_dict[name + ".weight"].shape:
-                    print("Init OK with pretrained model: {}".format(name))
                     m.weight.data = param_dict[name + ".weight"]
                     if m.bias is not None:
                         m.bias.data = param_dict[name + ".bias"]
-                else:
-                    print("Init random: {}".format(name))
 
             elif isinstance(m, nn.ConvTranspose2d):
-                print("Init OK with pretrained model: {}".format(name))
                 m.weight.data = param_dict[name + ".weight"]
                 if m.bias is not None:
                     m.bias.data = param_dict[name + ".bias"]

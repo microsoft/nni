@@ -19,7 +19,19 @@ INIT_CH = 16
 
 
 class PFLDInference(nn.Module):
-    def __init__(self, lookup_table, sampled_ops, num_points=98):
+    """ The subnet with the architecture of PFLD. """
+
+    def __init__(self, lookup_table, sampled_ops, num_points=106):
+        """
+        Parameters
+        ----------
+        lookup_table : class
+            to manage the candidate ops, layer information and layer perf
+        sampled_ops : list of str
+            the searched layer names of the subnet
+        num_points : int
+            the number of landmarks for prediction
+        """
         super(PFLDInference, self).__init__()
 
         stage_names = [stage_name for stage_name in lookup_table.layer_num]
@@ -78,7 +90,19 @@ class PFLDInference(nn.Module):
                     init.constant_(m.bias, 0)
 
     def forward(self, x):
-        # x: 3, 112, 112
+        """
+        Parameters
+        ----------
+        x : tensor
+            input image
+
+        Returns
+        -------
+        output: tensor
+            the predicted landmarks
+        output: tensor
+            the intermediate features
+        """
         x, y1 = self.stem(x)
         out1 = x
 
@@ -104,6 +128,8 @@ class PFLDInference(nn.Module):
 
 
 class AuxiliaryNet(nn.Module):
+    """ AuxiliaryNet to predict pose angles. """
+
     def __init__(self):
         super(AuxiliaryNet, self).__init__()
         self.conv1 = conv_bn(INIT_CH, 64, 3, 2)
@@ -115,6 +141,17 @@ class AuxiliaryNet(nn.Module):
         self.fc2 = nn.Linear(32, 3)
 
     def forward(self, x):
+        """
+        Parameters
+        ----------
+        x : tensor
+            input intermediate features
+
+        Returns
+        -------
+        output: tensor
+            the predicted pose angles
+        """
         x = self.conv1(x)
         x = self.conv2(x)
         x = self.conv3(x)

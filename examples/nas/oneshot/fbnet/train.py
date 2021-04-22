@@ -22,7 +22,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def main(args):
-
+    """ The main function for supernet pre-training and subnet fine-tuning. """
     logging.basicConfig(
         format="[%(asctime)s] [p%(process)s] [%(pathname)s\
             :%(lineno)d] [%(levelname)s] %(message)s",
@@ -167,6 +167,7 @@ def main(args):
 
 
 def parse_args():
+    """ Parse the user arguments. """
     parser = argparse.ArgumentParser(description="FBNet for PFLD")
     parser.add_argument(
         "--net", default="supernet", type=str, choices=["supernet", "subnet"]
@@ -180,8 +181,8 @@ def parse_args():
     parser.add_argument(
         "--mode", default="mul", type=str, choices=["mul", "add"]
     )
-    parser.add_argument("--alpha", default=0.18, type=float)
-    parser.add_argument("--beta", default=0.6, type=float)
+    parser.add_argument("--alpha", default=0.25, type=float)
+    parser.add_argument("--beta", default=0.8, type=float)
     parser.add_argument("--supernet", default="", type=str, metavar="PATH")
     parser.add_argument("--end_epoch", default=300, type=int)
     parser.add_argument(
