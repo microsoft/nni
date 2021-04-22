@@ -262,18 +262,21 @@ class NNIManager implements Manager {
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             switch (key) {
-                case 'kubeflow_config':
+                case 'kubeflow_config': {
                     const kubeflowModule = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
                     this.trainingService = new kubeflowModule.KubeflowTrainingService();
                     break;
-                case 'frameworkcontroller_config':
+                }
+                case 'frameworkcontroller_config': {
                     const fcModule = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
                     this.trainingService = new fcModule.FrameworkControllerTrainingService();
                     break;
-                case 'adl_config':
+                }
+                case 'adl_config': {
                     const adlModule = await import('../training_service/kubernetes/adl/adlTrainingService');
                     this.trainingService = new adlModule.AdlTrainingService();
                     break;
+                }
                 default:
                     throw new Error("Setup training service failed.");
             }
