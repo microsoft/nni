@@ -210,7 +210,6 @@ class NNIManager implements Manager {
             return Promise.resolve();
         }
 
-        this.log.info('Setup training service...');
         const config: ExperimentConfig = this.experimentProfile.params;
         this.config = config;
         if (this.trainingService === undefined) {
