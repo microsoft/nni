@@ -24,7 +24,7 @@ PFLD是一种面向实时应用的、轻量型人脸关键点模型，其网络�
 
 * `Grand Challenge of 106-Point Facial Landmark Localization <https://arxiv.org/abs/1905.03469>`__
 
-选择的基线模型以MobileNet-V3为主干，表示为MobileNet-V3 PFLD（`参考开源实现 <https://github.com/Hsintao/pfld_106_face_landmarks>`__）。搜索模型通过超网络预训练、子网络采样与微调获得，表示为Subnet。搜索结果如下，其中推理延迟的测试平台为高通625处理器：
+选择的基线模型以MobileNet-V3为主干，表示为MobileNet-V3 PFLD（`参考开源实现 <https://github.com/Hsintao/pfld_106_face_landmarks>`__）。搜索模型通过超网络预训练、子网络采样与微调获得，表示为Subnet。搜索结果如下，其中推理延迟的测试平台为高通625处理器 (ARMv8)：
 
 .. list-table::
    :header-rows: 1
