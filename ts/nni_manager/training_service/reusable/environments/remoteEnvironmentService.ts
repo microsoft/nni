@@ -27,7 +27,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private readonly environmentExecutorManagerMap: Map<string, ExecutorManager>;
     private readonly remoteMachineMetaOccupiedMap: Map<RemoteMachineConfig, boolean>;
     private readonly log: Logger;
-    private sshConnectionPromises: any[];
+    private sshConnectionPromises: Promise<void[]>;
     private experimentRootDir: string;
     private remoteExperimentRootDir: string = "";
     private experimentId: string;
@@ -39,7 +39,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
-        this.sshConnectionPromises = [];
         this.experimentRootDir = getExperimentRootDir();
         this.experimentId = getExperimentId();
         this.log = getLogger();
@@ -50,9 +49,18 @@ export class RemoteEnvironmentService extends EnvironmentService {
             throw new Error(`codeDir ${this.config.trialCodeDirectory} is not a directory`);
         }
 
-        this.sshConnectionPromises = this.config.machineList.map(
+        this.sshConnectionPromises = Promise.all(this.config.machineList.map(
             machine => this.initRemoteMachineOnConnected(machine)
-        );
+        ));
+    }
+
+    public async init(): Promise<void> {
+        await this.sshConnectionPromises;
+        this.log.info('ssh connection initialized!');
+        Array.from(this.machineExecutorManagerMap.keys()).forEach(rmMeta => {
+            // initialize remoteMachineMetaOccupiedMap, false means not occupied
+            this.remoteMachineMetaOccupiedMap.set(rmMeta, false);
+        });
     }
 
     public get prefetchedEnvironmentCount(): number {
@@ -204,16 +212,6 @@ export class RemoteEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        if (this.sshConnectionPromises.length > 0) {
-            await Promise.all(this.sshConnectionPromises);
-            this.log.info('ssh connection initialized!');
-            // set sshConnectionPromises to [] to avoid log information duplicated
-            this.sshConnectionPromises = [];
-            Array.from(this.machineExecutorManagerMap.keys()).forEach(rmMeta => {
-                // initialize remoteMachineMetaOccupiedMap, false means not occupied
-                this.remoteMachineMetaOccupiedMap.set(rmMeta, false);
-            });
-        }
         const remoteEnvironment: RemoteMachineEnvironmentInformation = environment as RemoteMachineEnvironmentInformation;
         remoteEnvironment.status = 'WAITING';
         // schedule machine for environment, generate command
@@ -238,7 +236,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
             const executor = await this.getExecutor(environment.id);
             if (environment.useSharedStorage) {
                 this.remoteExperimentRootDir = component.get<SharedStorageService>(SharedStorageService).remoteWorkingRoot;
-                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `);
+                if (!this.remoteExperimentRootDir.startsWith('/')) {
+                    this.remoteExperimentRootDir = executor.joinPath((await executor.getCurrentPath()).trim(), this.remoteExperimentRootDir);
+                }
+                const remoteMountCommand = component.get<SharedStorageService>(SharedStorageService).remoteMountCommand.replace(/echo -e /g, `echo `).replace(/echo /g, `echo -e `).replace(/\\\$/g, `\\\\\\$`);
                 const result = await executor.executeScript(remoteMountCommand, false, false);
                 if (result.exitCode !== 0) {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);

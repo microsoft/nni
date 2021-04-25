@@ -19,7 +19,7 @@ def request(method: str, port: Optional[int], api: str, data: Any = None) -> Any
     if not resp.ok:
         _logger.error('rest request %s %s failed: %s %s', method.upper(), url, resp.status_code, resp.text)
     resp.raise_for_status()
-    if method.lower() in ['get', 'post']:
+    if method.lower() in ['get', 'post'] and len(resp.content) > 0:
         return resp.json()
 
 def get(port: Optional[int], api: str) -> Any:

@@ -419,7 +419,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     private _renderOperationColumn(record: any): React.ReactNode {
         const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
-        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
         return (
             <Stack className='detail-button' horizontal>
                 <PrimaryButton
