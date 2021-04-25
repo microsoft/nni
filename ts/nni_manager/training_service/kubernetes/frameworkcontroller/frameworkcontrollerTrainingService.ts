@@ -202,7 +202,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG: {
-                this.log.info('-----------setting cluster metadata for FRAMEWORKCONTROLLER_CLUSTER_CONFIG')
                 const frameworkcontrollerClusterJsonObject: any = JSON.parse(value);
                 let namespace: string | undefined;
                 this.fcClusterConfig = FrameworkControllerClusterConfigFactory

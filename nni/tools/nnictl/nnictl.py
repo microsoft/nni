@@ -1,536 +1,275 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import json
+import argparse
+import logging
 import os
-from pathlib import Path
-import sys
-import string
-import random
-import time
-import tempfile
-from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
-from nni.experiment.config import ExperimentConfig, convert
-from nni.tools.annotation import expand_annotations, generate_search_space
-from nni.tools.package_utils import get_builtin_module_class_name
-import nni_node  # pylint: disable=import-error
-from .launcher_utils import validate_all_content
-from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
-from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
-                          detect_port, get_user
+import pkg_resources
+from colorama import init
+from .common_utils import print_error
+from .launcher import create_experiment, resume_experiment, view_experiment
+from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
+from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
+                          log_trial, experiment_clean, platform_clean, experiment_list, \
+                          monitor_experiment, export_trials_data, trial_codegen, webui_url, \
+                          get_config, log_stdout, log_stderr, search_space_auto_gen, webui_nas, \
+                          save_experiment, load_experiment
+from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
+from .constants import DEFAULT_REST_PORT
+from .tensorboard_utils import start_tensorboard, stop_tensorboard
+init(autoreset=True)
 
-from .constants import NNI_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
-from .command_utils import check_output_command, kill_command
-from .nnictl_utils import update_experiment
+if os.environ.get('COVERAGE_PROCESS_START'):
+    import coverage
+    coverage.process_startup()
 
-k8s_training_services = ['kubeflow', 'frameworkcontroller', 'adl']
-
-def get_log_path(experiment_id):
-    '''generate stdout and stderr log path'''
-    os.makedirs(os.path.join(NNI_HOME_DIR, experiment_id, 'log'), exist_ok=True)
-    stdout_full_path = os.path.join(NNI_HOME_DIR, experiment_id, 'log', 'nnictl_stdout.log')
-    stderr_full_path = os.path.join(NNI_HOME_DIR, experiment_id, 'log', 'nnictl_stderr.log')
-    return stdout_full_path, stderr_full_path
-
-def print_log_content(config_file_name):
-    '''print log information'''
-    stdout_full_path, stderr_full_path = get_log_path(config_file_name)
-    print_normal(' Stdout:')
-    print(check_output_command(stdout_full_path))
-    print('\n\n')
-    print_normal(' Stderr:')
-    print(check_output_command(stderr_full_path))
-
-def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None):
-    '''Run nni manager process'''
-    if detect_port(port):
-        print_error('Port %s is used by another process, please reset the port!\n' \
-        'You could use \'nnictl create --help\' to get help information' % port)
-        exit(1)
-
-    if (platform not in ['local', 'aml']) and detect_port(int(port) + 1):
-        print_error('%s mode need an additional adjacent port %d, and the port %d is used by another process!\n' \
-        'You could set another port to start experiment!\n' \
-        'You could use \'nnictl create --help\' to get help information' % (platform, (int(port) + 1), (int(port) + 1)))
-        exit(1)
-
-    print_normal('Starting restful server...')
-
-    entry_dir = nni_node.__path__[0]
-    if (not entry_dir) or (not os.path.exists(entry_dir)):
-        print_error('Fail to find nni under python library')
-        exit(1)
-    entry_file = os.path.join(entry_dir, 'main.js')
-
-    if sys.platform == 'win32':
-        node_command = os.path.join(entry_dir, 'node.exe')
-    else:
-        node_command = os.path.join(entry_dir, 'node')
-    cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(port), '--mode', platform, \
-            '--experiment_id', experiment_id]
-    if mode == 'view':
-        cmds += ['--start_mode', 'resume']
-        cmds += ['--readonly', 'true']
-    else:
-        cmds += ['--start_mode', mode]
-    if log_dir is not None:
-        cmds += ['--log_dir', log_dir]
-    if log_level is not None:
-        cmds += ['--log_level', log_level]
-    if foreground:
-        cmds += ['--foreground', 'true']
-    stdout_full_path, stderr_full_path = get_log_path(experiment_id)
-    with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
-        start_time = time.time()
-        time_now = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(start_time))
-        #add time information in the header of log files
-        log_header = LOG_HEADER % str(time_now)
-        stdout_file.write(log_header)
-        stderr_file.write(log_header)
-        if sys.platform == 'win32':
-            from subprocess import CREATE_NEW_PROCESS_GROUP
-            if foreground:
-                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=STDOUT, creationflags=CREATE_NEW_PROCESS_GROUP)
-            else:
-                process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file, creationflags=CREATE_NEW_PROCESS_GROUP)
-        else:
-            if foreground:
-                process = Popen(cmds, cwd=entry_dir, stdout=PIPE, stderr=PIPE)
-            else:
-                process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
-    return process, int(start_time * 1000)
-
-def set_trial_config(experiment_config, port, config_file_name):
-    '''set trial configuration'''
-    request_data = dict()
-    request_data['trial_config'] = experiment_config['trial']
-    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
-    if check_response(response):
-        return True
-    else:
-        print('Error message is {}'.format(response.text))
-        _, stderr_full_path = get_log_path(config_file_name)
-        if response:
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-        return False
-
-def set_adl_config(experiment_config, port, config_file_name):
-    '''set adl configuration'''
-    adl_config_data = dict()
-    # hack for supporting v2 config, need refactor
-    adl_config_data['adl_config'] = {}
-    response = rest_put(cluster_metadata_url(port), json.dumps(adl_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setV1CommonConfig(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), None
-
-def setV1CommonConfig(experiment_config, port, config_file_name):
-    '''set nniManagerIp'''
-    if experiment_config.get('nniManagerIp') is None:
-        return True, None
-    config_dict = dict()
-    config_dict['nni_manager_ip'] = {'nniManagerIp': experiment_config['nniManagerIp']}
-        #debug mode should disable version check
-    if experiment_config.get('debug') is not None:
-        config_dict['version_check'] = not experiment_config.get('debug')
-    #validate version check
-    if experiment_config.get('versionCheck') is not None:
-        config_dict['version_check'] = experiment_config.get('versionCheck')
-    if experiment_config.get('logCollection'):
-        config_dict['log_collection'] = experiment_config.get('logCollection')
-    response = rest_put(cluster_metadata_url(port), json.dumps(config_dict), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    return True, None
-
-def set_kubeflow_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration'''
-    kubeflow_config_data = dict()
-    kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setV1CommonConfig(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_frameworkcontroller_config(experiment_config, port, config_file_name):
-    '''set kubeflow configuration'''
-    frameworkcontroller_config_data = dict()
-    frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
-    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
-    err_message = None
-    if not response or not response.status_code == 200:
-        if response is not None:
-            err_message = response.text
-            _, stderr_full_path = get_log_path(config_file_name)
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-        return False, err_message
-    result, message = setV1CommonConfig(experiment_config, port, config_file_name)
-    if not result:
-        return result, message
-    #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name), err_message
-
-def set_shared_storage(experiment_config, port, config_file_name):
-    if 'sharedStorage' in experiment_config:
-        response = rest_put(cluster_metadata_url(port), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
-        err_message = None
-        if not response or not response.status_code == 200:
-            if response is not None:
-                err_message = response.text
-                _, stderr_full_path = get_log_path(config_file_name)
-                with open(stderr_full_path, 'a+') as fout:
-                    fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
-            return False, err_message
-    return True, None
-
-def set_experiment_v1(experiment_config, mode, port, config_file_name):
-    '''Call startExperiment (rest POST /experiment) with yaml file content'''
-    request_data = dict()
-    request_data['authorName'] = experiment_config['authorName']
-    request_data['experimentName'] = experiment_config['experimentName']
-    request_data['trialConcurrency'] = experiment_config['trialConcurrency']
-    request_data['maxExecDuration'] = experiment_config['maxExecDuration']
-    request_data['maxExperimentDuration'] = str(experiment_config['maxExecDuration']) + 's'
-    request_data['maxTrialNum'] = experiment_config['maxTrialNum']
-    request_data['maxTrialNumber'] = experiment_config['maxTrialNum']
-    request_data['searchSpace'] = experiment_config.get('searchSpace')
-    request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
-    # hack for hotfix, fix config.trainingService undefined error, need refactor
-    request_data['trainingService'] = {'platform': experiment_config.get('trainingServicePlatform')}
-    if experiment_config.get('description'):
-        request_data['description'] = experiment_config['description']
-    if experiment_config.get('multiPhase'):
-        request_data['multiPhase'] = experiment_config.get('multiPhase')
-    if experiment_config.get('multiThread'):
-        request_data['multiThread'] = experiment_config.get('multiThread')
-    if experiment_config.get('nniManagerIp'):
-        request_data['nniManagerIp'] = experiment_config.get('nniManagerIp')
-    if experiment_config.get('advisor'):
-        request_data['advisor'] = experiment_config['advisor']
-        if request_data['advisor'].get('gpuNum'):
-            print_error('gpuNum is deprecated, please use gpuIndices instead.')
-        if request_data['advisor'].get('gpuIndices') and isinstance(request_data['advisor'].get('gpuIndices'), int):
-            request_data['advisor']['gpuIndices'] = str(request_data['advisor'].get('gpuIndices'))
-    else:
-        request_data['tuner'] = experiment_config['tuner']
-        if request_data['tuner'].get('gpuNum'):
-            print_error('gpuNum is deprecated, please use gpuIndices instead.')
-        if request_data['tuner'].get('gpuIndices') and isinstance(request_data['tuner'].get('gpuIndices'), int):
-            request_data['tuner']['gpuIndices'] = str(request_data['tuner'].get('gpuIndices'))
-        if 'assessor' in experiment_config:
-            request_data['assessor'] = experiment_config['assessor']
-            if request_data['assessor'].get('gpuNum'):
-                print_error('gpuNum is deprecated, please remove it from your config file.')
-    #debug mode should disable version check
-    if experiment_config.get('debug') is not None:
-        request_data['versionCheck'] = not experiment_config.get('debug')
-    #validate version check
-    if experiment_config.get('versionCheck') is not None:
-        request_data['versionCheck'] = experiment_config.get('versionCheck')
-    if experiment_config.get('logCollection'):
-        request_data['logCollection'] = experiment_config.get('logCollection')
-    request_data['clusterMetaData'] = []
-    if experiment_config['trainingServicePlatform'] == 'kubeflow':
-        request_data['clusterMetaData'].append(
-            {'key': 'kubeflow_config', 'value': experiment_config['kubeflowConfig']})
-        request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'frameworkcontroller':
-        request_data['clusterMetaData'].append(
-            {'key': 'frameworkcontroller_config', 'value': experiment_config['frameworkcontrollerConfig']})
-        request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': experiment_config['trial']})
-    elif experiment_config['trainingServicePlatform'] == 'adl':
-        request_data['clusterMetaData'].append(
-            {'key': 'trial_config', 'value': experiment_config['trial']})
-    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
-    if check_response(response):
-        return response
-    else:
-        _, stderr_full_path = get_log_path(config_file_name)
-        if response is not None:
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-            print_error('Setting experiment error, error message is {}'.format(response.text))
-        return None
-
-def set_experiment_v2(experiment_config, mode, port, config_file_name):
-    '''Call startExperiment (rest POST /experiment) with yaml file content'''
-    response = rest_post(experiment_url(port), json.dumps(experiment_config), REST_TIME_OUT, show_error=True)
-    if check_response(response):
-        return response
-    else:
-        _, stderr_full_path = get_log_path(config_file_name)
-        if response is not None:
-            with open(stderr_full_path, 'a+') as fout:
-                fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-            print_error('Setting experiment error, error message is {}'.format(response.text))
-        return None
-
-def set_platform_config(platform, experiment_config, port, config_file_name, rest_process):
-    '''call set_cluster_metadata for specific platform'''
-    print_normal('Setting {0} config...'.format(platform))
-    config_result, err_msg = None, None
-    if platform == 'adl':
-        config_result, err_msg = set_adl_config(experiment_config, port, config_file_name)
-    elif platform == 'kubeflow':
-        config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
-    elif platform == 'frameworkcontroller':
-        config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name)
-    else:
-        raise Exception(ERROR_INFO % 'Unsupported platform!')
-        exit(1)
-    if config_result:
-        config_result, err_msg = set_shared_storage(experiment_config, port, config_file_name)
-    if config_result:
-        print_normal('Successfully set {0} config!'.format(platform))
-    else:
-        print_error('Failed! Error is: {}'.format(err_msg))
+def nni_info(*args):
+    if args[0].version:
         try:
-            kill_command(rest_process.pid)
-        except Exception:
-            raise Exception(ERROR_INFO % 'Rest server stopped!')
-        exit(1)
-
-def launch_experiment(args, experiment_config, mode, experiment_id, config_version):
-    '''follow steps to start rest server and start experiment'''
-    # check packages for tuner
-    package_name, module_name = None, None
-    if experiment_config.get('tuner') and experiment_config['tuner'].get('builtinTunerName'):
-        package_name = experiment_config['tuner']['builtinTunerName']
-        module_name, _ = get_builtin_module_class_name('tuners', package_name)
-    elif experiment_config.get('advisor') and experiment_config['advisor'].get('builtinAdvisorName'):
-        package_name = experiment_config['advisor']['builtinAdvisorName']
-        module_name, _ = get_builtin_module_class_name('advisors', package_name)
-    if package_name and module_name:
-        try:
-            stdout_full_path, stderr_full_path = get_log_path(experiment_id)
-            with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
-                check_call([sys.executable, '-c', 'import %s'%(module_name)], stdout=stdout_file, stderr=stderr_file)
-        except CalledProcessError:
-            print_error('some errors happen when import package %s.' %(package_name))
-            print_log_content(experiment_id)
-            if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
-                print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
-            raise
-    if config_version == 1:
-        log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+            print(pkg_resources.get_distribution('nni').version)
+        except pkg_resources.ResolutionError:
+            print_error('Get version failed, please use `pip3 list | grep nni` to check nni version!')
     else:
-        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
-    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
-    #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
-    foreground = False
-    if mode != 'view':
-        foreground = args.foreground
-        if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
-            log_level = 'debug'
-    # start rest server
-    if config_version == 1:
-        platform = experiment_config['trainingServicePlatform']
-    elif isinstance(experiment_config['trainingService'], list):
-        platform = 'hybrid'
-    else:
-        platform = experiment_config['trainingService']['platform']
+        print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
-    rest_process, start_time = start_rest_server(args.port, platform, \
-                                                 mode, experiment_id, foreground, log_dir, log_level)
-    # save experiment information
-    Experiments().add_experiment(experiment_id, args.port, start_time,
-                                 platform,
-                                 experiment_config.get('experimentName', 'N/A'), pid=rest_process.pid, logDir=log_dir)
-    # Deal with annotation
-    if experiment_config.get('useAnnotation'):
-        path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
-        if not os.path.isdir(path):
-            os.makedirs(path)
-        path = tempfile.mkdtemp(dir=path)
-        nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
-        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
-        experiment_config['trial']['codeDir'] = code_dir
-        search_space = generate_search_space(code_dir)
-        experiment_config['searchSpace'] = search_space
-        assert search_space, ERROR_INFO % 'Generated search space is empty'
-    elif config_version == 1:
-        if experiment_config.get('searchSpacePath'):
-            search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = search_space
-        else:
-            experiment_config['searchSpace'] = ''
+def parse_args():
+    logging.getLogger().setLevel(logging.ERROR)
 
-    # check rest server
-    running, _ = check_rest_server(args.port)
-    if running:
-        print_normal('Successfully started Restful server!')
-    else:
-        print_error('Restful server start failed!')
-        print_log_content(experiment_id)
-        try:
-            kill_command(rest_process.pid)
-        except Exception:
-            raise Exception(ERROR_INFO % 'Rest server stopped!')
-        exit(1)
-    if config_version == 1 and mode != 'view':
-        # set platform configuration
-        set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
-                            experiment_id, rest_process)
+    '''Definite the arguments users need to follow and input'''
+    parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
+    parser.add_argument('--version', '-v', action='store_true')
+    parser.set_defaults(func=nni_info)
 
-    # start a new experiment
-    print_normal('Starting experiment...')
-    # set debug configuration
-    if mode != 'view' and experiment_config.get('debug') is None:
-        experiment_config['debug'] = args.debug
-    if config_version == 1:
-        response = set_experiment_v1(experiment_config, mode, args.port, experiment_id)
-    else:
-        response = set_experiment_v2(experiment_config, mode, args.port, experiment_id)
-    if response:
-        if experiment_id is None:
-            experiment_id = json.loads(response.text).get('experiment_id')
-    else:
-        print_error('Start experiment failed!')
-        print_log_content(experiment_id)
-        try:
-            kill_command(rest_process.pid)
-        except Exception:
-            raise Exception(ERROR_INFO % 'Restful server stopped!')
-        exit(1)
-    if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
-    else:
-        web_ui_url_list = get_local_urls(args.port)
-    Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
+    # create subparsers for args with sub values
+    subparsers = parser.add_subparsers()
 
-    print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
-    if mode != 'view' and args.foreground:
-        try:
-            while True:
-                log_content = rest_process.stdout.readline().strip().decode('utf-8')
-                print(log_content)
-        except KeyboardInterrupt:
-            kill_command(rest_process.pid)
-            print_normal('Stopping experiment...')
+    # parse the command of auto generating search space
+    parser_start = subparsers.add_parser('ss_gen', help='automatically generate search space file from trial code')
+    parser_start.add_argument('--trial_command', '-t', required=True, dest='trial_command', help='the command for running trial code')
+    parser_start.add_argument('--trial_dir', '-d', default='./', dest='trial_dir', help='the directory for running the command')
+    parser_start.add_argument('--file', '-f', default='nni_auto_gen_search_space.json', dest='file', help='the path of search space file')
+    parser_start.set_defaults(func=search_space_auto_gen)
 
-def _validate_v1(config, path):
-    try:
-        validate_all_content(config, path)
-    except Exception as e:
-        print_error(f'Config V1 validation failed: {repr(e)}')
-        exit(1)
+    # parse start command
+    parser_start = subparsers.add_parser('create', help='create a new experiment')
+    parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
+    parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_start.set_defaults(func=create_experiment)
 
-def _validate_v2(config, path):
-    base_path = Path(path).parent
-    try:
-        conf = ExperimentConfig(_base_path=base_path, **config)
-        return conf.json()
-    except Exception as e:
-        print_error(f'Config V2 validation failed: {repr(e)}')
+    # parse resume command
+    parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
+    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
+    parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_resume.set_defaults(func=resume_experiment)
 
-def create_experiment(args):
-    '''start a new experiment'''
-    experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
-    config_path = os.path.abspath(args.config)
-    if not os.path.exists(config_path):
-        print_error('Please set correct config path!')
-        exit(1)
-    config_yml = get_yml_content(config_path)
+    # parse view command
+    parser_view = subparsers.add_parser('view', help='view a stopped experiment')
+    parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_view.set_defaults(func=view_experiment)
 
-    if 'trainingServicePlatform' in config_yml:
-        _validate_v1(config_yml, config_path)
-        platform = config_yml['trainingServicePlatform']
-        if platform in k8s_training_services:
-            schema = 1
-            config_v1 = config_yml
-        else:
-            schema = 2
-            from nni.experiment.config import convert
-            config_v2 = convert.to_v2(config_yml).json()
-    else:
-        config_v2 = _validate_v2(config_yml, config_path)
-        schema = 2
+    # parse update command
+    parser_updater = subparsers.add_parser('update', help='update the experiment')
+    #add subparsers for parser_updater
+    parser_updater_subparsers = parser_updater.add_subparsers()
+    parser_updater_searchspace = parser_updater_subparsers.add_parser('searchspace', help='update searchspace')
+    parser_updater_searchspace.add_argument('id', nargs='?', help='the id of experiment')
+    parser_updater_searchspace.add_argument('--filename', '-f', required=True)
+    parser_updater_searchspace.set_defaults(func=update_searchspace)
+    parser_updater_concurrency = parser_updater_subparsers.add_parser('concurrency', help='update concurrency')
+    parser_updater_concurrency.add_argument('id', nargs='?', help='the id of experiment')
+    parser_updater_concurrency.add_argument('--value', '-v', required=True)
+    parser_updater_concurrency.set_defaults(func=update_concurrency)
+    parser_updater_duration = parser_updater_subparsers.add_parser('duration', help='update duration')
+    parser_updater_duration.add_argument('id', nargs='?', help='the id of experiment')
+    parser_updater_duration.add_argument('--value', '-v', required=True, help='the unit of time should in {\'s\', \'m\', \'h\', \'d\'}')
+    parser_updater_duration.set_defaults(func=update_duration)
+    parser_updater_trialnum = parser_updater_subparsers.add_parser('trialnum', help='update maxtrialnum')
+    parser_updater_trialnum.add_argument('id', nargs='?', help='the id of experiment')
+    parser_updater_trialnum.add_argument('--value', '-v', required=True)
+    parser_updater_trialnum.set_defaults(func=update_trialnum)
 
-    try:
-        if schema == 1:
-            launch_experiment(args, config_v1, 'new', experiment_id, 1)
-        else:
-            launch_experiment(args, config_v2, 'new', experiment_id, 2)
-    except Exception as exception:
-        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
-        if restServerPid:
-            kill_command(restServerPid)
-        print_error(exception)
-        exit(1)
+    #parse stop command
+    parser_stop = subparsers.add_parser('stop', help='stop the experiment')
+    parser_stop.add_argument('id', nargs='?', help='the id of experiment, use \'all\' to stop all running experiments')
+    parser_stop.add_argument('--port', '-p', dest='port', type=int, help='the port of restful server')
+    parser_stop.add_argument('--all', '-a', action='store_true', help='stop all of experiments')
+    parser_stop.set_defaults(func=stop_experiment)
 
-def manage_stopped_experiment(args, mode):
-    '''view a stopped experiment'''
-    update_experiment()
-    experiments_config = Experiments()
-    experiments_dict = experiments_config.get_all_experiments()
-    experiment_id = None
-    #find the latest stopped experiment
-    if not args.id:
-        print_error('Please set experiment id! \nYou could use \'nnictl {0} id\' to {0} a stopped experiment!\n' \
-        'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
-        exit(1)
-    else:
-        if experiments_dict.get(args.id) is None:
-            print_error('Id %s not exist!' % args.id)
-            exit(1)
-        if experiments_dict[args.id]['status'] != 'STOPPED':
-            print_error('Only stopped experiments can be {0}ed!'.format(mode))
-            exit(1)
-        experiment_id = args.id
-    print_normal('{0} experiment {1}...'.format(mode, experiment_id))
-    experiment_config = Config(experiment_id, experiments_dict[args.id]['logDir']).get_config()
-    experiments_config.update_experiment(args.id, 'port', args.port)
-    assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
-    try:
-        if 'trainingService' in experiment_config:
-            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
-            launch_experiment(args, experiment_config, mode, experiment_id, 2)
-        else:
-            experiment_config['logDir'] = experiments_dict[args.id]['logDir']
-            launch_experiment(args, experiment_config, mode, experiment_id, 1)
-    except Exception as exception:
-        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
-        if restServerPid:
-            kill_command(restServerPid)
-        print_error(exception)
-        exit(1)
+    #parse trial command
+    parser_trial = subparsers.add_parser('trial', help='get trial information')
+    #add subparsers for parser_trial
+    parser_trial_subparsers = parser_trial.add_subparsers()
+    parser_trial_ls = parser_trial_subparsers.add_parser('ls', help='list trial jobs')
+    parser_trial_ls.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_ls.add_argument('--head', type=int, help='list the highest experiments on the default metric')
+    parser_trial_ls.add_argument('--tail', type=int, help='list the lowest experiments on the default metric')
+    parser_trial_ls.set_defaults(func=trial_ls)
+    parser_trial_kill = parser_trial_subparsers.add_parser('kill', help='kill trial jobs')
+    parser_trial_kill.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_kill.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to be killed')
+    parser_trial_kill.set_defaults(func=trial_kill)
+    parser_trial_codegen = parser_trial_subparsers.add_parser('codegen', help='generate trial code for a specific trial')
+    parser_trial_codegen.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_codegen.add_argument('--trial_id', '-T', required=True, dest='trial_id', help='the id of trial to do code generation')
+    parser_trial_codegen.set_defaults(func=trial_codegen)
 
-def view_experiment(args):
-    '''view a stopped experiment'''
-    manage_stopped_experiment(args, 'view')
+    #parse experiment command
+    parser_experiment = subparsers.add_parser('experiment', help='get experiment information')
+    #add subparsers for parser_experiment
+    parser_experiment_subparsers = parser_experiment.add_subparsers()
+    parser_experiment_show = parser_experiment_subparsers.add_parser('show', help='show the information of experiment')
+    parser_experiment_show.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_show.set_defaults(func=list_experiment)
+    parser_experiment_status = parser_experiment_subparsers.add_parser('status', help='show the status of experiment')
+    parser_experiment_status.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_status.set_defaults(func=experiment_status)
+    parser_experiment_list = parser_experiment_subparsers.add_parser('list', help='list all of running experiment ids')
+    parser_experiment_list.add_argument('--all', action='store_true', default=False, help='list all of experiments')
+    parser_experiment_list.set_defaults(func=experiment_list)
+    parser_experiment_clean = parser_experiment_subparsers.add_parser('delete', help='clean up the experiment data')
+    parser_experiment_clean.add_argument('id', nargs='?', help='the id of experiment')
+    parser_experiment_clean.add_argument('--all', action='store_true', default=False, help='delete all of experiments')
+    parser_experiment_clean.set_defaults(func=experiment_clean)
+    #import tuning data
+    parser_import_data = parser_experiment_subparsers.add_parser('import', help='import additional data')
+    parser_import_data.add_argument('id', nargs='?', help='the id of experiment')
+    parser_import_data.add_argument('--filename', '-f', required=True)
+    parser_import_data.set_defaults(func=import_data)
+    #export trial data
+    parser_trial_export = parser_experiment_subparsers.add_parser('export', help='export trial job results to csv or json')
+    parser_trial_export.add_argument('id', nargs='?', help='the id of experiment')
+    parser_trial_export.add_argument('--type', '-t', choices=['json', 'csv'], required=True, dest='type', help='target file type')
+    parser_trial_export.add_argument('--filename', '-f', required=True, dest='path', help='target file path')
+    parser_trial_export.add_argument('--intermediate', '-i', action='store_true',
+                                     default=False, help='are intermediate results included')
+    parser_trial_export.set_defaults(func=export_trials_data)
+    #save an NNI experiment
+    parser_save_experiment = parser_experiment_subparsers.add_parser('save', help='save an experiment')
+    parser_save_experiment.add_argument('id', nargs='?', help='the id of experiment')
+    parser_save_experiment.add_argument('--path', '-p', required=False, help='the folder path to store nni experiment data, \
+                                   default current working directory')
+    parser_save_experiment.add_argument('--saveCodeDir', '-s', action='store_true', default=False, help='save codeDir data \
+                                   of the experiment')
+    parser_save_experiment.set_defaults(func=save_experiment)
+    #load an NNI experiment
+    parser_load_experiment = parser_experiment_subparsers.add_parser('load', help='load an experiment')
+    parser_load_experiment.add_argument('--path', '-p', required=True, help='the path of nni package file')
+    parser_load_experiment.add_argument('--codeDir', '-c', required=True, help='the path of codeDir for loaded experiment, \
+                                   this path will also put the code in the loaded experiment package')
+    parser_load_experiment.add_argument('--logDir', '-l', required=False, help='the path of logDir for loaded experiment')
+    parser_load_experiment.add_argument('--searchSpacePath', '-s', required=False, help='the path of search space file for \
+                                   loaded experiment, this path contains file name. Default in $codeDir/search_space.json')
+    parser_load_experiment.set_defaults(func=load_experiment)
 
-def resume_experiment(args):
-    '''resume an experiment'''
-    manage_stopped_experiment(args, 'resume')
+    #parse platform command
+    parser_platform = subparsers.add_parser('platform', help='get platform information')
+    #add subparsers for parser_platform
+    parser_platform_subparsers = parser_platform.add_subparsers()
+    parser_platform_clean = parser_platform_subparsers.add_parser('clean', help='clean up the platform data')
+    parser_platform_clean.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
+    parser_platform_clean.set_defaults(func=platform_clean)
+
+    #TODO:finish webui function
+    #parse board command
+    parser_webui = subparsers.add_parser('webui', help='get web ui information')
+    #add subparsers for parser_board
+    parser_webui_subparsers = parser_webui.add_subparsers()
+    parser_webui_url = parser_webui_subparsers.add_parser('url', help='show the url of web ui')
+    parser_webui_url.add_argument('id', nargs='?', help='the id of experiment')
+    parser_webui_url.set_defaults(func=webui_url)
+    parser_webui_nas = parser_webui_subparsers.add_parser('nas', help='show nas ui')
+    parser_webui_nas.add_argument('--port', default=6060, type=int, help='port of nas ui')
+    parser_webui_nas.add_argument('--logdir', default='.', type=str, help='the logdir where nas ui will read data')
+    parser_webui_nas.set_defaults(func=webui_nas)
+
+    #parse config command
+    parser_config = subparsers.add_parser('config', help='get config information')
+    parser_config_subparsers = parser_config.add_subparsers()
+    parser_config_show = parser_config_subparsers.add_parser('show', help='show the information of config')
+    parser_config_show.add_argument('id', nargs='?', help='the id of experiment')
+    parser_config_show.set_defaults(func=get_config)
+
+    #parse log command
+    parser_log = subparsers.add_parser('log', help='get log information')
+    # add subparsers for parser_log
+    parser_log_subparsers = parser_log.add_subparsers()
+    parser_log_stdout = parser_log_subparsers.add_parser('stdout', help='get stdout information')
+    parser_log_stdout.add_argument('id', nargs='?', help='the id of experiment')
+    parser_log_stdout.add_argument('--tail', '-T', dest='tail', type=int, help='get tail -100 content of stdout')
+    parser_log_stdout.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stdout')
+    parser_log_stdout.add_argument('--path', action='store_true', default=False, help='get the path of stdout file')
+    parser_log_stdout.set_defaults(func=log_stdout)
+    parser_log_stderr = parser_log_subparsers.add_parser('stderr', help='get stderr information')
+    parser_log_stderr.add_argument('id', nargs='?', help='the id of experiment')
+    parser_log_stderr.add_argument('--tail', '-T', dest='tail', type=int, help='get tail -100 content of stderr')
+    parser_log_stderr.add_argument('--head', '-H', dest='head', type=int, help='get head -100 content of stderr')
+    parser_log_stderr.add_argument('--path', action='store_true', default=False, help='get the path of stderr file')
+    parser_log_stderr.set_defaults(func=log_stderr)
+    parser_log_trial = parser_log_subparsers.add_parser('trial', help='get trial log path')
+    parser_log_trial.add_argument('id', nargs='?', help='the id of experiment')
+    parser_log_trial.add_argument('--trial_id', '-T', dest='trial_id', help='find trial log path by id')
+    parser_log_trial.set_defaults(func=log_trial)
+
+    #parse algo command
+    parser_algo = subparsers.add_parser('algo', help='control nni builtin tuner, assessor and advisor algorithms')
+    # add subparsers for parser_algo
+    parser_algo_subparsers = parser_algo.add_subparsers()
+    parser_algo_reg = parser_algo_subparsers.add_parser(
+        'register',
+        aliases=('reg',),
+        help='''register algorithms as nni builtin algorithm, for example:
+            nnictl reg --meta_path <path_to_meta_file>
+            where <path_to_meta_file> is the path to a meta data in yml format,
+            reference the nni document and examples/tuners/customized_tuner example
+            for the format of the yml file.'''
+    )
+    parser_algo_reg.add_argument('--meta_path', '-m', dest='meta_path', help='path to the meta file', required=True)
+    parser_algo_reg.set_defaults(func=algo_reg)
+
+    parser_algo_unreg = parser_algo_subparsers.add_parser('unregister', aliases=('unreg',), help='unregister algorithm')
+    parser_algo_unreg.add_argument('name', nargs=1, help='builtin name of the algorithm')
+    parser_algo_unreg.set_defaults(func=algo_unreg)
+
+    parser_algo_show = parser_algo_subparsers.add_parser('show', help='show the information of algorithm')
+    parser_algo_show.add_argument('name', nargs=1, help='builtin name of the algorithm')
+    parser_algo_show.set_defaults(func=algo_show)
+
+    parser_algo_list = parser_algo_subparsers.add_parser('list', help='list registered algorithms')
+    parser_algo_list.set_defaults(func=algo_list)
+
+    # To show message that nnictl package command is replaced by nnictl algo, to be remove in the future release.
+    def show_messsage_for_nnictl_package(args):
+        print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
+
+    parser_package_subparsers = subparsers.add_parser('package', help='this argument is replaced by algo', prefix_chars='\n')
+    parser_package_subparsers.add_argument('args', nargs=argparse.REMAINDER)
+    parser_package_subparsers.set_defaults(func=show_messsage_for_nnictl_package)
+
+    #parse tensorboard command
+    parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
+    parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
+    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
+    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
+    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, type=int, help='the port to start tensorboard')
+    parser_tensorboard_start.set_defaults(func=start_tensorboard)
+    parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
+    parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
+    parser_tensorboard_stop.set_defaults(func=stop_tensorboard)
+
+    #parse top command
+    parser_top = subparsers.add_parser('top', help='monitor the experiment')
+    parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
+    'the unit is second')
+    parser_top.set_defaults(func=monitor_experiment)
+
+    args = parser.parse_args()
+    args.func(args)
+
+if __name__ == '__main__':
+    parse_args()
