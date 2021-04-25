@@ -58,6 +58,8 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
      - `Cyclic Differentiable Architecture Search <https://arxiv.org/pdf/2006.10724.pdf>`__ 在搜索和评估网络之间建立循环反馈机制。 通过引入的循环的可微分架构搜索框架将两个网络集成为一个架构。
    * - `ProxylessNAS <Proxylessnas.rst>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. 它删除了代理，直接从大规模目标任务和目标硬件平台进行学习。
+   * - `FBNet <FBNet.rst>`__
+     - `FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural Architecture Search <https://arxiv.org/abs/1812.03443>`__. 介绍了一种可微分的、模块级的网络结构搜索方法，结合了硬件资源约束。
    * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. 这是专门用于文本表示的神经网络架构搜索算法。
    * - `Cream <Cream.rst>`__
