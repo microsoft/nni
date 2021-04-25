@@ -131,11 +131,38 @@ def set_adl_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), None
+
+def validate_response(response, config_file_name):
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        print_error('Error:' + err_message)
+        exit(1)
+
+# hack to fix v1 version_check and log_collection bug, need refactor
+def set_V1_common_config(experiment_config, port, config_file_name):
+    version_check = True
+    #debug mode should disable version check
+    if experiment_config.get('debug') is not None:
+        version_check = not experiment_config.get('debug')
+    #validate version check
+    if experiment_config.get('versionCheck') is not None:
+        version_check = experiment_config.get('versionCheck')
+    response = rest_put(cluster_metadata_url(port), json.dumps({'version_check': version_check}), REST_TIME_OUT)
+    validate_response(response, config_file_name)
+    if experiment_config.get('logCollection'):
+        response = rest_put(cluster_metadata_url(port), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
+        validate_response(response, config_file_name)
 
 def setNNIManagerIp(experiment_config, port, config_file_name):
     '''set nniManagerIp'''
@@ -167,6 +194,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
@@ -186,6 +214,7 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message

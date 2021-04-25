@@ -19,6 +19,7 @@ import {validateCodeDir} from '../../common/util';
 import {NFSConfig} from '../kubernetesConfig';
 import {KubernetesTrialJobDetail} from '../kubernetesData';
 import {KubernetesTrainingService} from '../kubernetesTrainingService';
+import {KubernetesJobRestServer} from '../kubernetesJobRestServer';
 import {FrameworkControllerClientFactory} from './frameworkcontrollerApiClient';
 import {
     FrameworkControllerClusterConfig,
@@ -52,7 +53,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     public async run(): Promise<void> {
-        this.kubernetesJobRestServer = component.get(FrameworkControllerJobRestServer);
+        this.kubernetesJobRestServer = new KubernetesJobRestServer(this);
         if (this.kubernetesJobRestServer === undefined) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }
