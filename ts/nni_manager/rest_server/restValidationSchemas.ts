@@ -229,6 +229,8 @@ export namespace ValidationSchemas {
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             nniManagerIp: joi.string(),
+            versionCheck: joi.boolean(),
+            logCollection: joi.string(),
             advisor: joi.object({
                 builtinAdvisorName: joi.string(),
                 codeDir: joi.string(),
