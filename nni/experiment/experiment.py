@@ -19,7 +19,6 @@ from . import management
 from . import rest
 from ..tools.nnictl.command_utils import kill_command
 
-nni.runtime.log.init_logger_experiment()
 _logger = logging.getLogger('nni.experiment')
 
 
@@ -71,6 +70,8 @@ class Experiment:
         ...
 
     def __init__(self, config=None, training_service=None):
+        nni.runtime.log.init_logger_experiment()
+
         self.config: Optional[ExperimentConfig] = None
         self.id: Optional[str] = None
         self.port: Optional[int] = None

@@ -212,7 +212,9 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['experimentName'] = experiment_config['experimentName']
     request_data['trialConcurrency'] = experiment_config['trialConcurrency']
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
+    request_data['maxExperimentDuration'] = str(experiment_config['maxExecDuration']) + 's'
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
+    request_data['maxTrialNumber'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
     # hack for hotfix, fix config.trainingService undefined error, need refactor
@@ -368,14 +370,14 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
         experiment_config['trial']['codeDir'] = code_dir
         search_space = generate_search_space(code_dir)
-        experiment_config['searchSpace'] = json.dumps(search_space)
+        experiment_config['searchSpace'] = search_space
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif config_version == 1:
         if experiment_config.get('searchSpacePath'):
             search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+            experiment_config['searchSpace'] = search_space
         else:
-            experiment_config['searchSpace'] = json.dumps('')
+            experiment_config['searchSpace'] = ''
 
     # check rest server
     running, _ = check_rest_server(args.port)
