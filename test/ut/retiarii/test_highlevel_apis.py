@@ -365,7 +365,7 @@ class TestHighLevelAPI(unittest.TestCase):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.dropout_rate = nn.ValueChoice([[0.,], [1.,]])
+                self.dropout_rate = nn.ValueChoice([[0., ], [1., ]])
 
             def forward(self, x):
                 return F.dropout(x, self.dropout_rate()[0])
@@ -384,7 +384,7 @@ class TestHighLevelAPI(unittest.TestCase):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.dropout_rate = nn.ValueChoice([[1.05,], [1.1,]])
+                self.dropout_rate = nn.ValueChoice([[1.05, ], [1.1, ]])
 
             def forward(self, x):
                 # if expression failed, the exception would be:
@@ -400,3 +400,27 @@ class TestHighLevelAPI(unittest.TestCase):
         self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
+
+    def test_repeat(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), (3, 5))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        model3 = mutator.apply(model)
+        self.assertTrue((self._get_converted_pytorch_model(model1)(torch.zeros(1, 16)) == 3).all())
+        self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
+        self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())

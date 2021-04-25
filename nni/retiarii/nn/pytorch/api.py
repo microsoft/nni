@@ -13,7 +13,7 @@ from ...serializer import Translatable, basic_unit
 from ...utils import uid
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs', 'Repeat', 'Cell']
 
 
 class LayerChoice(nn.Module):
@@ -312,14 +312,16 @@ class ValueChoice(Translatable, nn.Module):
         return access
 
 
-class VariableSequential(nn.Module):
+class Repeat(nn.Module):
     """
-    Construct a chain and execute a variable prefix of the chain.
+    Construct a chain with a basic building block and execute a variable-length prefix of the chain.
 
     """
     def __init__(self,
                  blocks: Union[Callable, List[Callable], nn.Module, List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]]):
+                 depth: Union[int, Tuple[int, int]], label=None):
+        super().__init__()
+        self._label = label if label is not None else f'valuechoice_{uid()}'
         self.min_depth = depth if isinstance(depth, int) else depth[0]
         self.max_depth = depth if isinstance(depth, int) else depth[1]
         assert self.max_depth >= self.min_depth > 0
@@ -331,11 +333,16 @@ class VariableSequential(nn.Module):
         assert len(blocks) > 0
         if not isinstance(blocks[0], nn.Module):
             blocks = [b() for b in blocks]
-        self.blocks = blocks
-        self.depth = ValueChoice(candidates=list(range(self.min_depth, self.max_depth + 1)))
+        self.blocks = nn.ModuleList(blocks)
+
+    @property
+    def label(self):
+        return self._label
 
     def forward(self, x):
-        pass
+        for block in self.blocks:
+            x = block(x)
+        return x
 
 
 class Cell(nn.Module):
@@ -372,7 +379,6 @@ class Cell(nn.Module):
                 current_state.append(self.op_candidates[i][k](self.input_candidates[i][k](states)))
             current_state = sum(current_state)
         states.append(current_state)
-        # TODO: support loose ends
         return torch.cat(states, 1)
 
 
