@@ -1,5 +1,5 @@
 FBNet
-=======================================================================================
+======
 
 For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuray. References are listed as below:
 
@@ -20,7 +20,7 @@ To achieve better trade-off between latency and accuray, the FBNet is applied on
 
 
 Experiments
-------------------
+------------
 
 To verify the effectiveness of FBNet applied on PFLD, we choose the open source dataset with 106 landmark points as the benchmark:
 
@@ -56,7 +56,7 @@ Please run the following scripts at the example directory.
 
 
 Data Preparation
-----------------
+-----------------
 
 Firstly, you should download the dataset `106points dataset <https://drive.google.com/file/d/1I7QdnLxAlyG2Tq3L66QYzGhiBEoVfzKo/view?usp=sharing>`__ to the path ``./data/106points`` . The dataset includes the train-set and test-set:
 
@@ -71,8 +71,8 @@ Firstly, you should download the dataset `106points dataset <https://drive.googl
 Quik Start
 -----------
 
-1. Exploration training
-^^^^^^^^^
+1. Search
+^^^^^^^^^^
 
 The Python dependencies are listed as below:
 
@@ -97,8 +97,8 @@ After specifying the search space and hyper-parameters, we can run below command
 The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/supernet/checkpoint_min_nme.pth``.
 
 
-2. Finetune the sampled model
-^^^^^^^^^^^
+2. Finetune
+^^^^^^^^^^^^
 
 After the pre-training of supernet, we can run below command to sample the subnet and conduct the finetuning:
 
@@ -110,8 +110,8 @@ After the pre-training of supernet, we can run below command to sample the subne
 The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/subnet/checkpoint_min_nme.pth``。
 
 
-3. Export the ONNX model
-^^^^^^^^^
+3. Export
+^^^^^^^^^^
 
 After the finetuning of subnet, we can run below command to export the ONNX model:
 
