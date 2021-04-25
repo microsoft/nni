@@ -535,12 +535,12 @@ def manage_stopped_experiment(args, mode):
     experiments_config.update_experiment(args.id, 'port', args.port)
     assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
-        if 'trainingService' in experiment_config:
-            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
-            launch_experiment(args, experiment_config, mode, experiment_id, 2)
-        else:
+        if 'trainingServicePlatform' in experiment_config:
             experiment_config['logDir'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 1)
+        else:
+            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
+            launch_experiment(args, experiment_config, mode, experiment_id, 2)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:
