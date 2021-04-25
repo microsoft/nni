@@ -138,7 +138,7 @@ def set_adl_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), None
 
-def check_response(response， config_file_name):
+def check_response(response, config_file_name):
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
