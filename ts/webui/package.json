@@ -15,8 +15,8 @@
     "d3": "^5.16.0",
     "dotenv": "6.2.0",
     "dotenv-expand": "4.2.0",
-    "echarts": "^4.5.0",
-    "echarts-for-react": "^2.0.15-beta.1",
+    "echarts": "^5.0",
+    "echarts-for-react": "3.0.0",
     "file-loader": "3.0.1",
     "fs-extra": "7.0.1",
     "html-webpack-plugin": "4.0.0-beta.5",
@@ -41,7 +41,7 @@
     "postcss-safe-parser": "4.0.1",
     "react": "^16.8.6",
     "react-app-polyfill": "^1.0.0",
-    "react-dev-utils": "^11.0.4",
+    "react-dev-utils": "^9.0.0",
     "react-dom": "^16.8.6",
     "react-json-tree": "^0.11.2",
     "react-monaco-editor": "^0.32.1",
@@ -119,5 +119,8 @@
     "node-forge": ">=0.10.0",
     "y18n": ">=5.0.5",
     "serialize-javascript": ">=5.0.1"
+  },
+  "jest": {
+    "verbose": true
   }
 }

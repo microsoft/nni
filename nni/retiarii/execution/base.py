@@ -5,7 +5,7 @@ import logging
 import os
 import random
 import string
-from typing import Dict, List
+from typing import Dict, Iterable, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
@@ -53,6 +53,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         advisor.final_metric_callback = self._final_metric_callback
 
         self._running_models: Dict[int, Model] = dict()
+        self._history: List[Model] = []
 
         self.resources = 0
 
@@ -60,6 +61,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         for model in models:
             data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
             self._running_models[send_trial(data.dump())] = model
+            self._history.append(model)
+
+    def list_models(self) -> Iterable[Model]:
+        return self._history
 
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
         self._listeners.append(listener)

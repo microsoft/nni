@@ -144,15 +144,17 @@ class Model:
         for graph_name, graph_data in ir.items():
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
-        model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
+        if '_evaluator' in ir:
+            model.evaluator = Evaluator._load_with_type(ir['_evaluator']['__type__'], ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
         ret = {name: graph._dump() for name, graph in self.graphs.items()}
-        ret['_evaluator'] = {
-            '__type__': get_importable_name(self.evaluator.__class__),
-            **self.evaluator._dump()
-        }
+        if self.evaluator is not None:
+            ret['_evaluator'] = {
+                '__type__': get_importable_name(self.evaluator.__class__),
+                **self.evaluator._dump()
+            }
         return ret
 
     def get_nodes(self) -> Iterable['Node']:

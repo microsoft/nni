@@ -124,6 +124,12 @@ class LinuxCommands extends OsCommands {
             command = `bash '${script}'`;
         } else {
             script = script.replace(/"/g, '\\"');
+            const result = script.match(/[^\\]\\\\"/g);
+            if (result) {
+                result.forEach((res) => {
+                    script = script.replace(res, res.replace(/"$/g, '\\"'));
+                })
+            }
             command = `bash -c "${script}"`;
         }
         return command;

@@ -101,6 +101,8 @@ class ConfigBase:
             elif isinstance(value, ConfigBase):
                 setattr(ret, key, value.canonical())
                 # value will be copied twice, should not be a performance issue anyway
+            elif isinstance(value, Path):
+                setattr(ret, key, str(value))
         return ret
 
     def validate(self) -> None:

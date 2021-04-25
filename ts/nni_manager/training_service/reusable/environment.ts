@@ -129,7 +129,6 @@ export class EnvironmentInformation {
 export abstract class EnvironmentService {
 
     public abstract get hasStorageService(): boolean;
-    public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;

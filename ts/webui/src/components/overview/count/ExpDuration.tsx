@@ -53,7 +53,7 @@ export const ExpDuration = (): any => (
                                 field: 'maxExecDuration',
                                 title: 'Max duration',
                                 maxExecDuration: maxExecDurationStr,
-                                maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                maxTrialNum: EXPERIMENT.maxTrialNumber,
                                 trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                 updateOverviewPage
                             }}
