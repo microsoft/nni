@@ -197,6 +197,8 @@ export namespace ValidationSchemas {
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             }),
+            version_check: joi.string(),
+            log_collection: joi.string(),
             remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 reuse: joi.boolean()
             }),
@@ -227,8 +229,8 @@ export namespace ValidationSchemas {
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             nniManagerIp: joi.string(),
-            versionCheck: joi.boolean(),
-            logCollection: joi.string(),
+            version_check: joi.boolean(),
+            log_collection: joi.string(),
             advisor: joi.object({
                 builtinAdvisorName: joi.string(),
                 codeDir: joi.string(),

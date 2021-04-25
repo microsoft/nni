@@ -139,11 +139,12 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialWorkingFolder: string = path.join(this.CONTAINER_MOUNT_PATH, 'nni', getExperimentId(), trialJobId);
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         let frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
-
-        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
-        let frameworkcontrollerJobConfig = JSON.parse(JSON.stringify(this.fcTemplate));
+        
+        let frameworkcontrollerJobConfig: any;
 
         if (this.fcTemplate !== undefined) {
+            // Create frameworkcontroller job based on generated frameworkcontroller job resource config
+            frameworkcontrollerJobConfig = JSON.parse(JSON.stringify(this.fcTemplate));
             // add a custom name extension to the job name and apply it to the custom template
             frameworkcontrollerJobName += "xx" + this.fcTemplate.metadata.name;
             // Process custom task roles commands
@@ -202,6 +203,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
                 break;
             case TrialConfigMetadataKey.FRAMEWORKCONTROLLER_CLUSTER_CONFIG: {
+                this.log.info('-----------setting cluster metadata for FRAMEWORKCONTROLLER_CLUSTER_CONFIG')
                 const frameworkcontrollerClusterJsonObject: any = JSON.parse(value);
                 let namespace: string | undefined;
                 this.fcClusterConfig = FrameworkControllerClusterConfigFactory
