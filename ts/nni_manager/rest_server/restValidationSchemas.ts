@@ -197,8 +197,8 @@ export namespace ValidationSchemas {
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             }),
-            version_check: joi.string(),
-            log_collection: joi.string(),
+            version_check: joi.string(), // eslint-disable-line @typescript-eslint/camelcase
+            log_collection: joi.string(), // eslint-disable-line @typescript-eslint/camelcase
             remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 reuse: joi.boolean()
             }),
