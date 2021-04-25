@@ -424,3 +424,37 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertTrue((self._get_converted_pytorch_model(model1)(torch.zeros(1, 16)) == 3).all())
         self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
         self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
+
+    def test_cell(self):
+        # class Net(nn.Module):
+        #     def __init__(self):
+        #         super().__init__()
+        #         self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=1, num_ops_per_node=1, num_predecessors=1, merge_op='all')
+
+        #     def forward(self, x, y):
+        #         return self.cell([x])
+
+        # model = self._convert_to_ir(Net())
+        # import pprint
+        # pprint.pprint(model._dump())
+
+        # from typing import List
+
+        # class Net(nn.Module):
+        #     def __init__(self, num_nodes, num_ops_per_node):
+        #         super().__init__()
+        #         self.ops = nn.ModuleList()
+        #         self.num_nodes = num_nodes
+        #         self.num_ops_per_node = num_ops_per_node
+        #         for _ in range(num_nodes):
+        #             self.ops.append(nn.ModuleList([nn.Linear(16, 16) for __ in range(num_ops_per_node)]))
+
+        #     def forward(self, x):
+        #         state = x
+        #         for ops in self.ops:
+        #             for op in ops:
+        #                 state = op(state)
+        #         return state
+
+        # net = Net(4, 2)
+        # self._convert_to_ir(net)

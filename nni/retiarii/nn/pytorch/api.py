@@ -11,6 +11,7 @@ import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
 from ...utils import uid
+from .nn import ModuleList
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs', 'Repeat', 'Cell']
@@ -348,22 +349,29 @@ class Repeat(nn.Module):
 class Cell(nn.Module):
 
     def __init__(self,
-                 op_candidates: Union[Callable, nn.Module],
+                 op_candidates: Union[Callable, List[nn.Module]],
                  num_nodes: int,
                  num_ops_per_node: int,
                  num_predecessors: int,
                  merge_op: str,
                  label: str = None):
+        super().__init__()
         self._label = f'cell_{uid()}' if label is None else label
-        self.op_candidates = nn.ModuleList()
-        self.input_candidates = nn.ModuleList()
+        self.ops = ModuleList()
+        self.inputs = ModuleList()
         self.num_nodes = num_nodes
         self.num_ops_per_node = num_ops_per_node
         for i in range(num_nodes):
-            self.op_candidates.append(nn.ModuleList())
+            self.ops.append(ModuleList())
+            self.inputs.append(ModuleList())
             for k in range(num_ops_per_node):
-                self.op_candidates[-1].append(LayerChoice(op_candidates, label=f'{self.label}/op_{i}_{k}'))
-                self.input_candidates[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
+                if isinstance(op_candidates, list):
+                    assert len(op_candidates) > 0 and isinstance(op_candidates[0], nn.Module)
+                    ops = copy.deepcopy(op_candidates)
+                else:
+                    ops = op_candidates()
+                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
+                self.inputs[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
         assert merge_op in ['all', 'loose_end']
         self.merge_op = merge_op
 
@@ -371,14 +379,14 @@ class Cell(nn.Module):
     def label(self):
         return self._label
 
-    def forward(self, x: Tuple[torch.Tensor]):
-        states = list(x)
-        for i in range(self.num_nodes):
+    def forward(self, x: List[torch.Tensor]):
+        states = x
+        for ops, inps in zip(self.ops, self.inputs):
             current_state = []
-            for k in range(self.num_ops_per_node):
-                current_state.append(self.op_candidates[i][k](self.input_candidates[i][k](states)))
-            current_state = sum(current_state)
-        states.append(current_state)
+            for op, inp in zip(ops, inps):
+                current_state.append(op(inp(states)))
+            current_state = torch.sum(torch.stack(current_state), 0)
+            states.append(current_state)
         return torch.cat(states, 1)
 
 
