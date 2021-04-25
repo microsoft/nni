@@ -212,7 +212,9 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['experimentName'] = experiment_config['experimentName']
     request_data['trialConcurrency'] = experiment_config['trialConcurrency']
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
+    request_data['maxExperimentDuration'] = str(experiment_config['maxExecDuration']) + 's'
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
+    request_data['maxTrialNumber'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
     # hack for hotfix, fix config.trainingService undefined error, need refactor
