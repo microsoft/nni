@@ -8,8 +8,8 @@ import torch
 
 from nni.compression.pytorch.compressor import Compressor
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.algorithms.compression.pytorch.pruning.one_shot import LevelPruner, SlimPruner, L1FilterPruner, L2FilterPruner, FPGMPruner,
-                                        TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, ActivationMeanRankFilterPruner
+from nni.algorithms.compression.pytorch.pruning.one_shot import LevelPruner, SlimPruner, L1FilterPruner, L2FilterPruner, \
+    FPGMPruner, TaylorFOWeightFilterPruner, ActivationAPoZRankFilterPruner, ActivationMeanRankFilterPruner
 from nni.algorithms.compression.pytorch.quantization.quantizers import NaiveQuantizer, QAT_Quantizer, DoReFaQuantizer, BNNQuantizer
 
 _logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ class MultiCompressor:
         self.calibration_path = calibration_path
         self.onnx_path = onnx_path
         self.input_shape = input_shape
-        self.device = device
+        self.device = device if device else 'cpu'
 
     def _convert_config_list(self, mixed_config_list: List[dict]) -> Tuple[CONCFIG_LIST_TYPE, CONCFIG_LIST_TYPE]:
         pruner_config_list = []
