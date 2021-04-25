@@ -138,7 +138,7 @@ def set_adl_config(experiment_config, port, config_file_name):
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), None
 
-def check_response(response, config_file_name):
+def validate_response(response, config_file_name):
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -159,10 +159,10 @@ def set_V1_common_config(experiment_config, port, config_file_name):
     if experiment_config.get('versionCheck') is not None:
         version_check = experiment_config.get('versionCheck')
     response = rest_put(cluster_metadata_url(port), json.dumps({'version_check': version_check}), REST_TIME_OUT)
-    check_response(response, config_file_name)
+    validate_response(response, config_file_name)
     if experiment_config.get('logCollection'):
         response = rest_put(cluster_metadata_url(port), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
-        check_response(response, config_file_name)
+        validate_response(response, config_file_name)
 
 def setNNIManagerIp(experiment_config, port, config_file_name):
     '''set nniManagerIp'''
