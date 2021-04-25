@@ -39,7 +39,7 @@ class Experiment:
         """
         Prepare an experiment.
 
-        Use `Experiment.start()` to launch it.
+        Use `Experiment.run()` to launch it.
 
         Parameters
         ----------
@@ -59,7 +59,7 @@ class Experiment:
             experiment.config.trial_command = 'python3 trial.py'
             experiment.config.machines.append(RemoteMachineConfig(ip=..., user_name=...))
             ...
-            experiment.start(8080)
+            experiment.run(8080)
 
         Parameters
         ----------
@@ -150,27 +150,30 @@ class Experiment:
         self._proc = None
         _logger.info('Experiment stopped')
 
-    def run(self, port: int = 8080, debug: bool = False) -> bool:
+    def run(self, port: int = 8080, wait_completion: bool = True, debug: bool = False) -> bool:
         """
         Run the experiment.
 
-        This function will block until experiment finish or error.
+        If wait_completion is True, this function will block until experiment finish or error.
 
         Return `True` when experiment done; or return `False` when experiment failed.
+
+        Else if wait_completion is False, this function will non-block and return None immediately.
         """
         self.start(port, debug)
-        try:
-            while True:
-                time.sleep(10)
-                status = self.get_status()
-                if status == 'DONE' or status == 'STOPPED':
-                    return True
-                if status == 'ERROR':
-                    return False
-        except KeyboardInterrupt:
-            _logger.warning('KeyboardInterrupt detected')
-        finally:
-            self.stop()
+        if wait_completion:
+            try:
+                while True:
+                    time.sleep(10)
+                    status = self.get_status()
+                    if status == 'DONE' or status == 'STOPPED':
+                        return True
+                    if status == 'ERROR':
+                        return False
+            except KeyboardInterrupt:
+                _logger.warning('KeyboardInterrupt detected')
+            finally:
+                self.stop()
 
     @classmethod
     def connect(cls, port: int):
@@ -195,7 +198,7 @@ class Experiment:
         return experiment
 
     @classmethod
-    def resume(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+    def resume(cls, experiment_id: str, port: int = 8080, wait_completion: bool = True, debug: bool = False):
         """
         Resume a stopped experiment.
 
@@ -213,14 +216,12 @@ class Experiment:
         experiment = Experiment()
         experiment.id = experiment_id
         experiment.mode = 'resume'
-        if wait_completion:
-            experiment.run(port, debug)
-        else:
-            experiment.start(port, debug)
+        experiment.run(port=port, wait_completion=wait_completion, debug=debug)
+        if not wait_completion:
             return experiment
 
     @classmethod
-    def view(cls, experiment_id: str, port: int, wait_completion: bool = True):
+    def view(cls, experiment_id: str, port: int = 8080, non_blocking: bool = False):
         """
         View a stopped experiment.
 
@@ -230,18 +231,24 @@ class Experiment:
             The stopped experiment id.
         port
             The port of web UI.
-        wait_completion
-            If true, run in the foreground. If false, run in the background.
+        non_blocking
+            If false, run in the foreground. If true, run in the background.
         """
         debug = False
         experiment = Experiment()
         experiment.id = experiment_id
         experiment.mode = 'view'
-        if wait_completion:
-            experiment.run(port, debug)
-        else:
-            experiment.start(port, debug)
+        experiment.start(port=port, debug=debug)
+        if non_blocking:
             return experiment
+        else:
+            try:
+                while True:
+                    time.sleep(10)
+            except KeyboardInterrupt:
+                _logger.warning('KeyboardInterrupt detected')
+            finally:
+                experiment.stop()
 
     def get_status(self) -> str:
         """

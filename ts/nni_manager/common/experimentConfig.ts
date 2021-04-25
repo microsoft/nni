@@ -65,6 +65,7 @@ export interface AmlConfig extends TrainingServiceConfig {
     workspaceName: string;
     computeTarget: string;
     dockerImage: string;
+    maxTrialNumberPerGpu: number;
 }
 
 /* Kubeflow */

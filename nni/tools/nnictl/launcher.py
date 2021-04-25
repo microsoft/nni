@@ -119,6 +119,18 @@ def set_trial_config(experiment_config, port, config_file_name):
 
 def set_adl_config(experiment_config, port, config_file_name):
     '''set adl configuration'''
+    adl_config_data = dict()
+    # hack for supporting v2 config, need refactor
+    adl_config_data['adl_config'] = {}
+    response = rest_put(cluster_metadata_url(port), json.dumps(adl_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
@@ -203,6 +215,8 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
+    # hack for hotfix, fix config.trainingService undefined error, need refactor
+    request_data['trainingService'] = {'platform': experiment_config.get('trainingServicePlatform')}
     if experiment_config.get('description'):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
@@ -319,7 +333,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    if config_version == 1:
+        log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    else:
+        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
@@ -330,6 +347,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     # start rest server
     if config_version == 1:
         platform = experiment_config['trainingServicePlatform']
+    elif isinstance(experiment_config['trainingService'], list):
+        platform = 'hybrid'
     else:
         platform = experiment_config['trainingService']['platform']
 
@@ -486,8 +505,10 @@ def manage_stopped_experiment(args, mode):
     assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
         if 'trainingService' in experiment_config:
+            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 2)
         else:
+            experiment_config['logDir'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 1)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
