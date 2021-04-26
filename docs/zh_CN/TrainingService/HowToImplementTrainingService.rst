@@ -15,8 +15,8 @@ TrainingService 是与平台管理、任务调度相关的模块。 TrainingServ
    :alt: 
 
 
-NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 NNI 目前支持的平台有 `local platfrom <LocalMode.md>`__\ 
- ，`remote platfrom <RemoteMachineMode.md>`__\ ， `PAI platfrom <PaiMode.md>`__\ ， `kubeflow platform <KubeflowMode.md>`__ 和 `FrameworkController platfrom <FrameworkControllerMode.rst>`__。
+NNI 的架构如图所示。 NNIManager 是系统的核心管理模块，负责调用 TrainingService 来管理 Trial，并负责不同模块之间的通信。 Dispatcher 是消息处理中心。 TrainingService 是管理任务的模块，它和 NNIManager 通信，并且根据平台的特点有不同的实现。 NNI 目前支持的平台有 `本地平台 <LocalMode.rst>`__\ 
+ ，`远程平台 <RemoteMachineMode.rst>`__\ ， `PAI <PaiMode.rst>`__\ ， `kubeflow <KubeflowMode.rst>`__ 和 `FrameworkController <FrameworkControllerMode.rst>`__。
 
 本文中，会介绍 TrainingService 的简要设计。 如果要添加新的 TrainingService，只需要继承 TrainingServcie 类并实现相应的方法，不需要理解NNIManager、Dispatcher 等其它模块的细节。
 

@@ -21,7 +21,7 @@ def single_line_process(line):
     line = re.sub(r'\\\* \*\*(.*?)\*\* \(\\\*\s*(.*?)\s*\*\\ \)', r'* \1 (\2)', line)
     line = re.sub(r'\<(.*)\.md(\>|#)', r'<\1.rst\2', line)
     line = re.sub(r'`\*\*(.*?)\*\* <#(.*?)>`__', r'`\1 <#\2>`__', line)
-    line = re.sub(r'\*\* (classArgs|stop|FLOPS.*?|pruned.*?|large.*?|path|preCommand|2D.*?|codeDirectory|ps|worker|Tuner|Assessor)\*\*',
+    line = re.sub(r'\*\* (classArgs|stop|FLOPS.*?|pruned.*?|large.*?|path|pythonPath|2D.*?|codeDirectory|ps|worker|Tuner|Assessor)\*\*',
                   r' **\1**', line)
 
     line = line.replace('.. code-block:::: bash', '.. code-block:: bash')

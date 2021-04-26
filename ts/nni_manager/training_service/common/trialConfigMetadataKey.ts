@@ -26,5 +26,6 @@ export enum TrialConfigMetadataKey {
     LOG_COLLECTION = 'log_collection',
     // Used to set platform for hybrid in reuse mode, 
     // temproarily change and will refactor config schema in the future
-    PLATFORM_LIST = 'platform_list'
+    PLATFORM_LIST = 'platform_list',
+    SHARED_STORAGE_CONFIG = 'shared_storage_config'
 }

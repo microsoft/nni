@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     DefaultButton,
     Dropdown,
@@ -12,27 +13,29 @@ import {
     TooltipHost,
     DirectionalHint
 } from '@fluentui/react';
-import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
 import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
 import { TableObj, SortInfo } from '../../static/interface';
-import '../../static/style/search.scss';
-import '../../static/style/tableStatus.css';
-import '../../static/style/logPath.scss';
-import '../../static/style/table.scss';
-import '../../static/style/button.scss';
-import '../../static/style/openRow.scss';
-import '../../static/style/pagination.scss';
-import '../../static/style/overview/overviewTitle.scss';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
 import Customize from '../modals/CustomizedTrial';
+import TensorboardUI from '../modals/tensorboard/TensorboardUI';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
+import CopyButton from '../public-child/CopyButton';
 import { Trial } from '../../static/model/trial';
+import '../../static/style/button.scss';
+import '../../static/style/logPath.scss';
+import '../../static/style/openRow.scss';
+import '../../static/style/pagination.scss';
+import '../../static/style/search.scss';
+import '../../static/style/table.scss';
+import '../../static/style/tableStatus.css';
+import '../../static/style/tensorboard.scss';
+import '../../static/style/overview/overviewTitle.scss';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -55,6 +58,8 @@ function _inferColumnTitle(columnKey: string): string {
         return 'ID';
     } else if (columnKey === 'intermediateCount') {
         return 'Intermediate results (#)';
+    } else if (columnKey === 'message') {
+        return 'Message';
     } else if (columnKey.startsWith('space/')) {
         return columnKey.split('/', 2)[1] + ' (space)';
     } else if (columnKey === 'latestAccuracy') {
@@ -98,7 +103,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
         this.state = {
             displayedItems: [],
-            displayedColumns: defaultDisplayedColumns,
+            displayedColumns:
+                localStorage.getItem('columns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('columns')!)
+                    : defaultDisplayedColumns,
             columns: [],
             searchType: 'id',
             searchText: '',
@@ -184,6 +193,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 endTime: (trial as Trial).info.endTime,
                 duration: trial.duration,
                 status: trial.status,
+                message: (trial as Trial).info.message || '--',
                 intermediateCount: trial.intermediates.length,
                 _expandDetails: this._expandedTrialIds.has(trial.id) // hidden field names should start with `_`
             };
@@ -279,6 +289,28 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         <span className={`${record.status} commonStyle`}>{record.status}</span>
                     )
                 }),
+                ...(k === 'message' && {
+                    onRender: (record): React.ReactNode =>
+                        record.message.length > 15 ? (
+                            <TooltipHost
+                                content={record.message}
+                                directionalHint={DirectionalHint.bottomCenter}
+                                tooltipProps={{
+                                    calloutProps: {
+                                        styles: {
+                                            beak: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            beakCurtain: { background: TOOLTIP_BACKGROUND_COLOR },
+                                            calloutMain: { background: TOOLTIP_BACKGROUND_COLOR }
+                                        }
+                                    }
+                                }}
+                            >
+                                <div>{record.message}</div>
+                            </TooltipHost>
+                        ) : (
+                            <div>{record.message}</div>
+                        )
+                }),
                 ...((k.startsWith('metric/') || k.startsWith('space/')) && {
                     // show tooltip
                     onRender: (record): React.ReactNode => (
@@ -325,6 +357,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 ...(k === 'duration' && {
                     onRender: (record): React.ReactNode => (
                         <span className='durationsty'>{convertDuration(record[k])}</span>
+                    )
+                }),
+                ...(k === 'id' && {
+                    onRender: (record): React.ReactNode => (
+                        <Stack horizontal className='idCopy'>
+                            <div>{record.id}</div>
+                            <CopyButton value={record.id} />
+                        </Stack>
                     )
                 })
             });
@@ -453,6 +493,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             disabled={selectedRowIds.length === 0}
                         />
+                        <TensorboardUI selectedRowIds={selectedRowIds} />
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -533,6 +574,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onHideDialog={(): void => {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
+                        whichComponent='table'
                     />
                 )}
                 {/* Clone a trial and customize a set of new parameters */}

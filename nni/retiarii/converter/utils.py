@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 def build_full_name(prefix, name, seq=None):
     if isinstance(name, list):
         name = '__'.join(name)

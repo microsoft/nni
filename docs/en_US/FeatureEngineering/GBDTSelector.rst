@@ -22,7 +22,7 @@ Then
 
 .. code-block:: python
 
-   from nni.feature_engineering.gbdt_selector import GBDTSelector
+   from nni.algorithms.feature_engineering.gbdt_selector import GBDTSelector
 
    # load data
    ...

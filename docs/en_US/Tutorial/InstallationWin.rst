@@ -40,7 +40,7 @@ If you want to contribute to NNI, refer to `setup development environment <Setup
 
   .. code-block:: bat
 
-       git clone -b v2.0 https://github.com/Microsoft/nni.git
+       git clone -b v2.1 https://github.com/Microsoft/nni.git
        cd nni
        python setup.py develop
 
@@ -52,7 +52,7 @@ Verify installation
 
   .. code-block:: bat
 
-       git clone -b v2.0 https://github.com/Microsoft/nni.git
+       git clone -b v2.1 https://github.com/Microsoft/nni.git
 
 * 
   Run the MNIST example.

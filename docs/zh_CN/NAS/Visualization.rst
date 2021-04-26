@@ -21,7 +21,7 @@ NAS 可视化（测试版）
 可视化定制的 Trainer
 ------------------------------
 
-如果要定制 Trainer，参考 `文档 <./Advanced.rst>`__。
+如果要定制 Trainer，参考 `文档 <./Advanced.rst#extend-the-ability-of-one-shot-trainers>`__。
 
 需要对已有 Trainer 代码做两处改动来支持可视化：
 

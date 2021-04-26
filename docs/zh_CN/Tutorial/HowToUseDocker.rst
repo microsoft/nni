@@ -33,7 +33,7 @@
 
 ``-p:`` 端口映射，映射主机端口和容器端口。
 
-可以参考 `这里 <https://docs.docker.com/v17.09/edge/engine/reference/run/>`__，获取更多的命令参考。
+可以参考 `这里 <https://docs.docker.com/engine/reference/run/>`__，获取更多的 Docker 命令参考。
 
 注意：
 

@@ -1,7 +1,7 @@
 **教程：使用 NNI API 在本地创建和运行 Experiment**
-====================================================================
+================================================================================================================================
 
-本教程会使用 [~/examples/trials/mnist-tfv1] 示例来解释如何在本地使用 NNI API 来创建并运行 Experiment。
+本教程会使用 [~/examples/trials/mnist-pytorch] 示例来解释如何在本地使用 NNI API 来创建并运行 Experiment。
 
 ..
 
@@ -17,23 +17,25 @@
 
 对代码进行以下改动来启用 NNI API：
 
-* 声明 NNI API 在 Trial 代码中通过 ``import nni`` 来导入 NNI API。
-* 获取预定义参数
+1.1 声明 NNI API 在 Trial 代码中通过 ``import nni`` 来导入 NNI API。
+
+1.2 获取预定义参数
 
 使用一下代码段：
 
 .. code-block:: python
 
-   RECEIVED_PARAMS = nni.get_next_parameter()
+   tuner_params = nni.get_next_parameter()
 
-获得 tuner 分配的超参数值。 ``RECEIVED_PARAMS`` 是一个对象，如：
+获得 tuner 分配的超参数值。 ``tuner_params`` 是一个对象，例如：
 
 .. code-block:: json
 
-   {"conv_size": 2, "hidden_size": 124, "learning_rate": 0.0307, "dropout_rate": 0.2029}
+   {"batch_size": 32, "hidden_size": 128, "lr": 0.01, "momentum": 0.2029}
 
-* 导出 NNI results API：``nni.report_intermediate_result(accuracy)`` 发送 ``accuracy`` 给 assessor。
-  使用 API: ``nni.report_final_result(accuracy)`` 返回 ``accuracy`` 的值给 Tuner。
+..
+
+1.3 导出 NNI results API：``nni.report_intermediate_result(accuracy)`` 发送 ``accuracy`` 给 assessor。 使用 API: ``nni.report_final_result(accuracy)`` 返回 ``accuracy`` 的值给 Tuner。
 
 将改动保存到 ``mnist.py`` 文件中。
 
@@ -54,12 +56,12 @@
 
 .. code-block:: bash
 
-   {
-       "dropout_rate":{"_type":"uniform","_value":[0.1,0.5]},
-       "conv_size":{"_type":"choice","_value":[2,3,5,7]},
-       "hidden_size":{"_type":"choice","_value":[124, 512, 1024]},
-       "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
-   }
+    {
+        "batch_size": {"_type":"choice", "_value": [16, 32, 64, 128]},
+        "hidden_size":{"_type":"choice","_value":[128, 256, 512, 1024]},
+        "lr":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]},
+        "momentum":{"_type":"uniform","_value":[0, 1]}
+    }
 
 参考 `define search space <../Tutorial/SearchSpaceSpec.rst>`__ 进一步了解搜索空间。
 
@@ -91,7 +93,7 @@
 
 ..
 
-   在克隆代码后，可以在 ~/nni/examples 中找到一些示例，运行 ``ls examples/trials`` 查看所有 Trial 示例。
+   安装 NNI 之后，NNI 的样例已经在目录 ``nni/examples`` 下，运行 ``ls nni/examples/trials`` 可以看到所有的 examples。
 
 
 以一个简单的 trial 来举例。 NNI 提供了 mnist 样例。 安装 NNI 之后，NNI 的样例已经在目录 ~/nni/examples下，运行 ``ls ~/nni/examples/trials`` 可以看到所有的 examples。 执行下面的命令可轻松运行 NNI 的 mnist 样例：

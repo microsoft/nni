@@ -28,7 +28,7 @@ NNI API
        "learning_rate":{"_type":"uniform","_value":[0.0001, 0.1]}
    }
 
-参考 `SearchSpaceSpec.md <../Tutorial/SearchSpaceSpec.rst>`__ 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
+参考 `SearchSpaceSpec.rst <../Tutorial/SearchSpaceSpec.rst>`__ 进一步了解搜索空间。 Tuner 会根据搜索空间来生成配置，即从每个超参的范围中选一个值。
 
 第二步：更新模型代码
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,7 +80,7 @@ NNI API
 
 参考 `这里 <../Tutorial/ExperimentConfig.rst>`__ 进一步了解如何配置 Experiment。
 
-参考 `这里 </sdk_reference.html>`__ ，了解更多 NNI API （例如：``nni.get_sequence_id()``）。
+参考 `这里 <../sdk_reference.rst>`__ ，了解更多 NNI API （例如：``nni.get_sequence_id()``）。
 
 :raw-html:`<a name="nni-annotation"></a>`
 
@@ -159,14 +159,15 @@ NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 
 
 .. code-block:: python
 
-   # 注意：请为 Trial 代码中的超参分配默认值
-   nni.report_final_result # 已在 stdout 上打印日志，但不报告
-   nni.report_intermediate_result # 已在 stdout 上打印日志，但不报告
+   ＃注意：请为 Trial 代码中的超参分配默认值
+   nni.get_next_parameter # 返回 {}
+   nni.report_final_result ＃已在 stdout 上打印日志，但不报告
+   nni.report_intermediate_result # ＃已在 stdout 上打印日志，但不报告
    nni.get_experiment_id # 返回 "STANDALONE"
    nni.get_trial_id # 返回 "STANDALONE"
    nni.get_sequence_id # 返回 0
 
-可使用 :githublink:`mnist 示例 <examples/trials/mnist-tfv1>` 来尝试独立模式。 只需在代码目录下运行 ``python3 mnist.py``。 Trial 代码会使用默认超参成功运行。
+可使用 :githublink:`mnist 示例 <examples/trials/mnist-pytorch>` 来尝试独立模式。 只需在代码目录下运行 ``python3 mnist.py``。 Trial 代码会使用默认超参成功运行。
 
 更多调试的信息，可参考 `How to Debug <../Tutorial/HowToDebug.rst>`__。
 

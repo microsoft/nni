@@ -17,6 +17,11 @@ export class UtEnvironmentService extends EnvironmentService {
         // storage service is tested by integration testing.
         return false;
     }
+
+    public get useSharedStorage(): boolean {
+        return false;
+    }
+
     public get environmentMaintenceLoopInterval(): number {
         return 1;
     }

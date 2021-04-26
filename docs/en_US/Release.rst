@@ -5,6 +5,71 @@
 Change Log
 ==========
 
+Release 2.1 - 3/10/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural architecture search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Improved Experimental)
+
+  * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
+  * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
+  * Improve the design and implementation of Model Evaluator (#3359 #3404)
+  * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+Training service
+""""""""""""""""
+
+* Support shared storage for reuse mode (#3354)
+* Support Windows as the local training service in hybrid mode (#3353)
+* Remove PAIYarn training service (#3327)
+* Add "recently-idle" scheduling algorithm (#3375)
+* Deprecate ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
+* Refactor reuse mode temp folder (#3374)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Migrate ``nnicli`` to new Python API ``nni.experiment`` (#3334)
+* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with ``nnictl`` (#3419)
+
+WebUI
+"""""
+
+* Support showing the assigned training service of each trial in hybrid mode on WebUI (#3261 #3391)
+* Support multiple selection for filter status in experiments management page (#3351)
+* Improve overview page (#3316 #3317 #3352)
+* Support copy trial id in the table (#3378)
+
+Documentation
+^^^^^^^^^^^^^
+
+* Improve model compression examples and documentation (#3326 #3371)
+* Add Python API examples and documentation (#3396)
+* Add SECURITY doc (#3358)
+* Add 'What's NEW!' section in README (#3395) 
+* Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
+
+Bug fixes
+^^^^^^^^^
+
+* Fix AML outputs path and python process not killed (#3321)
+* Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
+* Fix import path of network morphism example (#3333)
+* Fix bug in the tuple unpack (#3340)
+* Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
+* Fix ``NoneType`` error on jupyter notebook (#3337, thanks external contributor @tczhangzhi)
+* Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
+* Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
+* Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
+* Fix bug in ruamel import (#3430, thanks external contributor @rushtehrani)
+
+
 Release 2.0 - 1/14/2021
 -----------------------
 

@@ -260,9 +260,9 @@ def run(args):
             continue
         # remote mode need more time to cleanup 
         if args.ts == 'remote':
-            wait_for_port_available(8080, 180)
+            wait_for_port_available(8080, 240)
         else:
-            wait_for_port_available(8080, 30)
+            wait_for_port_available(8080, 60)
 
         # adl mode need more time to cleanup PVC
         if args.ts == 'adl' and name == 'nnictl-resume-2':

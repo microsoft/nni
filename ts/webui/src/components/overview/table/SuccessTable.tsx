@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {
+    Stack,
     DetailsList,
     IDetailsListProps,
     IColumn,
@@ -14,6 +15,7 @@ import {
 } from '@fluentui/react';
 import DefaultMetric from '../../public-child/DefaultMetric';
 import OpenRow from '../../public-child/OpenRow';
+import CopyButton from '../../public-child/CopyButton';
 import { convertDuration, copyAndSort } from '../../../static/function';
 import { TRIALS } from '../../../static/datamodel';
 import { SortInfo } from '../../../static/interface';
@@ -134,7 +136,7 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             key: 'sequenceId',
             fieldName: 'sequenceId', // required!
             minWidth: 60,
-            maxWidth: 100,
+            maxWidth: 80,
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
@@ -144,18 +146,23 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
             name: 'ID',
             key: 'id',
             fieldName: 'id',
-            minWidth: 60,
-            maxWidth: 90,
+            minWidth: 90,
+            maxWidth: 100,
             isResizable: true,
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.id}</div>
+            onRender: (item: any): React.ReactNode => (
+                <Stack horizontal className='idCopy'>
+                    <div className='succeed-padding'>{item.id}</div>
+                    <CopyButton value={item.id} />
+                </Stack>
+            )
         },
         {
             name: 'Duration',
             key: 'duration',
-            minWidth: 80,
+            minWidth: 70,
             maxWidth: 120,
             isResizable: true,
             fieldName: 'duration',

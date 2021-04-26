@@ -1,5 +1,5 @@
 import logging
-from typing import Any
+from typing import Any, Optional
 
 import requests
 
@@ -8,25 +8,28 @@ _logger = logging.getLogger(__name__)
 url_template = 'http://localhost:{}/api/v1/nni{}'
 timeout = 20
 
-def get(port: int, api: str) -> Any:
+def request(method: str, port: Optional[int], api: str, data: Any = None) -> Any:
+    if port is None:
+        raise RuntimeError('Experiment is not running')
     url = url_template.format(port, api)
-    resp = requests.get(url, timeout=timeout)
+    if data is None:
+        resp = requests.request(method, url, timeout=timeout)
+    else:
+        resp = requests.request(method, url, json=data, timeout=timeout)
     if not resp.ok:
-        _logger.error('rest request GET %s %s failed: %s %s', port, api, resp.status_code, resp.text)
+        _logger.error('rest request %s %s failed: %s %s', method.upper(), url, resp.status_code, resp.text)
     resp.raise_for_status()
-    return resp.json()
+    if method.lower() in ['get', 'post']:
+        return resp.json()
 
-def post(port: int, api: str, data: Any) -> Any:
-    url = url_template.format(port, api)
-    resp = requests.post(url, json=data, timeout=timeout)
-    if not resp.ok:
-        _logger.error('rest request POST %s %s failed: %s %s', port, api, resp.status_code, resp.text)
-    resp.raise_for_status()
-    return resp.json()
+def get(port: Optional[int], api: str) -> Any:
+    return request('get', port, api)
 
-def put(port: int, api: str, data: Any) -> None:
-    url = url_template.format(port, api)
-    resp = requests.put(url, json=data, timeout=timeout)
-    if not resp.ok:
-        _logger.error('rest request PUT %s %s failed: %s', port, api, resp.status_code)
-    resp.raise_for_status()
+def post(port: Optional[int], api: str, data: Any) -> Any:
+    return request('post', port, api, data)
+
+def put(port: Optional[int], api: str, data: Any) -> None:
+    request('put', port, api, data)
+
+def delete(port: Optional[int], api: str) -> None:
+    request('delete', port, api)

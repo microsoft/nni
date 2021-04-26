@@ -21,13 +21,13 @@ sys.path.insert(0, os.path.abspath('../..'))
 # -- Project information ---------------------------------------------------
 
 project = 'NNI'
-copyright = '2020, Microsoft'
+copyright = '2021, Microsoft'
 author = 'Microsoft'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v1.9'
+release = 'v2.0'
 
 # -- General configuration ---------------------------------------------------
 
@@ -47,10 +47,11 @@ extensions = [
     'sphinx.ext.intersphinx',
     'nbsphinx',
     'sphinx.ext.extlinks',
+    'IPython.sphinxext.ipython_console_highlighting',
 ]
 
 # 添加示例模块
-autodoc_mock_imports = ['apex']
+autodoc_mock_imports = ['apex', 'nni_node']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -72,7 +73,7 @@ language = None
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'Release_v1.0.md']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'Release_v1.0.md', '**.ipynb_checkpoints']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = None

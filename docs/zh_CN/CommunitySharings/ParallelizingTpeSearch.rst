@@ -176,8 +176,8 @@ a, b, c, r, s 以及 t 的推荐值分别为：a = 1, b = 5.1 ⁄ (4π2), c = 5 
 参考
 ----------
 
-[1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. "Algorithms for Hyper-Parameter Optimization". `链接 <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
+[1] James Bergstra, Remi Bardenet, Yoshua Bengio, Balazs Kegl. `Algorithms for Hyper-Parameter Optimization. <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__
 
-[2] Meng-Hiot Lim, Yew-Soon Ong. "Computational Intelligence in Expensive Optimization Problems". `链接 <https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf>`__
+[2] Meng-Hiot Lim, Yew-Soon Ong. `Computational Intelligence in Expensive Optimization Problems. <https://link.springer.com/content/pdf/10.1007%2F978-3-642-10701-6.pdf>`__
 
-[3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. "Pattern Recognition and Machine Learning". `链接 <http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf>`__
+[3] M. Jordan, J. Kleinberg, B. Scho¨lkopf. `Pattern Recognition and Machine Learning. <http://users.isr.ist.utl.pt/~wurmd/Livros/school/Bishop%20-%20Pattern%20Recognition%20And%20Machine%20Learning%20-%20Springer%20%202006.pdf>`__

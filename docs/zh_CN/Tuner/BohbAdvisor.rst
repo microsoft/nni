@@ -52,9 +52,11 @@ BOHB 的 BO 与 TPE 非常相似, 它们的主要区别是: BOHB 中使用一个
 
 .. image:: ../../img/bohb_6.jpg
    :target: ../../img/bohb_6.jpg
+   :alt: 
 
 
-以上这张图展示了 BOHB 的工作流程。 将每次训练的最大资源配置（max_budget）设为 9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为 3，其他的超参数为默认值。 那么在这个例子中，s_max 计算的值为 2, 所以会持续地进行 {s=2, s=1, s=0, s=2, s=1, s=0, ...} 的循环。 在“逐次减半”（SuccessiveHalving）算法的每一个阶段，即图中橙色框，都将选取表现最好的前 1/eta 个参数，并在赋予更多计算资源（budget）的情况下运行。不断重复“逐次减半” （SuccessiveHalving）过程，直到这个循环结束。 同时，收集这些试验的超参数组合，使用了计算资源（budget）和其表现（metrics），使用这些数据来建立一个以使用了多少计算资源（budget）为维度的多维核密度估计（KDE）模型。这个多维的核密度估计（KDE）模型将用于指导下一个循环的参数选择。
+以上这张图展示了 BOHB 的工作流程。 将每次训练的最大资源配置（max_budget）设为 9，最小资源配置设为（min_budget）1，逐次减半比例（eta）设为 3，其他的超参数为默认值。 那么在这个例子中，s_max 计算的值为 2, 所以会持续地进行 {s=2, s=1, s=0, s=2, s=1, s=0, ...} 的循环。 在“逐次减半”（SuccessiveHalving）算法的每一个阶段，即图中橙色框，都将选取表现最好的前 1/eta 个参数，并在赋予更多计算资源（budget）的情况下运行。不断重复“逐次减半” （SuccessiveHalving）过程，直到这个循环结束。 同时，收集这些试验的超参数组合，使用了计算资源（budget）和其表现（metrics），使用这些数据来建立一个以使用了多少计算资源（budget）为维度的多维核密度估计（KDE）模型。
+ 这个多维的核密度估计（KDE）模型将用于指导下一个循环的参数选择。
 
 有关如何使用多维的 KDE 模型来指导参数选择的采样规程，用以下伪代码来描述。
 
@@ -71,7 +73,7 @@ BOHB advisor 需要安装 `ConfigSpace <https://github.com/automl/ConfigSpace>`_
 
 .. code-block:: bash
 
-   nnictl package install --name=BOHB
+   pip install nni[BOHB]
 
 要使用 BOHB，需要在 Experiment 的 YAML 配置文件进行如下改动：
 
@@ -120,7 +122,7 @@ Advisor 有大量的文件、函数和类。 这里只简单介绍最重要的�
 -------------
 
 BOHB 在 MNIST 数据集上的表现
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 源码地址： :githublink:`examples/trials/mnist-advisor <examples/trials/>`
 

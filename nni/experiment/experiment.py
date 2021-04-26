@@ -3,22 +3,19 @@ import logging
 from pathlib import Path
 import socket
 from subprocess import Popen
-from threading import Thread
 import time
 from typing import Optional, Union, List, overload, Any
 
+import json_tricks
 import colorama
 import psutil
 
 import nni.runtime.log
-from nni.runtime.msg_dispatcher import MsgDispatcher
-from nni.tuner import Tuner
 
-from .config import ExperimentConfig
+from .config import ExperimentConfig, AlgorithmConfig
 from .data import TrialJob, TrialMetricData, TrialResult
 from . import launcher
 from . import management
-from .pipe import Pipe
 from . import rest
 from ..tools.nnictl.command_utils import kill_command
 
@@ -39,7 +36,7 @@ class Experiment:
     """
 
     @overload
-    def __init__(self, tuner: Tuner, config: ExperimentConfig) -> None:
+    def __init__(self, config: ExperimentConfig) -> None:
         """
         Prepare an experiment.
 
@@ -47,21 +44,19 @@ class Experiment:
 
         Parameters
         ----------
-        tuner
-            A tuner instance.
         config
             Experiment configuration.
         """
         ...
 
     @overload
-    def __init__(self, tuner: Tuner, training_service: Union[str, List[str]]) -> None:
+    def __init__(self, training_service: Union[str, List[str]]) -> None:
         """
         Prepare an experiment, leaving configuration fields to be set later.
 
         Example usage::
 
-            experiment = Experiment(my_tuner, 'remote')
+            experiment = Experiment('remote')
             experiment.config.trial_command = 'python3 trial.py'
             experiment.config.machines.append(RemoteMachineConfig(ip=..., user_name=...))
             ...
@@ -69,45 +64,27 @@ class Experiment:
 
         Parameters
         ----------
-        tuner
-            A tuner instance.
         training_service
             Name of training service.
             Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl" and hybrid training service.
         """
         ...
 
-    @overload
-    def __init__(self) -> None:
-        """
-        Prepare an empty experiment, for `connect_experiment`.
-
-        Use `Experiment.connect_experiment` to manage experiment.
-
-        """
-        ...
-
-    def __init__(self, tuner=None, config=None, training_service=None):
+    def __init__(self, config=None, training_service=None):
         self.config: Optional[ExperimentConfig] = None
         self.id: Optional[str] = None
         self.port: Optional[int] = None
-        self.tuner: Optional[Tuner] = None
         self._proc: Optional[Popen] = None
-        self._pipe: Optional[Pipe] = None
-        self._dispatcher: Optional[MsgDispatcher] = None
-        self._dispatcher_thread: Optional[Thread] = None
+        self.mode = 'new'
 
-        if isinstance(tuner, Tuner):
-            self.tuner = tuner
-            if isinstance(config, (str, list)):
-                config, training_service = None, config
-
-            if config is None:
-                self.config = ExperimentConfig(training_service)
-            else:
-                self.config = config
+        args = [config, training_service]  # deal with overloading
+        if isinstance(args[0], (str, list)):
+            self.config = ExperimentConfig(args[0])
+            self.config.tuner = AlgorithmConfig(name='_none_', class_args={})
+            self.config.assessor = AlgorithmConfig(name='_none_', class_args={})
+            self.config.advisor = AlgorithmConfig(name='_none_', class_args={})
         else:
-            _logger.warning('Tuner not set, wait for connect...')
+            self.config = args[0]
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -125,7 +102,10 @@ class Experiment:
         """
         atexit.register(self.stop)
 
-        self.id = management.generate_experiment_id()
+        if self.mode == 'new':
+            self.id = management.generate_experiment_id()
+        else:
+            self.config = launcher.get_stopped_experiment_config(self.id, self.mode)
 
         if self.config.experiment_working_directory is not None:
             log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
@@ -133,17 +113,10 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc, self._pipe = launcher.start_experiment(self.id, self.config, port, debug)
+        self._proc = launcher.start_experiment(self.id, self.config, port, debug, mode=self.mode)
         assert self._proc is not None
-        assert self._pipe is not None
 
         self.port = port  # port will be None if start up failed
-
-        # dispatcher must be launched after pipe initialized
-        # the logic to launch dispatcher in background should be refactored into dispatcher api
-        self._dispatcher = self._create_dispatcher()
-        self._dispatcher_thread = Thread(target=self._dispatcher.run)
-        self._dispatcher_thread.start()
 
         ips = [self.config.nni_manager_ip]
         for interfaces in psutil.net_if_addrs().values():
@@ -153,9 +126,6 @@ class Experiment:
         ips = [f'http://{ip}:{port}' for ip in ips if ip]
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
-
-    def _create_dispatcher(self):  # overrided by retiarii, temporary solution
-        return MsgDispatcher(self.tuner, None)
 
     def stop(self) -> None:
         """
@@ -167,19 +137,16 @@ class Experiment:
         if self.id is not None:
             nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
-            kill_command(self._proc.pid)
-        if self._pipe is not None:
-            self._pipe.close()
-        if self._dispatcher_thread is not None:
-            self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
+            try:
+                rest.delete(self.port, '/experiment')
+            except Exception as e:
+                _logger.exception(e)
+                _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
+                kill_command(self._proc.pid)
 
         self.id = None
         self.port = None
         self._proc = None
-        self._pipe = None
-        self._dispatcher = None
-        self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 
     def run(self, port: int = 8080, debug: bool = False) -> bool:
@@ -204,7 +171,8 @@ class Experiment:
         finally:
             self.stop()
 
-    def connect_experiment(self, port: int):
+    @classmethod
+    def connect(cls, port: int):
         """
         Connect to an existing experiment.
 
@@ -213,18 +181,53 @@ class Experiment:
         port
             The port of web UI.
         """
-        self.port = port
-        self.get_status()
+        experiment = Experiment()
+        experiment.port = port
+        experiment.id = experiment.get_experiment_profile().get('id')
+        status = experiment.get_status()
+        pid = experiment.get_experiment_metadata(experiment.id).get('pid')
+        if pid is None:
+            _logger.warning('Get experiment pid failed, can not stop experiment by stop().')
+        else:
+            experiment._proc = psutil.Process(pid)
+        _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, experiment.id, status)
+        return experiment
 
-    def _experiment_rest_get(self, port: int, api: str) -> Any:
-        if self.port is None:
-            raise RuntimeError('Experiment is not running')
-        return rest.get(self.port, api)
+    @classmethod
+    def resume(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+        """
+        Resume a stopped experiment.
 
-    def _experiment_rest_put(self, port: int, api: str, data: Any):
-        if self.port is None:
-            raise RuntimeError('Experiment is not running')
-        rest.put(self.port, api, data)
+        Parameters
+        ----------
+        experiment_id
+            The stopped experiment id.
+        """
+        experiment = Experiment()
+        experiment.mode = 'resume'
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
+
+    @classmethod
+    def view(cls, experiment_id: str, port: int, wait_completion: bool = True, debug: bool = False):
+        """
+        View a stopped experiment.
+
+        Parameters
+        ----------
+        experiment_id
+            The stopped experiment id.
+        """
+        experiment = Experiment()
+        experiment.mode = 'view'
+        if wait_completion:
+            experiment.run(port, debug)
+        else:
+            experiment.start(port, debug)
+            return experiment
 
     def get_status(self) -> str:
         """
@@ -235,7 +238,7 @@ class Experiment:
         str
             Experiment status.
         """
-        resp = self._experiment_rest_get(self.port, '/check-status')
+        resp = rest.get(self.port, '/check-status')
         return resp['status']
 
     def get_trial_job(self, trial_job_id: str):
@@ -248,11 +251,11 @@ class Experiment:
             Trial job id.
 
         Returns
-        ----------
+        -------
         TrialJob
             A `TrialJob` instance corresponding to `trial_job_id`.
         """
-        resp = self._experiment_rest_get(self.port, '/trial-jobs/{}'.format(trial_job_id))
+        resp = rest.get(self.port, '/trial-jobs/{}'.format(trial_job_id))
         return TrialJob(**resp)
 
     def list_trial_jobs(self):
@@ -260,11 +263,11 @@ class Experiment:
         Return information for all trial jobs as a list.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialJob`.
         """
-        resp = self._experiment_rest_get(self.port, '/trial-jobs')
+        resp = rest.get(self.port, '/trial-jobs')
         return [TrialJob(**trial_job) for trial_job in resp]
 
     def get_job_statistics(self):
@@ -272,11 +275,11 @@ class Experiment:
         Return trial job statistics information as a dict.
 
         Returns
-        ----------
+        -------
         dict
             Job statistics information.
         """
-        resp = self._experiment_rest_get(self.port, '/job-statistics')
+        resp = rest.get(self.port, '/job-statistics')
         return resp
 
     def get_job_metrics(self, trial_job_id=None):
@@ -289,12 +292,12 @@ class Experiment:
             trial job id. if this parameter is None, all trail jobs' metrics will be returned.
 
         Returns
-        ----------
+        -------
         dict
             Each key is a trialJobId, the corresponding value is a list of `TrialMetricData`.
         """
         api = '/metric-data/{}'.format(trial_job_id) if trial_job_id else '/metric-data'
-        resp = self._experiment_rest_get(self.port, api)
+        resp = rest.get(self.port, api)
         metric_dict = {}
         for metric in resp:
             trial_id = metric["trialJobId"]
@@ -309,11 +312,38 @@ class Experiment:
         Return experiment profile as a dict.
 
         Returns
-        ----------
+        -------
         dict
             The profile of the experiment.
         """
-        resp = self._experiment_rest_get(self.port, '/experiment')
+        resp = rest.get(self.port, '/experiment')
+        return resp
+
+    def get_experiment_metadata(self, exp_id: str):
+        """
+        Return experiment metadata with specified exp_id as a dict.
+
+        Returns
+        -------
+        dict
+            The specified experiment metadata.
+        """
+        experiments_metadata = self.get_all_experiments_metadata()
+        for metadata in experiments_metadata:
+            if metadata['id'] == exp_id:
+                return metadata
+        return {}
+
+    def get_all_experiments_metadata(self):
+        """
+        Return all experiments metadata as a list.
+
+        Returns
+        -------
+        list
+            The experiments metadata.
+        """
+        resp = rest.get(self.port, '/experiments-info')
         return resp
 
     def export_data(self):
@@ -321,21 +351,21 @@ class Experiment:
         Return exported information for all trial jobs.
 
         Returns
-        ----------
+        -------
         list
             List of `TrialResult`.
         """
-        resp = self._experiment_rest_get(self.port, '/export-data')
+        resp = rest.get(self.port, '/export-data')
         return [TrialResult(**trial_result) for trial_result in resp]
 
     def _get_query_type(self, key: str):
-        if key == 'trial_concurrency':
+        if key == 'trialConcurrency':
             return '?update_type=TRIAL_CONCURRENCY'
-        if key == 'max_experiment_duration':
+        if key == 'maxExecDuration':
             return '?update_type=MAX_EXEC_DURATION'
-        if key == 'search_space':
+        if key == 'searchSpace':
             return '?update_type=SEARCH_SPACE'
-        if key == 'max_trial_number':
+        if key == 'maxTrialNum':
             return '?update_type=MAX_TRIAL_NUM'
 
     def _update_experiment_profile(self, key: str, value: Any):
@@ -352,7 +382,8 @@ class Experiment:
         api = '/experiment{}'.format(self._get_query_type(key))
         experiment_profile = self.get_experiment_profile()
         experiment_profile['params'][key] = value
-        self._experiment_rest_put(self.port, api, experiment_profile)
+        rest.put(self.port, api, experiment_profile)
+        logging.info('Successfully update %s.', key)
 
     def update_trial_concurrency(self, value: int):
         """
@@ -363,7 +394,7 @@ class Experiment:
         value: int
             New trial_concurrency value.
         """
-        self._update_experiment_profile('trial_concurrency', value)
+        self._update_experiment_profile('trialConcurrency', value)
 
     def update_max_experiment_duration(self, value: str):
         """
@@ -375,7 +406,7 @@ class Experiment:
             Strings like '1m' for one minute or '2h' for two hours.
             SUFFIX may be 's' for seconds, 'm' for minutes, 'h' for hours or 'd' for days.
         """
-        self._update_experiment_profile('max_experiment_duration', value)
+        self._update_experiment_profile('maxExecDuration', value)
 
     def update_search_space(self, value: dict):
         """
@@ -387,9 +418,10 @@ class Experiment:
         value: dict
             New search_space.
         """
-        self._update_experiment_profile('search_space', value)
+        value = json_tricks.dumps(value)
+        self._update_experiment_profile('searchSpace', value)
 
-    def update_max_trial_number(self, value):
+    def update_max_trial_number(self, value: int):
         """
         Update an experiment's max_trial_number
 
@@ -398,4 +430,4 @@ class Experiment:
         value: int
             New max_trial_number value.
         """
-        self._update_experiment_profile('max_trial_number', value)
+        self._update_experiment_profile('maxTrialNum', value)

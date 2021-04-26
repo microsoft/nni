@@ -9,7 +9,7 @@ import nni
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.integration import RetiariiAdvisor, register_advisor
-from nni.retiarii.trainer.pytorch import PyTorchImageClassificationTrainer
+from nni.retiarii.evaluator.pytorch import PyTorchImageClassificationTrainer
 from nni.retiarii.utils import import_
 
 

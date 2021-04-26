@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, TooltipHost, ProgressIndicator, DirectionalHint } from '@fluentui/react';
+import { Stack, TooltipHost, ProgressIndicator, DirectionalHint, IStackTokens } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../../static/datamodel';
 import { CONTROLTYPE, TOOLTIP_BACKGROUND_COLOR, MAX_TRIAL_NUMBERS } from '../../../static/const';
 import { EditExperimentParam } from './EditExperimentParam';
@@ -7,13 +7,20 @@ import { EditExpeParamContext } from './context';
 import { ExpDurationContext } from './ExpDurationContext';
 import { leftProgress, rightEidtParam, progressHeight } from './commonStyle';
 
+const line1Tokens: IStackTokens = {
+    childrenGap: 60
+};
+const line2Tokens: IStackTokens = {
+    childrenGap: 80
+};
+
 export const TrialCount = (): any => {
     const count = TRIALS.countStatus();
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const stoppedCount = count.get('USER_CANCELED')! + count.get('SYS_CANCELED')! + count.get('EARLY_STOPPED')!;
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     const bar2 = count.get('RUNNING')! + count.get('SUCCEEDED')! + count.get('FAILED')! + stoppedCount;
-    const maxTrialNum = EXPERIMENT.profile.params.maxTrialNum;
+    const maxTrialNum = EXPERIMENT.maxTrialNumber;
     // support type [0, 1], not 98%
     const bar2Percent = bar2 / maxTrialNum;
     return (
@@ -52,7 +59,7 @@ export const TrialCount = (): any => {
                         </Stack>
                         <Stack horizontal className='marginTop'>
                             <div style={leftProgress}>
-                                <Stack horizontal className='status-count' gap={60}>
+                                <Stack horizontal className='status-count' tokens={line1Tokens}>
                                     <div>
                                         <span>Running</span>
                                         <p>{count.get('RUNNING')}</p>
@@ -66,7 +73,7 @@ export const TrialCount = (): any => {
                                         <p>{stoppedCount}</p>
                                     </div>
                                 </Stack>
-                                <Stack horizontal className='status-count marginTop' gap={80}>
+                                <Stack horizontal className='status-count marginTop' tokens={line2Tokens}>
                                     <div>
                                         <span>Failed</span>
                                         <p>{count.get('FAILED')}</p>
@@ -85,7 +92,7 @@ export const TrialCount = (): any => {
                                         field: 'maxTrialNum',
                                         editType: CONTROLTYPE[1],
                                         maxExecDuration: '',
-                                        maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                        maxTrialNum: EXPERIMENT.maxTrialNumber,
                                         trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                         updateOverviewPage
                                     }}
@@ -102,7 +109,7 @@ export const TrialCount = (): any => {
                                             editType: CONTROLTYPE[2],
                                             // maxExecDuration: EXPERIMENT.profile.params.maxExecDuration,
                                             maxExecDuration: '',
-                                            maxTrialNum: EXPERIMENT.profile.params.maxTrialNum,
+                                            maxTrialNum: EXPERIMENT.maxTrialNumber,
                                             trialConcurrency: EXPERIMENT.profile.params.trialConcurrency,
                                             updateOverviewPage
                                         }}

@@ -144,7 +144,7 @@ Files in ``codeDir`` will be uploaded to remote machines automatically. You can 
 Configure python environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **preCommand** to specify a python environment on your remote machine. 
+By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **pythonPath** to specify a python environment on your remote machine. 
 
 Use ``examples/trials/mnist-tfv2`` as the example. Below is content of ``examples/trials/mnist-tfv2/config_remote.yml``\ :
 
@@ -176,47 +176,8 @@ Use ``examples/trials/mnist-tfv2`` as the example. Below is content of ``example
      - ip: ${replace_to_your_remote_machine_ip}
        username: ${replace_to_your_remote_machine_username}
        sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
-       # Pre-command will be executed before the remote machine executes other commands.
        # Below is an example of specifying python environment.
-       # If you want to execute multiple commands, please use "&&" to connect them.
-       # preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
-       # preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
-       preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
-
-The **preCommand** will be executed before the remote machine executes other commands. So you can configure python environment path like this:
-
-.. code-block:: yaml
-
-   # Linux remote machine
-   preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
-   # Windows remote machine
-   preCommand: set path=${replace_to_python_environment_path_in_your_remote_machine};%path%
-
-Or if you want to activate the ``virtualenv`` environment:
-
-.. code-block:: yaml
-
-   # Linux remote machine
-   preCommand: source ${replace_to_absolute_path_recommended_here}/bin/activate
-   # Windows remote machine
-   preCommand: ${replace_to_absolute_path_recommended_here}\\scripts\\activate
-
-Or if you want to activate the ``conda`` environment:
-
-.. code-block:: yaml
-
-   # Linux remote machine
-   preCommand: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
-   # Windows remote machine
-   preCommand: call activate ${replace_to_conda_env_name}
-
-If you want multiple commands to be executed, you can use ``&&`` to connect these commands:
-
-.. code-block:: yaml
-
-   preCommand: command1 && command2 && command3
-
-**Note**\ : Because **preCommand** will execute before other commands each time, it is strongly not recommended to set **preCommand** that will make changes to system, i.e. ``mkdir`` or ``touch``.
+       pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
 
 Remote machine supports running experiment in reuse mode. In this mode, NNI will reuse remote machine jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in the same job, for example, avoid loading checkpoint from previous trials.  
 Follow the setting to enable reuse mode:

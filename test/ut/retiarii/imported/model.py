@@ -1,8 +1,8 @@
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 
 
-@blackbox_module
+@basic_unit
 class ImportTest(nn.Module):
     def __init__(self, foo, bar):
         super().__init__()

@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
@@ -45,9 +48,9 @@ class DedupInputOptimizer(AbstractOptimizer):
             node_to_check.operation.type == '_inputs' and \
                 isinstance(root_node, OriginNode) and \
                 isinstance(node_to_check, OriginNode):
-            if root_node.original_graph.model.training_config.module not in _supported_training_modules:
+            if root_node.original_graph.model.evaluator.module not in _supported_training_modules:
                 return False
-            if root_node.original_graph.model.training_config == node_to_check.original_graph.model.training_config:
+            if root_node.original_graph.model.evaluator == node_to_check.original_graph.model.evaluator:
                 return True
             else:
                 return False

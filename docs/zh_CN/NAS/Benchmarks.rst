@@ -32,7 +32,7 @@ NAS 基准测试
       git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
       cd nni/examples/nas/benchmarks
 
-   将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v1.9``。
+   将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v2.0``。
 
 #. 
    通过 ``pip3 install -r xxx.requirements.txt`` 安装依赖。 ``xxx`` 可以是 ``nasbench101``\ ，``nasbench201`` ，``nds``。
@@ -44,12 +44,13 @@ NAS 基准测试
 示例用法
 --------------
 
-请参考 `Benchmarks API 的示例用法 <./BenchmarksExample>`_。
+请参考 `Benchmarks API 的示例用法 <./BenchmarksExample.rst>`_。
 
 NAS-Bench-101
 -------------
 
-`Paper link <https://arxiv.org/abs/1902.09635>`__ &nbsp; &nbsp; `Open-source <https://github.com/google-research/nasbench>`__
+* `论文链接 <https://arxiv.org/abs/1902.09635>`__ 
+* `开源地址 <https://github.com/google-research/nasbench>`__
 
 NAS-Bench-101 包含 423,624 个独立的神经网络，再加上 4 个 Epoch (4, 12, 36, 108) 时的变化，以及每个都要训练 3 次。 这是基于 Cell 的搜索空间，通过枚举最多 7 个有向图的运算符来构造并堆叠 Cell，连接数量不超过 9 个。 除了第一个 (必须为 ``INPUT`` ) 和最后一个运算符 (必须为 ``OUTPUT`` )，可选的运算符有 ``CONV3X3_BN_RELU`` , ``CONV1X1_BN_RELU`` 和 ``MAXPOOL3X3`` 。
 
@@ -85,7 +86,9 @@ API 文档
 NAS-Bench-201
 -------------
 
-`Paper link <https://arxiv.org/abs/2001.00326>`__ &nbsp; &nbsp; `Open-source API <https://github.com/D-X-Y/NAS-Bench-201>`__ &nbsp; &nbsp;\ `Implementations <https://github.com/D-X-Y/AutoDL-Projects>`__
+* `论文链接 <https://arxiv.org/abs/2001.00326>`__ 
+* `开源 API <https://github.com/D-X-Y/NAS-Bench-201>`__ 
+* `实现 <https://github.com/D-X-Y/AutoDL-Projects>`__
 
 NAS-Bench-201 是单元格的搜索空间，并将张量当作节点，运算符当作边。 搜索空间包含了 4 个节点所有密集连接的有向图，共有 15,625 个候选项。 每个操作符都是从预定义的运算符集（\ ``NONE``\ ，``SKIP_CONNECT``\ ，``CONV_1X1``\ ，``CONV_3X3`` 和``AVG_POOL_3X3``\ ）中选出的。 训练方法根据数据集 (CIFAR-10, CIFAR-100, ImageNet) 和 Epoch 数量 (12 和 200)，而有所不同。 每个架构和训练方法的组合会随机重复 1 到 3 次。
 
@@ -113,7 +116,8 @@ API 文档
 NDS
 ---
 
-`论文链接 <https://arxiv.org/abs/1905.13214>`__ , `开源代码 <https://github.com/facebookresearch/nds>`__
+* `论文链接 <https://arxiv.org/abs/1905.13214>`__ 
+* `开源地址 <https://github.com/facebookresearch/nds>`__
 
 *On Network Design Spaces for Visual Recognition* 发布了来自多个模型系列，超过 100,000 个配置（模型加超参组合）的统计，包括 vanilla (受 VGG 启发的松散前馈网络), ResNet 和 ResNeXt (残差基本模块和残差瓶颈模块) 以及 NAS 单元格 (遵循 NASNet, Ameoba, PNAS, ENAS 和 DARTS 的设计)。 大部分配置只采用固定的随机种子训练一次，但少部分会训练两到三次。
 

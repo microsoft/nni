@@ -7,9 +7,9 @@ import torch.nn as torch_nn
 
 import ops
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 
-@blackbox_module
+@basic_unit
 class AuxiliaryHead(nn.Module):
     """ Auxiliary head in 2/3 place of network to let the gradient flow well """
 

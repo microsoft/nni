@@ -40,7 +40,7 @@ GBDTSelector 基于 `LightGBM <https://github.com/microsoft/LightGBM>`__，这�
 
 也可在 ``/examples/feature_engineering/gbdt_selector/`` 目录找到示例。
 
-``fit`` 函数参数要求
+**fit 函数参数要求**
 
 
 * 

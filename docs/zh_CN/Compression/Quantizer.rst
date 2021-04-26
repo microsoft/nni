@@ -157,7 +157,7 @@ PyTorch 代码
    quantizer = BNNQuantizer(model, configure_list)
    model = quantizer.compress()
 
-可以查看 :githublink:`示例 <examples/model_compress/BNN_quantizer_cifar10.py>` 了解更多信息。
+可以查看 :githublink:`示例 <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 了解更多信息。
 
 BNN Quantizer 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,4 +181,4 @@ BNN Quantizer 的用户配置
      - 86.93%
 
 
-实验代码在 :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/BNN_quantizer_cifar10.py>` 
+实验代码在 :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 

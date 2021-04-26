@@ -50,24 +50,24 @@ NNI 在一些基准模型和数据集上使用各种剪枝算法进行了广泛�
 CIFAR-10, VGG16:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_vgg16.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_vgg16.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_vgg16.png
    :alt: 
 
 
 CIFAR-10, ResNet18:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet18.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet18.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet18.png
    :alt: 
 
 
 CIFAR-10, ResNet50:
 
 
-.. image:: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet50.png
-   :target: ../../../examples/model_compress/comparison_of_pruners/img/performance_comparison_resnet50.png
+.. image:: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
+   :target: ../../../examples/model_compress/pruning/comparison_of_pruners/img/performance_comparison_resnet50.png
    :alt: 
 
 
@@ -103,7 +103,7 @@ CIFAR-10, ResNet50:
 
 
 * 
-  如果遵循 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>` 的做法，对于每一次剪枝实验，实验结果将以JSON格式保存如下：
+  如果遵循 :githublink:`示例 <examples/model_compress/auto_pruners_torch.py>`\ 的做法，对于每一次剪枝实验，实验结果将以JSON格式保存如下：
 
   .. code-block:: json
 
@@ -114,7 +114,8 @@ CIFAR-10, ResNet50:
        }
 
 * 
-  实验代码在 :githublink:`这里 <examples/model_compress/comparison_of_pruners>`。可以参考 :githublink:`分析 <examples/model_compress/comparison_of_pruners/analyze.py>` 来绘制新的性能比较图。
+  实验代码在 :githublink:`这里 <examples/model_compress/comparison_of_pruners>`. 
+  可以参考 :githublink:`分析 <examples/model_compress/comparison_of_pruners/analyze.py>` 来绘制新的性能比较图。
 
 贡献
 ------------

@@ -12,10 +12,9 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import blackbox_module
+from nni.retiarii import basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.utils import get_records
 
 class MnistNet(nn.Module):
     def __init__(self):
@@ -35,16 +34,29 @@ class MnistNet(nn.Module):
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
 
+# NOTE: serialize module cannot be placed within class or function
+@basic_unit
+class Linear(nn.Module):
+    def __init__(self, d_embed, d_proj):
+        super().__init__()
+        self.linear = nn.Linear(d_embed, d_proj)
+
+    def forward(self, input):
+        if len(input.size()) <= 2:
+            return self.linear(input)
+        size = input.size()[:2]
+        out = self.linear(input.view(size[0] * size[1], -1))
+        return out.view(size[0], size[1], -1)
 
 class TestConvert(unittest.TestCase):
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}
         for k, v in expected_format.items():
-            for cv in current_values:
+            for idx, cv in enumerate(current_values):
                 if cv.shape == v.shape:
                     result[k] = cv
-                    current_values.remove(cv)
+                    current_values.pop(idx)
                     break
         return result
 
@@ -134,18 +146,17 @@ class TestConvert(unittest.TestCase):
         model = DCGANGenerator(nz, ngf, nc)
         self.checkExportImport(model, input)
 
-    @unittest.skip('this test has a if condition that needs to be handle')  # FIXME
     def test_neural_style(self):
-        class TransformerNet(torch.nn.Module):
+        class TransformerNet(nn.Module):
             def __init__(self):
                 super(TransformerNet, self).__init__()
                 # Initial convolution layers
                 self.conv1 = ConvLayer(3, 32, kernel_size=9, stride=1)
-                self.in1 = torch.nn.InstanceNorm2d(32, affine=True)
+                self.in1 = nn.InstanceNorm2d(32, affine=True)
                 self.conv2 = ConvLayer(32, 64, kernel_size=3, stride=2)
-                self.in2 = torch.nn.InstanceNorm2d(64, affine=True)
+                self.in2 = nn.InstanceNorm2d(64, affine=True)
                 self.conv3 = ConvLayer(64, 128, kernel_size=3, stride=2)
-                self.in3 = torch.nn.InstanceNorm2d(128, affine=True)
+                self.in3 = nn.InstanceNorm2d(128, affine=True)
                 # Residual layers
                 self.res1 = ResidualBlock(128)
                 self.res2 = ResidualBlock(128)
@@ -154,12 +165,12 @@ class TestConvert(unittest.TestCase):
                 self.res5 = ResidualBlock(128)
                 # Upsampling Layers
                 self.deconv1 = UpsampleConvLayer(128, 64, kernel_size=3, stride=1, upsample=2)
-                self.in4 = torch.nn.InstanceNorm2d(64, affine=True)
+                self.in4 = nn.InstanceNorm2d(64, affine=True)
                 self.deconv2 = UpsampleConvLayer(64, 32, kernel_size=3, stride=1, upsample=2)
-                self.in5 = torch.nn.InstanceNorm2d(32, affine=True)
+                self.in5 = nn.InstanceNorm2d(32, affine=True)
                 self.deconv3 = ConvLayer(32, 3, kernel_size=9, stride=1)
                 # Non-linearities
-                self.relu = torch.nn.ReLU()
+                self.relu = nn.ReLU()
 
             def forward(self, X):
                 y = self.relu(self.in1(self.conv1(X)))
@@ -175,19 +186,19 @@ class TestConvert(unittest.TestCase):
                 y = self.deconv3(y)
                 return y
 
-        class ConvLayer(torch.nn.Module):
+        class ConvLayer(nn.Module):
             def __init__(self, in_channels, out_channels, kernel_size, stride):
                 super(ConvLayer, self).__init__()
                 reflection_padding = kernel_size // 2
-                self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-                self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+                self.reflection_pad = nn.ReflectionPad2d(reflection_padding)
+                self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
             def forward(self, x):
                 out = self.reflection_pad(x)
                 out = self.conv2d(out)
                 return out
 
-        class ResidualBlock(torch.nn.Module):
+        class ResidualBlock(nn.Module):
             """ResidualBlock
             introduced in: https://arxiv.org/abs/1512.03385
             recommended architecture: http://torch.ch/blog/2016/02/04/resnets.html
@@ -196,10 +207,10 @@ class TestConvert(unittest.TestCase):
             def __init__(self, channels):
                 super(ResidualBlock, self).__init__()
                 self.conv1 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-                self.in1 = torch.nn.InstanceNorm2d(channels, affine=True)
+                self.in1 = nn.InstanceNorm2d(channels, affine=True)
                 self.conv2 = ConvLayer(channels, channels, kernel_size=3, stride=1)
-                self.in2 = torch.nn.InstanceNorm2d(channels, affine=True)
-                self.relu = torch.nn.ReLU()
+                self.in2 = nn.InstanceNorm2d(channels, affine=True)
+                self.relu = nn.ReLU()
 
             def forward(self, x):
                 residual = x
@@ -208,7 +219,7 @@ class TestConvert(unittest.TestCase):
                 out = out + residual
                 return out
 
-        class UpsampleConvLayer(torch.nn.Module):
+        class UpsampleConvLayer(nn.Module):
             """UpsampleConvLayer
             Upsamples the input and then does a convolution. This method gives better results
             compared to ConvTranspose2d.
@@ -219,10 +230,10 @@ class TestConvert(unittest.TestCase):
                 super(UpsampleConvLayer, self).__init__()
                 self.upsample = upsample
                 if upsample:
-                    self.upsample_layer = torch.nn.Upsample(mode='nearest', scale_factor=upsample)
+                    self.upsample_layer = nn.Upsample(mode='nearest', scale_factor=upsample)
                 reflection_padding = kernel_size // 2
-                self.reflection_pad = torch.nn.ReflectionPad2d(reflection_padding)
-                self.conv2d = torch.nn.Conv2d(in_channels, out_channels, kernel_size, stride)
+                self.reflection_pad = nn.ReflectionPad2d(reflection_padding)
+                self.conv2d = nn.Conv2d(in_channels, out_channels, kernel_size, stride)
 
             def forward(self, x):
                 x_in = x
@@ -254,50 +265,40 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(Policy(), (torch.rand(1, 4),))
 
-    @unittest.skip('Replaced init error.')  # FIXME
     def test_snli(self):
-        class Bottle(nn.Module):
-
-            def forward(self, input):
-                if len(input.size()) <= 2:
-                    return super(Bottle, self).forward(input)
-                size = input.size()[:2]
-                out = super(Bottle, self).forward(input.view(size[0] * size[1], -1))
-                return out.view(size[0], size[1], -1)
-
-        class Linear(Bottle, nn.Linear):
-            pass
 
         class Encoder(nn.Module):
 
             def __init__(self, config):
                 super(Encoder, self).__init__()
-                self.config = config
-                input_size = config.d_proj if config.projection else config.d_embed
-                dropout = 0 if config.n_layers == 1 else config.dp_ratio
-                self.rnn = nn.LSTM(input_size=input_size, hidden_size=config.d_hidden,
-                                   num_layers=config.n_layers, dropout=dropout,
-                                   bidirectional=config.birnn)
+                #self.config = config
+                input_size = config["d_proj"] if config["projection"] else config["d_embed"]
+                dropout = 0 if config["n_layers"] == 1 else config["dp_ratio"]
+                self.rnn = nn.LSTM(input_size=input_size, hidden_size=config["d_hidden"],
+                                   num_layers=config["n_layers"], dropout=dropout,
+                                   bidirectional=config["birnn"])
+                self.n_cells = config["n_cells"]
+                self.d_hidden = config["d_hidden"]
+                self.birnn = config["birnn"]
 
             def forward(self, inputs):
                 batch_size = inputs.size()[1]
-                state_shape = self.config.n_cells, batch_size, self.config.d_hidden
+                state_shape = self.n_cells, batch_size, self.d_hidden
                 h0 = c0 = inputs.new_zeros(state_shape)
                 outputs, (ht, ct) = self.rnn(inputs, (h0, c0))
-                return ht[-1] if not self.config.birnn else ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
+                return ht[-1] if not self.birnn else ht[-2:].transpose(0, 1).contiguous().view(batch_size, -1)
 
         class SNLIClassifier(nn.Module):
 
             def __init__(self, config):
                 super(SNLIClassifier, self).__init__()
-                self.config = config
-                self.embed = nn.Embedding(config.n_embed, config.d_embed)
-                self.projection = Linear(config.d_embed, config.d_proj)
+                self.embed = nn.Embedding(config["n_embed"], config["d_embed"])
+                self.projection = Linear(config["d_embed"], config["d_proj"])
                 self.encoder = Encoder(config)
-                self.dropout = nn.Dropout(p=config.dp_ratio)
+                self.dropout = nn.Dropout(p=config["dp_ratio"])
                 self.relu = nn.ReLU()
-                seq_in_size = 2 * config.d_hidden
-                if self.config.birnn:
+                seq_in_size = 2 * config["d_hidden"]
+                if config["birnn"]:
                     seq_in_size *= 2
                 lin_config = [seq_in_size] * 2
                 self.out = nn.Sequential(
@@ -310,15 +311,17 @@ class TestConvert(unittest.TestCase):
                     Linear(*lin_config),
                     self.relu,
                     self.dropout,
-                    Linear(seq_in_size, config.d_out))
+                    Linear(seq_in_size, config["d_out"]))
+                self.fix_emb = config["fix_emb"]
+                self.project = config["projection"]
 
             def forward(self, premise, hypothesis):
                 prem_embed = self.embed(premise)
                 hypo_embed = self.embed(hypothesis)
-                if self.config.fix_emb:
+                if self.fix_emb:
                     prem_embed = prem_embed.detach()
                     hypo_embed = hypo_embed.detach()
-                if self.config.projection:
+                if self.project:
                     prem_embed = self.relu(self.projection(prem_embed))
                     hypo_embed = self.relu(self.projection(hypo_embed))
                 premise = self.encoder(prem_embed)
@@ -326,23 +329,24 @@ class TestConvert(unittest.TestCase):
                 scores = self.out(torch.cat([premise, hypothesis], 1))
                 return scores
 
-        class Config:
-            n_embed = 100
-            d_embed = 100
-            d_proj = 300
-            dp_ratio = 0.0  # For deterministic testing TODO: change by fixing seed in checkTrace?
-            d_hidden = 30
-            birnn = True
-            d_out = 300
-            fix_emb = True
-            projection = True
-            n_layers = 2
-            n_cells = 4  # 2 * n_layers because birnn = True
+        Config = {
+            "n_embed": 100,
+            "d_embed": 100,
+            "d_proj": 300,
+            "dp_ratio": 0.0,  # For deterministic testing TOD": change by fixing seed in checkTrace?,
+            "d_hidden": 30,
+            "birnn": True,
+            "d_out": 300,
+            "fix_emb": True,
+            "projection": True,
+            "n_layers": 2,
+            "n_cells": 4  # 2 * n_layers because birnn = True,
+        }
 
         premise = torch.LongTensor(48, 64).random_(0, 100)
         hypothesis = torch.LongTensor(24, 64).random_(0, 100)
 
-        self.checkExportImport(SNLIClassifier(Config()), (premise, hypothesis))
+        self.checkExportImport(SNLIClassifier(Config), (premise, hypothesis))
 
     def test_super_resolution(self):
         class Net(nn.Module):
@@ -367,16 +371,16 @@ class TestConvert(unittest.TestCase):
         net = Net(upscale_factor=4)
         self.checkExportImport(net, (torch.rand(5, 1, 32, 32),))
 
-    @unittest.skip('Need to support operator prim::ListUnpack')  # FIXME
+    @unittest.skip('Need to support Loop')  # FIXME
     def test_time_sequence_prediction(self):
-        class Sequence(torch.jit.ScriptModule):
+        class Sequence(nn.Module): #torch.jit.ScriptModule
             def __init__(self):
                 super(Sequence, self).__init__()
                 self.lstm1 = nn.LSTMCell(1, 51)
                 self.lstm2 = nn.LSTMCell(51, 51)
                 self.linear = nn.Linear(51, 1)
 
-            @torch.jit.script_method
+            #@torch.jit.script_method
             def forward(self, input):
                 # TODO: add future as input with default val
                 # see https://github.com/pytorch/pytorch/issues/8724
@@ -414,7 +418,7 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(Traced(), (torch.rand(3, 4),))
 
-    @unittest.skip('Unsupported callmethod encode')  # FIXME
+    @unittest.skip('incorrectly assigned weights')  # FIXME
     def test_vae(self):
         class VAE(nn.Module):
             def __init__(self):
@@ -449,11 +453,14 @@ class TestConvert(unittest.TestCase):
 
         self.checkExportImport(VAE().eval(), (torch.rand(128, 1, 28, 28),))
 
-    @unittest.skip('torchvision models are not supported yet')  # FIXME
     def test_torchvision_resnet18(self):
-        self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
+            self.checkExportImport(torchvision.models.resnet18().eval(), (torch.ones(1, 3, 224, 224),))
+        finally:
+            remove_inject_pytorch_nn()
 
-    @unittest.skip('Unsupported CallMethod _forward_impl')  # FIXME
     def test_resnet(self):
         def conv1x1(in_planes, out_planes, stride=1):
             """1x1 convolution"""
@@ -464,7 +471,7 @@ class TestConvert(unittest.TestCase):
             return nn.Conv2d(in_planes, out_planes, kernel_size=3, stride=stride,
                              padding=1, bias=False)
 
-        class BasicBlock(torch.jit.ScriptModule):
+        class BasicBlock(nn.Module): #torch.jit.ScriptModule
             expansion = 1
             __constants__ = ['downsample']
 
@@ -478,7 +485,8 @@ class TestConvert(unittest.TestCase):
                 self.downsample = downsample
                 self.stride = stride
 
-            @torch.jit.script_method
+            # NOTE: jit cannot be annotated, otherwise, module id is not matched for recorded arguments
+            #@torch.jit.script_method
             def forward(self, x):
                 residual = x
 
@@ -497,7 +505,8 @@ class TestConvert(unittest.TestCase):
 
                 return out
 
-        class ResNet(torch.jit.ScriptModule):
+        # NOTE: cannot inherit torch.jit.ScriptModule, otherwise, there would be error: 'RecursiveScriptModule' object has no attribute 'graph'
+        class ResNet(nn.Module): #torch.jit.ScriptModule
             __constants__ = ['layer1', 'layer2', 'layer3', 'layer4']
 
             def __init__(self, block, layers, num_classes=1000):
@@ -538,7 +547,8 @@ class TestConvert(unittest.TestCase):
 
                 return nn.Sequential(*layers)
 
-            @torch.jit.script_method
+            # NOTE: jit cannot be annotated, otherwise, module id is not matched for recorded arguments
+            #@torch.jit.script_method
             def forward(self, x):
                 x = self.conv1(x)
                 x = self.bn1(x)
@@ -558,10 +568,14 @@ class TestConvert(unittest.TestCase):
 
         resnet18 = ResNet(BasicBlock, [2, 2, 2, 2])
 
-        self.checkExportImport(torchvision.models.resnet18().eval(), (torch.randn(1, 3, 224, 224),))
+        self.checkExportImport(resnet18, (torch.randn(1, 3, 224, 224),))
 
-    @unittest.skip('torchvision models are not supported yet')  # FIXME
     def test_alexnet(self):
-        x = torch.ones(1, 3, 224, 224)
-        model = torchvision.models.AlexNet()
-        self.checkExportImport(model, (x,))
+        from .inject_nn import inject_pytorch_nn, remove_inject_pytorch_nn
+        try:
+            inject_pytorch_nn()
+            x = torch.ones(1, 3, 224, 224)
+            model = torchvision.models.AlexNet()
+            self.checkExportImport(model, (x,))
+        finally:
+            remove_inject_pytorch_nn()

@@ -12,7 +12,7 @@ NNI 支持在 `OpenPAI <https://github.com/Microsoft/pai>`__  上运行 Experime
 设置环境
 -----------------
 
-**步骤 1. 参考** `指南 <../Tutorial/QuickStart.rst>`__ **安装 NNI。**   
+**步骤 1. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 NNI。**   
 
 **步骤 2. 获得令牌（token）。**
 
@@ -111,7 +111,7 @@ NNI 支持在 `OpenPAI <https://github.com/Microsoft/pai>`__  上运行 Experime
 Trial 配置
 ^^^^^^^^^^^^^^^^^^^^
 
-与 `LocalMode <LocalMode.md>`__ 和 `RemoteMachineMode <RemoteMachineMode.rst>`__\ 相比， pai 模式下的 ``trial`` 配置有下面所列的其他 keys：
+与 `LocalMode <LocalMode.rst>`__ 和 `RemoteMachineMode <RemoteMachineMode.rst>`__\ 相比， pai 模式下的 ``trial`` 配置有下面所列的其他 keys：
 
 
 * 
@@ -130,6 +130,8 @@ Trial 配置
   可选。 在 pai 模式下，OpenPAI 将安排试用程序在 `Docker 容器 <https://www.docker.com/>`__ 中运行。 此键用来指定 Trial 程序的容器使用的 Docker 映像。
 
   我们已经 build 了一个 docker image :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`。 可以直接使用此映像，或参考它来生成自己的映像。 如果没在 Trial 配置中设置，则需要在 ``paiConfigPath`` 指定的配置文件中设置。
+
+.. cannot find :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`
 
 * 
   virtualCluster
@@ -166,7 +168,7 @@ Trial 配置
 
 
   #. 
-     OpenPAI 配置文件中的作业名称会由 NNI 指定，格式为：nni\ *exp*\ ${this.experimentId}*trial*\ ${trialJobId}。
+     OpenPAI 配置文件中的作业名称会由 NNI 指定，格式为：``nni_exp_${this.experimentId}_trial_${trialJobId}`` 。
 
   #. 
      如果在 OpenPAI 配置文件中有多个 taskRoles，NNI 会将这些 taksRoles 作为一个 Trial 任务，用户需要确保只有一个 taskRole 会将指标上传到 NNI 中，否则可能会产生错误。
@@ -218,7 +220,7 @@ OpenPAI 配置
 在 Trial 列表页面中展开 Trial 信息，点击如下的 logPath：
 
 
-.. image:: ../../img/nni_webui_joblist.jpg
+.. image:: ../../img/nni_webui_joblist.png
    :scale: 30%
 
 接着将会打开 HDFS 的 WEB 界面，并浏览到 Trial 的输出文件：
@@ -248,5 +250,5 @@ OpenPAI 配置
 如果 Experiment 无法运行，而且不能确认是否是因为版本不匹配造成的，可以在 Web 界面检查是否有相关的错误消息。
 
 
-.. image:: ../../img/version_check.png
+.. image:: ../../img/webui-img/experimentError.png
    :scale: 80%

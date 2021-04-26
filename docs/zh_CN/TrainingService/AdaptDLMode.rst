@@ -1,7 +1,7 @@
 在 AdaptDL 上运行 Experiment
 ============================
 
-NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI 的 AdaptDL 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好  `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 在 AdaptDL 模式下，每个 Trial 程序会在 AdaptDL 集群中作为一个 Kubeflow 作业来运行。
+NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI 的 AdaptDL 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好 `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 在 AdaptDL 模式下，每个 Trial 程序会在 AdaptDL 集群中作为一个 Kubeflow 作业来运行。
 
 AdaptDL 旨在使动态资源环境（例如共享集群和云）中的分布式深度学习变得轻松高效。
 
@@ -9,9 +9,9 @@ AdaptDL 旨在使动态资源环境（例如共享集群和云）中的分布式
 -----------------------------------
 
 
-#. 采用 **Kubernetes 1.14** 或更高版本。 根据下面的指南设置 Kubernetes 环境： `on Azure <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__\ ， `on-premise <https://kubernetes.io/docs/setup/>`__ ， `cephfs <https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd>`__\  和  `microk8s with storage add-on enabled <https://microk8s.io/docs/addons>`__。
+#. 采用 **Kubernetes 1.14** 或更高版本。 根据下面的指南设置 Kubernetes 环境： `on Azure <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__\ ， `on-premise <https://kubernetes.io/docs/setup/>`__ ， `cephfs <https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd>`__\ 和 `microk8s with storage add-on enabled <https://microk8s.io/docs/addons>`__。
 #. Helm 将 **AdaptDL Scheduler** 安装到 Kubernetes 集群中。 参照 `指南 <https://adaptdl.readthedocs.io/en/latest/installation/install-adaptdl.html>`__ 来设置 AdaptDL scheduler。
-#. 配置 **kubeconfig** 文件，NNI 将使用此配置与 Kubernetes API 服务交互。 默认情况下，NNI 管理器会使用 $(HOME)/.kube/config 作为 kubeconfig 文件的路径。 也可以通过环境变量 **KUBECONFIG** 来指定其它 kubeconfig 文件。 根据 `指南 <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ 了解更多 kubeconfig 的信息。
+#. 配置 **kubeconfig** 文件，NNI 将使用此配置与 Kubernetes API 服务交互。 默认情况下，NNI 管理器会使用 ``$(HOME)/.kube/config`` 作为 kubeconfig 文件的路径。 也可以通过环境变量 **KUBECONFIG** 来指定其它 kubeconfig 文件。 根据 `指南 <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig>`__ 了解更多 kubeconfig 的信息。
 #. 如果 NNI Trial 作业需要 GPU 资源，需按照 `指南 <https://github.com/NVIDIA/k8s-device-plugin>`__ 来配置 **Kubernetes 下的 Nvidia 插件**。
 #. （可选）准备 **NFS服务器** 并导出通用装载作为外部存储。
 #. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 **NNI**。
@@ -76,7 +76,7 @@ AdaptDL 旨在使动态资源环境（例如共享集群和云）中的分布式
        storageSize: 1Gi
 
 下文中没有提及的 config 可以参考这篇文档：
-`default specs defined in the NNI doc </Tutorial/ExperimentConfig.html#configuration-spec>`__。
+`默认配置说明 </Tutorial/ExperimentConfig.rst#configuration-spec>`__。
 
 
 * **trainingServicePlatform**\ : 选择 ``adl`` 以将 Kubernetes 集群与 AdaptDL 调度程序一起使用。
@@ -133,7 +133,7 @@ NFS 存储
 简而言之，并没有限制 trial 如何读取或写入 NFS 存储，因此可以根据需要灵活使用它。
 
 通过日志流监控
-----------------------
+---------------------------------------------
 
 遵循特定 trial 的日志流：
 

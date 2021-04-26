@@ -25,7 +25,9 @@ NNI的命令行工具 **nnictl** 支持自动补全，也就是说，您可以�
    cd ~
    wget https://raw.githubusercontent.com/microsoft/nni/{nni-version}/tools/bash-completion
 
-{nni-version} 应该填充 NNI 的版本，例如 ``master``\ , ``v1.9``。 你也可以 :githublink:`在这里 <tools/bash-completion>` 查看最新的 ``bash-completion`` 脚本。
+{nni-version} 应该填充 NNI 的版本，例如 ``master``\ , ``v2.0``。 你也可以 :githublink:`在这里 <tools/bash-completion>` 查看最新的 ``bash-completion`` 脚本。
+
+.. cannot find :githublink:`here <tools/bash-completion>`.
 
 步骤 2. 安装脚本
 ^^^^^^^^^^^^^^^^^^^^^^^^^^

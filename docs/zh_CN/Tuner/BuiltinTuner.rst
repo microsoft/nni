@@ -26,7 +26,7 @@
    * - `Naïve Evolution（朴素进化） <#Evolution>`__
      - Naïve Evolution（朴素进化算法）来自于 Large-Scale Evolution of Image Classifiers。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 朴素进化算法需要很多次的 Trial 才能有效，但它也非常简单，也很容易扩展新功能。 `参考论文 <https://arxiv.org/pdf/1703.01041.pdf>`__
    * - `SMAC <#SMAC>`__
-     - SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：SMAC 需要通过 ``nnictl package`` 命令来安装。 `参考论文 <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `代码仓库 <https://github.com/automl/SMAC3>`__
+     - SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：SMAC 需要通过 ``pip install nni[SMAC]`` 命令来安装。 `参考论文 <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `代码仓库 <https://github.com/automl/SMAC3>`__
    * - `Batch tuner（批处理） <#Batch>`__
      - Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，Experiment 即结束。 Batch Tuner 仅支持 choice 类型。
    * - `Grid Search（遍历） <#GridSearch>`__
@@ -52,7 +52,7 @@
 
 要使用 NNI 内置的 Assessor，需要在 ``config.yml`` 文件中添加 **builtinAssessorName** 和 **classArgs**。 本部分中，将介绍每个 Tuner 的用法和建议场景、参数要求，并提供配置示例。
 
-注意：参考样例中的格式来创建新的 ``config.yml`` 文件。 一些内置的 Tuner 还需要通过 ``nnictl package`` 命令先安装，如 SMAC。
+注意：参考样例中的格式来创建新的 ``config.yml`` 文件。 一些内置 Tuner 因为依赖问题需要使用 ``pip install nni[<tuner>]`` 来安装，比如使用 ``pip install nni[SMAC]`` 来安装 SMAC。
 
 :raw-html:`<a name="TPE"></a>`
 
@@ -71,7 +71,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 `TPE 文档 <./HyperoptTuner.rst>`__。
 
@@ -128,7 +128,7 @@ Anneal（退火算法）
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 **配置示例：**
 
@@ -196,7 +196,7 @@ SMAC 在第一次使用前，必须用下面的命令先安装。 注意：SMAC 
 
 .. code-block:: bash
 
-   nnictl package install --name=SMAC
+   pip install nni[SMAC]
 
 **建议场景**
 
@@ -306,7 +306,7 @@ Hyperband
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, 可选, 默认为 60*)，分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
 * **eta** (*int，可选，默认为 3*)，``(eta-1)/eta`` 是丢弃 Trial 的比例。
 * **exec_mode** (*串行或并行，可选默认值是并行*\ )，如果是“并行”， Tuner 会尝试使用可用资源立即启动新的分组。 如果是“串行”， Tuner 只会在当前分组完成后启动新的分组。
@@ -417,7 +417,7 @@ BOHB advisor 需要安装 `ConfigSpace <https://github.com/automl/ConfigSpace>`_
 
 .. code-block:: bash
 
-   nnictl package install --name=BOHB
+   pip install nni[BOHB]
 
 **建议场景**
 
@@ -512,7 +512,7 @@ PPO Tuner
 
 **建议场景**
 
-PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 PPOTuner 可用于使用 NNI NAS 接口进行的神经网络结构搜索。 一般来说，尽管 PPO 算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 当有大量可用的计算资源时，才建议使用此 Tuner。 以在简单的任务上尝试，如 :githublink:`mnist-nas <examples/trials/mnist-nas>` 示例。 `查看详细信息 <./PPOTuner.rst>`__。
+PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 PPOTuner 可用于使用 NNI NAS 接口进行的神经网络结构搜索。 一般来说，尽管 PPO 算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 当有大量可用的计算资源时，才建议使用此 Tuner。 以在简单的任务上尝试，如 :githublink:`mnist-nas <examples/nas/classic_nas>` 示例。 `查看详细信息 <./PPOTuner.rst>`__。
 
 **classArgs 要求：**
 
@@ -580,6 +580,6 @@ Population Based Training (PBT，基于种群的训练)，将并扩展并行搜�
 
 * 在Github 中 `提交此功能的 Bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__
 * 在Github 中 `提交新功能或请求改进 <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__
-* 了解 NNI 中 `特征工程的更多信息 <../FeatureEngineering/Overview.rst>`__
-* 了解 NNI 中 `NAS 的更多信息 <../NAS/Overview.rst>`__
-* 了解 NNI 中 `模型压缩的更多信息 <../Compression/Overview.rst>`__
+* 了解 NNI 中 :githublink:`特征工程的更多信息 <docs/zh_CN/FeatureEngineering/Overview.rst>`
+* 了解 NNI 中 :githublink:`NAS 的更多信息 <docs/zh_CN/NAS/Overview.rst>`
+* 了解 NNI 中 :githublink:`模型压缩的更多信息 <docs/zh_CN/Compression/Overview.rst>`

@@ -28,7 +28,7 @@ abstract class OsCommands {
     public abstract killChildProcesses(pidFileName: string, killSelf: boolean): string;
     public abstract extractFile(tarFileName: string, targetFolder: string): string;
     public abstract executeScript(script: string, isFile: boolean): string;
-    public abstract addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined;
+    public abstract setPythonPath(pythonPath: string | undefined, command: string | undefined): string | undefined;
     public abstract fileExistCommand(filePath: string): string | undefined;
 
     public joinPath(...paths: string[]): string {

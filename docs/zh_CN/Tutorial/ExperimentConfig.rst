@@ -71,7 +71,7 @@ Experiment（实验）配置参考
       * `gpuIndices <#gpuindices-3>`__
       * `maxTrialNumPerGpu <#maxtrialnumpergpu-1>`__
       * `useActiveGpu <#useactivegpu-1>`__
-      * `preCommand <#preCommand>`__
+      * `pythonPath <#pythonPath>`__
 
     * `kubeflowConfig <#kubeflowconfig>`__
 
@@ -252,7 +252,7 @@ maxExecDuration
 
 可选。 字符串。 默认值：999d。
 
-**maxExecDuration** 指定实验的最大执行时间。 时间单位为 {**s**\ ,** m**\ ,** h**\ ,** d**\ }，其分别表示 {*秒*\ , *分钟*\ , *小时*\ , *天*\ }。
+**maxExecDuration** 指定实验的最大执行时间。 时间单位为 {**s**\ , **m**\ , **h**\ , **d**\ }，其分别表示 {*秒*\ , *分钟*\ , *小时*\ , *天*\ }。
 
 注意：maxExecDuration 设置的是 Experiment 执行的时间，不是 Trial 的。 如果 Experiment 达到了设置的最大时间，Experiment 不会停止，但不会再启动新的 Trial 作业。
 
@@ -282,7 +282,7 @@ trainingServicePlatform
 
 必填。 字符串。
 
-指定运行 Experiment 的平台，包括 **local**\ ,** remote**\ ,** pai**\ ,** kubeflow**\ ,** frameworkcontroller**。
+指定运行 Experiment 的平台，包括 **local**\ , **remote**\ , **pai**\ , **kubeflow**\ , **frameworkcontroller**。
 
 
 * 
@@ -363,7 +363,7 @@ tuner
 
 必填。
 
-指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**\ ,** classFileName**\ ,** className** 和 **classArgs**。 *必须选择其中的一种方式。*
+指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**\ , **classFileName**\ , **className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
@@ -417,7 +417,7 @@ includeIntermediateResults
 assessor
 ^^^^^^^^
 
-指定 Assessor 算法以运行 Experiment。 与 Tuner 类似，有两种设置 Assessor 的方法。 一种方法是使用 NNI SDK 提供的 Assessor。 必填字段：builtinAssessorName 和 classArgs。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**\ ,** classFileName**\ ,** className** 和 **classArgs**。 *必须选择其中的一种方式。*
+指定 Assessor 算法以运行 Experiment。 与 Tuner 类似，有两种设置 Assessor 的方法。 一种方法是使用 NNI SDK 提供的 Assessor。 必填字段：builtinAssessorName 和 classArgs。 另一种方法，是使用用户自定义的 Assessor，需要设置 **codeDirectory**\ , **classFileName**\ , **className** 和 **classArgs**。 *必须选择其中的一种方式。*
 
 默认情况下，未启用任何 Assessor。
 
@@ -461,7 +461,7 @@ Advisor
 
 可选。
 
-指定 Experiment 中的 Advisor 算法。 与 Tuner 和 Assessor 类似，有两种指定 Advisor 的方法。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor ，需要设置 **codeDirectory**\ ,** classFileName**\ ,** className** 和 **classArgs**。
+指定 Experiment 中的 Advisor 算法。 与 Tuner 和 Assessor 类似，有两种指定 Advisor 的方法。 一种方法是使用 SDK 提供的 Advisor ，需要设置 **builtinAdvisorName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Advisor ，需要设置 **codeDirectory**\ , **classFileName**\ , **className** 和 **classArgs**。
 
 启用 Advisor 后，将忽略 Tuner 和 Advisor 的设置。
 
@@ -551,6 +551,8 @@ trial
 
 * 
   **portList**\ : ``label``\ , ``beginAt``\ , ``portNumber`` 的键值对 list。 参考 `OpenPAI 教程 <https://github.com/microsoft/pai/blob/master/docs/job_tutorial.rst>`__ 。
+
+.. cannot find `Reference <https://github.com/microsoft/pai/blob/2ea69b45faa018662bc164ed7733f6fdbb4c42b3/docs/faq.rst#q-how-to-use-private-docker-registry-job-image-when-submitting-an-openpai-job>`__  and `job tutorial of PAI <https://github.com/microsoft/pai/blob/master/docs/job_tutorial.rst>`__ 
 
 在 Kubeflow 模式下，需要以下键。
 
@@ -700,14 +702,12 @@ useActiveGpu
 
 用于指定 GPU 上存在其他进程时是否使用此 GPU。 默认情况下，NNI 仅在 GPU 中没有其他活动进程时才使用 GPU。 如果 **useActiveGpu** 设置为 true，则 NNI 无论某 GPU 是否有其它进程，都将使用它。 此字段不适用于 Windows 版的 NNI。
 
-preCommand
+pythonPath
 ^^^^^^^^^^
 
 可选。 字符串。
 
-在远程机器执行其他命令之前，将执行预命令。 用户可以通过设置 **preCommand**，在远程机器上配置实验环境。 如果需要执行多个命令，请使用 ``&&`` 连接它们，例如 ``preCommand: command1 && command2&&…``。
-
-**注意**：因为 ``preCommand`` 每次都会在其他命令之前执行，所以强烈建议不要设置 **preCommand** 来对系统进行更改，即 ``mkdir`` or ``touch``。
+用户可以通过设置 **pythonPath**，在远程机器上配置 Python 环境。
 
 remoteConfig
 ^^^^^^^^^^^^
@@ -755,7 +755,7 @@ keyVault
 
 如果使用 Azure 存储，则必需。 键值对。
 
-将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考：https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2 。
+将 **keyVault** 设置为 Azure 存储帐户的私钥。 参考 `此文档 <https://docs.microsoft.com/zh-cn/azure/key-vault/key-vault-manage-with-cli2>`__ 。
 
 
 * 
@@ -822,6 +822,79 @@ reuse
 可选。 布尔。 默认值：``false``。 这是试用中的功能。
 
 如果为 true，NNI 会重用 OpenPAI 作业，在其中运行尽可能多的 Trial。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。
+
+sharedStorage
+^^^^^^^^^^^^^
+
+storageType
+^^^^^^^^^^^
+
+必填。 字符串。
+
+存储类型，支持 ``NFS`` 和 ``AzureBlob``。
+
+localMountPoint
+^^^^^^^^^^^^^^^
+
+必填。 字符串。
+
+已经或将要在本地挂载存储的绝对路径。
+
+remoteMountPoint
+^^^^^^^^^^^^^^^^
+
+必填。 字符串。
+
+远程挂载存储的绝对路径。
+
+localMounted
+^^^^^^^^^^^^
+
+必填。 字符串。
+
+``usermount``、``nnimount`` 和 ``nomount`` 其中之一。 ``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 nni 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。
+
+nfsServer
+^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 NFS 存储，则必需。 NFS 服务器的 host。
+
+exportedDirectory
+^^^^^^^^^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 NFS 存储，则必需。 NFS 服务器的导出目录。
+
+storageAccountName
+^^^^^^^^^^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 AzureBlob 存储，则必需。 Azure 存储账户名。
+
+storageAccountKey
+^^^^^^^^^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 AzureBlob 存储且 ``resourceGroupName`` 未设置，则必需。 Azure 存储账户密钥。
+
+resourceGroupName
+^^^^^^^^^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 AzureBlob 存储且 ``storageAccountKey`` 未设置，则必需。 AzureBlob 容器所属的资源组。
+
+containerName
+^^^^^^^^^^^^^
+
+可选。 字符串。
+
+如果使用 AzureBlob 存储，则必需。 AzureBlob 容器名。
 
 示例
 --------
@@ -959,12 +1032,8 @@ reuse
          username: test
          sshKeyPath: /nni/sshkey
          passphrase: qwert
-         # 在远程机器执行其他命令之前，将执行预命令。
          # 以下是特定 python 环境的一个示例
-         # 如果想同时执行多条命令，使用 "&&" 连接他们
-         # 预命令: source ${replace_to_absolute_path_recommended_here}/bin/activate
-         # 预命令: source ${replace_to_conda_path}/bin/activate ${replace_to_conda_env_name}
-         preCommand: export PATH=${replace_to_python_environment_path_in_your_remote_machine}:$PATH
+         pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
 
 PAI 模式
 ^^^^^^^^
@@ -1005,7 +1074,7 @@ PAI 模式
        host: 10.10.10.10
 
 Kubeflow 模式
-^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
   使用 NFS 存储。
 

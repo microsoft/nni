@@ -13,19 +13,14 @@ import { setExperimentStartupInfo } from './common/experimentStartupInfo';
 import { getLogger, Logger, logLevelNameMap } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
-import { TrainingService } from './common/trainingService';
+import { TensorboardManager } from './common/tensorboardManager';
 import { getLogDir, mkDirP, parseArg } from './common/utils';
 import { NNIDataStore } from './core/nniDataStore';
 import { NNIManager } from './core/nnimanager';
 import { SqlDB } from './core/sqlDatabase';
 import { NNIExperimentsManager } from './core/nniExperimentsManager';
+import { NNITensorboardManager } from './core/nniTensorboardManager';
 import { NNIRestServer } from './rest_server/nniRestServer';
-import { FrameworkControllerTrainingService } from './training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
-import { AdlTrainingService } from './training_service/kubernetes/adl/adlTrainingService';
-import { KubeflowTrainingService } from './training_service/kubernetes/kubeflow/kubeflowTrainingService';
-import { LocalTrainingService } from './training_service/local/localTrainingService';
-import { RouterTrainingService } from './training_service/reusable/routerTrainingService';
-import { DLTSTrainingService } from './training_service/dlts/dltsTrainingService';
 
 
 function initStartupInfo(
@@ -36,34 +31,6 @@ function initStartupInfo(
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
-    const routerPlatformMode = ['remote', 'pai', 'aml', 'hybrid'];
-    if (routerPlatformMode.includes(platformMode)) {
-        Container.bind(TrainingService)
-            .to(RouterTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'local') {
-        Container.bind(TrainingService)
-            .to(LocalTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'kubeflow') {
-        Container.bind(TrainingService)
-            .to(KubeflowTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'frameworkcontroller') {
-        Container.bind(TrainingService)
-            .to(FrameworkControllerTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'dlts') {
-        Container.bind(TrainingService)
-            .to(DLTSTrainingService)
-            .scope(Scope.Singleton);
-    } else if (platformMode === 'adl') {
-        Container.bind(TrainingService)
-            .to(AdlTrainingService)
-            .scope(Scope.Singleton);
-    } else {
-        throw new Error(`Error: unsupported mode: ${platformMode}`);
-    }
     Container.bind(Manager)
         .to(NNIManager)
         .scope(Scope.Singleton);
@@ -75,6 +42,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         .scope(Scope.Singleton);
     Container.bind(ExperimentManager)
         .to(NNIExperimentsManager)
+        .scope(Scope.Singleton);
+    Container.bind(TensorboardManager)
+        .to(NNITensorboardManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     if (foreground) {
@@ -174,25 +144,8 @@ mkDirP(getLogDir())
         console.error(`Failed to create log dir: ${err.stack}`);
     });
 
-async function cleanUp(): Promise<void> {
-    const log: Logger = getLogger();
-    let hasError: boolean = false;
-    try {
-        const nniManager: Manager = component.get(Manager);
-        await nniManager.stopExperiment();
-        const experimentManager: ExperimentManager = component.get(ExperimentManager);
-        await experimentManager.stop();
-        const ds: DataStore = component.get(DataStore);
-        await ds.close();
-        const restServer: NNIRestServer = component.get(NNIRestServer);
-        await restServer.stop();
-    } catch (err) {
-        hasError = true;
-        log.error(`${err.stack}`);
-    } finally {
-        log.close();
-        process.exit(hasError ? 1 : 0);
-    }
+function cleanUp(): void {
+    (component.get(Manager) as Manager).stopExperiment();
 }
 
 process.on('SIGTERM', cleanUp);

@@ -5,7 +5,7 @@
 
 为了简化实现新压缩算法的过程，NNI 设计了简单灵活，同时支持剪枝和量化的接口。 首先会介绍如何自定义新的剪枝算法，然后介绍如何自定义新的量化算法。
 
-**重要说明**，为了更好的理解如何定制新的剪枝、量化算法，应先了解 NNI 中支持各种剪枝算法的框架。 参考 `模型压缩框架概述 </Compression/Framework.html>`__。
+**重要说明**，为了更好的理解如何定制新的剪枝、量化算法，应先了解 NNI 中支持各种剪枝算法的框架。 参考 `模型压缩框架概述 <../Compression/Framework.rst>`__。
 
 自定义剪枝算法
 ---------------------------------
@@ -28,7 +28,7 @@
            # mask = ...
            return {'weight_mask': mask}
 
-参考 NNI 提供的 :githublink:`权重掩码 <src/sdk/pynni/nni/compression/pytorch/pruning/structured_pruning.py>` 来实现自己的权重掩码。
+参考 NNI 提供的 :githublink:`权重掩码 <nni/algorithms/compression/pytorch/pruning/structured_pruning.py>` 来实现自己的权重掩码。
 
 基础的 ``Pruner`` 如下所示：
 
@@ -52,7 +52,7 @@
                wrapper.if_calculated = True
                return masks
 
-参考 NNI 提供的 :githublink:`Pruner <src/sdk/pynni/nni/compression/pytorch/pruning/one_shot.py>` 来实现自己的 Pruner。
+参考 NNI 提供的 :githublink:`Pruner <nni/algorithms/compression/pytorch/pruning/one_shot.py>` 来实现自己的 Pruner。
 
 ----
 

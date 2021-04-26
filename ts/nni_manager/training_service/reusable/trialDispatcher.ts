@@ -7,18 +7,20 @@ import { EventEmitter } from 'events';
 import * as fs from 'fs';
 import * as path from 'path';
 import { Writable } from 'stream';
+import { Container, Scope } from 'typescript-ioc';
 import { String } from 'typescript-string-operations';
 import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { NNIManagerIpConfig, TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
+import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentConfig';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
 import { ScheduleResultType } from '../../training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
+import { CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
@@ -26,8 +28,10 @@ import { EnvironmentServiceFactory } from './environments/environmentServiceFact
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
+import { SharedStorageService } from './sharedStorage';
+import { NFSSharedStorageService } from './shared_storages/nfsStorageService'
+import { AzureBlobSharedStorageService } from './shared_storages/azureblobStorageService'
 import { TrialDetail } from './trial';
-
 
 /**
  * It uses to manage jobs on training platforms 
@@ -55,8 +59,6 @@ class TrialDispatcher implements TrainingService {
     public commandEmitter: EventEmitter;
     public environmentMaintenceLoopInterval: number = -1;
 
-    private nniManagerIp: string | undefined;
-
     // uses to accelerate trial manager loop
     // true means there is updates, and trial loop should run a cycle immediately.
     private shouldUpdateTrials: boolean = true;
@@ -66,7 +68,7 @@ class TrialDispatcher implements TrainingService {
     private enableGpuScheduler: boolean = false;
     // uses to save if user like to reuse environment
     private reuseEnvironment: boolean = true;
-    private logCollection: string = '';
+    private logCollection: string = 'none';
 
     private gpuScheduler: GpuScheduler;
 
@@ -74,7 +76,13 @@ class TrialDispatcher implements TrainingService {
     private isLoggedNoMoreEnvironment: boolean = false;
     private isLoggedNoGpuAvailable: boolean = false;
 
-    constructor() {
+    // uses to mark whether to use shared storage
+    private useSharedStorage: boolean = false;
+    private fileCopyCompleted: boolean = false;
+
+    private config: ExperimentConfig;
+
+    constructor(config: ExperimentConfig) {
         this.log = getLogger();
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();
@@ -94,6 +102,39 @@ class TrialDispatcher implements TrainingService {
         this.commandEmitter = new EventEmitter();
 
         this.gpuScheduler = new GpuScheduler();
+
+        this.config = config;
+
+        this.enableGpuScheduler = !!config.trialGpuNumber;
+        if (this.enableGpuScheduler) {
+            this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
+        }
+
+        validateCodeDir(config.trialCodeDirectory);
+
+        if (Array.isArray(config.trainingService)) {
+            config.trainingService.forEach(trainingService => {
+                const env = EnvironmentServiceFactory.createEnvironmentService(trainingService.platform, config);
+                this.environmentServiceList.push(env);
+            });
+        } else {
+            const env = EnvironmentServiceFactory.createEnvironmentService(config.trainingService.platform, config);
+            this.environmentServiceList.push(env);
+        }
+
+        // FIXME: max?
+        this.environmentMaintenceLoopInterval = Math.max(
+            ...this.environmentServiceList.map((env) => env.environmentMaintenceLoopInterval)
+        );
+
+        for (const env of this.environmentServiceList) {
+            env.initCommandChannel(this.commandEmitter);
+            this.commandChannelSet.add(env.getCommandChannel);
+        }
+
+        if (this.config.sharedStorage !== undefined) {
+            this.initializeSharedStorage(this.config.sharedStorage);
+        }
     }
 
     public async listTrialJobs(): Promise<TrialDetail[]> {
@@ -120,10 +161,6 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialDetail> {
-        if (this.trialConfig === undefined) {
-            throw new Error(`trialConfig not initialized!`);
-        }
-
         const trialId: string = uniqueString(5);
 
         const trialJobDetail: TrialDetail = new TrialDetail(trialId, "WAITING", Date.now(), "", form);
@@ -174,17 +211,14 @@ class TrialDispatcher implements TrainingService {
     }
 
     public async run(): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error(`trial config shouldn't be undefined in run()`);
-        }
         for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
-            runnerSettings.nniManagerIP = this.nniManagerIp === undefined? getIPV4Address() : this.nniManagerIp;
+            runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? getIPV4Address() : this.config.nniManagerIp;
             runnerSettings.nniManagerPort = getBasePort() + 1;
             runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;
-            runnerSettings.command = this.trialConfig.command;
+            runnerSettings.command = this.config.trialCommand;
             runnerSettings.nniManagerVersion = this.enableVersionCheck ? await getVersion() : '';
             runnerSettings.logCollection = this.logCollection;
             runnerSettings.platform = environmentService.getName;
@@ -195,23 +229,32 @@ class TrialDispatcher implements TrainingService {
     
             this.log.info(`TrialDispatcher: copying code and settings.`);
             let storageService: StorageService;
-            if (environmentService.hasStorageService) {
+            if (this.useSharedStorage) {
+                if (this.fileCopyCompleted) {
+                    this.log.debug(`TrialDispatcher: file already copy to shared storage.`);
+                    continue;
+                }
+                this.log.debug(`TrialDispatcher: use shared storage service.`);
+                storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            } else if (environmentService.hasStorageService) {
                 this.log.debug(`TrialDispatcher: use existing storage service.`);
                 storageService = component.get<StorageService>(StorageService);
             } else {
                 this.log.debug(`TrialDispatcher: create temp storage service to temp folder.`);
                 storageService = new MountedStorageService();
-                const environmentLocalTempFolder = path.join(this.experimentRootDir, this.experimentId, "environment-temp");
-                storageService.initialize(this.trialConfig.codeDir, environmentLocalTempFolder);
+                const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
+                storageService.initialize(this.config.trialCodeDirectory, environmentLocalTempFolder);
             }
             // Copy the compressed file to remoteDirectory and delete it
-            const codeDir = path.resolve(this.trialConfig.codeDir);
+            const codeDir = path.resolve(this.config.trialCodeDirectory);
             const envDir = storageService.joinPath("envs");
             const codeFileName = await storageService.copyDirectory(codeDir, envDir, true);
             storageService.rename(codeFileName, "nni-code.tar.gz");
 
-            const installFileName = storageService.joinPath(envDir, 'install_nni.sh');
+            const installFileName = storageService.joinPath(envDir, `install_nni.sh`);
+            const installFileNameForWin = storageService.joinPath(envDir, `install_nni.ps1`);
             await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT, installFileName);
+            await storageService.save(CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN, installFileNameForWin);
 
             const runnerSettingsConfig = storageService.joinPath(envDir, "settings.json");
             await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
@@ -222,6 +265,10 @@ class TrialDispatcher implements TrainingService {
                     trialToolsPath = path.join(__dirname, "..\\..\\..\\..\\..\\tools\\nni_trial_tool");
                 }
                 await storageService.copyDirectory(trialToolsPath, envDir, true);
+            }
+
+            if (this.useSharedStorage) {
+                this.fileCopyCompleted = true;
             }
         }
         // start channel
@@ -249,56 +296,8 @@ class TrialDispatcher implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
-    public get isMultiPhaseJobSupported(): boolean {
-        return true;
-    }
-
-    public async setClusterMetadata(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.NNI_MANAGER_IP:
-                this.nniManagerIp = (<NNIManagerIpConfig>JSON.parse(value)).nniManagerIp;
-                break;
-            case TrialConfigMetadataKey.VERSION_CHECK:
-                this.enableVersionCheck = (value === 'true' || value === 'True');
-                
-                break;
-            case TrialConfigMetadataKey.LOG_COLLECTION:
-                this.logCollection = value;
-                break;
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.trialConfig = <TrialConfig>JSON.parse(value);
-
-                if (this.trialConfig.reuseEnvironment !== undefined) {
-                    this.reuseEnvironment = this.trialConfig.reuseEnvironment;
-                }
-                if (this.trialConfig.gpuNum !== undefined && this.trialConfig.gpuNum > 0) {
-                    this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
-                    this.enableGpuScheduler = true;
-                }
-
-                // Validate to make sure codeDir doesn't have too many files
-                await validateCodeDir(this.trialConfig.codeDir);
-                break;
-            case TrialConfigMetadataKey.PLATFORM_LIST: {
-                const platforms: string[] = value.split(",");
-                for(const platform of platforms) {
-                    const environmentService: EnvironmentService = EnvironmentServiceFactory.createEnvironmentService(platform);
-                    environmentService.initCommandChannel(this.commandEmitter);
-                    this.environmentMaintenceLoopInterval =
-                      Math.max(environmentService.environmentMaintenceLoopInterval, this.environmentMaintenceLoopInterval);
-                    this.commandChannelSet.add(environmentService.getCommandChannel);
-                    this.environmentServiceList.push(environmentService);
-                }
-            }
-        }
-        for(const environmentService of this.environmentServiceList) {
-            await environmentService.config(key, value);
-        }
-    }
-
-    public getClusterMetadata(_key: string): Promise<string> {
-        throw new Error('Not implemented!');
-    }
+    public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
+    public async getClusterMetadata(_key: string): Promise<string> { return ""; }
 
     public async cleanUp(): Promise<void> {
         if (this.commandEmitter === undefined) {
@@ -320,6 +319,11 @@ class TrialDispatcher implements TrainingService {
         this.commandEmitter.off("command", this.handleCommand);
         for (const commandChannel of this.commandChannelSet) {
             await commandChannel.stop();
+        }
+        if (this.useSharedStorage) {
+            this.log.info(`stopping shared storage...`)
+            await component.get<SharedStorageService>(SharedStorageService).cleanUp();
+            this.log.info(`shared storage stopped.`)
         }
     }
 
@@ -435,7 +439,6 @@ class TrialDispatcher implements TrainingService {
                             if (environment.environmentService === undefined) {
                                 throw new Error(`${environment.id} does not has environment service!`);
                             }
-
                             trial.url = environment.trackingUrl;
                             const environmentStatus = environment.status;
 
@@ -496,7 +499,7 @@ class TrialDispatcher implements TrainingService {
                         // if environment is not reusable and used, stop and not count as idle;
                         if (
                             0 === environment.runningTrialCount &&
-                            false === this.reuseEnvironment &&
+                            !(this.config as any).reuseMode &&
                             environment.assignedTrialCount > 0
                         ) {
                             if (environment.environmentService === undefined) {
@@ -529,7 +532,7 @@ class TrialDispatcher implements TrainingService {
                     if (undefined === trial) {
                         throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
                     }
-                    const gpuNum = this.trialConfig ? this.trialConfig.gpuNum : undefined;
+                    const gpuNum = this.config.trialGpuNumber;
                     const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, gpuNum, trial);
                     switch (result.resultType) {
                         case ScheduleResultType.REQUIRE_EXCEED_TOTAL:
@@ -619,7 +622,7 @@ class TrialDispatcher implements TrainingService {
 
         }
     }
-    
+
     // Schedule a environment platform for environment
     private selectEnvironmentService(): EnvironmentService | undefined {
         const validEnvironmentServiceList = [];
@@ -634,7 +637,7 @@ class TrialDispatcher implements TrainingService {
         // Random scheduler
         return randomSelect(validEnvironmentServiceList);
     }
-    
+
     private async prefetchEnvironments (): Promise<void> {
         for (const environmentService of this.environmentServiceList) {
             const number = environmentService.prefetchedEnvironmentCount;
@@ -659,6 +662,8 @@ class TrialDispatcher implements TrainingService {
 
         environment.command = `mkdir -p envs/${envId} && cd envs/${envId} && ${environment.command}`;
 
+        environment.useSharedStorage = this.useSharedStorage;
+
         await environmentService.startEnvironment(environment);
         this.environments.set(environment.id, environment);
 
@@ -673,10 +678,6 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async allocateEnvironment(trial: TrialDetail, environment: EnvironmentInformation): Promise<void> {
-        if (this.trialConfig === undefined) {
-            throw new Error(`TrialDispatcher: trialConfig shouldn't be undefined in allocateEnvironment.`);
-        }
-
         if (trial.environment) {
             throw new Error(`TrialDispatcher: trial ${trial.id} has assigned environment ${trial.environment.id} already, not assign to ${environment.id}!`);
         }
@@ -688,7 +689,7 @@ class TrialDispatcher implements TrainingService {
         // convert assigned gpus to string for nvidia visible settings
         // undefined means no constraint, [] means no gpu visible.
         let gpuIndices: string | undefined = undefined;
-        if (undefined !== this.trialConfig.gpuNum) {
+        if (undefined !== this.config.trialGpuNumber) {
             const gpuArray: number[] = [];
             if (undefined !== trial.assignedGpus) {
                 trial.assignedGpus.map((value) => {
@@ -704,6 +705,7 @@ class TrialDispatcher implements TrainingService {
         if (environment.environmentService === undefined) {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
+        trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
         if (environment.environmentService.hasStorageService) {	
             const storageService = component.get<StorageService>(StorageService);	
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
@@ -732,6 +734,7 @@ class TrialDispatcher implements TrainingService {
                 throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
             }
             trial.environment.runningTrialCount--;
+            trial.environment.latestTrialReleasedTime = Date.now();
             trial.environment = undefined;
         }
         if (true === this.enableGpuScheduler) {
@@ -879,6 +882,52 @@ class TrialDispatcher implements TrainingService {
                 break;
         }
         this.shouldUpdateTrials = true;
+    }
+
+    private async initializeSharedStorage(config: SharedStorageConfig): Promise<void> {
+        switch (config.storageType) {
+            case 'NFS':
+                Container.bind(SharedStorageService)
+                         .to(NFSSharedStorageService)
+                         .scope(Scope.Singleton);
+                break;
+            case 'AzureBlob':
+                Container.bind(SharedStorageService)
+                         .to(AzureBlobSharedStorageService)
+                         .scope(Scope.Singleton);
+                break;
+            default: {
+                const errorMessage = `Shared storage type '${config.storageType}' not support.`;
+                this.log.error(errorMessage)
+                return Promise.reject(errorMessage);
+            }
+        }
+        await component.get<SharedStorageService>(SharedStorageService).config(config);
+        this.useSharedStorage = true;
+        return Promise.resolve();
+    }
+
+    public async getTrialOutputLocalPath(trialJobId: string): Promise<string> {
+        // TODO: support non shared storage
+        if (this.useSharedStorage) {
+            const localWorkingRoot = component.get<SharedStorageService>(SharedStorageService).localWorkingRoot;
+            return Promise.resolve(path.join(localWorkingRoot, 'trials', trialJobId));
+        } else {
+            return Promise.reject(new Error('Only support shared storage right now.'));
+        }
+    }
+
+    public async fetchTrialOutput(trialJobId: string, subpath: string | undefined): Promise<void> {
+        // TODO: support non shared storage
+        let trialLocalPath = await this.getTrialOutputLocalPath(trialJobId);
+        if (subpath !== undefined) {
+            trialLocalPath = path.join(trialLocalPath, subpath);
+        }
+        if (fs.existsSync(trialLocalPath)) {
+            return Promise.resolve();
+        } else {
+            return Promise.reject(new Error('Trial local path not exist.'));
+        }
     }
 }
 

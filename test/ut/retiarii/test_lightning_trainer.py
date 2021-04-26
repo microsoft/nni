@@ -2,13 +2,13 @@ import json
 import pytest
 
 import nni
-import nni.retiarii.trainer.pytorch.lightning as pl
+import nni.retiarii.evaluator.pytorch.lightning as pl
 import pytorch_lightning
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from nni.retiarii import blackbox_module as bm
-from nni.retiarii.trainer import FunctionalTrainer
+from nni.retiarii import serialize_cls, serialize
+from nni.retiarii.evaluator import FunctionalEvaluator
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -49,7 +49,7 @@ class FCNet(nn.Module):
         return output.view(-1)
 
 
-@bm
+@serialize_cls
 class DiabetesDataset(Dataset):
     def __init__(self, train=True):
         data = load_diabetes()
@@ -91,8 +91,8 @@ def _reset():
 def test_mnist():
     _reset()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = bm(MNIST)(root='data/mnist', train=True, download=True, transform=transform)
-    test_dataset = bm(MNIST)(root='data/mnist', train=False, download=True, transform=transform)
+    train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+    test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
     lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                   val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                   max_epochs=2, limit_train_batches=0.25,  # for faster training
@@ -121,7 +121,7 @@ def test_diabetes():
 
 @pytest.mark.skipif(pytorch_lightning.__version__ < '1.0', reason='Incompatible APIs.')
 def test_functional():
-    FunctionalTrainer(_foo)._execute(MNISTModel)
+    FunctionalEvaluator(_foo)._execute(MNISTModel)
 
 
 if __name__ == '__main__':

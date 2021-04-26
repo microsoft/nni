@@ -8,6 +8,8 @@ Retiarii Overview
     :maxdepth: 2
 
     Quick Start <Tutorial>
-    Customize a New Trainer <WriteTrainer>
+    Write a Model Evaluator <WriteTrainer>
+    One-shot NAS <OneshotTrainer>
+    Advanced Tutorial <Advanced>
     Customize a New Strategy <WriteStrategy>
     Retiarii APIs <ApiReference>

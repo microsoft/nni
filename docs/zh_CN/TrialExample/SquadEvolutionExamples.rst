@@ -45,7 +45,7 @@
 或手动下载
 
 
-#. 在 https://rajpurkar.github.io/SQuAD-explorer/ 下载 "dev-v1.1.json" 和 "train-v1.1.json"。
+#. 在 `这里 <https://rajpurkar.github.io/SQuAD-explorer/>`__ 下载 ``dev-v1.1.json`` 和 ``train-v1.1.json``
 
 .. code-block:: bash
 
@@ -53,7 +53,7 @@
    wget https://rajpurkar.github.io/SQuAD-explorer/dataset/dev-v1.1.json
 
 
-#. 在 https://nlp.stanford.edu/projects/glove/ 下载 "glove.840B.300d.txt"。
+#. 在 `这里 <https://nlp.stanford.edu/projects/glove/>`__ 下载 ``glove.840B.300d.txt``
 
 .. code-block:: bash
 
@@ -120,7 +120,7 @@
    # 你的 nni_manager ip 地址
    nniManagerIp: 10.10.10.10
    tuner:
-     codeDir: https://github.com/Microsoft/nni/tree/v1.9/examples/tuners/ga_customer_tuner
+     codeDir: https://github.com/Microsoft/nni/tree/v2.0/examples/tuners/ga_customer_tuner
      classFileName: customer_tuner.py
      className: CustomerTuner
      classArgs:

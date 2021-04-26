@@ -14,7 +14,7 @@ Examples
 CIFAR10 Macro/Micro Search Space
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:githublink:`Example code <examples/nas/enas>`
+:githublink:`Example code <examples/nas/oneshot/enas>`
 
 .. code-block:: bash
 
@@ -22,7 +22,7 @@ CIFAR10 Macro/Micro Search Space
    git clone https://github.com/Microsoft/nni.git
 
    # search the best architecture
-   cd examples/nas/enas
+   cd examples/nas/oneshot/enas
 
    # search in macro search space
    python3 search.py --search-for macro

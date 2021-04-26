@@ -85,13 +85,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                 tooltip: {
                     trigger: 'item',
                     enterable: true,
-                    position: function(point: number[], data: TooltipForIntermediate): number[] {
-                        if (data.dataIndex < length / 2) {
-                            return [point[0], 80];
-                        } else {
-                            return [point[0] - 300, 80];
-                        }
-                    },
+                    confine: true,
                     formatter: function(data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
                         let parameters = {};
@@ -101,24 +95,15 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                             parameters = temp.hyperPara;
                             trialNum = temp.trialNum;
                         }
-                        return (
-                            '<div class="tooldetailAccuracy">' +
-                            '<div>Trial No.: ' +
-                            trialNum +
-                            '</div>' +
-                            '<div>Trial ID: ' +
-                            trialId +
-                            '</div>' +
-                            '<div>Intermediate: ' +
-                            data.data +
-                            '</div>' +
-                            '<div>Parameters: ' +
-                            '<pre>' +
-                            JSON.stringify(parameters, null, 4) +
-                            '</pre>' +
-                            '</div>' +
-                            '</div>'
-                        );
+                        return `
+                            <div class="tooldetailAccuracy">
+                                <div>Trial No.: ${trialNum}</div> 
+                                <div>Trial ID: ${trialId}</div>
+                                <div>Intermediate: ${data.data}</div>
+                                <div>Parameters: <pre>${JSON.stringify(parameters, null, 4)}</pre>
+                                </div>
+                            </div>
+                        `;
                     }
                 },
                 grid: {
@@ -280,7 +265,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                         <Toggle onChange={this.switchTurn} />
                     </Stack>
                 </Stack>
-                <div className='intermediate-graph'>
+                <div className='intermediate-graph graph'>
                     <ReactEcharts
                         option={interSource}
                         style={{ width: '100%', height: 400, margin: '0 auto' }}
