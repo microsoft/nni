@@ -11,7 +11,7 @@ about: Report an issue or question while using nni instance (deployment).
 
 **Environment**:
 - NNI version:
-- NNI mode (local|remote|pai):
+- Training service (local|remote|pai|aml|etc):
 - Client OS:
 - Server OS (for remote mode only):
 - Python version:
@@ -19,6 +19,10 @@ about: Report an issue or question while using nni instance (deployment).
 - Is conda/virtualenv/venv used?:
 - Is running in Docker?:
 
+
+**Configuration**:
+ - Experiment config: (remember to remove secrets!):
+ - Search space:
 
 
 **Log message**:
