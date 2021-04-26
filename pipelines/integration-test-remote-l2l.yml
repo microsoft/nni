@@ -93,7 +93,7 @@ jobs:
           --remote_port $(docker_port) \
           --remote_pwd $(password_in_docker) \
           --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote --cases shared-storage-remote-azureblob
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
     displayName: Integration test
 
   - task: SSH@0

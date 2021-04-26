@@ -34,33 +34,6 @@ testCases:
   # check status of experiment before calling validator
   experimentStatusCheck: True
 
-- name: shared-storage-remote-azureblob
-  configFile: test/config/examples/config_sharedstorage_remote_azureblob.yml
-  config:
-    sharedStorage:
-      localMountPoint: /tmp/nnimount/testlocalrootpath
-      remoteMountPoint: /tmp/nnimount/testremoterootpath
-      storageAccountName: jsblobtest
-      storageAccountKey: ${azureblob_token}
-      containerName: nni
-  validator:
-    class: FileExistValidator
-    kwargs:
-      rootpath: /tmp/nnimount/testlocalrootpath
-      
-#- name: shared-storage-remote-nfs
-#  configFile: test/config/examples/config_sharedstorage_remote_nfs.yml
-#  config:
-#    sharedStorage:
-#      localMountPoint: /tmp/nnimount/testlocalrootpath
-#      remoteMountPoint: /tmp/nnimount/testremoterootpath
-#      nfsServer: ${NFS_IP}
-#      exportedDirectory: /mntnni/nfs_share
-#  validator:
-#    class: FileExistValidator
-#    kwargs:
-#      rootpath: /tmp/nnimount/testlocalrootpath
-
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
 
@@ -90,6 +63,33 @@ testCases:
 #  config:
 #    maxTrialNum: 1
 #    trialConcurrency: 1
+
+- name: shared-storage-remote-azureblob
+  configFile: test/config/examples/config_sharedstorage_remote_azureblob.yml
+  config:
+    sharedStorage:
+      localMountPoint: /tmp/nnimount/testlocalrootpath
+      remoteMountPoint: /tmp/nnimount/testremoterootpath
+      storageAccountName: nennistorage
+      storageAccountKey: $(azureblob_token_test)
+      containerName: sharedstorage
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
+
+#- name: shared-storage-remote-nfs
+#  configFile: test/config/examples/config_sharedstorage_remote_nfs.yml
+#  config:
+#    sharedStorage:
+#      localMountPoint: /tmp/nnimount/testlocalrootpath
+#      remoteMountPoint: /tmp/nnimount/testremoterootpath
+#      nfsServer: $(NFS_IP)
+#      exportedDirectory: /mntnni/nfs_share
+#  validator:
+#    class: FileExistValidator
+#    kwargs:
+#      rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch.yml
@@ -254,4 +254,3 @@ testCases:
 #########################################################################
 - name: customized-tuners-demotuner
   configFile: test/config/customized_tuners/demotuner-sklearn-classification.yml
-
