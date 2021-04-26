@@ -29,8 +29,7 @@ RUN apt-get -y install \
     python3-dev \
     python3-pip \
     python3-tk \
-    libcupti-dev \
-    lsb-release
+    libcupti-dev
 RUN apt-get clean
 RUN rm -rf /var/lib/apt/lists/*
 
@@ -91,10 +90,5 @@ RUN python3 -m pip --no-cache-dir install azureml
 RUN python3 -m pip --no-cache-dir install azureml-sdk
 
 ENV PATH=/usr/local/nvidia/bin:/usr/local/cuda/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/root/.local/bin:/usr/bin:/bin:/sbin
-
-# nni
-# enable sudo for nni
-#
-RUN echo 'nni ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
 WORKDIR /root

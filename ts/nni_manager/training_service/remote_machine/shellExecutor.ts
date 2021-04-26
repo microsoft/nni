@@ -162,6 +162,16 @@ class ShellExecutor {
         return this.osCommands.generateGpuStatsScript(this.getRemoteScriptsPath(experimentId));
     }
 
+    public async getHomePath(): Promise<string> {
+        const commandText = this.osCommands && this.osCommands.getHomePath();
+        const commandResult = await this.execute(commandText);
+        if (commandResult.exitCode == 0) {
+            return commandResult.stdout;
+        } else {
+            throw Error(commandResult.stderr);
+        }
+    }
+
     public getTempPath(): string {
         if (this.tempPath === "") {
             throw new Error("tempPath must be initialized!");
