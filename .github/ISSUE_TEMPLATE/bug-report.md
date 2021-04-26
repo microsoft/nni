@@ -21,7 +21,7 @@ about: Report an issue or question while using nni instance (deployment).
 
 
 **Configuration**:
- - Experiment config: (remember to remove secrets!):
+ - Experiment config (remember to remove secrets!):
  - Search space:
 
 
