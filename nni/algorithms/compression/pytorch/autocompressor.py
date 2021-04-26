@@ -95,10 +95,10 @@ class AutoCompressor:
     def run(self, result_dir: str = None, input_shape: Optional[Union[List, Tuple]] = None, device: torch.device = None):
         if result_dir is None:
             result_dir = os.path.abspath('./autocompress_result_{}'.format(int(time.time())))
-        Path(result_dir).mkdir(parents=True, exist_ok=True)
         while self.counter < self.max_count:
             mixed_config_list = self._generate_config_list()
-            config_result_dir = os.path.join(result_dir, self.counter)
+            config_result_dir = os.path.join(result_dir, str(self.counter))
+            Path(config_result_dir).mkdir(parents=True, exist_ok=True)
             _logger.info('Result saved under %s', config_result_dir)
 
             compressor = MultiCompressor(copy.deepcopy(self.bound_model), mixed_config_list, optimizer=copy.deepcopy(self.optimizer), trainer=self.trainer)
