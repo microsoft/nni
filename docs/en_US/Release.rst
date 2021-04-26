@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.2 - 4/22/2021
+Release 2.2 - 4/26/2021
 -----------------------
 
 Major updates
@@ -44,6 +44,7 @@ Training Service
 * Support Windows as the remote training service in reuse mode (#3500)
 * Remove duplicated env folder in remote training service (#3472)
 * Add log information for GPU metric collector (#3506)
+* Enable optional Pod Spec for FrameworkController platform (#3379, thanks the external contributor @mbu93)
 
 WebUI
 """""
