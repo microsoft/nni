@@ -8,7 +8,7 @@ import { TrialJobStatus, LogType } from './trainingService';
 import { ExperimentConfig } from './experimentConfig';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
-type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL';
+type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL' | 'VIEWED';
 namespace ExperimentStartUpMode {
     export const NEW = 'new';
     export const RESUME = 'resume';

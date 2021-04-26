@@ -5,6 +5,65 @@
 Change Log
 ==========
 
+Release 2.2 - 4/26/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Alpha Release)
+
+  * Support local debug mode (#3476)
+  * Support nesting ``ValueChoice`` in ``LayerChoice`` (#3508)
+  * Support dict/list type in ``ValueChoice`` (#3508)
+  * Improve the format of export architectures (#3464)
+  * Refactor of NAS examples (#3513)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+Model Compression
+"""""""""""""""""
+
+* Support speedup for mixed precision quantization model (Experimental) (#3488 #3512)
+* Support model export for quantization algorithm (#3458 #3473)
+* Support model export in model compression for TensorFlow (#3487)
+* Improve documentation (#3482)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Add native support for experiment config V2 (#3466 #3540 #3552)
+* Add resume and view mode in Python API ``nni.experiment`` (#3490 #3524 #3545)
+
+Training Service
+""""""""""""""""
+
+* Support umount for shared storage in remote training service (#3456)
+* Support Windows as the remote training service in reuse mode (#3500)
+* Remove duplicated env folder in remote training service (#3472)
+* Add log information for GPU metric collector (#3506)
+* Enable optional Pod Spec for FrameworkController platform (#3379, thanks the external contributor @mbu93)
+
+WebUI
+"""""
+
+* Support launching TensorBoard on WebUI (#3454 #3361 #3531)
+* Upgrade echarts-for-react to v5 (#3457)
+* Add wrap for dispatcher/nnimanager log monaco editor (#3461)
+
+Bug Fixes
+^^^^^^^^^
+
+* Fix bug of FLOPs counter (#3497)
+* Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
+* Fix bug that monaco editor search text is not displayed completely (#3492)
+* Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
+* Fix typos in docs (#3448, thanks the external contributor @OliverShang)
+* Fix typo in NAS 1.0 (#3538, thanks the external contributor @ankitaggarwal23)
+
+
 Release 2.1 - 3/10/2021
 -----------------------
 
@@ -289,7 +348,7 @@ Documentation
 * Fix several typos and grammar mistakes in documentation (#2637 #2638, thanks @tomzx)
 * Improve AzureML training service documentation (#2631)
 * Improve CI of Chinese translation (#2654)
-* Improve OpenPAI training service documenation (#2685)
+* Improve OpenPAI training service documentation (#2685)
 * Improve documentation of community sharing (#2640)
 * Add tutorial of Colab support (#2700)
 * Improve documentation structure for model compression (#2676)

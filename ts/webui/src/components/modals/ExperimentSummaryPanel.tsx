@@ -54,7 +54,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
             this.setState({ experiment: JSON.stringify(result, null, 4) });
         }
 
-        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+        if (['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status)) {
             if (this.refreshId !== null || this.refreshId !== undefined) {
                 window.clearInterval(this.refreshId);
             }
