@@ -89,6 +89,7 @@ remote:
   trainingServicePlatform: remote
   sharedStorage:
     storageAccountKey:
+    nfsServer:
 adl:
   maxExecDuration: 15m
   nniManagerIp:
