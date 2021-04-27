@@ -56,7 +56,13 @@ def update_training_service_config(config, training_service, config_file_path):
     if training_service == 'remote':
         testcase_config = get_yml_content(args.nni_source_dir + config_file_path)
         sharedStorage = testcase_config.get('sharedStorage')
-        if sharedStorage is None or str(sharedStorage.get('storageType')).lower() != 'azureblob':
+        if sharedStorage is None:
+            it_ts_config[training_service].pop('sharedStorage')
+        elif str(sharedStorage.get('storageType')).lower() == 'nfs':
+            it_ts_config[training_service].get('sharedStorage').pop('storageAccountKey')
+        elif str(sharedStorage.get('storageType')).lower() == 'azureblob'):
+            it_ts_config[training_service].get('sharedStorage').pop('nfsServer')
+        else:
             it_ts_config[training_service].pop('sharedStorage')
     
     if training_service == 'hybrid':
