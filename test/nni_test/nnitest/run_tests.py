@@ -60,7 +60,7 @@ def update_training_service_config(config, training_service, config_file_path):
             it_ts_config[training_service].pop('sharedStorage')
         elif str(sharedStorage.get('storageType')).lower() == 'nfs':
             it_ts_config[training_service].get('sharedStorage').pop('storageAccountKey')
-        elif str(sharedStorage.get('storageType')).lower() == 'azureblob'):
+        elif str(sharedStorage.get('storageType')).lower() == 'azureblob':
             it_ts_config[training_service].get('sharedStorage').pop('nfsServer')
         else:
             it_ts_config[training_service].pop('sharedStorage')
