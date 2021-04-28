@@ -94,8 +94,8 @@ class PFLDTrainer(FBNetTrainer):
 
         Returns
         -------
-        float, float, float
-            average loss, average top1 accuracy, average top5 accuracy
+        float, float
+            average loss, average nme
         """
 
         # test on validation set under eval mode

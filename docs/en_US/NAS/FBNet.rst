@@ -54,6 +54,17 @@ Example
 
 Please run the following scripts at the example directory.
 
+The Python dependencies are listed as below:
+
+.. code-block:: bash
+
+   numpy==1.18.5
+   opencv-python==4.5.1.48
+   torch==1.6.0
+   torchvision==0.7.0
+   onnx==1.8.1
+   onnx-simplifier==0.3.5
+   onnxruntime==1.7.0
 
 Data Preparation
 -----------------
@@ -74,21 +85,33 @@ Quik Start
 1. Search
 ^^^^^^^^^^
 
-The Python dependencies are listed as below:
+Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be configured to construct the supernet, as an example:
 
 .. code-block:: bash
 
-   numpy==1.18.5
-   opencv-python==4.5.1.48
-   torch==1.6.0
-   torchvision==0.7.0
-   onnx==1.8.1
-   onnx-simplifier==0.3.5
-   onnxruntime==1.7.0
+   from lib.builder import search_space
+   from lib.ops import PRIMITIVES
+   from lib.supernet import PFLDInference, AuxiliaryNet
+   from nni.algorithms.nas.pytorch.fbnet import LookUpTable, NASConfig,
 
-Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be configured, referred to `configuration <https://github.com/microsoft/nni/tree/master/nni/algorithms/nas/pytorch/fbnet/utils.py>`__ .
+   # configuration of hyper-parameters
+   # search_space defines the multi-stage search space
+   nas_config = NASConfig(
+          arch_search=True,
+          model_dir="./ckpt_save",
+          nas_lr=0.01,
+          mode="mul",
+          alpha=0.25,
+          beta=0.8,
+          search_space=search_space,
+      )
+   # lookup table to manage the information
+   lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
+   # created supernet
+   pfld_backbone = PFLDInference(lookup_table)
 
-After specifying the search space and hyper-parameters, we can run below command to start the searching and training of supernet:
+
+After creation of the supernet with the specification of the search space and hyper-parameters, we can run below command to start the searching and training of supernet:
 
 .. code-block:: bash
 
