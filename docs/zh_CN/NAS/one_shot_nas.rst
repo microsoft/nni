@@ -14,6 +14,5 @@ One-Shot NAS 算法利用了搜索空间中模型间的权重共享来训练超�
     SPOS <SPOS>
     CDARTS <CDARTS>
     ProxylessNAS <Proxylessnas>
-    FBNet <FBNet>
     TextNAS <TextNAS>
     Cream <Cream>

@@ -12,10 +12,15 @@ import torchvision
 import numpy as np
 
 from datasets import PFLDDatasets
-from loss import PFLDLoss
-from lib.config import NASConfig, search_space
-from lib.builder import LookUpTable, supernet_sample
-from nni.algorithms.nas.pytorch.fbnet.trainer import FBNetTrainer
+from lib.builder import search_space
+from lib.ops import PRIMITIVES
+from lib.trainer import PFLDTrainer
+from lib.utils import PFLDLoss
+from nni.algorithms.nas.pytorch.fbnet import (
+    LookUpTable,
+    NASConfig,
+    supernet_sample,
+)
 from torch.utils.data import DataLoader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -71,7 +76,7 @@ def main(args):
         search_space=search_space,
     )
     # look-up table with information of search space, flops per block, etc.
-    lookup_table = LookUpTable(config=nas_config)
+    lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
 
     if "sub" in args.net:
         check = torch.load(args.supernet, map_location=torch.device("cpu"))
@@ -149,7 +154,7 @@ def main(args):
     )
 
     # create the trainer, then search/finetune
-    trainer = FBNetTrainer(
+    trainer = PFLDTrainer(
         pfld_backbone,
         auxiliarynet,
         optimizer,

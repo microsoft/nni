@@ -9,9 +9,13 @@ import onnxsim
 import os
 import torch
 
-from lib.config import NASConfig, search_space
-from lib.builder import LookUpTable
-from lib.utils import model_init
+from lib.builder import search_space
+from lib.ops import PRIMITIVES
+from nni.algorithms.nas.pytorch.fbnet import (
+    LookUpTable,
+    NASConfig,
+    model_init,
+)
 
 
 parser = argparse.ArgumentParser(description="Export the onnx model")
@@ -35,7 +39,7 @@ check = torch.load(args.supernet, map_location=torch.device("cpu"))
 sampled_arch = check["arch_sample"]
 
 nas_config = NASConfig(search_space=search_space)
-lookup_table = LookUpTable(config=nas_config)
+lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
 pfld_backbone = PFLDInference(lookup_table, sampled_arch, args.num_points)
 
 pfld_backbone.eval()
