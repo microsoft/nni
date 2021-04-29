@@ -97,7 +97,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
         }
 
         if (this.canLocalMounted && this.localMountPoint) {
-            this.internalStorageService.initialize(path.join(this.localMountPoint, 'nni', this.experimentId), path.join(this.remoteMountPoint, 'nni', this.experimentId));
+            this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         }
     }
 

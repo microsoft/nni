@@ -71,7 +71,7 @@ export class NFSSharedStorageService extends SharedStorageService {
             return Promise.reject(errorMessage);
         }
 
-        this.internalStorageService.initialize(path.join(this.localMountPoint, 'nni', this.experimentId), path.join(this.remoteMountPoint, 'nni', this.experimentId));
+        this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         return Promise.resolve();
     }
 
