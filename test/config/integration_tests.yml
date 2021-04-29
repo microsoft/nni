@@ -55,7 +55,7 @@ testCases:
 #      localMountPoint: /tmp/nnimount/testlocalrootpath
 #      remoteMountPoint: /tmp/nnimount/testremoterootpath
 #      nfsServer: $(NFS_IP)
-#      exportedDirectory: /mntnni/nfs_share
+#      exportedDirectory: /home/nni/mnt/
 #  validator:
 #    class: FileExistValidator
 #    kwargs:
