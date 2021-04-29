@@ -362,7 +362,6 @@ class NNIManager implements Manager {
             hasError = true;
             this.log.error(`${err.stack}`);
         } finally {
-            this.log.close();
             process.exit(hasError ? 1 : 0);
         }
     }

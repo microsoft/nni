@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
-import { getLogger, Logger, logLevelNameMap } from './common/log';
+import * as logging from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
 import { TensorboardManager } from './common/tensorboardManager';
@@ -47,14 +47,13 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         .to(NNITensorboardManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    if (foreground) {
-        logFileName = undefined;
-    } else if (logFileName === undefined) {
-        logFileName = DEFAULT_LOGFILE;
+    if (!foreground) {
+        if (logFileName === undefined) {
+            logging.start(DEFAULT_LOGFILE);
+        } else {
+            logging.start(logFileName);
+        }
     }
-    Container.bind(Logger).provider({
-        get: (): Logger => new Logger(logFileName)
-    });
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -110,8 +109,10 @@ if (logDir.length > 0) {
 }
 
 const logLevel: string = parseArg(['--log_level', '-ll']);
-if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
+if (logLevel.length > 0 && (logging as any)[logLevel] === undefined) {
     console.log(`FATAL: invalid log_level: ${logLevel}`);
+} else {
+    logging.setLevel(logLevel);
 }
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
@@ -132,10 +133,10 @@ mkDirP(getLogDir())
             await initContainer(foreground, mode);
             const restServer: NNIRestServer = component.get(NNIRestServer);
             await restServer.start();
-            const log: Logger = getLogger();
+            const log = logging.getLogger();
             log.info(`Rest server listening on: ${restServer.endPoint}`);
         } catch (err) {
-            const log: Logger = getLogger();
+            const log = logging.getLogger();
             log.error(`${err.stack}`);
             throw err;
         }

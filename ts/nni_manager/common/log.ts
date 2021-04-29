@@ -10,146 +10,116 @@ import { format } from 'util';
 import * as component from '../common/component';
 import { getExperimentStartupInfo, isReadonly } from './experimentStartupInfo';
 
-const FATAL: number = 1;
-const ERROR: number = 2;
-const WARNING: number = 3;
-const INFO: number = 4;
-const DEBUG: number = 5;
-const TRACE: number = 6;
+export const DEBUG = 10;
+export const INFO = 20;
+export const WARNING = 30;
+export const ERROR = 40;
+export const CRITICAL = 50;
 
-const logLevelNameMap: Map<string, number> = new Map([
-    ['fatal', FATAL],
-    ['error', ERROR],
-    ['warning', WARNING],
-    ['info', INFO],
-    ['debug', DEBUG],
-    ['trace', TRACE]
-]);
+export const TRACE = 1;
+export const FATAL = 50;
 
-class BufferSerialEmitter {
-    private buffer: Buffer;
-    private emitting: boolean;
-    private writable: Writable;
-
-    constructor(writable: Writable) {
-        this.buffer = Buffer.alloc(0);
-        this.emitting = false;
-        this.writable = writable;
-    }
-
-    public feed(buffer: Buffer): void {
-        this.buffer = Buffer.concat([this.buffer, buffer]);
-        if (!this.emitting) {
-            this.emit();
-        }
-    }
-
-    private emit(): void {
-        this.emitting = true;
-        this.writable.write(this.buffer, () => {
-            if (this.buffer.length === 0) {
-                this.emitting = false;
-            } else {
-                this.emit();
-            }
-        });
-        this.buffer = Buffer.alloc(0);
-    }
+const levelNames: Record<number, string> = {
+    CRITICAL: 'CRITICAL',
+    ERROR: 'ERROR',
+    WARNING: 'WARNING',
+    INFO: 'INFO',
+    DEBUG: 'DEBUG',
+    TRACE: 'TRACE',
 }
 
-@component.Singleton
-class Logger {
-    private level: number = INFO;
-    private bufferSerialEmitter?: BufferSerialEmitter;
-    private writable?: Writable;
-    private readonly: boolean = false;
+let logFile: Writable | null = null;
 
-    constructor(fileName?: string) {
-        const logFile: string | undefined = fileName;
-        if (logFile) {
-            this.writable = fs.createWriteStream(logFile, {
-                flags: 'a+',
-                encoding: 'utf8',
-                autoClose: true
-            });
-            this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
-        }
+export function setLevel(level: number | string) {
 
-        const logLevelName: string = getExperimentStartupInfo()
-                                    .getLogLevel();
-        const logLevel: number | undefined = logLevelNameMap.get(logLevelName);
-        if (logLevel !== undefined) {
-            this.level = logLevel;
-        }
+}
 
-        this.readonly = isReadonly();
+export function start(logFileName: string) {
+    logFile = fs.createWriteStream(logFile, {
+        flags: 'a+',
+        encoding: 'utf8',
+        autoClose: true
+    });
+}
+
+export function stop() {
+    logFile.end();
+    logFile = null;
+}
+
+export class Logger {
+    private name: string;
+
+    constructor(name: string = 'root') {
+        this.name = name;
     }
 
-    public close(): void {
-        if (this.writable) {
-            this.writable.destroy();
-        }
+    public trace(...args: any[]): void {
+        this.log(TRACE, args);
     }
 
-    public trace(...param: any[]): void {
-        if (this.level >= TRACE) {
-            this.log('TRACE', param);
-        }
+    public debug(...args: any[]): void {
+        this.log(DEBUG, args);
     }
 
-    public debug(...param: any[]): void {
-        if (this.level >= DEBUG) {
-            this.log('DEBUG', param);
-        }
+    public info(...args: any[]): void {
+        this.log(INFO, args);
     }
 
-    public info(...param: any[]): void {
-        if (this.level >= INFO) {
-            this.log('INFO', param);
-        }
+    public warning(...args: any[]): void {
+        this.log(WARNING, args);
     }
 
-    public warning(...param: any[]): void {
-        if (this.level >= WARNING) {
-            this.log('WARNING', param);
-        }
+    public error(...args: any[]): void {
+        this.log(ERROR, args);
     }
 
-    public error(...param: any[]): void {
-        if (this.level >= ERROR) {
-            this.log('ERROR', param);
-        }
+    public critical(...args: any[]): void {
+        this.log(CRITICAL, args);
     }
 
-    public fatal(...param: any[]): void {
-        this.log('FATAL', param);
+    public fatal(...args: any[]): void {
+        this.log(FATAL, args);
     }
-    
-    /**
-     * if the experiment is not in readonly mode, write log content to stream
-     * @param level log level
-     * @param param the params to be written
-     */
-    private log(level: string, param: any[]): void {
-        if (!this.readonly) {
-            const time = new Date();
-            const localTime = new Date(time.getTime() - time.getTimezoneOffset() * 60000);
-            const timeStr = localTime.toISOString().slice(0, -5).replace('T', ' ');
-            const logContent = `[${timeStr}] ${level} ${format(param)}\n`;
-            if (this.writable && this.bufferSerialEmitter) {
-                const buffer: WritableStreamBuffer = new WritableStreamBuffer();
-                buffer.write(logContent);
-                buffer.end();
-                this.bufferSerialEmitter.feed(buffer.getContents());
+
+    private log(level: number, args: any[]): void {
+        if (level < logLevel || logFile === null) {
+            return;
+        }
+
+        // time.toLocaleString('sv') trick does not work for Windows
+        const time1 = new Date(new Date().toLocaleString() + ' UTC').toISOString();
+        const time = time1.slice(0, 10) + ' ' + time1.slice(11, 19);
+
+        const levelName: string = levelNames[level] === undefined ? level.toString() : levelNames[level];
+
+        const words = [];
+        for (const arg of args) {
+            if (arg === undefined) {
+                words.push('undefined');
+            } else if (arg === null) {
+                words.push('null');
+            } else if (typeof arg === 'object') {
+                const json = JSON.stringify(arg);
+                words.push(json === undefined ? arg : json);
             } else {
-                console.log(logContent);
+                words.push(arg);
             }
         }
+        const message = words.join(' ');
+        
+        const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
+        logFile.write(record);
     }
 }
 
-function getLogger(): Logger {
-    return component.get(Logger);
-}
+const loggers = new Map<string, Logger>();
 
-export { Logger, getLogger, logLevelNameMap };
+export function getLogger(name: string = 'root'): Logger {
+    let logger = loggers.get(name);
+    if (logger === undefined) {
+        logger = new Logger(name);
+        loggers.set(name, logger);
+    }
+    return logger;
+}
