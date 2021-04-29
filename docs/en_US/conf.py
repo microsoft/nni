@@ -27,7 +27,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v2.1'
+release = 'v2.2'
 
 # -- General configuration ---------------------------------------------------
 
@@ -51,7 +51,7 @@ extensions = [
 ]
 
 # Add mock modules
-autodoc_mock_imports = ['apex', 'nni_node']
+autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

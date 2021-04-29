@@ -14,7 +14,9 @@ NNI provides a model compression toolkit to help user compress and speed up thei
 * Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
 * Concise interface for users to customize their own compression algorithms.
 
-*Note that the interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.*
+.. note::
+  Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency. To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__. The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.
+
 
 Supported Algorithms
 --------------------
@@ -24,7 +26,7 @@ The algorithms include pruning algorithms and quantization algorithms.
 Pruning Algorithms
 ^^^^^^^^^^^^^^^^^^
 
-Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and address the over-ﬁtting issue.
+Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and address the over-ﬁtting issue. 
 
 .. list-table::
    :header-rows: 1
@@ -90,7 +92,7 @@ Quantization algorithms compress the original network by reducing the number of 
 Model Speedup
 -------------
 
-The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Model Speedup can be found `here <./ModelSpeedup.rst>`__.
+The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Masked Model Speedup can be found `here <./ModelSpeedup.rst>`__, The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <./QuantizationSpeedup.rst>`__.
 
 Compression Utilities
 ---------------------

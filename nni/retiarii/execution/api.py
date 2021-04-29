@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import time
+from typing import Iterable
 
 from ..graph import Model, ModelStatus
 from .interface import AbstractExecutionEngine
@@ -11,8 +12,8 @@ _execution_engine = None
 _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
-           'submit_models', 'wait_models', 'query_available_resources',
-           'set_execution_engine', 'is_stopped_exec']
+           'list_models', 'submit_models', 'wait_models', 'query_available_resources',
+           'set_execution_engine', 'is_stopped_exec', 'budget_exhausted']
 
 def set_execution_engine(engine) -> None:
     global _execution_engine
@@ -20,6 +21,7 @@ def set_execution_engine(engine) -> None:
         _execution_engine = engine
     else:
         raise RuntimeError('execution engine is already set')
+
 
 def get_execution_engine() -> AbstractExecutionEngine:
     """
@@ -43,6 +45,12 @@ def submit_models(*models: Model) -> None:
     engine.submit_models(*models)
 
 
+def list_models(*models: Model) -> Iterable[Model]:
+    engine = get_execution_engine()
+    get_and_register_default_listener(engine)
+    return engine.list_models()
+
+
 def wait_models(*models: Model) -> None:
     get_and_register_default_listener(get_execution_engine())
     while True:
@@ -60,3 +68,8 @@ def query_available_resources() -> int:
 
 def is_stopped_exec(model: Model) -> bool:
     return model.status in (ModelStatus.Trained, ModelStatus.Failed)
+
+
+def budget_exhausted() -> bool:
+    engine = get_execution_engine()
+    return engine.budget_exhausted()

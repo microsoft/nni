@@ -19,7 +19,8 @@ $error: #a4262c;
 }
 
 .DONE,
-.STOPPED {
+.STOPPED,
+.VIEWED {
     color: $done;
 
     .ms-ProgressIndicator-progressBar {
@@ -37,7 +38,8 @@ $error: #a4262c;
 
 .bestMetric {
     .DONE,
-    .STOPPED {
+    .STOPPED,
+    .VIEWED {
         color: $done;
     }
 

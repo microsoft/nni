@@ -82,6 +82,7 @@ class ConfigBase:
         Convert config to JSON object.
         The keys of returned object will be camelCase.
         """
+        self.validate()
         return dataclasses.asdict(
             self.canonical(),
             dict_factory=lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
@@ -101,6 +102,8 @@ class ConfigBase:
             elif isinstance(value, ConfigBase):
                 setattr(ret, key, value.canonical())
                 # value will be copied twice, should not be a performance issue anyway
+            elif isinstance(value, Path):
+                setattr(ret, key, str(value))
         return ret
 
     def validate(self) -> None:

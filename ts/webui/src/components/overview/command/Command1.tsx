@@ -11,24 +11,24 @@ export const Command1 = (): any => {
     const builtinName: string[] = [];
     if (tuner !== undefined) {
         title.push('Tuner');
-        builtinName.push(tuner.builtinTunerName || tuner.className || 'unknown');
+        builtinName.push(tuner.name || tuner.className || 'unknown');
     }
 
     if (advisor !== undefined) {
         title.push('Advisor');
-        builtinName.push(advisor.builtinAdvisorName || advisor.className || 'unknown');
+        builtinName.push(advisor.name || advisor.className || 'unknown');
     }
 
     if (assessor !== undefined) {
         title.push('Assessor');
-        builtinName.push(assessor.builtinAssessorName || assessor.className || 'unknown');
+        builtinName.push(assessor.name || assessor.className || 'unknown');
     }
 
     return (
         <div className='basic' style={rightEidtParam}>
             <div>
                 <p className='command'>Training platform</p>
-                <div className='ellipsis'>{EXPERIMENT.profile.params.trainingServicePlatform}</div>
+                <div className='ellipsis'>{EXPERIMENT.trainingServicePlatform}</div>
                 <p className='lineMargin'>{title.join('/')}</p>
                 <div className='ellipsis'>{builtinName.join('/')}</div>
             </div>

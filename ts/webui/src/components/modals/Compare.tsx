@@ -4,9 +4,9 @@ import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentu
 import ReactEcharts from 'echarts-for-react';
 import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
-import '../../static/style/compare.scss';
 import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import '../../static/style/compare.scss';
 
 function _getWebUIWidth(): number {
     return window.innerWidth;

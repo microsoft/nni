@@ -565,6 +565,14 @@ class DLTSTrainingService implements TrainingService {
     public get isMultiPhaseJobSupported(): boolean {
         return false;
     }
+
+    public getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 
 export { DLTSTrainingService };
