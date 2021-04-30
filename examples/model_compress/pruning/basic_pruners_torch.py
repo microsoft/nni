@@ -20,8 +20,10 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
-from models.mnist.lenet import LeNet
-from models.cifar10.vgg import VGG
+import sys
+sys.path.append('../models')
+from mnist.lenet import LeNet
+from cifar10.vgg import VGG
 
 from nni.compression.pytorch.utils.counter import count_flops_params
 

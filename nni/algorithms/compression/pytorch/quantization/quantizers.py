@@ -148,11 +148,12 @@ class QAT_Quantizer(Quantizer):
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QATGrad
         modules_to_compress = self.get_modules_to_compress()
-        self.bound_model.register_buffer("steps", torch.Tensor([1]))
+        device = next(model.parameters()).device
+        self.bound_model.register_buffer("steps", torch.Tensor([1], device=device))
         for layer, config in modules_to_compress:
-            layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
-            layer.module.register_buffer("scale", torch.Tensor([1.0]))
-            layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
+            layer.module.register_buffer("zero_point", torch.Tensor([0.0], device=device))
+            layer.module.register_buffer("scale", torch.Tensor([1.0], device=device))
+            layer.module.register_buffer('ema_decay', torch.Tensor([0.99], device=device))
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bit', torch.zeros(1))
                 layer.module.register_buffer('tracked_min_input', torch.zeros(1))

@@ -437,11 +437,12 @@ class Pruner(Compressor):
         for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
             weight_mask = wrapper.weight_mask
             if len(weight_mask.size()) == 4:
-                sum_idx = (1, 2, 3) if dim == 0 else (0, 2, 3)
+                sum_idx = [0, 1, 2, 3]
+                sum_idx.remove(dim)
                 index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=True)[0].tolist()
             elif len(weight_mask.size()) == 1:
                 index = torch.nonzero(weight_mask.abs() != 0, as_tuple=True)[0].tolist()
-            _logger.info(f'{wrapper.name} Remain/Total: {len(index)}/{weight_mask.size(dim)}')
+            _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
 
 
 class QuantizerModuleWrapper(torch.nn.Module):

@@ -15,10 +15,13 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
-from models.mnist.lenet import LeNet
-from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
 import nni
+from nni.algorithms.compression.pytorch.pruning import LevelPruner
+
+import sys
+sys.path.append('../models')
+from mnist.lenet import LeNet
 
 _logger = logging.getLogger('mnist_example')
 _logger.setLevel(logging.INFO)
