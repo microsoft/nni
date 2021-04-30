@@ -238,9 +238,14 @@ class TableList extends React.Component<TableListProps, TableListState> {
     };
 
     private changeSelectTrialIds = (): void => {
-        console.info('调动页面刷新'); // not work
+        const { displayedItems } = this.state;
+        const newDisplayedItems = displayedItems;
+        newDisplayedItems.forEach(item => {
+            item.checked = false;
+        });
         this.setState(() => ({
-            selectedRowIds: []
+            selectedRowIds: [],
+            displayedItems: newDisplayedItems
         }));
     };
 
@@ -601,6 +606,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onHideDialog={(): void => {
                             this.setState({ compareDialogVisible: false });
                         }}
+                        changeSelectTrialIds={this.changeSelectTrialIds}
                     />
                 )}
                 {intermediateDialogTrial !== undefined && (
