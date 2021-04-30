@@ -4,7 +4,7 @@
 import inspect
 import warnings
 from collections import defaultdict
-from typing import Any
+from typing import Any, List
 from pathlib import Path
 
 
@@ -61,3 +61,34 @@ def get_module_name(cls_or_func):
 def get_importable_name(cls, relocate_module=False):
     module_name = get_module_name(cls) if relocate_module else cls.__module__
     return module_name + '.' + cls.__name__
+
+
+class ContextStack:
+    _stack: List[Any] = []
+
+    def __init__(self, value: Any):
+        self.value = value
+
+    def __enter__(self):
+        self.push(self.value)
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.pop()
+
+    @classmethod
+    def push(cls, value: Any):
+        cls._stack.append(value)
+
+    @classmethod
+    def pop(cls) -> None:
+        cls._stack.pop()
+
+    @classmethod
+    def top(cls) -> Any:
+        assert cls._stack, 'Context is empty.'
+        return cls._stack[-1]
+
+
+def get_current_context() -> Any:
+    return ContextStack.top()
