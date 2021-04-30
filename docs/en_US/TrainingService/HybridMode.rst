@@ -15,40 +15,25 @@ Use ``examples/trials/mnist-tfv1`` as an example. The NNI config YAML file's con
 
 .. code-block:: yaml
 
-    authorName: default
-    experimentName: example_mnist
+    experimentName: MNIST
+    searchSpaceFile: search_space.json
+    trialCommand: python3 mnist.py
+    trialCodeDirectory: .
     trialConcurrency: 2
-    maxExecDuration: 1h
-    maxTrialNum: 10
-    trainingServicePlatform: hybrid
-    searchSpacePath: search_space.json
-    #choice: true, false
-    useAnnotation: false
+    trialGpuNumber: 0
+    maxExperimentDuration: 24h
+    maxTrialNumber: 100
     tuner:
-      builtinTunerName: TPE
+      name: TPE
       classArgs:
-        #choice: maximize, minimize
         optimize_mode: maximize
-    trial:
-      command: python3 mnist.py
-      codeDir: .
-      gpuNum: 1
-    hybridConfig:
-      trainingServicePlatforms:
-        - local
-        - remote
-    remoteConfig:
-      reuse: true
-    machineList:
-      - ip: 10.1.1.1
-        username: bob
-        passwd: bob123
+    trainingService:
+      - platform: remote
+        machineList:
+          - host: 127.0.0.1
+            user: bob
+            password: bob
+      - platform: local
 
-Configurations for hybrid mode:
-
-hybridConfig:
-
-* trainingServicePlatforms. required key. This field specify the platforms used in hybrid mode, the values using yaml list format. NNI support setting ``local``, ``remote``, ``aml``, ``pai`` in this field.
-
-
-.. Note:: If setting a platform in trainingServicePlatforms mode, users should also set the corresponding configuration for the platform. For example, if set ``remote`` as one of the platform, should also set ``machineList`` and ``remoteConfig`` configuration.
+To use hybrid training services, users should set training service configurations as a list in `trainingService` field.  
+Currently, hybrid support setting `local`, `remote`, `pai` and `aml` training services.
