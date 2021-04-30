@@ -434,7 +434,7 @@ class Pruner(Compressor):
             self.bound_model.load_state_dict(model_state)
 
     def get_pruned_weights(self, dim=0):
-        for wrapper_idx, wrapper in enumerate(self.get_modules_wrapper()):
+        for _, wrapper in enumerate(self.get_modules_wrapper()):
             weight_mask = wrapper.weight_mask
             if len(weight_mask.size()) == 4:
                 sum_idx = [0, 1, 2, 3]

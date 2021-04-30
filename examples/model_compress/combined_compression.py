@@ -148,9 +148,6 @@ def main(args):
     print(f'Pretrained model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}, Time Cost: {time_cost}')
 
     # Step2. Model Pruning
-    def trainer(model, optimizer, criterion, epoch, callback=None):
-        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
-
     config_list = [{
         'sparsity': args.sparsity,
         'op_types': ['Conv2d']
