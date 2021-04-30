@@ -43,6 +43,9 @@ class MockExecutionEngine(AbstractExecutionEngine):
     def query_available_resource(self) -> Union[List[WorkerInfo], int]:
         return self._resource_left
 
+    def budget_exhausted(self) -> bool:
+        pass
+
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
         pass
 

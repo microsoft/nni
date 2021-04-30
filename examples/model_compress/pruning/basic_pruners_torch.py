@@ -373,6 +373,6 @@ if __name__ == '__main__':
         print(params)
         args.sparsity = params['sparsity']
         args.pruner = params['pruner']
-        args.model = params['pruner']
+        args.model = params['model']
 
     main(args)

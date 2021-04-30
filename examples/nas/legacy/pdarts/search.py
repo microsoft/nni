@@ -14,7 +14,7 @@ from nni.algorithms.nas.pytorch.pdarts import PdartsTrainer
 
 # prevent it to be reordered.
 if True:
-    sys.path.append('../darts')
+    sys.path.append('../../oneshot/darts')
     from utils import accuracy
     from model import CNN
     import datasets

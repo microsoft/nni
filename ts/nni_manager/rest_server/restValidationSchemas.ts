@@ -131,6 +131,9 @@ export namespace ValidationSchemas {
                 maxTrialNumPerGpu: joi.number(),
                 useActiveGpu: joi.boolean(),
             }),
+            adl_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
+                // hack for v2 configuration
+            }),
             kubeflow_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 operator: joi.string().min(1).required(),
                 storage: joi.string().min(1),
@@ -194,6 +197,8 @@ export namespace ValidationSchemas {
             nni_manager_ip: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 nniManagerIp: joi.string().min(1)
             }),
+            version_check: joi.boolean(), // eslint-disable-line @typescript-eslint/camelcase
+            log_collection: joi.string(), // eslint-disable-line @typescript-eslint/camelcase
             remote_config: joi.object({ // eslint-disable-line @typescript-eslint/camelcase
                 reuse: joi.boolean()
             }),

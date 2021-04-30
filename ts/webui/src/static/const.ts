@@ -21,6 +21,7 @@ const EXPERIMENTSTATUS = [
     'ERROR',
     'STOPPING',
     'STOPPED',
+    'VIEWED',
     'DONE',
     'NO_MORE_TRIAL',
     'TUNER_NO_MORE_TRIAL'
