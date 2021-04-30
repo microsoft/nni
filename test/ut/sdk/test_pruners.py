@@ -97,6 +97,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
+        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
@@ -226,7 +227,7 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, short_term_fine_tuner=prune_config[pruner_name]['short_term_fine_tuner'], evaluator=prune_config[pruner_name]['evaluator'])
         elif pruner_name == 'simulatedannealing':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, evaluator=prune_config[pruner_name]['evaluator'])
-        elif pruner_name == 'admm':
+        elif pruner_name in ('admm', 'agp', 'slim'):
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'])
         elif pruner_name.startswith('autocompress'):
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], dummy_input=x, base_algo=prune_config[pruner_name]['base_algo'])
