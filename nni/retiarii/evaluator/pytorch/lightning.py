@@ -165,13 +165,18 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
+class _AccuracyWithLogits(pl.metrics.Accuracy):
+    def update(self, pred, target):
+        return super().update(nn.functional.softmax(pred), target)
+
+
 @serialize_cls
 class _ClassificationModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam):
-        super().__init__(criterion, {'acc': pl.metrics.Accuracy},
+        super().__init__(criterion, {'acc': _AccuracyWithLogits},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
