@@ -42,9 +42,10 @@ class MixedMasker(WeightMasker):
 
 class MixedMaskerPruner(_StructuredFilterPruner):
     def __init__(self, model, config_list, maskers_config_dict, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
-        super().__init__(model, config_list, 'level', optimizer=optimizer, dependency_aware=dependency_aware,
+        super().__init__(model, config_list, 'mixed', optimizer=optimizer, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
         self.masker = MixedMasker(model, self, maskers_config_dict)
+        _logger.debug('Set MixedMasker successfully.')
 
     def validate_config(self, model, config_list):
         """

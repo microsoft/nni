@@ -40,6 +40,9 @@ class OneshotPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
+        if pruning_algorithm not in MASKER_DICT:
+            logger.debug('Masker type {} not in MASKER_DICT, need set masker manually.'.format(pruning_algorithm))
+            return
         self.masker = MASKER_DICT[pruning_algorithm](
             model, self, **algo_kwargs)
 
