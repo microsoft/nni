@@ -168,7 +168,7 @@ def main(args):
     mask_path = os.path.join(args.experiment_data_dir, 'mask.pth')
     model_path = os.path.join(args.experiment_data_dir, 'pruned.pth')
     pruner.export_model(model_path=model_path, mask_path=mask_path)
-    pruner._unwrap_model() 
+    pruner._unwrap_model() # unwrap all modules to normal state
 
     # Step3. Model Speedup
     m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
@@ -190,8 +190,8 @@ def main(args):
         scheduler.step()
         acc=test(args, model, device, criterion, test_loader)
         if acc > best_acc:
-            best_acc=acc
-            state_dict=model.state_dict()
+            best_acc = acc
+            state_dict = model.state_dict()
 
     model.load_state_dict(state_dict)
     save_path = os.path.join(args.experiment_data_dir, f'finetuned.pth')

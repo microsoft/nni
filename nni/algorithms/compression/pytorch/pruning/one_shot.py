@@ -121,14 +121,24 @@ class SlimPruner(OneshotPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only BatchNorm2d is supported in Slim Pruner.
-    optimizer: torch.optim.Optimizer
+    optimizer : torch.optim.Optimizer
             Optimizer used to train model
+    trainer : function
+        Function used to sparsify BatchNorm2d scaling factors.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch, callback` as function arguments.
+    training_epochs : int
+        Totoal number of iterations for sparsification.
+    scale : float 
+        Penalty parameters for sparsification.
     """
 
-    def __init__(self, model, config_list, trainer, training_epochs=5, scale=0.0001):
+    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=5, scale=0.0001):
         super().__init__(model, config_list, pruning_algorithm='slim')
         self.scale = scale
+        self.optimizer = optimizer
         self._trainer = trainer
+        self._criterion = criterion
         self._training_epochs = training_epochs
 
     def validate_config(self, model, config_list):
@@ -162,18 +172,14 @@ class SlimPruner(OneshotPruner):
             model with specified modules compressed.
         """
         logger.info('Starting Network Slimming...')
-
-        optimizer = torch.optim.SGD(
-            self.bound_model.parameters(), lr=0.1, momentum=0.9, weight_decay=1e-4)
         
         def callback():
             for i, wrapper in enumerate(self.get_modules_wrapper()):
                  wrapper.module.weight.grad.data.add_(self.scale * torch.sign( wrapper.module.weight.data))
 
-        criterion = torch.nn.CrossEntropyLoss()
         for epoch in range(self._training_epochs):
-            self._trainer(self.bound_model, optimizer=optimizer,
-                criterion=criterion, epoch=epoch, callback=callback)
+            self._trainer(self.bound_model, optimizer=self.optimizer,
+                criterion=self._criterion, epoch=epoch, callback=callback)
 
         self._get_global_threshold()
         self.update_mask()
@@ -421,11 +427,31 @@ class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
 
     """
 
-    def __init__(self, model, config_list, optimizer=None, statistics_batch_num=1,
+    def __init__(self, model, config_list, optimizer, trainer, criterion,statistics_batch_num=1,
                  dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='taylorfo',
                          dependency_aware=dependency_aware, dummy_input=dummy_input,
                          optimizer=optimizer, statistics_batch_num=statistics_batch_num)
+        self._trainer = trainer
+        self._criterion = criterion
+
+    def compress(self):
+        """
+        Compress the model.
+
+        Returns
+        -------
+        torch.nn.Module
+            model with specified modules compressed.
+        """
+
+        for epoch in range(1):
+            self._trainer(self.bound_model, optimizer=self.optimizer,
+                criterion=self._criterion, epoch=epoch)
+
+        self.update_mask()
+
+        return self.bound_model
 
 
 class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):

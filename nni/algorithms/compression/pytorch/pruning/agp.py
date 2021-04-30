@@ -42,13 +42,14 @@ class AGPPruner(Pruner):
         choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, pruning_algorithm='level'):
+    def __init__(self, model, config_list, optimizer, trainer, criterion, pruning_algorithm='level'):
         super().__init__(model, config_list, optimizer)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
         self.masker = MASKER_DICT[pruning_algorithm](model, self)
 
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
+        self._criterion = criterion
         self._trainer = trainer
 
     def validate_config(self, model, config_list):
@@ -154,10 +155,9 @@ class AGPPruner(Pruner):
                 wrapper.if_calculated = False
 
     def compress(self):
-        criterion = torch.nn.CrossEntropyLoss()
         for epoch in range(self.config_list[0]['end_epoch']):
             self.update_epoch(epoch)
-            self._trainer(self.bound_model, optimizer=self.optimizer, criterion=criterion, epoch=epoch)
+            self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
             self.get_pruned_weights()
             
         return self.bound_model
