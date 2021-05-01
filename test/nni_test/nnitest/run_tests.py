@@ -38,7 +38,7 @@ def update_training_service_config(config, training_service, config_file_path):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
-    
+
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
         containerCodeDir = config['trial']['codeDir']
@@ -52,6 +52,18 @@ def update_training_service_config(config, training_service, config_file_path):
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
+
+    if training_service == 'remote':
+        testcase_config = get_yml_content(args.nni_source_dir + config_file_path)
+        sharedStorage = testcase_config.get('sharedStorage')
+        if sharedStorage is None:
+            it_ts_config[training_service].pop('sharedStorage')
+        elif str(sharedStorage.get('storageType')).lower() == 'nfs':
+            it_ts_config[training_service].get('sharedStorage').pop('storageAccountKey')
+        elif str(sharedStorage.get('storageType')).lower() == 'azureblob':
+            it_ts_config[training_service].get('sharedStorage').pop('nfsServer')
+        else:
+            it_ts_config[training_service].pop('sharedStorage')
 
     deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
@@ -232,6 +244,15 @@ def match_training_service(test_case_config, cur_training_service):
         return True
     return False
 
+def match_remoteConfig(test_case_config):
+    trainingservice_config = get_yml_content(os.path.join('config', 'training_service.yml'))
+    trainingservice_config_reuse_value = str(trainingservice_config['remote']['remoteConfig']['reuse']).lower()
+    testcase_config = get_yml_content(args.nni_source_dir + test_case_config['configFile'])
+    if testcase_config.get('remoteConfig') is not None:
+        if testcase_config['remoteConfig'].get('reuse') is not None:
+            return str(testcase_config['remoteConfig']['reuse']).lower() == trainingservice_config_reuse_value
+    return True
+
 
 def run(args):
     it_config = get_yml_content(args.config)
@@ -258,6 +279,11 @@ def run(args):
             print('skipped {}, training service {} not match [{}]'.format(
                 name, args.ts, test_case_config['trainingService']))
             continue
+
+        if not match_remoteConfig(test_case_config):
+            print('skipped {}, remoteConfig not match.'.format(name))
+            continue
+
         # remote mode need more time to cleanup 
         if args.ts == 'remote':
             wait_for_port_available(8080, 240)

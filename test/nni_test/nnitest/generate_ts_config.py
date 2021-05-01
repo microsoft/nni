@@ -73,6 +73,10 @@ def update_training_service_config(args):
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
         if args.remote_reuse is not None:
             config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
+        if args.azurestoragetoken is not None:
+            config[args.ts]['sharedStorage']['storageAccountKey'] = args.azurestoragetoken
+        if args.nfs_server is not None:
+            config[args.ts]['sharedStorage']['nfsServer'] = args.nfs_server
     elif args.ts == 'adl':
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
@@ -97,6 +101,8 @@ if __name__ == '__main__':
     parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl'], default='pai')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
+    parser.add_argument("--azurestoragetoken", type=str)
+    parser.add_argument("--nfs_server", type=str)
     # args for PAI
     parser.add_argument("--pai_user", type=str)
     parser.add_argument("--pai_pwd", type=str)
