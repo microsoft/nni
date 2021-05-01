@@ -76,3 +76,6 @@ tuners:
   classArgsValidator: nni.algorithms.hpo.regularized_evolution_tuner.EvolutionClassArgsValidator
   className: nni.algorithms.hpo.regularized_evolution_tuner.RegularizedEvolutionTuner
   source: nni
+- builtinName: BlendSearch
+  className: flaml.searcher.blendsearch.BlendSearchTuner
+  source: nni
