@@ -17,3 +17,5 @@ class OpTypeName(str, Enum):
     ValueChoice = 'ValueChoice'
     Placeholder = 'Placeholder'
     MergedSlice = 'MergedSlice'
+    Repeat = 'Repeat'
+    Cell = 'Cell'

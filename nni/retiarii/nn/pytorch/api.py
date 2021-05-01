@@ -4,16 +4,17 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Any, List, Union, Dict
+from typing import Any, Callable, List, Union, Dict, Tuple
 
 import torch
 import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
 from ...utils import uid
+from .nn import ModuleList
 
 
-__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+__all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs', 'Repeat', 'Cell']
 
 
 class LayerChoice(nn.Module):
@@ -310,6 +311,83 @@ class ValueChoice(Translatable, nn.Module):
         for candidate in self.candidates:
             access.access(candidate)
         return access
+
+
+class Repeat(nn.Module):
+    """
+    Construct a chain with a basic building block and execute a variable-length prefix of the chain.
+
+    """
+    def __init__(self,
+                 blocks: Union[Callable, List[Callable], nn.Module, List[nn.Module]],
+                 depth: Union[int, Tuple[int, int]], label=None):
+        super().__init__()
+        self._label = label if label is not None else f'valuechoice_{uid()}'
+        self.min_depth = depth if isinstance(depth, int) else depth[0]
+        self.max_depth = depth if isinstance(depth, int) else depth[1]
+        assert self.max_depth >= self.min_depth > 0
+        if not isinstance(blocks, list):
+            if isinstance(blocks, nn.Module):
+                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(self.max_depth - 1)]
+            else:
+                blocks = [blocks for _ in range(self.max_depth)]
+        assert len(blocks) > 0
+        if not isinstance(blocks[0], nn.Module):
+            blocks = [b() for b in blocks]
+        self.blocks = nn.ModuleList(blocks)
+
+    @property
+    def label(self):
+        return self._label
+
+    def forward(self, x):
+        for block in self.blocks:
+            x = block(x)
+        return x
+
+
+class Cell(nn.Module):
+
+    def __init__(self,
+                 op_candidates: Union[Callable, List[nn.Module]],
+                 num_nodes: int,
+                 num_ops_per_node: int,
+                 num_predecessors: int,
+                 merge_op: str,
+                 label: str = None):
+        super().__init__()
+        self._label = f'cell_{uid()}' if label is None else label
+        self.ops = ModuleList()
+        self.inputs = ModuleList()
+        self.num_nodes = num_nodes
+        self.num_ops_per_node = num_ops_per_node
+        for i in range(num_nodes):
+            self.ops.append(ModuleList())
+            self.inputs.append(ModuleList())
+            for k in range(num_ops_per_node):
+                if isinstance(op_candidates, list):
+                    assert len(op_candidates) > 0 and isinstance(op_candidates[0], nn.Module)
+                    ops = copy.deepcopy(op_candidates)
+                else:
+                    ops = op_candidates()
+                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
+                self.inputs[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
+        assert merge_op in ['all', 'loose_end']
+        self.merge_op = merge_op
+
+    @property
+    def label(self):
+        return self._label
+
+    def forward(self, x: List[torch.Tensor]):
+        states = x
+        for ops, inps in zip(self.ops, self.inputs):
+            current_state = []
+            for op, inp in zip(ops, inps):
+                current_state.append(op(inp(states)))
+            current_state = torch.sum(torch.stack(current_state), 0)
+            states.append(current_state)
+        return torch.cat(states, 1)
 
 
 @basic_unit
