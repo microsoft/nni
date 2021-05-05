@@ -14,7 +14,7 @@ from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import get_importable_name, import_, uid
 
-__all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'IllegalGraphError', 'MetricData']
+__all__ = ['Model', 'ModelStatus', 'Graph', 'Node', 'Edge', 'Mutation', 'IllegalGraphError', 'MetricData']
 
 
 MetricData = Any
@@ -80,6 +80,8 @@ class Model:
 
     Attributes
     ----------
+    class_name
+        Python class name that base model is converted from.
     status
         See `ModelStatus`.
     root_graph
@@ -102,6 +104,7 @@ class Model:
     def __init__(self, _internal=False):
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
+        self.class_name: Optional[str] = None
 
         self.status: ModelStatus = ModelStatus.Mutating
 
@@ -135,7 +138,8 @@ class Model:
         new_model._root_graph_name = self._root_graph_name
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
         new_model.evaluator = copy.deepcopy(self.evaluator)  # TODO this may be a problem when evaluator is large
-        new_model.history = self.history + [self]
+        new_model.history = [*self.history]
+        # Note: the history is not updated. It will be updated when the model is changed, that is in mutator.
         return new_model
 
     @staticmethod
@@ -515,7 +519,7 @@ class Node:
         # TODO: the operation is likely to be considered editable by end-user and it will be hard to debug
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
-        self.label: str = None
+        self.label: str = None  # FIXME: label is a misuse here. It should be merged into `name`
 
     def __repr__(self):
         return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
@@ -671,6 +675,37 @@ class Edge:
             'head': [self.head.name, self.head_slot],
             'tail': [self.tail.name, self.tail_slot]
         }
+
+
+class Mutation:
+    """
+    An execution of mutation, which consists of four parts: a mutator, a list of decisions (choices),
+    the model that it comes from, and the model that it becomes.
+
+    In general cases, the mutation logs are not reliable and should not be replayed as the mutators can
+    be arbitrarily complex. However, for inline mutations, the labels correspond to mutator names here,
+    this can be useful for metadata visualization and python execution mode.
+
+    Attributes
+    ----------
+    mutator
+        Mutator.
+    samples
+        Decisions/choices.
+    from_
+        Model that is comes from.
+    to
+        Model that it becomes.
+    """
+
+    def __init__(self, mutator: 'Mutator', samples: List[Any], from_: Model, to: Model):
+        self.mutator: 'Mutator' = mutator
+        self.samples: List[Any] = samples
+        self.from_: Model = from_
+        self.to: Model = to
+
+    def __repr__(self):
+        return f'Edge(mutator={self.mutator}, samples={self.samples}, from={self.from_}, to={self.to})'
 
 
 class IllegalGraphError(ValueError):

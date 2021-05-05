@@ -4,7 +4,7 @@
 import inspect
 import warnings
 from collections import defaultdict
-from typing import Any, List
+from typing import Any, List, Dict
 from pathlib import Path
 
 
@@ -64,31 +64,32 @@ def get_importable_name(cls, relocate_module=False):
 
 
 class ContextStack:
-    _stack: List[Any] = []
+    _stack: Dict[str, List[Any]] = defaultdict(list)
 
-    def __init__(self, value: Any):
+    def __init__(self, key: str, value: Any):
+        self.key = key
         self.value = value
 
     def __enter__(self):
-        self.push(self.value)
+        self.push(self.key, self.value)
         return self
 
     def __exit__(self, *args, **kwargs):
-        self.pop()
+        self.pop(self.key)
 
     @classmethod
-    def push(cls, value: Any):
-        cls._stack.append(value)
+    def push(cls, key: str, value: Any):
+        cls._stack[key].append(value)
 
     @classmethod
-    def pop(cls) -> None:
-        cls._stack.pop()
+    def pop(cls, key: str) -> None:
+        cls._stack[key].pop()
 
     @classmethod
-    def top(cls) -> Any:
-        assert cls._stack, 'Context is empty.'
-        return cls._stack[-1]
+    def top(cls, key: str) -> Any:
+        assert cls._stack[key], 'Context is empty.'
+        return cls._stack[key][-1]
 
 
-def get_current_context() -> Any:
-    return ContextStack.top()
+def get_current_context(key: str) -> Any:
+    return ContextStack.top(key)
