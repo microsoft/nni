@@ -171,8 +171,8 @@ class Model:
 
     def get_nodes_by_label(self, label: str) -> List['Node']:
         """
-        Traverse all the nodes to find the matched node(s) with the given name.
-        There could be multiple nodes with the same name. Name space name can uniquely
+        Traverse all the nodes to find the matched node(s) with the given label.
+        There could be multiple nodes with the same label. Name space name can uniquely
         identify a graph or node.
 
         NOTE: the implementation does not support the class abstration
@@ -497,6 +497,8 @@ class Node:
         If two models have nodes with same ID, they are semantically the same node.
     name
         Mnemonic name. It should have an one-to-one mapping with ID.
+    label
+        Optional. If two nodes have the same label, they are considered same by the mutator.
     operation
         ...
     cell
@@ -519,7 +521,7 @@ class Node:
         # TODO: the operation is likely to be considered editable by end-user and it will be hard to debug
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
-        self.label: str = None  # FIXME: label is a misuse here. It should be merged into `name`
+        self.label: Optional[str] = None
 
     def __repr__(self):
         return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
@@ -683,7 +685,7 @@ class Mutation:
     the model that it comes from, and the model that it becomes.
 
     In general cases, the mutation logs are not reliable and should not be replayed as the mutators can
-    be arbitrarily complex. However, for inline mutations, the labels correspond to mutator names here,
+    be arbitrarily complex. However, for inline mutations, the labels correspond to mutator labels here,
     this can be useful for metadata visualization and python execution mode.
 
     Attributes

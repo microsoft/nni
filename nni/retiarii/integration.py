@@ -12,7 +12,6 @@ from nni.utils import MetricType
 from .graph import MetricData
 from .execution.base import BaseExecutionEngine
 from .execution.cgo_engine import CGOExecutionEngine
-from .execution.api import set_execution_engine
 from .integration_api import register_advisor
 from .serializer import json_dumps, json_loads
 
@@ -49,7 +48,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
     final_metric_callback
     """
 
-    def __init__(self):
+    def __init__(self, execution_):
         super(RetiariiAdvisor, self).__init__()
         register_advisor(self)  # register the current advisor as the "global only" advisor
         self.search_space = None
@@ -61,15 +60,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Callable[[int, MetricData], None] = None
 
         self.parameters_count = 0
-
-        engine = self._create_execution_engine()
-        set_execution_engine(engine)
-
-    def _create_execution_engine(self):
-        if os.environ.get('CGO') == 'true':
-            return CGOExecutionEngine()
-        else:
-            return BaseExecutionEngine()
 
     def handle_initialize(self, data):
         """callback for initializing the advisor

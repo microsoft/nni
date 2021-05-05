@@ -10,10 +10,19 @@ import torch
 import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
-from ...utils import uid
+from ...utils import uid, get_current_context
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
+
+
+def _get_fixed_value(key: str):
+    ret = {}
+    try:
+        ret = get_current_context('fixed')
+        return ret['key']
+    except (AssertionError, KeyError):
+        raise KeyError(f'Fixed context with {key} not found. Existing values are: {ret}')
 
 
 class LayerChoice(nn.Module):
@@ -54,6 +63,12 @@ class LayerChoice(nn.Module):
     Elements in layer choice can be modified or deleted. Use ``del self.op_choice["conv5x5"]`` or
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
+
+    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
+        try:
+            return candidates[_get_fixed_value(label)]
+        except KeyError:
+            super().__new__(cls, candidates, label=label, **kwargs)
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
         super(LayerChoice, self).__init__()
@@ -163,6 +178,12 @@ class InputChoice(nn.Module):
         Identifier of the input choice.
     """
 
+    def __new__(cls, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
+        try:
+            return ChosenInputs(_get_fixed_value(label), reduction=reduction)
+        except KeyError:
+            super().__new__(cls, n_candidates, n_chosen=n_chosen, reduction=reduction, label=label, **kwargs)
+
     def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
@@ -264,6 +285,12 @@ class ValueChoice(Translatable, nn.Module):
     label : str
         Identifier of the value choice.
     """
+
+    def __new__(cls, candidates: List[Any], label: str = None):
+        try:
+            return _get_fixed_value(label)
+        except KeyError:
+            super().__new__(cls, candidates, label=label)
 
     def __init__(self, candidates: List[Any], label: str = None):
         super().__init__()

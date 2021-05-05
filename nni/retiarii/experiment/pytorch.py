@@ -28,11 +28,11 @@ from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
-from ..execution import list_models
+from ..execution import list_models, set_execution_engine
 from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import process_inline_mutation
+from ..nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
 from ..strategy import BaseStrategy
 from ..oneshot.interface import BaseOneShotTrainer
 
@@ -55,6 +55,7 @@ class RetiariiExeConfig(ConfigBase):
     experiment_working_directory: Optional[PathLike] = None
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
+    execution_engine: str = 'base'
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -70,6 +71,9 @@ class RetiariiExeConfig(ConfigBase):
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
         if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
+        if key == 'execution_engine':
+            assert value in ['base', 'py', 'cgo'], f'The specified execution engine "{value}" is not supported.'
+            self.__dict__['trial_command'] = fixed_attrs['trial_command'] + ' ' + value
         self.__dict__[key] = value
 
     def validate(self, initialized_tuner: bool = False) -> None:
@@ -100,7 +104,9 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
-def preprocess_model(base_model, trainer, applied_mutators):
+def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
+    # TODO: this logic might need to be refactored into execution engine
+    if full_ir:
         try:
             script_module = torch.jit.script(base_model)
         except Exception as e:
@@ -111,12 +117,14 @@ def preprocess_model(base_model, trainer, applied_mutators):
 
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
-        if mutators is not None and applied_mutators:
-            raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
-                               'do not use mutators when you use LayerChoice/InputChoice')
-        if mutators is not None:
-            applied_mutators = mutators
-        return base_model_ir, applied_mutators
+    else:
+        base_model_ir, mutators = extract_mutation_from_pt_module(base_model)
+    if mutators is not None and applied_mutators:
+        raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
+                            'do not use mutators when you use LayerChoice/InputChoice')
+    if mutators is not None:
+        applied_mutators = mutators
+    return base_model_ir, applied_mutators
 
 def debug_mutated_model(base_model, trainer, applied_mutators):
     """
@@ -181,6 +189,18 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+
+        # we will probably need a execution engine factory to make this clean and elegant
+        if self.config.execution_engine == 'base':
+            from ..execution.base import BaseExecutionEngine
+            engine = BaseExecutionEngine()
+        elif self.config.execution_engine == 'cgo':
+            from ..execution.cgo_engine import CGOExecutionEngine
+            engine = CGOExecutionEngine()
+        elif self.config.execution_engine == 'py':
+            from ..execution.purepython import PurePythonExecutinoEngine
+            engine = PurePythonExecutinoEngine()
+        set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
 

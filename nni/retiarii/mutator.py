@@ -41,12 +41,12 @@ class Mutator:
     For certain mutator subclasses, strategy or sampler can use `Mutator.dry_run()` to predict choice candidates.
     # Method names are open for discussion.
     
-    If mutator has a name, in most cases, it means that this mutator is applied to nodes with this name.
+    If mutator has a label, in most cases, it means that this mutator is applied to nodes with this label.
     """
 
-    def __init__(self, sampler: Optional[Sampler] = None, name: Optional[str] = None):
+    def __init__(self, sampler: Optional[Sampler] = None, label: Optional[str] = None):
         self.sampler: Optional[Sampler] = sampler
-        self.name = name
+        self.label: Optional[str] = label
         self._cur_model: Optional[Model] = None
         self._cur_choice_idx: Optional[int] = None
 
