@@ -7,21 +7,24 @@ from .base import BaseExecutionEngine
 
 
 class PythonGraphData:
-    def __init__(self, model_class_name: str, mutation: Dict[str, Any], evaluator: Evaluator) -> None:
-        self.model_class_name = model_class_name
+    def __init__(self, class_name: str, init_parameters: Dict[str, Any],
+                 mutation: Dict[str, Any], evaluator: Evaluator) -> None:
+        self.class_name = class_name
+        self.init_parameters = init_parameters
         self.mutation = mutation
         self.evaluator = evaluator
 
     def dump(self) -> dict:
         return {
-            'model_class_name': self.model_class_name,
+            'class_name': self.class_name,
+            'init_parameters': self.init_parameters,
             'mutation': self.mutation,
             'evaluator': self.evaluator
         }
 
     @staticmethod
     def load(data) -> 'PythonGraphData':
-        return PythonGraphData(data['model_class_name'], data['mutation'], data['evaluator'])
+        return PythonGraphData(data['class_name'], data['init_parameters'], data['mutation'], data['evaluator'])
 
 
 class PurePythonExecutionEngine(BaseExecutionEngine):
@@ -29,15 +32,19 @@ class PurePythonExecutionEngine(BaseExecutionEngine):
     def pack_model_data(cls, model: Model) -> Any:
         mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
         graph_data = PythonGraphData(get_importable_name(model.python_class, relocate_module=True),
-                                     mutation, model.evaluator)
+                                     model.python_init_params, mutation, model.evaluator)
         return graph_data
 
     @classmethod
     def trial_execute_graph(cls) -> None:
         graph_data = PythonGraphData.load(receive_trial_parameters())
+
+        class _model(import_(graph_data.class_name)):
+            def __init__(self):
+                super().__init__(**graph_data.init_parameters)
+
         with ContextStack('fixed', graph_data.mutation):
-            model_cls = import_(graph_data.model_class_name)
-            graph_data.evaluator._execute(model_cls)
+            graph_data.evaluator._execute(_model)
 
 
 def _unpack_if_only_one(ele: List[Any]):

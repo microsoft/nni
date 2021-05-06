@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from ...mutator import Mutator
 from ...graph import Cell, Graph, Model, ModelStatus, Node
-from ...utils import get_importable_name, uid
+from ...utils import uid
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
 
 

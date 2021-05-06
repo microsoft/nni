@@ -40,7 +40,7 @@ class Mutator:
     and then use `Mutator.apply()` to mutate model.
     For certain mutator subclasses, strategy or sampler can use `Mutator.dry_run()` to predict choice candidates.
     # Method names are open for discussion.
-    
+
     If mutator has a label, in most cases, it means that this mutator is applied to nodes with this label.
     """
 

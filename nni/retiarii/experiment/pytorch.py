@@ -114,12 +114,12 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
         base_model_ir = convert_to_graph(script_module, base_model)
-        base_model_ir.evaluator = trainer
-
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
     else:
         base_model_ir, mutators = extract_mutation_from_pt_module(base_model)
+    base_model_ir.evaluator = trainer
+
     if mutators is not None and applied_mutators:
         raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
                             'do not use mutators when you use LayerChoice/InputChoice')

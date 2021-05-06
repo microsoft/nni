@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import os
 from typing import Any, Callable
 
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
@@ -10,8 +9,6 @@ from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
 from .graph import MetricData
-from .execution.base import BaseExecutionEngine
-from .execution.cgo_engine import CGOExecutionEngine
 from .integration_api import register_advisor
 from .serializer import json_dumps, json_loads
 
