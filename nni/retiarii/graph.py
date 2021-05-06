@@ -706,8 +706,8 @@ class Mutation:
         Model that it becomes.
     """
 
-    def __init__(self, mutator: 'Mutator', samples: List[Any], from_: Model, to: Model):
-        self.mutator: 'Mutator' = mutator
+    def __init__(self, mutator: 'Mutator', samples: List[Any], from_: Model, to: Model):  # noqa: F821
+        self.mutator: 'Mutator' = mutator  # noqa: F821
         self.samples: List[Any] = samples
         self.from_: Model = from_
         self.to: Model = to
