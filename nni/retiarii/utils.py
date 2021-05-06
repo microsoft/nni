@@ -31,6 +31,10 @@ def uid(namespace: str = 'default') -> int:
     return _last_uid[namespace]
 
 
+def reset_uid(namespace: str = 'default') -> None:
+    _last_uid[namespace] = 0
+
+
 def get_module_name(cls_or_func):
     module_name = cls_or_func.__module__
     if module_name == '__main__':

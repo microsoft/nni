@@ -4,7 +4,7 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Any, List, Union, Dict
+from typing import Any, List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
@@ -16,13 +16,18 @@ from ...utils import uid, get_current_context
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
 
 
-def _get_fixed_value(key: str):
-    ret = {}
+def _generate_new_label(label: Optional[str]):
+    if label is None:
+        return '_mutation_' + str(uid('mutation'))
+    return label
+
+
+def _get_fixed_value(label: str):
+    ret = get_current_context('fixed')
     try:
-        ret = get_current_context('fixed')
-        return ret['key']
-    except (AssertionError, KeyError):
-        raise KeyError(f'Fixed context with {key} not found. Existing values are: {ret}')
+        return ret[_generate_new_label(label)]
+    except KeyError:
+        raise KeyError(f'Fixed context with {label} not found. Existing values are: {ret}')
 
 
 class LayerChoice(nn.Module):
@@ -66,8 +71,12 @@ class LayerChoice(nn.Module):
 
     def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
         try:
-            return candidates[_get_fixed_value(label)]
-        except KeyError:
+            chosen = _get_fixed_value(label)
+            if isinstance(candidates, list):
+                return candidates[int(chosen)]
+            else:
+                return candidates[chosen]
+        except AssertionError:
             return super().__new__(cls)
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
@@ -80,7 +89,7 @@ class LayerChoice(nn.Module):
         if 'reduction' in kwargs:
             warnings.warn(f'"reduction" is deprecated. Ignoring...')
         self.candidates = candidates
-        self._label = label if label is not None else f'layerchoice_{uid()}'
+        self._label = _generate_new_label(label)
 
         self.names = []
         if isinstance(candidates, OrderedDict):
@@ -181,7 +190,7 @@ class InputChoice(nn.Module):
     def __new__(cls, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
         try:
             return ChosenInputs(_get_fixed_value(label), reduction=reduction)
-        except KeyError:
+        except AssertionError:
             return super().__new__(cls)
 
     def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
@@ -197,7 +206,7 @@ class InputChoice(nn.Module):
         self.n_chosen = n_chosen
         self.reduction = reduction
         assert self.reduction in ['mean', 'concat', 'sum', 'none']
-        self._label = label if label is not None else f'inputchoice_{uid()}'
+        self._label = _generate_new_label(label)
 
     @property
     def key(self):
@@ -289,13 +298,13 @@ class ValueChoice(Translatable, nn.Module):
     def __new__(cls, candidates: List[Any], label: str = None):
         try:
             return _get_fixed_value(label)
-        except KeyError:
+        except AssertionError:
             return super().__new__(cls)
 
     def __init__(self, candidates: List[Any], label: str = None):
         super().__init__()
         self.candidates = candidates
-        self._label = label if label is not None else f'valuechoice_{uid()}'
+        self._label = _generate_new_label(label)
         self._accessor = []
 
     @property
@@ -366,9 +375,9 @@ class ChosenInputs(nn.Module):
     The already-chosen version of InputChoice.
     """
 
-    def __init__(self, chosen: List[int], reduction: str):
+    def __init__(self, chosen: Union[List[int], int], reduction: str):
         super().__init__()
-        self.chosen = chosen
+        self.chosen = chosen if isinstance(chosen, list) else [chosen]
         self.reduction = reduction
 
     def forward(self, candidate_inputs):

@@ -3,7 +3,7 @@
 
 from typing import (Any, Iterable, List, Optional)
 
-from .graph import Model, Mutation
+from .graph import Model, Mutation, ModelStatus
 
 
 __all__ = ['Sampler', 'Mutator']
@@ -72,6 +72,7 @@ class Mutator:
         self.mutate(copy)
         self.sampler.mutation_end(self, copy)
         copy.history.append(Mutation(self, self._cur_samples, model, copy))
+        copy.status = ModelStatus.Frozen
         self._cur_model = None
         self._cur_choice_idx = None
         return copy
