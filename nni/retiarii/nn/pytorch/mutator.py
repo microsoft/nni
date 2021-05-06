@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import inspect
 from typing import Any, List, Optional, Tuple
 
 import torch.nn as nn
@@ -156,6 +157,13 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     model = Model(_internal=True)
     graph = Graph(model, uid(), '_model', _internal=True)._register()
     model.python_class = pytorch_model.__class__
+    if len(inspect.signature(model.python_class.__init__).parameters) > 1:
+        if not hasattr(pytorch_model, '_init_parameters'):
+            raise ValueError('Please annotate the model with @serialize decorator in python execution mode ' \
+                             'if your model has init parameters.')
+        model.python_init_params = pytorch_model._init_parameters
+    else:
+        model.python_init_params = {}
     for module in pytorch_model.modules():
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
             # TODO: check the label of module and warn if it's auto-generated

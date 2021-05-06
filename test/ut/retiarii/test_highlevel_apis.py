@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from nni.retiarii import Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.execution.python import PurePythonExecutionEngine
+from nni.retiarii.execution.python import _unpack_if_only_one
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.utils import ContextStack
 
@@ -393,17 +393,11 @@ class GraphIR(unittest.TestCase):
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
 
 
-# class Python(GraphIR):
-#     def _get_converted_pytorch_model(self, model_ir: Model):
-#         mutation = PurePythonExecutionEngine.pack_model_data(model_ir).mutation
-#         with ContextStack('fixed', mutation):
-#             return model_ir.python_class()
-#             graph_data.evaluator._execute(model_cls)
-#         model_ir.
-#         model_code = model_to_pytorch_script(model_ir)
-#         exec_vars = {}
-#         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
-#         return exec_vars['converted_model']
+class Python(GraphIR):
+    def _get_converted_pytorch_model(self, model_ir):
+        mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model_ir.history}
+        with ContextStack('fixed', mutation):
+            return model_ir.python_class(**model_ir.python_init_params)
 
-#     def _get_model_with_mutators(self, pytorch_model):
-#         return extract_mutation_from_pt_module(pytorch_model)
+    def _get_model_with_mutators(self, pytorch_model):
+        return extract_mutation_from_pt_module(pytorch_model)
