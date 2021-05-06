@@ -3,7 +3,7 @@
 
 from typing import (Any, Iterable, List, Optional)
 
-from .graph import Model
+from .graph import Model, Mutation, ModelStatus
 
 
 __all__ = ['Sampler', 'Mutator']
@@ -40,10 +40,13 @@ class Mutator:
     and then use `Mutator.apply()` to mutate model.
     For certain mutator subclasses, strategy or sampler can use `Mutator.dry_run()` to predict choice candidates.
     # Method names are open for discussion.
+
+    If mutator has a label, in most cases, it means that this mutator is applied to nodes with this label.
     """
 
-    def __init__(self, sampler: Optional[Sampler] = None):
+    def __init__(self, sampler: Optional[Sampler] = None, label: Optional[str] = None):
         self.sampler: Optional[Sampler] = sampler
+        self.label: Optional[str] = label
         self._cur_model: Optional[Model] = None
         self._cur_choice_idx: Optional[int] = None
 
@@ -64,9 +67,12 @@ class Mutator:
         copy = model.fork()
         self._cur_model = copy
         self._cur_choice_idx = 0
+        self._cur_samples = []
         self.sampler.mutation_start(self, copy)
         self.mutate(copy)
         self.sampler.mutation_end(self, copy)
+        copy.history.append(Mutation(self, self._cur_samples, model, copy))
+        copy.status = ModelStatus.Frozen
         self._cur_model = None
         self._cur_choice_idx = None
         return copy
@@ -97,6 +103,7 @@ class Mutator:
         """
         assert self.sampler is not None and self._cur_model is not None and self._cur_choice_idx is not None
         ret = self.sampler.choice(list(candidates), self, self._cur_model, self._cur_choice_idx)
+        self._cur_samples.append(ret)
         self._cur_choice_idx += 1
         return ret
 
