@@ -3,6 +3,7 @@ import os
 import unittest
 from pathlib import Path
 
+import nni.retiarii
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution import set_execution_engine
@@ -24,9 +25,6 @@ class CodeGenTest(unittest.TestCase):
 class EngineTest(unittest.TestCase):
 
     def test_base_execution_engine(self):
-        os.makedirs('generated', exist_ok=True)
-        from nni.runtime import protocol
-        protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
         advisor = RetiariiAdvisor()
         set_execution_engine(BaseExecutionEngine())
         with open('mnist_pytorch.json') as f:
@@ -38,9 +36,7 @@ class EngineTest(unittest.TestCase):
         advisor.assessor_worker.join()
 
     def test_py_execution_engine(self):
-        os.makedirs('generated', exist_ok=True)
-        from nni.runtime import protocol
-        protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
+        
         advisor = RetiariiAdvisor()
         set_execution_engine(PurePythonExecutionEngine())
         model = Model._load({
@@ -55,8 +51,20 @@ class EngineTest(unittest.TestCase):
                 'edges': []
             }
         })
+        model.python_class = object
         submit_models(model, model)
 
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
+
+    def setUp(self) -> None:
+        os.makedirs('generated', exist_ok=True)
+        from nni.runtime import protocol
+        protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
+
+    def tearDown(self) -> None:
+        from nni.runtime import protocol
+        protocol._out_file.close()
+        nni.retiarii.execution.api._execution_engine = None
+        nni.retiarii.integration_api._advisor = None

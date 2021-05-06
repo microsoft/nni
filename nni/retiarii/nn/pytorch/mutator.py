@@ -155,7 +155,7 @@ class ManyChooseManyMutator(Mutator):
 def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Optional[List[Mutator]]]:
     model = Model(_internal=True)
     graph = Graph(model, uid(), '_model', _internal=True)._register()
-    model.class_name = get_importable_name(pytorch_model.__class__, relocate_module=True)
+    model.python_class = pytorch_model.__class__
     for module in pytorch_model.modules():
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
             # TODO: check the label of module and warn if it's auto-generated
@@ -172,8 +172,6 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
     model.status = ModelStatus.Frozen
-    print(model._dump())
-    print(model)
     if not graph.hidden_nodes:
         return model, None
 

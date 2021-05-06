@@ -9,7 +9,7 @@ import abc
 import copy
 import json
 from enum import Enum
-from typing import (Any, Dict, Iterable, List, Optional, Tuple, Union, overload)
+from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
 
 from .operation import Cell, Operation, _IOPseudoOperation
 from .utils import get_importable_name, import_, uid
@@ -80,8 +80,8 @@ class Model:
 
     Attributes
     ----------
-    class_name
-        Python class name that base model is converted from.
+    python_class
+        Python class that base model is converted from.
     status
         See `ModelStatus`.
     root_graph
@@ -104,7 +104,7 @@ class Model:
     def __init__(self, _internal=False):
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
-        self.class_name: Optional[str] = None
+        self.python_class: Optional[Type] = None
 
         self.status: ModelStatus = ModelStatus.Mutating
 
@@ -120,7 +120,7 @@ class Model:
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
             f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics}, ' + \
-            f'class_name={self.class_name})'
+            f'python_class={self.python_class})'
 
     @property
     def root_graph(self) -> 'Graph':

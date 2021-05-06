@@ -324,6 +324,14 @@ class ValueChoice(Translatable, nn.Module):
             raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
         return v
 
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        new_item = ValueChoice(self.candidates, self.label)
+        new_item._accessor = [*self._accessor]
+        return new_item
+
     def __getitem__(self, item):
         """
         Get a sub-element of value choice.

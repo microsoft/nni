@@ -2,7 +2,7 @@ from typing import Dict, Any, List
 
 from ..graph import Evaluator, Model
 from ..integration_api import receive_trial_parameters
-from ..utils import ContextStack, import_
+from ..utils import ContextStack, import_, get_importable_name
 from .base import BaseExecutionEngine
 
 
@@ -28,7 +28,8 @@ class PurePythonExecutionEngine(BaseExecutionEngine):
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
-        graph_data = PythonGraphData(model.class_name, mutation, model.evaluator)
+        graph_data = PythonGraphData(get_importable_name(model.python_class, relocate_module=True),
+                                     mutation, model.evaluator)
         return graph_data
 
     @classmethod
