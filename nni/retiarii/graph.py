@@ -119,7 +119,8 @@ class Model:
 
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
-            f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics})'
+            f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics}, ' + \
+            f'class_name={self.class_name})'
 
     @property
     def root_graph(self) -> 'Graph':

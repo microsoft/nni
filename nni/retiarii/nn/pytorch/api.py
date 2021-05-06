@@ -68,7 +68,7 @@ class LayerChoice(nn.Module):
         try:
             return candidates[_get_fixed_value(label)]
         except KeyError:
-            super().__new__(cls, candidates, label=label, **kwargs)
+            return super().__new__(cls)
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
         super(LayerChoice, self).__init__()
@@ -182,7 +182,7 @@ class InputChoice(nn.Module):
         try:
             return ChosenInputs(_get_fixed_value(label), reduction=reduction)
         except KeyError:
-            super().__new__(cls, n_candidates, n_chosen=n_chosen, reduction=reduction, label=label, **kwargs)
+            return super().__new__(cls)
 
     def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
         super(InputChoice, self).__init__()
@@ -290,7 +290,7 @@ class ValueChoice(Translatable, nn.Module):
         try:
             return _get_fixed_value(label)
         except KeyError:
-            super().__new__(cls, candidates, label=label)
+            return super().__new__(cls)
 
     def __init__(self, candidates: List[Any], label: str = None):
         super().__init__()

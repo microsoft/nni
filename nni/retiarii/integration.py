@@ -48,7 +48,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
     final_metric_callback
     """
 
-    def __init__(self, execution_):
+    def __init__(self):
         super(RetiariiAdvisor, self).__init__()
         register_advisor(self)  # register the current advisor as the "global only" advisor
         self.search_space = None

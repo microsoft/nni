@@ -43,7 +43,7 @@ _logger = logging.getLogger(__name__)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space: Any = ''  # TODO: remove
-    trial_command: str = 'python3 -m nni.retiarii.trial_entry'
+    trial_command: str = '_reserved'
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
@@ -62,10 +62,11 @@ class RetiariiExeConfig(ConfigBase):
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
             self.training_service = util.training_service_config_factory(platform = training_service_platform)
+        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry base'
 
     def __setattr__(self, key, value):
         fixed_attrs = {'search_space': '',
-                       'trial_command': 'python3 -m nni.retiarii.trial_entry'}
+                       'trial_command': '_reserved'}
         if key in fixed_attrs and fixed_attrs[key] != value:
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
@@ -73,7 +74,7 @@ class RetiariiExeConfig(ConfigBase):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
             assert value in ['base', 'py', 'cgo'], f'The specified execution engine "{value}" is not supported.'
-            self.__dict__['trial_command'] = fixed_attrs['trial_command'] + ' ' + value
+            self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
     def validate(self, initialized_tuner: bool = False) -> None:
@@ -168,7 +169,8 @@ class RetiariiExperiment(Experiment):
         self._pipe: Optional[Pipe] = None
 
     def _start_strategy(self):
-        base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.trainer, self.applied_mutators)
+        base_model_ir, self.applied_mutators = preprocess_model(
+            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py')
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
@@ -198,8 +200,8 @@ class RetiariiExperiment(Experiment):
             from ..execution.cgo_engine import CGOExecutionEngine
             engine = CGOExecutionEngine()
         elif self.config.execution_engine == 'py':
-            from ..execution.purepython import PurePythonExecutinoEngine
-            engine = PurePythonExecutinoEngine()
+            from ..execution.python import PurePythonExecutionEngine
+            engine = PurePythonExecutionEngine()
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()

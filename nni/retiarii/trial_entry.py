@@ -20,6 +20,6 @@ if __name__ == '__main__':
         from .execution.cgo_engine import CGOExecutionEngine
         engine = CGOExecutionEngine()
     elif args.exec == 'py':
-        from .execution.purepython import PurePythonExecutinoEngine
-        engine = PurePythonExecutinoEngine()
+        from .execution.python import PurePythonExecutionEngine
+        engine = PurePythonExecutionEngine()
     engine.trial_execute_graph()

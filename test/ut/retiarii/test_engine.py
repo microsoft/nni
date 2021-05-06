@@ -1,19 +1,16 @@
 import json
 import os
-import sys
-import threading
 import unittest
 from pathlib import Path
 
-import nni
 from nni.retiarii import Model, submit_models
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.integration import RetiariiAdvisor, register_advisor
-from nni.retiarii.evaluator.pytorch import PyTorchImageClassificationTrainer
-from nni.retiarii.utils import import_
+from nni.retiarii.execution import set_execution_engine
+from nni.retiarii.execution.base import BaseExecutionEngine
+from nni.retiarii.execution.python import PurePythonExecutionEngine
+from nni.retiarii.integration import RetiariiAdvisor
 
 
-@unittest.skip('Skipped in this version')
 class CodeGenTest(unittest.TestCase):
     def test_mnist_example_pytorch(self):
         with open('mnist_pytorch.json') as f:
@@ -24,29 +21,14 @@ class CodeGenTest(unittest.TestCase):
         self.assertEqual(script.strip(), reference_script.strip())
 
 
-@unittest.skip('Skipped in this version')
-class TrainerTest(unittest.TestCase):
-    def test_trainer(self):
-        sys.path.insert(0, Path(__file__).parent.as_posix())
-        Model = import_('debug_mnist_pytorch._model')
-        trainer = PyTorchImageClassificationTrainer(
-            Model(),
-            dataset_kwargs={'root': (Path(__file__).parent / 'data' / 'mnist').as_posix(), 'download': True},
-            dataloader_kwargs={'batch_size': 32},
-            optimizer_kwargs={'lr': 1e-3},
-            trainer_kwargs={'max_epochs': 1}
-        )
-        trainer.fit()
-
-
-@unittest.skip('Skipped in this version')
 class EngineTest(unittest.TestCase):
 
-    def test_submit_models(self):
+    def test_base_execution_engine(self):
         os.makedirs('generated', exist_ok=True)
         from nni.runtime import protocol
         protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
         advisor = RetiariiAdvisor()
+        set_execution_engine(BaseExecutionEngine())
         with open('mnist_pytorch.json') as f:
             model = Model._load(json.load(f))
         submit_models(model, model)
@@ -55,5 +37,26 @@ class EngineTest(unittest.TestCase):
         advisor.default_worker.join()
         advisor.assessor_worker.join()
 
-    def test_execution_engine(self):
-        pass
+    def test_py_execution_engine(self):
+        os.makedirs('generated', exist_ok=True)
+        from nni.runtime import protocol
+        protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
+        advisor = RetiariiAdvisor()
+        set_execution_engine(PurePythonExecutionEngine())
+        model = Model._load({
+            '_model': {
+                'inputs': None,
+                'outputs': None,
+                'nodes': {
+                    'layerchoice_1': {
+                        'operation': {'type': 'LayerChoice', 'parameters': {'candidates': ['0', '1']}}
+                    }
+                },
+                'edges': []
+            }
+        })
+        submit_models(model, model)
+
+        advisor.stopping = True
+        advisor.default_worker.join()
+        advisor.assessor_worker.join()

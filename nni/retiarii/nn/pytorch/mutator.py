@@ -6,8 +6,8 @@ from typing import Any, List, Optional, Tuple
 import torch.nn as nn
 
 from ...mutator import Mutator
-from ...graph import Cell, Model, Node
-from ...utils import get_importable_name
+from ...graph import Cell, Graph, Model, ModelStatus, Node
+from ...utils import get_importable_name, uid
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
 
 
@@ -129,7 +129,7 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
 
 class ManyChooseManyMutator(Mutator):
     def __init__(self, label: str):
-        self.label: str = label
+        super().__init__(label=label)
 
     @staticmethod
     def candidates(node):
@@ -147,15 +147,16 @@ class ManyChooseManyMutator(Mutator):
     def mutate(self, model: Model):
         # this mutate does not have any effect, but it is recorded in the mutation history
         for node in model.get_nodes_by_label(self.label):
-            for _ in self.number_of_chosen(node):
+            for _ in range(self.number_of_chosen(node)):
                 self.choice(self.candidates(node))
             break
 
 
-def extract_mutation_from_pt_module(model: nn.Module) -> Tuple[Model, Optional[List[Mutator]]]:
+def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Optional[List[Mutator]]]:
     model = Model(_internal=True)
-    model.class_name = get_importable_name(model)
-    for module in model.modules():
+    graph = Graph(model, uid(), '_model', _internal=True)._register()
+    model.class_name = get_importable_name(pytorch_model.__class__, relocate_module=True)
+    for module in pytorch_model.modules():
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
             # TODO: check the label of module and warn if it's auto-generated
             pass
@@ -170,12 +171,15 @@ def extract_mutation_from_pt_module(model: nn.Module) -> Tuple[Model, Optional[L
                                       {'candidates': module.candidates})
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
-    if not list(model.get_nodes()):
+    model.status = ModelStatus.Frozen
+    print(model._dump())
+    print(model)
+    if not graph.hidden_nodes:
         return model, None
 
     mutators = []
-    for nodes in _group_by_real_label(list(model.get_nodes())):
-        assert _is_all_equal(map(lambda n: n.operation.type_name, nodes)), \
+    for nodes in _group_by_real_label(graph.hidden_nodes):
+        assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
             f'Node with label "{nodes[0].label} does not all have the same type.'
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
             f'Node with label "{nodes[0].label} does not agree on parameters.'
