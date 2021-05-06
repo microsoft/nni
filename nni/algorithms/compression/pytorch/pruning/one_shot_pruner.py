@@ -11,8 +11,7 @@ from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
 
 
-__all__ = ['LevelPruner', 'SlimPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner',
-           'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner']
+__all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -41,6 +40,7 @@ class OneshotPruner(Pruner):
 
         super().__init__(model, config_list, optimizer)
         self.set_wrappers_attribute("if_calculated", False)
+        self.training_aware = False
         self.masker = MASKER_DICT[pruning_algorithm](
             model, self, **algo_kwargs)
 
@@ -92,6 +92,19 @@ class OneshotPruner(Pruner):
         else:
             return None
 
+    def _get_threshold(self):
+        """
+        Calculate the global threshold to decide the weights to be pruned
+        """
+        pass
+
+    def _callback(self):
+        """
+        Callback function to do additonal optimization
+        """
+        pass
+
+
 
 class LevelPruner(OneshotPruner):
     """
@@ -111,81 +124,6 @@ class LevelPruner(OneshotPruner):
         super().__init__(model, config_list, pruning_algorithm='level', optimizer=optimizer)
 
 
-class SlimPruner(OneshotPruner):
-    """
-    Parameters
-    ----------
-    model : torch.nn.Module
-        Model to be pruned
-    config_list : list
-        Supported keys:
-            - sparsity : This is to specify the sparsity operations to be compressed to.
-            - op_types : Only BatchNorm2d is supported in Slim Pruner.
-    optimizer : torch.optim.Optimizer
-            Optimizer used to train model
-    trainer : function
-        Function used to sparsify BatchNorm2d scaling factors.
-        Users should write this function as a normal function to train the Pytorch model
-        and include `model, optimizer, criterion, epoch, callback` as function arguments.
-    training_epochs : int
-        Totoal number of iterations for sparsification.
-    scale : float 
-        Penalty parameters for sparsification.
-    """
-
-    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=5, scale=0.0001):
-        super().__init__(model, config_list, pruning_algorithm='slim')
-        self.scale = scale
-        self.optimizer = optimizer
-        self._trainer = trainer
-        self._criterion = criterion
-        self._training_epochs = training_epochs
-
-    def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
-            'op_types': ['BatchNorm2d'],
-            Optional('op_names'): [str]
-        }], model, logger)
-
-        schema.validate(config_list)
-
-        if len(config_list) > 1:
-            logger.warning('Slim pruner only supports 1 configuration')
-    
-    def _get_global_threshold(self):
-        weight_list = []
-        for (layer, _) in self.get_modules_to_compress():
-            weight_list.append(layer.module.weight.data.abs().clone())
-        all_bn_weights = torch.cat(weight_list)
-        k = int(all_bn_weights.shape[0] * self.config_list[0]['sparsity'])
-        self.masker.global_threshold = torch.topk(
-            all_bn_weights.view(-1), k, largest=False)[0].max()
-
-    def compress(self):
-        """
-        Compress the model with Network Slimming.
-
-        Returns
-        -------
-        torch.nn.Module
-            model with specified modules compressed.
-        """
-        logger.info('Starting Network Slimming...')
-        
-        def callback():
-            for i, wrapper in enumerate(self.get_modules_wrapper()):
-                 wrapper.module.weight.grad.data.add_(self.scale * torch.sign( wrapper.module.weight.data))
-
-        for epoch in range(self._training_epochs):
-            self._trainer(self.bound_model, optimizer=self.optimizer,
-                criterion=self._criterion, epoch=epoch, callback=callback)
-
-        self._get_global_threshold()
-        self.update_mask()
-
-        return self.bound_model
-
 
 class _StructuredFilterPruner(OneshotPruner):
     """
@@ -198,12 +136,14 @@ class _StructuredFilterPruner(OneshotPruner):
     to prune the same channels.
     """
 
-    def __init__(self, model, config_list, pruning_algorithm, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
+    def __init__(self, model, config_list, pruning_algorithm, optimizer=None, trainer=None, training_epochs=1, criterion=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list, pruning_algorithm=pruning_algorithm,
                          optimizer=optimizer, **algo_kwargs)
         self.dependency_aware = dependency_aware
         # set the dependency-aware switch for the masker
         self.masker.dependency_aware = dependency_aware
+        self._trainer = trainer
+        self._criterion = criterion
         self.dummy_input = dummy_input
         if self.dependency_aware:
             errmsg = "When dependency_aware is set, the dummy_input should not be None"
@@ -334,7 +274,7 @@ class L1FilterPruner(_StructuredFilterPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
+    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)
 
@@ -364,7 +304,7 @@ class L2FilterPruner(_StructuredFilterPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
+    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)
 
@@ -399,129 +339,6 @@ class FPGMPruner(_StructuredFilterPruner):
                          dependency_aware=dependency_aware, dummy_input=dummy_input, optimizer=optimizer)
 
 
-class TaylorFOWeightFilterPruner(_StructuredFilterPruner):
-    """
-    Parameters
-    ----------
-    model : torch.nn.Module
-        Model to be pruned
-    config_list : list
-        Supported keys:
-            - sparsity : How much percentage of convolutional filters are to be pruned.
-            - op_types : Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
-    statistics_batch_num: int
-        The number of batches to statistic the activation.
-    dependency_aware: bool
-        If prune the model in a dependency-aware way. If it is `True`, this pruner will
-        prune the model according to the l2-norm of weights and the channel-dependency or
-        group-dependency of the model. In this way, the pruner will force the conv layers
-        that have dependencies to prune the same channels, so the speedup module can better
-        harvest the speed benefit from the pruned model. Note that, if this flag is set True
-        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
-        dependency between the conv layers.
-    dummy_input : torch.Tensor
-        The dummy input to analyze the topology constraints. Note that, the dummy_input
-        should on the same device with the model.
-
-    """
-
-    def __init__(self, model, config_list, optimizer, trainer, criterion,statistics_batch_num=1,
-                 dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='taylorfo',
-                         dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         optimizer=optimizer, statistics_batch_num=statistics_batch_num)
-        self._trainer = trainer
-        self._criterion = criterion
-
-    def compress(self):
-        """
-        Compress the model.
-
-        Returns
-        -------
-        torch.nn.Module
-            model with specified modules compressed.
-        """
-
-        for epoch in range(1):
-            self._trainer(self.bound_model, optimizer=self.optimizer,
-                criterion=self._criterion, epoch=epoch)
-
-        self.update_mask()
-
-        return self.bound_model
 
 
-class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
-    """
-    Parameters
-    ----------
-    model : torch.nn.Module
-        Model to be pruned
-    config_list : list
-        Supported keys:
-            - sparsity : How much percentage of convolutional filters are to be pruned.
-            - op_types : Only Conv2d is supported in ActivationAPoZRankFilterPruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
-    activation: str
-        The activation type.
-    statistics_batch_num: int
-        The number of batches to statistic the activation.
-    dependency_aware: bool
-        If prune the model in a dependency-aware way. If it is `True`, this pruner will
-        prune the model according to the l2-norm of weights and the channel-dependency or
-        group-dependency of the model. In this way, the pruner will force the conv layers
-        that have dependencies to prune the same channels, so the speedup module can better
-        harvest the speed benefit from the pruned model. Note that, if this flag is set True
-        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
-        dependency between the conv layers.
-    dummy_input : torch.Tensor
-        The dummy input to analyze the topology constraints. Note that, the dummy_input
-        should on the same device with the model.
 
-    """
-
-    def __init__(self, model, config_list, optimizer=None, activation='relu',
-                 statistics_batch_num=1, dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, statistics_batch_num=statistics_batch_num)
-
-
-class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
-    """
-    Parameters
-    ----------
-    model : torch.nn.Module
-        Model to be pruned
-    config_list : list
-        Supported keys:
-            - sparsity : How much percentage of convolutional filters are to be pruned.
-            - op_types : Only Conv2d is supported in ActivationMeanRankFilterPruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model.
-    activation: str
-        The activation type.
-    statistics_batch_num: int
-        The number of batches to statistic the activation.
-    dependency_aware: bool
-        If prune the model in a dependency-aware way. If it is `True`, this pruner will
-        prune the model according to the l2-norm of weights and the channel-dependency or
-        group-dependency of the model. In this way, the pruner will force the conv layers
-        that have dependencies to prune the same channels, so the speedup module can better
-        harvest the speed benefit from the pruned model. Note that, if this flag is set True
-        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
-        dependency between the conv layers.
-    dummy_input : torch.Tensor
-        The dummy input to analyze the topology constraints. Note that, the dummy_input
-        should on the same device with the model.
-    """
-
-    def __init__(self, model, config_list, optimizer=None, activation='relu',
-                 statistics_batch_num=1, dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, statistics_batch_num=statistics_batch_num)

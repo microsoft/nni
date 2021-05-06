@@ -42,15 +42,13 @@ class AGPPruner(Pruner):
         choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, pruning_algorithm='level'):
-        super().__init__(model, config_list, optimizer)
+    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=1, pruning_algorithm='level'):
+        super().__init__(model, config_list, optimizer=optimizer, trainer=trainer, criterion=criterion)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
         self.masker = MASKER_DICT[pruning_algorithm](model, self)
-
+        self.training_epochs = training_epochs
         self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
-        self._criterion = criterion
-        self._trainer = trainer
 
     def validate_config(self, model, config_list):
         """
@@ -62,10 +60,7 @@ class AGPPruner(Pruner):
             List on pruning configs
         """
         schema = CompressorSchema([{
-            'initial_sparsity': And(float, lambda n: 0 <= n <= 1),
-            'final_sparsity': And(float, lambda n: 0 <= n <= 1),
-            'start_epoch': And(int, lambda n: n >= 0),
-            'end_epoch': And(int, lambda n: n >= 0),
+            'sparsity': And(float, lambda n: 0 <= n <= 1),
             'frequency': And(int, lambda n: n > 0),
             Optional('op_types'): [str],
             Optional('op_names'): [str]
@@ -92,13 +87,12 @@ class AGPPruner(Pruner):
         """
 
         config = wrapper.config
-
-        start_epoch = config.get('start_epoch', 0)
         freq = config.get('frequency', 1)
 
         if wrapper.if_calculated:
             return None
-        if not (self.now_epoch >= start_epoch and (self.now_epoch - start_epoch) % freq == 0):
+
+        if not self.now_epoch % freq == 0:
             return None
 
         target_sparsity = self.compute_target_sparsity(config)
@@ -121,24 +115,24 @@ class AGPPruner(Pruner):
             Target sparsity to be pruned
         """
 
-        end_epoch = config.get('end_epoch', 1)
-        start_epoch = config.get('start_epoch', 0)
+        initial_sparsity = 0
+        end_epoch = self.training_epochs
         freq = config.get('frequency', 1)
-        final_sparsity = config.get('final_sparsity', 0)
-        initial_sparsity = config.get('initial_sparsity', 0)
-        if end_epoch <= start_epoch or initial_sparsity >= final_sparsity:
-            logger.warning('your end epoch <= start epoch or initial_sparsity >= final_sparsity')
+        self.target_sparsity = final_sparsity = config.get('sparsity', 0)
+        
+        if initial_sparsity >= final_sparsity:
+            logger.warning('your initial_sparsity >= final_sparsity')
             return final_sparsity
 
-        if end_epoch <= self.now_epoch:
+        if end_epoch == 1 or end_epoch <= self.now_epoch:
             return final_sparsity
-
-        span = ((end_epoch - start_epoch - 1) // freq) * freq
+            
+        span = ((end_epoch - 1) // freq) * freq
         assert span > 0
-        target_sparsity = (final_sparsity +
+        self.target_sparsity = (final_sparsity +
                            (initial_sparsity - final_sparsity) *
-                           (1.0 - ((self.now_epoch - start_epoch) / span)) ** 3)
-        return target_sparsity
+                           (1.0 - ((self.now_epoch) / span)) ** 3)
+        return self.target_sparsity
 
     def update_epoch(self, epoch):
         """
@@ -155,9 +149,11 @@ class AGPPruner(Pruner):
                 wrapper.if_calculated = False
 
     def compress(self):
-        for epoch in range(self.config_list[0]['end_epoch']):
+        for epoch in range(self.training_epochs):
             self.update_epoch(epoch)
             self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
+            logger.info(f'sparsity is {self.target_sparsity:.2f} at epoch {epoch}')
+            self.update_mask()
             self.get_pruned_weights()
             
         return self.bound_model

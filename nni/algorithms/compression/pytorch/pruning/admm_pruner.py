@@ -8,7 +8,7 @@ import copy
 
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .constants import MASKER_DICT
-from .one_shot import OneshotPruner
+from .one_shot_pruner import OneshotPruner
 
 
 _logger = logging.getLogger(__name__)
@@ -59,12 +59,14 @@ class ADMMPruner(OneshotPruner):
 
     """
 
-    def __init__(self, model, config_list, trainer, num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
+    def __init__(self, model, config_list, trainer, criterion, optimizer=None, num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
         self._base_algo = base_algo
 
         super().__init__(model, config_list)
 
         self._trainer = trainer
+        self._optimizer = optimizer
+        self._criterion = criterion
         self._num_iterations = num_iterations
         self._training_epochs = training_epochs
         self._row = row
@@ -144,7 +146,7 @@ class ADMMPruner(OneshotPruner):
             self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
 
         # Loss = cross_entropy +  l2 regulization + \Sum_{i=1}^N \row_i ||W_i - Z_i^k + U_i^k||^2
-        criterion = torch.nn.CrossEntropyLoss()
+        # criterion = torch.nn.CrossEntropyLoss()
 
         # callback function to do additonal optimization, refer to the deriatives of Formula (7)
         def callback():
@@ -159,7 +161,7 @@ class ADMMPruner(OneshotPruner):
             # step 1: optimize W with AdamOptimizer
             for epoch in range(self._training_epochs):
                 self._trainer(self.bound_model, optimizer=optimizer,
-                              criterion=criterion, epoch=epoch, callback=callback)
+                              criterion=self._criterion, epoch=epoch, callback=callback)
 
             # step 2: update Z, U
             # Z_i^{k+1} = projection(W_i^{k+1} + U_i^k)

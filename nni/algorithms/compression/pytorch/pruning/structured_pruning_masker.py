@@ -486,6 +486,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         if channel_masks is not None:
             channel_contribution = channel_contribution * channel_masks
         prune_indices = torch.argsort(channel_contribution)[:num_prune]
+        # print('prune_indices',prune_indices)
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
             if base_mask['bias_mask'] is not None:

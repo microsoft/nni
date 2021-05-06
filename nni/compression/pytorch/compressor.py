@@ -7,7 +7,7 @@ import torch
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
-
+MAX_EPOCHS = 9999
 
 class LayerInfo:
     def __init__(self, name, module):
@@ -317,12 +317,25 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None):
+        self._trainer = trainer
+        self._criterion = criterion
         super().__init__(model, config_list, optimizer)
         if optimizer is not None:
             self.patch_optimizer(self.update_mask)
 
     def compress(self):
+        if self.training_aware:
+            training = self.bound_model.training
+            self.bound_model.train()
+            for epoch in range(MAX_EPOCHS):
+                self._trainer(self.bound_model, optimizer=self.optimizer,
+                criterion=self._criterion, epoch=epoch, callback=self._callback)
+                if epoch >= self.training_epochs:
+                    break
+            self.bound_model.train(training)
+            self._get_threshold()
+            
         self.update_mask()
         return self.bound_model
 
@@ -436,12 +449,15 @@ class Pruner(Compressor):
     def get_pruned_weights(self, dim=0):
         for _, wrapper in enumerate(self.get_modules_wrapper()):
             weight_mask = wrapper.weight_mask
-            if len(weight_mask.size()) == 4:
+            mask_size = weight_mask.size()
+            if len(mask_size) == 4:
                 sum_idx = [0, 1, 2, 3]
                 sum_idx.remove(dim)
-                index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=True)[0].tolist()
-            elif len(weight_mask.size()) == 1:
-                index = torch.nonzero(weight_mask.abs() != 0, as_tuple=True)[0].tolist()
+                index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0).tolist()
+            elif len(mask_size) == 2:
+                index = torch.nonzero(weight_mask.abs().sum(1) != 0).tolist()
+            elif len(mask_size) == 1:
+                index = torch.nonzero(weight_mask.abs() != 0).tolist()
             _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
 
 

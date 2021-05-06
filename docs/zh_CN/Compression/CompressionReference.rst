@@ -34,7 +34,7 @@ module 的包装
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.weight_masker.WeightMasker
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning_maskerStructuredWeightMasker
     :members:
 
 

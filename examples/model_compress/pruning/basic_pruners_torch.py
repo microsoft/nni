@@ -28,7 +28,7 @@ from cifar10.vgg import VGG
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 import nni
-from nni.compression.pytorch import apply_compression_results, ModelSpeedup
+from nni.compression.pytorch import ModelSpeedup
 from nni.algorithms.compression.pytorch.pruning import (
     LevelPruner,
     SlimPruner,
@@ -206,7 +206,7 @@ def main(args):
     flops, params, results = count_flops_params(model, dummy_input)
     print(f"FLOPs: {flops}, params: {params}")
 
-    print('start pruning...')
+    print(f'start {args.pruner} pruning...')
     def trainer(model, optimizer, criterion, epoch, callback=None):
         return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
         
@@ -230,38 +230,35 @@ def main(args):
             'sparsity': args.sparsity,
             'op_types': ['default']
         }]
-    elif args.pruner in ['l1filter', 'mean_activation', 'apoz']:
+
+    else:
+        kw_args['trainer'] = trainer
+
+        if args.pruner not in ('l1filter', 'l2filter', 'fpgmfilter'):
+            # set only work for training aware pruners
+            kw_args['optimizer'] = optimizer
+            kw_args['criterion'] = criterion
+            kw_args['training_epochs'] = 5
+
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
-        config_list = [{
+        if args.pruner == 'slim':
+            config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['BatchNorm2d'],
+        }]
+        else:
+            config_list = [{
             'sparsity': args.sparsity,
             'op_types': ['Conv2d'],
             'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
         }]
-    elif args.pruner == 'slim':
-        config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['BatchNorm2d'],
-        }]
-        kw_args['criterion'] = criterion
-        kw_args['trainer'] = trainer
-        kw_args['training_epochs'] = 1
-    elif args.pruner == 'agp':
-        config_list = [{
-            'initial_sparsity': 0.,
-            'final_sparsity': 0.8,
-            'start_epoch': 0,
-            'end_epoch': 10,
-            'frequency': 1,
-            'op_types': ['Conv2d']
-        }]
-        kw_args['criterion'] = criterion
-        kw_args['trainer'] = trainer
-    elif args.pruner == 'taylorfo':
-        kw_args['criterion'] = criterion
-        kw_args['trainer'] = trainer
 
-    pruner = pruner_cls(model, config_list, optimizer, **kw_args)
+        if args.pruner == 'agp':
+            kw_args['pruning_algorithm'] = 'l1'
+            config_list[0]['frequency'] = 1
+
+    pruner = pruner_cls(model, config_list, **kw_args)
 
     # Pruner.compress() returns the masked model
     model = pruner.compress()
