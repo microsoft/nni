@@ -12,22 +12,19 @@ from nni.retiarii.execution.python import PurePythonExecutionEngine
 from nni.retiarii.integration import RetiariiAdvisor
 
 
-class CodeGenTest(unittest.TestCase):
-    def test_mnist_example_pytorch(self):
-        with open('mnist_pytorch.json') as f:
+class EngineTest(unittest.TestCase):
+    def test_codegen(self):
+        with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
             model = Model._load(json.load(f))
             script = model_to_pytorch_script(model)
-        with open('debug_mnist_pytorch.py') as f:
+        with open(self.enclosing_dir / 'debug_mnist_pytorch.py') as f:
             reference_script = f.read()
         self.assertEqual(script.strip(), reference_script.strip())
-
-
-class EngineTest(unittest.TestCase):
 
     def test_base_execution_engine(self):
         advisor = RetiariiAdvisor()
         set_execution_engine(BaseExecutionEngine())
-        with open('mnist_pytorch.json') as f:
+        with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
             model = Model._load(json.load(f))
         submit_models(model, model)
 
@@ -59,9 +56,10 @@ class EngineTest(unittest.TestCase):
         advisor.assessor_worker.join()
 
     def setUp(self) -> None:
-        os.makedirs('generated', exist_ok=True)
+        self.enclosing_dir = Path(__file__).parent
+        os.makedirs(self.enclosing_dir / 'generated', exist_ok=True)
         from nni.runtime import protocol
-        protocol._out_file = open(Path(__file__).parent / 'generated/debug_protocol_out_file.py', 'wb')
+        protocol._out_file = open(self.enclosing_dir / 'generated/debug_protocol_out_file.py', 'wb')
 
     def tearDown(self) -> None:
         from nni.runtime import protocol
