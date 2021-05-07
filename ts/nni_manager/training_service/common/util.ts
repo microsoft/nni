@@ -236,7 +236,8 @@ export function getScriptName(fileNamePrefix: string): string {
 }
 
 export function getGpuMetricsCollectorBashScriptContent(scriptFolder: string): string {
-    return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni.tools.gpu_tool.gpu_metrics_collector`;
+    return `echo $$ > ${scriptFolder}/pid ; METRIC_OUTPUT_DIR=${scriptFolder} python3 -m nni.tools.gpu_tool.gpu_metrics_collector \
+1>${scriptFolder}/stdout 2>${scriptFolder}/stderr`;
 }
 
 export function runGpuMetricsCollector(scriptFolder: string): void {

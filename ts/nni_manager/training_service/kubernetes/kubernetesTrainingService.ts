@@ -7,21 +7,21 @@ import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
 import * as azureStorage from 'azure-storage';
-import { EventEmitter } from 'events';
-import { Base64 } from 'js-base64';
-import { String } from 'typescript-string-operations';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import {EventEmitter} from 'events';
+import {Base64} from 'js-base64';
+import {String} from 'typescript-string-operations';
+import {getExperimentId} from '../../common/experimentStartupInfo';
+import {getLogger, Logger} from '../../common/log';
+import {MethodNotImplementedError} from '../../common/errors';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString } from '../../common/utils';
-import { AzureStorageClientUtility } from './azureStorageClientUtils';
-import { GeneralK8sClient, KubernetesCRDClient } from './kubernetesApiClient';
-import { KubernetesClusterConfig } from './kubernetesConfig';
-import { kubernetesScriptFormat, KubernetesTrialJobDetail } from './kubernetesData';
-import { KubernetesJobRestServer } from './kubernetesJobRestServer';
+import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
+import {AzureStorageClientUtility} from './azureStorageClientUtils';
+import {GeneralK8sClient, KubernetesCRDClient} from './kubernetesApiClient';
+import {KubernetesClusterConfig} from './kubernetesConfig';
+import {kubernetesScriptFormat, KubernetesTrialJobDetail} from './kubernetesData';
+import {KubernetesJobRestServer} from './kubernetesJobRestServer';
 
 const fs = require('fs');
 
@@ -34,7 +34,7 @@ abstract class KubernetesTrainingService {
     protected readonly metricsEmitter: EventEmitter;
     protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
     //  experiment root dir in NFS
-    protected readonly trialLocalNFSTempFolder: string;
+    protected readonly trialLocalTempFolder: string;
     protected stopping: boolean = false;
     protected experimentId!: string;
     protected kubernetesRestServerPort?: number;
@@ -57,7 +57,7 @@ abstract class KubernetesTrainingService {
         this.log = getLogger();
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
-        this.trialLocalNFSTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
+        this.trialLocalTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
         this.experimentId = getExperimentId();
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.expContainerCodeFolder = path.join(this.CONTAINER_MOUNT_PATH, 'nni', this.experimentId, 'nni-code');
@@ -124,7 +124,7 @@ abstract class KubernetesTrainingService {
     }
 
     public async cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
-        const trialJobDetail: KubernetesTrialJobDetail | undefined =  this.trialJobsMap.get(trialJobId);
+        const trialJobDetail: KubernetesTrialJobDetail | undefined = this.trialJobsMap.get(trialJobId);
         if (trialJobDetail === undefined) {
             const errorMessage: string = `CancelTrialJob: trial job id ${trialJobId} not found`;
             this.log.error(errorMessage);
@@ -168,7 +168,7 @@ abstract class KubernetesTrainingService {
                 try {
                     await this.cancelTrialJob(trialJobId);
                 } catch (error) {
-                  // DONT throw error during cleanup
+                    // DONT throw error during cleanup
                 }
                 kubernetesTrialJob.status = 'SYS_CANCELED';
             }
@@ -191,9 +191,9 @@ abstract class KubernetesTrainingService {
 
         // Unmount NFS
         try {
-            await cpp.exec(`sudo umount ${this.trialLocalNFSTempFolder}`);
+            await cpp.exec(`sudo umount ${this.trialLocalTempFolder}`);
         } catch (error) {
-            this.log.error(`Unmount ${this.trialLocalNFSTempFolder} failed, error is ${error}`);
+            this.log.error(`Unmount ${this.trialLocalTempFolder} failed, error is ${error}`);
         }
 
         // Stop kubernetes rest server
@@ -230,14 +230,16 @@ abstract class KubernetesTrainingService {
             await AzureStorageClientUtility.createShare(this.azureStorageClient, this.azureStorageShare);
             //create sotrage secret
             this.azureStorageSecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                            .toLowerCase());
+                .toLowerCase());
+
+            const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
             await this.genericK8sClient.createSecret(
                 {
                     apiVersion: 'v1',
                     kind: 'Secret',
                     metadata: {
                         name: this.azureStorageSecretName,
-                        namespace: 'default',
+                        namespace: namespace,
                         labels: {
                             app: this.NNI_KUBERNETES_TRIAL_LABEL,
                             expId: getExperimentId()
@@ -267,7 +269,7 @@ abstract class KubernetesTrainingService {
      * @param trialSequenceId sequence id
      */
     protected async generateRunScript(platform: string, trialJobId: string, trialWorkingFolder: string,
-                                      command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
+        command: string, trialSequenceId: string, roleName: string, gpuNum: number): Promise<string> {
         let nvidiaScript: string = '';
         // Nvidia devcie plugin for K8S has a known issue that requesting zero GPUs allocates all GPUs
         // Refer https://github.com/NVIDIA/k8s-device-plugin/issues/61
@@ -297,11 +299,11 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(runScript);
     }
     protected async createNFSStorage(nfsServer: string, nfsPath: string): Promise<void> {
-        await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}`);
+        await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}`);
         try {
-            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalNFSTempFolder}`);
+            await cpp.exec(`sudo mount ${nfsServer}:${nfsPath} ${this.trialLocalTempFolder}`);
         } catch (error) {
-            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalNFSTempFolder} failed, error is ${error}`;
+            const mountError: string = `Mount NFS ${nfsServer}:${nfsPath} to ${this.trialLocalTempFolder} failed, error is ${error}`;
             this.log.error(mountError);
 
             return Promise.reject(mountError);
@@ -309,21 +311,35 @@ abstract class KubernetesTrainingService {
 
         return Promise.resolve();
     }
+    protected async createPVCStorage(pvcPath: string): Promise<void> {
+        try {
+            await cpp.exec(`mkdir -p ${pvcPath}`);
+            await cpp.exec(`sudo ln -s ${pvcPath} ${this.trialLocalTempFolder}`);
+        } catch (error) {
+            const linkError: string = `Linking ${pvcPath} to ${this.trialLocalTempFolder} failed, error is ${error}`;
+            this.log.error(linkError);
+
+            return Promise.reject(linkError);
+        }
+
+        return Promise.resolve();
+    }
 
     protected async createRegistrySecret(filePath: string | undefined): Promise<string | undefined> {
-        if(filePath === undefined || filePath === '') {
+        if (filePath === undefined || filePath === '') {
             return undefined;
         }
         const body = fs.readFileSync(filePath).toString('base64');
         const registrySecretName = String.Format('nni-secret-{0}', uniqueString(8)
-                                                                            .toLowerCase());
+            .toLowerCase());
+        const namespace = this.genericK8sClient.getNamespace ? this.genericK8sClient.getNamespace : "default"
         await this.genericK8sClient.createSecret(
             {
                 apiVersion: 'v1',
                 kind: 'Secret',
                 metadata: {
                     name: registrySecretName,
-                    namespace: 'default',
+                    namespace: namespace,
                     labels: {
                         app: this.NNI_KUBERNETES_TRIAL_LABEL,
                         expId: getExperimentId()
@@ -337,7 +353,7 @@ abstract class KubernetesTrainingService {
         );
         return registrySecretName;
     }
-    
+
     /**
      * upload local directory to azureStorage
      * @param srcDirectory the source directory of local folder
@@ -349,7 +365,7 @@ abstract class KubernetesTrainingService {
             throw new Error('azureStorageClient is not initialized');
         }
         let retryCount: number = 1;
-        if(uploadRetryCount) {
+        if (uploadRetryCount) {
             retryCount = uploadRetryCount;
         }
         let uploadSuccess: boolean = false;
@@ -358,7 +374,7 @@ abstract class KubernetesTrainingService {
             do {
                 uploadSuccess = await AzureStorageClientUtility.uploadDirectory(
                     this.azureStorageClient,
-                    `${destDirectory}`, 
+                    `${destDirectory}`,
                     this.azureStorageShare,
                     `${srcDirectory}`);
                 if (!uploadSuccess) {
@@ -377,5 +393,13 @@ abstract class KubernetesTrainingService {
         }
         return Promise.resolve(folderUriInAzure);
     }
+
+    public getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
-export { KubernetesTrainingService };
+export {KubernetesTrainingService};

@@ -64,7 +64,7 @@ Then, define a ``config`` file in YAML to automatically tuning model, pruning al
     trialConcurrency: 1
     trialGpuNumber: 0
     tuner:
-      name: grid
+      name: GridSearch
 
 The full example can be found :githublink:`here <examples/model_compress/pruning/config.yml>`
 

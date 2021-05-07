@@ -2,7 +2,7 @@ $boxPadding: 24px;
 $boxBorderRadius: 5px;
 $boxGapPadding: 10px;
 
-.wrapper {
+.overviewWrapper {
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-auto-rows: 102px;

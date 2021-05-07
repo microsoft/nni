@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
@@ -57,6 +57,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         #     data = BaseGraphData(codegen.model_to_pytorch_script(model),
         #                          model.config['trainer_module'], model.config['trainer_kwargs'])
         #     self._running_models[send_trial(data.dump())] = model
+
+    def list_models(self) -> Iterable[Model]:
+        raise NotImplementedError
 
     def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice]]:
         # unique_models = set()
@@ -126,6 +129,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     def query_available_resource(self) -> List[WorkerInfo]:
         raise NotImplementedError  # move the method from listener to here?
+
+    def budget_exhausted(self) -> bool:
+        raise NotImplementedError
 
     @classmethod
     def trial_execute_graph(cls) -> None:

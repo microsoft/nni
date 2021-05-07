@@ -4,9 +4,9 @@ import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentu
 import ReactEcharts from 'echarts-for-react';
 import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
-import '../../static/style/compare.scss';
 import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import '../../static/style/compare.scss';
 
 function _getWebUIWidth(): number {
     return window.innerWidth;
@@ -83,13 +83,7 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: number[], data: TooltipForIntermediate): [number, number] => {
-                    if (data.dataIndex < xAxisMax / 2) {
-                        return [point[0], 80];
-                    } else {
-                        return [point[0] - 300, 80];
-                    }
-                },
+                confine: true,
                 formatter: (data: TooltipForIntermediate): string => {
                     const item = items.find(k => k.id === data.seriesName) as Item;
                     return this._generateTooltipSummary(item, data.data);
@@ -103,7 +97,7 @@ class Compare extends React.Component<CompareProps, {}> {
             legend: {
                 type: 'scroll',
                 right: 40,
-                left: legend.length > 6 ? 80 : null,
+                left: legend.length > 6 ? '15%' : null,
                 data: legend
             },
             xAxis: {
@@ -119,11 +113,13 @@ class Compare extends React.Component<CompareProps, {}> {
             series: dataForEchart
         };
         return (
-            <ReactEcharts
-                option={option}
-                style={{ width: '100%', height: 418, margin: '0 auto' }}
-                notMerge={true} // update now
-            />
+            <div className='graph'>
+                <ReactEcharts
+                    option={option}
+                    style={{ width: '100%', height: 418, margin: '0 auto' }}
+                    notMerge={true} // update now
+                />
+            </div>
         );
     }
 
@@ -139,7 +135,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 <td className='column'>{rowName}</td>
                 {items.map(item => (
                     <td className={className} key={item.id}>
-                        {formatter(item)}
+                        {formatter(item) || '--'}
                     </td>
                 ))}
             </tr>
@@ -178,6 +174,7 @@ class Compare extends React.Component<CompareProps, {}> {
         }
         const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
         const metricKeys = this._overlapKeys(items.map(item => item.metrics));
+
         return (
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>

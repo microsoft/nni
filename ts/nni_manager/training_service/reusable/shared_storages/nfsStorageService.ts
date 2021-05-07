@@ -6,11 +6,11 @@
 import * as cpp from 'child-process-promise';
 import * as path from 'path';
 
-import { SharedStorageService, SharedStorageConfig, SharedStorageType, LocalMountedType } from '../sharedStorage'
+import { SharedStorageService, SharedStorageType } from '../sharedStorage'
 import { MountedStorageService } from '../storages/mountedStorageService';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { getLogger, Logger } from '../../../common/log';
 import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { NfsConfig } from '../../../common/experimentConfig';
 
 const INSTALL_NFS_CLIENT = `
 #!/bin/bash
@@ -35,30 +35,11 @@ else
 fi
 `
 
-class NFSSharedStorageConfig implements SharedStorageConfig {
-    public storageType: SharedStorageType;
-    public localMountPoint: string;
-    public remoteMountPoint: string;
-
-    public nfsServer: string;
-    public exportedDirectory: string;
-    public localMounted: LocalMountedType;
-
-    constructor(storageType: SharedStorageType, localMountPoint: string, remoteMountPoint: string,
-                nfsServer: string, exportedDirectory: string, localMounted: LocalMountedType) {
-        this.storageType = storageType;
-        this.localMountPoint = localMountPoint;
-        this.remoteMountPoint = remoteMountPoint;
-        this.nfsServer = nfsServer;
-        this.exportedDirectory = exportedDirectory;
-        this.localMounted = localMounted;
-    }
-}
-
 export class NFSSharedStorageService extends SharedStorageService {
     private log: Logger;
     private internalStorageService: MountedStorageService;
     private experimentId: string;
+    private localMounted?: string;
 
     private storageType?: SharedStorageType;
     private nfsServer?: string;
@@ -74,25 +55,23 @@ export class NFSSharedStorageService extends SharedStorageService {
         this.experimentId = getExperimentId();
     }
 
-    public async config(key: string, value: string): Promise<void> {
-        if (key === TrialConfigMetadataKey.SHARED_STORAGE_CONFIG) {
-            const nfsConfig = <NFSSharedStorageConfig>JSON.parse(value);
-            this.localMountPoint = nfsConfig.localMountPoint;
-            this.remoteMountPoint = nfsConfig.remoteMountPoint;
+    public async config(nfsConfig: NfsConfig): Promise<void> {
+        this.localMountPoint = nfsConfig.localMountPoint;
+        this.remoteMountPoint = nfsConfig.remoteMountPoint;
 
-            this.storageType = nfsConfig.storageType;
-            this.nfsServer = nfsConfig.nfsServer;
-            this.exportedDirectory = nfsConfig.exportedDirectory;
-            if (nfsConfig.localMounted === 'nnimount') {
-                await this.helpLocalMount();
-            } else if (nfsConfig.localMounted === 'nomount') {
-                const errorMessage = `${this.storageType} Shared Storage:  ${this.storageType} not Support 'nomount'.`;
-                this.log.error(errorMessage);
-                return Promise.reject(errorMessage);
-            }
-
-            this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
+        this.storageType = nfsConfig.storageType;
+        this.nfsServer = nfsConfig.nfsServer;
+        this.exportedDirectory = nfsConfig.exportedDirectory;
+        this.localMounted = nfsConfig.localMounted;
+        if (this.localMounted === 'nnimount') {
+            await this.helpLocalMount();
+        } else if (this.localMounted === 'nomount') {
+            const errorMessage = `${this.storageType} Shared Storage:  ${this.storageType} not Support 'nomount'.`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
         }
+
+        this.internalStorageService.initialize(this.localMountPoint, path.join(this.localMountPoint, 'nni', this.experimentId));
         return Promise.resolve();
     }
 
@@ -116,6 +95,15 @@ export class NFSSharedStorageService extends SharedStorageService {
     public get remoteMountCommand(): string {
         if (this.remoteMountPoint) {
             return this.getCommand(this.remoteMountPoint);
+        } else {
+            this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
+            return '';
+        }
+    }
+
+    public get remoteUmountCommand(): string {
+        if (this.remoteMountPoint) {
+            return `sudo umount -f -l ${this.remoteMountPoint}`;
         } else {
             this.log.error(`${this.storageType} Shared Storage: remoteMountPoint is not initialized.`);
             return '';
@@ -155,6 +143,23 @@ export class NFSSharedStorageService extends SharedStorageService {
             return Promise.reject(errorMessage);
         }
 
+        return Promise.resolve();
+    }
+
+    public async cleanUp(): Promise<void> {
+        if (this.localMounted !== 'nnimount') {
+            return Promise.resolve();
+        }
+        try {
+            const result = await cpp.exec(`sudo umount -f -l ${this.localMountPoint}`);
+            if (result.stderr) {
+                throw new Error(result.stderr);
+            }
+        } catch (error) {
+            const errorMessage: string = `${this.storageType} Shared Storage: Umount ${this.localMountPoint} failed, error is ${error}`;
+            this.log.error(errorMessage);
+            return Promise.reject(errorMessage);
+        }
         return Promise.resolve();
     }
 }

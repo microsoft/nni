@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from abc import ABC, abstractmethod, abstractclassmethod
-from typing import Any, NewType, List, Union
+from typing import Any, Iterable, NewType, List, Union
 
 from ..graph import Model, MetricData
 
@@ -105,12 +105,28 @@ class AbstractExecutionEngine(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def list_models(self) -> Iterable[Model]:
+        """
+        Get all models in submitted.
+
+        Execution engine should store a copy of models that have been submitted and return a list of copies in this method.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def query_available_resource(self) -> Union[List[WorkerInfo], int]:
         """
         Returns information of all idle workers.
         If no details are available, this may returns a list of "empty" objects, reporting the number of idle workers.
 
         Could be left unimplemented for first iteration.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def budget_exhausted(self) -> bool:
+        """
+        Check whether user configured max trial number or max execution duration has been reached
         """
         raise NotImplementedError
 

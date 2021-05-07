@@ -17,30 +17,37 @@ The ``dict``\ s in the ``list`` are applied one by one, that is, the configurati
 
 There are different keys in a ``dict``. Some of them are common keys supported by all the compression algorithms:
 
-* **op_types**\ : This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting.
+* **op_types**\ : This is to specify what types of operations to be compressed. 'default' means following the algorithm's default setting. All suported module types are defined in :githublink:`default_layers.py <nni/compression/pytorch/default_layers.py>` for pytorch.
 * **op_names**\ : This is to specify by name what operations to be compressed. If this field is omitted, operations will not be filtered by it.
 * **exclude**\ : Default is False. If this field is True, it means the operations with specified types and names will be excluded from the compression.
 
 Some other keys are often specific to a certain algorithm, users can refer to `pruning algorithms <./Pruner.rst>`__ and `quantization algorithms <./Quantizer.rst>`__ for the keys allowed by each algorithm.
 
-A simple example of configuration is shown below:
+To prune all ``Conv2d`` layers with the sparsity of 0.6, the configuration can be written as:
 
 .. code-block:: python
 
-   [
-       {
-           'sparsity': 0.8,
-           'op_types': ['default']
-       },
-       {
-           'sparsity': 0.6,
-           'op_names': ['op_name1', 'op_name2']
-       },
-       {
-           'exclude': True,
-           'op_names': ['op_name3']
-       }
-   ]
+   [{
+    'sparsity': 0.6,
+    'op_types': ['Conv2d']
+   }]
+
+To control the sparsity of specific layers, the configuration can be written as:
+
+.. code-block:: python
+
+   [{
+      'sparsity': 0.8,
+      'op_types': ['default']
+   }, 
+   {
+      'sparsity': 0.6,
+      'op_names': ['op_name1', 'op_name2']
+   }, 
+   {
+      'exclude': True,
+      'op_names': ['op_name3']
+   }]
 
 It means following the algorithm's default setting for compressed operations with sparsity 0.8, but for ``op_name1`` and ``op_name2`` use sparsity 0.6, and do not compress ``op_name3``.
 
@@ -62,10 +69,10 @@ bits length of quantization, key is the quantization type, value is the quantiza
 .. code-block:: bash
 
    {
-       quant_bits: {
-           'weight': 8,
-           'output': 4,
-           },
+      quant_bits: {
+         'weight': 8,
+         'output': 4,
+         },
    }
 
 when the value is int type, all quantization types share same bits length. eg. 
@@ -73,7 +80,7 @@ when the value is int type, all quantization types share same bits length. eg.
 .. code-block:: bash
 
    {
-       quant_bits: 8, # weight or output quantization are all 8 bits
+      quant_bits: 8, # weight or output quantization are all 8 bits
    }
 
 The following example shows a more complete ``config_list``\ , it uses ``op_names`` (or ``op_types``\ ) to specify the target layers along with the quantization bits for those layers.
@@ -81,25 +88,26 @@ The following example shows a more complete ``config_list``\ , it uses ``op_name
 .. code-block:: bash
 
    config_list = [{
-           'quant_types': ['weight'],        
-           'quant_bits': 8, 
-           'op_names': ['conv1']
-       }, {
-           'quant_types': ['weight'],
-           'quant_bits': 4,
-           'quant_start_step': 0,
-           'op_names': ['conv2']
-       }, {
-           'quant_types': ['weight'],
-           'quant_bits': 3,
-           'op_names': ['fc1']
-           },
-          {
-           'quant_types': ['weight'],
-           'quant_bits': 2,
-           'op_names': ['fc2']
-           }
-   ]
+      'quant_types': ['weight'],        
+      'quant_bits': 8, 
+      'op_names': ['conv1']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 4,
+      'quant_start_step': 0,
+      'op_names': ['conv2']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 3,
+      'op_names': ['fc1']
+   }, 
+   {
+      'quant_types': ['weight'],
+      'quant_bits': 2,
+      'op_names': ['fc2']
+   }]
 
 In this example, 'op_names' is the name of layer and four layers will be quantized to different quant_bits.
 
