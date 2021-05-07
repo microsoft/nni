@@ -100,7 +100,7 @@ class SlimPrunerMasker(WeightMasker):
 
         assert weight is not None
         if wrapper.masks.get(weight_name) is not None:
-            weight *= wrapper.masks[weight_variable.name]
+            weight *= wrapper.masks[weight_name]
 
         filters = weight.shape[0]
         num_prune = int(filters * sparsity)
@@ -113,9 +113,3 @@ class SlimPrunerMasker(WeightMasker):
         if bias_name:
             masks[bias_name] = mask
         return masks
-
-
-MASKER_DICT = {
-    'level': LevelPrunerMasker,
-    'slim': SlimPrunerMasker,
-}
