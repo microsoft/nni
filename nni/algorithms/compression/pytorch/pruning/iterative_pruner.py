@@ -121,10 +121,14 @@ class ActivationAPoZRankFilterPruner(_StructuredFilterPruner):
             - op_types : Only Conv2d is supported in ActivationAPoZRankFilterPruner.
     optimizer: torch.optim.Optimizer
             Optimizer used to train model
-    activation: str
-        The activation type.
+    trainer: function
+        Function used to train the model.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch, callback` as function arguments.
     training_epochs: int
         The number of epochs to statistic the activation.
+    activation: str
+        The activation type.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -160,6 +164,10 @@ class ActivationMeanRankFilterPruner(_StructuredFilterPruner):
             - op_types : Only Conv2d is supported in ActivationMeanRankFilterPruner.
     optimizer: torch.optim.Optimizer
             Optimizer used to train model.
+    trainer: function
+            Function used to train the model.
+            Users should write this function as a normal function to train the Pytorch model
+            and include `model, optimizer, criterion, epoch, callback` as function arguments.
     activation: str
         The activation type.
     training_epochs: int

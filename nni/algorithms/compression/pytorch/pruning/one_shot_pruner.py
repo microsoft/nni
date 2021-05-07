@@ -22,7 +22,7 @@ class OneshotPruner(Pruner):
     Prune model to an exact pruning level for one time.
     """
 
-    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None, **algo_kwargs):
+    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None, trainer=None, criterion=None, **algo_kwargs):
         """
         Parameters
         ----------
@@ -34,11 +34,17 @@ class OneshotPruner(Pruner):
             algorithms being used to prune model
         optimizer: torch.optim.Optimizer
             Optimizer used to train model
+        trainer: function
+            Function used to train the model.
+            Users should write this function as a normal function to train the Pytorch model
+            and include `model, optimizer, criterion, epoch, callback` as function arguments.
+        criterion: function
+            Function used to calculate the loss between the target and the output.
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
 
-        super().__init__(model, config_list, optimizer)
+        super().__init__(model, config_list, optimizer, trainer, criterion)
         self.set_wrappers_attribute("if_calculated", False)
         self.training_aware = False
         self.masker = MASKER_DICT[pruning_algorithm](
