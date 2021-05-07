@@ -28,7 +28,7 @@
            # mask = ...
            return {'weight_mask': mask}
 
-参考 NNI 提供的 :githublink:`权重掩码 <nni/algorithms/compression/pytorch/pruning/structured_pruning.py>` 来实现自己的权重掩码。
+参考 NNI 提供的 :githublink:`权重掩码 <nni/algorithms/compression/pytorch/pruning/structured_pruning_maskerpy>` 来实现自己的权重掩码。
 
 基础的 ``Pruner`` 如下所示：
 

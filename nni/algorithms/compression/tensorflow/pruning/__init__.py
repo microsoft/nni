@@ -1,1 +1,1 @@
-from .one_shot import *
+from .one_shot_pruner import *

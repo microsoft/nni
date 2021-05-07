@@ -100,7 +100,7 @@ class AutoCompressPruner(Pruner):
         PATH to store temporary experiment data.
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, dummy_input,
+    def __init__(self, model, config_list, trainer, criterion, evaluator, dummy_input,
                  num_iterations=3, optimize_mode='maximize', base_algo='l1',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
@@ -112,6 +112,7 @@ class AutoCompressPruner(Pruner):
         self._base_algo = base_algo
 
         self._trainer = trainer
+        self._criterion = criterion
         self._evaluator = evaluator
         self._dummy_input = dummy_input
         self._num_iterations = num_iterations
@@ -204,6 +205,7 @@ class AutoCompressPruner(Pruner):
             ADMMpruner = ADMMPruner(
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=config_list,
+                criterion=self._criterion,
                 trainer=self._trainer,
                 num_iterations=self._admm_num_iterations,
                 training_epochs=self._admm_training_epochs,
@@ -219,7 +221,8 @@ class AutoCompressPruner(Pruner):
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 
             masks_file = os.path.join(self._experiment_data_dir, 'mask.pth')
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = next(self._model_to_prune.parameters()).device
 
             _logger.info('Speeding up models...')
             m_speedup = ModelSpeedup(self._model_to_prune, self._dummy_input, masks_file, device)

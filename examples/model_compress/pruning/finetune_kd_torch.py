@@ -20,8 +20,11 @@ from nni.compression.pytorch import ModelSpeedup
 from torch.optim.lr_scheduler import MultiStepLR, StepLR
 from torchvision import datasets, transforms
 from basic_pruners_torch import get_data
-from models.cifar10.vgg import VGG
-from models.mnist.lenet import LeNet
+
+import sys
+sys.path.append('../models')
+from cifar10.vgg import VGG
+from mnist.lenet import LeNet
 
 class DistillKL(nn.Module):
     """Distilling the Knowledge in a Neural Network"""

@@ -31,7 +31,6 @@ class VGG_Cifar10(nn.Module):
             nn.BatchNorm2d(256, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),
 
-
             nn.Conv2d(256, 512, kernel_size=3, padding=1, bias=False),
             nn.BatchNorm2d(512, eps=1e-4, momentum=0.1),
             nn.Hardtanh(inplace=True),

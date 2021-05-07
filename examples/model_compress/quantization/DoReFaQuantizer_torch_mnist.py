@@ -3,27 +3,9 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.algorithms.compression.pytorch.quantization import DoReFaQuantizer
 
-
-class Mnist(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
-        self.relu1 = torch.nn.ReLU6()
-        self.relu2 = torch.nn.ReLU6()
-        self.relu3 = torch.nn.ReLU6()
-
-    def forward(self, x):
-        x = self.relu1(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = self.relu2(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
-        x = self.relu3(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+import sys
+sys.path.append('../models')
+from mnist.naive import NaiveModel
 
 
 def train(model, quantizer, device, train_loader, optimizer):
@@ -66,7 +48,7 @@ def main():
         datasets.MNIST('data', train=False, transform=trans),
         batch_size=1000, shuffle=True)
 
-    model = Mnist()
+    model = NaiveModel()
     model = model.to(device)
     configure_list = [{
         'quant_types': ['weight'],

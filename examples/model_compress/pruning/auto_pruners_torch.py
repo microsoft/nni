@@ -13,14 +13,16 @@ import torch
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
-from models.mnist.lenet import LeNet
-from models.cifar10.vgg import VGG
-from models.cifar10.resnet import ResNet18, ResNet50
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
+import sys
+sys.path.append('../models')
+from mnist.lenet import LeNet
+from cifar10.vgg import VGG
+from cifar10.resnet import ResNet18, ResNet50
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
     '''

@@ -152,7 +152,8 @@ class CompressorTestCase(TestCase):
         config_list = [{'sparsity': 0.2, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(-w).float()
-        pruner = torch_pruner.SlimPruner(model, config_list)
+        pruner = torch_pruner.SlimPruner(model, config_list, optimizer=None, trainer=None, criterion=None)
+        pruner._get_threshold()
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -165,7 +166,8 @@ class CompressorTestCase(TestCase):
         config_list = [{'sparsity': 0.6, 'op_types': ['BatchNorm2d']}]
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(w).float()
-        pruner = torch_pruner.SlimPruner(model, config_list)
+        pruner = torch_pruner.SlimPruner(model, config_list, optimizer=None, trainer=None, criterion=None)
+        pruner._get_threshold()
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -202,7 +204,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, statistics_batch_num=1)
+        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, training_epochs=1)
         
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
         model.conv1.module.weight.data = torch.tensor(w1).float()
@@ -353,7 +355,13 @@ class CompressorTestCase(TestCase):
         for pruner_class in pruner_classes:
             for config_list in bad_configs:
                 try:
-                    pruner_class(model, config_list, optimizer)
+                    kwargs = {}
+                    if pruner_class in (torch_pruner.SlimPruner, torch_pruner.AGPPruner, torch_pruner.ActivationMeanRankFilterPruner, torch_pruner.ActivationAPoZRankFilterPruner):
+                        kwargs = {'optimizer': None, 'trainer': None, 'criterion': None}
+
+                    print('kwargs', kwargs)
+                    pruner_class(model, config_list, **kwargs)      
+
                     print(config_list)
                     assert False, 'Validation error should be raised for bad configuration'
                 except schema.SchemaError:

@@ -5,8 +5,12 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torchvision import datasets, transforms
-from models.cifar10.vgg import VGG
-from models.mnist.lenet import LeNet
+
+import sys
+sys.path.append('../models')
+from cifar10.vgg import VGG
+from mnist.lenet import LeNet
+
 from nni.compression.pytorch import apply_compression_results, ModelSpeedup
 
 torch.manual_seed(0)

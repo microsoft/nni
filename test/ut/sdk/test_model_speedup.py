@@ -17,7 +17,7 @@ from unittest import TestCase, main
 from nni.compression.pytorch import ModelSpeedup, apply_compression_results
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
-from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
+from nni.algorithms.compression.pytorch.pruning.one_shot_pruner import _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
