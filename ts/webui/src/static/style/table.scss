@@ -59,3 +59,22 @@
     max-height: 335px;
     overflow-y: auto;
 }
+
+$checkboxwidth: 17px;
+
+.detail-check {
+    .ms-Checkbox-checkbox {
+        width: $checkboxwidth;
+        height: $checkboxwidth;
+        border-radius: 50%;
+        border: none;
+
+        &:hover {
+            border: 1px solid grey;
+        }
+
+        i {
+            width: 12px;
+        }
+    }
+}

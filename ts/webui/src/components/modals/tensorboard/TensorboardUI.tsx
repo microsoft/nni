@@ -9,7 +9,7 @@ import TensorboardDialog from './TensorboardDialog';
 
 function TensorboardUI(props): any {
     let refreshTensorboard = 0;
-    const { selectedRowIds } = props;
+    const { selectedRowIds, changeSelectTrialIds } = props;
     const [queryTensorboardList, setQueryTensorboardList] = useState([]);
     const [isReaptedStartTensorboard, setReaptedTensorboard] = useState(false);
     const [tensorboardPanelVisible, setTensorboardPanelVisible] = useState(false);
@@ -130,6 +130,7 @@ function TensorboardUI(props): any {
                     item={selectedTensorboard}
                     onHideDialog={(): void => {
                         setTensorboardPanelVisible(false);
+                        changeSelectTrialIds();
                     }}
                 />
             )}
@@ -138,7 +139,8 @@ function TensorboardUI(props): any {
 }
 
 TensorboardUI.propTypes = {
-    selectedRowIds: PropTypes.array
+    selectedRowIds: PropTypes.array,
+    changeSelectTrialIds: PropTypes.func
 };
 
 export default TensorboardUI;
