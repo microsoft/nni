@@ -62,21 +62,19 @@
 
 $checkboxwidth: 17px;
 
-.detail-check{
-
-    .ms-Checkbox-checkbox{
+.detail-check {
+    .ms-Checkbox-checkbox {
         width: $checkboxwidth;
         height: $checkboxwidth;
         border-radius: 50%;
         border: none;
 
-        &:hover{
+        &:hover {
             border: 1px solid grey;
         }
 
-        i{
+        i {
             width: 12px;
         }
     }
-
 }
