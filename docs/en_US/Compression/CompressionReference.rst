@@ -34,7 +34,7 @@ Weight Masker
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.weight_masker.WeightMasker
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning_maskerStructuredWeightMasker
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning_masker.StructuredWeightMasker
     :members:
 
 

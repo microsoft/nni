@@ -335,7 +335,7 @@ class Pruner(Compressor):
                     break
             self.bound_model.train(training)
             self._get_threshold()
-            
+
         self.update_mask()
         return self.bound_model
 
