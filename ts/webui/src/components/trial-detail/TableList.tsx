@@ -11,7 +11,6 @@ import {
     TooltipHost,
     DirectionalHint,
     Checkbox
-    // ICheckboxProps
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
@@ -95,7 +94,6 @@ interface TableListState {
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
-    // private _selection: Selection;
     private _expandedTrialIds: Set<string>;
 
     constructor(props: TableListProps) {
@@ -118,14 +116,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true }
         };
-
-        // this._selection = new Selection({
-        //     onSelectionChanged: (): void => {
-        //         this.setState({
-        //             selectedRowIds: this._selection.getSelection().map(s => (s as any).id)
-        //         });
-        //     }
-        // });
 
         this._expandedTrialIds = new Set<string>();
     }
@@ -250,8 +240,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
     };
 
     private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
-        // extra column, for a icon to expand the trial details panel
         const columns: IColumn[] = [
+            // select trial function
             {
                 name: '',
                 key: '_selected',
@@ -269,6 +259,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     />
                 )
             },
+            // extra column, for a icon to expand the trial details panel
             {
                 key: '_expand',
                 name: '',
