@@ -88,7 +88,7 @@ def _init_logger_dispatcher() -> None:
 
 def _init_logger_trial() -> None:
     log_path = _prepare_log_dir(trial_env_vars.NNI_OUTPUT_DIR) / 'trial.log'
-    log_file = open(log_path, 'w')
+    log_file = open(log_path, 'a')
     _register_handler(StreamHandler(log_file), logging.INFO)
 
     if trial_env_vars.NNI_PLATFORM == 'local':
