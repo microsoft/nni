@@ -14,5 +14,6 @@ One-shot NAS algorithms leverage weight sharing among models in neural architect
     SPOS <SPOS>
     CDARTS <CDARTS>
     ProxylessNAS <Proxylessnas>
+    FBNet <FBNet>
     TextNAS <TextNAS>
     Cream <Cream>
