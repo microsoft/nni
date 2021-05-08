@@ -28,7 +28,6 @@ nnictl support commands:
 * `nnictl config <#config>`__
 * `nnictl log <#log>`__
 * `nnictl webui <#webui>`__
-* `nnictl tensorboard <#tensorboard>`__
 * `nnictl algo <#algo>`__
 * `nnictl ss_gen <#ss_gen>`__
 * `nnictl --version <#version>`__
@@ -1310,97 +1309,6 @@ Manage webui
      - 
      - Experiment ID
 
-
-:raw-html:`<a name="tensorboard"></a>`
-
-Manage tensorboard
-^^^^^^^^^^^^^^^^^^
-
-
-* 
-  **nnictl tensorboard start**
-
-
-  * 
-    Description
-
-    Start the tensorboard process.
-
-  * 
-    Usage
-
-    .. code-block:: bash
-
-       nnictl tensorboard start
-
-  * 
-    Options
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name, shorthand
-     - Required
-     - Default
-     - Description
-   * - id
-     - False
-     - 
-     - ID of the experiment you want to set
-   * - --trial_id, -T
-     - False
-     - 
-     - ID of the trial
-   * - --port
-     - False
-     - 6006
-     - The port of the tensorboard process
-
-
-
-* 
-  Detail
-
-
-  #. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.
-  #. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.
-  #. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-  #. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-  #. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.
-
-
-* 
-  **nnictl tensorboard stop**
-
-
-  * 
-    Description
-
-    Stop all of the tensorboard process.
-
-  * 
-    Usage
-
-    .. code-block:: bash
-
-       nnictl tensorboard stop
-
-  * 
-    Options
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name, shorthand
-     - Required
-     - Default
-     - Description
-   * - id
-     - False
-     - 
-     - ID of the experiment you want to set
 
 
 :raw-html:`<a name="algo"></a>`
