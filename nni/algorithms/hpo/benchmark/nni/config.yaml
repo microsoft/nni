@@ -1,0 +1,33 @@
+# put this file in custom input dir or in ~/.config/automlbenchmark directory
+# in order to have a custom setup, allowing to add custom frameworks definitions (in our case, creating a benchmark for various H2O versions)
+---
+project_repository: https://github.com/openml/automlbenchmark
+
+input_dir: '{user}/data'   # change the default input directory (where data files are loaded and/or downloaded).
+
+frameworks:
+  definition_file:  # this allows to add custom framework definitions (in {user}/frameworks.yaml) on top of the default ones.
+    - '{root}/resources/frameworks.yaml'
+    - '{user}/frameworks.yaml'
+
+benchmarks:
+  definition_dir:  # this allows to add custom benchmark definitions (under {user}/benchmarks) to the default ones.
+    - '{user}/benchmarks'
+    - '{root}/resources/benchmarks'
+  constraints_file: # this allows to add custom constraint definitions (in {user}/constraints.yaml) on top of the default ones.
+    - '{root}/resources/constraints.yaml'
+    - '{user}/constraints.yaml'
+
+aws:
+  resource_files:  # this allows to automatically upload custom config + frameworks to the running instance (benchmark files are always uploaded).
+    - '{user}/config.yaml'
+    - '{user}/frameworks.yaml'
+    - '{user}/constraints.yaml'
+    - '{user}/benchmarks'
+    - '{user}/extensions'
+
+  ec2:
+    instance_type:
+      series: t3
+  use_docker: false  # you can decide to always use the prebuilt docker images on AWS.
+
