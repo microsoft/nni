@@ -23,6 +23,7 @@ pids
 *.pid
 *.seed
 *.pid.lock
+/nni/algorithms/hpo/benchmark/nni/data
 
 # Build package
 dist/
