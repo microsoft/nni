@@ -10,7 +10,7 @@ import * as component from '../common/component';
 import { DataStore, MetricDataRecord, MetricType, TrialJobInfo } from '../common/datastore';
 import { NNIError } from '../common/errors';
 import { getExperimentId, getDispatcherPipe } from '../common/experimentStartupInfo';
-import { getLogger, Logger } from '../common/log';
+import { Logger, getLogger, stopLogging } from '../common/log';
 import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
@@ -362,6 +362,7 @@ class NNIManager implements Manager {
             hasError = true;
             this.log.error(`${err.stack}`);
         } finally {
+            stopLogging();
             process.exit(hasError ? 1 : 0);
         }
     }

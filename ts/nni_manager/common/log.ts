@@ -111,7 +111,7 @@ export function getLogger(name: string = 'root'): Logger {
 
 /* management functions */
 
-export function setLevel(levelName: string): void {
+export function setLogLevel(levelName: string): void {
     if (levelName) {
         const level = module.exports[levelName.toUpperCase()];
         if (typeof level === 'number') {
@@ -123,7 +123,7 @@ export function setLevel(levelName: string): void {
     }
 }
 
-export function start(logPath: string): void {
+export function startLogging(logPath: string): void {
     logFile = fs.createWriteStream(logPath, {
         flags: 'a+',
         encoding: 'utf8',
@@ -131,7 +131,7 @@ export function start(logPath: string): void {
     });
 }
 
-export function stop(): void {
+export function stopLogging(): void {
     if (logFile !== null) {
         logFile.end();
         logFile = null;

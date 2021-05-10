@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
-import * as logging from './common/log';
+import { getLogger, setLogLevel, startLogging } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
 import { TensorboardManager } from './common/tensorboardManager';
@@ -49,12 +49,12 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
     if (!foreground) {
         if (logFileName === undefined) {
-            logging.start(DEFAULT_LOGFILE);
+            startLogging(DEFAULT_LOGFILE);
         } else {
-            logging.start(logFileName);
+            startLogging(logFileName);
         }
         // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        logging.setLevel(logLevel);
+        setLogLevel(logLevel);
     }
     const ds: DataStore = component.get(DataStore);
 
@@ -130,11 +130,9 @@ mkDirP(getLogDir())
             await initContainer(foreground, mode);
             const restServer: NNIRestServer = component.get(NNIRestServer);
             await restServer.start();
-            const log = logging.getLogger();
-            log.info(`Rest server listening on: ${restServer.endPoint}`);
+            getLogger('main').info(`Rest server listening on: ${restServer.endPoint}`);
         } catch (err) {
-            const log = logging.getLogger();
-            log.error(`${err.stack}`);
+            getLogger('main').error(`${err.stack}`);
             throw err;
         }
     })
