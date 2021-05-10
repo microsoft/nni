@@ -5,10 +5,8 @@
 
 import * as fs from 'fs';
 import { Writable } from 'stream';
-import { WritableStreamBuffer } from 'stream-buffers';
-import { format } from 'util';
-import * as component from '../common/component';
-import { getExperimentStartupInfo, isReadonly } from './experimentStartupInfo';
+
+/* log level constants */
 
 export const DEBUG = 10;
 export const INFO = 20;
@@ -19,33 +17,51 @@ export const CRITICAL = 50;
 export const TRACE = 1;
 export const FATAL = 50;
 
-const levelNames: Record<number, string> = {
-    CRITICAL: 'CRITICAL',
-    ERROR: 'ERROR',
-    WARNING: 'WARNING',
-    INFO: 'INFO',
-    DEBUG: 'DEBUG',
-    TRACE: 'TRACE',
-}
+const levelNames = new Map<number, string>([
+    [CRITICAL, 'CRITICAL'],
+    [ERROR, 'ERROR'],
+    [WARNING, 'WARNING'],
+    [INFO, 'INFO'],
+    [DEBUG, 'DEBUG'],
+    [TRACE, 'TRACE'],
+]);
+
+/* global states */
 
 let logFile: Writable | null = null;
+let logLevel: number = 0;
+const loggers = new Map<string, Logger>();
 
-export function setLevel(level: number | string) {
+/* management functions */
 
+export function setLevel(levelName: string): void {
+    if (levelName) {
+        const level = module.exports[levelName.toUpperCase()];
+        if (typeof level === 'number') {
+            logLevel = level;
+        } else {
+            console.log('[ERROR] Bad log level:', levelName);
+            getLogger('logging').error('Bad log level:', levelName);
+        }
+    }
 }
 
-export function start(logFileName: string) {
-    logFile = fs.createWriteStream(logFile, {
+export function start(logPath: string): void {
+    logFile = fs.createWriteStream(logPath, {
         flags: 'a+',
         encoding: 'utf8',
         autoClose: true
     });
 }
 
-export function stop() {
-    logFile.end();
-    logFile = null;
+export function stop(): void {
+    if (logFile !== null) {
+        logFile.end();
+        logFile = null;
+    }
 }
+
+/* major api */
 
 export class Logger {
     private name: string;
@@ -87,11 +103,11 @@ export class Logger {
             return;
         }
 
-        // time.toLocaleString('sv') trick does not work for Windows
-        const time1 = new Date(new Date().toLocaleString() + ' UTC').toISOString();
-        const time = time1.slice(0, 10) + ' ' + time1.slice(11, 19);
+        // `time.toLocaleString('sv')` trick does not work for Windows
+        const isoTime = new Date(new Date().toLocaleString() + ' UTC').toISOString();
+        const time = isoTime.slice(0, 10) + ' ' + isoTime.slice(11, 19);
 
-        const levelName: string = levelNames[level] === undefined ? level.toString() : levelNames[level];
+        const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
         const words = [];
         for (const arg of args) {
@@ -112,8 +128,6 @@ export class Logger {
         logFile.write(record);
     }
 }
-
-const loggers = new Map<string, Logger>();
 
 export function getLogger(name: string = 'root'): Logger {
     let logger = loggers.get(name);

@@ -43,7 +43,7 @@ def print_log_content(config_file_name):
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
 
-def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level='info'):
     '''Run nni manager process'''
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
@@ -367,8 +367,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     if config_version == 1:
         log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
     else:
-        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
-    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
+        log_dir = experiment_config.get('experimentWorkingDirectory', NNI_HOME_DIR)
+    log_level = experiment_config.get('logLevel', 'info')
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
     if mode != 'view':
@@ -383,8 +383,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     else:
         platform = experiment_config['trainingService']['platform']
 
-    rest_process, start_time = start_rest_server(args.port, platform, \
-                                                 mode, experiment_id, foreground, log_dir, log_level)
+    rest_process, start_time = start_rest_server(args.port, platform, mode, experiment_id, foreground, log_dir, log_level)
     # save experiment information
     Experiments().add_experiment(experiment_id, args.port, start_time,
                                  platform,

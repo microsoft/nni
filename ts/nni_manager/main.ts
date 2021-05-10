@@ -53,6 +53,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         } else {
             logging.start(logFileName);
         }
+        logging.setLevel(logLevel);
     }
     const ds: DataStore = component.get(DataStore);
 
@@ -109,11 +110,6 @@ if (logDir.length > 0) {
 }
 
 const logLevel: string = parseArg(['--log_level', '-ll']);
-if (logLevel.length > 0 && (logging as any)[logLevel] === undefined) {
-    console.log(`FATAL: invalid log_level: ${logLevel}`);
-} else {
-    logging.setLevel(logLevel);
-}
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
 if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
