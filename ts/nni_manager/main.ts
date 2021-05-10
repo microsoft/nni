@@ -53,6 +53,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         } else {
             logging.start(logFileName);
         }
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         logging.setLevel(logLevel);
     }
     const ds: DataStore = component.get(DataStore);

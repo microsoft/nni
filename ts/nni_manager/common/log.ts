@@ -26,40 +26,11 @@ const levelNames = new Map<number, string>([
     [TRACE, 'TRACE'],
 ]);
 
-/* global states */
+/* global_ states */
 
 let logFile: Writable | null = null;
 let logLevel: number = 0;
 const loggers = new Map<string, Logger>();
-
-/* management functions */
-
-export function setLevel(levelName: string): void {
-    if (levelName) {
-        const level = module.exports[levelName.toUpperCase()];
-        if (typeof level === 'number') {
-            logLevel = level;
-        } else {
-            console.log('[ERROR] Bad log level:', levelName);
-            getLogger('logging').error('Bad log level:', levelName);
-        }
-    }
-}
-
-export function start(logPath: string): void {
-    logFile = fs.createWriteStream(logPath, {
-        flags: 'a+',
-        encoding: 'utf8',
-        autoClose: true
-    });
-}
-
-export function stop(): void {
-    if (logFile !== null) {
-        logFile.end();
-        logFile = null;
-    }
-}
 
 /* major api */
 
@@ -136,4 +107,33 @@ export function getLogger(name: string = 'root'): Logger {
         loggers.set(name, logger);
     }
     return logger;
+}
+
+/* management functions */
+
+export function setLevel(levelName: string): void {
+    if (levelName) {
+        const level = module.exports[levelName.toUpperCase()];
+        if (typeof level === 'number') {
+            logLevel = level;
+        } else {
+            console.log('[ERROR] Bad log level:', levelName);
+            getLogger('logging').error('Bad log level:', levelName);
+        }
+    }
+}
+
+export function start(logPath: string): void {
+    logFile = fs.createWriteStream(logPath, {
+        flags: 'a+',
+        encoding: 'utf8',
+        autoClose: true
+    });
+}
+
+export function stop(): void {
+    if (logFile !== null) {
+        logFile.end();
+        logFile = null;
+    }
 }
