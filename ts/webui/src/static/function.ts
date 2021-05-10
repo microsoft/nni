@@ -4,6 +4,17 @@ import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
 import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
+function getPrefix(): string | undefined {
+    const pathName = window.location.pathname;
+    let newPathName = pathName;
+
+    if (pathName.endsWith('/oview' || '/detail' || '/experiment')) {
+        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
+    }
+
+    return newPathName === '' ? undefined : newPathName;
+}
+
 async function requestAxios(url: string): Promise<any> {
     const response = await axios.get(url);
     if (response.status === 200) {
@@ -346,6 +357,7 @@ function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDe
     return tensorboardMenu;
 }
 export {
+    getPrefix,
     convertTime,
     convertDuration,
     convertTimeAsUnit,
