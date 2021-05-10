@@ -59,7 +59,7 @@ def update_ema(biased_ema, value, decay):
     float, float
     """
     biased_ema = biased_ema * decay + (1 - decay) * value
-    return biased_ema 
+    return biased_ema
 
 
 def update_quantization_param(bits, rmin, rmax):
@@ -161,14 +161,13 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('activation_bit', torch.zeros(1))
                 layer.module.register_buffer('tracked_min_activation', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_activation', torch.zeros(1))
-                
 
     def _del_simulated_attr(self, module):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
-        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input',
+                         'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -259,10 +258,8 @@ class QAT_Quantizer(Quantizer):
             return weight
 
         current_min, current_max = torch.min(input), torch.max(input)
-        module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
-                                                                    module.ema_decay)
-        module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
-                                                                    module.ema_decay)
+        module.tracked_min_input = update_ema(module.tracked_min_input, current_min, module.ema_decay)
+        module.tracked_max_input = update_ema(module.tracked_max_input, current_max, module.ema_decay)
 
         # if bias exists, quantize bias to uint32
         if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
@@ -273,7 +270,6 @@ class QAT_Quantizer(Quantizer):
             bias = self._quantize(bias_bits, module, bias)
             bias = self._dequantize(module, bias)
             wrapper.module.bias.data = bias
-
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -299,10 +295,8 @@ class QAT_Quantizer(Quantizer):
         # we dont update output quantization parameters in evaluation stage
         if wrapper.training:
             current_min, current_max = torch.min(output), torch.max(output)
-            module.tracked_min_activation = update_ema(module.tracked_min_activation, current_min,
-                                                                       module.ema_decay)
-            module.tracked_max_activation = update_ema(module.tracked_max_activation, current_max,
-                                                                       module.ema_decay)
+            module.tracked_min_activation = update_ema(module.tracked_min_activation, current_min, module.ema_decay)
+            module.tracked_max_activation = update_ema(module.tracked_max_activation, current_max, module.ema_decay)
             module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_activation, module.tracked_max_activation)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
@@ -359,7 +353,7 @@ class QAT_Quantizer(Quantizer):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
-        self.bound_model.steps +=1
+        self.bound_model.steps += 1
 
 
 class DoReFaQuantizer(Quantizer):
