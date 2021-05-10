@@ -81,14 +81,6 @@ def get_user():
     else:
         return os.environ['USER']
 
-def check_tensorboard_version():
-    try:
-        import tensorboard
-        return tensorboard.__version__
-    except:
-        print_error('import tensorboard error!')
-        exit(1)
-
 def generate_temp_dir():
     '''generate a temp folder'''
     def generate_folder_name():
