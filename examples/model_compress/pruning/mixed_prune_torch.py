@@ -1,11 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-'''
-NNI example for quick start of pruning.
-In this example, we use level pruner to prune the LeNet on MNIST.
-'''
-
 import logging
 
 import argparse
@@ -77,7 +72,7 @@ def main(args):
     transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
-        ])
+    ])
 
     dataset1 = datasets.MNIST('./data', train=True, download=True,
                               transform=transform)
@@ -129,7 +124,7 @@ def main(args):
             pruner.export_model(model_path='pruend_mnist_lenet.pt', mask_path='mask_mnist_lenet.pt')
 
 if __name__ == '__main__':
-     # Training settings
+    # Training settings
     parser = argparse.ArgumentParser(description='PyTorch MNIST Example for model comporession')
     parser.add_argument('--batch-size', type=int, default=64, metavar='N',
                         help='input batch size for training (default: 64)')
@@ -152,6 +147,5 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity', type=float, default=0.5,
                         help='target overall target sparsity')
     args = parser.parse_args()
-
 
     main(args)
