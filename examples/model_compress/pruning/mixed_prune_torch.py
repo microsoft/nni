@@ -63,8 +63,7 @@ def main(args):
     torch.manual_seed(args.seed)
     use_cuda = not args.no_cuda and torch.cuda.is_available()
 
-    # device = torch.device("cuda" if use_cuda else "cpu")
-    device = 'cpu'
+    device = torch.device("cuda" if use_cuda else "cpu")
 
     train_kwargs = {'batch_size': args.batch_size}
     test_kwargs = {'batch_size': args.test_batch_size}
@@ -105,14 +104,15 @@ def main(args):
     # create pruner
     prune_config = [{
         'sparsity': args.sparsity,
-        'op_types': ['default'],
+        'op_types': ['Conv2d'],
+        'pruning_algo': ('l1', {})
+    }, {
+        'sparsity': args.sparsity,
+        'op_types': ['Linear'],
+        'pruning_algo': ('level', {})
     }]
 
-    masker_config = {
-        'default': ('level', {})
-    }
-
-    pruner = MixedMaskerPruner(model, prune_config, masker_config, optimizer_finetune)
+    pruner = MixedMaskerPruner(model, prune_config, optimizer_finetune)
     model = pruner.compress()
 
     # fine-tuning

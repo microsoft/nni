@@ -5,46 +5,43 @@ import logging
 import torch
 
 from schema import And, Optional
+
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
-
-from nni.algorithms.compression.pytorch.pruning.constants import MASKER_DICT
 from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
-from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
-from nni.algorithms.compression.pytorch.pruning.structured_pruning import StructuredWeightMasker
-
 
 _logger = logging.getLogger(__name__)
 
-class MixedMasker(WeightMasker):
-    def __init__(self, model, pruner, maskers_config_dict):
-        self.model = model
-        self.pruner = pruner
-        self.maskers = dict()
-
-        for masker_name, masker_config in maskers_config_dict.items():
-            masker_type, masker_args = masker_config
-            assert masker_type in MASKER_DICT, 'Unsupported masker type {}.'.format(masker_type)
-            self.maskers[masker_name] = MASKER_DICT[masker_type](self.model, self.pruner, **masker_args)
-
-        if 'default' not in self.maskers:
-            self.maskers['default'] = MASKER_DICT['level'](self.model, self.pruner)
-
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
-        masker_name = 'default' if wrapper.config.get('masker_name') is None else wrapper.config['masker_name']
-        masker = self.maskers[masker_name]
-        if isinstance(masker, StructuredWeightMasker):
-            return masker.calc_mask(sparsity, wrapper, wrapper, **depen_kwargs)
-        else:
-            if not depen_kwargs:
-                _logger.warning('Submasker type {} not support dependency aware.'.format(type(masker).__name__))
-            return masker.calc_mask(sparsity, wrapper, wrapper)
-
 
 class MixedMaskerPruner(_StructuredFilterPruner):
-    def __init__(self, model, config_list, maskers_config_dict, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
+    """
+    MixedMaskerPruner support config different masker in operation level.
+    """
+
+    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None, maskers_config_dict=None):
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+            Model to be pruned
+        config_list : list
+            Supported keys:
+            - sparsity : This is to specify the sparsity operations to be compressed to.
+            - op_types : See specific pruner introduction more information.
+            - pruning_algo(Optional): A tuple of the type of masker and the args of masker, i.e. ('level', {})
+            - masker_name(Optional): If use maskers_config_dict, the value is the key in maskers_config_dict.
+        optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+        dependency_aware: bool
+            If use dependency aware mode
+        dummy_input: torch.Tensor
+            Required in dependency aware mode
+        maskers_config_dict: dict
+            Reuse pruning_algo value in config_list, key is a custom name of masker and value has the same scheme with pruning_algo in config_list. i.e. {'level_0': ('level', {})}
+        """
+        if maskers_config_dict is None:
+            config_list, maskers_config_dict = self.__convert_config_list(config_list)
         super().__init__(model, config_list, 'mixed', optimizer=optimizer, dependency_aware=dependency_aware,
-                         dummy_input=dummy_input)
-        self.masker = MixedMasker(model, self, maskers_config_dict)
+                         dummy_input=dummy_input, maskers_config_dict=maskers_config_dict)
         _logger.debug('Set MixedMasker successfully.')
 
     def validate_config(self, model, config_list):
@@ -60,7 +57,21 @@ class MixedMaskerPruner(_StructuredFilterPruner):
             'sparsity': And(float, lambda n: 0 < n < 1),
             Optional('op_types'): [str],
             Optional('op_names'): [str],
-            Optional('masker_name'): [str]
+            Optional('masker_name'): str
         }], model, _logger)
 
         schema.validate(config_list)
+
+    def __convert_config_list(self, config_list):
+        maskers_config_dict = {}
+        counter = {}
+        for config in config_list:
+            if 'pruning_algo' not in config:
+                config['masker_name'] = 'default'
+            else:
+                masker_type, params_dict = config['pruning_algo']
+                counter[masker_type] = 1 + counter.get(masker_type, 0)
+                masker_name = '{}_{}'.format(masker_type, counter[masker_type])
+                maskers_config_dict[masker_name] = config.pop('pruning_algo')
+                config['masker_name'] = masker_name
+        return config_list, maskers_config_dict

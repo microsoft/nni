@@ -3,6 +3,7 @@
 
 from .finegrained_pruning import *
 from .structured_pruning import *
+from .mixed_pruning import *
 from .one_shot import *
 from .agp import *
 from .lottery_ticket import LotteryTicketPruner
@@ -12,3 +13,4 @@ from .admm_pruner import ADMMPruner
 from .auto_compress_pruner import AutoCompressPruner
 from .sensitivity_pruner import SensitivityPruner
 from .amc import AMCPruner
+from .mixed_masker_pruner import MixedMaskerPruner

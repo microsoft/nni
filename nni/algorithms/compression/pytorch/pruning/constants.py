@@ -1,8 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-
-from . import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, \
+from . import LevelPrunerMasker, SlimPrunerMasker, L1FilterPrunerMasker, MixedPrunerMasker, \
     L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
     ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker
 
@@ -14,5 +13,6 @@ MASKER_DICT = {
     'fpgm': FPGMPrunerMasker,
     'taylorfo': TaylorFOWeightFilterPrunerMasker,
     'apoz': ActivationAPoZRankFilterPrunerMasker,
-    'mean_activation': ActivationMeanRankFilterPrunerMasker
+    'mean_activation': ActivationMeanRankFilterPrunerMasker,
+    'mixed': MixedPrunerMasker
 }
