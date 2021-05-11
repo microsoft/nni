@@ -17,15 +17,20 @@ This folder contains a benchmark tool that enables comparisons between the perfo
 
 ### Run predefined benchmarks on existing tuners
 ```bash
-./runbenchmark_nni.sh
+./runbenchmark_nni.sh \[tuner-names\]
 ```
 This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the "results.csv.parsed" file in the result folder associated with current time. To run on other predefined benchmarks, change the `benchmark` variable in `runbenchmark_nni.sh`. Some benchmarks are defined in `./nni/benchmarks`, and others are defined in `./automlbenchmark/resources/benchmarks/`.
+
+By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in \[tuner-names\], it only runs the tuners in the list. 
 
 ### Run customized benchmarks on existing tuners
 To run customized benchmarks, add a benchmark_name.yaml file in the folder `./nni/benchmarks`, and change the `benchmark` variable in `runbenchmark_nni.sh`. See `./automlbenchmark/resources/benchmarks/` for some examples of defining a custom benchmark.
 
 ### Run benchmarks on custom tuners
-To use custom tuners, first make sure that the tuner inherits from `nni.tuner.Tuner` and correctly implements the required APIs. Next, perform the following steps:
+To use custom tuners, first make sure that the tuner inherits from `nni.tuner.Tuner` and correctly implements the required APIs. For more information on implementing a custom tuner, please refer to [here](https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html). Next, perform the following steps:
 1. Install the custom tuner with command `nnictl algo register`. Check [this page](https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html) for details. 
 1. In `./nni/frameworks.yaml`, add a new framework extending the base framework NNI. Make sure that the parameter `tuner_type` corresponds to the "builtinName" of tuner installed in step 1.
-1. (Optional) Include the new framework in the last step into `runbenchmark_nni.sh`. 
+1. Run the following command:
+```bash
+./runbenchmark_nni.sh \<new tuner builtinName\>
+``` 
