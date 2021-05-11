@@ -6,7 +6,7 @@ class AutoCompressSearchSpaceGenerator:
         self.pruner_choice_list = []
         self.quantizer_choice_list = []
 
-    def add_pruner_config(self, pruner_name: str, config_list: dict, **algo_kwargs):
+    def add_pruner_config(self, pruner_name: str, config_list: list, **algo_kwargs):
         sub_search_space = {'_name': pruner_name}
         for config in config_list:
             op_types = config.pop('op_types', [])
@@ -19,7 +19,7 @@ class AutoCompressSearchSpaceGenerator:
             sub_search_space['{}::{}'.format(key_prefix, parameter_name)] = self._wrap_single_value(parameter_search_space)
         self.pruner_choice_list.append(sub_search_space)
 
-    def add_quantizer_config(self, quantizer_name: str, config_list: dict, **algo_kwargs):
+    def add_quantizer_config(self, quantizer_name: str, config_list: list, **algo_kwargs):
         sub_search_space = {'_name': quantizer_name}
         for config in config_list:
             quant_types = config.pop('quant_types', [])
@@ -33,7 +33,7 @@ class AutoCompressSearchSpaceGenerator:
             sub_search_space['{}::{}'.format(key_prefix, parameter_name)] = self._wrap_single_value(parameter_search_space)
         self.quantizer_choice_list.append(sub_search_space)
 
-    def dumps(self) -> str:
+    def dumps(self) -> dict:
         compressor_choice_value = []
         if self.pruner_choice_list:
             compressor_choice_value.append({

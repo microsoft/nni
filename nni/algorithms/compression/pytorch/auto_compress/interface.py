@@ -2,9 +2,10 @@
 # Licensed under the MIT license.
 
 from abc import ABC, abstractmethod
+from typing import Optional, Callable
+
 from torch.nn import Module
 from torch.optim import Optimizer
-from typing import Optional, Callable
 
 
 class AbstractExecutionEngine(ABC):
@@ -31,7 +32,7 @@ class AbstractBasket(ABC):
 
     @classmethod
     @abstractmethod
-    def evaluator(cls) -> Callable[Module]:
+    def evaluator(cls) -> Callable[[Module], float]:
         """
         Returns
         -------
@@ -53,7 +54,7 @@ class AbstractBasket(ABC):
 
     @classmethod
     @abstractmethod
-    def trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[Module, Optimizer]]:
+    def trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
         """
         Parameters
         ----------
@@ -71,7 +72,7 @@ class AbstractBasket(ABC):
 
     @classmethod
     @abstractmethod
-    def finetune_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[Module, Optimizer]]:
+    def finetune_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
         """
         Parameters
         ----------

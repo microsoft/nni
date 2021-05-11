@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import json_tricks
 from typing import Optional, Callable
 
 from torch.nn import Module
@@ -74,10 +73,10 @@ class AutoCompressEngine(AbstractExecutionEngine):
     def __compress_pruning_pipeline(cls, algorithm_name: str,
                                     model: Module,
                                     config_list: list,
-                                    evaluator: Callable[Module],
+                                    evaluator: Callable[[Module], float],
                                     optimizer: Optional[Optimizer],
-                                    trainer: Optional[Callable[Module]],
-                                    finetune_trainer: Optional[Callable[Module]],
+                                    trainer: Optional[Callable[[Module, Optimizer], None]],
+                                    finetune_trainer: Optional[Callable[[Module, Optimizer], None]],
                                     **compressor_parameter_dict) -> Module:
         # evaluator is for future use
         pruner = PRUNER_DICT[algorithm_name](model, config_list, optimizer, **compressor_parameter_dict)
@@ -92,10 +91,10 @@ class AutoCompressEngine(AbstractExecutionEngine):
     def __compress_quantization_pipeline(cls, algorithm_name: str,
                                          model: Module,
                                          config_list: list,
-                                         evaluator: Callable[Module],
+                                         evaluator: Callable[[Module], float],
                                          optimizer: Optional[Optimizer],
-                                         trainer: Callable[Module],
-                                         finetune_trainer: Optional[Callable[Module]],
+                                         trainer: Callable[[Module, Optimizer], None],
+                                         finetune_trainer: Optional[Callable[[Module, Optimizer], None]],
                                          **compressor_parameter_dict) -> Module:
         # evaluator is for future use
         quantizer = QUANTIZER_DICT[algorithm_name](model, config_list, optimizer, **compressor_parameter_dict)
@@ -111,10 +110,10 @@ class AutoCompressEngine(AbstractExecutionEngine):
                            algorithm_name: str,
                            model: Module,
                            config_list: list,
-                           evaluator: Callable[Module],
+                           evaluator: Callable[[Module], float],
                            optimizer: Optional[Optimizer],
-                           trainer: Optional[Callable[Module]],
-                           finetune_trainer: Optional[Callable[Module]],
+                           trainer: Optional[Callable[[Module, Optimizer], None]],
+                           finetune_trainer: Optional[Callable[[Module, Optimizer], None]],
                            **compressor_parameter_dict) -> Module:
         func_dict = {
             'pruner': cls.__compress_pruning_pipeline,
@@ -125,10 +124,9 @@ class AutoCompressEngine(AbstractExecutionEngine):
 
     @classmethod
     def trial_execute_compress(cls):
-        basket: AbstractBasket = import_('basket.Basket')
-        assert isinstance(basket, AbstractBasket)
+        basket= import_('basket.Basket')
 
-        parameter = json_tricks.loads(nni.get_next_parameter())['compressor_type']
+        parameter = nni.get_next_parameter()['compressor_type']
         compressor_type, algorithm_config = parameter['_name'], parameter['algorithm_name']
         algorithm_name = algorithm_config['_name']
         converted_config_dict = {k: v for k, v in algorithm_config.items() if k.startswith('config_list::')}
@@ -136,11 +134,11 @@ class AutoCompressEngine(AbstractExecutionEngine):
 
         config_list = cls._convert_config_list(compressor_type, converted_config_dict)
 
-        model, evaluator, optimizer = basket.model, basket.evaluator, basket.optimizer
+        model, evaluator, optimizer = basket.model(), basket.evaluator(), basket.optimizer()
         trainer = basket.trainer(compressor_type, algorithm_name)
         finetune_trainer = basket.trainer(compressor_type, algorithm_name)
 
-        compressed_model = cls._pipeline_compress(compressor_type, algorithm_name, model, config_list, evaluator,
+        compressed_model = cls._compress_pipeline(compressor_type, algorithm_name, model, config_list, evaluator,
                                                   optimizer, trainer, finetune_trainer, **parameter_dict)
 
         nni.report_final_result(evaluator(compressed_model))
