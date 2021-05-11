@@ -9,7 +9,7 @@ tuner:
   classArgs:
     optimize_mode: maximize
 trial:
-  codeDir: ../../../examples/nas/classic_nas
+  codeDir: ../../../examples/nas/legacy/classic_nas
   command: python3 mnist.py --epochs 1
   gpuNum: 0
 

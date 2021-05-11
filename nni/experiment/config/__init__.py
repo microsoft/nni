@@ -9,3 +9,4 @@ from .aml import *
 from .kubeflow import *
 from .frameworkcontroller import *
 from .adl import *
+from .shared_storage import *

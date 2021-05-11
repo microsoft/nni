@@ -36,7 +36,7 @@ Examples
 CNN Search Space
 ^^^^^^^^^^^^^^^^
 
-:githublink:`Example code <examples/nas/darts>`
+:githublink:`Example code <examples/nas/oneshot/darts>`
 
 .. code-block:: bash
 
@@ -44,7 +44,7 @@ CNN Search Space
    git clone https://github.com/Microsoft/nni.git
 
    # search the best architecture
-   cd examples/nas/darts
+   cd examples/nas/oneshot/darts
    python3 search.py
 
    # train the best architecture

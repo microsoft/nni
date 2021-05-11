@@ -56,7 +56,7 @@ class KubeflowConfig(TrainingServiceConfig):
     parameter_server: Optional[KubeflowRoleConfig] = None
 
     def __init__(self, **kwargs):
-        kwargs = util.case_insensitve(kwargs)
+        kwargs = util.case_insensitive(kwargs)
         kwargs['storage'] = util.load_config(_KubeflowStorageConfig, kwargs.get('storage'))
         kwargs['worker'] = util.load_config(KubeflowRoleConfig, kwargs.get('worker'))
         kwargs['parameterserver'] = util.load_config(KubeflowRoleConfig, kwargs.get('parameterserver'))

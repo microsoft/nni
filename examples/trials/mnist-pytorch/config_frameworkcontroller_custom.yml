@@ -1,0 +1,29 @@
+authorName: default
+experimentName: example_mnist_pytorch
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+logLevel: trace
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: frameworkcontroller
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: .
+frameworkcontrollerConfig:
+  configPath: fc_template.yml
+  storage: pvc
+  namespace: "default"
+  pvc:
+    path: "/tmp/mount"
