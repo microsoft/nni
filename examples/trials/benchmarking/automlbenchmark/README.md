@@ -26,7 +26,6 @@ To run customized benchmarks, add a benchmark_name.yaml file in the folder `./nn
 
 ### Run benchmarks on custom tuners
 To use custom tuners, first make sure that the tuner inherits from `nni.tuner.Tuner` and correctly implements the required APIs. Next, perform the following steps:
-1. Copy the implementation into the folder `./nni/extensionsions/NNI`.
-1. In `tuners.py` (under the same folder), import the custom tuner, and change the `get_tuner` function to include the new option.
-1. In `./nni/frameworks.yaml`, add a new framework extending the base framework NNI. Make sure that the parameter `tuner_type` corresponds to the name in step 2.
+1. Install the custom tuner with command `nnictl algo register`. Check [this page](https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html) for details. 
+1. In `./nni/frameworks.yaml`, add a new framework extending the base framework NNI. Make sure that the parameter `tuner_type` corresponds to the "builtinName" of tuner installed in step 1.
 1. (Optional) Include the new framework in the last step into `runbenchmark_nni.sh`. 

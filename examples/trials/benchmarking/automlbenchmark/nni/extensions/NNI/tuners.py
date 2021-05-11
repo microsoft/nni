@@ -1,58 +1,71 @@
-from amlb.benchmark import TaskConfig
+import os
+import yaml
+import importlib
 
 import nni
-
+from nni.runtime.config import get_config_file 
 from nni.utils import MetricType 
-
-from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
-from nni.algorithms.hpo.evolution_tuner import EvolutionTuner
-from nni.algorithms.hpo.smac_tuner.smac_tuner import SMACTuner
-from nni.algorithms.hpo.gp_tuner.gp_tuner import GPTuner
-from nni.algorithms.hpo.metis_tuner.metis_tuner import MetisTuner
-from nni.algorithms.hpo.hyperband_advisor import Hyperband
+from nni.tuner import Tuner
+from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.algorithms.hpo.bohb_advisor.bohb_advisor import BOHB
 from nni.algorithms.hpo.bohb_advisor.config_generator import CG_BOHB
 
+from amlb.benchmark import TaskConfig
+
+
+def get_tuner_class_dict():
+    config_file = str(get_config_file('registered_algorithms.yml'))
+    if os.path.exists(config_file):
+        with open(config_file, 'r') as f:
+            config = yaml.load(f, Loader=yaml.SafeLoader)
+    else:
+        config = defaultdict(list)
+    ret = {}
+    for t in ['tuners', 'advisors']:
+        for entry in config[t]:
+            ret[entry['builtinName']] = entry['className']
+    return ret
+
 
 def get_tuner(config: TaskConfig):
-    # Users may add their customized Tuners here 
-    if config.framework_params['tuner_type'] == 'tpe':
-        return HyperoptTuner('tpe'), 'TPE Tuner'
-
-    elif config.framework_params['tuner_type'] == 'random_search':
-        return HyperoptTuner('random_search'), 'Random Search Tuner'
-
-    elif config.framework_params['tuner_type'] == 'anneal':
-        return HyperoptTuner('anneal'), 'Annealing Tuner'
-    
-    elif config.framework_params['tuner_type'] == 'evolution':
-        return EvolutionTuner(), 'Evolution Tuner'
-
-    elif config.framework_params['tuner_type'] == 'smac':
-        return SMACTuner(), 'SMAC Tuner'
-
-    elif config.framework_params['tuner_type'] == 'gp':
-        return GPTuner(), 'GP Tuner'
-
-    elif config.framework_params['tuner_type'] == 'metis':
-        return MetisTuner(), 'Metis Tuner'
-
-    elif config.framework_params['tuner_type'] == 'hyperband':
-        if 'max_resource' in config.framework_params:
-            tuner = Hyperband(R=config.framework_params['max_resource'])
-        else:
-            tuner = Hyperband()
-        return tuner, 'Hyperband Advisor'
-    
-    elif config.framework_params['tuner_type'] == 'bohb':
-        if 'max_resource' in config.framework_params:
-            tuner = BOHB(max_budget=config.framework_params['max_resource'])     
-        else:
-            tuner = BOHB(max_budget=60)  
-        return tuner, 'BOHB Advisor'
-        
+    name2tuner = get_tuner_class_dict()
+    if config.framework_params['tuner_type'] not in name2tuner:
+        raise RuntimeError('The requested tuner type is unavailable.')
     else:
-        raise RuntimeError('The requested tuner type in framework.yaml is unavailable.')
+        module_name = name2tuner[config.framework_params['tuner_type']]
+        tuner_name = module_name.split('.')[-1]
+        module_name = '.'.join(module_name.split('.')[:-1])
+        tuner_type = getattr(importlib.import_module(module_name), tuner_name)
+
+        # special handlings for tuner initialization
+        tuner = None
+        if config.framework_params['tuner_type'] == 'TPE':
+            tuner = tuner_type('tpe')
+
+        elif config.framework_params['tuner_type'] == 'Random':
+            tuner = tuner_type('random_search')
+
+        elif config.framework_params['tuner_type'] == 'Anneal':
+            tuner = tuner_type('anneal')
+
+        elif config.framework_params['tuner_type'] == 'Hyperband':
+            if 'max_resource' in config.framework_params:
+                tuner = tuner_type(R=config.framework_params['max_resource'])
+            else:
+                tuner = tuner_type()
+
+        elif config.framework_params['tuner_type'] == 'BOHB':
+            if 'max_resource' in config.framework_params:
+                tuner = tuner_type(max_budget=config.framework_params['max_resource'])
+            else:
+                tuner = tuner_type(max_budget=60)
+
+        else:
+            tuner = tuner_type()
+
+        assert(tuner is not None)
+
+        return tuner, config.framework_params['tuner_type']
 
     
 class NNITuner:
@@ -66,9 +79,9 @@ class NNITuner:
 
         # 'tuner' or 'advisor'
         self.core_type = None      
-        if isinstance(self.core, nni.tuner.Tuner):
+        if isinstance(self.core, Tuner):
             self.core_type = 'tuner'
-        elif isinstance(self.core, nni.runtime.msg_dispatcher_base.MsgDispatcherBase):
+        elif isinstance(self.core, MsgDispatcherBase):
             self.core_type = 'advisor'
         else:
             raise RuntimeError('Unsupported tuner or advisor type') 

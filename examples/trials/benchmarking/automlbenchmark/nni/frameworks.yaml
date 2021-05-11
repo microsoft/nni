@@ -5,64 +5,64 @@ NNI:
   version: '2.2'
   project: https://github.com/microsoft/nni
   params:
-    tuner_type: 'bohb'
-    arch_type: 'random forest'
+    tuner_type: 'Random'
+    arch_type: 'random_forest'
 
-# tuner type in ['tpe', 'random_search', 'anneal', 'evolution', 'smac', 'gp', 'metis', 'hyperband', 'bohb']
+# tuner type in ['TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'GPTuner', 'MetisTuner', 'Hyperband', 'BOHB']
 # arch_type in ['random_forest']
 
 NNI_TPE:
   extends: NNI
   params:
-    tuner_type: 'tpe'
+    tuner_type: 'TPE'
     arch_type: 'random_forest'
 
 NNI_RANDOM_SEARCH:
   extends: NNI 
   params:
-    tuner_type: 'random_search'
+    tuner_type: 'Random'
     arch_type: 'random_forest'
 
 NNI_ANNEAL:
   extends: NNI 
   params:
-    tuner_type: 'anneal'
+    tuner_type: 'Anneal'
     arch_type: 'random_forest'
 
 NNI_EVOLUTION:
   extends: NNI 
   params:
-    tuner_type: 'evolution'
+    tuner_type: 'Evolution'
     arch_type: 'random_forest'
 
 NNI_SMAC:
   extends: NNI 
   params:
-    tuner_type: 'smac'
+    tuner_type: 'SMAC'
     arch_type: 'random_forest'
 
 NNI_GP:
   extends: NNI 
   params:
-    tuner_type: 'gp'
+    tuner_type: 'GPTuner'
     arch_type: 'random_forest'
 
 NNI_METIS:
   extends: NNI 
   params:
-    tuner_type: 'metis'
+    tuner_type: 'MetisTuner'
     arch_type: 'random_forest'
 
 NNI_HYPERBAND:
   extends: NNI 
   params:
-    tuner_type: 'hyperband'
+    tuner_type: 'Hyperband'
     arch_type: 'random_forest'
     max_resource: 60
 
 NNI_BOHB:
   extends: NNI 
   params:
-    tuner_type: 'bohb'
+    tuner_type: 'BOHB'
     arch_type: 'random_forest'
     max_resource: 60
