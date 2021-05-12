@@ -14,6 +14,9 @@ from amlb.utils import Timer
 SEARCH_SPACE = {
     "n_estimators": {"_type":"choice", "_value": [128, 256, 512, 1024, 2048, 4096]},
     "max_depth": {"_type":"choice", "_value": [5, 10, 25, 50, 100]},
+    "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
+    "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
+    "max_leaf_nodes": {"_type":"choice", "_value": [0, 8, 64, 512]}     # 0 for None 
 }
 
     
@@ -33,9 +36,12 @@ def run_random_forest(dataset, config, tuner, log):
     while True:
         try:
             param_idx, cur_params = tuner.generate_parameters()
+            train_params = cur_params.copy()
             if 'TRIAL_BUDGET' in cur_params:
-                cur_params.pop('TRIAL_BUDGET')
-            cur_model = estimator(random_state=config.seed, **cur_params)
+                train_params.pop('TRIAL_BUDGET')
+            if cur_params['max_leaf_nodes'] == 0: 
+                train_params.pop('max_leaf_nodes')
+            cur_model = estimator(random_state=config.seed, **train_params)
             # Here score is the output of score() from the estimator
             cur_score = cross_val_score(cur_model, X_train, y_train)
             cur_score = sum(cur_score) / float(len(cur_score))

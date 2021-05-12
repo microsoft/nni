@@ -11,8 +11,19 @@ This folder contains a benchmark tool that enables comparisons between the perfo
 * **architecture**: an architecture is a specific method for solving the tasks, along with a set of hyperparameters to optimize (i.e., the search space). In our implementation, the architecture calls tuner multiple times to obtain possible hyperparameter configurations, and produces the final prediction for a task. See `./nni/extensions/NNI/architectures` for examples.
 
 ### Setup
+Due to some incompatibilities between automlbenchmark and python 3.8, python 3.7 is recommended for running experiments contained in this folder. First, run the following shell script to clone the automlbenchmark repository. 
 ```bash
 ./setup.sh
+```
+Then, install the dependencies required by automlbenchmark using the following commands.
+```bash
+cd automlbenchmark
+pip3 install -r requirements.txt
+```
+Finally, install additional dependencies using the following commands.
+```bash
+cd ..
+pip3 install -r requirements.txt
 ```
 
 ### Run predefined benchmarks on existing tuners
