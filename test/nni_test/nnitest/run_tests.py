@@ -52,7 +52,9 @@ def update_training_service_config(config, training_service, config_file_path):
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
-
+    
+    if training_service == 'hybrid':
+        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
     deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
@@ -259,7 +261,7 @@ def run(args):
                 name, args.ts, test_case_config['trainingService']))
             continue
         # remote mode need more time to cleanup 
-        if args.ts == 'remote':
+        if args.ts == 'remote' or args.ts == 'hybrid':
             wait_for_port_available(8080, 240)
         else:
             wait_for_port_available(8080, 60)

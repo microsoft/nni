@@ -8,6 +8,7 @@ import argparse
 from utils import get_yml_content, dump_yml_content
 
 TRAINING_SERVICE_FILE = os.path.join('config', 'training_service.yml')
+TRAINING_SERVICE_FILE_V2 = os.path.join('config', 'training_service_v2.yml')
 
 def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
@@ -99,8 +100,15 @@ def update_training_service_config(args):
             config[args.ts]['amlConfig']['workspaceName'] = args.workspace_name
         if args.compute_target is not None:
             config[args.ts]['amlConfig']['computeTarget'] = args.compute_target
-
     dump_yml_content(TRAINING_SERVICE_FILE, config)
+
+    if args.ts == 'hybrid':
+        config = get_yml_content(TRAINING_SERVICE_FILE_V2)
+        config[args.ts]['trainingService'][0]['machineList'][0]['user'] = args.remote_user
+        config[args.ts]['trainingService'][0]['machineList'][0]['host'] = args.remote_host
+        config[args.ts]['trainingService'][0]['machineList'][0]['password'] = args.remote_pwd
+        config[args.ts]['trainingService'][0]['machineList'][0]['port'] = args.remote_port
+        dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
 
 
 if __name__ == '__main__':

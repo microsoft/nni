@@ -1,0 +1,23 @@
+
+defaultTestCaseConfig:
+  launchCommand: nnictl create --config $configFile --debug
+  stopCommand: nnictl stop
+  experimentStatusCheck: True
+  platform: linux darwin win32
+  trainingService: all
+
+testCases:
+#######################################################################
+# nni examples test
+#######################################################################
+- name: cifar10-pytorch
+  configFile: test/config/examples/cifar10-pytorch-v2.yml
+  config:
+    # this example downloads large pretrained model weights
+    # test 1 trial to save time
+    maxExecDuration: 10m
+    maxTrialNum: 1
+    trialConcurrency: 1
+    trial:
+      command: python3 main.py --epochs 1 --batches 1
+      gpuNum: 0
