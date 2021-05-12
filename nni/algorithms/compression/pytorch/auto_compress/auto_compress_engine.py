@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
+import json_tricks
 from typing import Optional, Callable
 
 from torch.nn import Module
@@ -10,6 +12,9 @@ import nni
 from nni.retiarii.utils import import_
 from .constants import PRUNER_DICT, QUANTIZER_DICT
 from .interface import AbstractExecutionEngine
+
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 class AutoCompressEngine(AbstractExecutionEngine):
     @classmethod
@@ -23,8 +28,8 @@ class AutoCompressEngine(AbstractExecutionEngine):
         config_list = []
         for key, config in config_dict.items():
             op_types, op_names = key
-            op_types = op_types.split(':')
-            op_names = op_names.split(':')
+            op_types = op_types.split(':') if op_types else []
+            op_names = op_names.split(':') if op_names else []
             if op_types:
                 config['op_types'] = op_types
             if op_names:
@@ -119,12 +124,13 @@ class AutoCompressEngine(AbstractExecutionEngine):
             'pruner': cls.__compress_pruning_pipeline,
             'quantizer': cls.__compress_quantization_pipeline
         }
+        _logger.info('%s compressor config_list:\n%s', algorithm_name, json_tricks.dumps(config_list, indent=4))
         return func_dict[compressor_type](algorithm_name, model, config_list, evaluator, optimizer, trainer,
                                           finetune_trainer, **compressor_parameter_dict)
 
     @classmethod
     def trial_execute_compress(cls):
-        basket= import_('basket.Basket')
+        basket = import_('basket.Basket')
 
         parameter = nni.get_next_parameter()['compressor_type']
         compressor_type, algorithm_config = parameter['_name'], parameter['algorithm_name']

@@ -12,6 +12,7 @@ from torchvision import datasets, transforms
 
 from nni.algorithms.compression.pytorch.auto_compress import AbstractBasket
 
+torch.manual_seed(1)
 
 class LeNet(nn.Module):
     def __init__(self):
