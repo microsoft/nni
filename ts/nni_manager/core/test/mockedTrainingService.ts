@@ -124,6 +124,14 @@ class MockedTrainingService extends TrainingService {
     public cleanUp(): Promise<void> {
         return Promise.resolve();
     }
+
+    public getTrialOutputLocalPath(_trialJobId: string): Promise<string> {
+        throw new MethodNotImplementedError();
+    }
+
+    public fetchTrialOutput(_trialJobId: string, _subpath: string): Promise<void> {
+        throw new MethodNotImplementedError();
+    }
 }
 
 export{MockedTrainingService, testTrainingServiceProvider}

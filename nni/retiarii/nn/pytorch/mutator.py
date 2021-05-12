@@ -4,7 +4,7 @@
 from typing import Any, List, Optional, Tuple
 
 from ...mutator import Mutator
-from ...graph import Model, Node
+from ...graph import Cell, Model, Node
 from .api import ValueChoice
 
 
@@ -14,13 +14,23 @@ class LayerChoiceMutator(Mutator):
         self.nodes = nodes
 
     def mutate(self, model):
-        n_candidates = len(self.nodes[0].operation.parameters['candidates'])
-        indices = list(range(n_candidates))
-        chosen_index = self.choice(indices)
+        candidates = self.nodes[0].operation.parameters['candidates']
+        chosen = self.choice(candidates)
         for node in self.nodes:
-            target = model.get_node_by_name(node.name)
-            chosen_cand = node.operation.parameters['candidates'][chosen_index]
-            target.update_operation(chosen_cand['type'], chosen_cand['parameters'])
+            # Each layer choice corresponds to a cell, which is unconnected in the base graph.
+            # We add the connections here in the mutation logic.
+            # Thus, the mutated model should not be mutated again. Everything should be based on the original base graph.
+            target = model.graphs[node.operation.cell_name]
+            chosen_node = target.get_node_by_name(chosen)
+            assert chosen_node is not None
+            target.add_edge((target.input_node, 0), (chosen_node, None))
+            target.add_edge((chosen_node, None), (target.output_node, None))
+            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+
+            # remove redundant nodes
+            for rm_node in target.hidden_nodes:
+                if rm_node.name != chosen_node.name:
+                    rm_node.remove()
 
 
 class InputChoiceMutator(Mutator):
@@ -61,19 +71,13 @@ class ParameterChoiceMutator(Mutator):
     def mutate(self, model):
         chosen = self.choice(self.candidates)
         for node, argname in self.nodes:
+            chosen_value = node.operation.parameters[argname].access(chosen)
             target = model.get_node_by_name(node.name)
-            target.update_operation(target.operation.type, {**target.operation.parameters, argname: chosen})
+            target.update_operation(target.operation.type, {**target.operation.parameters, argname: chosen_value})
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     applied_mutators = []
-
-    lc_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.LayerChoice'))
-    for node_list in lc_nodes:
-        assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
-            'Layer choice with the same label must have the same number of candidates.'
-        mutator = LayerChoiceMutator(node_list)
-        applied_mutators.append(mutator)
 
     ic_nodes = _group_by_label(model.get_nodes_by_type('__torch__.nni.retiarii.nn.pytorch.api.InputChoice'))
     for node_list in ic_nodes:
@@ -99,8 +103,19 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
     for node_list in pc_nodes:
         assert _is_all_equal([node.operation.parameters[name].candidates for node, name in node_list]), \
             'Value choice with the same label must have the same candidates.'
-        mutator = ParameterChoiceMutator(node_list, node_list[0][0].operation.parameters[node_list[0][1]].candidates)
+        first_node, first_argname = node_list[0]
+        mutator = ParameterChoiceMutator(node_list, first_node.operation.parameters[first_argname].candidates)
         applied_mutators.append(mutator)
+
+    # apply layer choice at last as it will delete some nodes
+    lc_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'layerchoice',
+                                      model.get_nodes_by_type('_cell')))
+    for node_list in lc_nodes:
+        assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
+            'Layer choice with the same label must have the same number of candidates.'
+        mutator = LayerChoiceMutator(node_list)
+        applied_mutators.append(mutator)
+
 
     if applied_mutators:
         return applied_mutators

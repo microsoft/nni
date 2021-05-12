@@ -16,7 +16,6 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
-from .tensorboard_utils import start_tensorboard, stop_tensorboard
 init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
@@ -249,18 +248,6 @@ def parse_args():
     parser_package_subparsers = subparsers.add_parser('package', help='this argument is replaced by algo', prefix_chars='\n')
     parser_package_subparsers.add_argument('args', nargs=argparse.REMAINDER)
     parser_package_subparsers.set_defaults(func=show_messsage_for_nnictl_package)
-
-    #parse tensorboard command
-    parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
-    parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
-    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
-    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
-    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, type=int, help='the port to start tensorboard')
-    parser_tensorboard_start.set_defaults(func=start_tensorboard)
-    parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
-    parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_stop.set_defaults(func=stop_tensorboard)
 
     #parse top command
     parser_top = subparsers.add_parser('top', help='monitor the experiment')

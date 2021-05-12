@@ -48,5 +48,5 @@ jobs:
           --azs_share nni \
           --nni_docker_image nnidev/nni-nightly \
           --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --exclude multi-phase
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --exclude multi-phase,multi-thread
     displayName: Integration test

@@ -281,7 +281,7 @@ if __name__ == '__main__':
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai',
-                                                   'kubeflow', 'frameworkcontroller', 'adl', 'hybrid'], default='local')
+                                                   'kubeflow', 'frameworkcontroller', 'adl', 'aml', 'hybrid'], default='local')
     args = parser.parse_args()
 
     run(args)

@@ -19,7 +19,7 @@ def case_insensitive(key_or_kwargs: Union[str, Dict[str, Any]]) -> Union[str, Di
         return {key.lower().replace('_', ''): value for key, value in key_or_kwargs.items()}
 
 def camel_case(key: str) -> str:
-    words = key.split('_')
+    words = key.strip('_').split('_')
     return words[0] + ''.join(word.title() for word in words[1:])
 
 def canonical_path(path: Optional[PathLike]) -> Optional[str]:

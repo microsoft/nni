@@ -69,6 +69,9 @@ class PrimConstant(PyTorchOperation):
         elif self.parameters['type'] == 'Device':
             value = self.parameters['value']
             return f'{output} = torch.device("{value}")'
+        elif self.parameters['type'] in ('dict', 'list', 'tuple'):
+            # TODO: prim::TupleIndex is not supported yet
+            return f'{output} = {repr(self.parameters["value"])}'
         else:
             raise RuntimeError(f'unsupported type of prim::Constant: {self.parameters["type"]}')
 

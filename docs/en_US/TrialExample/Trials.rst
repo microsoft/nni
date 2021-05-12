@@ -208,6 +208,7 @@ More Trial Examples
 -------------------
 
 
+* `Write logs to trial output directory for tensorboard <../Tutorial/Tensorboard.rst>`__
 * `MNIST examples <MnistExamples.rst>`__
 * `Finding out best optimizer for Cifar10 classification <Cifar10Examples.rst>`__
 * `How to tune Scikit-learn on NNI <SklearnExamples.rst>`__
