@@ -10,6 +10,7 @@ import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
+import { getUrlPrefix } from '../common/experimentStartupInfo';
 
 /**
  * NNI Main rest server, provides rest API to support
@@ -19,7 +20,7 @@ import { createRestHandler } from './restHandler';
  */
 @component.Singleton
 export class NNIRestServer extends RestServer {
-    private readonly API_ROOT_URL: string = '/api/v1/nni';
+    private readonly API_ROOT_URL: string = `/api/v1/nni/${getUrlPrefix()}`;
     private readonly LOGS_ROOT_URL: string = '/logs';
 
     /**

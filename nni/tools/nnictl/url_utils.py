@@ -3,6 +3,7 @@
 
 import socket
 import psutil
+import re
 
 BASE_URL = 'http://localhost'
 
@@ -23,6 +24,15 @@ EXPORT_DATA_API = '/export-data'
 TENSORBOARD_API = '/tensorboard'
 
 METRIC_DATA_API = '/metric-data'
+
+def path_validation(path):
+    assert re.match("^[A-Za-z0-9_-]*$", path), "prefix url is invalid."
+
+def set_prefix_url(prefix):
+    '''set prefix url'''
+    path_validation(prefix)
+    global API_ROOT_URL
+    API_ROOT_URL = '{0}/{1}'.format(API_ROOT_URL, prefix)
 
 def metric_data_url(port):
     '''get metric_data url'''

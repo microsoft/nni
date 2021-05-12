@@ -16,7 +16,7 @@ from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, set_prefix_url
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
@@ -43,7 +43,7 @@ def print_log_content(config_file_name):
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
 
-def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None, url_prefix=None):
     '''Run nni manager process'''
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
@@ -81,6 +81,10 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         cmds += ['--log_level', log_level]
     if foreground:
         cmds += ['--foreground', 'true']
+    if url_prefix:
+        set_prefix_url(url_prefix)
+        cmds += ['--url_prefix', url_prefix]
+
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
         start_time = time.time()
@@ -384,7 +388,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         platform = experiment_config['trainingService']['platform']
 
     rest_process, start_time = start_rest_server(args.port, platform, \
-                                                 mode, experiment_id, foreground, log_dir, log_level)
+                                                 mode, experiment_id, foreground, log_dir, log_level, args.url_prefix)
     # save experiment information
     Experiments().add_experiment(experiment_id, args.port, start_time,
                                  platform,
