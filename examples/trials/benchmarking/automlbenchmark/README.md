@@ -33,6 +33,7 @@ pip3 install -r requirements.txt
 This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the "results.csv.parsed" file in the result folder associated with current time. To run on other predefined benchmarks, change the `benchmark` variable in `runbenchmark_nni.sh`. Some benchmarks are defined in `./nni/benchmarks`, and others are defined in `./automlbenchmark/resources/benchmarks/`.
 
 By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "Hyperband", "BOHB". It is also possible to evaluate custom tuners. See the next sections for details. 
+Note: the SMAC tuner has to be manually installed before any experiments can be run on it. Please refer to [this page](https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni%5Bsmac%5D#smac) for more details on installing SMAC.
 
 ### Run customized benchmarks on existing tuners
 To run customized benchmarks, add a benchmark_name.yaml file in the folder `./nni/benchmarks`, and change the `benchmark` variable in `runbenchmark_nni.sh`. See `./automlbenchmark/resources/benchmarks/` for some examples of defining a custom benchmark.
