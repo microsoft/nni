@@ -15,7 +15,7 @@ Due to some incompatibilities between automlbenchmark and python 3.8, python 3.7
 ```bash
 ./setup.sh
 ```
-Then, install the dependencies required by automlbenchmark using the following commands.
+Then, install the dependencies required by automlbenchmark using the following commands. It is recommended to perform the following steps in a separate virtual environment. 
 ```bash
 cd automlbenchmark
 pip3 install -r requirements.txt
