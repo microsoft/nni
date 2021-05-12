@@ -9,7 +9,7 @@ from torch.optim import Optimizer
 import nni
 from nni.retiarii.utils import import_
 from .constants import PRUNER_DICT, QUANTIZER_DICT
-from .interface import AbstractExecutionEngine, AbstractBasket
+from .interface import AbstractExecutionEngine
 
 class AutoCompressEngine(AbstractExecutionEngine):
     @classmethod
