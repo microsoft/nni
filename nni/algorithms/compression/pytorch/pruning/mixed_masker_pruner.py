@@ -2,8 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import torch
-
 from schema import And, Optional
 
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
@@ -66,10 +64,11 @@ class MixedMaskerPruner(_StructuredFilterPruner):
         maskers_config_dict = {}
         counter = {}
         for config in config_list:
+            assert 'masker_name' in config, 'maskers_config_dict should be set if use masker_name'
             if 'pruning_algo' not in config:
                 config['masker_name'] = 'default'
             else:
-                masker_type, params_dict = config['pruning_algo']
+                masker_type, _ = config['pruning_algo']
                 counter[masker_type] = 1 + counter.get(masker_type, 0)
                 masker_name = '{}_{}'.format(masker_type, counter[masker_type])
                 maskers_config_dict[masker_name] = config.pop('pruning_algo')
