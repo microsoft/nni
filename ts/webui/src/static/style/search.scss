@@ -3,6 +3,7 @@
     width: 96%;
     margin: 0 auto;
     margin-top: 15px;
+    position: relative;
 
     &-compare {
         margin-top: 15px;
@@ -18,7 +19,7 @@
     }
 
     &-search-input {
-        padding-left: 10px;
+        margin-left: 10px !important;
     }
 }
 
@@ -32,4 +33,33 @@
     .ms-Dropdown {
         width: 120px;
     }
+}
+
+$filterConditionsHeight: 54px;
+
+.filterConditions{
+    height: $filterConditionsHeight;
+    line-height: $filterConditionsHeight;
+    padding: 0 15px;
+
+    .btn-vertical-middle{
+        margin-top: 11px;
+    }
+
+    .input{
+        width: 100px;
+        height: 24px;
+        margin-top: 13px;
+        border: 1px solid #333;
+        border-radius: 20px;
+        outline: none;
+    }
+
+    .and{
+        margin: 0 4px;
+    }
+}
+
+.ms-ContextualMenu-Callout{
+    display: block;
 }
