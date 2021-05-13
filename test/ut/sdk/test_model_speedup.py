@@ -373,6 +373,7 @@ class SpeedupTestCase(TestCase):
 
 
     def test_channel_prune(self):
+        # import pdb; pdb.set_trace()
         orig_net = resnet18(num_classes=10).to(device)
         channel_prune(orig_net)
         state_dict = torch.load(MODEL_FILE)

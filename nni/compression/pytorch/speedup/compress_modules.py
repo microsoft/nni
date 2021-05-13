@@ -9,6 +9,7 @@ _logger = logging.getLogger(__name__)
 
 replace_module = {
     'BatchNorm2d': lambda module, auto_infer: replace_batchnorm2d(module, auto_infer),
+    'BatchNorm1d': lambda module, auto_infer: replace_batchnorm1d(module, auto_infer),
     'Conv2d': lambda module, auto_infer: replace_conv2d(module, auto_infer),
     'Linear': lambda module, auto_infer: replace_linear(module, auto_infer),
     'MaxPool2d': lambda module, auto_infer: no_replace(module, auto_infer),
@@ -135,6 +136,50 @@ def replace_linear(linear, auto_infer):
     # print(bias_constant)
     # exit(-1)
     return new_linear
+
+
+def replace_batchnorm1d(norm, auto_infer):
+    """
+    Parameters
+    ----------
+    norm : torch.nn.BatchNorm1d
+        The batchnorm module to be replace
+    auto_infer : AutoMaskInference
+        The auto mask inference object that contains the input,
+        parameter and output masks.
+
+    Returns
+    -------
+    torch.nn.BatchNorm2d
+        The new batchnorm module
+    """
+    assert isinstance(norm, nn.BatchNorm1d)
+    in_mask = auto_infer.in_masks[0]
+    output_mask = auto_infer.output_mask
+    # print('BN CONSTANT')
+    # print(auto_infer.in_constants[0])
+    # N, C, H, W
+    _, remained_in = convert_to_coarse_mask(in_mask, 1)
+    _, remained_out = convert_to_coarse_mask(output_mask, 1)
+    assert remained_in.size(0) == remained_out.size(0)
+
+    num_features = remained_in.size(0)
+    _logger.info("replace batchnorm2d with num_features: %d", num_features)
+    new_norm = torch.nn.BatchNorm1d(num_features=num_features,
+                                    eps=norm.eps,
+                                    momentum=norm.momentum,
+                                    affine=norm.affine,
+                                    track_running_stats=norm.track_running_stats)
+    # assign weights
+    new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
+    new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
+
+    new_norm.running_mean.data = torch.index_select(
+        norm.running_mean.data, 0, remained_in)
+    new_norm.running_var.data = torch.index_select(
+        norm.running_var.data, 0, remained_in)
+    return new_norm
+
 
 
 def replace_batchnorm2d(norm, auto_infer):

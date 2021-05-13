@@ -143,6 +143,9 @@ class AutoMaskInference:
         """
         Apply the weight mask of this module.
         """
+        # import pdb;
+        # if self.name == 'fc':
+        #     pdb.set_trace()
         with torch.no_grad():
             # apply the weight mask
             for para in self.weights:
