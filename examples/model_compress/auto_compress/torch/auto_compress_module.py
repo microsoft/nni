@@ -10,7 +10,7 @@ import torch.nn.functional as F
 from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.pytorch.auto_compress import AbstractBasket
+from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressModule
 
 torch.manual_seed(1)
 
@@ -99,7 +99,7 @@ for _ in range(_epoch):
     _test(_model)
     _scheduler.step()
 
-class Basket(AbstractBasket):
+class AutoCompressModule(AbstractAutoCompressModule):
     @classmethod
     def model(cls) -> nn.Module:
         return _model

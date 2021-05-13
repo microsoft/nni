@@ -18,7 +18,7 @@ class AbstractExecutionEngine(ABC):
         pass
 
 
-class AbstractBasket(ABC):
+class AbstractAutoCompressModule(ABC):
     @classmethod
     @abstractmethod
     def model(cls) -> Module:

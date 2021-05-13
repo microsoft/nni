@@ -130,7 +130,7 @@ class AutoCompressEngine(AbstractExecutionEngine):
 
     @classmethod
     def trial_execute_compress(cls):
-        basket = import_('basket.Basket')
+        auto_compress_module = import_('auto_compress_module.AutoCompressModule')
 
         parameter = nni.get_next_parameter()['compressor_type']
         compressor_type, algorithm_config = parameter['_name'], parameter['algorithm_name']
@@ -140,9 +140,9 @@ class AutoCompressEngine(AbstractExecutionEngine):
 
         config_list = cls._convert_config_list(compressor_type, converted_config_dict)
 
-        model, evaluator, optimizer = basket.model(), basket.evaluator(), basket.optimizer()
-        trainer = basket.trainer(compressor_type, algorithm_name)
-        finetune_trainer = basket.trainer(compressor_type, algorithm_name)
+        model, evaluator, optimizer = auto_compress_module.model(), auto_compress_module.evaluator(), auto_compress_module.optimizer()
+        trainer = auto_compress_module.trainer(compressor_type, algorithm_name)
+        finetune_trainer = auto_compress_module.trainer(compressor_type, algorithm_name)
 
         compressed_model = cls._compress_pipeline(compressor_type, algorithm_name, model, config_list, evaluator,
                                                   optimizer, trainer, finetune_trainer, **parameter_dict)
