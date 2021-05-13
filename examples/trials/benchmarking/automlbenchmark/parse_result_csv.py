@@ -9,6 +9,8 @@ if len(sys.argv) != 2:
 result_file = sys.argv[1]
 result = pd.read_csv(result_file)
 
+keep_parameters = ['framework', 'constraint', 'result', 'metric', 'params', 'utc', 'duration'] + list(result.columns[16:])
+
 task_ids = result['id'].unique()
 
 with open(result_file + '.parsed', 'w') as out_f:
@@ -21,7 +23,6 @@ with open(result_file + '.parsed', 'w') as out_f:
         folds = task_results['fold'].unique()
         for fold in folds:
             out_f.write("Fold {}:\n".format(fold))
-            keep_parameters = ['framework', 'constraint', 'result', 'metric', 'params', 'utc', 'duration', 'acc', 'auc', 'logloss', 'r2', 'rmse']
             res = task_results[task_results['fold'] == fold][keep_parameters]
             out_f.write(res.to_string())
             out_f.write('\n')

@@ -11,19 +11,9 @@ This folder contains a benchmark tool that enables comparisons between the perfo
 * **architecture**: an architecture is a specific method for solving the tasks, along with a set of hyperparameters to optimize (i.e., the search space). In our implementation, the architecture calls tuner multiple times to obtain possible hyperparameter configurations, and produces the final prediction for a task. See `./nni/extensions/NNI/architectures` for examples.
 
 ### Setup
-Due to some incompatibilities between automlbenchmark and python 3.8, python 3.7 is recommended for running experiments contained in this folder. First, run the following shell script to clone the automlbenchmark repository. 
+Due to some incompatibilities between automlbenchmark and python 3.8, python 3.7 is recommended for running experiments contained in this folder. First, run the following shell script to clone the automlbenchmark repository. Note: it is recommended to perform the following steps in a separate virtual environment, as the setup code may install several packages. 
 ```bash
 ./setup.sh
-```
-Then, install the dependencies required by automlbenchmark using the following commands. It is recommended to perform the following steps in a separate virtual environment. 
-```bash
-cd automlbenchmark
-pip3 install -r requirements.txt
-```
-Finally, install additional dependencies using the following commands.
-```bash
-cd ..
-pip3 install -r requirements.txt
 ```
 
 ### Run predefined benchmarks on existing tuners
@@ -34,7 +24,7 @@ This script runs the benchmark 'nnivalid', which consists of a regression task, 
 
 By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "Hyperband", "BOHB". It is also possible to evaluate custom tuners. See the next sections for details. 
 
-Note: the SMAC tuner has to be manually installed before any experiments can be run on it. Please refer to [this page](https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni%5Bsmac%5D#smac) for more details on installing SMAC.
+Note: the SMAC tuner and the BOHB advisor has to be manually installed before any experiments can be run on it. Please refer to [this page](https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni) for more details on installing SMAC and BOHB.
 
 ### Run customized benchmarks on existing tuners
 To run customized benchmarks, add a benchmark_name.yaml file in the folder `./nni/benchmarks`, and change the `benchmark` variable in `runbenchmark_nni.sh`. See `./automlbenchmark/resources/benchmarks/` for some examples of defining a custom benchmark.

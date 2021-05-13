@@ -3,10 +3,10 @@
 time=$(date "+%Y%m%d%H%M%S")
 installation='automlbenchmark'
 outdir="results_$time"
-benchmark='nnivalid'
+benchmark='nnismall'
 
 if [ "$#" -eq 0 ]; then
-    tuner_array=('NNI_TPE' 'NNI_RANDOM_SEARCH' 'NNI_ANNEAL' 'NNI_EVOLUTION' 'NNI_SMAC' 'NNI_GP' 'NNI_METIS' 'NNI_HYPERBAND' 'NNI_BOHB')
+    tuner_array=('TPE' 'Random' 'Anneal' 'Evolution' 'GPTuner' 'MetisTuner' 'Hyperband')
 else
     tuner_array=( "$@" )
 fi

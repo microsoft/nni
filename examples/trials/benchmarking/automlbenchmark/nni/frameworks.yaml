@@ -11,56 +11,56 @@ NNI:
 # tuner type in ['TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'GPTuner', 'MetisTuner', 'Hyperband', 'BOHB']
 # arch_type in ['random_forest']
 
-NNI_TPE:
+TPE:
   extends: NNI
   params:
     tuner_type: 'TPE'
     arch_type: 'random_forest'
 
-NNI_RANDOM_SEARCH:
+Random:
   extends: NNI 
   params:
     tuner_type: 'Random'
     arch_type: 'random_forest'
 
-NNI_ANNEAL:
+Anneal:
   extends: NNI 
   params:
     tuner_type: 'Anneal'
     arch_type: 'random_forest'
 
-NNI_EVOLUTION:
+Evolution:
   extends: NNI 
   params:
     tuner_type: 'Evolution'
     arch_type: 'random_forest'
 
-NNI_SMAC:
+SMAC:
   extends: NNI 
   params:
     tuner_type: 'SMAC'
     arch_type: 'random_forest'
 
-NNI_GP:
+GPTuner:
   extends: NNI 
   params:
     tuner_type: 'GPTuner'
     arch_type: 'random_forest'
 
-NNI_METIS:
+MetisTuner:
   extends: NNI 
   params:
     tuner_type: 'MetisTuner'
     arch_type: 'random_forest'
 
-NNI_HYPERBAND:
+Hyperband:
   extends: NNI 
   params:
     tuner_type: 'Hyperband'
     arch_type: 'random_forest'
     max_resource: 60
 
-NNI_BOHB:
+BOHB:
   extends: NNI 
   params:
     tuner_type: 'BOHB'

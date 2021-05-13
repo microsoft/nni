@@ -7,8 +7,6 @@ from nni.runtime.config import get_config_file
 from nni.utils import MetricType 
 from nni.tuner import Tuner
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
-from nni.algorithms.hpo.bohb_advisor.bohb_advisor import BOHB
-from nni.algorithms.hpo.bohb_advisor.config_generator import CG_BOHB
 
 from amlb.benchmark import TaskConfig
 
@@ -101,15 +99,21 @@ class NNITuner:
         elif self.core_type == 'advisor':
             self.core.handle_update_search_space(search_space)
             # special initializations for BOHB Advisor
-            if isinstance(self.core, BOHB):
-                self.core.cg = CG_BOHB(configspace=self.core.search_space,
-                                        min_points_in_model=self.core.min_points_in_model,
-                                        top_n_percent=self.core.top_n_percent,
-                                        num_samples=self.core.num_samples,
-                                        random_fraction=self.core.random_fraction,
-                                        bandwidth_factor=self.core.bandwidth_factor,
-                                        min_bandwidth=self.core.min_bandwidth)
-                self.core.generate_new_bracket()
+            from nni.algorithms.hpo.hyperband_advisor import Hyperband
+            if isinstance(self.core, Hyperband):
+                pass
+            else:
+                from nni.algorithms.hpo.bohb_advisor.bohb_advisor import BOHB
+                from nni.algorithms.hpo.bohb_advisor.config_generator import CG_BOHB   
+                if isinstance(self.core, BOHB):
+                    self.core.cg = CG_BOHB(configspace=self.core.search_space,
+                                           min_points_in_model=self.core.min_points_in_model,
+                                           top_n_percent=self.core.top_n_percent,
+                                           num_samples=self.core.num_samples,
+                                           random_fraction=self.core.random_fraction,
+                                           bandwidth_factor=self.core.bandwidth_factor,
+                                           min_bandwidth=self.core.min_bandwidth)
+                    self.core.generate_new_bracket()
                 
         
     def generate_parameters(self):
