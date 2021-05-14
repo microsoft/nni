@@ -47,7 +47,8 @@ testCases:
     class: FileExistValidator
     kwargs:
       rootpath: /tmp/nnimount/testlocalrootpath
-      
+
+# TODO: Enable this case after nfs server is ready
 #- name: shared-storage-remote-nfs
 #  configFile: test/config/examples/config_sharedstorage_remote_nfs.yml
 #  config:
