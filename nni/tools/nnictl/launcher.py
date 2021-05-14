@@ -16,7 +16,7 @@ from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, path_validation
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, path_validation, formatURLPath
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
@@ -435,7 +435,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     # set debug configuration
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
-    print_normal(config_version)
     if config_version == 1:
         response = set_experiment_v1(experiment_config, mode, args.port, experiment_id, args.url_prefix)
     else:
@@ -452,9 +451,9 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
     if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
+        web_ui_url_list = ['http://{0}:{1}{2}'.format(experiment_config['nniManagerIp'], str(args.port), formatURLPath(args.url_prefix))]
     else:
-        web_ui_url_list = get_local_urls(args.port)
+        web_ui_url_list = get_local_urls(args.port, args.url_prefix)
     Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))

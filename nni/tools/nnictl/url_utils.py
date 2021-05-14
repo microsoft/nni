@@ -75,11 +75,11 @@ def tensorboard_url(port,prefix):
     return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), TENSORBOARD_API)
 
 
-def get_local_urls(port):
+def get_local_urls(port,prefix):
     '''get urls of local machine'''
     url_list = []
     for _, info in psutil.net_if_addrs().items():
         for addr in info:
             if socket.AddressFamily.AF_INET == addr.family:
-                url_list.append('http://{}:{}'.format(addr.address, port))
+                url_list.append('http://{0}:{1}{2}'.format(addr.address, port, formatURLPath(prefix)))
     return url_list
