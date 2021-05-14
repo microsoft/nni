@@ -108,7 +108,7 @@ def update_training_service_config(args):
         config[args.ts]['trainingService'][0]['machineList'][0]['host'] = args.remote_host
         config[args.ts]['trainingService'][0]['machineList'][0]['password'] = args.remote_pwd
         config[args.ts]['trainingService'][0]['machineList'][0]['port'] = args.remote_port
-        config[args.ts]['nni_manager_ip'] = nni_manager_ip
+        config[args.ts]['nni_manager_ip'] = args.nni_manager_ip
         dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
 
 
