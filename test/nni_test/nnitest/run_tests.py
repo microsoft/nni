@@ -126,7 +126,10 @@ def invoke_validator(test_case_config, nni_source_dir, training_service):
 
 def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
-    return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    if experiment_config.get('maxExecDuration'):
+        return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    else:
+        return parse_max_duration_time(experiment_config['maxExperimentDuration']), experiment_config['maxTrialNumber']
 
 
 def get_command(test_case_config, commandKey):
