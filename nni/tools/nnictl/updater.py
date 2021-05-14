@@ -62,13 +62,14 @@ def update_experiment_profile(args, key, value):
     experiments_config = Experiments()
     experiments_dict = experiments_config.get_all_experiments()
     rest_port = experiments_dict.get(get_config_filename(args)).get('port')
-    running, _ = check_rest_server_quick(rest_port)
+    prefix_url = experiments_dict.get(get_config_filename(args)).get('prefixUrl')
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
+        response = rest_get(experiment_url(rest_port, prefix_url), REST_TIME_OUT)
         if response and check_response(response):
             experiment_profile = json.loads(response.text)
             experiment_profile['params'][key] = value
-            response = rest_put(experiment_url(rest_port)+get_query_type(key), json.dumps(experiment_profile), REST_TIME_OUT)
+            response = rest_put(experiment_url(rest_port, prefix_url)+get_query_type(key), json.dumps(experiment_profile), REST_TIME_OUT)
             if response and check_response(response):
                 return response
     else:
@@ -121,11 +122,12 @@ def import_data(args):
     experiments_dict = Experiments().get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(get_config_filename(args)).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, _ = check_rest_server_quick(rest_port)
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if not running:
         print_error('Restful server is not running')
         return
@@ -141,9 +143,10 @@ def import_data_to_restful_server(args, content):
     '''call restful server to import data to the experiment'''
     experiments_dict = Experiments().get_all_experiments()
     rest_port = experiments_dict.get(get_config_filename(args)).get('port')
-    running, _ = check_rest_server_quick(rest_port)
+    prefix_url = experiments_dict.get(get_config_filename(args)).get('prefixUrl')
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_post(import_data_url(rest_port), content, REST_TIME_OUT)
+        response = rest_post(import_data_url(rest_port, prefix_url), content, REST_TIME_OUT)
         if response and check_response(response):
             return response
     else:

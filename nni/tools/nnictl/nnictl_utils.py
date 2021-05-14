@@ -25,17 +25,17 @@ from .common_utils import print_green
 from .command_utils import check_output_command, kill_command
 from .ssh_utils import create_ssh_sftp_client, remove_remote_directory
 
-def get_experiment_time(port):
+def get_experiment_time(port, prefixUrl):
     '''get the startTime and endTime of an experiment'''
-    response = rest_get(experiment_url(port), REST_TIME_OUT)
+    response = rest_get(experiment_url(port, prefixUrl), REST_TIME_OUT)
     if response and check_response(response):
         content = json.loads(response.text)
         return content.get('startTime'), content.get('endTime')
     return None, None
 
-def get_experiment_status(port):
+def get_experiment_status(port, prefixUrl):
     '''get the status of an experiment'''
-    result, response = check_rest_server_quick(port)
+    result, response = check_rest_server_quick(port, prefixUrl)
     if result:
         return json.loads(response.text).get('status')
     return None
@@ -202,7 +202,8 @@ def check_rest(args):
     experiments_config = Experiments()
     experiments_dict = experiments_config.get_all_experiments()
     rest_port = experiments_dict.get(get_config_filename(args)).get('port')
-    running, _ = check_rest_server_quick(rest_port)
+    prefix_url = experiments_dict.get(get_config_filename(args)).get('prefixUrl')
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if running:
         print_normal('Restful server is running...')
     else:
@@ -245,13 +246,14 @@ def trial_ls(args):
     experiments_dict = experiments_config.get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(experiment_id).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, response = check_rest_server_quick(rest_port)
+    running, response = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
+        response = rest_get(trial_jobs_url(rest_port, prefix_url), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
             if args.head:
@@ -278,13 +280,14 @@ def trial_kill(args):
     experiments_dict = experiments_config.get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(experiment_id).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, _ = check_rest_server_quick(rest_port)
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_delete(trial_job_id_url(rest_port, args.trial_id), REST_TIME_OUT)
+        response = rest_delete(trial_job_id_url(rest_port, args.trial_id, prefix_url), REST_TIME_OUT)
         if response and check_response(response):
             print(response.text)
             return True
@@ -311,13 +314,14 @@ def list_experiment(args):
     experiments_dict = experiments_config.get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(experiment_id).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, _ = check_rest_server_quick(rest_port)
+    running, _ = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_get(experiment_url(rest_port), REST_TIME_OUT)
+        response = rest_get(experiment_url(rest_port, prefix_url), REST_TIME_OUT)
         if response and check_response(response):
             content = convert_time_stamp_to_date(json.loads(response.text))
             print(json.dumps(content, indent=4, sort_keys=True, separators=(',', ':')))
@@ -333,7 +337,8 @@ def experiment_status(args):
     experiments_config = Experiments()
     experiments_dict = experiments_config.get_all_experiments()
     rest_port = experiments_dict.get(get_config_filename(args)).get('port')
-    result, response = check_rest_server_quick(rest_port)
+    prefix_url = experiments_dict.get(get_config_filename(args)).get('prefixUrl')
+    result, response = check_rest_server_quick(rest_port, prefix_url)
     if not result:
         print_normal('Restful server is not running...')
     else:
@@ -399,14 +404,15 @@ def log_trial(args):
     experiments_dict = experiments_config.get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(experiment_id).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
     experiment_config = Config(experiment_id, experiments_dict.get(experiment_id).get('logDir')).get_config()
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, response = check_rest_server_quick(rest_port)
+    running, response = check_rest_server_quick(rest_port, prefix_url)
     if running:
-        response = rest_get(trial_jobs_url(rest_port), REST_TIME_OUT)
+        response = rest_get(trial_jobs_url(rest_port, prefix_url), REST_TIME_OUT)
         if response and check_response(response):
             content = json.loads(response.text)
             for trial in content:
@@ -661,9 +667,9 @@ def show_experiment_info():
               experiments_dict[key].get('platform'), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'], \
               get_time_interval(experiments_dict[key]['startTime'], experiments_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
-        running, response = check_rest_server_quick(experiments_dict[key]['port'])
+        running, response = check_rest_server_quick(experiments_dict[key]['port'], experiments_dict[key]['prefixUrl'])
         if running:
-            response = rest_get(trial_jobs_url(experiments_dict[key]['port']), REST_TIME_OUT)
+            response = rest_get(trial_jobs_url(experiments_dict[key]['port'], experiments_dict[key]['prefixUrl']), REST_TIME_OUT)
             if response and check_response(response):
                 content = json.loads(response.text)
                 for index, value in enumerate(content):
@@ -672,7 +678,7 @@ def show_experiment_info():
                           content[index].get('endTime'), content[index].get('status')))
         print(TRIAL_MONITOR_TAIL)
 
-def set_monitor(auto_exit, time_interval, port=None, pid=None):
+def set_monitor(auto_exit, time_interval, port=None, pid=None, prefixUrl=None):
     '''set the experiment monitor engine'''
     while True:
         try:
@@ -683,7 +689,7 @@ def set_monitor(auto_exit, time_interval, port=None, pid=None):
             update_experiment()
             show_experiment_info()
             if auto_exit:
-                status = get_experiment_status(port)
+                status = get_experiment_status(port, prefixUrl)
                 if status in ['DONE', 'ERROR', 'STOPPED']:
                     print_normal('Experiment status is {0}.'.format(status))
                     print_normal('Stopping experiment...')
@@ -724,20 +730,21 @@ def export_trials_data(args):
     experiments_dict = experiments_config.get_all_experiments()
     experiment_id = get_config_filename(args)
     rest_port = experiments_dict.get(experiment_id).get('port')
+    prefix_url = experiments_dict.get(experiment_id).get('prefixUrl')
     rest_pid = experiments_dict.get(experiment_id).get('pid')
 
     if not detect_process(rest_pid):
         print_error('Experiment is not running...')
         return
-    running, response = check_rest_server_quick(rest_port)
+    running, response = check_rest_server_quick(rest_port, prefix_url)
     if not running:
         print_error('Restful server is not running')
         return
-    response = rest_get(export_data_url(rest_port), 20)
+    response = rest_get(export_data_url(rest_port, prefix_url), 20)
     if response is not None and check_response(response):
         content = json.loads(response.text)
         if args.intermediate:
-            intermediate_results_response = rest_get(metric_data_url(rest_port), REST_TIME_OUT)
+            intermediate_results_response = rest_get(metric_data_url(rest_port, prefix_url), REST_TIME_OUT)
             if not intermediate_results_response or not check_response(intermediate_results_response):
                 print_error('Error getting intermediate results.')
                 return
