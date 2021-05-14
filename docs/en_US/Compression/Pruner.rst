@@ -14,7 +14,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `FPGM Pruner <#fpgm-pruner>`__
 * `L1Filter Pruner <#l1filter-pruner>`__
 * `L2Filter Pruner <#l2filter-pruner>`__
-* `Activation APoZ Rank Filter Pruner <#activationAPoZRankFilter-pruner>`__
+* `Activation APoZ Rank Filter Pruner <#activationapozrankfilter-pruner>`__
 * `Activation Mean Rank Filter Pruner <#activationmeanrankfilter-pruner>`__
 * `Taylor FO On Weight Pruner <#taylorfoweightfilter-pruner>`__
 
@@ -31,6 +31,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 
 * `ADMM Pruner <#admm-pruner>`__
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
+* `MixedMasker Pruner <#mixedmasker-pruner>`__
 
 Level Pruner
 ------------
@@ -737,3 +738,63 @@ User configuration for Sensitivity Pruner
 **PyTorch**
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.SensitivityPruner
+
+MixedMasker Pruner
+------------------
+
+Masker is the mask computing unit in a pruner, it represents a method of calculating mask.
+Generally, a pruner will configure a masker to help to calculate the mask.
+MixedMaskerPruner can apply masker in layer level, that means you can specify different pruning algorithm for different layer.
+
+Supported maskers are shown below:
+
+.. code-block:: python
+
+   MASKER_DICT = {
+      'level': LevelPrunerMasker,
+      'slim': SlimPrunerMasker,
+      'l1': L1FilterPrunerMasker,
+      'l2': L2FilterPrunerMasker,
+      'fpgm': FPGMPrunerMasker,
+      'taylorfo': TaylorFOWeightFilterPrunerMasker,
+      'apoz': ActivationAPoZRankFilterPrunerMasker,
+      'mean_activation': ActivationMeanRankFilterPrunerMasker
+   }
+
+You need to set key ``pruning_algo`` in config_list to specify the masker, and the value is ``(MASKER_NAME, MASKER_KWARGS)``.
+Now, ``TaylorFOWeightFilterPrunerMasker`` has argument ``statistics_batch_num``, and ``ActivationAPoZRankFilterPrunerMasker`` and ``ActivationMeanRankFilterPrunerMasker`` have ``activation`` and ``statistics_batch_num``.
+For example, if you want to use ``TaylorFOWeightFilterPrunerMasker``, your config_list may like:
+
+.. code-block:: python
+   config_list = [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+            'pruning_algo': ('taylorfo', {'statistics_batch_num': 1})
+        }]
+
+Usage
+^^^^^
+
+PyTorch code
+
+.. code-block:: python
+
+   from nni.algorithms.compression.pytorch.pruning import MixedMaskerPruner
+   config_list = [{
+            'sparsity': 0.5,
+            'op_types': ['Conv2d'],
+            'pruning_algo': ('l1', {})
+        }, {
+            'sparsity': 0.5,
+            'op_types': ['Linear'],
+            'pruning_algo': ('level', {})
+        }]
+   pruner = MixedMaskerPruner(model, config_list)
+   pruner.compress()
+
+User configuration for MixedMasker Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.MixedMaskerPruner
