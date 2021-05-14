@@ -10,5 +10,44 @@ testCases:
 #######################################################################
 # nni examples test
 #######################################################################
+- name: sklearn-classification
+  # test case config yml file relative to nni source code directory
+  configFile: test/config/examples/sklearn-classification-v2.yml
+
+- name: sklearn-regression
+  configFile: test/config/examples/sklearn-regression-v2.yml
+
+- name: mnist-tensorflow
+  configFile: test/config/examples/mnist-tfv2-v2.yml
+  trainingService: local remote hybrid
+
+- name: mnist-pytorch-local
+  configFile: test/config/examples/mnist-pytorch-v2.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 --data_dir ../examples/trials/mnist-pytorch/data && nnictl create --config $configFile --debug
+  trainingService: local
+
+- name: mnist-pytorch-non-local
+  configFile: test/config/examples/mnist-pytorch-v2.yml
+  trainingService: remote pai kubeflow frameworkcontroller dlts hybrid
+
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch-v2.yml
+
+- name: cifar10-pytorch-adl
+  configFile: test/config/examples/cifar10-pytorch-adl.yml
+  trainingService: adl
+
+- name: classic-nas-gen-ss
+  configFile: test/config/examples/classic-nas-pytorch-v2.yml
+  launchCommand: nnictl ss_gen --trial_command="python3 mnist.py --epochs 1" --trial_dir=../examples/nas/legacy/classic_nas --file=config/examples/nni-nas-search-space.json
+  stopCommand:
+  experimentStatusCheck: False
+  trainingService: local
+
+- name: classic-nas-pytorch
+  configFile: test/config/examples/classic-nas-pytorch-v2.yml
+  # remove search space file
+  stopCommand: nnictl stop
+  onExitCommand: python3 -c "import os; os.remove('config/examples/nni-nas-search-space.json')"
+  trainingService: local
