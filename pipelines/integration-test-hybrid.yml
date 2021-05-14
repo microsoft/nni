@@ -86,7 +86,6 @@ jobs:
           --remote_reuse true \
           --remote_user nni \
           --remote_host $(worker_ip) \
-          --remote_port $(docker_port) \
           --remote_pwd $(password_in_docker) \
           --nni_manager_ip $(manager_ip)
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts hybrid
