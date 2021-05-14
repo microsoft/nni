@@ -766,11 +766,12 @@ Now, ``TaylorFOWeightFilterPrunerMasker`` has argument ``statistics_batch_num``,
 For example, if you want to use ``TaylorFOWeightFilterPrunerMasker``, your config_list may like:
 
 .. code-block:: python
+
    config_list = [{
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
             'pruning_algo': ('taylorfo', {'statistics_batch_num': 1})
-        }]
+       }]
 
 Usage
 ^^^^^
@@ -781,14 +782,14 @@ PyTorch code
 
    from nni.algorithms.compression.pytorch.pruning import MixedMaskerPruner
    config_list = [{
-            'sparsity': 0.5,
-            'op_types': ['Conv2d'],
-            'pruning_algo': ('l1', {})
-        }, {
-            'sparsity': 0.5,
-            'op_types': ['Linear'],
-            'pruning_algo': ('level', {})
-        }]
+           'sparsity': 0.5,
+           'op_types': ['Conv2d'],
+           'pruning_algo': ('l1', {})
+       }, {
+           'sparsity': 0.5,
+           'op_types': ['Linear'],
+           'pruning_algo': ('level', {})
+       }]
    pruner = MixedMaskerPruner(model, config_list)
    pruner.compress()
 
