@@ -1,6 +1,6 @@
 experimentName: default_test
 searchSpaceFile: ./search_space.json
-trialCommand: python3 main.py
+trialCommand: python3 trial.py
 trialCodeDirectory: .
 trialGpuNumber: 0
 trialConcurrency: 1
