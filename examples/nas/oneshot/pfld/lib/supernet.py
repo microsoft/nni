@@ -89,16 +89,12 @@ class PFLDInference(nn.Module):
                 if m.bias is not None:
                     init.constant_(m.bias, 0)
 
-    def forward(self, x, temperature, perf_cost):
+    def forward(self, x):
         """
         Parameters
         ----------
         x : tensor
             input image
-        temperature : float32
-            the annealing temperature
-        perf_cost : tensor
-            the performance cost to be accumulated
 
         Returns
         -------
@@ -106,15 +102,13 @@ class PFLDInference(nn.Module):
             the predicted landmarks
         output: tensor
             the intermediate features
-        output: tensor
-            the accumulated performance cost
         """
         x, y1 = self.stem(x)
         out1 = x
 
         x = self.block4_1(x)
         for i, block in enumerate(self.blocks):
-            x, perf_cost = block(x, temperature, perf_cost)
+            x = block(x)
             if i == 1:
                 y2 = x
             elif i == 4:
@@ -130,7 +124,7 @@ class PFLDInference(nn.Module):
         y = self.conv7(y)
         landmarks = self.fc(y)
 
-        return landmarks, out1, perf_cost
+        return landmarks, out1
 
 
 class AuxiliaryNet(nn.Module):

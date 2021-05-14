@@ -34,9 +34,16 @@ class MixedOp(nn.Module):
             torch.FloatTensor([1.0 / n_choices for i in range(n_choices)])
         )
         self.path_alpha.requires_grad = False
+        self.temperature = 1.0
 
     def get_path_alpha(self):
         return self.path_alpha
+
+    def get_alpha_latency(self):
+        return (self.path_alpha, self.latency)
+
+    def set_temperature(self, temperature):
+        self.temperature = temperature
 
     def to_requires_grad(self):
         self.path_alpha.requires_grad = True
@@ -44,7 +51,7 @@ class MixedOp(nn.Module):
     def to_disable_grad(self):
         self.path_alpha.requires_grad = False
 
-    def forward(self, mutable, x, temperature, perf_cost):
+    def forward(self, mutable, x):
         """
         Define forward of LayerChoice.
 
@@ -54,37 +61,21 @@ class MixedOp(nn.Module):
             this layer's mutable
         x : tensor
             inputs of this layer, only support one input
-        temperature : float32
-            the temperature for gumbel softmax
-        perf_cost : tensor
-            accumulated performance cost
 
         Returns
         -------
         output: tensor
             output of this layer
-        perf_cost : tensor
-            accumulated performance cost
         """
         candidate_ops = list(mutable)
-        soft_masks = self.probs_over_ops(temperature)
+        soft_masks = self.probs_over_ops()
         output = sum(m * op(x) for m, op in zip(soft_masks, candidate_ops))
-        layer_perf = sum(m * lat for m, lat in zip(soft_masks, self.latency))
-        perf_cost = perf_cost + layer_perf
 
-        return output, perf_cost
+        return output
 
-    def probs_over_ops(self, temperature):
-        """
-        Apply softmax on alpha to generate probability distribution
-
-        Returns
-        -------
-        pytorch tensor
-            probability distribution
-        """
-        probs = F.gumbel_softmax(self.path_alpha, temperature)
-        return probs
+    def probs_over_ops(self):
+        """Apply gumbel softmax to generate probability distribution."""
+        return F.gumbel_softmax(self.path_alpha, self.temperature)
 
     @property
     def chosen_index(self):
@@ -193,10 +184,29 @@ class FBNetMutator(BaseMutator):
         yield
         -----
         PyTorch Parameter
-            Return ap_path_alpha of the traversed mutable
+            Return path_alpha of the traversed mutable
         """
         for mutable in self.undedup_mutables:
             yield mutable.registered_module.get_path_alpha()
+
+    def get_alpha_latency(self):
+        """
+        Get the arch param and latency.
+
+        yield
+        -----
+        Tuple
+            Return the path_alpha and latency table of the traversed mutable
+        """
+        for mutable in self.undedup_mutables:
+            yield mutable.registered_module.get_alpha_latency()
+
+    def set_temperature(self, temperature):
+        """
+        Set the annealed temperature of the op for gumbel softmax.
+        """
+        for mutable in self.undedup_mutables:
+            mutable.registered_module.set_temperature(temperature)
 
     def arch_requires_grad(self):
         """

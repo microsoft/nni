@@ -8,6 +8,7 @@ import os
 import time
 import torch
 
+from torch.nn import functional as F
 import numpy as np
 
 from torch.autograd import Variable
@@ -87,6 +88,7 @@ class FBNetTrainer(BaseTrainer):
 
         # init mutator
         self.mutator = FBNetMutator(model, lookup_table)
+        self.mutator.set_temperature(self.temp)
 
         # DataParallel should be put behind the init of mutator
         self.model = torch.nn.DataParallel(self.model, device_ids=device_ids)
@@ -105,7 +107,7 @@ class FBNetTrainer(BaseTrainer):
 
     def _layer_choice_sample(self):
         """
-        sample the index of network within layer choice
+        Sample the index of network within layer choice
         """
         stages = [stage_name for stage_name in self.lookup_table.layer_num]
         stage_lnum = [self.lookup_table.layer_num[stage] for stage in stages]
@@ -135,6 +137,21 @@ class FBNetTrainer(BaseTrainer):
         self.logger.info(choice_names)
         return choice_names
 
+    def _get_perf_cost(self, requires_grad=True):
+        """
+        Get the accumulated performance cost.
+        """
+        perf_cost = Variable(
+            torch.zeros(1), requires_grad=requires_grad
+        ).to(self.device, non_blocking=True)
+
+        for (alpha, latency) in self.mutator.get_alpha_latency():
+            gumbel_alpha = F.gumbel_softmax(alpha, self.temp)
+            gumbel_latency = sum(m * l for m, l in zip(gumbel_alpha, latency))
+            perf_cost = perf_cost + gumbel_latency
+
+        return perf_cost
+
     def _validate(self):
         """
         Do validation. During validation, LayerChoices use the mixed-op.
@@ -159,10 +176,7 @@ class FBNetTrainer(BaseTrainer):
                 images = images.to(self.device, non_blocking=True)
                 labels = labels.to(self.device, non_blocking=True)
 
-                perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
-                    self.device, non_blocking=True
-                )
-                output, _ = self.model(images, self.temp, perf_cost)
+                output = self.model(images)
 
                 loss = self.criterion(output, labels)
                 acc1, acc5 = accuracy(output, labels, topk=(1, 5))
@@ -212,15 +226,12 @@ class FBNetTrainer(BaseTrainer):
             images = images.to(self.device, non_blocking=True)
             labels = labels.to(self.device, non_blocking=True)
 
-            perf_cost = Variable(
-                torch.zeros(self.dev_num, 1), requires_grad=True
-            ).to(self.device, non_blocking=True)
-            output, perf_cost = self.model(images, self.temp, perf_cost)
-
+            output = self.model(images)
             loss = self.criterion(output, labels)
 
             # hardware-aware loss
-            regu_loss = self.reg_loss(perf_cost.mean(dim=0))
+            perf_cost = self._get_perf_cost(requires_grad=True)
+            regu_loss = self.reg_loss(perf_cost)
             if self.mode.startswith("mul"):
                 loss = loss * regu_loss
             elif self.mode.startswith("add"):
@@ -314,6 +325,7 @@ class FBNetTrainer(BaseTrainer):
             self.mutator.arch_disable_grad()
             # temperature annealing
             self.temp = self.temp * self.exp_anneal_rate
+            self.mutator.set_temperature(self.temp)
             # sample the architecture of sub-network
             choice_names = self._layer_choice_sample()
 

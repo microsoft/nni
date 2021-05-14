@@ -9,7 +9,6 @@ import torch
 
 import numpy as np
 
-from torch.autograd import Variable
 from nni.algorithms.nas.pytorch.fbnet import FBNetTrainer
 from nni.nas.pytorch.utils import AverageMeter
 from .utils import accuracy
@@ -111,10 +110,7 @@ class PFLDTrainer(FBNetTrainer):
                 landmark_gt = land_gt.to(self.device, non_blocking=True)
                 angle_gt = angle_gt.to(self.device, non_blocking=True)
 
-                perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
-                    self.device, non_blocking=True
-                )
-                landmark, _, _ = self.model(img, self.temp, perf_cost)
+                landmark, _ = self.model(img)
 
                 # compute the l2 loss
                 landmark = landmark.squeeze()
@@ -163,11 +159,7 @@ class PFLDTrainer(FBNetTrainer):
             landmark_gt = landmark_gt.to(self.device, non_blocking=True)
             angle_gt = angle_gt.to(self.device, non_blocking=True)
 
-            perf_cost = Variable(
-                torch.zeros(self.dev_num, 1), requires_grad=True
-            ).to(self.device, non_blocking=True)
-            lands, feats, perf_cost = self.model(img, self.temp, perf_cost)
-
+            lands, feats = self.model(img)
             landmarks = lands.squeeze()
             angle = self.auxiliarynet(feats)
 
@@ -178,7 +170,8 @@ class PFLDTrainer(FBNetTrainer):
             loss = l2_loss if arch_train else weighted_loss
 
             # hardware-aware loss
-            regu_loss = self.reg_loss(perf_cost.mean(dim=0))
+            perf_cost = self._get_perf_cost(requires_grad=True)
+            regu_loss = self.reg_loss(perf_cost)
             if self.mode.startswith("mul"):
                 loss = loss * regu_loss
             elif self.mode.startswith("add"):
@@ -257,6 +250,7 @@ class PFLDTrainer(FBNetTrainer):
             self.mutator.arch_disable_grad()
             # temperature annealing
             self.temp = self.temp * self.exp_anneal_rate
+            self.mutator.set_temperature(self.temp)
             # sample the architecture of sub-network
             choice_names = self._layer_choice_sample()
 

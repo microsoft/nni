@@ -172,7 +172,6 @@ def parse_args():
     )
     parser.add_argument("--train_batchsize", default=256, type=int)
     parser.add_argument("--val_batchsize", default=128, type=int)
-    parser.add_argument("--arch-search", "-as", action="store_true")
     args = parser.parse_args()
     args.snapshot = os.path.join(args.snapshot, 'supernet')
     args.log_file = os.path.join(args.snapshot, "{}.log".format('supernet'))
