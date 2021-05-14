@@ -3,8 +3,8 @@
 
 from __future__ import absolute_import, division, print_function
 
-import time
 import os
+import time
 import torch
 
 import numpy as np
@@ -111,14 +111,10 @@ class PFLDTrainer(FBNetTrainer):
                 landmark_gt = land_gt.to(self.device, non_blocking=True)
                 angle_gt = angle_gt.to(self.device, non_blocking=True)
 
-                if self.arch_search:
-                    perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
-                        self.device, non_blocking=True
-                    )
-                    landmark, _, _ = self.model(img, self.temp, perf_cost)
-
-                else:
-                    landmark, _ = self.model(img)
+                perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
+                    self.device, non_blocking=True
+                )
+                landmark, _, _ = self.model(img, self.temp, perf_cost)
 
                 # compute the l2 loss
                 landmark = landmark.squeeze()
@@ -167,13 +163,11 @@ class PFLDTrainer(FBNetTrainer):
             landmark_gt = landmark_gt.to(self.device, non_blocking=True)
             angle_gt = angle_gt.to(self.device, non_blocking=True)
 
-            if self.arch_search:
-                perf_cost = Variable(
-                    torch.zeros(self.dev_num, 1), requires_grad=True
-                ).to(self.device, non_blocking=True)
-                lands, feats, perf_cost = self.model(img, self.temp, perf_cost)
-            else:
-                lands, feats = self.model(img)
+            perf_cost = Variable(
+                torch.zeros(self.dev_num, 1), requires_grad=True
+            ).to(self.device, non_blocking=True)
+            lands, feats, perf_cost = self.model(img, self.temp, perf_cost)
+
             landmarks = lands.squeeze()
             angle = self.auxiliarynet(feats)
 
@@ -183,13 +177,12 @@ class PFLDTrainer(FBNetTrainer):
             )
             loss = l2_loss if arch_train else weighted_loss
 
-            if self.arch_search:
-                # hardware-aware loss
-                regu_loss = self.reg_loss(perf_cost.mean(dim=0))
-                if self.mode.startswith("mul"):
-                    loss = loss * regu_loss
-                elif self.mode.startswith("add"):
-                    loss = loss + regu_loss
+            # hardware-aware loss
+            regu_loss = self.reg_loss(perf_cost.mean(dim=0))
+            if self.mode.startswith("mul"):
+                loss = loss * regu_loss
+            elif self.mode.startswith("add"):
+                loss = loss + regu_loss
 
             # compute gradient and do SGD step
             optimizer.zero_grad()
@@ -242,32 +235,30 @@ class PFLDTrainer(FBNetTrainer):
         Then, it is disabled after the updating, in order not to update
         architecture weights when training model weights.
         """
-        if self.arch_search:
-            arch_param_num = self.mutator.num_arch_params()
-            self.logger.info("#arch_params: {}".format(arch_param_num))
-            self.epoch = max(self.start_epoch, self.epoch)
+        arch_param_num = self.mutator.num_arch_params()
+        self.logger.info("#arch_params: {}".format(arch_param_num))
+        self.epoch = max(self.start_epoch, self.epoch)
 
         ckpt_path = self.config.model_dir
         choice_names = None
         val_nme = 1e6
 
         for epoch in range(self.epoch, self.n_epochs):
-            self.logger.info("\n--------Train epoch: %d--------\n", epoch + 1)
             # update the weight parameters
+            self.logger.info("\n--------Train epoch: %d--------\n", epoch + 1)
             self._train_epoch(epoch, self.model_optim)
             # adjust learning rate
             self.scheduler.step()
 
-            if self.arch_search:
-                self.logger.info("Update architecture parameters")
-                # update the architecture parameters
-                self.mutator.arch_requires_grad()
-                self._train_epoch(epoch, self.arch_optimizer, True)
-                self.mutator.arch_disable_grad()
-                # temperature annealing
-                self.temp = self.temp * self.exp_anneal_rate
-                # sample the architecture of sub-network
-                choice_names = self._layer_choice_sample()
+            # update the architecture parameters
+            self.logger.info("Update architecture parameters")
+            self.mutator.arch_requires_grad()
+            self._train_epoch(epoch, self.arch_optimizer, True)
+            self.mutator.arch_disable_grad()
+            # temperature annealing
+            self.temp = self.temp * self.exp_anneal_rate
+            # sample the architecture of sub-network
+            choice_names = self._layer_choice_sample()
 
             # validate
             _, nme = self._validate()

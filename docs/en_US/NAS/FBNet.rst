@@ -97,7 +97,6 @@ Based on the architecture of simplified PFLD, the setting of multi-stage search 
    # configuration of hyper-parameters
    # search_space defines the multi-stage search space
    nas_config = NASConfig(
-          arch_search=True,
           model_dir="./ckpt_save",
           nas_lr=0.01,
           mode="mul",
@@ -115,7 +114,7 @@ After creation of the supernet with the specification of the search space and hy
 
 .. code-block:: bash
 
-   python train.py --net "supernet" -as --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points"
+   python train.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points"
 
 The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/supernet/checkpoint_best.pth``.
 
@@ -127,8 +126,8 @@ After the pre-training of supernet, we can run below command to sample the subne
 
 .. code-block:: bash
 
-   python train.py --net "subnet" --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points" \
-                   --supernet "./ckpt_save/supernet/checkpoint_best.pth"
+   python retrain.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points" \
+                     --supernet "./ckpt_save/supernet/checkpoint_best.pth"
 
 The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/subnet/checkpoint_best.pth``。
 

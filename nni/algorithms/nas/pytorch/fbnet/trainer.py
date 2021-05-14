@@ -3,9 +3,9 @@
 
 from __future__ import absolute_import, division, print_function
 
-import time
 import json
 import os
+import time
 import torch
 
 import numpy as np
@@ -71,7 +71,6 @@ class FBNetTrainer(BaseTrainer):
         self.n_epochs = n_epochs
         self.lookup_table = lookup_table
         self.config = lookup_table.config
-        self.arch_search = self.config.arch_search
         self.start_epoch = self.config.start_epoch
         self.temp = self.config.init_temperature
         self.exp_anneal_rate = self.config.exp_anneal_rate
@@ -86,22 +85,20 @@ class FBNetTrainer(BaseTrainer):
             model_optim, T_max=n_epochs, last_epoch=-1
         )
 
-        if self.arch_search:
-            # init mutator
-            self.mutator = FBNetMutator(model, lookup_table)
+        # init mutator
+        self.mutator = FBNetMutator(model, lookup_table)
 
         # DataParallel should be put behind the init of mutator
         self.model = torch.nn.DataParallel(self.model, device_ids=device_ids)
         self.model.to(device)
 
-        if self.arch_search:
-            # build architecture optimizer
-            self.arch_optimizer = torch.optim.AdamW(
-                self.mutator.get_architecture_parameters(),
-                self.config.nas_lr,
-                weight_decay=self.config.nas_weight_decay,
-            )
-            self.reg_loss = RegularizerLoss(config=self.config)
+        # build architecture optimizer
+        self.arch_optimizer = torch.optim.AdamW(
+            self.mutator.get_architecture_parameters(),
+            self.config.nas_lr,
+            weight_decay=self.config.nas_weight_decay,
+        )
+        self.reg_loss = RegularizerLoss(config=self.config)
 
         self.criterion = criterion
         self.epoch = 0
@@ -162,14 +159,10 @@ class FBNetTrainer(BaseTrainer):
                 images = images.to(self.device, non_blocking=True)
                 labels = labels.to(self.device, non_blocking=True)
 
-                if self.arch_search:
-                    perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
-                        self.device, non_blocking=True
-                    )
-                    output, _ = self.model(images, self.temp, perf_cost)
-
-                else:
-                    output = self.model(images)
+                perf_cost = Variable(torch.zeros(self.dev_num, 1)).to(
+                    self.device, non_blocking=True
+                )
+                output, _ = self.model(images, self.temp, perf_cost)
 
                 loss = self.criterion(output, labels)
                 acc1, acc5 = accuracy(output, labels, topk=(1, 5))
@@ -219,23 +212,19 @@ class FBNetTrainer(BaseTrainer):
             images = images.to(self.device, non_blocking=True)
             labels = labels.to(self.device, non_blocking=True)
 
-            if self.arch_search:
-                perf_cost = Variable(
-                    torch.zeros(self.dev_num, 1), requires_grad=True
-                ).to(self.device, non_blocking=True)
-                output, perf_cost = self.model(images, self.temp, perf_cost)
-            else:
-                output = self.model(images)
+            perf_cost = Variable(
+                torch.zeros(self.dev_num, 1), requires_grad=True
+            ).to(self.device, non_blocking=True)
+            output, perf_cost = self.model(images, self.temp, perf_cost)
 
             loss = self.criterion(output, labels)
 
-            if self.arch_search:
-                # hardware-aware loss
-                regu_loss = self.reg_loss(perf_cost.mean(dim=0))
-                if self.mode.startswith("mul"):
-                    loss = loss * regu_loss
-                elif self.mode.startswith("add"):
-                    loss = loss + regu_loss
+            # hardware-aware loss
+            regu_loss = self.reg_loss(perf_cost.mean(dim=0))
+            if self.mode.startswith("mul"):
+                loss = loss * regu_loss
+            elif self.mode.startswith("add"):
+                loss = loss + regu_loss
 
             # measure accuracy and record loss
             acc1, acc5 = accuracy(output, labels, topk=(1, 5))
@@ -303,10 +292,9 @@ class FBNetTrainer(BaseTrainer):
         Then, it is disabled after the updating, in order not to update
         architecture weights when training model weights.
         """
-        if self.arch_search:
-            arch_param_num = self.mutator.num_arch_params()
-            self.logger.info("#arch_params: {}".format(arch_param_num))
-            self.epoch = max(self.start_epoch, self.epoch)
+        arch_param_num = self.mutator.num_arch_params()
+        self.logger.info("#arch_params: {}".format(arch_param_num))
+        self.epoch = max(self.start_epoch, self.epoch)
 
         ckpt_path = self.config.model_dir
         choice_names = None
@@ -319,16 +307,15 @@ class FBNetTrainer(BaseTrainer):
             # adjust learning rate
             self.scheduler.step()
 
-            if self.arch_search:
-                self.logger.info("Update architecture parameters")
-                # update the architecture parameters
-                self.mutator.arch_requires_grad()
-                self._train_epoch(epoch, self.arch_optimizer, True)
-                self.mutator.arch_disable_grad()
-                # temperature annealing
-                self.temp = self.temp * self.exp_anneal_rate
-                # sample the architecture of sub-network
-                choice_names = self._layer_choice_sample()
+            self.logger.info("Update architecture parameters")
+            # update the architecture parameters
+            self.mutator.arch_requires_grad()
+            self._train_epoch(epoch, self.arch_optimizer, True)
+            self.mutator.arch_disable_grad()
+            # temperature annealing
+            self.temp = self.temp * self.exp_anneal_rate
+            # sample the architecture of sub-network
+            choice_names = self._layer_choice_sample()
 
             # validate
             val_loss, val_top1, val_top5 = self._validate()
@@ -387,7 +374,7 @@ class FBNetTrainer(BaseTrainer):
             if os.path.exists(filename):
                 self.load_checkpoint(filename)
 
-        if (self.epoch < self.start_epoch) and self.arch_search:
+        if self.epoch < self.start_epoch:
             self._warm_up()
         self._train()
 

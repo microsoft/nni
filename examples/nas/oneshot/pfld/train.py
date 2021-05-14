@@ -16,11 +16,7 @@ from lib.builder import search_space
 from lib.ops import PRIMITIVES
 from lib.trainer import PFLDTrainer
 from lib.utils import PFLDLoss
-from nni.algorithms.nas.pytorch.fbnet import (
-    LookUpTable,
-    NASConfig,
-    supernet_sample,
-)
+from nni.algorithms.nas.pytorch.fbnet import LookUpTable, NASConfig
 from torch.utils.data import DataLoader
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -56,18 +52,11 @@ def main(args):
     torch.manual_seed(manual_seed)
     torch.cuda.manual_seed_all(manual_seed)
 
-    if args.net == "supernet":
-        # import supernet for block-wise DNAS pre-training
-        from lib.supernet import PFLDInference, AuxiliaryNet
-    elif args.net == "subnet":
-        # import subnet for fine-tuning
-        from lib.subnet import PFLDInference, AuxiliaryNet
-    else:
-        raise ValueError("Network is not implemented")
+    # import supernet for block-wise DNAS pre-training
+    from lib.supernet import PFLDInference, AuxiliaryNet
 
     # the configuration for training control
     nas_config = NASConfig(
-        arch_search=args.arch_search,
         model_dir=args.snapshot,
         nas_lr=args.theta_lr,
         mode=args.mode,
@@ -78,20 +67,8 @@ def main(args):
     # look-up table with information of search space, flops per block, etc.
     lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
 
-    if "sub" in args.net:
-        check = torch.load(args.supernet, map_location=torch.device("cpu"))
-        sampled_arch = check["arch_sample"]
-        logging.info(sampled_arch)
-        # create subnet
-        pfld_backbone = PFLDInference(lookup_table, sampled_arch, num_points)
-
-        # pre-load the weights from pre-trained supernet
-        state_dict = check["pfld_backbone"]
-        supernet_sample(pfld_backbone, state_dict, sampled_arch, lookup_table)
-
-    else:
-        # create supernet
-        pfld_backbone = PFLDInference(lookup_table, num_points)
+    # create supernet
+    pfld_backbone = PFLDInference(lookup_table, num_points)
     # the auxiliary-net of PFLD to predict the pose angle
     auxiliarynet = AuxiliaryNet()
 
@@ -174,9 +151,6 @@ def main(args):
 def parse_args():
     """ Parse the user arguments. """
     parser = argparse.ArgumentParser(description="FBNet for PFLD")
-    parser.add_argument(
-        "--net", default="supernet", type=str, choices=["supernet", "subnet"]
-    )
     parser.add_argument("--dev_id", dest="dev_id", default="0", type=str)
     parser.add_argument("--opt", default="rms", type=str)
     parser.add_argument("--base_lr", default=0.0001, type=int)
@@ -188,7 +162,6 @@ def parse_args():
     )
     parser.add_argument("--alpha", default=0.25, type=float)
     parser.add_argument("--beta", default=0.8, type=float)
-    parser.add_argument("--supernet", default="", type=str, metavar="PATH")
     parser.add_argument("--end_epoch", default=300, type=int)
     parser.add_argument(
         "--snapshot", default="models", type=str, metavar="PATH"
@@ -201,8 +174,8 @@ def parse_args():
     parser.add_argument("--val_batchsize", default=128, type=int)
     parser.add_argument("--arch-search", "-as", action="store_true")
     args = parser.parse_args()
-    args.snapshot = os.path.join(args.snapshot, args.net)
-    args.log_file = os.path.join(args.snapshot, "{}.log".format(args.net))
+    args.snapshot = os.path.join(args.snapshot, 'supernet')
+    args.log_file = os.path.join(args.snapshot, "{}.log".format('supernet'))
     os.makedirs(args.snapshot, exist_ok=True)
     return args
 
