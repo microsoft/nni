@@ -44,15 +44,23 @@ class MixedPrunerMasker(WeightMasker):
     def __setattr__(self, name: str, value: Any) -> None:
         if name == 'dependency_aware':
             for masker in self.maskers.values():
-                masker.dependency_aware = value if isinstance(masker, StructuredWeightMasker) else masker.dependency_aware
+                if isinstance(masker, StructuredWeightMasker):
+                    masker.dependency_aware = value
         return super().__setattr__(name, value)
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
-        masker_name = 'default' if wrapper.config.get('masker_name') is None else wrapper.config['masker_name']
-        masker = self.maskers[masker_name]
-        if isinstance(masker, StructuredWeightMasker):
-            return masker.calc_mask(sparsity, wrapper, wrapper, **depen_kwargs)
+        if isinstance(wrapper, list):
+            origin_wrapper = depen_kwargs.pop('origin_wrapper')
+            masker_name = 'default' if origin_wrapper.config.get('masker_name') is None else origin_wrapper.config.get('masker_name')
+            masker = self.maskers[masker_name]
+            if isinstance(masker, StructuredWeightMasker):
+                return masker.calc_mask(sparsity, wrapper, wrapper_idx, **depen_kwargs)
+            else:
+                if depen_kwargs:
+                    _logger.warning('Submasker type %s not support dependency aware.', type(masker).__name__)
+                origin_sparsity = origin_wrapper.config['sparsity']
+                return {origin_wrapper.name: masker.calc_mask(origin_sparsity, origin_wrapper, wrapper_idx)}
         else:
-            if depen_kwargs:
-                _logger.warning('Submasker type %s not support dependency aware.', type(masker).__name__)
-            return masker.calc_mask(sparsity, wrapper, wrapper)
+            masker_name = 'default' if wrapper.config.get('masker_name') is None else wrapper.config['masker_name']
+            masker = self.maskers[masker_name]
+            return masker.calc_mask(sparsity, wrapper, wrapper_idx)

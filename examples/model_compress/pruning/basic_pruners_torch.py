@@ -35,7 +35,8 @@ from nni.algorithms.compression.pytorch.pruning import (
     L2FilterPruner,
     AGPPruner,
     ActivationMeanRankFilterPruner,
-    ActivationAPoZRankFilterPruner
+    ActivationAPoZRankFilterPruner,
+    MixedMaskerPruner
 )
 
 
@@ -50,7 +51,8 @@ str2pruner = {
     'agp': AGPPruner,
     'fpgm': FPGMPruner,
     'mean_activation': ActivationMeanRankFilterPruner,
-    'apoz': ActivationAPoZRankFilterPruner
+    'apoz': ActivationAPoZRankFilterPruner,
+    'mixed': MixedMaskerPruner
 }
 
 def get_dummy_input(args, device):
@@ -90,6 +92,17 @@ def get_pruner(model, pruner_name, device, optimizer=None, dependency_aware=Fals
             'end_epoch': 10,
             'frequency': 1,
             'op_types': ['Conv2d']
+        }]
+    elif pruner_name == 'mixed':
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['Conv2d'],
+            'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37'],
+            'pruning_algo': ('l1', {})
+        }, {
+            'sparsity': args.sparsity,
+            'op_types': ['Linear'],
+            'pruning_algo': ('level', {})
         }]
     else:
         config_list = [{
@@ -352,7 +365,7 @@ if __name__ == '__main__':
                         help='toggle dependency aware mode')
     parser.add_argument('--pruner', type=str, default='l1filter',
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                                 'fpgm', 'mean_activation', 'apoz'],
+                                 'fpgm', 'mean_activation', 'apoz', 'mixed'],
                         help='pruner to use')
 
     # fine-tuning

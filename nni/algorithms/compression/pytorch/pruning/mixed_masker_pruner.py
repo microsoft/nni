@@ -64,7 +64,7 @@ class MixedMaskerPruner(_StructuredFilterPruner):
         maskers_config_dict = {}
         counter = {}
         for config in config_list:
-            assert 'masker_name' in config, 'maskers_config_dict should be set if use masker_name'
+            assert 'masker_name' not in config, 'maskers_config_dict should be set if use masker_name'
             if 'pruning_algo' not in config:
                 config['masker_name'] = 'default'
             else:
@@ -74,3 +74,51 @@ class MixedMaskerPruner(_StructuredFilterPruner):
                 maskers_config_dict[masker_name] = config.pop('pruning_algo')
                 config['masker_name'] = masker_name
         return config_list, maskers_config_dict
+
+    def _dependency_calc_mask(self, wrappers, channel_dsets, wrappers_idx=None, origin_wrapper=None):
+        """
+        Override to make sure if submasker do not support dependency_aware, calc_mask perform normal calculations.
+        """
+        groups = [self.group_depen[_w.name] for _w in wrappers]
+        sparsities = [_w.config['sparsity'] for _w in wrappers]
+        masks = self.masker.calc_mask(
+            sparsities, wrappers, wrappers_idx, channel_dsets=channel_dsets, groups=groups, origin_wrapper=origin_wrapper)
+        if masks is not None:
+            if isinstance(masks, dict):
+                for _w in wrappers:
+                    _w.if_calculated = True
+            else:
+                origin_wrapper.if_calculated = True
+                masks = {origin_wrapper.name: masks}
+        return masks
+
+    def _common_calc_mask(self, wrapper, wrappers_idx=None):
+        return self.masker.calc_mask(wrapper.config['sparsity'], wrapper, wrappers_idx=wrappers_idx)
+
+    def _dependency_update_mask(self):
+        """
+        Override to make sure if submasker do not support dependency_aware, calc_mask perform normal calculations.
+        """
+        name2wrapper = {x.name: x for x in self.get_modules_wrapper()}
+        wrapper2index = {x: i for i, x in enumerate(self.get_modules_wrapper())}
+        for wrapper in self.get_modules_wrapper():
+            if wrapper.if_calculated:
+                continue
+            if wrapper.name not in self.channel_depen:
+                masks = self._common_calc_mask(wrapper, wrapper2index[wrapper])
+                if masks is not None:
+                    for k in masks:
+                        assert hasattr(wrapper, k), "there is no attribute '%s' in wrapper" % k
+                        setattr(wrapper, k, masks[k])
+            else:
+                _names = [x for x in self.channel_depen[wrapper.name]]
+                _wrappers = [name2wrapper[name] for name in _names if name in name2wrapper]
+                _wrapper_idxes = [wrapper2index[_w] for _w in _wrappers]
+
+                masks = self._dependency_calc_mask(_wrappers, _names, wrappers_idx=_wrapper_idxes, origin_wrapper=wrapper)
+                if masks is not None:
+                    for layer in masks:
+                        for mask_type in masks[layer]:
+                            assert hasattr(
+                                name2wrapper[layer], mask_type), "there is no attribute '%s' in wrapper on %s" % (mask_type, layer)
+                            setattr(name2wrapper[layer], mask_type, masks[layer][mask_type])
