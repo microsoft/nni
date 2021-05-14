@@ -1,7 +1,7 @@
 experimentName: default_test
-searchSpaceFile: ./mnist_pytorch_search_space.json
-trialCommand: python3 mnist.py  --epochs 1 --batch_num 10
-trialCodeDirectory: ../../../examples/trials/mnist-pytorch
+searchSpaceFile: seach_space_classic_nas.json
+trialCommand: python3 mnist.py --epochs 1
+trialCodeDirectory: ../../../examples/nas/legacy/classic_nas
 trialGpuNumber: 0
 trialConcurrency: 1
 maxExperimentDuration: 15m
@@ -14,4 +14,3 @@ assessor:
   name: Medianstop
   classArgs:
     optimize_mode: maximize
-
