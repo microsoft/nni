@@ -3,9 +3,9 @@ searchSpaceFile: cifar10_search_space.json
 trialCommand: python3 main.py --epochs 1 --batches 1
 trialCodeDirectory: ../../../examples/trials/cifar10_pytorch
 trialGpuNumber: 1
-trialConcurrency: 2
+trialConcurrency: 1
 maxExperimentDuration: 15m
-maxTrialNumber: 2
+maxTrialNumber: 1
 tuner:
   name: Random
 trainingService:
