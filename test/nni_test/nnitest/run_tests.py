@@ -55,7 +55,8 @@ def update_training_service_config(config, training_service, config_file_path):
     
     if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-    deep_update(config, it_ts_config['all'])
+    else:
+        deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
 
