@@ -12,7 +12,7 @@ TRAINING_SERVICE_FILE_V2 = os.path.join('config', 'training_service_v2.yml')
 
 def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
-    if args.nni_manager_ip is not None:
+    if args.nni_manager_ip is not None and args.config_version == 'v1':
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
     if args.ts == 'pai':
         if args.pai_user is not None:
@@ -108,12 +108,14 @@ def update_training_service_config(args):
         config[args.ts]['trainingService'][0]['machineList'][0]['host'] = args.remote_host
         config[args.ts]['trainingService'][0]['machineList'][0]['password'] = args.remote_pwd
         config[args.ts]['trainingService'][0]['machineList'][0]['port'] = args.remote_port
+        config[args.ts]['nni_manager_ip'] = nni_manager_ip
         dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--ts", type=str, choices=['pai', 'kubeflow', 'remote', 'local', 'frameworkcontroller', 'adl', 'aml', 'hybrid'], default='pai')
+    parser.add_argument("--config_version", type=str, choices=['v1', 'v2'], default='v1')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
     # args for PAI
