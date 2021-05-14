@@ -368,7 +368,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
     else:
         log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
-    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
+    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else 'info'
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
     if mode != 'view':
