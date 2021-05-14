@@ -17,7 +17,7 @@ def get_tuner_class_dict():
         with open(config_file, 'r') as f:
             config = yaml.load(f, Loader=yaml.SafeLoader)
     else:
-        config = defaultdict(list)
+        config = {}
     ret = {}
     for t in ['tuners', 'advisors']:
         for entry in config[t]:
