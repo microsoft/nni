@@ -7,7 +7,7 @@ trialConcurrency: 8
 maxExperimentDuration: 15m
 maxTrialNumber: 8
 tuner:
-  nameame: TPE
+  name: TPE
   classArgs:
     optimize_mode: maximize
 trainingService:
