@@ -1,5 +1,5 @@
 experimentName: default_test
-searchSpaceFile: ./naive_trial/search_space.json
+searchSpaceFile: ../naive_trial/search_space.json
 trialCommand: python3 trial.py
 trialCodeDirectory: ../naive_trial
 trialGpuNumber: 0
