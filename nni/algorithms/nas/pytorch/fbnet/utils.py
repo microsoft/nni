@@ -27,7 +27,7 @@ class NASConfig:
         nas_weight_decay=5e-4,
         mode="mul",
         alpha=0.25,
-        beta=0.8,
+        beta=0.6,
         start_epoch=50,
         init_temperature=5.0,
         exp_anneal_rate=np.exp(-0.045),

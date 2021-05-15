@@ -8,7 +8,6 @@ import os
 import time
 import torch
 
-from torch.nn import functional as F
 import numpy as np
 
 from torch.autograd import Variable
@@ -145,10 +144,8 @@ class FBNetTrainer(BaseTrainer):
             torch.zeros(1), requires_grad=requires_grad
         ).to(self.device, non_blocking=True)
 
-        for (alpha, latency) in self.mutator.get_alpha_latency():
-            gumbel_alpha = F.gumbel_softmax(alpha, self.temp)
-            gumbel_latency = sum(m * l for m, l in zip(gumbel_alpha, latency))
-            perf_cost = perf_cost + gumbel_latency
+        for latency in self.mutator.get_weighted_latency():
+            perf_cost = perf_cost + latency
 
         return perf_cost
 

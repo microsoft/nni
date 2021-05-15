@@ -39,8 +39,10 @@ class MixedOp(nn.Module):
     def get_path_alpha(self):
         return self.path_alpha
 
-    def get_alpha_latency(self):
-        return (self.path_alpha, self.latency)
+    def get_weighted_latency(self):
+        soft_masks = self.probs_over_ops()
+        weighted_latency = sum(m * l for m, l in zip(soft_masks, self.latency))
+        return weighted_latency
 
     def set_temperature(self, temperature):
         self.temperature = temperature
@@ -189,17 +191,17 @@ class FBNetMutator(BaseMutator):
         for mutable in self.undedup_mutables:
             yield mutable.registered_module.get_path_alpha()
 
-    def get_alpha_latency(self):
+    def get_weighted_latency(self):
         """
-        Get the arch param and latency.
+        Get the latency weighted by gumbel softmax coefficients.
 
         yield
         -----
         Tuple
-            Return the path_alpha and latency table of the traversed mutable
+            Return the weighted_latency of the traversed mutable
         """
         for mutable in self.undedup_mutables:
-            yield mutable.registered_module.get_alpha_latency()
+            yield mutable.registered_module.get_weighted_latency()
 
     def set_temperature(self, temperature):
         """
