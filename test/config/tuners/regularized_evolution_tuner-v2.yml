@@ -7,10 +7,8 @@ trialConcurrency: 1
 maxExperimentDuration: 15m
 maxTrialNumber: 1
 tuner:
-  name: Random
-trainingService:
-  platform: local
-assessor:
-  name: Medianstop
+  name: RegularizedEvolutionTuner
   classArgs:
     optimize_mode: maximize
+trainingService:
+  platform: local
