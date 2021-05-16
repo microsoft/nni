@@ -593,28 +593,43 @@ class LsqQuantizer(Quantizer):
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
-            layer.module.register_parameter("scale", torch.nn.Parameter(torch.Tensor([1.0])))
             if "weight" in config.get("quant_types", []):
-                # todo: support per-channel quantization for weight since TensorRT it for conv weight
+                layer.module.register_parameter("weight_scale", torch.nn.Parameter(torch.Tensor([1.0])))
+                # todo: support per-channel quantization for weight since TensorRT use it for conv weight
                 q_bit = get_bits_length(config, "weight")
                 layer.module.register_buffer('weight_bit', torch.Tensor([q_bit]))
                 qmax = 2 ** (q_bit - 1) - 1
                 qmin = -2 ** (q_bit - 1)
                 init_weight_scale = layer.module.weight.data.detach().abs().mean() * 2 / (qmax ** 0.5)
-                layer.module.scale = torch.nn.Parameter(init_weight_scale)
+                layer.module.weight_scale = torch.nn.Parameter(init_weight_scale)
                 layer.module.weight_qmax = qmax
                 layer.module.weight_qmin = qmin
 
+                self.optimizer.add_param_group({"params": layer.module.weight_scale})
+
             if "output" in config.get("quant_types", []):
                 # scale of activation will be initialized using the first batch data
+                layer.module.register_parameter("output_scale", torch.nn.Parameter(torch.Tensor([1.0])))
                 q_bit = get_bits_length(config, "output")
-                layer.module.register_buffer('activation_bit', torch.Tensor([q_bit]))
+                layer.module.register_buffer('output_bit', torch.Tensor([q_bit]))
                 qmax = 2 ** (q_bit - 1) - 1
                 qmin = -2 ** (q_bit - 1)
-                layer.module.activation_qmax = qmax
-                layer.module.activation_qmin = qmin
-            # add scale to optimizer since they are updated through the gradient
-            self.optimizer.add_param_group({"params": layer.module.scale})
+                layer.module.output_qmax = qmax
+                layer.module.output_qmin = qmin
+
+                self.optimizer.add_param_group({"params": layer.module.output_scale})
+
+            if "input" in config.get("quant_types", []):
+                # scale of activation will be initialized using the first batch data
+                layer.module.register_parameter("input_scale", torch.nn.Parameter(torch.Tensor([1.0])))
+                q_bit = get_bits_length(config, "input")
+                layer.module.register_buffer('input_bit', torch.Tensor([q_bit]))
+                qmax = 2 ** (q_bit - 1) - 1
+                qmin = -2 ** (q_bit - 1)
+                layer.module.input_qmax = qmax
+                layer.module.input_qmin = qmin
+
+                self.optimizer.add_param_group({"params": layer.module.input_scale})
 
     @staticmethod
     def grad_scale(x, scale):
@@ -649,7 +664,7 @@ class LsqQuantizer(Quantizer):
         # todo: add support for quantize bias. If we use TensorRT as backend, there is no need to quantize
         # bias
         old_weight = module.old_weight
-        weight = self.quantize(old_weight, module.scale, module.weight_qmin, module.weight_qmax)
+        weight = self.quantize(old_weight, module.weight_scale, module.weight_qmin, module.weight_qmax)
         module.weight = weight
         return weight
 
@@ -658,12 +673,27 @@ class LsqQuantizer(Quantizer):
 
         # initialize the scale
         if self.bound_model.steps == 1:
-            qmax = module.activation_qmax
+            qmax = module.output_qmax
             init_oup_scale = output.data.detach().abs().mean() * 2 / (qmax ** 0.5)
-            module.scale.data = init_oup_scale
+            module.output_scale.data = init_oup_scale
 
-        output = self.quantize(output, module.scale, module.activation_qmin, module.activation_qmax)
+        output = self.quantize(output, module.output_scale, module.output_qmin, module.output_qmax)
         return output
+
+    def quantize_input(self, *inputs, wrapper, **kwargs):
+        # This is hacky since it is not recommended to modify a tuple
+        # NB: support layers with multi inputs
+        module = wrapper.module
+        # initialize the scale
+        if self.bound_model.steps == 1:
+            qmax = module.input_qmax
+            init_oup_scale = inputs[0].data.detach().abs().mean() * 2 / (qmax ** 0.5)
+            module.input_scale.data = init_oup_scale
+
+        new_input = self.quantize(inputs[0], module.input_scale, module.input_qmin, module.input_qmax)
+        list_inp = list(inputs)
+        list_inp[0] = new_input
+        return tuple(list_inp)
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
@@ -692,18 +722,18 @@ class LsqQuantizer(Quantizer):
         calibration_config = {}
 
         for name, module in self.bound_model.named_modules():
-            if hasattr(module, 'weight_bit') or hasattr(module, 'activation_bit'):
+            if hasattr(module, 'input_bit') or hasattr(module, 'output_bit'):
                 calibration_config[name] = {}
-            if hasattr(module, 'weight_bit'):
-                calibration_config[name]['weight_bit'] = int(module.weight_bit)
-                abs_max_weight = float(module.scale * module.weight_qmax)
-                calibration_config[name]['tracked_min_input'] = -abs_max_weight
-                calibration_config[name]['tracked_max_input'] = abs_max_weight
-            if hasattr(module, 'activation_bit'):
-                calibration_config[name]['activation_bit'] = int(module.activation_bit)
-                abs_max_activation = float(module.scale * module.activation_qmax)
-                calibration_config[name]['tracked_min_activation'] = -abs_max_activation
-                calibration_config[name]['tracked_max_activation'] = abs_max_activation
+            if hasattr(module, 'input_bit'):
+                calibration_config[name]['weight_bit'] = int(module.input_bit)
+                abs_max_input = float(module.input_scale * module.input_qmax)
+                calibration_config[name]['tracked_min_input'] = -abs_max_input
+                calibration_config[name]['tracked_max_input'] = abs_max_input
+            if hasattr(module, 'output_bit'):
+                calibration_config[name]['activation_bit'] = int(module.output_bit)
+                abs_max_output = float(module.output_scale * module.output_qmax)
+                calibration_config[name]['tracked_min_activation'] = -abs_max_output
+                calibration_config[name]['tracked_max_activation'] = abs_max_output
             self._del_simulated_attr(module)
 
         self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path,
@@ -715,8 +745,8 @@ class LsqQuantizer(Quantizer):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
-        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'tracked_min_input', 'tracked_max_input', 'tracked_min_activation', \
+        'tracked_max_activation', 'output_scale', 'input_scale', 'weight_scale','weight_bit', 'output_bit', 'input_bit']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)

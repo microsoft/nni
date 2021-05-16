@@ -746,7 +746,7 @@ def _check_weight(module):
 
 def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
     if quant_type == QuantType.QUANT_INPUT:
-        output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
+        output = wrapper.quantizer.quantize_input(*tensor, wrapper=wrapper, **kwargs)
     elif quant_type == QuantType.QUANT_WEIGHT:
         output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
     elif quant_type == QuantType.QUANT_OUTPUT:
