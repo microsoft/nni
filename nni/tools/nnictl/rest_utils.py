@@ -49,11 +49,11 @@ def rest_delete(url, timeout, show_error=False):
             print_error(exception)
         return None
 
-def check_rest_server(rest_port, prefixUrl):
+def check_rest_server(rest_port):
     '''Check if restful server is ready'''
     retry_count = 20
     for _ in range(retry_count):
-        response = rest_get(check_status_url(rest_port, prefixUrl), REST_TIME_OUT)
+        response = rest_get(check_status_url(rest_port), REST_TIME_OUT)
         if response:
             if response.status_code == 200:
                 return True, response
@@ -63,9 +63,9 @@ def check_rest_server(rest_port, prefixUrl):
             time.sleep(1)
     return  False, response
 
-def check_rest_server_quick(rest_port, prefixUrl):
+def check_rest_server_quick(rest_port):
     '''Check if restful server is ready, only check once'''
-    response = rest_get(check_status_url(rest_port, prefixUrl), 5)
+    response = rest_get(check_status_url(rest_port), 5)
     if response and response.status_code == 200:
         return True, response
     return False, None

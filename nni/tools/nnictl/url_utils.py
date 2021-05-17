@@ -3,7 +3,6 @@
 
 import socket
 import psutil
-import re
 
 BASE_URL = 'http://localhost'
 
@@ -25,54 +24,55 @@ TENSORBOARD_API = '/tensorboard'
 
 METRIC_DATA_API = '/metric-data'
 
-def path_validation(path):
-    assert re.match("^[A-Za-z0-9_-]*$", path), "prefix url is invalid."
-
 def formatURLPath(path):
     return '' if path is None else '/{0}'.format(path)
 
-def metric_data_url(port,prefix):
+def setPrefixUrl(prefix_path):
+    global API_ROOT_URL
+    API_ROOT_URL = formatURLPath(prefix_path)
+
+def metric_data_url(port):
     '''get metric_data url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), METRIC_DATA_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, METRIC_DATA_API)
 
-def check_status_url(port,prefix):
+def check_status_url(port):
     '''get check_status url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), CHECK_STATUS_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, CHECK_STATUS_API)
 
 
-def cluster_metadata_url(port,prefix):
+def cluster_metadata_url(port):
     '''get cluster_metadata_url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), CLUSTER_METADATA_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, CLUSTER_METADATA_API)
 
 
-def import_data_url(port,prefix):
+def import_data_url(port):
     '''get import_data_url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), IMPORT_DATA_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, IMPORT_DATA_API)
 
 
-def experiment_url(port,prefix):
+def experiment_url(port):
     '''get experiment_url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), EXPERIMENT_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, EXPERIMENT_API)
 
 
-def trial_jobs_url(port,prefix):
+def trial_jobs_url(port):
     '''get trial_jobs url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), TRIAL_JOBS_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, TRIAL_JOBS_API)
 
 
-def trial_job_id_url(port, job_id,prefix):
+def trial_job_id_url(port, job_id):
     '''get trial_jobs with id url'''
-    return '{0}:{1}{2}{3}{4}/{5}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), TRIAL_JOBS_API, job_id)
+    return '{0}:{1}{2}{3}/{4}'.format(BASE_URL, port, API_ROOT_URL, TRIAL_JOBS_API, job_id)
 
 
-def export_data_url(port,prefix):
+def export_data_url(port):
     '''get export_data url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), EXPORT_DATA_API)
+    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, EXPORT_DATA_API)
 
 
-def tensorboard_url(port,prefix):
+def tensorboard_url(port):
     '''get tensorboard url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, formatURLPath(prefix), TENSORBOARD_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, TENSORBOARD_API)
 
 
 def get_local_urls(port,prefix):

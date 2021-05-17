@@ -10,6 +10,8 @@ import * as component from '../common/component';
 
 @component.Singleton
 class ExperimentStartupInfo {
+    private readonly API_ROOT_URL: string = '/api/v1/nni';
+
     private experimentId: string = '';
     private newExperiment: boolean = true;
     private basePort: number = -1;
@@ -100,9 +102,14 @@ class ExperimentStartupInfo {
         return this.dispatcherPipe;
     }
 
-    public getUrlPrefix(): string {
+    public getAPIRootUrl(): string {
         assert(this.initialized);
-        return this.urlprefix;
+        if(this.urlprefix==''){
+            return this.API_ROOT_URL;
+        }
+        else{
+            return `/${this.urlprefix}`;
+        }
     }
 }
 
@@ -140,11 +147,11 @@ function getDispatcherPipe(): string | null {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getDispatcherPipe();
 }
 
-function getUrlPrefix(): string {
-    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getUrlPrefix();
+function getAPIRootUrl(): string {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getAPIRootUrl();
 }
 
 export {
     ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getPlatform, getExperimentStartupInfo,
-    setExperimentStartupInfo, isReadonly, getDispatcherPipe, getUrlPrefix
+    setExperimentStartupInfo, isReadonly, getDispatcherPipe, getAPIRootUrl
 };

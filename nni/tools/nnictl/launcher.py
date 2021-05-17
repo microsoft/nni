@@ -9,6 +9,7 @@ import string
 import random
 import time
 import tempfile
+import re
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
@@ -16,7 +17,7 @@ from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, path_validation, formatURLPath
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, setPrefixUrl, formatURLPath
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
@@ -82,7 +83,8 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
     if foreground:
         cmds += ['--foreground', 'true']
     if url_prefix:
-        path_validation(url_prefix)
+        _validate_prefix_path(url_prefix)
+        setPrefixUrl(url_prefix)
         cmds += ['--url_prefix', url_prefix]
 
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
@@ -106,11 +108,11 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
                 process = Popen(cmds, cwd=entry_dir, stdout=stdout_file, stderr=stderr_file)
     return process, int(start_time * 1000)
 
-def set_trial_config(experiment_config, port, config_file_name, prefixUrl):
+def set_trial_config(experiment_config, port, config_file_name):
     '''set trial configuration'''
     request_data = dict()
     request_data['trial_config'] = experiment_config['trial']
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps(request_data), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps(request_data), REST_TIME_OUT)
     if check_response(response):
         return True
     else:
@@ -121,12 +123,12 @@ def set_trial_config(experiment_config, port, config_file_name, prefixUrl):
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
         return False
 
-def set_adl_config(experiment_config, port, config_file_name, prefixUrl):
+def set_adl_config(experiment_config, port, config_file_name):
     '''set adl configuration'''
     adl_config_data = dict()
     # hack for supporting v2 config, need refactor
     adl_config_data['adl_config'] = {}
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps(adl_config_data), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps(adl_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -136,11 +138,11 @@ def set_adl_config(experiment_config, port, config_file_name, prefixUrl):
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
     set_V1_common_config(experiment_config, port, config_file_name)
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name, prefixUrl)
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
     #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name, prefixUrl), None
+    return set_trial_config(experiment_config, port, config_file_name), None
 
 def validate_response(response, config_file_name):
     err_message = None
@@ -154,7 +156,7 @@ def validate_response(response, config_file_name):
         exit(1)
 
 # hack to fix v1 version_check and log_collection bug, need refactor
-def set_V1_common_config(experiment_config, port, config_file_name, prefixUrl):
+def set_V1_common_config(experiment_config, port, config_file_name):
     version_check = True
     #debug mode should disable version check
     if experiment_config.get('debug') is not None:
@@ -162,19 +164,19 @@ def set_V1_common_config(experiment_config, port, config_file_name, prefixUrl):
     #validate version check
     if experiment_config.get('versionCheck') is not None:
         version_check = experiment_config.get('versionCheck')
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps({'version_check': version_check}), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps({'version_check': version_check}), REST_TIME_OUT)
     validate_response(response, config_file_name)
     if experiment_config.get('logCollection'):
-        response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
+        response = rest_put(cluster_metadata_url(port), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
         validate_response(response, config_file_name)
 
-def setNNIManagerIp(experiment_config, port, config_file_name, prefixUrl):
+def setNNIManagerIp(experiment_config, port, config_file_name):
     '''set nniManagerIp'''
     if experiment_config.get('nniManagerIp') is None:
         return True, None
     ip_config_dict = dict()
     ip_config_dict['nni_manager_ip'] = {'nniManagerIp': experiment_config['nniManagerIp']}
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps(ip_config_dict), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps(ip_config_dict), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -185,11 +187,11 @@ def setNNIManagerIp(experiment_config, port, config_file_name, prefixUrl):
         return False, err_message
     return True, None
 
-def set_kubeflow_config(experiment_config, port, config_file_name, prefixUrl):
+def set_kubeflow_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration'''
     kubeflow_config_data = dict()
     kubeflow_config_data['kubeflow_config'] = experiment_config['kubeflowConfig']
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps(kubeflow_config_data), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps(kubeflow_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -198,18 +200,18 @@ def set_kubeflow_config(experiment_config, port, config_file_name, prefixUrl):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
-    set_V1_common_config(experiment_config, port, config_file_name, prefixUrl)
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name, prefixUrl)
+    set_V1_common_config(experiment_config, port, config_file_name)
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
     #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name, prefixUrl), err_message
+    return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_frameworkcontroller_config(experiment_config, port, config_file_name, prefixUrl):
+def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     '''set kubeflow configuration'''
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
-    response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
+    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:
@@ -218,16 +220,16 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name, pr
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
-    set_V1_common_config(experiment_config, port, config_file_name, prefixUrl)
-    result, message = setNNIManagerIp(experiment_config, port, config_file_name, prefixUrl)
+    set_V1_common_config(experiment_config, port, config_file_name)
+    result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
     #set trial_config
-    return set_trial_config(experiment_config, port, config_file_name, prefixUrl), err_message
+    return set_trial_config(experiment_config, port, config_file_name), err_message
 
-def set_shared_storage(experiment_config, port, config_file_name, prefixUrl):
+def set_shared_storage(experiment_config, port, config_file_name):
     if 'sharedStorage' in experiment_config:
-        response = rest_put(cluster_metadata_url(port, prefixUrl), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
+        response = rest_put(cluster_metadata_url(port), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
         err_message = None
         if not response or not response.status_code == 200:
             if response is not None:
@@ -238,7 +240,7 @@ def set_shared_storage(experiment_config, port, config_file_name, prefixUrl):
             return False, err_message
     return True, None
 
-def set_experiment_v1(experiment_config, mode, port, config_file_name, prefixUrl):
+def set_experiment_v1(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
     request_data = dict()
     request_data['authorName'] = experiment_config['authorName']
@@ -298,7 +300,7 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name, prefixUrl
     elif experiment_config['trainingServicePlatform'] == 'adl':
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
-    response = rest_post(experiment_url(port, prefixUrl), json.dumps(request_data), REST_TIME_OUT, show_error=True)
+    response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
     else:
@@ -309,9 +311,9 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name, prefixUrl
             print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
-def set_experiment_v2(experiment_config, mode, port, config_file_name, prefixUrl):
+def set_experiment_v2(experiment_config, mode, port, config_file_name):
     '''Call startExperiment (rest POST /experiment) with yaml file content'''
-    response = rest_post(experiment_url(port, prefixUrl), json.dumps(experiment_config), REST_TIME_OUT, show_error=True)
+    response = rest_post(experiment_url(port), json.dumps(experiment_config), REST_TIME_OUT, show_error=True)
     if check_response(response):
         return response
     else:
@@ -322,21 +324,21 @@ def set_experiment_v2(experiment_config, mode, port, config_file_name, prefixUrl
             print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
-def set_platform_config(platform, experiment_config, port, config_file_name, rest_process, prefixUrl):
+def set_platform_config(platform, experiment_config, port, config_file_name, rest_process):
     '''call set_cluster_metadata for specific platform'''
     print_normal('Setting {0} config...'.format(platform))
     config_result, err_msg = None, None
     if platform == 'adl':
-        config_result, err_msg = set_adl_config(experiment_config, port, config_file_name, prefixUrl)
+        config_result, err_msg = set_adl_config(experiment_config, port, config_file_name)
     elif platform == 'kubeflow':
-        config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name, prefixUrl)
+        config_result, err_msg = set_kubeflow_config(experiment_config, port, config_file_name)
     elif platform == 'frameworkcontroller':
-        config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name, prefixUrl)
+        config_result, err_msg = set_frameworkcontroller_config(experiment_config, port, config_file_name)
     else:
         raise Exception(ERROR_INFO % 'Unsupported platform!')
         exit(1)
     if config_result:
-        config_result, err_msg = set_shared_storage(experiment_config, port, config_file_name, prefixUrl)
+        config_result, err_msg = set_shared_storage(experiment_config, port, config_file_name)
     if config_result:
         print_normal('Successfully set {0} config!'.format(platform))
     else:
@@ -414,7 +416,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             experiment_config['searchSpace'] = ''
 
     # check rest server
-    running, _ = check_rest_server(args.port, args.url_prefix)
+    running, _ = check_rest_server(args.port)
     if running:
         print_normal('Successfully started Restful server!')
     else:
@@ -436,9 +438,9 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     if mode != 'view' and experiment_config.get('debug') is None:
         experiment_config['debug'] = args.debug
     if config_version == 1:
-        response = set_experiment_v1(experiment_config, mode, args.port, experiment_id, args.url_prefix)
+        response = set_experiment_v1(experiment_config, mode, args.port, experiment_id)
     else:
-        response = set_experiment_v2(experiment_config, mode, args.port, experiment_id, args.url_prefix)
+        response = set_experiment_v2(experiment_config, mode, args.port, experiment_id)
     if response:
         if experiment_id is None:
             experiment_id = json.loads(response.text).get('experiment_id')
@@ -480,6 +482,9 @@ def _validate_v2(config, path):
         return conf.json()
     except Exception as e:
         print_error(f'Config V2 validation failed: {repr(e)}')
+
+def _validate_prefix_path(path):
+    assert re.match("^[A-Za-z0-9_-]*$", path), "prefix url is invalid."
 
 def create_experiment(args):
     '''start a new experiment'''

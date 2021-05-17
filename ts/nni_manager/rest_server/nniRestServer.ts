@@ -10,7 +10,7 @@ import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
-import { getUrlPrefix } from '../common/experimentStartupInfo';
+import { getAPIRootUrl } from '../common/experimentStartupInfo';
 
 /**
  * NNI Main rest server, provides rest API to support
@@ -20,14 +20,15 @@ import { getUrlPrefix } from '../common/experimentStartupInfo';
  */
 @component.Singleton
 export class NNIRestServer extends RestServer {
-    private readonly API_ROOT_URL: string = `/api/v1/nni/${getUrlPrefix()}`;
     private readonly LOGS_ROOT_URL: string = '/logs';
+    protected API_ROOT_URL: string = '/api/v1/nni';
 
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */
     constructor() {
         super();
+        this.API_ROOT_URL = getAPIRootUrl();
     }
 
     /**
