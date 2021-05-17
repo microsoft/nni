@@ -430,7 +430,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     if config_version == 1 and mode != 'view':
         # set platform configuration
         set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
-                            experiment_id, rest_process, args.url_prefix)
+                            experiment_id, rest_process)
 
     # start a new experiment
     print_normal('Starting experiment...')

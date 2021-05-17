@@ -104,12 +104,7 @@ class ExperimentStartupInfo {
 
     public getAPIRootUrl(): string {
         assert(this.initialized);
-        if(this.urlprefix==''){
-            return this.API_ROOT_URL;
-        }
-        else{
-            return `/${this.urlprefix}`;
-        }
+        return this.urlprefix==''?this.API_ROOT_URL:`/${this.urlprefix}`;
     }
 }
 
