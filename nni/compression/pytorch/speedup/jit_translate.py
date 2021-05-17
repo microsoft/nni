@@ -109,8 +109,8 @@ def size_python(node, speedup):
             self.sizedim = sizedim
 
         def forward(self, x):
-            return torch.tensor(x.size(self.sizedim))
-            # return x.size(self.sizedim)
+            return torch.as_tensor([x.size(self.sizedim)], dtype=torch.long)
+            # return torch.tensor(x.size(self.sizedim))
     c_node = node.key_node
     inputs = list(c_node.inputs())
     size_dim = inputs[1].toIValue()

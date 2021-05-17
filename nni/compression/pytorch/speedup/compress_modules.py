@@ -350,7 +350,7 @@ def replace_conv2d(conv, auto_infer):
         new_out_start = new_outchannel_step * new_groups
         new_out_end = new_out_start + new_outchannel_step
         tmp_weight[new_out_start:new_out_end] = torch.index_select(
-            conv.weight[current_output_index], 1, torch.tensor(current_input_index).to(conv.weight.device))
+            conv.weight[current_output_index], 1, torch.as_tensor(current_input_index, dtype=torch.long).to(conv.weight.device))
         new_groups += 1
 
     _logger.debug("replace conv2d with in_channels: %d, out_channels: %d",
@@ -495,7 +495,7 @@ def replace_convtranspose2d(convtrans, auto_infer):
         new_in_start = new_inchannel_step * new_groups
         new_in_end = new_in_start + new_inchannel_step
         tmp_weight[new_in_start:new_in_end] = torch.index_select(
-            convtrans.weight[current_input_index], 1, torch.tensor(current_output_index).to(convtrans.weight.device))
+            convtrans.weight[current_input_index], 1, torch.as_tensor(current_output_index, dtype=torch.long).to(convtrans.weight.device))
         new_groups += 1
 
     _logger.debug('Replace convtranspose2d %s with in_channels:%d out_channels:%d',

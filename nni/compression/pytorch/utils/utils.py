@@ -58,7 +58,7 @@ def randomize_tensor(tensor, start=1, end=10):
     assert isinstance(tensor, torch.Tensor)
     if tensor.dtype in torch_integer_dtype:
         # integer tensor can only be randomized by the torch.randint
-        torch.randint(start, end, tensor.size(), out=tensor.data, dtype=tensor.dtype)
+        torch.randint(int(start), int(end), tensor.size(), out=tensor.data, dtype=tensor.dtype)
     else:
         # we can use nn.init.uniform_ to randomize this tensor
         # Note: the tensor that with integer type cannot be randomize
