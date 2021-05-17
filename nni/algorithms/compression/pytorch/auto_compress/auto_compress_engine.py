@@ -9,9 +9,9 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 import nni
-from nni.retiarii.utils import import_
 from .constants import PRUNER_DICT, QUANTIZER_DICT
 from .interface import AbstractExecutionEngine
+from .utils import import_
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
