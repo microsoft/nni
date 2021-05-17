@@ -67,9 +67,15 @@ class AutoCompressSearchSpaceGenerator:
                 self.quantizer_choice_list = v['algorithm_name']['_value']
 
     def _wrap_single_value(self, value) -> dict:
-        if not isinstance(value, dict) or '_type' not in value:
-            value = {
+        if not isinstance(value, dict):
+            converted_value = {
                 '_type': 'choice',
                 '_value': [value]
             }
-        return value
+        elif '_type' not in value:
+            converted_value = {}
+            for k, v in value.items():
+                converted_value[k] = self._wrap_single_value(v)
+        else:
+            converted_value = value
+        return converted_value

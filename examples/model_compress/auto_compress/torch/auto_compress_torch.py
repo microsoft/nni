@@ -24,6 +24,15 @@ generator.add_pruner_config('l1', [
         'op_types': ['Conv2d']
     }
 ])
+generator.add_quantizer_config('qat', [
+    {
+        'quant_types': ['weight', 'output'],
+        'quant_bits': {
+            'weight': 8,
+            'output': 8
+        },
+        'op_types': ['Conv2d', 'Linear']
+    }])
 search_space = generator.dumps()
 
 experiment = AutoCompressExperiment('local')
