@@ -51,6 +51,7 @@ interface CompareProps {
     title: string;
     showDetails: boolean;
     onHideDialog: () => void;
+    changeSelectTrialIds?: () => void;
 }
 
 class Compare extends React.Component<CompareProps, {}> {
@@ -196,8 +197,17 @@ class Compare extends React.Component<CompareProps, {}> {
         );
     }
 
+    private closeCompareModal = (): void => {
+        const { showDetails, changeSelectTrialIds, onHideDialog } = this.props;
+        if (showDetails === true) {
+            // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+            changeSelectTrialIds!();
+        }
+        onHideDialog();
+    };
+
     render(): React.ReactNode {
-        const { onHideDialog, trials, title, showDetails } = this.props;
+        const { trials, title, showDetails } = this.props;
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -218,7 +228,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
-                onDismiss={onHideDialog}
+                onDismiss={this.closeCompareModal}
             >
                 <div>
                     <div className={contentStyles.header}>
@@ -227,7 +237,7 @@ class Compare extends React.Component<CompareProps, {}> {
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
                             ariaLabel='Close popup modal'
-                            onClick={onHideDialog}
+                            onClick={this.closeCompareModal}
                         />
                     </div>
                     <Stack className='compare-modal-intermediate'>
