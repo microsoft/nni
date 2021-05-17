@@ -566,7 +566,7 @@ class LsqQuantizer(Quantizer):
     """Quantizer defined in:
        Learned Step Size Quantization (ICLR 2020)
        https://arxiv.org/pdf/1902.08153.pdf
-       """
+    """
 
     def __init__(self, model, config_list, optimizer=None):
         """
