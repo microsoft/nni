@@ -409,9 +409,112 @@ def replace_conv2d(conv, auto_infer):
         # print('Fuck me!!!', auto_infer.name)
         return new_conv
 
-def replace_convtranspose2d(module, auto_infer):
-    # TODO add the replace function for the convtranspose2d module
-    return module
+def replace_convtranspose2d(convtrans, auto_infer):
+    """
+    We need anothor replace function for
+    convtranspose2d, because the layout of
+    the weight is different from traditional
+    conv layers. The layout of the weight is [N_in, N_out, ksize_1, ksize_2]
+    Parameters
+    ----------
+    convtrans : torch.nn.ConvTranspose2d
+        The conv2d module to be replaced
+    mask : ModuleMasks
+        The masks of this module
+    Returns
+    -------
+    torch.nn.ConvTranspose2d
+        The new conv2d module
+    """
+    assert isinstance(convtrans, torch.nn.ConvTranspose2d)
+    assert len(auto_infer.in_masks) == 1
+    in_mask = auto_infer.in_masks[0]
+    output_mask = auto_infer.output_mask
+    weight_mask = auto_infer.weight_mask['weight']
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    # ConvTranspose2d has the weight shape of [N_in, N_out/groups, k1, k2]
+    n_remained_in = weight_mask.size(0) - pruned_in.size(0)
+    n_remained_out = weight_mask.size(1) * convtrans.groups - pruned_out.size(0)
+    assert n_remained_in == remained_in.size(0)
+    assert n_remained_out == remained_out.size(0)
+    k_size1, k_size2 = convtrans.kernel_size
+    # Note: we should resolve the group dependency of the convtrans layers before
+    # run into this function
+    ori_inchannel_step = int(convtrans.in_channels/convtrans.groups)
+    ori_outchannel_step = int(convtrans.out_channels/convtrans.groups)
+    new_inchannel_step = new_outchannel_step = None
+    for groupid in range(convtrans.groups):
+        in_start = groupid * ori_inchannel_step
+        in_end = in_start + ori_inchannel_step
+        out_start = groupid * ori_outchannel_step
+        out_end = out_start + ori_outchannel_step
+        current_input_index = list(
+            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
+        current_output_index = list(
+            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+        if len(current_input_index) == 0:
+            # if the whole group are pruned
+            continue
+        else:
+            new_inchannel_step = len(current_input_index)
+            new_outchannel_step = len(current_output_index)
+            break
+    tmp_weight = torch.ones(n_remained_in, new_outchannel_step, k_size1, k_size2)
+    tmp_weight = tmp_weight.to(convtrans.weight.device)
+
+    assert n_remained_in % new_inchannel_step == 0
+    assert n_remained_out % new_outchannel_step == 0
+
+    new_groups = 0
+    for groupid in range(convtrans.groups):
+        # copy the weights of this group
+        in_start = groupid * ori_inchannel_step
+        in_end = in_start + ori_inchannel_step
+        out_start = groupid * ori_outchannel_step
+        out_end = out_start + ori_outchannel_step
+        current_input_index = list(
+            filter(lambda x: in_start <= x and x < in_end, remained_in.tolist()))
+        current_output_index = list(
+            filter(lambda x: out_start <= x and x < out_end, remained_out.tolist()))
+        # remap the global index to the group index
+        # in the convtranspose layer, the groups are on
+        # the output channel dimension
+        current_output_index = [x-out_start for x in current_output_index]
+        if len(current_input_index) == 0:
+            # if the whole group are pruned
+            assert len(current_output_index) == 0
+            continue
+        # check if the number of remained channel of each group are the same
+        assert len(current_input_index) == new_inchannel_step
+        assert len(current_output_index) == new_outchannel_step
+        # copy the weight into tmp_weight
+        new_in_start = new_inchannel_step * new_groups
+        new_in_end = new_in_start + new_inchannel_step
+        tmp_weight[new_in_start:new_in_end] = torch.index_select(
+            convtrans.weight[current_input_index], 1, torch.tensor(current_output_index).to(convtrans.weight.device))
+        new_groups += 1
+
+    _logger.debug('Replace convtranspose2d %s with in_channels:%d out_channels:%d',
+                  auto_infer.name, n_remained_in, n_remained_out)
+    new_convtrans = torch.nn.ConvTranspose2d(in_channels=n_remained_in,
+                                             out_channels=n_remained_out,
+                                             kernel_size=convtrans.kernel_size,
+                                             stride=convtrans.stride,
+                                             padding=convtrans.padding,
+                                             dilation=convtrans.dilation,
+                                             groups=new_groups,
+                                             bias=convtrans.bias is not None,
+                                             padding_mode=convtrans.padding_mode)
+    new_convtrans.to(convtrans.weight.device)
+    new_convtrans.weight.copy_(tmp_weight)
+    if convtrans.bias is not None:
+        if auto_infer.output_mask is not None:
+            new_convtrans.bias.data[:] = torch.index_select(
+                convtrans.bias.data, 0, remained_out)
+        else:
+            new_convtrans.bias.data.copy_(convtrans.bias.data)
+    return new_convtrans
 
 def replace_layernorm(layernorm, auto_infer):
     assert isinstance(layernorm, nn.LayerNorm)
