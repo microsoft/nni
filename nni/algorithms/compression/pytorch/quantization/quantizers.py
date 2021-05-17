@@ -639,7 +639,8 @@ class LsqQuantizer(Quantizer):
 
             :math:`\frac{\alpha_L}{\alpha_x}=\frac{\alpha_L}{\alpha_y}*\frac{\alpha_y}{\alpha_x}=sclae*\frac{\alpha_L}{\alpha_x}`
 
-            This means that the origin gradient of x is scaled by a factor of `scale`.
+            This means that the origin gradient of x is scaled by a factor of `scale`. Applying this function
+            to a nn.Parameter will scale the gradient of it without changing its value.
         """
         y = x
         y_grad = x * scale
@@ -648,7 +649,7 @@ class LsqQuantizer(Quantizer):
     @staticmethod
     def round_pass(x):
         """
-            A simple way to execute `round` operation with grad set to 1
+            A simple way to achieve STE operation.
         """
         y = x.round()
         y_grad = x
