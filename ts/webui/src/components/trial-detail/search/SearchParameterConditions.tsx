@@ -43,12 +43,15 @@ function SearchParameterConditions(props): any {
         let str = '';
         searchFilter.forEach(item => {
             const filterName = item.name === 'StatusNNI' ? 'Status' : item.name;
-            if (item.operator === undefined) {
-                str = str + `${filterName}: ${item.value1}; `;
+            if (item.operator === '') {
+                str = str + `${filterName}:${item.value1}; `;
             } else if (item.operator === 'between') {
-                str = str + `${item.value1} < ${filterName} < ${item.value2}; `;
+                str = str + `${filterName}:[${item.value1},${item.value2}]; `;
+            } else if (item.operator === '=') {
+                str = str + `${filterName}:${item.value1}; `;
             } else {
-                str = str + `${filterName} ${item.operator} ${item.value1}; `;
+                // > <
+                str = str + `${filterName}${item.operator}${item.value1}; `;
             }
         });
         return str;
@@ -144,8 +147,8 @@ function SearchParameterConditions(props): any {
 SearchParameterConditions.propTypes = {
     parameter: PropTypes.string,
     searchFilter: PropTypes.array,
-    changeSearchFilterList: PropTypes.func,
     setSearchInputVal: PropTypes.func,
+    changeSearchFilterList: PropTypes.func,
     updatePage: PropTypes.func
 };
 

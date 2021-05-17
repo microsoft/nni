@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { Stack, DefaultButton, IContextualMenuProps, IContextualMenuItem, DirectionalHint } from '@fluentui/react';
+import {
+    Stack,
+    DefaultButton,
+    IContextualMenuProps,
+    IContextualMenuItem,
+    DirectionalHint,
+    SearchBox
+} from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
@@ -77,67 +84,86 @@ function Search(props): any {
                 idOrTrialNo={item.text}
                 searchFilter={searchFilter} // search的数组
                 changeSearchFilterList={changeSearchFilterList}
+                setSearchInputVal={setSearchInputVal}
                 updatePage={updatePage}
             />
         );
     }
 
-    function _updateSearchText(ev: React.ChangeEvent<HTMLInputElement>): void {
-        setSearchInputVal(ev.target.value);
+    function _updateSearchText(_, newValue): void {
+        setSearchInputVal(newValue);
     }
 
-    function clickFuc(): void {
-        // 根据 input val 来反天 searchFilter []
-        const result = searchInputVal.trim().split(';');
-        console.info(result);
-        const copySearchFilter = JSON.parse(JSON.stringify(searchFilter));
+    // 根据用户自己填入的筛选条件来进行筛选
+    function startFilter(): void {
+        // 根据 input val 来反填 searchFilter []
+        const aaa = searchInputVal.trim().split(';');
+        const result = aaa.splice(
+            aaa.findIndex(item => item === ''),
+            1
+        );
+        const newSearchFilter: any = [];
         result.forEach(temp => {
-            // conv_size = 1024, conv_size > 1024, conv_size < 1024, ≠
-            // const temp = item.split(' ');
-            const item = temp.trim().split(' ');
-            console.info(item);
-            // 先找有没有这个条件存在
-            const find = copySearchFilter.filter(index => index.name === item[0]);
-            if (find.length > 0) {
-                // 条件存在，覆盖值
-                copySearchFilter.forEach(a => {
-                    if (a.name === item[0]) {
-                        a.operator = item[1];
-                        a.value1 = item[2];
-                        a.value2 = '';
-                    }
-                });
-            } else {
-                // 不存在这个条件，直接push进去
-                copySearchFilter.push({
-                    name: item[0],
-                    operator: item[1],
-                    value1: item[2],
+            let item;
+            if (temp.includes('Status')) {
+                const splitOperator = temp.includes('≠') ? '≠' : ':';
+                const filterOperator = temp.includes('≠') ? '≠' : '=';
+                item = temp.trim().split(splitOperator);
+                newSearchFilter.push({
+                    name: 'StatusNNI',
+                    operator: filterOperator,
+                    value1: item[1],
                     value2: ''
                 });
+            } else {
+                // if (temp.includes('Trial id') || temp.includes('Trial No.')) {
+                if (temp.includes(':')) {
+                    item = temp.trim().split(':');
+                    const isArray = Array.isArray(JSON.parse(item[1]));
+                    newSearchFilter.push({
+                        name: item[0],
+                        operator: isArray ? 'between' : '=',
+                        value1: isArray ? JSON.parse(item[1])[0] : item[1],
+                        value2: isArray ? JSON.parse(item[1])[1] : ''
+                    });
+                    console.info('split :', item);
+                } else {
+                    const operator = temp.includes('>') ? '>' : '<';
+                    item = temp.trim().split(operator);
+                    console.info('split operator', item);
+                    newSearchFilter.push({
+                        name: item[0],
+                        operator: operator,
+                        value1: item[1],
+                        value2: ''
+                    });
+                }
             }
         });
         // conv_size < 7; hidden_size < 1024
-        console.info(copySearchFilter);
-        changeSearchFilterList(copySearchFilter);
+        console.info(newSearchFilter);
+        changeSearchFilterList(newSearchFilter);
         updatePage();
     }
 
+    function clearFliter(): void {
+        changeSearchFilterList([]);
+        updatePage();
+    }
     return (
         <div>
             <Stack horizontal>
-                {/* 联动菜单demo */}
                 <DefaultButton text='Filter' menuProps={searchMenuProps} />
                 {/* 存放filter条件；用户输入filter条件，反向实现搜索 */}
-                <input
-                    type='text'
-                    className='input-padding'
-                    placeholder='xxx'
+                <SearchBox
+                    styles={{ root: { width: 400 } }}
+                    placeholder='Search'
                     onChange={_updateSearchText}
                     value={searchInputVal}
-                    style={{ width: 360 }}
+                    onSearch={startFilter}
+                    onEscape={clearFliter}
+                    onClear={clearFliter}
                 />
-                <DefaultButton text='filter' onClick={clickFuc} />
             </Stack>
         </div>
     );
