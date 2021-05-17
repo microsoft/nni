@@ -724,8 +724,8 @@ class LsqQuantizer(Quantizer):
         for name, module in self.bound_model.named_modules():
             if hasattr(module, 'input_bit') or hasattr(module, 'output_bit'):
                 calibration_config[name] = {}
-            if hasattr(module, 'input_bit'):
-                calibration_config[name]['weight_bit'] = int(module.input_bit)
+            if hasattr(module, 'weight_bit'):
+                calibration_config[name]['weight_bit'] = int(module.weight_bit)
                 abs_max_input = float(module.input_scale * module.input_qmax)
                 calibration_config[name]['tracked_min_input'] = -abs_max_input
                 calibration_config[name]['tracked_max_input'] = abs_max_input
