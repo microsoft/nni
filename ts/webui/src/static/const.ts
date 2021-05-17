@@ -6,8 +6,7 @@ const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const prefix = getPrefix();
 
-const MANAGER_IP = prefix === undefined ? '/api/v1/nni' : `/api/v1/nni${prefix}`;
-// how about /logs apis?
+const MANAGER_IP = prefix === undefined ? '/api/v1/nni' : `${prefix}`;
 const DOWNLOAD_IP = `/logs`;
 
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
