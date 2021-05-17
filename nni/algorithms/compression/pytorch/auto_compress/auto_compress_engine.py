@@ -2,9 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
-import json_tricks
 from typing import Optional, Callable
 
+import json_tricks
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -129,8 +129,8 @@ class AutoCompressEngine(AbstractExecutionEngine):
                                           finetune_trainer, **compressor_parameter_dict)
 
     @classmethod
-    def trial_execute_compress(cls):
-        auto_compress_module = import_('auto_compress_module.AutoCompressModule')
+    def trial_execute_compress(cls, module_name):
+        auto_compress_module = import_('{}.AutoCompressModule'.format(module_name))
 
         parameter = nni.get_next_parameter()['compressor_type']
         compressor_type, algorithm_config = parameter['_name'], parameter['algorithm_name']

@@ -45,4 +45,7 @@ experiment.config.tuner.name = 'TPE'
 experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
 experiment.config.training_service.use_active_gpu = True
 
-experiment.run(8080)
+# the relative file path under trial_code_directory, which contains the class AutoCompressModule
+experiment.config.auto_compress_module_file_name = './auto_compress_module.py'
+
+experiment.run(8088)
