@@ -4,7 +4,7 @@ import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency, GroupDependency, InputChannelDependency, reshape_break_channel_dependency
+from .shape_dependency import ChannelDependency, GroupDependency, InputChannelDependency
 from .utils import get_module_by_name
 # logging.basicConfig(level = logging.DEBUG)
 _logger = logging.getLogger('FixMaskConflict')
@@ -253,6 +253,8 @@ class ChannelMaskConflict(MaskFix):
                 else:
                     # no mask means not pruned, equivlent to full masks
                     channel_masks.append(None)
+            if fine_grained:
+                _logger.info("Fine-grianed mask detected")
             if all(x is None for x in channel_masks):
                 continue
             num_channels_list = [len(x)

@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import functools
 import logging
 from functools import partial
 import torch
-import torchvision
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -96,7 +95,7 @@ def slice_python(node, speedup):
     slice_step = inputs[4].toIValue()
     slice_obj = slice(slice_start, slice_end, slice_step)
     slice_list = []
-    for i in range(slice_dim-1):
+    for _ in range(slice_dim-1):
         slice_list.append(slice(None, None))
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))

@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-import torch
 import logging
+import torch
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -31,7 +31,7 @@ def add_conflict_unmask(node, input_masks, output_mask):
         mask doesn't need to unmask any value, else we should unmask the values in the
         tensor.
     """
-    
+
     # in the add operation, we should align the input mask
     # with the output mask.
     assert isinstance(input_masks, list)
@@ -68,7 +68,7 @@ def add_conflict_padding(node, input_masks, output_mask):
         mask doesn't need to unmask any value, else we should unmask the values in the
         tensor.
     """
-    
+
     # in the add operation, we should align the input mask
     # with the output mask.
     assert isinstance(input_masks, list)

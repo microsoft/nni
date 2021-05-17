@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import numpy as np
 import torch
 import torch.nn as nn
 from ..utils import randomize_tensor, torch_float_dtype, torch_integer_dtype
@@ -236,7 +235,7 @@ class AutoMaskInference:
                     out_mask.append(_mask)
                     constant.append(_constant)
             else:
-                _logger.warn(
+                _logger.warning(
                     'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
 
         # We also need random the parameters of the module, because if the weight of the model has
@@ -263,7 +262,7 @@ class AutoMaskInference:
                 for i, tout in enumerate(out):
                     _tmp = torch.zeros_like(tout)
                     sparsity_pos = out_mask[i] == 0
-                    _tmp[sparsity_pos] = t_out[sparsity_pos]
+                    _tmp[sparsity_pos] = tout[sparsity_pos]
                     constant.append(_tmp)
 
         # print('%%%%%%%%%')
@@ -375,7 +374,7 @@ class AutoMaskInference:
                 for i, _ in enumerate(out_sparsity):
                     self.output_mask[i] *= out_sparsity[i]
             else:
-                _logger.warn('There is no output sparsity')
+                _logger.warning('There is no output sparsity')
             # also save the out_constant
             self.out_constant = out_constant
 

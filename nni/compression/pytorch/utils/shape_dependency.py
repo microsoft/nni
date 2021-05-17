@@ -2,8 +2,8 @@
 # Licensed under the MIT license.
 
 import csv
-import numpy as np
 import logging
+import numpy as np
 
 
 __all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency']
@@ -429,14 +429,14 @@ class GroupDependency(Dependency):
                             self.groups[parent].append(group)
                         else:
                             self.groups[parent] = [group]
-        # self.dependency = {name: np.lcm(self.groups[name]) for name in self.groups}
+
         for name in self.groups:
             self.dependency[name] = lcm_list(self.groups[name])
             if min(self.groups[name]) == gcd_list(self.groups[name]):
                 self.min_groups[name] = min(self.groups[name])
             else:
                 self.min_groups[name] = 1
-        # self.min_groups = {name: min(self.groups[name]) if min(self.groups[name])== np.gcd(self.groups[name]) else 1 for name in self.groups}
+
         return self.dependency
 
     def export(self, filepath):

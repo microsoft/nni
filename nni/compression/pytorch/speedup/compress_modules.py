@@ -181,7 +181,6 @@ def replace_batchnorm1d(norm, auto_infer):
     return new_norm
 
 
-
 def replace_batchnorm2d(norm, auto_infer):
     """
     Parameters
@@ -317,7 +316,8 @@ def replace_conv2d(conv, auto_infer):
             new_inchannel_step = len(current_input_index)
             new_outchannel_step = len(current_output_index)
             break
-    tmp_weight = torch.ones(n_remained_out, new_inchannel_step, k_size1, k_size2)
+    tmp_weight = torch.ones(
+        n_remained_out, new_inchannel_step, k_size1, k_size2)
     tmp_weight = tmp_weight.to(conv.weight.device)
     # print(n_remained_out, new_outchannel_step)
     # print(current_output_index)
@@ -326,7 +326,7 @@ def replace_conv2d(conv, auto_infer):
     # print(conv)
     assert n_remained_in % new_inchannel_step == 0
     assert n_remained_out % new_outchannel_step == 0
-    
+
     new_groups = 0
     for groupid in range(conv.groups):
         in_start = groupid * ori_inchannel_step
@@ -343,7 +343,7 @@ def replace_conv2d(conv, auto_infer):
             # if the whole group are pruned
             assert len(current_output_index) == 0
             continue
-        # check if the number of remained channel of each group are the same       
+        # check if the number of remained channel of each group are the same
         assert len(current_input_index) == new_inchannel_step
         assert len(current_output_index) == new_outchannel_step
         # copy the weight into tmp_weight
@@ -378,7 +378,7 @@ def replace_conv2d(conv, auto_infer):
     if conv.bias is not None:
         new_conv.bias.data.copy_(torch.index_select(
             conv.bias.data, 0, remained_out))
-    
+
     # if auto_infer.name == 'conv2':
     #     print('in conv2')
     #     pos = torch.abs(in_constant) > 0.0001
@@ -409,6 +409,7 @@ def replace_conv2d(conv, auto_infer):
         # print('Fuck me!!!', auto_infer.name)
         return new_conv
 
+
 def replace_convtranspose2d(convtrans, auto_infer):
     """
     We need anothor replace function for
@@ -435,7 +436,8 @@ def replace_convtranspose2d(convtrans, auto_infer):
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
     # ConvTranspose2d has the weight shape of [N_in, N_out/groups, k1, k2]
     n_remained_in = weight_mask.size(0) - pruned_in.size(0)
-    n_remained_out = weight_mask.size(1) * convtrans.groups - pruned_out.size(0)
+    n_remained_out = weight_mask.size(
+        1) * convtrans.groups - pruned_out.size(0)
     assert n_remained_in == remained_in.size(0)
     assert n_remained_out == remained_out.size(0)
     k_size1, k_size2 = convtrans.kernel_size
@@ -460,7 +462,8 @@ def replace_convtranspose2d(convtrans, auto_infer):
             new_inchannel_step = len(current_input_index)
             new_outchannel_step = len(current_output_index)
             break
-    tmp_weight = torch.ones(n_remained_in, new_outchannel_step, k_size1, k_size2)
+    tmp_weight = torch.ones(
+        n_remained_in, new_outchannel_step, k_size1, k_size2)
     tmp_weight = tmp_weight.to(convtrans.weight.device)
 
     assert n_remained_in % new_inchannel_step == 0
@@ -515,6 +518,7 @@ def replace_convtranspose2d(convtrans, auto_infer):
         else:
             new_convtrans.bias.data.copy_(convtrans.bias.data)
     return new_convtrans
+
 
 def replace_layernorm(layernorm, auto_infer):
     assert isinstance(layernorm, nn.LayerNorm)

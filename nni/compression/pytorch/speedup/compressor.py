@@ -3,10 +3,10 @@
 
 import queue
 import logging
+import copy
 import torch
 import torch.nn as nn
 import numpy as np
-import copy
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
@@ -17,29 +17,6 @@ from ..utils import rand_like_with_shape
 from .sparsity_conflicts import calc_unmask, calc_padding
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.DEBUG)
-
-
-def get_module_by_name(model, module_name):
-    """
-    Get a module specified by its module name
-
-    Parameters
-    ----------
-    model : pytorch model
-        the pytorch model from which to get its module
-    module_name : str
-        the name of the required module
-
-    Returns
-    -------
-    module, module
-        the parent module of the required module, the required module
-    """
-    name_list = module_name.split(".")
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    leaf_module = getattr(model, name_list[-1])
-    return model, leaf_module
 
 
 class ModelSpeedup:
@@ -89,8 +66,9 @@ class ModelSpeedup:
         # load the mask tensor to the same device with the dummy_input
         # self.masks save the mask tensors pruned by the user and the infered
         # masks of the others modules
-        self.masks = torch.load(masks_file, map_location if map_location is not None else str(self.device))
-        
+        self.masks = torch.load(
+            masks_file, map_location if map_location is not None else str(self.device))
+
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
@@ -98,9 +76,6 @@ class ModelSpeedup:
         # architecture to resolve the sparsity conflict.
         self.fold_bias = fold_bias
         self.enable_compile = enable_compile
-    
-
-
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         input_errmsg = 'Only support the tensor, list/tuple/dict of tensors as input'
@@ -122,23 +97,24 @@ class ModelSpeedup:
                     and the batchsize of all inputs should be the same!'
                 input_shape = list(t_input.size())
                 input_shape[batch_dim] = confidence
-                # rand_func = torch.randint if t_input.dtype 
-                self.dummy_input.append(rand_like_with_shape(input_shape, t_input))
+                # rand_func = torch.randint if t_input.dtype
+                self.dummy_input.append(
+                    rand_like_with_shape(input_shape, t_input))
         elif isinstance(dummy_input, dict):
             self.dummy_input = {}
             tmp_key = list(dummy_input.keys())[0]
             old_batchsize = dummy_input[tmp_key].size(0)
             self.device = dummy_input[tmp_key].device
-            for in_name, t_input  in dummy_input.items():
+            for in_name, t_input in dummy_input.items():
                 assert isinstance(t_input, torch.Tensor), input_errmsg
                 assert old_batchsize == t_input.size(0), 'The first dimension should be batchsize\
-                and the batchsize of all inputs should be the same!'      
+                and the batchsize of all inputs should be the same!'
                 input_shape = list(t_input.size())
                 input_shape[batch_dim] = confidence
-                self.dummy_input[in_name] = rand_like_with_shape(input_shape, t_input)
+                self.dummy_input[in_name] = rand_like_with_shape(
+                    input_shape, t_input)
         else:
             raise TypeError(input_errmsg)
-
 
     def _prepare_dummy_input(self, node):
         """
@@ -231,7 +207,7 @@ class ModelSpeedup:
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInferenceClass(
-                func, dummy_input, in_masks, in_constants=in_constants, batch_dim = self.batch_dim)
+                func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
         else:
             # node.type == 'module'
             weight_mask = None
@@ -239,7 +215,7 @@ class ModelSpeedup:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInferenceClass(
-                module, dummy_input, in_masks, weight_mask, in_constants=in_constants, \
+                module, dummy_input, in_masks, weight_mask, in_constants=in_constants,
                 state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
@@ -309,7 +285,7 @@ class ModelSpeedup:
         else:
             value = c_node.toIValue()
             # TODO support more kinds of value node
-            errmsg = "Doesn't support convert %s to values", str(cnode.type())
+            errmsg = "Doesn't support convert %s to values", str(c_node.type())
             # currently only support the tensors and constant values
             assert value is not None, errmsg
             return value
