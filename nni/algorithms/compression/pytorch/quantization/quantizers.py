@@ -580,7 +580,7 @@ class LsqQuantizer(Quantizer):
                 - quant_types : list of string
                     type of quantization you want to apply, currently support 'weight', 'input', 'output'
                 - quant_bits : int or dict of {str : int}
-                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight', 8},
+                    bits length of quantization, key is the quantization type, value is the length, eg. {'weight': 8},
                     when the type is int, all quantization types share same bits length
                 - quant_start_step : int
                     disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
@@ -620,7 +620,7 @@ class LsqQuantizer(Quantizer):
                 self.optimizer.add_param_group({"params": layer.module.output_scale})
 
             if "input" in config.get("quant_types", []):
-                # scale of activation will be initialized using the first batch data
+                # scale of input will be initialized using the first batch data
                 layer.module.register_parameter("input_scale", torch.nn.Parameter(torch.Tensor([1.0])))
                 q_bit = get_bits_length(config, "input")
                 layer.module.register_buffer('input_bit', torch.Tensor([q_bit]))
@@ -634,7 +634,12 @@ class LsqQuantizer(Quantizer):
     @staticmethod
     def grad_scale(x, scale):
         """
-            Used to scale the gradient
+            Used to scale the gradient. Give tensor `x`, we have `y=grad_scale(x, scale)=x` in the forward pass,
+            which means that this function will not change the value of `x`. In the backward pass, we have:
+
+            :math:`\frac{\alpha_L}{\alpha_x}=\frac{\alpha_L}{\alpha_y}*\frac{\alpha_y}{\alpha_x}=sclae*\frac{\alpha_L}{\alpha_x}`
+
+            This means that the origin gradient of x is scaled by a factor of `scale`.
         """
         y = x
         y_grad = x * scale
