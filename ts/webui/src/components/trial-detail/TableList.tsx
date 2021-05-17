@@ -69,6 +69,7 @@ function _inferColumnTitle(columnKey: string): string {
 }
 
 interface SearchItems {
+    index: number;
     name: string;
     operator: string;
     value1: string; // 先按string
@@ -465,7 +466,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     result = result.filter(trial => trial.status === temp.value1);
                 } else {
                     result = result.filter(trial => trial.status !== temp.value1);
-                    console.info(result);
                 }
             } else {
                 const paraName = `space/${temp.name}`;

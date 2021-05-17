@@ -74,6 +74,7 @@ function Search(props): any {
                 changeSearchFilterList={changeSearchFilterList}
                 updatePage={updatePage}
                 setSearchInputVal={setSearchInputVal}
+                key={item.id}
             />
         );
     }
@@ -97,11 +98,15 @@ function Search(props): any {
     // 根据用户自己填入的筛选条件来进行筛选
     function startFilter(): void {
         // 根据 input val 来反填 searchFilter []
-        const aaa = searchInputVal.trim().split(';');
-        const result = aaa.splice(
-            aaa.findIndex(item => item === ''),
-            1
-        );
+        const result = searchInputVal.trim().split(';');
+        let id = 0;
+        if (result.includes('')) {
+            // delete '' in filter list
+            result.splice(
+                result.findIndex(item => item === ''),
+                1
+            );
+        }
         const newSearchFilter: any = [];
         result.forEach(temp => {
             let item;
@@ -111,27 +116,27 @@ function Search(props): any {
                 item = temp.trim().split(splitOperator);
                 newSearchFilter.push({
                     name: 'StatusNNI',
+                    id: ++id,
                     operator: filterOperator,
                     value1: item[1],
                     value2: ''
                 });
             } else {
-                // if (temp.includes('Trial id') || temp.includes('Trial No.')) {
                 if (temp.includes(':')) {
                     item = temp.trim().split(':');
-                    const isArray = Array.isArray(JSON.parse(item[1]));
+                    const isArray = item[1].includes('[' || ']') ? Array.isArray(JSON.parse(item[1])) : false;
                     newSearchFilter.push({
+                        id: ++id,
                         name: item[0],
                         operator: isArray ? 'between' : '=',
                         value1: isArray ? JSON.parse(item[1])[0] : item[1],
                         value2: isArray ? JSON.parse(item[1])[1] : ''
                     });
-                    console.info('split :', item);
                 } else {
-                    const operator = temp.includes('>') ? '>' : '<';
+                    const operator = temp.includes('>') === true ? '>' : '<';
                     item = temp.trim().split(operator);
-                    console.info('split operator', item);
                     newSearchFilter.push({
+                        id: ++id,
                         name: item[0],
                         operator: operator,
                         value1: item[1],
@@ -140,8 +145,9 @@ function Search(props): any {
                 }
             }
         });
-        // conv_size < 7; hidden_size < 1024
-        console.info(newSearchFilter);
+        newSearchFilter.forEach(element => {
+            console.info(element);
+        });
         changeSearchFilterList(newSearchFilter);
         updatePage();
     }

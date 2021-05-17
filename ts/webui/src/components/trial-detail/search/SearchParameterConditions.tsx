@@ -4,13 +4,15 @@ import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react
 import { trialJobStatus } from '../../../static/const';
 import { searchConditonsGap } from '../../modals/ChildrenGap';
 
+// This file is for filtering trial parameters and trial status
+
 function SearchParameterConditions(props): any {
-    const { parameter, changeSearchFilterList, updatePage, setSearchInputVal } = props;
+    const { parameter, searchFilter, changeSearchFilterList, updatePage, setSearchInputVal } = props;
     const isStatus = parameter === 'StatusNNI';
-    const [operatorVal, setOperatorVal] = useState(`${isStatus ? '=' : 'between'}`);
-    const [trialStatus, setTrialStatus] = useState('');
-    const [firstInputVal, setFirstInputVal] = useState('');
-    const [secondInputVal, setSecondInputVal] = useState('');
+    const [operatorVal, setOperatorVal] = useState(getInputsVal()[1]);
+    const [trialStatus, setTrialStatus] = useState(getInputsVal()[0]);
+    const [firstInputVal, setFirstInputVal] = useState(getInputsVal()[0]);
+    const [secondInputVal, setSecondInputVal] = useState(getInputsVal()[2]);
     const operatorList = isStatus ? ['=', '≠'] : ['between', '>', '<', '=', '≠'];
 
     function _updateSearchFilterType(_event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void {
@@ -18,6 +20,22 @@ function SearchParameterConditions(props): any {
             const value = item.key.toString();
             setOperatorVal(value);
         }
+    }
+
+    function getInputsVal(): string[] {
+        const str: string[] = [];
+        if (searchFilter.length > 0) {
+            const filterElement = searchFilter.find(ele => ele.name === parameter);
+            if (filterElement !== undefined) {
+                str.push(filterElement.value1, filterElement.operator, filterElement.value2);
+            } else {
+                str.push('', `${isStatus ? '=' : 'between'}`, '');
+            }
+        } else {
+            str.push('', `${isStatus ? '=' : 'between'}`, '');
+        }
+
+        return str;
     }
 
     function _updateTrialStatusDropdown(
@@ -120,6 +138,7 @@ function SearchParameterConditions(props): any {
                                 className='input input-padding'
                                 placeholder='xxx'
                                 onChange={_updateFirstInputVal}
+                                value={firstInputVal}
                             />
                             <span className='and'>and</span>
                             <input
@@ -127,6 +146,7 @@ function SearchParameterConditions(props): any {
                                 className='input input-padding'
                                 placeholder='xxx'
                                 onChange={_updateSecondInputVal}
+                                value={secondInputVal}
                             />
                         </div>
                     ) : (
@@ -135,6 +155,7 @@ function SearchParameterConditions(props): any {
                             className='input input-padding'
                             placeholder='xxx'
                             onChange={_updateFirstInputVal}
+                            value={firstInputVal}
                         />
                     )}
                 </React.Fragment>

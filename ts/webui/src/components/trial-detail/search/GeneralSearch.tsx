@@ -6,11 +6,24 @@ import { searchConditonsGap } from '../../modals/ChildrenGap';
 // This file is for search trial ['Trial id', 'Trial No.']
 
 function GeneralSearch(props): any {
-    const { idOrTrialNo, changeSearchFilterList, setSearchInputVal, updatePage } = props;
-    const [firstInputVal, setFirstInputVal] = useState('');
+    const { idOrTrialNo, searchFilter, changeSearchFilterList, setSearchInputVal, updatePage } = props;
+
+    const [firstInputVal, setFirstInputVal] = useState(getIdorNoInit());
 
     function _updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
         setFirstInputVal(ev.target.value);
+    }
+
+    function getIdorNoInit(): string {
+        let str = '';
+        searchFilter.forEach(item => {
+            if (item.name === idOrTrialNo) {
+                console.info(item);
+                str = item.value1;
+            }
+        });
+
+        return str;
     }
 
     function apply(): void {
@@ -21,11 +34,18 @@ function GeneralSearch(props): any {
             temp.forEach(item => {
                 if (item.name === idOrTrialNo) {
                     item.value1 = firstInputVal;
+                    item.operator = '';
                 }
             });
         } else {
+            let lastIndex = 0;
+            if (temp.length > 0) {
+                lastIndex = temp[temp.length - 1].id;
+            }
             temp.push({
+                id: ++lastIndex,
                 name: idOrTrialNo,
+                operator: '',
                 value1: firstInputVal
             });
         }
@@ -50,7 +70,13 @@ function GeneralSearch(props): any {
         // id & No
         <Stack horizontal className='filterConditions' tokens={searchConditonsGap}>
             <span>{idOrTrialNo === 'Trial id' ? 'Includes' : 'Equals to'}</span>
-            <input type='text' className='input input-padding' placeholder='xxx' onChange={_updateFirstInputVal} />
+            <input
+                type='text'
+                className='input input-padding'
+                placeholder='xxx'
+                onChange={_updateFirstInputVal}
+                value={firstInputVal}
+            />
             <PrimaryButton text='Apply' className='btn-vertical-middle' onClick={apply} />
         </Stack>
     );
