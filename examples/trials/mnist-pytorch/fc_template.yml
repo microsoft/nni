@@ -1,0 +1,49 @@
+apiVersion: frameworkcontroller.microsoft.com/v1
+kind: Framework
+metadata:
+  name: pytorchcpu
+  namespace: default
+spec:
+  executionType: Start
+  retryPolicy:
+    fancyRetryPolicy: true
+    maxRetryCount: 2
+  taskRoles:
+  - name: worker
+    taskNumber: 1
+    frameworkAttemptCompletionPolicy:
+      minFailedTaskCount: 1
+      minSucceededTaskCount: 3
+    task:
+      retryPolicy:
+        fancyRetryPolicy: false
+        maxRetryCount: 0
+      podGracefulDeletionTimeoutSec: 1800
+      pod:
+        spec:
+          restartPolicy: Never
+          hostNetwork: false
+          containers:
+          - name: mnist-pytorch
+            image: msranni/nni:latest
+            command: ["python", "mnist.py"]
+            ports:
+            - containerPort: 5001
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+            - name: data-volume
+              mountPath: /tmp/mount
+          serviceAccountName: frameworkbarrier
+          initContainers:
+          - name: frameworkbarrier
+            image: frameworkcontroller/frameworkbarrier
+            volumeMounts:
+            - name: frameworkbarrier-volume
+              mountPath: /mnt/frameworkbarrier
+          volumes:
+          - name: frameworkbarrier-volume
+            emptyDir: {}
+          - name: data-volume
+            persistentVolumeClaim:
+              claimName: nni-storage

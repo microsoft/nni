@@ -88,7 +88,7 @@ Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutat
     stride=stride
   )
 
-``label`` is used by mutator to identify this placeholder. The other parameters are the information that are required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <test/retiarii_test/mnasnet/base_mnasnet.py>`.
+``label`` is used by mutator to identify this placeholder. The other parameters are the information that are required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>`.
 
 Starting an experiment is almost the same as using inline mutation APIs. The only difference is that the applied mutators should be passed to ``RetiariiExperiment``. Below is a simple example.
 

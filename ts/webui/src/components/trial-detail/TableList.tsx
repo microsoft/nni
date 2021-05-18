@@ -1,3 +1,4 @@
+import React from 'react';
 import {
     DefaultButton,
     Dropdown,
@@ -5,35 +6,35 @@ import {
     Icon,
     IDropdownOption,
     PrimaryButton,
-    Selection,
-    SelectionMode,
     Stack,
     StackItem,
     TooltipHost,
-    DirectionalHint
+    DirectionalHint,
+    Checkbox
 } from '@fluentui/react';
-import React from 'react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
 import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
 import { TableObj, SortInfo } from '../../static/interface';
-import '../../static/style/search.scss';
-import '../../static/style/tableStatus.css';
-import '../../static/style/logPath.scss';
-import '../../static/style/table.scss';
-import '../../static/style/button.scss';
-import '../../static/style/openRow.scss';
-import '../../static/style/pagination.scss';
-import '../../static/style/overview/overviewTitle.scss';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
 import Customize from '../modals/CustomizedTrial';
+import TensorboardUI from '../modals/tensorboard/TensorboardUI';
 import KillJob from '../modals/Killjob';
 import ExpandableDetails from '../public-child/ExpandableDetails';
 import PaginationTable from '../public-child/PaginationTable';
 import CopyButton from '../public-child/CopyButton';
 import { Trial } from '../../static/model/trial';
+import '../../static/style/button.scss';
+import '../../static/style/logPath.scss';
+import '../../static/style/openRow.scss';
+import '../../static/style/pagination.scss';
+import '../../static/style/search.scss';
+import '../../static/style/table.scss';
+import '../../static/style/tableStatus.css';
+import '../../static/style/tensorboard.scss';
+import '../../static/style/overview/overviewTitle.scss';
 
 require('echarts/lib/chart/line');
 require('echarts/lib/component/tooltip');
@@ -93,7 +94,6 @@ interface TableListState {
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
-    private _selection: Selection;
     private _expandedTrialIds: Set<string>;
 
     constructor(props: TableListProps) {
@@ -116,14 +116,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true }
         };
-
-        this._selection = new Selection({
-            onSelectionChanged: (): void => {
-                this.setState({
-                    selectedRowIds: this._selection.getSelection().map(s => (s as any).id)
-                });
-            }
-        });
 
         this._expandedTrialIds = new Set<string>();
     }
@@ -183,10 +175,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
         // TODO: use search space and metrics space from TRIALS will cause update issues.
         const searchSpace = TRIALS.inferredSearchSpace(EXPERIMENT.searchSpaceNew);
         const metricSpace = TRIALS.inferredMetricSpace();
+        const { selectedRowIds } = this.state;
         const items = trials.map(trial => {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
+                checked: selectedRowIds.includes(trial.id) ? true : false,
                 startTime: (trial as Trial).info.startTime, // FIXME: why do we need info here?
                 endTime: (trial as Trial).info.endTime,
                 duration: trial.duration,
@@ -214,9 +208,58 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
     }
 
+    private selectedTrialOnChangeEvent = (
+        id: string,
+        _ev?: React.FormEvent<HTMLElement | HTMLInputElement>,
+        checked?: boolean
+    ): void => {
+        const { displayedItems, selectedRowIds } = this.state;
+        const items = JSON.parse(JSON.stringify(displayedItems));
+        const temp = selectedRowIds;
+        if (checked === true) {
+            temp.push(id);
+        }
+        items.forEach(item => {
+            if (item.id === id) {
+                item.checked = !!checked;
+            }
+        });
+        this.setState(() => ({ displayedItems: items, selectedRowIds: temp }));
+    };
+
+    private changeSelectTrialIds = (): void => {
+        const { displayedItems } = this.state;
+        const newDisplayedItems = displayedItems;
+        newDisplayedItems.forEach(item => {
+            item.checked = false;
+        });
+        this.setState(() => ({
+            selectedRowIds: [],
+            displayedItems: newDisplayedItems
+        }));
+    };
+
     private _buildColumnsFromTableItems(tableItems: any[]): IColumn[] {
-        // extra column, for a icon to expand the trial details panel
         const columns: IColumn[] = [
+            // select trial function
+            {
+                name: '',
+                key: '_selected',
+                fieldName: 'selected',
+                minWidth: 20,
+                maxWidth: 20,
+                isResizable: true,
+                className: 'detail-table',
+                onRender: (record): React.ReactNode => (
+                    <Checkbox
+                        label={undefined}
+                        checked={record.checked}
+                        className='detail-check'
+                        onChange={this.selectedTrialOnChangeEvent.bind(this, record.id)}
+                    />
+                )
+            },
+            // extra column, for a icon to expand the trial details panel
             {
                 key: '_expand',
                 name: '',
@@ -263,6 +306,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 maxWidth: 20
             }
         ];
+
         // looking at the first row only for now
         for (const k of Object.keys(tableItems[0])) {
             if (k === 'metric/default') {
@@ -417,7 +461,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     private _renderOperationColumn(record: any): React.ReactNode {
         const runningTrial: boolean = ['RUNNING', 'UNKNOWN'].includes(record.status) ? false : true;
-        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status);
+        const disabledAddCustomizedTrial = ['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status);
         return (
             <Stack className='detail-button' horizontal>
                 <PrimaryButton
@@ -491,6 +535,10 @@ class TableList extends React.Component<TableListProps, TableListState> {
                             }}
                             disabled={selectedRowIds.length === 0}
                         />
+                        <TensorboardUI
+                            selectedRowIds={selectedRowIds}
+                            changeSelectTrialIds={this.changeSelectTrialIds}
+                        />
                     </StackItem>
                     <StackItem grow={50}>
                         <Stack horizontal horizontalAlign='end' className='allList'>
@@ -528,12 +576,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <PaginationTable
                         columns={columns.filter(
                             column =>
-                                displayedColumns.includes(column.key) || ['_expand', '_operation'].includes(column.key)
+                                displayedColumns.includes(column.key) ||
+                                ['_expand', '_operation', '_selected'].includes(column.key)
                         )}
                         items={displayedItems}
                         compact={true}
-                        selection={this._selection}
-                        selectionMode={SelectionMode.multiple}
+                        selectionMode={0}
                         selectionPreservedOnEmptyClick={true}
                         onRenderRow={(props): any => {
                             // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
@@ -549,6 +597,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onHideDialog={(): void => {
                             this.setState({ compareDialogVisible: false });
                         }}
+                        changeSelectTrialIds={this.changeSelectTrialIds}
                     />
                 )}
                 {intermediateDialogTrial !== undefined && (
@@ -571,6 +620,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         onHideDialog={(): void => {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
+                        whichComponent='table'
                     />
                 )}
                 {/* Clone a trial and customize a set of new parameters */}

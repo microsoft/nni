@@ -12,6 +12,7 @@ interface ChangeColumnProps {
     onSelectedChange: (val: string[]) => void;
     onHideDialog: () => void;
     minSelected?: number;
+    whichComponent: string; // which component use this component
 }
 
 interface SimpleColumn {
@@ -57,10 +58,14 @@ class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeCol
 
     saveUserSelectColumn = (): void => {
         const { currentSelected } = this.state;
-        const { allColumns, onSelectedChange } = this.props;
+        const { allColumns, onSelectedChange, whichComponent } = this.props;
         const selectedColumns = allColumns.map(column => column.key).filter(key => currentSelected.includes(key));
-        localStorage.setItem('columns', JSON.stringify(selectedColumns));
         onSelectedChange(selectedColumns);
+        if (whichComponent === 'table') {
+            localStorage.setItem('columns', JSON.stringify(selectedColumns));
+        } else {
+            localStorage.setItem('paraColumns', JSON.stringify(selectedColumns));
+        }
         this.hideDialog();
     };
 
