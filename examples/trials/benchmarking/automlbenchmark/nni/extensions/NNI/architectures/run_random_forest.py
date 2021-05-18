@@ -16,20 +16,35 @@ from amlb.datautils import impute
 from amlb.utils import Timer
 
 
+import sys
+import warnings
+
+if not sys.warnoptions:
+    warnings.simplefilter("ignore")
+
+
 SEARCH_SPACE = {
-    "n_estimators": {"_type":"choice", "_value": [128, 256, 512, 1024, 2048, 4096]},
-    "max_depth": {"_type":"choice", "_value": [5, 10, 25, 50, 100]},
+    "n_estimators": {"_type":"randint", "_value": [8, 512]},
+    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
+    "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
+    "min_samples_split": {"_type":"randint", "_value": [2, 16]},
+    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}     # 0 for None
+}
+
+SEARCH_SPACE_CHOICE = {
+    "n_estimators": {"_type":"choice", "_value": [8, 16, 32, 64, 128, 256, 512]},
+    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 0]},   # 0 for None
     "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
     "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
-    "max_leaf_nodes": {"_type":"choice", "_value": [8, 64, 512, 0]}     # 0 for None 
+    "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 0]}     # 0 for None
 }
 
 SEARCH_SPACE_SIMPLE = {
-    "n_estimators": {"_type":"choice", "_value": [128]},
+    "n_estimators": {"_type":"choice", "_value": [10]},
     "max_depth": {"_type":"choice", "_value": [5]},
     "min_samples_leaf": {"_type":"choice", "_value": [8]},
     "min_samples_split": {"_type":"choice", "_value": [16]},
-    "max_leaf_nodes": {"_type":"choice", "_value": [64]}  
+    "max_leaf_nodes": {"_type":"choice", "_value": [64]}
 }
 
 
@@ -40,7 +55,7 @@ def preprocess_random_forest(dataset, log):
     - For categorical features, use ordinal encoding to map them into integers. 
     '''
     cat_columns, num_columns = [], []
-    shift_amount = 0  
+    shift_amount = 0
     for i, f in enumerate(dataset.features):
         if f.is_target:
             shift_amount += 1
@@ -49,7 +64,7 @@ def preprocess_random_forest(dataset, log):
             cat_columns.append(i - shift_amount)
         else:
             num_columns.append(i - shift_amount)
-     
+
     cat_pipeline = Pipeline([('imputer', SimpleImputer(strategy='most_frequent')),
                              ('ordinal_encoder', OrdinalEncoder()),
                              ])
@@ -71,7 +86,8 @@ def preprocess_random_forest(dataset, log):
 
     
 def run_random_forest(dataset, config, tuner, log):
-    #X_train, X_test = impute(dataset.train.X, dataset.test.X, strategy='mean')
+    limit_type, limit = config.framework_params['limit_type'], int(config.framework_params['limit'])
+    
     X_train, X_test = preprocess_random_forest(dataset, log)
     y_train, y_test = dataset.train.y, dataset.test.y
 
@@ -82,15 +98,22 @@ def run_random_forest(dataset, config, tuner, log):
     score_higher_better = True
 
     tuner.update_search_space(SEARCH_SPACE)
+    
+    
     start_time = time.time()
+    trial_count = 0
+        
     while True:
         try:
+            trial_count += 1
             param_idx, cur_params = tuner.generate_parameters()
             train_params = cur_params.copy()
             if 'TRIAL_BUDGET' in cur_params:
                 train_params.pop('TRIAL_BUDGET')
             if cur_params['max_leaf_nodes'] == 0: 
                 train_params.pop('max_leaf_nodes')
+            if cur_params['max_depth'] == 0:
+                train_params.pop('max_depth')
             log.info("Trial {}: \n{}\n".format(param_idx, cur_params))
                 
             cur_model = estimator(random_state=config.seed, **train_params)
@@ -104,10 +127,14 @@ def run_random_forest(dataset, config, tuner, log):
             
             tuner.receive_trial_result(param_idx, cur_params, cur_score)
 
-            current_time = time.time()
-            elapsed_time = current_time - start_time
-            if elapsed_time > config.max_runtime_seconds:
-                break
+            if limit_type == 'time':
+                current_time = time.time()
+                elapsed_time = current_time - start_time
+                if elapsed_time >= limit: # config.max_runtime_seconds:
+                    break
+            elif limit_type == 'ntrials':
+                if trial_count >= limit:
+                    break
         except:
             break
 

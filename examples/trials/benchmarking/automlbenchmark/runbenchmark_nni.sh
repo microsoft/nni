@@ -3,7 +3,7 @@
 time=$(date "+%Y%m%d%H%M%S")
 installation='automlbenchmark'
 outdir="results_$time"
-benchmark='nnismall'
+benchmark='nnivalid'
 
 if [ "$#" -eq 0 ]; then
     tuner_array=('TPE' 'Random' 'Anneal' 'Evolution' 'GPTuner' 'MetisTuner' 'Hyperband')
