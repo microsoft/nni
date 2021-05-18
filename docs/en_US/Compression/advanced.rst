@@ -6,4 +6,5 @@ Advanced Usage
 
     Framework <./Framework>
     Customize a new algorithm <./CustomizeCompressor>
-    Automatic Model Compression <./AutoPruningUsingTuners>
+    Automatic Model Pruning <./AutoPruningUsingTuners>
+    Automatic Model Compression (Beta) <./AutoCompression>

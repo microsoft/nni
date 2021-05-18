@@ -3,7 +3,7 @@ Automatic Model Pruning using NNI Tuners
 
 It's convenient to implement auto model pruning with NNI compression and NNI tuners
 
-First, model compression with NNI
+First, model pruning with NNI
 ---------------------------------
 
 You can easily compress a model with NNI compression. Take pruning for example, you can prune a pretrained model with L2FilterPruner like this
