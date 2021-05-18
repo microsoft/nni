@@ -19,6 +19,9 @@ class AbstractExecutionEngine(ABC):
 
 
 class AbstractAutoCompressModule(ABC):
+    """
+    The abstract container that user need to implement.
+    """
     @classmethod
     @abstractmethod
     def model(cls) -> Module:

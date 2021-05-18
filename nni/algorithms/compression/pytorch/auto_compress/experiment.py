@@ -13,7 +13,7 @@ from nni.experiment import Experiment, ExperimentConfig, AlgorithmConfig
 
 
 class AutoCompressExperimentConfig(ExperimentConfig):
-    auto_compress_module_file_name: str = 'auto_compress_module.py'
+    auto_compress_module_file_name: str = './auto_compress_module.py'
 
     def __setattr__(self, key, value):
         fixed_attrs = {'trial_command': 'python3 -m nni.algorithms.compression.pytorch.auto_compress.trial_entry'}
