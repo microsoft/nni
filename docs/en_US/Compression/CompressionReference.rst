@@ -73,10 +73,10 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp_pruner.AGPPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.AGPPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ADMMPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
