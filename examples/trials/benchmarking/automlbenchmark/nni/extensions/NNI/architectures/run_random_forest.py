@@ -14,21 +14,24 @@ from amlb.benchmark import TaskConfig
 from amlb.data import Dataset
 from amlb.datautils import impute
 from amlb.utils import Timer
+from amlb.results import save_predictions_to_file
 
 
+# for future use
+'''
 import sys
 import warnings
 
 if not sys.warnoptions:
     warnings.simplefilter("ignore")
-
+'''
 
 SEARCH_SPACE = {
     "n_estimators": {"_type":"randint", "_value": [8, 512]},
     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}     # 0 for None
+    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                    # 0 for None
 }
 
 SEARCH_SPACE_CHOICE = {
@@ -86,7 +89,9 @@ def preprocess_random_forest(dataset, log):
 
     
 def run_random_forest(dataset, config, tuner, log):
-    limit_type, limit = config.framework_params['limit_type'], int(config.framework_params['limit'])
+    limit_type, trial_limit = config.framework_params['limit_type'], None
+    if limit_type == 'ntrials':
+        trial_limit = int(config.framework_params['trial_limit'])
     
     X_train, X_test = preprocess_random_forest(dataset, log)
     y_train, y_test = dataset.train.y, dataset.test.y
@@ -97,12 +102,12 @@ def run_random_forest(dataset, config, tuner, log):
     best_score, best_params, best_model = None, None, None
     score_higher_better = True
 
-    tuner.update_search_space(SEARCH_SPACE)
-    
+    tuner.update_search_space(SEARCH_SPACE)    
     
     start_time = time.time()
     trial_count = 0
-        
+    intermediate_best_scores = []           # should be monotone increasing 
+    
     while True:
         try:
             trial_count += 1
@@ -125,15 +130,16 @@ def run_random_forest(dataset, config, tuner, log):
             if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
                 best_score, best_params, best_model = cur_score, cur_params, cur_model    
             
+            intermediate_best_scores.append(best_score)
             tuner.receive_trial_result(param_idx, cur_params, cur_score)
 
             if limit_type == 'time':
                 current_time = time.time()
                 elapsed_time = current_time - start_time
-                if elapsed_time >= limit: # config.max_runtime_seconds:
+                if elapsed_time >= config.max_runtime_seconds:
                     break
             elif limit_type == 'ntrials':
-                if trial_count >= limit:
+                if trial_count >= trial_limit:
                     break
         except:
             break
@@ -149,4 +155,4 @@ def run_random_forest(dataset, config, tuner, log):
     predictions = best_model.predict(X_test)
     probabilities = best_model.predict_proba(X_test) if is_classification else None
 
-    return probabilities, predictions, training, y_test
+    return probabilities, predictions, training, y_test, intermediate_best_scores

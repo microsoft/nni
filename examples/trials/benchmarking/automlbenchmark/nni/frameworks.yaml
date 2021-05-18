@@ -19,7 +19,7 @@ TPE:
     tuner_type: 'TPE'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 Random:
   extends: NNI 
@@ -27,7 +27,7 @@ Random:
     tuner_type: 'Random'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 Anneal:
   extends: NNI 
@@ -35,7 +35,7 @@ Anneal:
     tuner_type: 'Anneal'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 Evolution:
   extends: NNI 
@@ -43,7 +43,7 @@ Evolution:
     tuner_type: 'Evolution'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 SMAC:
   extends: NNI 
@@ -51,7 +51,7 @@ SMAC:
     tuner_type: 'SMAC'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 GPTuner:
   extends: NNI 
@@ -59,7 +59,7 @@ GPTuner:
     tuner_type: 'GPTuner'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 MetisTuner:
   extends: NNI 
@@ -67,7 +67,7 @@ MetisTuner:
     tuner_type: 'MetisTuner'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 Hyperband:
   extends: NNI 
@@ -76,7 +76,7 @@ Hyperband:
     arch_type: 'random_forest'
     max_resource: 60
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30
 
 BOHB:
   extends: NNI 
@@ -85,4 +85,4 @@ BOHB:
     arch_type: 'random_forest'
     max_resource: 60
     limit_type: 'ntrials'
-    limit: 5
+    trial_limit: 30

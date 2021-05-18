@@ -5,6 +5,8 @@ installation='automlbenchmark'
 outdir="results_$time"
 benchmark='nnivalid'
 
+mkdir $outdir $outdir/scorelogs $outdir/reports 
+
 if [ "$#" -eq 0 ]; then
     tuner_array=('TPE' 'Random' 'Anneal' 'Evolution' 'GPTuner' 'MetisTuner' 'Hyperband')
 else
