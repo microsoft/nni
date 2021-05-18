@@ -96,7 +96,7 @@ In `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__\ , 
 
 ..
 
-   We introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
+   The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
 
 
 Usage
@@ -132,7 +132,7 @@ PyTorch code
     quantizer = LsqQuantizer(model, configure_list, optimizer)
     quantizer.compress()
 
-You can view example for more information
+You can view example for more information. :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
 
 User configuration for LSQ Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

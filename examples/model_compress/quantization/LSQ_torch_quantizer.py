@@ -89,9 +89,6 @@ def main():
         batch_size=1000, shuffle=True)
 
     model = Mnist()
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(configure_list).compress(model)
-    '''
     configure_list = [{
             'quant_types': ['weight', 'input'],
             'quant_bits': {'weight': 8, 'input': 8},
