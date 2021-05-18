@@ -123,9 +123,6 @@ Quantizers
 ..  autoclass:: nni.compression.pytorch.utils.shape_dependency.GroupDependency
     :members:
 
-..  autoclass:: nni.compression.pytorch.utils.mask_conflict.CatMaskPadding
-    :members:
-
 ..  autoclass:: nni.compression.pytorch.utils.mask_conflict.GroupMaskConflict
     :members:
 
