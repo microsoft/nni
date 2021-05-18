@@ -48,6 +48,8 @@ if __name__ == '__main__':
 
     simple_strategy = strategy.Random()
 
+    print('### A ###')
+
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
@@ -56,7 +58,9 @@ if __name__ == '__main__':
     exp_config.max_trial_number = 2
     exp_config.training_service.use_active_gpu = False
 
-    exp.run(exp_config, 8081 + random.randint(0, 100))
-    print('Final model:')
-    for model_code in exp.export_top_models():
-        print(model_code)
+    print('### B ###')
+
+    #exp.run(exp_config, 8081 + random.randint(0, 100))
+    #print('Final model:')
+    #for model_code in exp.export_top_models():
+    #    print(model_code)

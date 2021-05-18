@@ -149,6 +149,8 @@ if __name__ == '__main__':
     PARSER.add_argument('--job_pid_file', type=str, help='save trial runner process pid')
     args, unknown = PARSER.parse_known_args()
 
+    print(os.path.abspath(os.getcwd()))
+
     setting_file = "settings.json"
     if not os.path.exists(setting_file):
         setting_file = "../{}".format(setting_file)

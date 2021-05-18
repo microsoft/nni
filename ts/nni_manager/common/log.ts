@@ -75,8 +75,7 @@ class Logger {
             this.bufferSerialEmitter = new BufferSerialEmitter(this.writable);
         }
 
-        const logLevelName: string = getExperimentStartupInfo()
-                                    .getLogLevel();
+        const logLevelName: string = getExperimentStartupInfo().logLevel;
         const logLevel: number | undefined = logLevelNameMap.get(logLevelName);
         if (logLevel !== undefined) {
             this.level = logLevel;
