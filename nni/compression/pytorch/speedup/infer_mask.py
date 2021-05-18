@@ -8,7 +8,7 @@ from ..utils import randomize_tensor, torch_float_dtype, torch_integer_dtype
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
-STD_DELTA = 1e-8
+STD_DELTA = 1e-6
 
 
 class AutoMaskInference:
