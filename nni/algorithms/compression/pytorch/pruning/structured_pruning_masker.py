@@ -474,9 +474,10 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     def __init__(self, model, pruner, statistics_batch_num=1):
         super().__init__(model, pruner)
         self.pruner.statistics_batch_num = statistics_batch_num
-        self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.iterations = 0
+        self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
+        # self.patch_update_mask = False
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
         channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
@@ -486,7 +487,6 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         if channel_masks is not None:
             channel_contribution = channel_contribution * channel_masks
         prune_indices = torch.argsort(channel_contribution)[:num_prune]
-        # print('prune_indices',prune_indices)
         for idx in prune_indices:
             base_mask['weight_mask'][idx] = 0.
             if base_mask['bias_mask'] is not None:
@@ -499,7 +499,12 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         based on the first order taylor expansion.
         """
         if self.pruner.iterations >= self.pruner.statistics_batch_num:
+            # if not self.patch_update_mask:
+            #     self.patch_optimizer(self.update_mask)
+            #     self.patch_update_mask = True
+
             return
+
         for wrapper in self.pruner.get_modules_wrapper():
             filters = wrapper.module.weight.size(0)
             contribution = (
@@ -678,6 +683,7 @@ class SlimPrunerMasker(WeightMasker):
 
     def __init__(self, model, pruner, **kwargs):
         super().__init__(model, pruner)
+        self.global_threshold = None
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'

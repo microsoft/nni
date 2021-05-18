@@ -2,12 +2,13 @@
 # Licensed under the MIT license.
 
 import logging
+import copy
 import torch
 from schema import And, Optional, SchemaError
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
 from .constants import MASKER_DICT, MAX_EPOCHS
-from .structured_pruner import StructuredFilterPruner
+from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['AGPPruner', 'ADMMPruner', 'SlimPruner', 'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', ]
 
@@ -15,12 +16,12 @@ logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
 
-class IterativePruner(Pruner):
+class IterativePruner(DependencyAwarePruner):
     """
     Prune model during the training process. 
     """
 
-    def __init__(self, model, config_list, pruning_algorithm='level', optimizer=None, trainer=None, criterion=None, training_eopchs=1, **algo_kwargs):
+    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', trainer=None, criterion=None, training_epochs=1, dependency_aware=False, dummy_input=None, **algo_kwargs):
         """
         Parameters
         ----------
@@ -40,17 +41,18 @@ class IterativePruner(Pruner):
             Function used to calculate the loss between the target and the output.
         training_epochs : int
             Totoal number of epochs for training.
+        dependency_aware: bool
+            If prune the model in a dependency-aware way.
+        dummy_input : torch.Tensor
+            The dummy input to analyze the topology constraints. Note that, the dummy_input should on the same device with the model.
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
-        print("IterativePruner init Start")
-        super().__init__(model, config_list, optimizer)
-        self.set_wrappers_attribute("if_calculated", False)
+        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
+
+        self.training_epochs = training_epochs
         self._trainer = trainer
         self._criterion = criterion
-        self.masker = MASKER_DICT[pruning_algorithm](
-            model, self, **algo_kwargs)
-        print("IterativePruner init Done")
 
     def compress(self):
         training = self.bound_model.training
@@ -64,14 +66,35 @@ class IterativePruner(Pruner):
         self._get_threshold()
 
         self.update_mask()
+        self.patch_optimizer(self.update_mask)
+        
         return self.bound_model
 
+
+    def _get_threshold(self):
+        """
+        Function to get global threshold
+        """
+        pass
 
     def _callback(self):
         """
         Callback function to do additonal optimization
         """
         pass
+
+    def calc_mask(self, wrapper, wrapper_idx=None):
+        sparsity = wrapper.config['sparsity']
+        if not wrapper.if_calculated:
+            masks = self.masker.calc_mask(
+                sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+
+            # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
+            if masks is not None:
+                wrapper.if_calculated = True
+            return masks
+        else:
+            return None
 
 
 class AGPPruner(IterativePruner):
@@ -206,8 +229,8 @@ class AGPPruner(IterativePruner):
         for epoch in range(self.training_epochs):
             self.update_epoch(epoch)
             self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
-            logger.info(f'sparsity is {self.target_sparsity:.2f} at epoch {epoch}')
             self.update_mask()
+            logger.info(f'sparsity is {self.target_sparsity:.2f} at epoch {epoch}')
             self.get_pruned_weights()
             
         return self.bound_model
@@ -329,7 +352,7 @@ class ADMMPruner(IterativePruner):
         torch.nn.Module
             model with specified modules compressed.
         """
-        _logger.info('Starting ADMM Compression...')
+        logger.info('Starting ADMM Compression...')
 
         # initiaze Z, U
         # Z_i^0 = W_i^0
@@ -378,7 +401,7 @@ class ADMMPruner(IterativePruner):
         return self.bound_model
 
 
-class SlimPruner(StructuredFilterPruner, IterativePruner):
+class SlimPruner(IterativePruner):
     """
     Parameters
     ----------
@@ -430,13 +453,14 @@ class SlimPruner(StructuredFilterPruner, IterativePruner):
         k = int(all_bn_weights.shape[0] * self.config_list[0]['sparsity'])
         self.masker.global_threshold = torch.topk(
             all_bn_weights.view(-1), k, largest=False)[0].max()
+        print(f'set global threshold to {self.masker.global_threshold}')
 
     def _callback(self):
         for i, wrapper in enumerate(self.get_modules_wrapper()):
             wrapper.module.weight.grad.data.add_(self.scale * torch.sign(wrapper.module.weight.data))
 
 
-class TaylorFOWeightFilterPruner(IterativePruner, StructuredFilterPruner):
+class TaylorFOWeightFilterPruner(IterativePruner):
     """
     Parameters
     ----------
@@ -466,14 +490,10 @@ class TaylorFOWeightFilterPruner(IterativePruner, StructuredFilterPruner):
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=1,
                  dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='taylorfo',
-                         dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         optimizer=optimizer, trainer=trainer, criterion=criterion)
-        self.training_aware = True
-        self.training_epochs = training_epochs
+        super().__init__(model, config_list, optimizer=optimizer,         pruning_algorithm='taylorfo', trainer=trainer, criterion=criterion, training_epochs=training_epochs, dependency_aware=dependency_aware, dummy_input=dummy_input)
 
 
-class ActivationAPoZRankFilterPruner(IterativePruner, StructuredFilterPruner):
+class ActivationAPoZRankFilterPruner(IterativePruner):
     """
     Parameters
     ----------
@@ -516,7 +536,7 @@ class ActivationAPoZRankFilterPruner(IterativePruner, StructuredFilterPruner):
         self.training_epochs = training_epochs
 
 
-class ActivationMeanRankFilterPruner(IterativePruner, StructuredFilterPruner):
+class ActivationMeanRankFilterPruner(IterativePruner):
     """
     Parameters
     ----------

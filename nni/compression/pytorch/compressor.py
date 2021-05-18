@@ -319,8 +319,8 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        if optimizer is not None:
-            self.patch_optimizer(self.update_mask)
+        # if optimizer is not None:
+        #     self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()

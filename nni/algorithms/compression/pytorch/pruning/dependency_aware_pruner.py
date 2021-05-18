@@ -8,16 +8,18 @@ from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
+from .constants import MASKER_DICT
 
-__all__ = ['StructuredFilterPruner']
+__all__ = ['DependencyAwarePruner']
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
-class StructuredFilterPruner(Pruner):
+
+class DependencyAwarePruner(Pruner):
     """
-    StructuredFilterPruner has two ways to calculate the masks
-    for conv layers. In the normal way, the _StructuredFilterPruner
+    DependencyAwarePruner has two ways to calculate the masks
+    for conv layers. In the normal way, the DependencyAwarePruner
     will calculate the mask of each layer separately. For example, each
     conv layer determine which filters should be pruned according to its L1
     norm. In constrast, in the dependency-aware way, the layers that in a
@@ -25,13 +27,12 @@ class StructuredFilterPruner(Pruner):
     to prune the same channels.
     """
 
-    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None, **algo_kwargs):
-        self.dependency_aware = dependency_aware
-        print("StructuredFilterPruner init Start")
+    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False, dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list=config_list, optimizer=optimizer)
-        # set the dependency-aware switch for the masker
-        self.masker.dependency_aware = dependency_aware
+
+        self.dependency_aware = dependency_aware
         self.dummy_input = dummy_input
+
         if self.dependency_aware:
             errmsg = "When dependency_aware is set, the dummy_input should not be None"
             assert self.dummy_input is not None, errmsg
@@ -47,13 +48,31 @@ class StructuredFilterPruner(Pruner):
             self.channel_depen = {
                 name: sets for sets in self.channel_depen for name in sets}
             self.group_depen = self.group_depen.dependency_sets
-        print("StructuredFilterPruner init Done")
+
+        self.masker = MASKER_DICT[pruning_algorithm](
+            model, self, **algo_kwargs)
+        # set the dependency-aware switch for the masker
+        self.masker.dependency_aware = dependency_aware
+        self.set_wrappers_attribute("if_calculated", False)
         
+    def calc_mask(self, wrapper, wrapper_idx=None):
+        sparsity = wrapper.config['sparsity']
+        if not wrapper.if_calculated:
+            masks = self.masker.calc_mask(
+                sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+
+            # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
+            if masks is not None:
+                wrapper.if_calculated = True
+            return masks
+        else:
+            return None
+
     def update_mask(self):
         if not self.dependency_aware:
             # if we use the normal way to update the mask,
             # then call the update_mask of the father class
-            super(StructuredFilterPruner, self).update_mask()
+            super(DependencyAwarePruner, self).update_mask()
         else:
             # if we update the mask in a dependency-aware way
             # then we call _dependency_update_mask
