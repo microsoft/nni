@@ -223,14 +223,6 @@ def stop_experiment(args):
             rest_pid = experiments_dict.get(experiment_id).get('pid')
             if rest_pid:
                 kill_command(rest_pid)
-                tensorboard_pid_list = experiments_dict.get(experiment_id).get('tensorboardPidList')
-                if tensorboard_pid_list:
-                    for tensorboard_pid in tensorboard_pid_list:
-                        try:
-                            kill_command(tensorboard_pid)
-                        except Exception as exception:
-                            print_error(exception)
-                    experiments_config.update_experiment(experiment_id, 'tensorboardPidList', [])
             print_normal('Stop experiment success.')
 
 def trial_ls(args):
