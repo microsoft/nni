@@ -203,6 +203,14 @@ interface Tensorboard {
     port: string;
 }
 
+// for TableList search
+interface SearchItems {
+    name: string;
+    operator: string;
+    value1: string;
+    value2: string;
+}
+
 export {
     TableObj,
     TableRecord,
@@ -226,5 +234,6 @@ export {
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard
+    Tensorboard,
+    SearchItems
 };

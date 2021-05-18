@@ -2,150 +2,137 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton, Dropdown, IDropdownOption } from '@fluentui/react';
 import { trialJobStatus } from '../../../static/const';
+import { getFiterConditionString } from '../../../static/function';
 import { searchConditonsGap } from '../../modals/ChildrenGap';
 
 // This file is for filtering trial parameters and trial status
 
 function SearchParameterConditions(props): any {
-    const { parameter, searchFilter, changeSearchFilterList, updatePage, setSearchInputVal } = props;
+    const { parameter, searchFilter, dismiss, changeSearchFilterList, updatePage, setSearchInputVal } = props;
     const isStatus = parameter === 'StatusNNI';
-    const [operatorVal, setOperatorVal] = useState(getInputsVal()[1]);
-    const [trialStatus, setTrialStatus] = useState(getInputsVal()[0]);
-    const [firstInputVal, setFirstInputVal] = useState(getInputsVal()[0]);
+    const [trialParameterOperatorVal, setTrialParameterOperatorVal] = useState(getInputsVal()[0]);
+    const [trialStatusOperator, setTrialStatusOperator] = useState(getInputsVal()[1]);
+    const [firstInputVal, setFirstInputVal] = useState(getInputsVal()[1]);
     const [secondInputVal, setSecondInputVal] = useState(getInputsVal()[2]);
     const operatorList = isStatus ? ['=', '≠'] : ['between', '>', '<', '=', '≠'];
 
-    function _updateSearchFilterType(_event: React.FormEvent<HTMLDivElement>, item: IDropdownOption | undefined): void {
-        if (item !== undefined) {
-            const value = item.key.toString();
-            setOperatorVal(value);
-        }
-    }
-
     function getInputsVal(): string[] {
         const str: string[] = [];
+
         if (searchFilter.length > 0) {
             const filterElement = searchFilter.find(ele => ele.name === parameter);
             if (filterElement !== undefined) {
-                str.push(filterElement.value1, filterElement.operator, filterElement.value2);
+                // set before value [operator, value1, value2]
+                str.push(filterElement.operator, filterElement.value1, filterElement.value2);
             } else {
-                str.push('', `${isStatus ? '=' : 'between'}`, '');
+                // set init value
+                str.push(`${isStatus ? '=' : 'between'}`, '', '');
             }
         } else {
-            str.push('', `${isStatus ? '=' : 'between'}`, '');
+            str.push(`${isStatus ? '=' : 'between'}`, '', '');
         }
 
         return str;
     }
 
-    function _updateTrialStatusDropdown(
+    function updateTrialParameterDropdown(
         _event: React.FormEvent<HTMLDivElement>,
         item: IDropdownOption | undefined
     ): void {
         if (item !== undefined) {
             const value = item.key.toString();
-            setTrialStatus(value);
+            setTrialParameterOperatorVal(value);
+        }
+    }
+
+    function updateTrialStatusDropdown(
+        _event: React.FormEvent<HTMLDivElement>,
+        item: IDropdownOption | undefined
+    ): void {
+        if (item !== undefined) {
+            const value = item.key.toString();
+            setTrialStatusOperator(value);
             // Status also store in first Input val
             setFirstInputVal(value);
         }
     }
 
-    function _updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
+    function updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
         setFirstInputVal(ev.target.value);
     }
 
-    function _updateSecondInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
+    function updateSecondInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
         setSecondInputVal(ev.target.value);
     }
-    function getFiterConditionString(searchFilter): string {
-        let str = '';
-        searchFilter.forEach(item => {
-            const filterName = item.name === 'StatusNNI' ? 'Status' : item.name;
-            if (item.operator === '') {
-                str = str + `${filterName}:${item.value1}; `;
-            } else if (item.operator === 'between') {
-                str = str + `${filterName}:[${item.value1},${item.value2}]; `;
-            } else if (item.operator === '=') {
-                str = str + `${filterName}:${item.value1}; `;
-            } else {
-                // > <
-                str = str + `${filterName}${item.operator}${item.value1}; `;
-            }
-        });
-        return str;
-    }
 
-    // 点击 apply 按钮
-    function apply(): void {
+    // click Apply button
+    function startFilterTrials(): void {
         const { searchFilter } = props;
-        const temp = JSON.parse(JSON.stringify(searchFilter));
-        // 先找有没有这个条件存在
-        const find = temp.filter(item => item.name === parameter);
+        const newSearchFilters = JSON.parse(JSON.stringify(searchFilter));
+        const find = newSearchFilters.filter(ele => ele.name === parameter);
         if (find.length > 0) {
-            // 条件存在，覆盖值
-            temp.forEach(item => {
+            newSearchFilters.forEach(item => {
                 if (item.name === parameter) {
-                    item.operator = operatorVal;
+                    item.operator = trialParameterOperatorVal;
                     item.value1 = firstInputVal;
                     item.value2 = secondInputVal;
                 }
             });
         } else {
-            // 不存在这个条件，直接push进去
-            temp.push({
+            newSearchFilters.push({
                 name: parameter,
-                operator: operatorVal,
+                operator: trialParameterOperatorVal,
                 value1: firstInputVal,
                 value2: secondInputVal
             });
         }
-        console.info(temp);
-        setSearchInputVal(getFiterConditionString(temp));
-        changeSearchFilterList(temp);
+        setSearchInputVal(getFiterConditionString(newSearchFilters));
+        changeSearchFilterList(newSearchFilters);
         updatePage();
+        dismiss(); // close menu
     }
 
     return (
         // for trial parameters & Status
         <Stack horizontal className='filterConditions' tokens={searchConditonsGap}>
             <Dropdown
-                selectedKey={operatorVal}
+                selectedKey={trialParameterOperatorVal}
                 options={operatorList.map(item => ({
                     key: item,
                     text: item
                 }))}
-                onChange={_updateSearchFilterType}
+                onChange={updateTrialParameterDropdown}
                 className='btn-vertical-middle'
                 styles={{ root: { width: 100 } }}
             />
             {isStatus ? (
                 <Dropdown
-                    selectedKey={trialStatus}
+                    selectedKey={trialStatusOperator}
                     options={trialJobStatus.map(item => ({
                         key: item,
                         text: item
                     }))}
-                    onChange={_updateTrialStatusDropdown}
+                    onChange={updateTrialStatusDropdown}
                     className='btn-vertical-middle'
                     styles={{ root: { width: 160 } }}
                 />
             ) : (
                 <React.Fragment>
-                    {operatorVal === 'between' ? (
+                    {trialParameterOperatorVal === 'between' ? (
                         <div>
                             <input
                                 type='text'
                                 className='input input-padding'
-                                placeholder='xxx'
-                                onChange={_updateFirstInputVal}
+                                // placeholder='Please input value...'
+                                onChange={updateFirstInputVal}
                                 value={firstInputVal}
                             />
                             <span className='and'>and</span>
                             <input
                                 type='text'
                                 className='input input-padding'
-                                placeholder='xxx'
-                                onChange={_updateSecondInputVal}
+                                // placeholder='Please input value...'
+                                onChange={updateSecondInputVal}
                                 value={secondInputVal}
                             />
                         </div>
@@ -153,14 +140,14 @@ function SearchParameterConditions(props): any {
                         <input
                             type='text'
                             className='input input-padding'
-                            placeholder='xxx'
-                            onChange={_updateFirstInputVal}
+                            // placeholder='Please input value...'
+                            onChange={updateFirstInputVal}
                             value={firstInputVal}
                         />
                     )}
                 </React.Fragment>
             )}
-            <PrimaryButton text='Apply' className='btn-vertical-middle' onClick={apply} />
+            <PrimaryButton text='Apply' className='btn-vertical-middle' onClick={startFilterTrials} />
         </Stack>
     );
 }
@@ -168,6 +155,7 @@ function SearchParameterConditions(props): any {
 SearchParameterConditions.propTypes = {
     parameter: PropTypes.string,
     searchFilter: PropTypes.array,
+    dismiss: PropTypes.func,
     setSearchInputVal: PropTypes.func,
     changeSearchFilterList: PropTypes.func,
     updatePage: PropTypes.func

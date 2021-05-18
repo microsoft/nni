@@ -13,8 +13,8 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
-import { convertDuration, formatTimestamp, copyAndSort } from '../../static/function';
-import { TableObj, SortInfo } from '../../static/interface';
+import { convertDuration, formatTimestamp, copyAndSort, getTrialsBySearchFilters } from '../../static/function';
+import { TableObj, SortInfo, SearchItems } from '../../static/interface';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
@@ -66,14 +66,6 @@ function _inferColumnTitle(columnKey: string): string {
         const withSpace = columnKey.replace(/[A-Z]/g, letter => ` ${letter.toLowerCase()}`);
         return withSpace.charAt(0).toUpperCase() + withSpace.slice(1);
     }
-}
-
-interface SearchItems {
-    index: number;
-    name: string;
-    operator: string;
-    value1: string; // 先按string
-    value2: string; // 先按string
 }
 
 interface TableListProps {
@@ -365,7 +357,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
     private _updateTableSource(): void {
         // call this method when trials or the computation of trial filter has changed
         let items = this._trialsToTableItems(this.props.tableSource);
-        items = this.filterBtn(items);
+        items = getTrialsBySearchFilters(items, this.state.searchItems); // use search filter to filter data
         if (items.length > 0) {
             const columns = this._buildColumnsFromTableItems(items);
             this.setState({
@@ -423,67 +415,6 @@ class TableList extends React.Component<TableListProps, TableListState> {
         );
     }
 
-    // search space 类型map
-    private parametersType = (arr: TableObj[]): Map<string, string | number> => {
-        // 抽出space名字
-        const map = new Map();
-        if (arr.length !== 0) {
-            const allSearchSpaceColumn = Object.keys(arr[0]).filter(item => item.startsWith('space/'));
-            allSearchSpaceColumn.forEach(item => {
-                map.set(item, typeof arr[0][item]);
-            });
-        }
-        return map;
-    };
-
-    private filterBtn = (arr: TableObj[]): TableObj[] => {
-        // 根据是否check决定条件，根据超参名字确定数据类型，转换类型，条件连起来，筛选数据
-        const relation = this.parametersType(arr);
-        const { searchItems } = this.state;
-        const que = searchItems;
-        // const que = searchItems.filter(
-        //     item => item.isChecked === true && item.name !== '' && item.value1 !== '' && item.operator !== ''
-        // );
-        // 待filter条件list
-        // 对 que 进行数据整合，调整成合适的数据，string->number
-        que.forEach(item => {
-            if (relation.get(`space/${item.name}`) === 'number') {
-                item.value1 = JSON.parse(item.value1);
-                if (item.value2 !== '') {
-                    item.value2 = JSON.parse(item.value2);
-                }
-            }
-        });
-        let result = arr;
-        que.forEach(temp => {
-            // ['Trial id', 'Trial No.', 'Status'] [...parameters]
-            if (temp.name === 'Trial id') {
-                result = result.filter(trial => trial.id.toUpperCase().includes(temp.value1.toUpperCase()));
-            } else if (temp.name === 'Trial No.') {
-                result = result.filter(trial => trial.sequenceId.toString() === temp.value1);
-            } else if (temp.name === 'StatusNNI') {
-                if (temp.operator === '=') {
-                    result = result.filter(trial => trial.status === temp.value1);
-                } else {
-                    result = result.filter(trial => trial.status !== temp.value1);
-                }
-            } else {
-                const paraName = `space/${temp.name}`;
-                if (temp.operator === '=') {
-                    result = result.filter(trial => trial[paraName] === temp.value1);
-                } else if (temp.operator === '>') {
-                    result = result.filter(trial => trial[paraName] > temp.value1);
-                } else if (temp.operator === '<') {
-                    result = result.filter(trial => trial[paraName] < temp.value1);
-                } else {
-                    // temp.operator === 'between'
-                    result = result.filter(trial => trial[paraName] > temp.value1 && trial[paraName] < temp.value2);
-                }
-            }
-        });
-        return result;
-    };
-
     private changeSearchFilterList = (arr: Array<SearchItems>): void => {
         this.setState(() => ({
             searchItems: arr
@@ -523,7 +454,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     <StackItem>
                         <Stack horizontal horizontalAlign='end' className='allList'>
                             <Search
-                                searchFilter={searchItems} // search的条件数组
+                                searchFilter={searchItems} // search filter list
                                 changeSearchFilterList={this.changeSearchFilterList}
                                 updatePage={this.props.updateDetailPage}
                             />

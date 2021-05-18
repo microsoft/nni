@@ -12,15 +12,19 @@ import { EXPERIMENT } from '../../../static/datamodel';
 import SearchParameterConditions from './SearchParameterConditions';
 import GeneralSearch from './GeneralSearch';
 import { classNames } from './searchStyle';
+import { SearchItems } from '../../../static/interface';
 
 function Search(props): any {
     const { searchFilter, changeSearchFilterList, updatePage } = props;
     const [searchInputVal, setSearchInputVal] = useState('');
+
     function getSearchItems(parameterList): IContextualMenuProps {
-        const result: Array<object> = [];
+        const menu: Array<object> = [];
+
         parameterList.unshift('StatusNNI');
+
         ['Trial id', 'Trial No.'].forEach(item => {
-            result.push({
+            menu.push({
                 key: item,
                 text: item,
                 subMenuProps: {
@@ -28,7 +32,7 @@ function Search(props): any {
                         {
                             key: item,
                             text: item,
-                            // component: GernalSearch
+                            // component: GeneralSearch
                             onRender: renderIdAndNo.bind(item)
                         }
                     ]
@@ -37,7 +41,7 @@ function Search(props): any {
         });
 
         parameterList.forEach(item => {
-            result.push({
+            menu.push({
                 key: item,
                 text: item === 'StatusNNI' ? 'Status' : item,
                 subMenuProps: {
@@ -56,37 +60,39 @@ function Search(props): any {
             shouldFocusOnMount: true,
             directionalHint: DirectionalHint.bottomLeftEdge,
             className: classNames.menu,
-            items: result as any
+            items: menu as any
         };
 
         return filterMenu;
     }
-    // 规避 nested 实验，nested 实验不支持进行超参搜索
+
+    // Avoid nested experiments, nested experiments do not support hyperparameter search
     const searchMenuProps: IContextualMenuProps = getSearchItems(
         EXPERIMENT.isNestedExp() ? [] : Object.keys(EXPERIMENT.searchSpace)
     );
 
-    function renderParametersSearchInputs(item: IContextualMenuItem): JSX.Element {
+    function renderParametersSearchInputs(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <SearchParameterConditions
                 parameter={item.text}
-                searchFilter={searchFilter} // search的数组
+                searchFilter={searchFilter} // search filter list
                 changeSearchFilterList={changeSearchFilterList}
                 updatePage={updatePage}
                 setSearchInputVal={setSearchInputVal}
-                key={item.id}
+                dismiss={dismissMenu} // close menu
             />
         );
     }
 
-    function renderIdAndNo(item: IContextualMenuItem): JSX.Element {
+    function renderIdAndNo(item: IContextualMenuItem, dismissMenu: () => void): JSX.Element {
         return (
             <GeneralSearch
                 idOrTrialNo={item.text}
-                searchFilter={searchFilter} // search的数组
+                searchFilter={searchFilter} // search fliter list
                 changeSearchFilterList={changeSearchFilterList}
                 setSearchInputVal={setSearchInputVal}
                 updatePage={updatePage}
+                dismiss={dismissMenu}
             />
         );
     }
@@ -95,74 +101,79 @@ function Search(props): any {
         setSearchInputVal(newValue);
     }
 
-    // 根据用户自己填入的筛选条件来进行筛选
+    // update TableList page
+    function changeTableListPage(searchFilterList: Array<SearchItems>): void {
+        changeSearchFilterList(searchFilterList);
+        updatePage();
+    }
+
+    // SearchBox onSearch event: Filter based on the filter criteria entered by the user
     function startFilter(): void {
-        // 根据 input val 来反填 searchFilter []
-        const result = searchInputVal.trim().split(';');
-        let id = 0;
-        if (result.includes('')) {
-            // delete '' in filter list
-            result.splice(
-                result.findIndex(item => item === ''),
+        // according [input val] to change searchFilter list
+        const allFilterConditions = searchInputVal.trim().split(';');
+        const newSearchFilter: any = [];
+
+        // delete '' in filter list
+        if (allFilterConditions.includes('')) {
+            allFilterConditions.splice(
+                allFilterConditions.findIndex(item => item === ''),
                 1
             );
         }
-        const newSearchFilter: any = [];
-        result.forEach(temp => {
-            let item;
-            if (temp.includes('Status')) {
-                const splitOperator = temp.includes('≠') ? '≠' : ':';
-                const filterOperator = temp.includes('≠') ? '≠' : '=';
-                item = temp.trim().split(splitOperator);
+
+        allFilterConditions.forEach(eachFilterConditionStr => {
+            let eachFilterConditionArr: string[] = [];
+
+            if (eachFilterConditionStr.includes('Status')) {
+                const splitOperator = eachFilterConditionStr.includes('≠') ? '≠' : ':';
+                const filterOperator = eachFilterConditionStr.includes('≠') ? '≠' : '=';
+                eachFilterConditionArr = eachFilterConditionStr.trim().split(splitOperator);
                 newSearchFilter.push({
                     name: 'StatusNNI',
-                    id: ++id,
                     operator: filterOperator,
-                    value1: item[1],
+                    value1: eachFilterConditionArr[1],
                     value2: ''
                 });
             } else {
-                if (temp.includes(':')) {
-                    item = temp.trim().split(':');
-                    const isArray = item[1].includes('[' || ']') ? Array.isArray(JSON.parse(item[1])) : false;
+                if (eachFilterConditionStr.includes(':')) {
+                    eachFilterConditionArr = eachFilterConditionStr.trim().split(':');
+                    const isArray = eachFilterConditionArr[1].includes('[' || ']')
+                        ? Array.isArray(JSON.parse(eachFilterConditionArr[1]))
+                        : false;
                     newSearchFilter.push({
-                        id: ++id,
-                        name: item[0],
+                        name: eachFilterConditionArr[0],
                         operator: isArray ? 'between' : '=',
-                        value1: isArray ? JSON.parse(item[1])[0] : item[1],
-                        value2: isArray ? JSON.parse(item[1])[1] : ''
+                        value1: isArray ? JSON.parse(eachFilterConditionArr[1])[0] : eachFilterConditionArr[1],
+                        value2: isArray ? JSON.parse(eachFilterConditionArr[1])[1] : ''
                     });
                 } else {
-                    const operator = temp.includes('>') === true ? '>' : '<';
-                    item = temp.trim().split(operator);
+                    const operator = eachFilterConditionStr.includes('>') === true ? '>' : '<';
+                    eachFilterConditionArr = eachFilterConditionStr.trim().split(operator);
                     newSearchFilter.push({
-                        id: ++id,
-                        name: item[0],
+                        name: eachFilterConditionArr[0],
                         operator: operator,
-                        value1: item[1],
+                        value1: eachFilterConditionArr[1],
                         value2: ''
                     });
                 }
             }
         });
-        newSearchFilter.forEach(element => {
-            console.info(element);
-        });
-        changeSearchFilterList(newSearchFilter);
-        updatePage();
+
+        changeTableListPage(newSearchFilter);
     }
 
+    // clear search input all value, clear all search filter
     function clearFliter(): void {
-        changeSearchFilterList([]);
-        updatePage();
+        changeTableListPage([]);
     }
+
     return (
         <div>
             <Stack horizontal>
                 <DefaultButton text='Filter' menuProps={searchMenuProps} />
-                {/* 存放filter条件；用户输入filter条件，反向实现搜索 */}
+                {/* search input: store filter conditons, also, user could input filter conditions, could search */}
                 <SearchBox
-                    styles={{ root: { width: 400 } }}
+                    styles={{ root: { width: 530 } }}
                     placeholder='Search'
                     onChange={_updateSearchText}
                     value={searchInputVal}
