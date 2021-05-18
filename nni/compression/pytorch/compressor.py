@@ -317,25 +317,12 @@ class Pruner(Compressor):
 
     """
 
-    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None):
-        self._trainer = trainer
-        self._criterion = criterion
+    def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
         if optimizer is not None:
             self.patch_optimizer(self.update_mask)
 
     def compress(self):
-        if self.training_aware:
-            training = self.bound_model.training
-            self.bound_model.train()
-            for epoch in range(MAX_EPOCHS):
-                self._trainer(self.bound_model, optimizer=self.optimizer,
-                criterion=self._criterion, epoch=epoch, callback=self._callback)
-                if epoch >= self.training_epochs:
-                    break
-            self.bound_model.train(training)
-            self._get_threshold()
-
         self.update_mask()
         return self.bound_model
 

@@ -16,3 +16,5 @@ MASKER_DICT = {
     'apoz': ActivationAPoZRankFilterPrunerMasker,
     'mean_activation': ActivationMeanRankFilterPrunerMasker
 }
+
+MAX_EPOCHS = 9999
