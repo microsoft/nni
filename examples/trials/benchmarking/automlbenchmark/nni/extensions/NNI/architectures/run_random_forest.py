@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import sklearn
 import time
@@ -80,6 +83,12 @@ def preprocess_random_forest(dataset, log):
 
     
 def run_random_forest(dataset, config, tuner, log):
+    """
+    Using the given tuner, tune a random forest within the given time constraint.
+    This function uses cross validation score as the feedback score to the tuner. 
+    The search space on which tuners search on is defined above empirically as a global variable.
+    """
+    
     limit_type, trial_limit = config.framework_params['limit_type'], None
     if limit_type == 'ntrials':
         trial_limit = int(config.framework_params['trial_limit'])
@@ -98,7 +107,7 @@ def run_random_forest(dataset, config, tuner, log):
     start_time = time.time()
     trial_count = 0
     intermediate_scores = []
-    intermediate_best_scores = []           # should be monotone increasing 
+    intermediate_best_scores = []           # should be monotonically increasing 
     
     while True:
         try:

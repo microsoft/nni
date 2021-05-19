@@ -1,9 +1,12 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 #!/bin/bash
 
 time=$(date "+%Y%m%d%H%M%S")
 installation='automlbenchmark'
 outdir="results_$time"
-benchmark='nnivalid'
+benchmark='nnivalid'      # 'nnismall'  
 
 mkdir $outdir $outdir/scorelogs $outdir/reports 
 

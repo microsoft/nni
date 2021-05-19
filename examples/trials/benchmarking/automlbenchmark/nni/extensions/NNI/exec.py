@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 
 from .tuners import NNITuner
@@ -30,6 +33,9 @@ def validate_config(config: TaskConfig):
 
 
 def save_scores_to_file(intermediate_scores, intermediate_best_scores, out_file):
+    """
+    Save statistics of every trial to a log file for generating reports. 
+    """
     with open(out_file, 'w') as f:
         f.write('ntrials,trial_score,best_score\n')
         for i, (trial_score, best_score) in enumerate(zip(intermediate_scores, intermediate_best_scores)):
