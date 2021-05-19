@@ -21,8 +21,7 @@ from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilte
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-# TODO !!!! Optimize the memory usage!!!!!!!
-# device = torch.device('cpu')
+
 BATCH_SIZE = 2
 # the relative distance
 RELATIVE_THRESHOLD = 0.01
@@ -311,9 +310,6 @@ class SpeedupTestCase(TestCase):
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                 (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
-    # FIXME: This test case might fail randomly, no idea why
-    # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282
-
     def test_speedup_integration(self):
         # skip this test on windows(7GB mem available) due to memory limit
         # Note: hack trick, may be updated in the future
@@ -355,7 +351,7 @@ class SpeedupTestCase(TestCase):
                 zero_bn_bias(speedup_model)
 
                 data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
-                ms = ModelSpeedup(speedup_model, data, MASK_FILE)
+                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=4)
                 ms.speedup_model()
 
                 speedup_model.eval()
