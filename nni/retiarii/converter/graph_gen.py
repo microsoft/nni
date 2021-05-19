@@ -333,10 +333,10 @@ class GraphConverter:
                         assert predecessor.kind() == 'prim::GetAttr'
                         assert predecessor.hasAttribute('name')
                         module_name_space.append(predecessor.s('name'))
-                        submodule_full_name = build_full_name(module_name, reversed(module_name_space))
+                        submodule_full_name = build_full_name(module_name, list(reversed(module_name_space)))
                         submodule_obj = module
                         script_submodule = script_module
-                        for each_name in reversed(module_name_space):
+                        for each_name in list(reversed(module_name_space)):
                             submodule_obj = getattr(submodule_obj, each_name)
                             script_submodule = script_submodule._modules[each_name]
                         subgraph, sub_m_attrs = self.convert_module(script_submodule, submodule_obj, submodule_full_name, ir_model)
