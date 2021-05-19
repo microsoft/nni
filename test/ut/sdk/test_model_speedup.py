@@ -323,9 +323,9 @@ class SpeedupTestCase(TestCase):
 
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
-        for model_name in ['vgg16', 'resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
+        for model_name in ['vgg16', 'resnet18', 'mobilenet_v2']# 'squeezenet1_1', 'densenet121',
                            # 'inception_v3' inception is too large and may fail the pipeline
-                            'resnet50']:
+                           # 'resnet50']:
                             
             for gen_cfg_func in Gen_cfg_funcs:
                 kwargs = {
