@@ -776,7 +776,7 @@ class ModelSpeedup:
         training = self.bound_model.training
         # set to the evaluation mode
         self.bound_model.train(False)
-        # TODO suppose to fix the conflict after the sparsity inference
+        # TODO suppose to fix the conflict after the sparsity propagation
         if not self.enable_compile:
             # if we cannot modify the network sparsity, then we should resolve
             # the sparsity conflict by unmask some sparse values.

@@ -20,9 +20,9 @@ from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMaske
 from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
 
 torch.manual_seed(0)
-# device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 # TODO !!!! Optimize the memory usage!!!!!!!
-device = torch.device('cpu')
+# device = torch.device('cpu')
 BATCH_SIZE = 2
 # the relative distance
 RELATIVE_THRESHOLD = 0.01
