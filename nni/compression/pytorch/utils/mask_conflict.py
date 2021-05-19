@@ -333,7 +333,7 @@ class ChannelMaskConflict(MaskFix):
                 elif type(m).__name__ == 'Linear':
                     new_mask[:, merged_index] = 1.
                 elif type(m).__name__ == 'BatchNorm2d':
-                    new_mask = merged_index.type_as(orig_mask)
+                    new_mask = merged_channel_mask.type_as(orig_mask)
                 else:
                     raise RuntimeError(
                         f'unsupported module type: {type(m).__name__}')
