@@ -101,7 +101,9 @@ export class AMLEnvironmentService extends EnvironmentService {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        amlEnvironment.useActiveGpu = !!this.config.deprecated.useActiveGpu;
+        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
+            amlEnvironment.useActiveGpu = this.config.deprecated.useActiveGpu;
+        }
         amlEnvironment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
