@@ -181,16 +181,11 @@ class ModelSpeedup:
         Update the mask for the target node.
         """
         AutoMaskInferenceClass = AutoMaskInference
-        # print("Creating auto inference for")
-        # print(node.unique_name)
-        # print(node.op_type)
-        # print(AutoMaskInferenceClass)
+
         # this name is consistent with the name returned by named_modules()
         module_name = node.name
         _logger.info('Update mask for %s', module_name)
         unique_name = node.unique_name
-        # if it is the first visit to this node, then we create a corresponding auto
-        # mask inference object for this node
         dummy_input, input_debugname = self._prepare_dummy_input(node)
         # get the input mask from self.masks
         # Note: the input mask of the successor nodes are
@@ -200,7 +195,9 @@ class ModelSpeedup:
                         for debugname in input_debugname]
         if node.type == 'func':
             # we cannot get the runable function directly from the jit traced
-            # graph, so we translate it back to python function
+            # graph, so we translate it back to python function, Note: the function
+            # is appliable to both cpu/gpu devices, the output tensors will be on the
+            # same device of the input tensors
             func = jit_to_python_function(node, self)
             if func is None:
                 # no need to infer the sparsity for this node
@@ -209,7 +206,6 @@ class ModelSpeedup:
             _auto_infer = AutoMaskInferenceClass(
                 func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
         else:
-            # node.type == 'module'
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
@@ -220,7 +216,7 @@ class ModelSpeedup:
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
         _auto_infer.fold_bias = self.fold_bias
-        # _auto_infer.update()
+
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
         _auto_infer.input_debugname = input_debugname
