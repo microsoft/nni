@@ -315,16 +315,31 @@ class GraphConverter:
                     if submodule.inputsAt(0).type().name() == 'ModuleList':
                         # handle ModuleList
                         predecessor = submodule.inputsAt(0).node()
+                        module_name_space = [submodule_name]
+                        while predecessor.inputsAt(0).debugName() != 'self':
+                            # this is for dealing with nested ModuleList. below is an example
+                            # %3 : __torch__.torch.nn.modules.container.___torch_mangle_0.ModuleList = prim::GetAttr[name="ops"](%self)
+                            # %5 : __torch__.torch.nn.modules.container.ModuleList = prim::GetAttr[name="0"](%3)
+                            # %7 : __torch__.torch.nn.modules.container.ModuleList = prim::GetAttr[name="1"](%3)
+                            # %9 : __torch__.torch.nn.modules.container.ModuleList = prim::GetAttr[name="2"](%3)
+                            # %11 : __torch__.torch.nn.modules.container.ModuleList = prim::GetAttr[name="3"](%3)
+                            # %14 : __torch__.torch.nn.modules.linear.Linear = prim::GetAttr[name="0"](%5)
+                            # %16 : __torch__.torch.nn.modules.linear.Linear = prim::GetAttr[name="1"](%5)
+                            # %state.2 : Tensor = prim::CallMethod[name="forward"](%14, %x.1) # modulelist.py:18:24
+                            # %state.4 : Tensor = prim::CallMethod[name="forward"](%16, %state.2) # modulelist.py:18:24
+                            assert predecessor.kind() == 'prim::GetAttr'
+                            module_name_space.append(predecessor.s('name'))
+                            predecessor = predecessor.inputsAt(0).node()
                         assert predecessor.kind() == 'prim::GetAttr'
                         assert predecessor.hasAttribute('name')
-                        assert predecessor.inputsAt(0).debugName() == 'self'
-                        predecessor_name = predecessor.s('name')
-                        # TODO: exchange submodule_name and predecessor_name
-                        submodule_full_name = build_full_name(module_name, [submodule_name, predecessor_name])
-                        predecessor_obj = getattr(module, predecessor_name)
-                        submodule_obj = getattr(predecessor_obj, submodule_name)
-                        subgraph, sub_m_attrs = self.convert_module(script_module._modules[predecessor_name]._modules[submodule_name],
-                                                                    submodule_obj, submodule_full_name, ir_model)
+                        module_name_space.append(predecessor.s('name'))
+                        submodule_full_name = build_full_name(module_name, reversed(module_name_space))
+                        submodule_obj = module
+                        script_submodule = script_module
+                        for each_name in reversed(module_name_space):
+                            submodule_obj = getattr(submodule_obj, each_name)
+                            script_submodule = script_submodule._modules[each_name]
+                        subgraph, sub_m_attrs = self.convert_module(script_submodule, submodule_obj, submodule_full_name, ir_model)
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
