@@ -25,7 +25,7 @@ def generate_perf_report(result_file_name):
             out_f.write('\n')   
 
 
-def generate_convergence_report(result_file_name):
+def generate_graphs(result_file_name):
     result = pd.read_csv(result_file_name)
     scorelog_dir = result_file_name.replace('results.csv', 'scorelogs/')
     output_dir = result_file_name.replace('results.csv', 'reports/') 
@@ -35,22 +35,33 @@ def generate_convergence_report(result_file_name):
         task_name = task_results.task.unique()[0]
         folds = task_results['fold'].unique()
         # load scorelog files
-        scores = []
+        trial_scores, best_scores = [], []
         for fold in folds:            
             tuners = list(task_results[task_results.fold == fold]['framework'].unique())
             for tuner in tuners:
                 scorelog_name = '{}_{}_{}.csv'.format(tuner.lower(), task_name, fold)
                 intermediate_scores = pd.read_csv(scorelog_dir + scorelog_name)
-                scores.append([tuner, fold, list(intermediate_scores['best_score'])])
+                best_scores.append([tuner, fold, list(intermediate_scores['best_score'])])
+                trial_scores.append([tuner, fold, list(intermediate_scores['trial_score'])])
 
-        # generate a graph
-        for tuner, fold, score in scores:
+        # generate the best score graph
+        for tuner, fold, score in best_scores:
             plt.plot(score, label='{} Fold {}'.format(tuner, fold))
         plt.title(task_name)
         plt.xlabel("Number of Trials")
         plt.ylabel("Best Cross Validation Score")        
         plt.legend()
-        plt.savefig(output_dir + '{}.jpg'.format(task_name))
+        plt.savefig(output_dir + '{}_1.jpg'.format(task_name))
+        plt.close()
+
+        # generate the trial score graph
+        for tuner, fold, score in trial_scores:
+            plt.plot(score, label='{} Fold {}'.format(tuner, fold))
+        plt.title(task_name)
+        plt.xlabel("Trial Number")
+        plt.ylabel("Trial Cross Validation Score")        
+        plt.legend()
+        plt.savefig(output_dir + '{}_2.jpg'.format(task_name))
         plt.close()
 
             
@@ -59,7 +70,7 @@ def main():
         print("Usage: python parse_result_csv.py <result.csv file>")
         exit(0)
     generate_perf_report(sys.argv[1])
-    generate_convergence_report(sys.argv[1])
+    generate_graphs(sys.argv[1])
     
 
 if __name__ == '__main__':

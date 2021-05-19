@@ -29,11 +29,11 @@ def validate_config(config: TaskConfig):
                 raise RuntimeError('"trial_limit" field must be an integer.')  
 
 
-def save_scores_to_file(scores, out_file):
+def save_scores_to_file(intermediate_scores, intermediate_best_scores, out_file):
     with open(out_file, 'w') as f:
-        f.write('ntrials,best_score\n')
-        for i, score in enumerate(scores):
-            f.write('{},{}\n'.format(i+1, score))
+        f.write('ntrials,trial_score,best_score\n')
+        for i, (trial_score, best_score) in enumerate(zip(intermediate_scores, intermediate_best_scores)):
+            f.write('{},{},{}\n'.format(i+1, trial_score, best_score))
             
     
 def run(dataset: Dataset, config: TaskConfig):
@@ -47,7 +47,7 @@ def run(dataset: Dataset, config: TaskConfig):
                  .format(config.framework_params['arch_type'], tuner.description, config.framework_params['trial_limit']))
         log.info("Note: any time constraints are ignored.")
 
-    probabilities, predictions, train_timer, y_test, intermediate_best_scores = run_experiment(dataset, config, tuner, log)
+    probabilities, predictions, train_timer, y_test, intermediate_scores, intermediate_best_scores = run_experiment(dataset, config, tuner, log)
 
     save_predictions_to_file(dataset=dataset,
                              output_file=config.output_predictions_file,
@@ -56,7 +56,8 @@ def run(dataset: Dataset, config: TaskConfig):
                              truth=y_test)
 
     scores_file = '/'.join(config.output_predictions_file.split('/')[:-3]) + '/scorelogs/' + config.output_predictions_file.split('/')[-1]
-    save_scores_to_file(intermediate_best_scores, scores_file)
+    assert(len(intermediate_scores) == len(intermediate_best_scores))
+    save_scores_to_file(intermediate_scores, intermediate_best_scores, scores_file)
 
     return dict(
         models_count=1,

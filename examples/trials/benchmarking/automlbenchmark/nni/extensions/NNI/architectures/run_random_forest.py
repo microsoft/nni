@@ -17,15 +17,6 @@ from amlb.utils import Timer
 from amlb.results import save_predictions_to_file
 
 
-# for future use
-'''
-import sys
-import warnings
-
-if not sys.warnoptions:
-    warnings.simplefilter("ignore")
-'''
-
 SEARCH_SPACE = {
     "n_estimators": {"_type":"randint", "_value": [8, 512]},
     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
@@ -106,6 +97,7 @@ def run_random_forest(dataset, config, tuner, log):
     
     start_time = time.time()
     trial_count = 0
+    intermediate_scores = []
     intermediate_best_scores = []           # should be monotone increasing 
     
     while True:
@@ -130,6 +122,7 @@ def run_random_forest(dataset, config, tuner, log):
             if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
                 best_score, best_params, best_model = cur_score, cur_params, cur_model    
             
+            intermediate_scores.append(cur_score)
             intermediate_best_scores.append(best_score)
             tuner.receive_trial_result(param_idx, cur_params, cur_score)
 
@@ -155,4 +148,4 @@ def run_random_forest(dataset, config, tuner, log):
     predictions = best_model.predict(X_test)
     probabilities = best_model.predict_proba(X_test) if is_classification else None
 
-    return probabilities, predictions, training, y_test, intermediate_best_scores
+    return probabilities, predictions, training, y_test, intermediate_scores, intermediate_best_scores
