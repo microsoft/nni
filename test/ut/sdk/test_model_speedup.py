@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import os
+import gc
 import psutil
 import sys
 import numpy as np
@@ -351,7 +352,7 @@ class SpeedupTestCase(TestCase):
                 zero_bn_bias(speedup_model)
 
                 data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
-                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=4)
+                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=2)
                 ms.speedup_model()
 
                 speedup_model.eval()
@@ -403,6 +404,8 @@ class SpeedupTestCase(TestCase):
             os.remove(MODEL_FILE)
         if os.path.exists(MASK_FILE):
             os.remove(MASK_FILE)
+        # GC to release memory
+        gc.collect()
 
 
 if __name__ == '__main__':
