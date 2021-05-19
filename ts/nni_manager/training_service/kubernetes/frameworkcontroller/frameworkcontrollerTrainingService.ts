@@ -19,6 +19,7 @@ import {validateCodeDir} from '../../common/util';
 import {NFSConfig} from '../kubernetesConfig';
 import {KubernetesTrialJobDetail} from '../kubernetesData';
 import {KubernetesTrainingService} from '../kubernetesTrainingService';
+import {KubernetesJobRestServer} from '../kubernetesJobRestServer';
 import {FrameworkControllerClientFactory} from './frameworkcontrollerApiClient';
 import {
     FrameworkControllerClusterConfig,
@@ -52,7 +53,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     public async run(): Promise<void> {
-        this.kubernetesJobRestServer = component.get(FrameworkControllerJobRestServer);
+        this.kubernetesJobRestServer = new KubernetesJobRestServer(this);
         if (this.kubernetesJobRestServer === undefined) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }
@@ -65,7 +66,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
             await this.fcJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if (this.kubernetesJobRestServer.getErrorMessage !== undefined) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
-                this.stopping = true;
             }
         }
     }
@@ -140,10 +140,11 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
         const trialLocalTempFolder: string = path.join(getExperimentRootDir(), 'trials-local', trialJobId);
         let frameworkcontrollerJobName: string = `nniexp${this.experimentId}trial${trialJobId}`.toLowerCase();
 
-        // Create frameworkcontroller job based on generated frameworkcontroller job resource config
-        let frameworkcontrollerJobConfig = JSON.parse(JSON.stringify(this.fcTemplate));
+        let frameworkcontrollerJobConfig: any;
 
         if (this.fcTemplate !== undefined) {
+            // Create frameworkcontroller job based on generated frameworkcontroller job resource config
+            frameworkcontrollerJobConfig = JSON.parse(JSON.stringify(this.fcTemplate));
             // add a custom name extension to the job name and apply it to the custom template
             frameworkcontrollerJobName += "xx" + this.fcTemplate.metadata.name;
             // Process custom task roles commands

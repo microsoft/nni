@@ -59,5 +59,5 @@ jobs:
           --checkpoint_storage_class $(checkpoint_storage_class) \
           --checkpoint_storage_size $(checkpoint_storage_size) \
           --nni_manager_ip $(nni_manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts adl
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts adl --exclude multi-phase,multi-thread
     displayName: Integration test

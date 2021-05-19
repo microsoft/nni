@@ -45,31 +45,8 @@ def to_v2(v1) -> ExperimentConfig:
         _move_field(v1_trial, v2, 'gpuNum', 'trial_gpu_number')
 
     for algo_type in ['tuner', 'assessor', 'advisor']:
-        if algo_type not in v1:
-            continue
-        v1_algo = v1.pop(algo_type)
-
-        builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
-        class_args = v1_algo.pop('classArgs', None)
-
-        if builtin_name is not None:
-            v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
-
-        else:
-            class_directory = util.canonical_path(v1_algo.pop('codeDir'))
-            class_file_name = v1_algo.pop('classFileName')
-            assert class_file_name.endswith('.py')
-            class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
-            v2_algo = CustomAlgorithmConfig(
-                class_name=class_name,
-                class_directory=class_directory,
-                class_args=class_args
-            )
-
-        setattr(v2, algo_type, v2_algo)
-        _deprecate(v1_algo, v2, 'includeIntermediateResults')
-        _move_field(v1_algo, v2, 'gpuIndices', 'tuner_gpu_indices')
-        assert not v1_algo, v1_algo
+        if algo_type in v1:
+            convert_algo(algo_type, v1, v2)
 
     ts = v2.training_service
 
@@ -134,7 +111,7 @@ def to_v2(v1) -> ExperimentConfig:
         _move_field(aml_config, ts, 'resourceGroup', 'resource_group')
         _move_field(aml_config, ts, 'workspaceName', 'workspace_name')
         _move_field(aml_config, ts, 'computeTarget', 'compute_target')
-        _deprecate(aml_config, v2, 'maxTrialNumPerGpu')
+        _move_field(aml_config, ts, 'maxTrialNumPerGpu', 'max_trial_number_per_gpu')
         _deprecate(aml_config, v2, 'useActiveGpu')
         assert not aml_config, aml_config
 
@@ -259,3 +236,31 @@ def _deprecate(v1, v2, key):
         if v2._deprecated is None:
             v2._deprecated = {}
         v2._deprecated[key] = v1.pop(key)
+
+def convert_algo(algo_type, v1, v2):
+    if algo_type not in v1:
+        return None
+    v1_algo = v1.pop(algo_type)
+
+    builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
+    class_args = v1_algo.pop('classArgs', None)
+
+    if builtin_name is not None:
+        v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
+
+    else:
+        class_directory = util.canonical_path(v1_algo.pop('codeDir'))
+        class_file_name = v1_algo.pop('classFileName')
+        assert class_file_name.endswith('.py')
+        class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
+        v2_algo = CustomAlgorithmConfig(
+            class_name=class_name,
+            class_directory=class_directory,
+            class_args=class_args
+        )
+
+    setattr(v2, algo_type, v2_algo)
+    _deprecate(v1_algo, v2, 'includeIntermediateResults')
+    _move_field(v1_algo, v2, 'gpuIndices', 'tuner_gpu_indices')
+    assert not v1_algo, v1_algo
+    return v2_algo

@@ -119,11 +119,50 @@ def set_trial_config(experiment_config, port, config_file_name):
 
 def set_adl_config(experiment_config, port, config_file_name):
     '''set adl configuration'''
+    adl_config_data = dict()
+    # hack for supporting v2 config, need refactor
+    adl_config_data['adl_config'] = {}
+    response = rest_put(cluster_metadata_url(port), json.dumps(adl_config_data), REST_TIME_OUT)
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
     #set trial_config
     return set_trial_config(experiment_config, port, config_file_name), None
+
+def validate_response(response, config_file_name):
+    err_message = None
+    if not response or not response.status_code == 200:
+        if response is not None:
+            err_message = response.text
+            _, stderr_full_path = get_log_path(config_file_name)
+            with open(stderr_full_path, 'a+') as fout:
+                fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
+        print_error('Error:' + err_message)
+        exit(1)
+
+# hack to fix v1 version_check and log_collection bug, need refactor
+def set_V1_common_config(experiment_config, port, config_file_name):
+    version_check = True
+    #debug mode should disable version check
+    if experiment_config.get('debug') is not None:
+        version_check = not experiment_config.get('debug')
+    #validate version check
+    if experiment_config.get('versionCheck') is not None:
+        version_check = experiment_config.get('versionCheck')
+    response = rest_put(cluster_metadata_url(port), json.dumps({'version_check': version_check}), REST_TIME_OUT)
+    validate_response(response, config_file_name)
+    if experiment_config.get('logCollection'):
+        response = rest_put(cluster_metadata_url(port), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
+        validate_response(response, config_file_name)
 
 def setNNIManagerIp(experiment_config, port, config_file_name):
     '''set nniManagerIp'''
@@ -155,6 +194,7 @@ def set_kubeflow_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
@@ -174,6 +214,7 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(err_message), indent=4, sort_keys=True, separators=(',', ':')))
         return False, err_message
+    set_V1_common_config(experiment_config, port, config_file_name)
     result, message = setNNIManagerIp(experiment_config, port, config_file_name)
     if not result:
         return result, message
@@ -200,9 +241,13 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['experimentName'] = experiment_config['experimentName']
     request_data['trialConcurrency'] = experiment_config['trialConcurrency']
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
+    request_data['maxExperimentDuration'] = str(experiment_config['maxExecDuration']) + 's'
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
+    request_data['maxTrialNumber'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
+    # hack for hotfix, fix config.trainingService undefined error, need refactor
+    request_data['trainingService'] = {'platform': experiment_config.get('trainingServicePlatform')}
     if experiment_config.get('description'):
         request_data['description'] = experiment_config['description']
     if experiment_config.get('multiPhase'):
@@ -319,8 +364,11 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
-    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else None
+    if config_version == 1:
+        log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    else:
+        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
+    log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else 'info'
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
     if mode != 'view':
@@ -330,6 +378,8 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
     # start rest server
     if config_version == 1:
         platform = experiment_config['trainingServicePlatform']
+    elif isinstance(experiment_config['trainingService'], list):
+        platform = 'hybrid'
     else:
         platform = experiment_config['trainingService']['platform']
 
@@ -349,14 +399,14 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
         experiment_config['trial']['codeDir'] = code_dir
         search_space = generate_search_space(code_dir)
-        experiment_config['searchSpace'] = json.dumps(search_space)
+        experiment_config['searchSpace'] = search_space
         assert search_space, ERROR_INFO % 'Generated search space is empty'
     elif config_version == 1:
         if experiment_config.get('searchSpacePath'):
             search_space = get_json_content(experiment_config.get('searchSpacePath'))
-            experiment_config['searchSpace'] = json.dumps(search_space)
+            experiment_config['searchSpace'] = search_space
         else:
-            experiment_config['searchSpace'] = json.dumps('')
+            experiment_config['searchSpace'] = ''
 
     # check rest server
     running, _ = check_rest_server(args.port)
@@ -411,6 +461,21 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             kill_command(rest_process.pid)
             print_normal('Stopping experiment...')
 
+def _validate_v1(config, path):
+    try:
+        validate_all_content(config, path)
+    except Exception as e:
+        print_error(f'Config V1 validation failed: {repr(e)}')
+        exit(1)
+
+def _validate_v2(config, path):
+    base_path = Path(path).parent
+    try:
+        conf = ExperimentConfig(_base_path=base_path, **config)
+        return conf.json()
+    except Exception as e:
+        print_error(f'Config V2 validation failed: {repr(e)}')
+
 def create_experiment(args):
     '''start a new experiment'''
     experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
@@ -420,23 +485,23 @@ def create_experiment(args):
         exit(1)
     config_yml = get_yml_content(config_path)
 
-    try:
-        config = ExperimentConfig(_base_path=Path(config_path).parent, **config_yml)
-        config_v2 = config.json()
-    except Exception as error_v2:
-        print_warning('Validation with V2 schema failed. Trying to convert from V1 format...')
-        try:
-            validate_all_content(config_yml, config_path)
-        except Exception as error_v1:
-            print_error(f'Convert from v1 format failed: {repr(error_v1)}')
-            print_error(f'Config in v2 format validation failed: {repr(error_v2)}')
-            exit(1)
-        from nni.experiment.config import convert
-        config_v2 = convert.to_v2(config_yml).json()
+    if 'trainingServicePlatform' in config_yml:
+        _validate_v1(config_yml, config_path)
+        platform = config_yml['trainingServicePlatform']
+        if platform in k8s_training_services:
+            schema = 1
+            config_v1 = config_yml
+        else:
+            schema = 2
+            from nni.experiment.config import convert
+            config_v2 = convert.to_v2(config_yml).json()
+    else:
+        config_v2 = _validate_v2(config_yml, config_path)
+        schema = 2
 
     try:
-        if getattr(config_v2['trainingService'], 'platform', None) in k8s_training_services:
-            launch_experiment(args, config_yml, 'new', experiment_id, 1)
+        if schema == 1:
+            launch_experiment(args, config_v1, 'new', experiment_id, 1)
         else:
             launch_experiment(args, config_v2, 'new', experiment_id, 2)
     except Exception as exception:
@@ -470,10 +535,12 @@ def manage_stopped_experiment(args, mode):
     experiments_config.update_experiment(args.id, 'port', args.port)
     assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
-        if 'trainingService' in experiment_config:
-            launch_experiment(args, experiment_config, mode, experiment_id, 2)
-        else:
+        if 'trainingServicePlatform' in experiment_config:
+            experiment_config['logDir'] = experiments_dict[args.id]['logDir']
             launch_experiment(args, experiment_config, mode, experiment_id, 1)
+        else:
+            experiment_config['experimentWorkingDirectory'] = experiments_dict[args.id]['logDir']
+            launch_experiment(args, experiment_config, mode, experiment_id, 2)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:

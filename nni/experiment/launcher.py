@@ -43,10 +43,9 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,
-                                     config.experiment_name, proc.pid, config.experiment_working_directory)
-        if mode != 'view':
-            _logger.info('Setting up...')
-            rest.post(port, '/experiment', config.json())
+                                     config.experiment_name, proc.pid, str(config.experiment_working_directory))
+        _logger.info('Setting up...')
+        rest.post(port, '/experiment', config.json())
         return proc
 
     except Exception as e:
@@ -116,7 +115,8 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
         'mode': ts,
         'experiment_id': experiment_id,
         'start_mode': mode,
-        'log_level': 'debug' if debug else 'info',
+        'log_dir': config.experiment_working_directory,
+        'log_level': 'debug' if debug else 'info'
     }
     if pipe_path is not None:
         args['dispatcher_pipe'] = pipe_path
@@ -167,10 +167,10 @@ def get_stopped_experiment_config(exp_id: str, mode: str) -> None:
     experiments_dict = experiments_config.get_all_experiments()
     experiment_metadata = experiments_dict.get(exp_id)
     if experiment_metadata is None:
-        logging.error('Id %s not exist!', exp_id)
+        _logger.error('Id %s not exist!', exp_id)
         return
     if experiment_metadata['status'] != 'STOPPED':
-        logging.error('Only stopped experiments can be %sed!', mode)
+        _logger.error('Only stopped experiments can be %sed!', mode)
         return
     experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
     config = ExperimentConfig(**experiment_config)

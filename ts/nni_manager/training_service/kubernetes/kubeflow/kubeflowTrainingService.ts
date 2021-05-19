@@ -19,6 +19,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { KubeflowOperatorClientFactory } from './kubeflowApiClient';
 import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfigFactory, KubeflowClusterConfigNFS,
@@ -46,7 +47,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
     public async run(): Promise<void> {
         this.log.info('Run Kubeflow training service.');
-        this.kubernetesJobRestServer = component.get(KubeflowJobRestServer);
+        this.kubernetesJobRestServer = new KubernetesJobRestServer(this);
         if (this.kubernetesJobRestServer === undefined) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }
@@ -59,7 +60,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if (this.kubernetesJobRestServer.getErrorMessage !== undefined) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
-                this.stopping = true;
             }
         }
         this.log.info('Kubeflow training service exit.');

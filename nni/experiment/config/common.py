@@ -98,6 +98,13 @@ class ExperimentConfig(ConfigBase):
             if isinstance(kwargs.get(algo_type), dict):
                 setattr(self, algo_type, _AlgorithmConfig(**kwargs.pop(algo_type)))
 
+    def canonical(self):
+        ret = super().canonical()
+        if isinstance(ret.training_service, list):
+            for i, ts in enumerate(ret.training_service):
+                ret.training_service[i] = ts.canonical()
+        return ret
+
     def validate(self, initialized_tuner: bool = False) -> None:
         super().validate()
         if initialized_tuner:

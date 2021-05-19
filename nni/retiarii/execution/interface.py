@@ -124,6 +124,13 @@ class AbstractExecutionEngine(ABC):
         raise NotImplementedError
 
     @abstractmethod
+    def budget_exhausted(self) -> bool:
+        """
+        Check whether user configured max trial number or max execution duration has been reached
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
         """
         Register a listener to receive graph events.

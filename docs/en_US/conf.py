@@ -27,7 +27,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v2.1'
+release = 'v2.2'
 
 # -- General configuration ---------------------------------------------------
 
@@ -201,4 +201,4 @@ extlinks = {
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')

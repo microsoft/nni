@@ -128,6 +128,10 @@ export class EnvironmentInformation {
 
 export abstract class EnvironmentService {
 
+    public async init(): Promise<void> {
+        return;
+    }
+
     public abstract get hasStorageService(): boolean;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;

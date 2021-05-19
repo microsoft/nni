@@ -52,7 +52,7 @@ class RetiariiExeConfig(ConfigBase):
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: Optional[PathLike] = None
+    experiment_working_directory: PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
 
@@ -165,7 +165,8 @@ class RetiariiExperiment(Experiment):
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
-        self._dispatcher.mark_experiment_as_ending()
+        # TODO: find out a proper way to show no more trial message on WebUI
+        #self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -210,11 +211,12 @@ class RetiariiExperiment(Experiment):
         msg = 'Web UI URLs: ' + colorama.Fore.CYAN + ' '.join(ips) + colorama.Style.RESET_ALL
         _logger.info(msg)
 
-        Thread(target=self._check_exp_status).start()
+        exp_status_checker = Thread(target=self._check_exp_status)
+        exp_status_checker.start()
         self._start_strategy()
         # TODO: the experiment should be completed, when strategy exits and there is no running job
-        # _logger.info('Waiting for submitted trial jobs to finish...')
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
+        exp_status_checker.join()
 
     def _create_dispatcher(self):
         return self._dispatcher
@@ -240,7 +242,12 @@ class RetiariiExperiment(Experiment):
         try:
             while True:
                 time.sleep(10)
-                status = self.get_status()
+                # this if is to deal with the situation that
+                # nnimanager is cleaned up by ctrl+c first
+                if self._proc.poll() is None:
+                    status = self.get_status()
+                else:
+                    return False
                 if status == 'DONE' or status == 'STOPPED':
                     return True
                 if status == 'ERROR':
@@ -261,7 +268,10 @@ class RetiariiExperiment(Experiment):
             nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
             try:
-                rest.delete(self.port, '/experiment')
+                # this if is to deal with the situation that
+                # nnimanager is cleaned up by ctrl+c first
+                if self._proc.poll() is None:
+                    rest.delete(self.port, '/experiment')
             except Exception as e:
                 _logger.exception(e)
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
