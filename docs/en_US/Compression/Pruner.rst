@@ -761,7 +761,7 @@ Supported maskers are shown below:
       'mean_activation': ActivationMeanRankFilterPrunerMasker
    }
 
-You need to set key ``pruning_algo`` in config_list to specify the masker, and the value is ``(MASKER_NAME, MASKER_KWARGS)``.
+You need to set key ``pruning_algo`` in config_list to specify the masker, and the value is ``(MASKER_NAME, MASKER_KWARGS)``. If you do not set ``pruning_algo``, level pruner will be set as default.
 Now, ``TaylorFOWeightFilterPrunerMasker`` has argument ``statistics_batch_num``, and ``ActivationAPoZRankFilterPrunerMasker`` and ``ActivationMeanRankFilterPrunerMasker`` have ``activation`` and ``statistics_batch_num``.
 For example, if you want to use ``TaylorFOWeightFilterPrunerMasker``, your config_list may like:
 
