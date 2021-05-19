@@ -89,6 +89,8 @@ Quantization algorithms compress the original network by reducing the number of 
      - DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. `Reference Paper <https://arxiv.org/abs/1606.06160>`__
    * - `BNN Quantizer <../Compression/Quantizer.rst#bnn-quantizer>`__
      - Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. `Reference Paper <https://arxiv.org/abs/1602.02830>`__
+   * - `LSQ Quantizer <../Compression/Quantizer.rst#lsq-quantizer>`__
+     - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
 
 
 Model Speedup
