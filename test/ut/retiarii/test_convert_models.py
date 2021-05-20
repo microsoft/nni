@@ -70,3 +70,27 @@ class TestModels(unittest.TestCase):
         model = Net(4, 2)
         x = torch.rand((16, 16), dtype=torch.float)
         self.run_test(model, (x, ))
+
+    def test_append_input_tensor(self):
+        from typing import List
+        class Net(nn.Module):
+            def __init__(self, num_nodes):
+                super().__init__()
+                self.ops = nn.ModuleList()
+                self.num_nodes = num_nodes
+                for _ in range(num_nodes):
+                    self.ops.append(nn.Linear(16, 16))
+            def forward(self, x: List[torch.Tensor]):
+                state = x
+                for ops in self.ops:
+                    state.append(ops(state[-1]))
+                return state[-1]
+
+        #net = Net(4)
+        #model = self._convert_to_ir(net)
+        #print(self._get_converted_pytorch_model(model)([torch.zeros(1, 16)]))
+        model = Net(4)
+        script_module = torch.jit.script(model)
+        print(script_module.graph)
+        x = torch.rand((1, 16), dtype=torch.float)
+        self.run_test(model, ([x], ))

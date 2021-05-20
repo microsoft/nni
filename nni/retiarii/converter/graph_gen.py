@@ -20,17 +20,17 @@ class GraphConverter:
         self.global_graph_id = 0
 
     def _add_edge_handle_source_node(self, _input, graph_inputs, ir_graph, output_remap, node_index):
-        if _input in graph_inputs:
-            idx = graph_inputs.index(_input)
-            src_node = ir_graph.input_node
-            src_node_idx = idx
-        elif _input in output_remap:
+        if _input in output_remap:
             assert output_remap[_input].kind() == 'aten::append'
             predecessor_node = output_remap[_input]
             assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
             src_node_idx = None
             src_node = node_index[predecessor_node]
             assert isinstance(src_node, Node)
+        elif _input in graph_inputs:
+            idx = graph_inputs.index(_input)
+            src_node = ir_graph.input_node
+            src_node_idx = idx
         else:
             predecessor_node = _input.node()
             assert predecessor_node in node_index, 'predecessor node: {}'.format(predecessor_node)
