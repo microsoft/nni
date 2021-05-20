@@ -130,11 +130,7 @@ def replace_linear(linear, auto_infer):
         bias_constant = torch.index_select(out[0], 0, remained_out)
         if new_linear.bias is not None:
             new_linear.bias.data += bias_constant
-    # print(auto_infer.in_constants[0].size())
-    # print(torch.sum(auto_infer.in_constants[0],[0]))
-    # print(in_constant)
-    # print(bias_constant)
-    # exit(-1)
+
     return new_linear
 
 
@@ -150,21 +146,20 @@ def replace_batchnorm1d(norm, auto_infer):
 
     Returns
     -------
-    torch.nn.BatchNorm2d
+    torch.nn.BatchNorm1d
         The new batchnorm module
     """
     assert isinstance(norm, nn.BatchNorm1d)
     in_mask = auto_infer.in_masks[0]
     output_mask = auto_infer.output_mask
-    # print('BN CONSTANT')
-    # print(auto_infer.in_constants[0])
+
     # N, C, H, W
     _, remained_in = convert_to_coarse_mask(in_mask, 1)
     _, remained_out = convert_to_coarse_mask(output_mask, 1)
     assert remained_in.size(0) == remained_out.size(0)
 
     num_features = remained_in.size(0)
-    _logger.info("replace batchnorm2d with num_features: %d", num_features)
+    _logger.info("replace batchnorm1d with num_features: %d", num_features)
     new_norm = torch.nn.BatchNorm1d(num_features=num_features,
                                     eps=norm.eps,
                                     momentum=norm.momentum,
@@ -199,8 +194,7 @@ def replace_batchnorm2d(norm, auto_infer):
     assert isinstance(norm, nn.BatchNorm2d)
     in_mask = auto_infer.in_masks[0]
     output_mask = auto_infer.output_mask
-    # print('BN CONSTANT')
-    # print(auto_infer.in_constants[0])
+
     # N, C, H, W
     _, remained_in = convert_to_coarse_mask(in_mask, 1)
     _, remained_out = convert_to_coarse_mask(output_mask, 1)
@@ -259,10 +253,6 @@ def replace_conv2d(conv, auto_infer):
     weight_mask = auto_infer.weight_mask['weight']
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
-    # print('%%%%%%%%%%%%%%%%%')
-    # print(remained_out)
-    # # print('Output mask')
-    # print(output_mask)
 
     # if pruned_in.size(0) == 0 and pruned_out.size(0) == 0:
     #     # if this is not structurally pruned at all
@@ -279,8 +269,6 @@ def replace_conv2d(conv, auto_infer):
 
     n_remained_in = weight_mask.size(1) * conv.groups - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
-
-    # print(n_remained_out, remained_out.size(0))
 
     assert n_remained_in == remained_in.size(0)
     assert n_remained_out == remained_out.size(0)
@@ -310,20 +298,14 @@ def replace_conv2d(conv, auto_infer):
             # if the whole group are pruned
             continue
         else:
-            # print(current_input_index)
-            # print(current_output_index)
-            # exit()
+
             new_inchannel_step = len(current_input_index)
             new_outchannel_step = len(current_output_index)
             break
     tmp_weight = torch.ones(
         n_remained_out, new_inchannel_step, k_size1, k_size2)
     tmp_weight = tmp_weight.to(conv.weight.device)
-    # print(n_remained_out, new_outchannel_step)
-    # print(current_output_index)
-    # print(remained_in)
-    # print(remained_out)
-    # print(conv)
+
     assert n_remained_in % new_inchannel_step == 0
     assert n_remained_out % new_outchannel_step == 0
 
@@ -379,34 +361,19 @@ def replace_conv2d(conv, auto_infer):
         new_conv.bias.data.copy_(torch.index_select(
             conv.bias.data, 0, remained_out))
 
-    # if auto_infer.name == 'conv2':
-    #     print('in conv2')
-    #     pos = torch.abs(in_constant) > 0.0001
-    #     print(in_constant[pos])
-        # exit()
-
     if NEED_FOLD_BIAS and torch.sum(torch.abs(in_constant)) > 0:
         # Fold the input constants into the new_conv bias
         # For conv, we can only fold the input constant into
         # bias when all the constant in the same channel are the
         # same.
-        # print('CONSTANT HERE!!')
-        # print(in_constant)
-        # pos= in_constant>0.000001
-        # print(torch.sum(pos))
-        # print(in_constant[pos])
-        # print(torch.sum(in_constant))
-        # exit(-1)
         # set the bias to zero and calculate the folded bias for new conv
         if conv.bias is not None:
             conv.bias.data[:] = 0
         bias_constant = torch.index_select(
             conv(in_constant)[0], 0, remained_out)
-        # print(bias_constant)
-        # exit(-1)
+
         return BiasModule(new_conv, bias_constant)
     else:
-        # print('Fuck me!!!', auto_infer.name)
         return new_conv
 
 
@@ -532,13 +499,5 @@ def replace_layernorm(layernorm, auto_infer):
         reduced = torch.sum(in_mask, sum_dims)
         n_remained = torch.sum(reduced > 0)
         new_shape.append(n_remained)
-    print('Original input shape')
-    print(in_mask.size())
-    print('new normalized shape')
-    print(new_shape)
-    print(dim_n)
-    print(auto_infer.in_masks)
-    print(auto_infer.name)
-    # print()
-    # exit()
+
     return nn.LayerNorm(tuple(new_shape), layernorm.eps, layernorm.elementwise_affine)
