@@ -52,6 +52,7 @@ class TestHighLevelAPI(unittest.TestCase):
 
     def _get_converted_pytorch_model(self, model_ir):
         model_code = model_to_pytorch_script(model_ir)
+        print(model_code)
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
         return exec_vars['converted_model']
@@ -426,35 +427,40 @@ class TestHighLevelAPI(unittest.TestCase):
         self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
 
     def test_cell(self):
-        # class Net(nn.Module):
-        #     def __init__(self):
-        #         super().__init__()
-        #         self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=1, num_ops_per_node=1, num_predecessors=1, merge_op='all')
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
+                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
 
-        #     def forward(self, x, y):
-        #         return self.cell([x])
+            def forward(self, x, y):
+                return self.cell([x, y])
 
-        # model = self._convert_to_ir(Net())
-        # import pprint
-        # pprint.pprint(model._dump())
+        model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(model)
+        sampler = EnumerateSampler()
+        for mutator in mutators:
+            model = mutator.bind_sampler(sampler).apply(model)
+        import pprint
+        pprint.pprint(model._dump())
+        print(self._get_converted_pytorch_model(model)(torch.zeros(1, 16), torch.zeros(1, 16)))
 
-        # from typing import List
+        from typing import List
 
-        # class Net(nn.Module):
-        #     def __init__(self, num_nodes, num_ops_per_node):
-        #         super().__init__()
-        #         self.ops = nn.ModuleList()
-        #         self.num_nodes = num_nodes
-        #         self.num_ops_per_node = num_ops_per_node
-        #         for _ in range(num_nodes):
-        #             self.ops.append(nn.ModuleList([nn.Linear(16, 16) for __ in range(num_ops_per_node)]))
+        class Net(nn.Module):
+            def __init__(self, num_nodes):
+                super().__init__()
+                self.ops = nn.ModuleList()
+                self.num_nodes = num_nodes
+                for _ in range(num_nodes):
+                    self.ops.append(nn.Linear(16, 16))
 
-        #     def forward(self, x):
-        #         state = x
-        #         for ops in self.ops:
-        #             for op in ops:
-        #                 state = op(state)
-        #         return state
+            def forward(self, x: List[torch.Tensor]):
+                state = x
+                for ops in self.ops:
+                    state.append(ops(state[-1]))
+                return state[-1]
 
-        # net = Net(4, 2)
-        # self._convert_to_ir(net)
+        net = Net(4)
+        model = self._convert_to_ir(net)
+        print(self._get_converted_pytorch_model(model)([torch.zeros(1, 16)]))

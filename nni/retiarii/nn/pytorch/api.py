@@ -370,9 +370,9 @@ class Cell(nn.Module):
                     ops = copy.deepcopy(op_candidates)
                 else:
                     ops = op_candidates()
-                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
+                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}__op_{i}_{k}'))
                 self.inputs[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
-        assert merge_op in ['all', 'loose_end']
+        assert merge_op in ['all']  # TODO: loose_end
         self.merge_op = merge_op
 
     @property
@@ -380,7 +380,17 @@ class Cell(nn.Module):
         return self._label
 
     def forward(self, x: List[torch.Tensor]):
-        states = x
+        states = x  # append order is not correct
+
+        states = [t for t in x]  # RuntimeError: Loop has not been supported yet!
+
+        states = [*x]  # RuntimeError: cannot statically infer the expected size of a list in this context:
+
+        states = copy.copy(x)  # Runtime attribute lookup is not defined on python value of type 'dict': _copy_dispatch.get(cls)
+
+        states = []
+        states.extend(x)  # RuntimeError: unsupported operation type: aten::extend ? None
+
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
             for op, inp in zip(ops, inps):
