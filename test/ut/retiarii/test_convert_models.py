@@ -86,11 +86,6 @@ class TestModels(unittest.TestCase):
                     state.append(ops(state[-1]))
                 return state[-1]
 
-        #net = Net(4)
-        #model = self._convert_to_ir(net)
-        #print(self._get_converted_pytorch_model(model)([torch.zeros(1, 16)]))
         model = Net(4)
-        script_module = torch.jit.script(model)
-        print(script_module.graph)
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
