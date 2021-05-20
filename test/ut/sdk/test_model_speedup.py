@@ -132,6 +132,7 @@ def generate_random_sparsity(model):
                              'sparsity': sparsity})
     return cfg_list
 
+
 def generate_random_sparsity_v2(model):
     """
     Only select 50% layers to prune.
@@ -142,8 +143,9 @@ def generate_random_sparsity_v2(model):
             if np.random.uniform(0, 1.0) > 0.5:
                 sparsity = np.random.uniform(0.5, 0.99)
                 cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
-                             'sparsity': sparsity})
+                                 'sparsity': sparsity})
     return cfg_list
+
 
 def zero_bn_bias(model):
     with torch.no_grad():
@@ -308,23 +310,34 @@ class SpeedupTestCase(TestCase):
         new_out = new_model(dummy_input)
         ori_sum = torch.sum(ori_out)
         speeded_sum = torch.sum(new_out)
-        print('Tanspose Speedup Test: ori_sum={} speedup_sum={}'.format(ori_sum, speeded_sum))
+        print('Tanspose Speedup Test: ori_sum={} speedup_sum={}'.format(
+            ori_sum, speeded_sum))
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
-                (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+            (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
-    def test_speedup_integration(self):
-        # skip this test on windows(7GB mem available) due to memory limit
-        # Note: hack trick, may be updated in the future
-        if 'win' in sys.platform or 'Win'in sys.platform:
-            print('Skip test_speedup_integration on windows due to memory limit!')
+    def test_speedup_integration_small(self):
+        model_list = ['resnet18', 'mobilenet_v2', 'alexnet']
+        self.speedup_integration(model_list)
+
+    def test_speedup_integration_big(self):
+        model_list = ['vgg11', 'vgg16', 'resnet34', 'squeezenet1_1',
+                      'densenet121', 'resnet50', 'wide_resnet50_2']
+        mem_info = psutil.virtual_memory()
+        ava_gb = mem_info.available/1024.0/1024/1024
+        print('Avaliable memory size: %.2f GB' % ava_gb)
+        if ava_gb < 8.0:
+            # memory size is too small that we may run into an OOM exception
+            # Skip this test in the pipeline test due to memory limitation
             return
+        self.speedup_integration(model_list)
 
+    def speedup_integration(self, model_list):
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
         # for model_name in ['vgg16', 'resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
         #                    # 'inception_v3' inception is too large and may fail the pipeline
         #                     'resnet50']:
-        for model_name in ['mobilenet_v2']:        
+        for model_name in model_list:
             for gen_cfg_func in Gen_cfg_funcs:
                 kwargs = {
                     'pretrained': True
@@ -342,7 +355,8 @@ class SpeedupTestCase(TestCase):
                 speedup_model.eval()
                 # random generate the prune config for the pruner
                 cfgs = gen_cfg_func(net)
-                print("Testing {} with compression config \n {}".format(model_name, cfgs))
+                print("Testing {} with compression config \n {}".format(
+                    model_name, cfgs))
                 pruner = L1FilterPruner(net, cfgs)
                 pruner.compress()
                 pruner.export_model(MODEL_FILE, MASK_FILE)
@@ -363,14 +377,13 @@ class SpeedupTestCase(TestCase):
                 ori_sum = torch.sum(ori_out).item()
                 speeded_sum = torch.sum(speeded_out).item()
                 print('Sum of the output of %s (before speedup):' %
-                    model_name, ori_sum)
+                      model_name, ori_sum)
                 print('Sum of the output of %s (after speedup):' %
-                    model_name, speeded_sum)
+                      model_name, speeded_sum)
                 assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                     (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
                 print("Collecting Garbage")
                 gc.collect(2)
-
 
     def test_channel_prune(self):
         orig_net = resnet18(num_classes=10).to(device)
