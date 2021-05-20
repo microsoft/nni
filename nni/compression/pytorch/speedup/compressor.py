@@ -438,7 +438,7 @@ class ModelSpeedup:
         feature as default.
         Note: we may change the network architecture in this function. If the user prefer to keep
         the original network architecture, please set the `fix_conflict_by_padding` flag to false.
-        In addtion, currently the compiling engine cannot support all possible models (for example,
+        In addition, currently the compiling engine cannot support all possible models (for example,
         a tensor is taken as input by more than one ADD nodes), when this funtion fails, you can
         still speedup the model with fix_conflict_by_padding set to false.
         """
@@ -472,7 +472,7 @@ class ModelSpeedup:
                     remain_padding = None
                     remain_unmask = None
                 # if this not is not replaced yet
-                _logger.debug('Sparisty Compiling %s', cur_node.unique_name)
+                _logger.debug('Fix mask conflict by padding for %s', cur_node.unique_name)
                 # calculate the unmask tensor for this node
 
                 _auto_infer = self.auto_inferences[cur_node.unique_name]
@@ -505,6 +505,8 @@ class ModelSpeedup:
                         pos = remain_unmask > 0
                         _auto_infer.output_mask[pos] = 1
                     remain_padding = remain_unmask = None
+
+
                 if new_padding is not None:
                     for i, tensor in enumerate(new_padding):
                         if tensor is not None:
@@ -598,124 +600,6 @@ class ModelSpeedup:
             unmask = calc_unmask(node, input_masks, output_mask)
         return padding, unmask
 
-    def need_to_unmask(self, node):
-        """
-        Check if this node has shape/sparsity conflict. If not, then
-        return None, if so, return the values that need to be unmasked.
-
-        Parameters
-        ----------
-        node: NodePyGroup
-            The target node to check if need unmask some values.
-        Returns
-        -------
-        unmask: list
-            List of the values that need to be unmasked. In the list, each element
-            is a tuple which contains the debugName of the tensor and the correponding
-            values that need to be unmask in this tensor. For example, [(1, tensor[0, 1])],
-            in this example, we need unmask the sencond value of the tensor 1.
-        """
-        if node.op_type not in ADD_TYPES and node.op_type not in MUL_TYPES \
-                and node.op_type != CAT_TYPE:
-            # only abobe operators may invovle shape dependencies
-            return None
-        unique_name = node.unique_name
-        auto_infer = self.auto_inferences[unique_name]
-        input_masks = auto_infer.in_masks
-        output_mask = auto_infer.output_mask
-        unmask = calc_unmask(node, input_masks, output_mask)
-        # Reduce the mask of the whole tensor into the channel mask
-        c_unmask = []
-        for t_unmask in unmask:
-            if t_unmask is not None:
-                shape = list(t_unmask.size())
-                dim_list = list(range(len(shape)))
-                dim_list.remove(1)
-                _count = np.prod(shape) / shape[1]
-                # reduce the element-wise unmask tensor to the channel-wise unmask tensor
-                sum_unmask = torch.sum(t_unmask, dim_list)
-                c_unmask.append(sum_unmask == _count)
-        return c_unmask
-
-    def unmask_chain(self, debugname, t_unmask):
-        """
-        Unmask the values in the tensor specified by debugname.
-        This function will also unmask the related dependent values in the
-        predecessor nodes/tensors.
-        Parameters
-        ---------
-        debugname: string
-            The debugname of the target tensor.
-        unmask: torch.Tensor
-            This tensor indicates the values that need to be unmasked in the
-            target tensor. This tensor only contains 0 and 1, 1-> need to be unmasked, 0
-            -> leave it.
-        """
-        if debugname not in self.torch_graph.output_to_node:
-            # already reach the dummy_inputs of the graph
-            unmask_pos = t_unmask > 0
-            self.masks[debugname][unmask_pos] = 1
-            return
-        # find corresponding auto inference object
-        node = self.torch_graph.output_to_node[debugname]
-        unique_name = node.unique_name
-        # _logger.debug('Unmask the tensor %s of %s', debugname, unique_name)
-
-        auto_infer = self.auto_inferences[unique_name]
-        debugnames, unmasks = auto_infer.unmask(t_unmask)
-
-        for dname, _unmask in zip(debugnames, unmasks):
-            self.unmask_chain(dname, _unmask)
-
-    def resolve_conflicts(self):
-        """
-        Resolve the channel and
-        """
-        self.resolve_channel_conflicts()
-        # self.resolve_group_conflict()
-
-    def resolve_channel_conflicts(self):
-        """
-        Resolve the shape/mask conflict for the model. Some operators may have shape constraints.
-        For example, `add`, the add operation need the input tensors have exactly the same shape.
-        If the two input tensors of the add opeartor mask difference values/channels, we need to
-        unmask some values/channels and padde zeros to make the shapes of the input tensors are the
-        same.
-        """
-
-        # build the out_degree table for the nodes in the model
-        out_degree = {}
-        visit_queue = queue.Queue()
-        for node in self.torch_graph.nodes_py.nodes_op:
-            successors = self.torch_graph.find_successors(node.unique_name)
-            out_degree[node.unique_name] = len(successors)
-            if out_degree[node.unique_name] == 0:
-                # if this node doesn't have any successor nodes
-                visit_queue.put(node)
-        # backward traverse the model graph and find the operators that have shape
-        # dependencies
-        while not visit_queue.empty():
-            cur_node = visit_queue.get()
-            _auto_infer = self.auto_inferences[cur_node.unique_name]
-            _logger.debug('Resolve conflict for %s', cur_node.unique_name)
-            unmask = self.calc_reindex(cur_node)
-            if unmask is not None:
-                for i, tensor in enumerate(unmask):
-                    if tensor is not None:
-                        # The reason why we use the input_debugname in the _auto_infer
-                        # rather the cur_node.inputs is that the cur_node.inputs have
-                        # the parameters of the modules (weight, bias), and this is caused by
-                        # the merging rules when we build the TorchModuleGraph. In TorchModuleGraph
-                        # we merge the node based on its scope name and the 'prim::GetAttr' node of
-                        # weight tensor has no scope name.
-                        debugname = _auto_infer.input_debugname[i]
-                        self.unmask_chain(debugname, tensor)
-            predecessors = self.torch_graph.find_predecessors(
-                cur_node.unique_name)
-            for predecessor in predecessors:
-                out_degree[predecessor] -= 1
-                if out_degree[predecessor] == 0:
-                    visit_queue.put(self.torch_graph.name_to_node[predecessor])
 
     def initialize_speedup(self):
         """
@@ -756,7 +640,7 @@ class ModelSpeedup:
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info('resolve the mask conflict')
-        # self.resolve_conflicts()
+
         # load the original stat dict before replace the model
         self.bound_model.load_state_dict(self.ori_state_dict)
         _logger.info("replace compressed modules...")
