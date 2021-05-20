@@ -155,9 +155,8 @@ def test_rl():
     _reset_execution_engine()
 
 
-
 if __name__ == '__main__':
-    # test_grid_search()
-    # test_random_search()
-    # test_evolution()
+    test_grid_search()
+    test_random_search()
+    test_evolution()
     test_rl()
