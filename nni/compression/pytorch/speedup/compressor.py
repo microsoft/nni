@@ -6,7 +6,7 @@ import logging
 import copy
 import torch
 import torch.nn as nn
-import numpy as np
+
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
@@ -24,7 +24,8 @@ class ModelSpeedup:
     This class is to speedup the model with provided weight mask.
     """
 
-    def __init__(self, model, dummy_input, masks_file, map_location=None, batch_dim=0, confidence=8, fold_bias=False, fix_conflict_by_padding=False):
+    def __init__(self, model, dummy_input, masks_file, map_location=None,
+                batch_dim=0, confidence=8, fold_bias=False, fix_conflict_by_padding=False):
         """
         Parameters
         ----------
@@ -472,7 +473,8 @@ class ModelSpeedup:
                     remain_padding = None
                     remain_unmask = None
                 # if this not is not replaced yet
-                _logger.debug('Fix mask conflict by padding for %s', cur_node.unique_name)
+                _logger.debug('Fix mask conflict by padding for %s',
+                              cur_node.unique_name)
                 # calculate the unmask tensor for this node
 
                 _auto_infer = self.auto_inferences[cur_node.unique_name]
@@ -505,7 +507,6 @@ class ModelSpeedup:
                         pos = remain_unmask > 0
                         _auto_infer.output_mask[pos] = 1
                     remain_padding = remain_unmask = None
-
 
                 if new_padding is not None:
                     for i, tensor in enumerate(new_padding):
@@ -599,7 +600,6 @@ class ModelSpeedup:
             padding = calc_padding(node, input_masks, output_mask)
             unmask = calc_unmask(node, input_masks, output_mask)
         return padding, unmask
-
 
     def initialize_speedup(self):
         """
