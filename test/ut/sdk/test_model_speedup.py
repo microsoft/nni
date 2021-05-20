@@ -10,8 +10,9 @@ import torch
 import torchvision.models as models
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.models.vgg import vgg16
+from torchvision.models.vgg import vgg16, vgg11
 from torchvision.models.resnet import resnet18
+from torchvision.models.mobilenet import mobilenet_v2
 import unittest
 from unittest import TestCase, main
 
@@ -233,27 +234,27 @@ def channel_prune(model):
 
 
 class SpeedupTestCase(TestCase):
-    def test_speedup_vgg16(self):
-        prune_model_l1(vgg16())
-        model = vgg16()
-        model.train()
-        # import pdb; pdb.set_trace()
-        ms = ModelSpeedup(model, torch.randn(2, 3, 32, 32), MASK_FILE)
-        ms.speedup_model()
+    # def test_speedup_vgg11(self):
+    #     prune_model_l1(vgg11())
+    #     model = vgg11()
+    #     model.train()
+    #     # import pdb; pdb.set_trace()
+    #     ms = ModelSpeedup(model, torch.randn(2, 3, 32, 32), MASK_FILE, confidence=2)
+    #     ms.speedup_model()
 
-        orig_model = vgg16()
-        assert model.training
-        assert model.features[2].out_channels == int(
-            orig_model.features[2].out_channels * SPARSITY)
-        print(model.classifier[0].in_features)
-        print(int(orig_model.classifier[0].in_features * SPARSITY))
-        print("Original model")
-        print(orig_model)
-        print("speeduped model")
-        print(model)
+    #     orig_model = vgg11()
+    #     assert model.training
+    #     assert model.features[2].out_channels == int(
+    #         orig_model.features[2].out_channels * SPARSITY)
+    #     print(model.classifier[0].in_features)
+    #     print(int(orig_model.classifier[0].in_features * SPARSITY))
+    #     print("Original model")
+    #     print(orig_model)
+    #     print("speeduped model")
+    #     print(model)
 
-        assert model.classifier[0].in_features == int(
-            orig_model.classifier[0].in_features * SPARSITY)
+    #     assert model.classifier[0].in_features == int(
+    #         orig_model.classifier[0].in_features * SPARSITY)
 
     def test_speedup_bigmodel(self):
         prune_model_l1(BigModel())
@@ -263,7 +264,7 @@ class SpeedupTestCase(TestCase):
         mask_out = model(dummy_input)
 
         model.train()
-        ms = ModelSpeedup(model, dummy_input, MASK_FILE)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=2)
         ms.speedup_model()
         assert model.training
 
@@ -299,7 +300,7 @@ class SpeedupTestCase(TestCase):
         new_model = TransposeModel()
         state_dict = torch.load(MODEL_FILE)
         new_model.load_state_dict(state_dict)
-        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE)
+        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE, confidence=2)
         ms.speedup_model()
         zero_bn_bias(ori_model)
         zero_bn_bias(new_model)
@@ -367,26 +368,27 @@ class SpeedupTestCase(TestCase):
                     model_name, speeded_sum)
                 assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                     (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+                print("Collecting Garbage")
+                gc.collect(2)
 
 
     def test_channel_prune(self):
-        # import pdb; pdb.set_trace()
-        orig_net = resnet18(num_classes=10).to(device)
+        orig_net = mobilenet_v2(num_classes=10).to(device)
         channel_prune(orig_net)
         state_dict = torch.load(MODEL_FILE)
 
-        orig_net = resnet18(num_classes=10).to(device)
+        orig_net = mobilenet_v2(num_classes=10).to(device)
         orig_net.load_state_dict(state_dict)
         apply_compression_results(orig_net, MASK_FILE)
         orig_net.eval()
 
-        net = resnet18(num_classes=10).to(device)
+        net = mobilenet_v2(num_classes=10).to(device)
 
         net.load_state_dict(state_dict)
         net.eval()
 
         data = torch.randn(BATCH_SIZE, 3, 128, 128).to(device)
-        ms = ModelSpeedup(net, data, MASK_FILE)
+        ms = ModelSpeedup(net, data, MASK_FILE, confidence=2)
         ms.speedup_model()
         ms.bound_model(data)
 
@@ -405,7 +407,7 @@ class SpeedupTestCase(TestCase):
         if os.path.exists(MASK_FILE):
             os.remove(MASK_FILE)
         # GC to release memory
-        gc.collect()
+        gc.collect(2)
 
 
 if __name__ == '__main__':
