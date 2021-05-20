@@ -7,7 +7,7 @@ import torch
 
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)
 
 
 def translate_list(list_node, speedup=None):
@@ -142,16 +142,27 @@ def view_python(node, speedup):
         def __init__(self, shape):
             super(ViewModule, self).__init__()
             self.shape = shape
-            print(self.shape)
+            logger.info('View Module output size: %s', str(self.shape))
         def forward(self, *args):
-            # print(x)
-            # exit()
-            # print(args[0])
             return args[0].view(self.shape)
     c_node = node.key_node
     inputs = list(c_node.inputs())
     shape = translate_list(inputs[1], speedup)
     return ViewModule(shape)
+
+def reshape_python(node, speedup):
+    class ReshapeModule(torch.nn.Module):
+        def __init__(self, shape):
+            super(ReshapeModule, self).__init__()
+            self.shape = shape
+            logger.info('Reshape Module output size: %s', str(self.shape))
+        def forward(self, *args):
+            return args[0].view(self.shape)
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    shape = translate_list(inputs[1], speedup)
+    return ReshapeModule(shape)
+
 
 def permute_python(node, speedup):
     class PermuteModule(torch.nn.Module):
@@ -229,16 +240,10 @@ def adaptive_avgpool_python(node, speedup):
     inputs = list(c_node.inputs())
     output_size = translate_list(inputs[1], speedup)
     new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
-    # import pdb; pdb.set_trace()
     return new_avgpool
 
-# def constructlist_python(node, speedup):
-#     class ListModule(torch.nn.Module):
-#         def forward(self, *args):
-#             return args
 
 trans_from_jit_to_python = {
-    # 'aten::cat': cat_python,
     'aten::add': add_python,
     'aten::add_': add_python,
     'aten::relu': relu_python,
@@ -254,6 +259,7 @@ trans_from_jit_to_python = {
     'aten::transpose': transpose2_python,
     'aten::Int': toint_python,
     'aten::view': view_python,
+    'aten::reshape': reshape_python,
     'aten::permute': permute_python,
     'aten::matmul': matmul_python,
     'aten::div': div_python,

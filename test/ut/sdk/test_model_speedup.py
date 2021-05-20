@@ -373,16 +373,16 @@ class SpeedupTestCase(TestCase):
 
 
     def test_channel_prune(self):
-        orig_net = mobilenet_v2(num_classes=10).to(device)
+        orig_net = resnet18(num_classes=10).to(device)
         channel_prune(orig_net)
         state_dict = torch.load(MODEL_FILE)
 
-        orig_net = mobilenet_v2(num_classes=10).to(device)
+        orig_net = resnet18(num_classes=10).to(device)
         orig_net.load_state_dict(state_dict)
         apply_compression_results(orig_net, MASK_FILE)
         orig_net.eval()
 
-        net = mobilenet_v2(num_classes=10).to(device)
+        net = resnet18(num_classes=10).to(device)
 
         net.load_state_dict(state_dict)
         net.eval()
