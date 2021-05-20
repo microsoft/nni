@@ -10,7 +10,7 @@ try:
     import torch
     from tianshou.data import AsyncCollector, Collector, VectorReplayBuffer
     from tianshou.env import SubprocVectorEnv
-    from tianshou.policy import BasePolicy, PPOPolicy
+    from tianshou.policy import BasePolicy, PPOPolicy  # pylint: disable=unused-import
     from ._rl_impl import ModelEvaluationEnv, Preprocessor, Actor, Critic
 except ImportError:
     has_tianshou = False
