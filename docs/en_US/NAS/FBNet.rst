@@ -1,13 +1,13 @@
 FBNet
 ======
 
-For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuray. References are listed as below:
+For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuracy. References are listed as below:
 
 
 * `FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural Architecture Search <https://arxiv.org/abs/1812.03443>`__
 * `PFLD: A Practical Facial Landmark Detector <https://arxiv.org/abs/1902.10859>`__
 
-FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate buildding blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planed (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
+FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate building blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planned (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
 
 .. image:: ../../img/fbnet.png
    :target: ../../img/fbnet.png
@@ -16,7 +16,7 @@ FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the bes
 
 PFLD is a lightweight facial landmark model for realtime application. The architecture of PLFD is firstly simplified for acceleration, by using the stem block of PeleeNet, average pooling with depthwise convolution and eSE module.
 
-To achieve better trade-off between latency and accuray, the FBNet is applied on the simplified PFLD for searching the best block at each specific layer. The search space is based on the FBNet space, and optimized for mobile deployment by using the average pooling with depthwise convolution and eSE module etc.
+To achieve better trade-off between latency and accuracy, the FBNet is further applied on the simplified PFLD for searching the best block at each specific layer. The search space is based on the FBNet space, and optimized for mobile deployment by using the average pooling with depthwise convolution and eSE module etc.
 
 
 Experiments
@@ -54,7 +54,7 @@ Example
 
 Please run the following scripts at the example directory.
 
-The Python dependencies are listed as below:
+The Python dependencies used here are listed as below:
 
 .. code-block:: bash
 
@@ -85,7 +85,7 @@ Quik Start
 1. Search
 ^^^^^^^^^^
 
-Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be configured to construct the supernet, as an example:
+Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be firstly configured to construct the supernet, as an example:
 
 .. code-block:: bash
 
@@ -101,7 +101,7 @@ Based on the architecture of simplified PFLD, the setting of multi-stage search 
           nas_lr=0.01,
           mode="mul",
           alpha=0.25,
-          beta=0.8,
+          beta=0.6,
           search_space=search_space,
       )
    # lookup table to manage the information
@@ -110,26 +110,26 @@ Based on the architecture of simplified PFLD, the setting of multi-stage search 
    pfld_backbone = PFLDInference(lookup_table)
 
 
-After creation of the supernet with the specification of the search space and hyper-parameters, we can run below command to start the searching and training of supernet:
+After creation of the supernet with the specification of search space and hyper-parameters, we can run below command to start searching and training of the supernet:
 
 .. code-block:: bash
 
    python train.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points"
 
-The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/supernet/checkpoint_best.pth``.
+The validation accuracy will be shown during training, and the model with best accuracy will be saved as ``./ckpt_save/supernet/checkpoint_best.pth``.
 
 
 2. Finetune
 ^^^^^^^^^^^^
 
-After the pre-training of supernet, we can run below command to sample the subnet and conduct the finetuning:
+After pre-training of the supernet, we can run below command to sample the subnet and conduct the finetuning:
 
 .. code-block:: bash
 
    python retrain.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points" \
                      --supernet "./ckpt_save/supernet/checkpoint_best.pth"
 
-The validation accuray will be shown during training, and the model with best accuray will be saved as ``./ckpt_save/subnet/checkpoint_best.pth``。
+The validation accuracy will be shown during training, and the model with best accuracy will be saved as ``./ckpt_save/subnet/checkpoint_best.pth``.
 
 
 3. Export
