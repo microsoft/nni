@@ -52,7 +52,6 @@ class TestHighLevelAPI(unittest.TestCase):
 
     def _get_converted_pytorch_model(self, model_ir):
         model_code = model_to_pytorch_script(model_ir)
-        print(model_code)
         exec_vars = {}
         exec(model_code + '\n\nconverted_model = _model()', exec_vars)
         return exec_vars['converted_model']
@@ -436,31 +435,12 @@ class TestHighLevelAPI(unittest.TestCase):
             def forward(self, x, y):
                 return self.cell([x, y])
 
-        model = self._convert_to_ir(Net())
-        mutators = process_inline_mutation(model)
-        sampler = EnumerateSampler()
-        for mutator in mutators:
-            model = mutator.bind_sampler(sampler).apply(model)
-        import pprint
-        pprint.pprint(model._dump())
-        print(self._get_converted_pytorch_model(model)(torch.zeros(1, 16), torch.zeros(1, 16)))
-
-        from typing import List
-
-        class Net(nn.Module):
-            def __init__(self, num_nodes):
-                super().__init__()
-                self.ops = nn.ModuleList()
-                self.num_nodes = num_nodes
-                for _ in range(num_nodes):
-                    self.ops.append(nn.Linear(16, 16))
-
-            def forward(self, x: List[torch.Tensor]):
-                state = x
-                for ops in self.ops:
-                    state.append(ops(state[-1]))
-                return state[-1]
-
-        net = Net(4)
-        model = self._convert_to_ir(net)
-        print(self._get_converted_pytorch_model(model)([torch.zeros(1, 16)]))
+        raw_model = self._convert_to_ir(Net())
+        mutators = process_inline_mutation(raw_model)
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(
+                torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))

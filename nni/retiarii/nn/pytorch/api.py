@@ -315,11 +315,19 @@ class ValueChoice(Translatable, nn.Module):
 
 class Repeat(nn.Module):
     """
-    Construct a chain with a basic building block and execute a variable-length prefix of the chain.
+    Repeat a block by a variable number of times.
 
+    Parameters
+    ----------
+    blocks : function, list of function, module or list of module
+        The block to be repeated. If not a list, it will be replicated into a list. If a function, it will be called to
+        instantiate a module. Otherwise the module will be deep-copied.
+    depth : int or tuple of int
+        If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
+        meaning that the block will be repeated at least `min` times and at most `max` times.
     """
     def __init__(self,
-                 blocks: Union[Callable, List[Callable], nn.Module, List[nn.Module]],
+                 blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
                  depth: Union[int, Tuple[int, int]], label=None):
         super().__init__()
         self._label = label if label is not None else f'valuechoice_{uid()}'
@@ -334,6 +342,7 @@ class Repeat(nn.Module):
         assert len(blocks) > 0
         if not isinstance(blocks[0], nn.Module):
             blocks = [b() for b in blocks]
+        assert self.max_depth <= len(blocks)
         self.blocks = nn.ModuleList(blocks)
 
     @property
@@ -347,6 +356,38 @@ class Repeat(nn.Module):
 
 
 class Cell(nn.Module):
+    """
+    Cell structure [1]_ [2]_ that is popularly used in NAS literature.
+
+    A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
+    ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
+    The output of cell is the concatenation of some of the nodes in the cell (currently all the nodes).
+
+    Parameters
+    ----------
+    op_candidates : function or list of module
+        A list of modules to choose from, or a function that returns a list of modules.
+    num_nodes : int
+        Number of nodes in the cell.
+    num_ops_per_node: int
+        Number of operators in each node. The output of each node is the sum of all operators in the node.
+    num_predecessors : int
+        Number of inputs of the cell. The input to forward should be a list of tensors.
+    merge_op : str
+        Currently only ``all`` is supported, which has slight difference with that described in reference.
+    label : str
+        Identifier of the cell. Cell sharing the same label will semantically share the same choice.
+
+    References
+    ----------
+    .. [1] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
+    .. [2] Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le,
+        "Learning Transferable Architectures for Scalable Image Recognition". https://arxiv.org/abs/1707.07012
+    """
+
+    # TODO:
+    # Support loose end concat (shape inference on the following cells)
+    # How to dynamically create convolution with stride as the first node
 
     def __init__(self,
                  op_candidates: Union[Callable, List[nn.Module]],
@@ -361,6 +402,7 @@ class Cell(nn.Module):
         self.inputs = ModuleList()
         self.num_nodes = num_nodes
         self.num_ops_per_node = num_ops_per_node
+        self.num_predecessors = num_predecessors
         for i in range(num_nodes):
             self.ops.append(ModuleList())
             self.inputs.append(ModuleList())
@@ -380,24 +422,14 @@ class Cell(nn.Module):
         return self._label
 
     def forward(self, x: List[torch.Tensor]):
-        states = x  # append order is not correct
-
-        states = [t for t in x]  # RuntimeError: Loop has not been supported yet!
-
-        states = [*x]  # RuntimeError: cannot statically infer the expected size of a list in this context:
-
-        states = copy.copy(x)  # Runtime attribute lookup is not defined on python value of type 'dict': _copy_dispatch.get(cls)
-
-        states = []
-        states.extend(x)  # RuntimeError: unsupported operation type: aten::extend ? None
-
+        states = x
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
             for op, inp in zip(ops, inps):
                 current_state.append(op(inp(states)))
             current_state = torch.sum(torch.stack(current_state), 0)
             states.append(current_state)
-        return torch.cat(states, 1)
+        return torch.cat(states[self.num_predecessors:], 1)
 
 
 @basic_unit
