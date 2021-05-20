@@ -41,8 +41,6 @@ class AutoMaskInference:
 
         # Initialize the mask for output tensors
         self.output = self.module(*dummy_input)
-        print(self.output.grad_fn)
-        # exit()
         # self.output.requires_grad_()
         if output_mask is not None:
             # assume the given output mask is right
@@ -136,7 +134,6 @@ class AutoMaskInference:
                         self.in_masks[tid] + \
                         (1-self.in_masks[tid]) * self.in_constants[tid]
 
-                    # print(in_tensor.data)
 
     def __apply_weight_mask(self):
         """
@@ -197,11 +194,6 @@ class AutoMaskInference:
             # calculate the mean value of the output among the batch dimension
             mean = torch.mean(tout, dim=0)
             mask_pos = std < STD_DELTA
-            # print(mask_pos)
-            # for bid in range(tout.size(0)):
-            #     # Set the mask and constant for each the output tensor
-            #     out_mask[bid][mask_pos] = 0
-            #     constant[bid][mask_pos] = mean[mask_pos]
             out_mask[:, mask_pos] = 0
             constant[:, mask_pos] = mean[mask_pos]
         return out_mask, constant
@@ -247,7 +239,6 @@ class AutoMaskInference:
 
         # TODO can be optimized here, move the randomization at the begining
         if len(self.weights) > 0 and self.state_dict is not None:
-            # print(self.module.weight)
 
             self.module.load_state_dict(self.state_dict)
             # apply weight mask
@@ -265,18 +256,6 @@ class AutoMaskInference:
                     _tmp[sparsity_pos] = tout[sparsity_pos]
                     constant.append(_tmp)
 
-        # print('%%%%%%%%%')
-        # print(out_mask[0])
-        # print(constant[0])
-        # print('%%%%%%%%')
-        # print(self.module(torch.zeros(1,3,3,3).cuda() ))
-        # print(self.module.weight)
-        # print(self.module.bias)
-        # if self.name =='bn1':
-        #     print(self.module.running_mean)
-        #     print(self.module.running_var)
-        #     exit(-1)
-
         return out_mask, constant
         # return out_mask
 
@@ -284,11 +263,6 @@ class AutoMaskInference:
         """
         Find those hidden sparsity through gradient.
         """
-        # if self.name == 'conv1':
-            # print(self.output)
-            # print(type(self.output))
-            # print(self.output.grad)
-            # exit()
         # Each node only update the output mask when we backwards
         # update the output mask
         if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
@@ -297,10 +271,6 @@ class AutoMaskInference:
             # sparsity
             # we can mask the values whose gradient is always zeros
             gradient_sum = torch.sum(torch.abs(self.output.grad.data), dim=0)
-            # if self.name == 'conv1':
-            #     print('Gradient Sum')
-            #     print(gradient_sum)
-                # exit()
             _grad_zero = gradient_sum == 0
             for batchid in range(self.output.size(0)):
                 # set the same mask value for the whole batche
@@ -327,7 +297,7 @@ class AutoMaskInference:
         tmp_dummy_input = [x.clone() if isinstance(
             x, torch.Tensor) else x for x in self.dummy_input]
         output = self.module(*tmp_dummy_input)
-        print(output.grad_fn)
+
         if output.grad_fn is None:
             # the output does not have the gradient function
             return
@@ -337,31 +307,11 @@ class AutoMaskInference:
         elif isinstance(output, list) or isinstance(output, tuple):
             for tid, t_out in enumerate(output):
                 t_out.backward(self.output_mask[tid])
-        # print('\n\nself.output')
-        # print(self.output)
-        # print('\n\nself.output_mask\n\n')
-        # print(self.output_mask)
-        # print('\n\nself.dummy_input\n\n')
-        # print(self.dummy_input)
-        # print('\n\nself.in_mask\n\n')
-        # print(self.in_masks)
-        # print('\n\noutput\n\n')
-        # print(output)
 
-        # print(self.weight)
         # update the sparsity of the paramters
         for para_name in self.weights:
-            # print("!!!!!!!!!!!!")
-            # print(para_name)
-            # print(self.weights[para_name].grad)
             grad_zero = self.weights[para_name].grad.data == 0
             self.weight_mask[para_name][grad_zero] = 0
-        # print(self.name)
-        # for tin in self.dummy_input:
-        #     print(tin.requires_grad)
-        #     print(tin.grad)
-        # exit()
-        # print('$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$')
 
     def update_direct_sparsity(self):
         # import pdb; pdb.set_trace()
@@ -398,65 +348,3 @@ class AutoMaskInference:
         # you need to konw the calculation logic in the model to unmask
         # the tensor
 
-        # print('$$$$$$$$$$$$$$$')
-        # print('UNMASK in', self.name)
-        # # Enable the gradient
-        # self.requires_grad_()
-        # self.random_init()
-        # self.apply_mask()
-        # self.zero_grad()
-
-        # # in case there is in_place operation in this node
-        # tmp_dummy_input = [x.clone() if isinstance(
-        #     x, torch.Tensor) else x for x in self.dummy_input]
-        # output = self.module(*tmp_dummy_input)
-        # # backwards to get the gradient
-        # if isinstance(t_unmask, torch.Tensor):
-        #     unmask_pos = t_unmask > 0
-        #     print('Unmask position')
-        #     print(torch.sum(unmask_pos, (0,2,3)))
-        #     print('Output mask before unmask')
-        #     print(torch.sum(self.output_mask, (0,2,3)))
-        #     # use the unmask tensor as the gradient
-        #     output.backward(t_unmask)
-        #     # update the output mask
-        #     self.output_mask[unmask_pos] = 1
-        # elif isinstance(t_unmask, list) or isinstance(t_unmask, tuple):
-        #     assert isinstance(output, list) or isinstance(output, tuple)
-        #     # the length of unmask tensor list should be exactly same with t_unmask
-        #     assert len(output) == len(t_unmask)
-        #     for i, _ in enumerate(t_unmask):
-        #         _unmask = t_unmask[i]
-        #         unmask_pos = _unmask > 0
-        #         _output = output[i]
-        #         _output.backward(_unmask)
-        #         self.output_mask[i][unmask_pos] = 1
-        # # all the values whose gradient is larger that zero
-        # # should be unmasked unmasked
-        # # unmask the values in the parameters
-        # for para_name in self.weights:
-        #     gradient = self.weights[para_name].grad.data
-        #     unmask_pos = gradient > 0
-        #     self.weight_mask[para_name][unmask_pos] = 1
-        # # check if there are values in the input tensors that should be unmasked
-        # input_debug = []
-        # input_unmask = []
-        # for i, _ in enumerate(self.dummy_input):
-        #     if not isinstance(self.dummy_input[i], torch.Tensor):
-        #         continue
-        #     gradient = self.dummy_input[i].grad.data
-        #     unmask_pos = gradient > 0
-        #     print('Unmask pos!!!!!!')
-        #     print(torch.sum(unmask_pos,[0, 2, 3]))
-        #     if torch.sum((unmask_pos.to(torch.float32) - self.in_masks[i]) > 0) > 0:
-        #         # if there is a masked value need to be unmasked, 1 in the unmask_pos
-        #         # and 0 in self.in_masks[i]
-        #         self.in_masks[i][unmask_pos] = 1
-        #         input_debug.append(self.input_debugname[i])
-        #         input_unmask.append(unmask_pos.to(torch.float32))
-        # print('\n\nNew output mask after unmasking')
-        # print(torch.sum(self.output_mask, (0,2,3)))
-        # print('input needto unmask')
-        # print(input_unmask)
-        # # print(torch.sum(input_unmask[0],(0,2,3)))
-        # return input_debug, input_unmask

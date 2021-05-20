@@ -158,21 +158,6 @@ class ModelSpeedup:
             # TODO what if a list/tuple of tensor
             dummy_input.append(self.internal_result[_input].detach())
             debugnames.append(_input)
-            # v_node = self.debugname_to_value[_input]
-            # if isinstance(v_node.type(), torch._C.TensorType) and \
-            #         'prim::GetAttr' not in v_node.node().kind():
-            #     # Filter the value nodes created by the prim::GetAttr, such as
-            #     # weight and bias tensor should be skipped
-
-            #     # print(v_node.type().sizes())
-            #     # print(v_node)
-            #     # print(v_node.node())
-            #     shape = tuple(v_node.type().sizes())
-            #     # Note: cannot support the value-dependent models
-            #     dummy_input.append((torch.rand(shape).to(self.device), _input))
-            #     if _input not in self.masks:
-            #         # if the input tensor doesn't have masks, then create one
-            #         self.masks[_input] = torch.ones(shape).to(self.device)
 
         return dummy_input, debugnames
 
@@ -234,7 +219,7 @@ class ModelSpeedup:
         # the successor nodes can take these output tensors as inputs.
         self.internal_result[out_debugname] = _auto_infer.output
         # update the parameter mask of the node
-        # print(self.masks.keys())
+
         self.masks[module_name] = _auto_infer.weight_mask
 
     def update_indirect_sparsity(self, node):
@@ -396,15 +381,11 @@ class ModelSpeedup:
                 self.t_index = tuple(tmp_index)
 
             def forward(self, x):
-                # print(unique_name)
                 tmpout = self.ori_module(x)
                 shape = list(tmpout.size())
                 shape[self.reindex_dim] = self.reindex.size(0)
                 out = torch.zeros(tuple(shape), device=tmpout.device,
                                   requires_grad=tmpout.requires_grad)
-                # print(self.t_index)
-                # print('Output shape')
-                # print(shape)
                 out[self.t_index] = tmpout
                 return out
 
@@ -566,8 +547,7 @@ class ModelSpeedup:
                         if out_degree[predecessor] == 0:
                             visit_queue.put(
                                 self.torch_graph.name_to_node[predecessor])
-            # for node in padding_map:
-                # print('Pruned channel', node, torch.sum(padding_map[node]))
+
             # replace the submodule that don't need the padding operators
             # according the inferred sparsity
             # If there are some values that need be unmasked
@@ -679,16 +659,8 @@ class ModelSpeedup:
 
         auto_infer = self.auto_inferences[unique_name]
         debugnames, unmasks = auto_infer.unmask(t_unmask)
-        # print("UNmasking  ", unique_name)
-        # print(type(auto_infer))
-        # print('Input unmask tensor')
-        # print(t_unmask)
-        # print('NEW tensors that need to be unmasked')
-        # print(debugnames)
-        # print(unmasks)
-        # print('!!!!!!!!')
+
         for dname, _unmask in zip(debugnames, unmasks):
-            # print(dname, _unmask)
             self.unmask_chain(dname, _unmask)
 
     def resolve_conflicts(self):
@@ -733,8 +705,6 @@ class ModelSpeedup:
                         # we merge the node based on its scope name and the 'prim::GetAttr' node of
                         # weight tensor has no scope name.
                         debugname = _auto_infer.input_debugname[i]
-                        # print('@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@')
-                        # print('Find conflict at ', cur_node.name)
                         self.unmask_chain(debugname, tensor)
             predecessors = self.torch_graph.find_predecessors(
                 cur_node.unique_name)
