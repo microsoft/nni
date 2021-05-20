@@ -16,7 +16,7 @@ from ..utils.shape_dependency import ADD_TYPES, CAT_TYPE, MUL_TYPES
 from ..utils import rand_like_with_shape
 from .sparsity_conflicts import calc_unmask, calc_padding
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.DEBUG)
+_logger.setLevel(logging.INFO)
 
 
 class ModelSpeedup:
@@ -24,7 +24,7 @@ class ModelSpeedup:
     This class is to speedup the model with provided weight mask.
     """
 
-    def __init__(self, model, dummy_input, masks_file, map_location=None, batch_dim=0, confidence=8, fold_bias=False, enable_compile=False):
+    def __init__(self, model, dummy_input, masks_file, map_location=None, batch_dim=0, confidence=8, fold_bias=False, fix_conflict_by_padding=False):
         """
         Parameters
         ----------
@@ -42,9 +42,12 @@ class ModelSpeedup:
             actually used as the batchsize of the dummy_input.
         confidence: int
             The number of examples used to infer the mask.
-        enable_compile: bool
+        fix_conflict_by_padding: bool
             If this flag is enabled, we will modify the network architecture to resolve
-            the sparsity conflict.
+            the sparsity conflict. Compared to modifying the mask to resolve the conflict,
+            the size of the speedup model in this method will be smaller, however,
+            the inference speed may be slower than the first method. Currently, we donnot
+            recommand this feature as default.
         """
         assert confidence > 1
         from nni.common.graph_utils import build_module_graph
@@ -75,7 +78,7 @@ class ModelSpeedup:
         # if we enable the compilation of the sparsity, then we will modify the network
         # architecture to resolve the sparsity conflict.
         self.fold_bias = fold_bias
-        self.enable_compile = enable_compile
+        self.fix_conflict_by_padding = fix_conflict_by_padding
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         input_errmsg = 'Only support the tensor, list/tuple/dict of tensors as input'
@@ -430,13 +433,14 @@ class ModelSpeedup:
     def compile_sparse_modules(self):
         """
         Reconstruct the model according to the inferred sparsity, compared to modifying the mask to
-        resolve the conflict, we will try to utilize as more sparsity as possible to speedup the whole
-        model.
+        resolve the conflict, the size of the speedup model in this method will be smaller, however,
+        the inference speed may be slower than the first method. Currently, we donnot recommand this
+        feature as default.
         Note: we may change the network architecture in this function. If the user prefer to keep
-        the original network architecture, please set the `enable_compile` flag to false.
+        the original network architecture, please set the `fix_conflict_by_padding` flag to false.
         In addtion, currently the compiling engine cannot support all possible models (for example,
         a tensor is taken as input by more than one ADD nodes), when this funtion fails, you can
-        still speedup the model with enable_compile set to false.
+        still speedup the model with fix_conflict_by_padding set to false.
         """
 
         with torch.no_grad():
@@ -541,7 +545,7 @@ class ModelSpeedup:
                                 # Currently the compiling cannot handle the scenario that a op is the input of two add
                                 # operators.
                                 errmsg = "Compiling engine cannot compile the sparsity for this model, Please set \
-                                     enable_compile to False and try again!"
+                                     fix_conflict_by_padding to False and try again!"
                                 assert all(remain_padding ==
                                            padding_map[predecessor]), errmsg
                         if out_degree[predecessor] == 0:
@@ -743,11 +747,12 @@ class ModelSpeedup:
         # set to the evaluation mode
         self.bound_model.train(False)
         # TODO suppose to fix the conflict after the sparsity propagation
-        if not self.enable_compile:
-            # if we cannot modify the network sparsity, then we should resolve
+        # which is more elegent
+        if not self.fix_conflict_by_padding:
+            # if we cannot modify the network architecture, then we should resolve
             # the sparsity conflict by unmask some sparse values.
             fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
-            # exit(-1)
+
         _logger.info("infer module masks...")
         self.infer_modules_masks()
         _logger.info('resolve the mask conflict')
@@ -755,10 +760,11 @@ class ModelSpeedup:
         # load the original stat dict before replace the model
         self.bound_model.load_state_dict(self.ori_state_dict)
         _logger.info("replace compressed modules...")
-        if not self.enable_compile:
+        if not self.fix_conflict_by_padding:
             # the mask conflict should be already resolved
             self.replace_compressed_modules()
         else:
+            # we use padding to resolve the mask conflict here
             self.compile_sparse_modules()
         self.bound_model.train(training)
         _logger.info("speedup done")
