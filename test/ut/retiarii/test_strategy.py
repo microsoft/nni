@@ -1,4 +1,5 @@
 import random
+import sys
 import time
 import threading
 from typing import *
@@ -6,6 +7,7 @@ from typing import *
 import nni.retiarii.execution.api
 import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
+import pytest
 import torch
 import torch.nn.functional as F
 from nni.retiarii import Model
@@ -139,6 +141,7 @@ def test_evolution():
     _reset_execution_engine()
 
 
+@pytest.mark.skipif(sys.platform in ('win32', 'darwin'), reason='Does not run on Windows and MacOS')
 def test_rl():
     rl = strategy.PolicyBasedRL(max_collect=2, trial_per_collect=10)
     engine = MockExecutionEngine(failure_prob=0.2)
