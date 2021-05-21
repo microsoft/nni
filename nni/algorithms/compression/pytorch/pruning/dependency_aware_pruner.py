@@ -56,6 +56,9 @@ class DependencyAwarePruner(Pruner):
         self.set_wrappers_attribute("if_calculated", False)
         
     def calc_mask(self, wrapper, wrapper_idx=None):
+        if wrapper.if_calculated:
+            return None
+            
         sparsity = wrapper.config['sparsity']
         if not wrapper.if_calculated:
             masks = self.masker.calc_mask(

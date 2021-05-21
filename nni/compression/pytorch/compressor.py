@@ -7,7 +7,6 @@ import torch
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
-MAX_EPOCHS = 9999
 
 class LayerInfo:
     def __init__(self, name, module):

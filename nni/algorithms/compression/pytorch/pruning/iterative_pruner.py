@@ -7,7 +7,7 @@ import torch
 from schema import And, Optional, SchemaError
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
-from .constants import MASKER_DICT, MAX_EPOCHS
+from .constants import MASKER_DICT
 from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['AGPPruner', 'ADMMPruner', 'SlimPruner', 'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', ]
@@ -29,10 +29,10 @@ class IterativePruner(DependencyAwarePruner):
             Model to be pruned
         config_list : list
             List on pruning configs
-        pruning_algorithm: str
-            algorithms being used to prune model
         optimizer: torch.optim.Optimizer
             Optimizer used to train model
+        pruning_algorithm: str
+            algorithms being used to prune model
         trainer: function
             Function used to train the model.
             Users should write this function as a normal function to train the Pytorch model
@@ -40,7 +40,7 @@ class IterativePruner(DependencyAwarePruner):
         criterion: function
             Function used to calculate the loss between the target and the output.
         training_epochs : int
-            Totoal number of epochs for training.
+            Totoal number of training epochs for iterative pruning.
         dependency_aware: bool
             If prune the model in a dependency-aware way.
         dummy_input : torch.Tensor
@@ -57,13 +57,10 @@ class IterativePruner(DependencyAwarePruner):
     def compress(self):
         training = self.bound_model.training
         self.bound_model.train()
-        for epoch in range(MAX_EPOCHS):
+        for epoch in range(self.training_epochs):
             self._trainer(self.bound_model, optimizer=self.optimizer,
             criterion=self._criterion, epoch=epoch, callback=self._callback)
-            if epoch >= self.training_epochs:
-                break
         self.bound_model.train(training)
-        self._get_threshold()
 
         self.update_mask()
         self.patch_optimizer(self.update_mask)
@@ -71,30 +68,11 @@ class IterativePruner(DependencyAwarePruner):
         return self.bound_model
 
 
-    def _get_threshold(self):
-        """
-        Function to get global threshold
-        """
-        pass
-
     def _callback(self):
         """
         Callback function to do additonal optimization
         """
         pass
-
-    def calc_mask(self, wrapper, wrapper_idx=None):
-        sparsity = wrapper.config['sparsity']
-        if not wrapper.if_calculated:
-            masks = self.masker.calc_mask(
-                sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
-
-            # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
-            if masks is not None:
-                wrapper.if_calculated = True
-            return masks
-        else:
-            return None
 
 
 class AGPPruner(IterativePruner):
@@ -114,6 +92,10 @@ class AGPPruner(IterativePruner):
         Optimizer used to train model.
     trainer: function
         Function to train the model
+    criterion: function
+        Function used to calculate the loss between the target and the output.
+    training_epochs : int
+        Totoal number of epochs for training.
     pruning_algorithm: str
         Algorithms being used to prune model,
         choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
@@ -423,9 +405,20 @@ class SlimPruner(IterativePruner):
         Totoal number of epochs for sparsification.
     scale : float 
         Penalty parameters for sparsification.
+    dependency_aware: bool
+        If prune the model in a dependency-aware way. If it is `True`, this pruner will
+        prune the model according to the l2-norm of weights and the channel-dependency or
+        group-dependency of the model. In this way, the pruner will force the conv layers
+        that have dependencies to prune the same channels, so the speedup module can better
+        harvest the speed benefit from the pruned model. Note that, if this flag is set True
+        , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+        dependency between the conv layers.
+    dummy_input : torch.Tensor
+        The dummy input to analyze the topology constraints. Note that, the dummy_input
+        should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=2, scale=0.0001):
+    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=2, scale=0.0001, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list=config_list, optimizer=optimizer, pruning_algorithm='slim')
         self.training_aware = True
         self.training_epochs = training_epochs
@@ -445,16 +438,6 @@ class SlimPruner(IterativePruner):
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
 
-    def _get_threshold(self):
-        weight_list = []
-        for (layer, _) in self.get_modules_to_compress():
-            weight_list.append(layer.module.weight.data.abs().clone())
-        all_bn_weights = torch.cat(weight_list)
-        k = int(all_bn_weights.shape[0] * self.config_list[0]['sparsity'])
-        self.masker.global_threshold = torch.topk(
-            all_bn_weights.view(-1), k, largest=False)[0].max()
-        print(f'set global threshold to {self.masker.global_threshold}')
-
     def _callback(self):
         for i, wrapper in enumerate(self.get_modules_wrapper()):
             wrapper.module.weight.grad.data.add_(self.scale * torch.sign(wrapper.module.weight.data))
@@ -472,8 +455,14 @@ class TaylorFOWeightFilterPruner(IterativePruner):
             - op_types : Currently only Conv2d is supported in TaylorFOWeightFilterPruner.
     optimizer: torch.optim.Optimizer
             Optimizer used to train model
+    trainer : function
+        Function used to sparsify BatchNorm2d scaling factors.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch, callback` as function arguments.
+    criterion : function
+        Function used to calculate the loss between the target and the output.
     training_epochs: int
-        The number of epochs to calculate the contributions.
+        The number of epochs to collect the contributions.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -488,9 +477,8 @@ class TaylorFOWeightFilterPruner(IterativePruner):
 
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=1,
-                 dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, optimizer=optimizer,         pruning_algorithm='taylorfo', trainer=trainer, criterion=criterion, training_epochs=training_epochs, dependency_aware=dependency_aware, dummy_input=dummy_input)
+    def __init__(self, model, config_list, optimizer, trainer, criterion, training_epochs=1, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer, criterion=criterion, training_epochs=training_epochs, dependency_aware=dependency_aware, dummy_input=dummy_input)
 
 
 class ActivationAPoZRankFilterPruner(IterativePruner):

@@ -146,7 +146,6 @@ class ADMMPruner(OneshotPruner):
             self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
 
         # Loss = cross_entropy +  l2 regulization + \Sum_{i=1}^N \row_i ||W_i - Z_i^k + U_i^k||^2
-        # criterion = torch.nn.CrossEntropyLoss()
 
         # callback function to do additonal optimization, refer to the deriatives of Formula (7)
         def callback():

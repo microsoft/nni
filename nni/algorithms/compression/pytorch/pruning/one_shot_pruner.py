@@ -60,43 +60,6 @@ class OneshotPruner(DependencyAwarePruner):
 
         schema.validate(config_list)
 
-    def calc_mask(self, wrapper, wrapper_idx=None):
-        """
-        Calculate the mask of given layer
-        Parameters
-        ----------
-        wrapper : Module
-            the module to instrument the compression operation
-        wrapper_idx: int
-            index of this wrapper in pruner's all wrappers
-        Returns
-        -------
-        dict
-            dictionary for storing masks, keys of the dict:
-            'weight_mask':  weight mask tensor
-            'bias_mask': bias mask tensor (optional)
-        """
-        if wrapper.if_calculated:
-            return None
-        print("-> one shot pruner calc mask")
-        sparsity = wrapper.config['sparsity']
-        if not wrapper.if_calculated:
-            masks = self.masker.calc_mask(
-                sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
-
-            # masker.calc_mask returns None means calc_mask is not calculated sucessfully, can try later
-            if masks is not None:
-                wrapper.if_calculated = True
-            return masks
-        else:
-            return None
-
-    def _get_threshold(self):
-        """
-        Calculate the global threshold to decide the weights to be pruned
-        """
-        pass
-
 
 class LevelPruner(OneshotPruner):
     """

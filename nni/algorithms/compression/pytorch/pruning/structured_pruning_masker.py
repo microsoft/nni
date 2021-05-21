@@ -477,7 +477,6 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         self.pruner.iterations = 0
         self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
-        # self.patch_update_mask = False
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
         channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
@@ -499,10 +498,6 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         based on the first order taylor expansion.
         """
         if self.pruner.iterations >= self.pruner.statistics_batch_num:
-            # if not self.patch_update_mask:
-            #     self.patch_optimizer(self.update_mask)
-            #     self.patch_update_mask = True
-
             return
 
         for wrapper in self.pruner.get_modules_wrapper():
@@ -685,8 +680,22 @@ class SlimPrunerMasker(WeightMasker):
         super().__init__(model, pruner)
         self.global_threshold = None
 
+    def _get_global_threshold(self):
+        weight_list = []
+        for (layer, _) in self.pruner.get_modules_to_compress():
+            weight_list.append(layer.module.weight.data.abs().clone())
+        all_bn_weights = torch.cat(weight_list)
+        k = int(all_bn_weights.shape[0] * self.pruner.config_list[0]['sparsity'])
+        self.global_threshold = torch.topk(
+            all_bn_weights.view(-1), k, largest=False)[0].max()
+        print(f'set global threshold to {self.global_threshold}')
+
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+
+        if self.global_threshold is None:
+            self._get_global_threshold()
+
         weight = wrapper.module.weight.data.clone()
         if wrapper.weight_mask is not None:
             # apply base mask for iterative pruning

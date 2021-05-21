@@ -68,7 +68,7 @@ def main():
     quantizer.compress()
 
     model.to(device)
-    for epoch in range(1):
+    for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
         train(model, quantizer, device, train_loader, optimizer)
         test(model, device, test_loader)

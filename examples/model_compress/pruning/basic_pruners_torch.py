@@ -343,10 +343,6 @@ if __name__ == '__main__':
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
                         help='epochs to fine tune')
 
-    # speed-up
-    parser.add_argument('--speed-up', action='store_true', default=False,
-                        help='whether to speed-up the pruned model')
-
     parser.add_argument('--nni', action='store_true', default=False,
                         help="whether to tune the pruners using NNi tuners")
 
