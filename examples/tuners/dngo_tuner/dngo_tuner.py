@@ -110,5 +110,8 @@ class DngoTuner(Tuner):
         self.searchspace_json = search_space
         self.random_state = np.random.RandomState()
 
-        
+# DNGO tuner do not have much input arg, so the validation is actually harly used 
+class DNGOClassArgsValidator(ClassArgsValidator):
+    def validate_class_args(self, **kwargs):
+        pass     
 
