@@ -58,6 +58,9 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.FPGMPruner
     :members:
 
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.IterativePruner
+    :members:
+
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.SlimPruner
     :members:
 
@@ -68,9 +71,6 @@ Pruners
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ActivationMeanRankFilterPruner
-    :members:
-
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.AGPPruner
@@ -86,6 +86,9 @@ Pruners
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.simulated_annealing_pruner.SimulatedAnnealingPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
 
