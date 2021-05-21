@@ -4,11 +4,8 @@ Supported Pruning Algorithms on NNI
 We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized hardware or software to speed up the sparse network. **Filter Pruning** achieves acceleration by removing the entire filter. Some pruning algorithms use one-shot method that prune weights at once based on an importance metric (It is necessary to finetune the model to compensate for the loss of accuracy). Other pruning algorithms **iteratively** prune weights during optimization, which control the pruning schedule, including some automatic pruning algorithms.
 
 
-**Fine-grained Pruning**
-* `Level Pruner <#level-pruner>`__
-
 **One-shot Pruning**
-
+* `Level Pruner <#level-pruner>`__ ((fine-grained pruning))
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
 * `L1Filter Pruner <#l1filter-pruner>`__

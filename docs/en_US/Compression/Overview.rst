@@ -35,7 +35,7 @@ The algorithms include pruning algorithms and quantization algorithms.
 Pruning Algorithms
 ^^^^^^^^^^^^^^^^^^
 
-Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and address the over-ﬁtting issue.
+Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and mitigate the over-ﬁtting issue.
 
 .. list-table::
    :header-rows: 1
