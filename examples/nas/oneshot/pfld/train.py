@@ -161,7 +161,7 @@ def parse_args():
         "--mode", default="mul", type=str, choices=["mul", "add"]
     )
     parser.add_argument("--alpha", default=0.25, type=float)
-    parser.add_argument("--beta", default=0.8, type=float)
+    parser.add_argument("--beta", default=0.6, type=float)
     parser.add_argument("--end_epoch", default=300, type=int)
     parser.add_argument(
         "--snapshot", default="models", type=str, metavar="PATH"

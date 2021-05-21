@@ -37,21 +37,37 @@ class MixedOp(nn.Module):
         self.temperature = 1.0
 
     def get_path_alpha(self):
+        """Return the architecture parameter."""
         return self.path_alpha
 
     def get_weighted_latency(self):
+        """Return the weighted perf_cost of current mutable."""
         soft_masks = self.probs_over_ops()
         weighted_latency = sum(m * l for m, l in zip(soft_masks, self.latency))
         return weighted_latency
 
     def set_temperature(self, temperature):
+        """
+        Set the annealed temperature for gumbel softmax.
+
+        Parameters
+        ----------
+        temperature : float
+            The annealed temperature for gumbel softmax
+        """
         self.temperature = temperature
 
     def to_requires_grad(self):
+        """Enable gradient calculation."""
         self.path_alpha.requires_grad = True
 
     def to_disable_grad(self):
+        """Disable gradient calculation."""
         self.path_alpha.requires_grad = False
+
+    def probs_over_ops(self):
+        """Apply gumbel softmax to generate probability distribution."""
+        return F.gumbel_softmax(self.path_alpha, self.temperature)
 
     def forward(self, mutable, x):
         """
@@ -75,10 +91,6 @@ class MixedOp(nn.Module):
 
         return output
 
-    def probs_over_ops(self):
-        """Apply gumbel softmax to generate probability distribution."""
-        return F.gumbel_softmax(self.path_alpha, self.temperature)
-
     @property
     def chosen_index(self):
         """
@@ -88,8 +100,6 @@ class MixedOp(nn.Module):
         -------
         int
             index of the chosen one
-        numpy.float32
-            prob of the chosen one
         """
         alphas = self.path_alpha.data.detach().cpu().numpy()
         index = int(np.argmax(alphas))
@@ -117,6 +127,12 @@ class FBNetMutator(BaseMutator):
         model : pytorch model
             The model that users want to tune,
             it includes search space defined with nni nas apis
+        lookup_table : class
+            lookup table object to manage model space information,
+            including candidate ops for each stage as the model space,
+            input channels/output channels/stride/fm_size as the layer config,
+            and the performance information for perf_cost accumulation.
+
         """
         super(FBNetMutator, self).__init__(model)
         self.mutable_list = []
@@ -206,6 +222,11 @@ class FBNetMutator(BaseMutator):
     def set_temperature(self, temperature):
         """
         Set the annealed temperature of the op for gumbel softmax.
+
+        Parameters
+        ----------
+        temperature : float
+            The annealed temperature for gumbel softmax
         """
         for mutable in self.undedup_mutables:
             mutable.registered_module.set_temperature(temperature)
@@ -220,7 +241,7 @@ class FBNetMutator(BaseMutator):
     def arch_disable_grad(self):
         """
         Disable gradient of architecture weights, i.e., does not
-        calcuate gradient for them.
+        calculate gradient for them.
         """
         for mutable in self.undedup_mutables:
             mutable.registered_module.to_disable_grad()
