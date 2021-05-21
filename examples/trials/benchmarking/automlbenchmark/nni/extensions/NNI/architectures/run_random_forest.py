@@ -127,6 +127,9 @@ def run_random_forest(dataset, config, tuner, log):
             # Here score is the output of score() from the estimator
             cur_score = cross_val_score(cur_model, X_train, y_train)
             cur_score = sum(cur_score) / float(len(cur_score))
+            if np.isnan(cur_score):
+                cur_score = 0
+            
             log.info("Score: {}\n".format(cur_score))
             if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
                 best_score, best_params, best_model = cur_score, cur_params, cur_model    
