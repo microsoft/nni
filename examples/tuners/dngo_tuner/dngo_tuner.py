@@ -12,8 +12,6 @@ def random_archi_generator(nas_ss, random_state):
     '''
     chosen_arch = {}
     for key, val in nas_ss.items():
-        assert val['_type'] in ['choice', 'uniform'], \
-            "Random NAS Tuner only receives NAS search space whose _type is 'choice' or 'uniform'"
         if val['_type'] == 'choice':
             choices = val['_value']
             index = random_state.randint(len(choices))
@@ -26,7 +24,7 @@ def random_archi_generator(nas_ss, random_state):
             chosen_arch[key] = random.uniform(val['_value'][0], val['_value'][1])
         elif val['_type'] == 'randint':
             chosen_arch[key] = random_state.randint(
-                    val['_value'][0], val['_value'][1], size=1)
+                    val['_value'][0], val['_value'][1])
         elif val['_type'] == 'quniform':
             chosen_arch[key] = parameter_expressions.quniform(
                 val['_value'][0], val['_value'][1], val['_value'][2], random_state)
