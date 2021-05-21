@@ -23,7 +23,6 @@ pids
 *.pid
 *.seed
 *.pid.lock
-/examples/trials/benchmarking/automlbenchmark/nni/data
 
 # Build package
 dist/
