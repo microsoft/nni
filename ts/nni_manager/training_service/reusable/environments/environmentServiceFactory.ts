@@ -8,24 +8,24 @@ import { getCustomEnvironmentServiceConfig } from '../../../common/nniConfig';
 import { importModule } from '../../../common/utils';
 
 export class EnvironmentServiceFactory {
-    public static createEnvironmentService(name: string, config: ExperimentConfig): EnvironmentService {
+    public static createEnvironmentService(name: string, config: ExperimentConfig, expId: string, rootDir: string): EnvironmentService {
         switch(name) {
             case 'local':
-                return new LocalEnvironmentService(config);
+                return new LocalEnvironmentService(rootDir, expId, config);
             case 'remote':
-                return new RemoteEnvironmentService(config);
+                return new RemoteEnvironmentService(rootDir, expId, config);
             case 'aml':
-                return new AMLEnvironmentService(config);
+                return new AMLEnvironmentService(rootDir, expId, config);
             case 'openpai':
-                return new OpenPaiEnvironmentService(config);
+                return new OpenPaiEnvironmentService(rootDir, expId, config);
         }
 
-        const customEs = getCustomEnvironmentServiceConfig(name);
-        if (customEs === null) {
+        const esConfig = getCustomEnvironmentServiceConfig(name);
+        if (esConfig === null) {
             throw new Error(`${name} is not a supported training service!`);
         }
-        const module_ = importModule(customEs.nodeModulePath);
-        const class_ = module_[customEs.nodeClassName] as any;
-        return new class_(config);
+        const esModule = importModule(esConfig.nodeModulePath);
+        const esClass = esModule[esConfig.nodeClassName] as any;
+        return new esClass(rootDir, expId, config);
     }
 }

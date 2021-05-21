@@ -6,10 +6,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { getExperimentRootDir, getLogLevel } from '../../../common/utils';
+import { getLogLevel } from '../../../common/utils';
 import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
 import { execMkdir } from '../../common/util';
 import { ExecutorManager } from '../../remote_machine/remoteMachineData';
@@ -33,14 +32,13 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private experimentId: string;
     private config: FlattenRemoteConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(experimentRootDir: string, experimentId: string, config: ExperimentConfig) {
         super();
-        this.experimentId = getExperimentId();
+        this.experimentId = experimentId;
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
-        this.experimentRootDir = getExperimentRootDir();
-        this.experimentId = getExperimentId();
+        this.experimentRootDir = experimentRootDir;
         this.log = getLogger();
         this.config = flattenConfig(config, 'remote');
 
@@ -103,10 +101,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
         // Create root working directory after executor is ready
         const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni-experiments');
-        await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
+        await executor.createFolder(executor.getRemoteExperimentRootDir(this.experimentId));
 
         // the directory to store temp scripts in remote machine
-        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath(getExperimentId());
+        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath(this.experimentId);
 
         // clean up previous result.
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
@@ -245,7 +243,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
                 }
             } else {
-                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
+                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(this.experimentId);
             }
 
             environment.command = await this.getScript(environment);

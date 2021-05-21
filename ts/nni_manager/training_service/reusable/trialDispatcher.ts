@@ -112,13 +112,15 @@ class TrialDispatcher implements TrainingService {
 
         validateCodeDir(config.trialCodeDirectory);
 
+        const expId = getExperimentId();
+        const rootDir = getExperimentRootDir();
         if (Array.isArray(config.trainingService)) {
             config.trainingService.forEach(trainingService => {
-                const env = EnvironmentServiceFactory.createEnvironmentService(trainingService.platform, config);
+                const env = EnvironmentServiceFactory.createEnvironmentService(trainingService.platform, config, expId, rootDir);
                 this.environmentServiceList.push(env);
             });
         } else {
-            const env = EnvironmentServiceFactory.createEnvironmentService(config.trainingService.platform, config);
+            const env = EnvironmentServiceFactory.createEnvironmentService(config.trainingService.platform, config, expId, rootDir);
             this.environmentServiceList.push(env);
         }
 
