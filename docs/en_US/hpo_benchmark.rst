@@ -8,7 +8,7 @@ Terminology
 ^^^^^^^^^^^
 
 
-* **task**\ : a task can be thought of as (dataset, evaluator). It gives out a dataset containing (train, valid, test), and based on the received predictions, the evaluator evaluates a given metric (e.g., mse for regression, f1 for classfication). 
+* **task**\ : a task can be thought of as (dataset, evaluator). It gives out a dataset containing (train, valid, test), and based on the received predictions, the evaluator evaluates a given metric (e.g., mse for regression, f1 for classification). 
 * **benchmark**\ : a benchmark is a set of tasks, along with other external constraints such as time and resource. 
 * **framework**\ : given a task, a framework conceives answers to the proposed regression or classification problem and produces predictions. Note that the automlbenchmark framework does not pose any restrictions on the hypothesis space of a framework. In our implementation in this folder, each framework is a tuple (tuner, architecture), where architecture provides the hypothesis space (and search space for tuner), and tuner determines the strategy of hyperparameter optimization. 
 * **tuner**\ : a tuner or advisor defined in the hpo folder, or a custom tuner provided by the user. 
@@ -47,7 +47,7 @@ Run benchmarks on custom tuners
 To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_. Next, perform the following steps:
 
 
-#. Install the custom tuner with command ``nnictl algo register``. Check `this page <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
+#. Install the custom tuner with command ``nnictl algo register``. Check `this document <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
 #. In ``./nni/frameworks.yaml``\ , add a new framework extending the base framework NNI. Make sure that the parameter ``tuner_type`` corresponds to the "builtinName" of tuner installed in step 1.
 #. Run the following command
 
