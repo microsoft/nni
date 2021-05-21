@@ -257,7 +257,7 @@ def parse_args():
     parser_ts_unreg.set_defaults(func=ts_management.unregister)
 
     parser_ts_list = parser_ts_subparsers.add_parser('list', help='list custom training services')
-    parser_ts_list.set_defaults(func=ts_management.list)
+    parser_ts_list.set_defaults(func=ts_management.list_services)
 
     # To show message that nnictl package command is replaced by nnictl algo, to be remove in the future release.
     def show_messsage_for_nnictl_package(args):
