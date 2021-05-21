@@ -12,9 +12,8 @@ from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from ..utils.shape_dependency import ADD_TYPES, CAT_TYPE, MUL_TYPES
 from ..utils import rand_like_with_shape
-from .sparsity_conflicts import calc_unmask, calc_padding
+
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
@@ -25,7 +24,7 @@ class ModelSpeedup:
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                batch_dim=0, confidence=8, fold_bias=False, fix_conflict_by_padding=False):
+                batch_dim=0, confidence=8, fold_bias=False):
         """
         Parameters
         ----------
@@ -43,12 +42,6 @@ class ModelSpeedup:
             actually used as the batchsize of the dummy_input.
         confidence: int
             The number of examples used to infer the mask.
-        fix_conflict_by_padding: bool
-            If this flag is enabled, we will modify the network architecture to resolve
-            the sparsity conflict. Compared to modifying the mask to resolve the conflict,
-            the size of the speedup model in this method will be smaller, however,
-            the inference speed may be slower than the first method. Currently, we donnot
-            recommand this feature as default.
         """
         assert confidence > 1
         from nni.common.graph_utils import build_module_graph
@@ -79,7 +72,7 @@ class ModelSpeedup:
         # if we enable the compilation of the sparsity, then we will modify the network
         # architecture to resolve the sparsity conflict.
         self.fold_bias = fold_bias
-        self.fix_conflict_by_padding = fix_conflict_by_padding
+
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         input_errmsg = 'Only support the tensor, list/tuple/dict of tensors as input'
@@ -431,176 +424,6 @@ class ModelSpeedup:
         else:
             raise RuntimeError("Unsupported node type: {}".format(g_node.type))
 
-    def compile_sparse_modules(self):
-        """
-        Reconstruct the model according to the inferred sparsity, compared to modifying the mask to
-        resolve the conflict, the size of the speedup model in this method will be smaller, however,
-        the inference speed may be slower than the first method. Currently, we donnot recommand this
-        feature as default.
-        Note: we may change the network architecture in this function. If the user prefer to keep
-        the original network architecture, please set the `fix_conflict_by_padding` flag to false.
-        In addition, currently the compiling engine cannot support all possible models (for example,
-        a tensor is taken as input by more than one ADD nodes), when this funtion fails, you can
-        still speedup the model with fix_conflict_by_padding set to false.
-        """
-
-        with torch.no_grad():
-            # build the out_degree table for the nodes in the model
-            out_degree = {}
-            visit_queue = queue.Queue()
-            # Store the padding and unmask tensors
-            padding_map = {}
-            unmask_map = {}
-            for node in self.torch_graph.nodes_py.nodes_op:
-                successors = self.torch_graph.find_successors(node.unique_name)
-                out_degree[node.unique_name] = len(successors)
-                if out_degree[node.unique_name] == 0:
-                    # if this node doesn't have any successor nodes
-                    visit_queue.put(node)
-            # backward traverse the model graph and find the operators that have shape
-            # dependencies
-            while not visit_queue.empty():
-                # remain_padding is the unmask tensors passed by the successor nodes
-                # for example, the relu node is a function and we cannot replace
-                # the function node in the model, so the unmask tensor which should be
-                # handled by the relu node can only be passed to the predecessor nodes.
-                cur_node = visit_queue.get()
-                # Get the padding tensors from the padding_map
-                if cur_node.unique_name in padding_map:
-                    remain_padding = padding_map[cur_node.unique_name]
-                    remain_unmask = unmask_map[cur_node.unique_name]
-                else:
-                    remain_padding = None
-                    remain_unmask = None
-                # if this not is not replaced yet
-                _logger.debug('Fix mask conflict by padding for %s',
-                              cur_node.unique_name)
-                # calculate the unmask tensor for this node
-
-                _auto_infer = self.auto_inferences[cur_node.unique_name]
-                assert isinstance(_auto_infer.output_mask, torch.Tensor)
-                _remain_resolved = None
-                if remain_padding is not None:
-                    # since we change the output of this node by padding zeros, so
-                    # we also need to unmask the correponding values in the _auto_infer.output_mask
-                    # so that, the successor node will take the right shape. And this will interfere
-                    # with the replacement of the current node (because the output_mask has been changed)
-                    # So, we need to replace the modules that need the padding operators before
-                    # those nodes who don't. We have to update the output_mask to make sure
-                    # that the successor has the right input shape,
-                    _remain_resolved = self.replace_submodule(
-                        cur_node.unique_name, 1, remain_padding == False)
-
-                if _remain_resolved is None:
-                    new_padding, new_unmask = self.calc_paddingindex(
-                        cur_node, remain_unmask)
-                    if remain_padding is not None:
-                        pos = remain_unmask > 0
-                        _auto_infer.output_mask[pos] = 1
-                else:
-                    # we can resovle the conflict by reindex the output of this module,
-                    # so we don't need to pass the remained padding zeros to the predecessor
-                    # nodes
-                    new_padding, new_unmask = self.calc_paddingindex(
-                        cur_node, None)
-                    if remain_padding is not None:
-                        pos = remain_unmask > 0
-                        _auto_infer.output_mask[pos] = 1
-                    remain_padding = remain_unmask = None
-
-                if new_padding is not None:
-                    for i, tensor in enumerate(new_padding):
-                        if tensor is not None:
-                            # The reason why we use the input_debugname in the _auto_infer
-                            # rather the cur_node.inputs is that the cur_node.inputs have
-                            # the parameters of the modules (weight, bias), and this is caused by
-                            # the merging rules when we build the TorchModuleGraph. In TorchModuleGraph
-                            # we merge the node based on its scope name and the 'prim::GetAttr' node of
-                            # weight tensor has no scope name.
-                            debugname = _auto_infer.input_debugname[i]
-                            predecessor = self.torch_graph.output_to_node[debugname]
-                            out_degree[predecessor.unique_name] -= 1
-
-                            if predecessor.unique_name not in padding_map:
-                                padding_map[predecessor.unique_name] = new_padding[i]
-                                unmask_map[predecessor.unique_name] = new_unmask[i]
-                            else:
-                                # NOTE: Currently, compiling cannot handle the situation that a tensor is broadcast
-                                # to several add Ops(fix_mask_conflict can handle this scenario). We cannot decide the
-                                # unmask/reindex tensor from only one Add operator. Fortunately, there is no such structure
-                                # in common networks.
-                                # TODO May support the secenario mentioned above in the future
-                                assert all(
-                                    new_padding[1] == padding_map[predecessor.unique_name])
-                            if out_degree[predecessor.unique_name] == 0:
-                                visit_queue.put(predecessor)
-                else:
-                    # No conflict found here
-                    predecessors = self.torch_graph.find_predecessors(
-                        cur_node.unique_name)
-                    for predecessor in predecessors:
-                        out_degree[predecessor] -= 1
-                        if remain_padding is not None:
-                            if predecessor not in padding_map:
-                                padding_map[predecessor] = remain_padding
-                                unmask_map[predecessor] = remain_unmask
-                            else:
-                                # Currently the compiling cannot handle the scenario that a op is the input of two add
-                                # operators.
-                                errmsg = "Compiling engine cannot compile the sparsity for this model, Please set \
-                                     fix_conflict_by_padding to False and try again!"
-                                assert all(remain_padding ==
-                                           padding_map[predecessor]), errmsg
-                        if out_degree[predecessor] == 0:
-                            visit_queue.put(
-                                self.torch_graph.name_to_node[predecessor])
-
-            # replace the submodule that don't need the padding operators
-            # according the inferred sparsity
-            # If there are some values that need be unmasked
-            for unique_name in self.auto_inferences:
-                if unique_name not in padding_map:
-                    self.replace_submodule(unique_name)
-
-    def calc_paddingindex(self, node, remain_unmask):
-        """
-        Calculate the reindex tensor for this node. If this node has sparsity
-        conflict then we will return a reindex tensor for each of its input, else
-        this function will just return None.
-        Parameters
-        ----------
-        node: Node NodePyGroup
-            The target node to caculate the reindex tenosr for its output.
-        Returns
-        -------
-        padding: list of tensor
-            List of tensor, each tensor indicates the channel-wise index of a input
-            to padding the zeros. Note: this tensor is calculated based on the shape
-            after the pruning.
-        unmask: list of tensor
-
-        """
-        if node.op_type not in ADD_TYPES and node.op_type not in MUL_TYPES \
-                and node.op_type != CAT_TYPE:
-            return None, None
-        unique_name = node.unique_name
-        auto_infer = self.auto_inferences[unique_name]
-        input_masks = auto_infer.in_masks
-        output_mask = auto_infer.output_mask
-        # The difference between the padding and the unmask is that
-        # the padding is calculated based on the shape that after pruning,
-        # and the unmask is calculated based on the shape that befer the actual
-        # pruning.
-        if remain_unmask is not None:
-            padding = calc_padding(
-                node, input_masks, output_mask + remain_unmask)
-            unmask = calc_unmask(
-                node, input_masks, output_mask + remain_unmask)
-        else:
-            padding = calc_padding(node, input_masks, output_mask)
-            unmask = calc_unmask(node, input_masks, output_mask)
-        return padding, unmask
-
     def initialize_speedup(self):
         """
         Do some initial work for speedup.
@@ -632,10 +455,7 @@ class ModelSpeedup:
         self.bound_model.train(False)
         # TODO suppose to fix the conflict after the sparsity propagation
         # which is more elegent
-        if not self.fix_conflict_by_padding:
-            # if we cannot modify the network architecture, then we should resolve
-            # the sparsity conflict by unmask some sparse values.
-            fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
+        fix_mask_conflict(self.masks, self.bound_model, self.dummy_input)
 
         _logger.info("infer module masks...")
         self.infer_modules_masks()
@@ -644,11 +464,7 @@ class ModelSpeedup:
         # load the original stat dict before replace the model
         self.bound_model.load_state_dict(self.ori_state_dict)
         _logger.info("replace compressed modules...")
-        if not self.fix_conflict_by_padding:
-            # the mask conflict should be already resolved
-            self.replace_compressed_modules()
-        else:
-            # we use padding to resolve the mask conflict here
-            self.compile_sparse_modules()
+        # the mask conflict should be already resolved
+        self.replace_compressed_modules()
         self.bound_model.train(training)
         _logger.info("speedup done")

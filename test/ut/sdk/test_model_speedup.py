@@ -331,7 +331,7 @@ class SpeedupTestCase(TestCase):
             return
         self.speedup_integration(model_list)
 
-    def speedup_integration(self, model_list):
+    def speedup_integration(self, model_list, speedup_cfg=None):
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
         # for model_name in ['vgg16', 'resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
@@ -367,7 +367,9 @@ class SpeedupTestCase(TestCase):
                 zero_bn_bias(speedup_model)
 
                 data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
-                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=2)
+                if speedup_cfg is None:
+                    speedup_cfg = {}
+                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=2, **speedup_cfg)
                 ms.speedup_model()
 
                 speedup_model.eval()
