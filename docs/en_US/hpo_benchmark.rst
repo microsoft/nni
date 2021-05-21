@@ -49,7 +49,7 @@ To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.T
 
 #. Install the custom tuner with command ``nnictl algo register``. Check `this page <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
 #. In ``./nni/frameworks.yaml``\ , add a new framework extending the base framework NNI. Make sure that the parameter ``tuner_type`` corresponds to the "builtinName" of tuner installed in step 1.
-#. Run the following command:
+#. Run the following command
    .. code-block:: bash
 
       ./runbenchmark_nni.sh new-tuner-builtinName
