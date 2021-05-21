@@ -40,9 +40,9 @@ def register(args):
     _save(config)
 
     if update:
-        print_green(f'Sucessfully updated {arg.package}')
+        print_green(f'Sucessfully updated {args.package}')
     else:
-        print_green(f'Sucessfully registered {arg.package}')
+        print_green(f'Sucessfully registered {args.package}')
 
 def unregister(args):
     config = _load()
