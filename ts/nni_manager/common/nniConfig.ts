@@ -24,7 +24,7 @@ function readConfigFile(fileName: string): string {
 }
 
 export function getCustomEnvironmentServiceConfig(name: string): CustomEnvironmentServiceConfig | null {
-    const config = JSON.parse(readConfigFile('registered_training_services.json'));
+    const config = JSON.parse(readConfigFile('training_services.json'));
     if (config[name] === undefined) {
         return null;
     }

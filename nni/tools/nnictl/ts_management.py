@@ -57,7 +57,7 @@ def list_services(_):
     print('\n'.join(_load().keys()))
 
 def _load():
-    return json.load(get_config_file.open())
+    return json.load(get_config_file('training_services.json').open())
 
 def _save(config):
-    json.dump(config, get_config_file.open('w'), indent=4)
+    json.dump(config, get_config_file('training_services.json').open('w'), indent=4)

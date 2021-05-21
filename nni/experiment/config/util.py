@@ -39,11 +39,12 @@ def training_service_config_factory(
         base_path: Optional[Path] = None): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
 
+    # import all custom config classes so they can be found in TrainingServiceConfig.__subclasses__()
     custom_ts_config_path = nni.runtime.config.get_config_file('training_services.json')
     custom_ts_config = json.load(custom_ts_config_path.open())
-    for custom_ts_pkg in custom_ts_config.values():
+    for custom_ts_pkg in custom_ts_config.keys():
         pkg = importlib.import_module(custom_ts_pkg)
-        config_class = pkg.nni_meta.config_class
+        _config_class = pkg.nni_training_service_info.config_class
 
     ts_configs = []
     if platform is not None:
