@@ -49,7 +49,7 @@ def convert_to_coarse_mask(t_mask, dim):
     shape = list(t_mask.size())
     n_dims = len(shape)
     dim_list = list(range(n_dims))
-    # try to reduce the mask from the 0-th dimension
+    # try to reduce the mask from the dim-th dimension
     dim_list.remove(dim)
 
     t_merged = torch.sum(t_mask, dim_list)
