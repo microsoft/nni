@@ -153,7 +153,6 @@ class CompressorTestCase(TestCase):
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(-w).float()
         pruner = torch_pruner.SlimPruner(model, config_list, optimizer=None, trainer=None, criterion=None)
-        pruner._get_threshold()
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
@@ -167,7 +166,6 @@ class CompressorTestCase(TestCase):
         model.bn1.weight.data = torch.tensor(w).float()
         model.bn2.weight.data = torch.tensor(w).float()
         pruner = torch_pruner.SlimPruner(model, config_list, optimizer=None, trainer=None, criterion=None)
-        pruner._get_threshold()
 
         mask1 = pruner.calc_mask(model.bn1)
         mask2 = pruner.calc_mask(model.bn2)
