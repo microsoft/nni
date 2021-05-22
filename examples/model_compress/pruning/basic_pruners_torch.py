@@ -283,7 +283,6 @@ def main(args):
     best_top1 = 0
     save_path = os.path.join(args.experiment_data_dir, f'finetuned.pth')
     for epoch in range(args.fine_tune_epochs):
-        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(args, model, device, train_loader, criterion, optimizer, epoch)
         scheduler.step()

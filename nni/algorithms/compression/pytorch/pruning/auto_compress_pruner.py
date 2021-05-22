@@ -13,7 +13,8 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
-from .admm_pruner import ADMMPruner
+from .iterative_pruner import IterativePruner, ADMMPruner
+
 
 
 _logger = logging.getLogger(__name__)
@@ -221,7 +222,6 @@ class AutoCompressPruner(Pruner):
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 
             masks_file = os.path.join(self._experiment_data_dir, 'mask.pth')
-            # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
             device = next(self._model_to_prune.parameters()).device
 
             _logger.info('Speeding up models...')

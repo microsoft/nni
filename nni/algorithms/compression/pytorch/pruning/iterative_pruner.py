@@ -21,7 +21,7 @@ class IterativePruner(DependencyAwarePruner):
     Prune model during the training process. 
     """
 
-    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', trainer=None, criterion=None, training_epochs=1, dependency_aware=False, dummy_input=None, **algo_kwargs):
+    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', trainer=None, criterion=None, training_epochs=20, dependency_aware=False, dummy_input=None, **algo_kwargs):
         """
         Parameters
         ----------
@@ -53,6 +53,7 @@ class IterativePruner(DependencyAwarePruner):
         self.training_epochs = training_epochs
         self._trainer = trainer
         self._criterion = criterion
+        
 
     def compress(self):
         training = self.bound_model.training
@@ -156,6 +157,7 @@ class AGPPruner(IterativePruner):
 
         target_sparsity = self.compute_target_sparsity(config)
         new_mask = self.masker.calc_mask(sparsity=target_sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
+        
         if new_mask is not None:
             wrapper.if_calculated = True
 
@@ -228,6 +230,8 @@ class ADMMPruner(IterativePruner):
         Model to be pruned.
     config_list : list
         List on pruning configs.
+    optimizer: torch.optim.Optimizer
+        Optimizer used to train model, which is set to be ADMM in this pruner.
     trainer : function
         Function used for the first subproblem.
         Users should write this function as a normal function to train the Pytorch model
@@ -251,6 +255,8 @@ class ADMMPruner(IterativePruner):
                     if callback:
                         callback()
                     optimizer.step()
+    criterion: function
+        Function used to calculate the loss between the target and the output.
     num_iterations : int
         Total number of iterations.
     training_epochs : int
@@ -263,13 +269,14 @@ class ADMMPruner(IterativePruner):
 
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
+    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=torch.nn.CrossEntropyLoss(), num_iterations=30, training_epochs=5, row=1e-4, base_algo='l1'):
         self._base_algo = base_algo
 
         super().__init__(model, config_list)
 
         self._trainer = trainer
-        self._optimizer = optimizer
+        self._optimizer = torch.optim.Adam(
+            self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
         self._criterion = criterion
         self._num_iterations = num_iterations
         self._training_epochs = training_epochs
@@ -325,6 +332,12 @@ class ADMMPruner(IterativePruner):
         wrapper_copy.module.weight.data = weight
         return weight.data.mul(self.masker.calc_mask(sparsity, wrapper_copy)['weight_mask'])
 
+    def _callback(self):
+        # callback function to do additonal optimization, refer to the deriatives of Formula (7)
+        for i, wrapper in enumerate(self.get_modules_wrapper()):
+            wrapper.module.weight.data -= self._row * \
+                (wrapper.module.weight.data - self.Z[i] + self.U[i])
+
     def compress(self):
         """
         Compress the model with ADMM.
@@ -339,41 +352,30 @@ class ADMMPruner(IterativePruner):
         # initiaze Z, U
         # Z_i^0 = W_i^0
         # U_i^0 = 0
-        Z = []
-        U = []
+        self.Z = []
+        self.U = []
         for wrapper in self.get_modules_wrapper():
             z = wrapper.module.weight.data
-            Z.append(z)
-            U.append(torch.zeros_like(z))
-
-        optimizer = torch.optim.Adam(
-            self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
+            self.Z.append(z)
+            self.U.append(torch.zeros_like(z))
 
         # Loss = cross_entropy +  l2 regulization + \Sum_{i=1}^N \row_i ||W_i - Z_i^k + U_i^k||^2
-        # criterion = torch.nn.CrossEntropyLoss()
-
-        # callback function to do additonal optimization, refer to the deriatives of Formula (7)
-        def callback():
-            for i, wrapper in enumerate(self.get_modules_wrapper()):
-                wrapper.module.weight.data -= self._row * \
-                    (wrapper.module.weight.data - Z[i] + U[i])
-
         # optimization iteration
         for k in range(self._num_iterations):
             logger.info('ADMM iteration : %d', k)
 
             # step 1: optimize W with AdamOptimizer
             for epoch in range(self._training_epochs):
-                self._trainer(self.bound_model, optimizer=optimizer,
-                              criterion=self._criterion, epoch=epoch, callback=callback)
+                self._trainer(self.bound_model, optimizer=self._optimizer,
+                              criterion=self._criterion, epoch=epoch, callback=self._callback)
 
             # step 2: update Z, U
             # Z_i^{k+1} = projection(W_i^{k+1} + U_i^k)
             # U_i^{k+1} = U^k + W_i^{k+1} - Z_i^{k+1}
             for i, wrapper in enumerate(self.get_modules_wrapper()):
-                z = wrapper.module.weight.data + U[i]
-                Z[i] = self._projection(z, wrapper.config['sparsity'], wrapper)
-                U[i] = U[i] + wrapper.module.weight.data - Z[i]
+                z = wrapper.module.weight.data + self.U[i]
+                self.Z[i] = self._projection(z, wrapper.config['sparsity'], wrapper)
+                self.U[i] = self.U[i] + wrapper.module.weight.data - self.Z[i]
 
         # apply prune
         self.update_mask()
