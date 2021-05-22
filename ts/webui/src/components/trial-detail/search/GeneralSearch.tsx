@@ -2,27 +2,26 @@ import React, { useState } from 'react';
 import PropTypes from 'prop-types';
 import { Stack, PrimaryButton } from '@fluentui/react';
 import { searchConditonsGap } from '../../modals/ChildrenGap';
-import { getFiterConditionString } from '../../../static/function';
+import { getSearchInputValueBySearchList } from './searchFunction';
 
 // This file is for search trial ['Trial id', 'Trial No.']
 
 function GeneralSearch(props): any {
-    const { idOrTrialNo, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal, updatePage } = props;
-
-    const [firstInputVal, setFirstInputVal] = useState(getIdorNoInit());
+    // searchName val: Trial No. | Trial id
+    const { searchName, searchFilter, dismiss, changeSearchFilterList, setSearchInputVal, updatePage } = props;
+    const [firstInputVal, setFirstInputVal] = useState(getSearchNameInit());
 
     function updateFirstInputVal(ev: React.ChangeEvent<HTMLInputElement>): void {
         setFirstInputVal(ev.target.value);
     }
 
-    function getIdorNoInit(): string {
+    function getSearchNameInit(): string {
         let str = ''; // init ''
+        const find = searchFilter.find(item => item.name === searchName);
 
-        searchFilter.forEach(item => {
-            if (item.name === idOrTrialNo) {
-                str = item.value1; // init by filter value
-            }
-        });
+        if (find !== undefined) {
+            str = find.value1; // init by filter value
+        }
 
         return str;
     }
@@ -30,23 +29,32 @@ function GeneralSearch(props): any {
     function startFilterTrial(): void {
         const { searchFilter } = props;
         const searchFilterConditions = JSON.parse(JSON.stringify(searchFilter));
-        const find = searchFilterConditions.filter(item => item.name === idOrTrialNo);
+        const find = searchFilterConditions.filter(item => item.name === searchName);
+
+        if (firstInputVal === '') {
+            alert('Please input related value!');
+            return;
+        }
+
         if (find.length > 0) {
             // change this record
+            // Trial id | Trial No. only need {search name, search value} these message
             searchFilterConditions.forEach(item => {
-                if (item.name === idOrTrialNo) {
+                if (item.name === searchName) {
                     item.value1 = firstInputVal;
-                    item.operator = '';
+                    // item.operator = '';
+                    item.isChoice = false;
                 }
             });
         } else {
             searchFilterConditions.push({
-                name: idOrTrialNo,
-                operator: '',
-                value1: firstInputVal
+                name: searchName,
+                // operator: '',
+                value1: firstInputVal,
+                isChoice: false
             });
         }
-        setSearchInputVal(getFiterConditionString(searchFilterConditions));
+        setSearchInputVal(getSearchInputValueBySearchList(searchFilterConditions));
         changeSearchFilterList(searchFilterConditions);
         updatePage();
         dismiss(); // close menu
@@ -55,21 +63,15 @@ function GeneralSearch(props): any {
     return (
         // Trial id & Trial No.
         <Stack horizontal className='filterConditions' tokens={searchConditonsGap}>
-            <span>{idOrTrialNo === 'Trial id' ? 'Includes' : 'Equals to'}</span>
-            <input
-                type='text'
-                className='input input-padding'
-                // placeholder='Please input value...'
-                onChange={updateFirstInputVal}
-                value={firstInputVal}
-            />
+            <span>{searchName === 'Trial id' ? 'Includes' : 'Equals to'}</span>
+            <input type='text' className='input input-padding' onChange={updateFirstInputVal} value={firstInputVal} />
             <PrimaryButton text='Apply' className='btn-vertical-middle' onClick={startFilterTrial} />
         </Stack>
     );
 }
 
 GeneralSearch.propTypes = {
-    idOrTrialNo: PropTypes.string,
+    searchName: PropTypes.string,
     searchFilter: PropTypes.array,
     dismiss: PropTypes.func,
     setSearchInputVal: PropTypes.func,

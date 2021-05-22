@@ -207,8 +207,10 @@ interface Tensorboard {
 interface SearchItems {
     name: string;
     operator: string;
-    value1: string;
-    value2: string;
+    value1: string; // first input value
+    value2: string; // second input value
+    choice: string[]; // use select multiy value list
+    isChoice: boolean; // for parameters: type = choice and status also as choice type
 }
 
 export {

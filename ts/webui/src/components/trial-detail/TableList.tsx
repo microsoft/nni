@@ -12,8 +12,9 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
-import { convertDuration, formatTimestamp, copyAndSort, getTrialsBySearchFilters } from '../../static/function';
+import { convertDuration, formatTimestamp, copyAndSort, parametersType } from '../../static/function';
 import { TableObj, SortInfo, SearchItems } from '../../static/interface';
+import { getTrialsBySearchFilters } from './search/searchFunction';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
 import ChangeColumnComponent from '../modals/ChangeColumnComponent';
 import Compare from '../modals/Compare';
@@ -85,6 +86,7 @@ interface TableListState {
     copiedTrialId: string | undefined;
     sortInfo: SortInfo;
     searchItems: Array<SearchItems>;
+    relation: Map<string, string>;
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -109,7 +111,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             intermediateDialogTrial: undefined,
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
-            searchItems: []
+            searchItems: [],
+            relation: parametersType()
         };
 
         this._expandedTrialIds = new Set<string>();
@@ -398,8 +401,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
 
     private _updateTableSource(): void {
         // call this method when trials or the computation of trial filter has changed
+        const { searchItems, relation } = this.state;
         let items = this._trialsToTableItems(this.props.tableSource);
-        items = getTrialsBySearchFilters(items, this.state.searchItems); // use search filter to filter data
+        if (searchItems.length > 0) {
+            items = getTrialsBySearchFilters(items, searchItems, relation); // use search filter to filter data
+        }
         if (items.length > 0) {
             const columns = this._buildColumnsFromTableItems(items);
             this.setState({

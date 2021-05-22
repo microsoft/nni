@@ -2,7 +2,8 @@ import * as JSON5 from 'json5';
 import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
-import { MetricDataRecord, FinalType, TableObj, Tensorboard, SearchItems } from './interface';
+import { EXPERIMENT } from './datamodel';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
 async function requestAxios(url: string): Promise<any> {
     const response = await axios.get(url);
@@ -346,89 +347,17 @@ function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDe
     return tensorboardMenu;
 }
 
-// search space type map list
-const parametersType = (arr: TableObj[]): Map<string, string | number> => {
+// search space type map list: now get type from search space
+const parametersType = (): Map<string, string> => {
     const parametersTypeMap = new Map();
+    const trialParameterlist = Object.keys(EXPERIMENT.searchSpace);
 
-    if (arr.length !== 0) {
-        const allSearchSpaceColumn = Object.keys(arr[0]).filter(item => item.startsWith('space/'));
-        allSearchSpaceColumn.forEach(item => {
-            parametersTypeMap.set(item, typeof arr[0][item]);
-        });
-    }
+    trialParameterlist.forEach(item => {
+        parametersTypeMap.set(item, typeof EXPERIMENT.searchSpace[item]._value[0]);
+    });
 
     return parametersTypeMap;
 };
-
-const getTrialsBySearchFilters = (arr: TableObj[], searchItems: Array<SearchItems>): TableObj[] => {
-    const relation = parametersType(arr);
-    const que = searchItems;
-    let result = arr;
-
-    // change origin data to parameter type, string -> number
-    que.forEach(item => {
-        if (relation.get(`space/${item.name}`) === 'number') {
-            item.value1 = JSON.parse(item.value1);
-            if (item.value2 !== '') {
-                item.value2 = JSON.parse(item.value2);
-            }
-        }
-    });
-
-    // start to filter data by ['Trial id', 'Trial No.', 'Status'] [...parameters]...
-    que.forEach(element => {
-        if (element.name === 'Trial id') {
-            result = result.filter(trial => trial.id.toUpperCase().includes(element.value1.toUpperCase()));
-        } else if (element.name === 'Trial No.') {
-            result = result.filter(trial => trial.sequenceId.toString() === element.value1);
-        } else if (element.name === 'StatusNNI') {
-            if (element.operator === '=') {
-                result = result.filter(trial => trial.status === element.value1);
-            } else {
-                result = result.filter(trial => trial.status !== element.value1);
-            }
-        } else {
-            const parameter = `space/${element.name}`;
-            if (element.operator === '=') {
-                result = result.filter(trial => trial[parameter] === element.value1);
-            } else if (element.operator === '>') {
-                result = result.filter(trial => trial[parameter] > element.value1);
-            } else if (element.operator === '<') {
-                result = result.filter(trial => trial[parameter] < element.value1);
-            } else {
-                // operator is 'between'
-                result = result.filter(trial => trial[parameter] > element.value1 && trial[parameter] < element.value2);
-            }
-        }
-    });
-
-    return result;
-};
-
-function getFiterConditionString(searchFilter): string {
-    let str = '';
-
-    searchFilter.forEach(item => {
-        const filterName = item.name === 'StatusNNI' ? 'Status' : item.name;
-
-        if (item.name === 'Trial id') {
-            str = str + `Trial id:${item.value1}; `;
-        } else if (item.name === 'Trial No.') {
-            str = str + `Trial No.:${item.value1}; `;
-        } else if (item.operator === '') {
-            str = str + `${filterName}:${item.value1}; `;
-        } else if (item.operator === 'between') {
-            str = str + `${filterName}:[${item.value1},${item.value2}]; `;
-        } else if (item.operator === '=') {
-            str = str + `${filterName}:${item.value1}; `;
-        } else {
-            // > <
-            str = str + `${filterName}${item.operator}${item.value1}; `;
-        }
-    });
-
-    return str;
-}
 
 export {
     convertTime,
@@ -455,6 +384,5 @@ export {
     copyAndSort,
     disableTensorboard,
     getTensorboardMenu,
-    getTrialsBySearchFilters,
-    getFiterConditionString
+    parametersType
 };

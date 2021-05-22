@@ -9,18 +9,11 @@
         margin-top: 15px;
     }
 
-    &-entry {
-        line-height: 32px;
-    }
-
     /* compare button style */
     &-button-gap {
         margin-right: 10px;
     }
 
-    &-search-input {
-        margin-left: 10px !important;
-    }
 }
 
 /* each row's Intermediate btn -> Modal */
@@ -37,16 +30,16 @@
 
 $filterConditionsHeight: 54px;
 
-.filterConditions{
+.filterConditions {
     height: $filterConditionsHeight;
     line-height: $filterConditionsHeight;
     padding: 0 15px;
 
-    .btn-vertical-middle{
+    .btn-vertical-middle {
         margin-top: 11px;
     }
 
-    .input{
+    .input {
         width: 100px;
         height: 24px;
         margin-top: 13px;
@@ -55,11 +48,11 @@ $filterConditionsHeight: 54px;
         outline: none;
     }
 
-    .and{
+    .and {
         margin: 0 4px;
     }
 }
 
-.ms-ContextualMenu-Callout{
+.ms-ContextualMenu-Callout {
     display: block;
 }
