@@ -60,7 +60,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if (this.kubernetesJobRestServer.getErrorMessage !== undefined) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
-                this.stopping = true;
             }
         }
         this.log.info('Kubeflow training service exit.');

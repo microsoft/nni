@@ -503,13 +503,13 @@ class QuantizerModuleWrapper(torch.nn.Module):
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
-            inputs = self.quantizer.quant_grad.apply(
+            inputs = self.quantizer.quant_grad(
                 inputs,
                 QuantType.QUANT_INPUT,
                 self)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
-            self.quantizer.quant_grad.apply(
+            self.quantizer.quant_grad(
                 self.module.old_weight,
                 QuantType.QUANT_WEIGHT,
                 self, inputs[0])
@@ -518,11 +518,12 @@ class QuantizerModuleWrapper(torch.nn.Module):
             result = self.module(*inputs)
 
         if 'output' in self.config['quant_types']:
-            result = self.quantizer.quant_grad.apply(
+            result = self.quantizer.quant_grad(
                 result,
                 QuantType.QUANT_OUTPUT,
                 self)
         return result
+
 
 class Quantizer(Compressor):
     """
@@ -531,7 +532,7 @@ class Quantizer(Compressor):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        self.quant_grad = QuantGrad
+        self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
             self.patch_optimizer(self.step_with_optimizer)
             for wrapper in self.get_modules_wrapper():
@@ -748,14 +749,7 @@ class QuantGrad(torch.autograd.Function):
 
     @staticmethod
     def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
-        if quant_type == QuantType.QUANT_INPUT:
-            output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
-        elif quant_type == QuantType.QUANT_WEIGHT:
-            output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
-        elif quant_type == QuantType.QUANT_OUTPUT:
-            output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
-        else:
-            raise ValueError("unrecognized QuantType.")
+        output = quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
 
         bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
         qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
@@ -778,3 +772,24 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
+
+def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+    if quant_type == QuantType.QUANT_INPUT:
+        output = wrapper.quantizer.quantize_input(*tensor, wrapper=wrapper, **kwargs)
+    elif quant_type == QuantType.QUANT_WEIGHT:
+        output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
+    elif quant_type == QuantType.QUANT_OUTPUT:
+        output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
+    else:
+        raise ValueError("unrecognized QuantType.")
+
+    return output
+
+class QuantForward(torch.nn.Module):
+    """
+    Base class for executing quantization operations. This is for quantization algorithms
+    that do not need to customize gradient.
+    """
+
+    def forward(self, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+        return quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
