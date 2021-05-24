@@ -230,7 +230,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* Support to search for a specific trial by it's id, status, Trial No. and parameters.
+* Support to search for a specific trial by its id, status, Trial No. and trial parameters.(更新图)
 
 
 .. image:: ../../img/webui-img/search-trial.png
@@ -273,3 +273,11 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :target: ../../img/webui-img/kill-running.png
    :alt: killTrial
 
+
+
+* Customized trial: you can change this trial parameters and then submit it to the experiment. If you want to rerun a failed trial you could submit the same parameters to the experiment.
+(加图片)
+
+.. image:: ../../img/webui-img/kill-running.png
+   :target: ../../img/webui-img/kill-running.png
+   :alt: killTrial
