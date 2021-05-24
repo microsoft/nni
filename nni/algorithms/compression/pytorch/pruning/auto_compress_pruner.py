@@ -13,9 +13,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
-from .iterative_pruner import IterativePruner, ADMMPruner
-
-
+from .iterative_pruner import ADMMPruner
 
 _logger = logging.getLogger(__name__)
 
@@ -81,8 +79,8 @@ class AutoCompressPruner(Pruner):
     optimize_mode : str
         optimize mode, `maximize` or `minimize`, by default `maximize`.
     base_algo : str
-        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among the ops,
-        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among
+        the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
     start_temperature : float
         Start temperature of the simulated annealing process.
     stop_temperature : float
@@ -176,12 +174,12 @@ class AutoCompressPruner(Pruner):
         """
         _logger.info('Starting AutoCompress pruning...')
 
-        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._num_iterations)
+        sparsity_each_round = 1 - pow(1 - self._sparsity, 1 / self._num_iterations)
 
         for i in range(self._num_iterations):
             _logger.info('Pruning iteration: %d', i)
             _logger.info('Target sparsity this round: %s',
-                         1-pow(1-sparsity_each_round, i+1))
+                         1 - pow(1 - sparsity_each_round, i + 1))
 
             # SimulatedAnnealingPruner
             _logger.info(
@@ -217,7 +215,8 @@ class AutoCompressPruner(Pruner):
             ADMMpruner.export_model(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'), os.path.join(
                 self._experiment_data_dir, 'mask.pth'))
 
-            # use speed up to prune the model before next iteration, because SimulatedAnnealingPruner & ADMMPruner don't take masked models
+            # use speed up to prune the model before next iteration,
+            # because SimulatedAnnealingPruner & ADMMPruner don't take masked models
             self._model_to_prune.load_state_dict(torch.load(os.path.join(
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 

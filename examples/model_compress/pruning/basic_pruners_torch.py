@@ -12,15 +12,11 @@ import logging
 
 import argparse
 import os
-import time
+import sys
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
-import sys
 sys.path.append('../models')
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
@@ -154,7 +150,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
     print('Pretrained model acc:', best_acc)
     return model, optimizer, scheduler
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
+def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -162,10 +158,6 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch, callba
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
-        # callback should be inserted between loss.backward() and optimizer.step()
-        if callback:
-            callback()
-
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -207,11 +199,11 @@ def main(args):
     print(f"FLOPs: {flops}, params: {params}")
 
     print(f'start {args.pruner} pruning...')
-    def trainer(model, optimizer, criterion, epoch, callback=None):
-        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
-        
+    def trainer(model, optimizer, criterion, epoch):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch)
+
     pruner_cls = str2pruner[args.pruner]
-    
+
     kw_args = {}
     config_list = [{
         'sparsity': args.sparsity,
@@ -256,7 +248,6 @@ def main(args):
 
         if args.pruner == 'agp':
             kw_args['pruning_algorithm'] = 'l1'
-            config_list[0]['frequency'] = 1
 
     pruner = pruner_cls(model, config_list, **kw_args)
 

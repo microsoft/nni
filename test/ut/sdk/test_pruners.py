@@ -43,7 +43,6 @@ prune_config = {
         'pruner_class': AGPPruner,
         'config_list': [{
             'sparsity': 0.8,
-            'frequency': 1,
             'op_types': ['Conv2d']
         }],
         'trainer': lambda model, optimizer, criterion, epoch: model,

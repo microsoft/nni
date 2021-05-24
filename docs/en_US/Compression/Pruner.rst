@@ -377,11 +377,7 @@ PyTorch code
 
    from nni.algorithms.compression.pytorch.pruning import AGPPruner
    config_list = [{
-       'initial_sparsity': 0,
-       'final_sparsity': 0.8,
-       'start_epoch': 0,
-       'end_epoch': 10,
-       'frequency': 1,
+       'sparsity': 0.8,
        'op_types': ['default']
    }]
 

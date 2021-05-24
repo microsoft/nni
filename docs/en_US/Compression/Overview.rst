@@ -22,7 +22,7 @@ Compression Pipeline
    :target: ../../img/compression_flow.jpg
    :alt: 
 
-The overall compression pipeline in NNI. For compress a pretrained model, pruning and quantization can be used alone or in combination. 
+The overall compression pipeline in NNI. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
 
 .. note::
   Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency. To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__. The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.

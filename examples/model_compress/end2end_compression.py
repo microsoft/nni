@@ -6,13 +6,10 @@ NNI example for combined pruning and quantization to compress a model.
 In this example, we show the compression process to first prune a model, then quantize the pruned model.
 
 """
-import logging
-
 import argparse
 import os
 import time
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
@@ -42,7 +39,7 @@ def get_model_time_cost(model, dummy_input):
     return sum(time_list) / len(time_list)
 
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
+def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -50,10 +47,6 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch, callba
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
-
-        # callback should be inserted between loss.backward() and optimizer.step()
-        if callback:
-            callback()
 
         optimizer.step()
         if batch_idx % args.log_interval == 0:

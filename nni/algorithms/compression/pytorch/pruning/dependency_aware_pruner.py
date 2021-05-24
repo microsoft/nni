@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import torch
 from schema import And, Optional, SchemaError
 from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
@@ -27,13 +26,17 @@ class DependencyAwarePruner(Pruner):
     to prune the same channels.
     """
 
-    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False, dummy_input=None, **algo_kwargs):
+    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False,
+                 dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list=config_list, optimizer=optimizer)
 
         self.dependency_aware = dependency_aware
         self.dummy_input = dummy_input
 
         if self.dependency_aware:
+            if not self._supported_dependency_aware():
+                raise ValueError('This pruner does not support dependency aware!')
+
             errmsg = "When dependency_aware is set, the dummy_input should not be None"
             assert self.dummy_input is not None, errmsg
             # Get the TorchModuleGraph of the target model
@@ -54,13 +57,10 @@ class DependencyAwarePruner(Pruner):
         # set the dependency-aware switch for the masker
         self.masker.dependency_aware = dependency_aware
         self.set_wrappers_attribute("if_calculated", False)
-        
+
     def calc_mask(self, wrapper, wrapper_idx=None):
-        if wrapper.if_calculated:
-            return None
-            
-        sparsity = wrapper.config['sparsity']
         if not wrapper.if_calculated:
+            sparsity = wrapper.config['sparsity']
             masks = self.masker.calc_mask(
                 sparsity=sparsity, wrapper=wrapper, wrapper_idx=wrapper_idx)
 
@@ -93,6 +93,9 @@ class DependencyAwarePruner(Pruner):
         for config in config_list:
             if 'exclude' not in config and 'sparsity' not in config:
                 raise SchemaError('Either sparisty or exclude must be specified!')
+
+    def _supported_dependency_aware(self):
+        raise NotImplementedError
 
     def _dependency_calc_mask(self, wrappers, channel_dsets, wrappers_idx=None):
         """
@@ -154,6 +157,6 @@ class DependencyAwarePruner(Pruner):
             if masks is not None:
                 for layer in masks:
                     for mask_type in masks[layer]:
-                        assert hasattr(
-                            name2wrapper[layer], mask_type), "there is no attribute '%s' in wrapper on %s" % (mask_type, layer)
+                        assert hasattr(name2wrapper[layer], mask_type), "there is no attribute '%s' in wrapper on %s" \
+                            % (mask_type, layer)
                         setattr(name2wrapper[layer], mask_type, masks[layer][mask_type])

@@ -2,14 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
+from schema import And, Optional
 
-import torch
-from nni.common.graph_utils import TorchModuleGraph
-from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
-from nni.compression.pytorch.utils.shape_dependency import (ChannelDependency,
-                                                            GroupDependency)
-from schema import And, Optional, SchemaError
 from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
@@ -23,7 +18,8 @@ class OneshotPruner(DependencyAwarePruner):
     Prune model to an exact pruning level for one time.
     """
 
-    def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False, dummy_input=None, **algo_kwargs):
+    def __init__(self, model, config_list, pruning_algorithm='level', dependency_aware=False, dummy_input=None,
+                 **algo_kwargs):
         """
         Parameters
         ----------
@@ -33,15 +29,15 @@ class OneshotPruner(DependencyAwarePruner):
             List on pruning configs
         pruning_algorithm: str
             algorithms being used to prune model
-        optimizer: torch.optim.Optimizer
-            Optimizer used to train model
+        dependency_aware: bool
+            If prune the model in a dependency-aware way.
+        dummy_input : torch.Tensor
+            The dummy input to analyze the topology constraints. Note that,
+            the dummy_input should on the same device with the model.
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
-        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
-        
-        if optimizer is not None:
-            self.patch_optimizer(self.update_mask)
+        super().__init__(model, config_list, None, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
 
     def validate_config(self, model, config_list):
         """
@@ -71,12 +67,13 @@ class LevelPruner(OneshotPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Operation types to prune.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
     """
 
-    def __init__(self, model, config_list, optimizer=None):
-        super().__init__(model, config_list, pruning_algorithm='level', optimizer=optimizer)
+    def __init__(self, model, config_list):
+        super().__init__(model, config_list, pruning_algorithm='level')
+
+    def _supported_dependency_aware(self):
+        return False
 
 
 class L1FilterPruner(OneshotPruner):
@@ -89,8 +86,6 @@ class L1FilterPruner(OneshotPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in L1FilterPruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -104,9 +99,12 @@ class L1FilterPruner(OneshotPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None, dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+    def __init__(self, model, config_list, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, pruning_algorithm='l1', dependency_aware=dependency_aware,
+                         dummy_input=dummy_input)
+
+    def _supported_dependency_aware(self):
+        return True
 
 
 class L2FilterPruner(OneshotPruner):
@@ -119,8 +117,6 @@ class L2FilterPruner(OneshotPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in L2FilterPruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -134,9 +130,12 @@ class L2FilterPruner(OneshotPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, trainer=None, criterion=None, dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='l2', optimizer=optimizer,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+    def __init__(self, model, config_list, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, pruning_algorithm='l2', dependency_aware=dependency_aware,
+                         dummy_input=dummy_input)
+
+    def _supported_dependency_aware(self):
+        return True
 
 
 class FPGMPruner(OneshotPruner):
@@ -149,8 +148,6 @@ class FPGMPruner(OneshotPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Only Conv2d is supported in FPGM Pruner.
-    optimizer: torch.optim.Optimizer
-            Optimizer used to train model
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -164,11 +161,9 @@ class FPGMPruner(OneshotPruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
-        super().__init__(model, config_list, pruning_algorithm='fpgm',
-                         dependency_aware=dependency_aware, dummy_input=dummy_input, optimizer=optimizer)
+    def __init__(self, model, config_list, dependency_aware=False, dummy_input=None):
+        super().__init__(model, config_list, pruning_algorithm='fpgm', dependency_aware=dependency_aware,
+                         dummy_input=dummy_input)
 
-
-
-
-
+    def _supported_dependency_aware(self):
+        return True
