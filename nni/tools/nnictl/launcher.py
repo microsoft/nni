@@ -9,6 +9,7 @@ import string
 import random
 import time
 import tempfile
+import re
 from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
@@ -16,7 +17,7 @@ from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, setPrefixUrl, formatURLPath
 from .config_utils import Config, Experiments
 from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
                           detect_port, get_user
@@ -43,7 +44,7 @@ def print_log_content(config_file_name):
     print_normal(' Stderr:')
     print(check_output_command(stderr_full_path))
 
-def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None):
+def start_rest_server(port, platform, mode, experiment_id, foreground=False, log_dir=None, log_level=None, url_prefix=None):
     '''Run nni manager process'''
     if detect_port(port):
         print_error('Port %s is used by another process, please reset the port!\n' \
@@ -81,6 +82,11 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         cmds += ['--log_level', log_level]
     if foreground:
         cmds += ['--foreground', 'true']
+    if url_prefix:
+        _validate_prefix_path(url_prefix)
+        setPrefixUrl(url_prefix)
+        cmds += ['--url_prefix', url_prefix]
+
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
     with open(stdout_full_path, 'a+') as stdout_file, open(stderr_full_path, 'a+') as stderr_file:
         start_time = time.time()
@@ -384,11 +390,12 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         platform = experiment_config['trainingService']['platform']
 
     rest_process, start_time = start_rest_server(args.port, platform, \
-                                                 mode, experiment_id, foreground, log_dir, log_level)
+                                                 mode, experiment_id, foreground, log_dir, log_level, args.url_prefix)
     # save experiment information
     Experiments().add_experiment(experiment_id, args.port, start_time,
                                  platform,
-                                 experiment_config.get('experimentName', 'N/A'), pid=rest_process.pid, logDir=log_dir)
+                                 experiment_config.get('experimentName', 'N/A')
+                                 , pid=rest_process.pid, logDir=log_dir, prefixUrl=args.url_prefix)
     # Deal with annotation
     if experiment_config.get('useAnnotation'):
         path = os.path.join(tempfile.gettempdir(), get_user(), 'nni', 'annotation')
@@ -446,9 +453,9 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
     if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['http://{0}:{1}'.format(experiment_config['nniManagerIp'], str(args.port))]
+        web_ui_url_list = ['http://{0}:{1}{2}'.format(experiment_config['nniManagerIp'], str(args.port), formatURLPath(args.url_prefix))]
     else:
-        web_ui_url_list = get_local_urls(args.port)
+        web_ui_url_list = get_local_urls(args.port, args.url_prefix)
     Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))
@@ -475,6 +482,9 @@ def _validate_v2(config, path):
         return conf.json()
     except Exception as e:
         print_error(f'Config V2 validation failed: {repr(e)}')
+
+def _validate_prefix_path(path):
+    assert re.match("^[A-Za-z0-9_-]*$", path), "prefix url is invalid."
 
 def create_experiment(args):
     '''start a new experiment'''
@@ -533,6 +543,7 @@ def manage_stopped_experiment(args, mode):
     print_normal('{0} experiment {1}...'.format(mode, experiment_id))
     experiment_config = Config(experiment_id, experiments_dict[args.id]['logDir']).get_config()
     experiments_config.update_experiment(args.id, 'port', args.port)
+    args.url_prefix = experiments_dict[args.id]['prefixUrl']
     assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
     try:
         if 'trainingServicePlatform' in experiment_config:
