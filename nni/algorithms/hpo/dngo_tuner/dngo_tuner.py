@@ -2,6 +2,7 @@ import random
 import torch
 import numpy as np
 
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 import nni.parameter_expressions as parameter_expressions
 from torch.distributions import Normal
