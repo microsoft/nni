@@ -143,6 +143,7 @@ def view_python(node, speedup):
             super(ViewModule, self).__init__()
             self.shape = shape
             logger.info('View Module output size: %s', str(self.shape))
+
         def forward(self, *args):
             return args[0].view(self.shape)
     c_node = node.key_node
@@ -150,12 +151,14 @@ def view_python(node, speedup):
     shape = translate_list(inputs[1], speedup)
     return ViewModule(shape)
 
+
 def reshape_python(node, speedup):
     class ReshapeModule(torch.nn.Module):
         def __init__(self, shape):
             super(ReshapeModule, self).__init__()
             self.shape = shape
             logger.info('Reshape Module output size: %s', str(self.shape))
+
         def forward(self, *args):
             return args[0].view(self.shape)
     c_node = node.key_node
@@ -169,6 +172,7 @@ def permute_python(node, speedup):
         def __init__(self, dimlist):
             super(PermuteModule, self).__init__()
             self.dimlist = dimlist
+
         def forward(self, x):
             return x.permute(self.dimlist)
     c_node = node.key_node
@@ -176,8 +180,10 @@ def permute_python(node, speedup):
     dim_list = translate_list(inputs[1], speedup)
     return PermuteModule(dim_list)
 
+
 def matmul_python(node, speedup):
     return torch.matmul
+
 
 def div_python(node, speedup):
     # The second input parameter of torch.div can be a
@@ -195,18 +201,21 @@ def div_python(node, speedup):
         # print(other)
         return new_div
 
+
 def softmax_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
     dim = inputs[1].toIValue()
-    new_softmax =partial(torch.softmax, dim=dim)
+    new_softmax = partial(torch.softmax, dim=dim)
     return new_softmax
+
 
 def contiguous_python(node, speedup):
     class contiguousModule(torch.nn.Module):
         def forward(self, x):
             return x.contiguous()
     return contiguousModule()
+
 
 def gelu_python(node, speedup):
     return torch.nn.GELU()
@@ -217,6 +226,7 @@ def cat_python(node, speedup):
         def __init__(self, cat_dim):
             super(CatModule, self).__init__()
             self.cat_dim = cat_dim
+
         def forward(self, *args):
             return torch.cat(args, dim=self.cat_dim)
 
@@ -225,13 +235,15 @@ def cat_python(node, speedup):
     dim = inputs[1].toIValue()
     return CatModule(dim)
 
+
 def avgpool2d_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
     kernel_size = translate_list(inputs[1], speedup)
     stride = translate_list(inputs[2], speedup)
     padding = translate_list(inputs[3], speedup)
-    new_avgpool = partial(torch.nn.functional.avg_pool2d, kernel_size=kernel_size, stride=stride, padding=padding)
+    new_avgpool = partial(torch.nn.functional.avg_pool2d,
+                          kernel_size=kernel_size, stride=stride, padding=padding)
     return new_avgpool
 
 
@@ -243,12 +255,19 @@ def adaptive_avgpool_python(node, speedup):
     return new_avgpool
 
 
+def tupleunpack_python(node, speedup):
+    # Note: tuple unpack should only exists at the
+    # the end of the model, and is no need to replace/propagate mask
+    return None
+
+
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
     'aten::relu': relu_python,
-    # 'aten::tanh': tanh_python,
-    # 'aten::tanh_': tanh_python,
+    # tanh behaives like relu
+    'aten::tanh': relu_python,
+    'aten::tanh_': relu_python,
     'aten::flatten': flatten_python,
     'aten::mean': mean_python,
     'aten::dropout': dropout_python,
@@ -267,13 +286,36 @@ trans_from_jit_to_python = {
     'aten::contiguous': contiguous_python,
     'aten::gelu': gelu_python,
     'aten::cat': cat_python,
-    'aten::avg_pool2d' : avgpool2d_python,
+    'aten::avg_pool2d': avgpool2d_python,
     'aten::max_pool2d': avgpool2d_python,
-    'aten::adaptive_avg_pool2d': adaptive_avgpool_python
+    'aten::adaptive_avg_pool2d': adaptive_avgpool_python,
+    'prim::TupleUnpack': tupleunpack_python
 }
 
 
 def jit_to_python_function(node, speedup):
+    """
+    Return a callable object to inference the mask according to the
+    node.op_type.
+
+    Parameters
+    ---------
+    node: NodeGroup
+        The target node to inference the mask
+    speedup: ModelSpeedup
+        The speedup object of the target model.
+
+    Returns
+    ------
+    func: callable object(nn.Module/function)
+        Return the translated function that used to inference the mask
+        , if current op_type is not supported, then we return None.
+    """
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
+    if node.op_type not in trans_from_jit_to_python:
+        logger.warning(
+            '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~')
+        # return None to skip the mask inference for this node
+        return None
     return trans_from_jit_to_python[node.op_type](node, speedup)

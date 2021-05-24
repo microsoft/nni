@@ -108,6 +108,55 @@ class TransposeModel(torch.nn.Module):
         return x
 
 
+class TupleUnpack_backbone(nn.Module):
+    def __init__(self, width):
+        super(TupleUnpack_backbone, self).__init__()
+        self.model_backbone = mobilenet_v2(
+            pretrained=False, width_mult=width, num_classes=3)
+
+    def forward(self, x):
+        x1 = self.model_backbone.features[:7](x)
+        x2 = self.model_backbone.features[7:14](x1)
+        x3 = self.model_backbone.features[14:18](x2)
+        return [x1, x2, x3]
+
+
+class TupleUnpack_FPN(nn.Module):
+    def __init__(self):
+        super(TupleUnpack_FPN, self).__init__()
+
+        self.conv1 = nn.Conv2d(32, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+        self.conv2 = nn.Conv2d(96, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+        self.conv3 = nn.Conv2d(320, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+
+        # self.init_weights()
+
+    def forward(self, inputs):
+        """Forward function."""
+        laterals = []
+
+        laterals.append(self.conv1(inputs[0]))  # inputs[0]==x1
+        laterals.append(self.conv2(inputs[1]))  # inputs[1]==x2
+        laterals.append(self.conv3(inputs[2]))  # inputs[2]==x3
+
+        return laterals
+
+
+class TupleUnpack_Model(nn.Module):
+    def __init__(self):
+        super(TupleUnpack_Model, self).__init__()
+        self.backbone = TupleUnpack_backbone(1.0)
+        self.fpn = TupleUnpack_FPN()
+
+    def forward(self, x):
+        x1 = self.backbone(x)
+        out = self.fpn(x1)
+        return out
+
+
 dummy_input = torch.randn(2, 1, 28, 28)
 SPARSITY = 0.5
 MODEL_FILE, MASK_FILE = './11_model.pth', './l1_mask.pth'
@@ -369,7 +418,8 @@ class SpeedupTestCase(TestCase):
                 data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
                 if speedup_cfg is None:
                     speedup_cfg = {}
-                ms = ModelSpeedup(speedup_model, data, MASK_FILE, confidence=2, **speedup_cfg)
+                ms = ModelSpeedup(speedup_model, data,
+                                  MASK_FILE, confidence=2, **speedup_cfg)
                 ms.speedup_model()
 
                 speedup_model.eval()
@@ -415,6 +465,20 @@ class SpeedupTestCase(TestCase):
         print(ori_sum, speeded_sum)
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
             (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+
+    def test_speedup_tupleunpack(self):
+        """This test is reported in issue3645"""
+        model = TupleUnpack_Model()
+        cfg_list = [{'op_types':['Conv2d'], 'sparsity':0.5}]
+        dummy_input = torch.rand(2, 3, 224, 224)
+        pruner = L1FilterPruner(model, cfg_list)
+        pruner.compress()
+        model(dummy_input)
+        pruner.export_model(MODEL_FILE, MASK_FILE)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=2)
+        ms.speedup_model()
+
+
 
     def tearDown(self):
         if os.path.exists(MODEL_FILE):

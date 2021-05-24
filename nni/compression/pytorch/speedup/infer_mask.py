@@ -216,14 +216,14 @@ class AutoMaskInference:
             # ori_out may be the same tensor with dummy_input,
             # so we use clone and detach to create a new tensor with
             # the same values.
-            out = self.module(*self.dummy_input).clone().detach()
+            out = self.module(*self.dummy_input)
             if isinstance(out, torch.Tensor):
-                out_mask, constant = self.isconstants(out)
+                out_mask, constant = self.isconstants(out.clone().detach())
             elif isinstance(out, tuple) or isinstance(out, list):
                 out_mask = []
                 constant = []
                 for tout in out:
-                    _mask, _constant = self.isconstants(tout)
+                    _mask, _constant = self.isconstants(tout.clone().detach())
                     out_mask.append(_mask)
                     constant.append(_constant)
             else:

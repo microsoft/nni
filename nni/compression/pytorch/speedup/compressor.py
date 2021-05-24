@@ -183,6 +183,7 @@ class ModelSpeedup:
             func = jit_to_python_function(node, self)
             if func is None:
                 # no need to infer the sparsity for this node
+                self.auto_inferences[unique_name] = None
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInferenceClass(
@@ -204,10 +205,10 @@ class ModelSpeedup:
         _auto_infer.input_debugname = input_debugname
         # update the mask tensor and the internal output of the submodules
         # after manually unpack the tuple/list of tensors, the number of the outputs
-        # of each node should always be one
+        # of each node should always be one(Except for the TupleUnpack node at the end
+        # of the whole model)
+        assert len(node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
 
-        assert len(
-            node.outputs) == 1, "The number of the outputs of %s is not 1" % module_name
         out_debugname = node.outputs[0]
         # update the output mask into self.masks
         self.masks[out_debugname] = _auto_infer.output_mask
@@ -226,7 +227,7 @@ class ModelSpeedup:
         module_name = node.name
         _logger.info('Update indirect sparsity for %s', module_name)
         unique_name = node.unique_name
-        if unique_name in self.auto_inferences:
+        if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
             # directly update the previous one
             # self.auto_inferences[unique_name].update()
