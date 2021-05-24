@@ -38,8 +38,8 @@ def get_model_time_cost(model, dummy_input):
         _ = model(dummy_input)
         torch.cuda.synchronize()
         time_list.append(time.time()-tic)
-    time_list = time_list[1:]
-    return sum(time_list)
+    time_list = time_list[10:]
+    return sum(time_list) / len(time_list)
 
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
