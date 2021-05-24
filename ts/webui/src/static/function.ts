@@ -5,6 +5,17 @@ import { MANAGER_IP } from './const';
 import { EXPERIMENT } from './datamodel';
 import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
+function getPrefix(): string | undefined {
+    const pathName = window.location.pathname;
+    let newPathName = pathName;
+
+    if (pathName.endsWith('/oview') || pathName.endsWith('/detail') || pathName.endsWith('/experiment')) {
+        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
+    }
+
+    return newPathName === '' ? undefined : newPathName;
+}
+
 async function requestAxios(url: string): Promise<any> {
     const response = await axios.get(url);
     if (response.status === 200) {
@@ -360,6 +371,7 @@ const parametersType = (): Map<string, string> => {
 };
 
 export {
+    getPrefix,
     convertTime,
     convertDuration,
     convertTimeAsUnit,
