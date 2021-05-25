@@ -360,7 +360,7 @@ class ADMMPruner(IterativePruner):
 
             # step 1: optimize W with AdamOptimizer
             for epoch in range(self._training_epochs):
-                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=epoch)
+                self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
 
             # step 2: update Z, U
             # Z_i^{k+1} = projection(W_i^{k+1} + U_i^k)
