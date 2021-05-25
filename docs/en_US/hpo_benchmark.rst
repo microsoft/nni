@@ -30,7 +30,7 @@ Run predefined benchmarks on existing tuners
 
    ./runbenchmark_nni.sh [tuner-names]
 
-This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Some benchmarks are defined in ``./nni/benchmarks``\ , and others are defined in ``./automlbenchmark/resources/benchmarks/``. One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and 8 multi-class classification tasks.
+This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Some benchmarks are defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``\ , and others are defined in ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``. One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and 8 multi-class classification tasks.
 
 By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "Hyperband", "BOHB". It is also possible to evaluate custom tuners. See the next sections for details. 
 
@@ -54,3 +54,182 @@ To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.T
 .. code-block:: bash
 
       ./runbenchmark_nni.sh new-tuner-builtinName
+
+A Benchmark Example 
+^^^^^^^^^^^^^^^^^^^
+
+As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DngoTuner". (The DngoTuner is not available as a built-in tuner at the time this article is written.) As some of the tasks contains a considerable amount of training data, it took about 2 days to run the whole benchmark on one tuner using a single CPU core. For a more detailed description of the tasks, please check ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``. 
+
+After the script finishes, the final scores of each tuner is summarized in the file ``results[time]/reports/performances.txt``. Since the file is large, we only show the following screenshot and summarize other important statistics instead. 
+
+.. image:: ../../img/hpo_benchmark/performances.png
+   :target: ../../img/hpo_benchmark/performances.png
+   :alt: 
+
+When the results are parsed, the tuners are ranked based on their final performance. ``results[time]/reports/rankings.txt`` presents a ranking of the tuners for each metric (logloss, rmse, auc), and the rankings of tuners for each metric (another view of the same data).
+
+Average rankings for metric rmse:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tuner Name
+     - Average Ranking
+   * - Anneal
+     - 3.75
+   * - Random
+     - 4.00
+   * - Evolution
+     - 4.44
+   * - DNGOTuner
+     - 4.44
+   * - SMAC
+     - 4.56
+   * - TPE
+     - 4.94
+   * - GPTuner
+     - 4.94
+   * - MetisTuner
+     - 4.94
+
+Average rankings for metric auc:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tuner Name
+     - Average Ranking
+   * - SMAC
+     - 3.67
+   * - GPTuner
+     - 4.00
+   * - Evolution
+     - 4.22
+   * - Anneal
+     - 4.39
+   * - MetisTuner
+     - 4.39
+   * - TPE
+     - 4.67
+   * - Random
+     - 5.33
+   * - DNGOTuner
+     - 5.33
+
+Average rankings for metric logloss:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tuner Name
+     - Average Ranking
+   * - Random
+     - 3.36
+   * - DNGOTuner
+     - 3.50
+   * - SMAC
+     - 3.93
+   * - GPTuner
+     - 4.64
+   * - TPE
+     - 4.71
+   * - Anneal
+     - 4.93
+   * - Evolution
+     - 5.00
+   * - MetisTuner
+     - 5.93
+
+Average rankings for tuners:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Tuner Name
+     - rmse
+     - auc
+     - logloss
+   * - TPE
+     - 4.94
+     - 4.67
+     - 4.71
+   * - Random
+     - 4.00
+     - 5.33
+     - 3.36
+   * - Anneal
+     - 3.75
+     - 4.39
+     - 4.93
+   * - Evolution
+     - 4.44
+     - 4.22
+     - 5.00
+   * - GPTuner
+     - 4.94
+     - 4.00
+     - 4.64
+   * - MetisTuner
+     - 4.94
+     - 4.39
+     - 5.93
+   * - SMAC
+     - 4.56
+     - 3.67
+     - 3.93
+   * - DNGOTuner
+     - 4.44
+     - 5.33
+     - 3.50
+
+Besides these reports, our script also generates two graphs for each fold of each task. The first graph presents the best score seen by each tuner until trial x, and the second graph shows the scores of each tuner in trial x. These two graphs can give some information regarding how the tuners are "converging". We found that for "nnismall", tuners on the random forest model with search space defined in ``/examples/trials/benchmarking/automlbenchmark/nni/extensions/NNI/architectures/run_random_forest.py`` generally converge to the final solution after 40 to 60 trials. As there are too much graphs to incldue in a single report (96 graphs in total), we only present 10 graphs here.
+
+.. image:: ../img/hpo_benchmark/car_fold1_1.jpg
+   :target: ../img/hpo_benchmark/car_fold1_1.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/car_fold1_2.jpg
+   :target: ../img/hpo_benchmark/car_fold1_2.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/christine_fold0_1.jpg
+   :target: ../img/hpo_benchmark/christine_fold0_1.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/christine_fold0_2.jpg
+   :target: ../img/hpo_benchmark/christine_fold0_2.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
+   :target: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
+   :target: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/credit-g_fold1_1.jpg
+   :target: ../img/hpo_benchmark/credit-g_fold1_1.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/credit-g_fold1_2.jpg
+   :target: ../img/hpo_benchmark/credit-g_fold1_2.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
+   :target: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
+   :alt: 
+
+
+.. image:: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
+   :target: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
+   :alt: 
+
