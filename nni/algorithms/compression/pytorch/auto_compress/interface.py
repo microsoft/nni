@@ -2,18 +2,18 @@
 # Licensed under the MIT license.
 
 from abc import ABC, abstractmethod
-from typing import Optional, Callable
+from typing import Optional, Callable, Iterable
 
 from torch.nn import Module
 from torch.optim import Optimizer
 
 
-class AbstractExecutionEngine(ABC):
+class BaseAutoCompressEngine(ABC):
     @classmethod
     @abstractmethod
     def trial_execute_compress(cls):
         """
-        Execute the compressing trial
+        Execute the compressing trial.
         """
         pass
 
@@ -29,7 +29,7 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         torch.nn.Module
-            Model to be compress
+            Model to be compress.
         """
         pass
 
@@ -40,18 +40,19 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         function
-            A function used to evaluate the compressed model, return a scalar
+            The function used to evaluate the compressed model, return a scalar.
         """
         pass
 
     @classmethod
     @abstractmethod
-    def optimizer(cls) -> Optional[Optimizer]:
+    def optimizer_factory(cls) -> Optional[Callable[[Iterable], Optimizer]]:
         """
         Returns
         -------
-        torch.optim.Optimizer
-            Optimizer used to train the model in compressing process.
+        Optional[Callable[[Iterable], Optimizer]]
+            Optimizer factory function. Input is a iterable value, i.e. `model.parameters()`.
+            Output is the `torch.optim.Optimizer` instance.
         """
         pass
 
@@ -62,46 +63,60 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         Optional[Callable]
-            The criterion used to train the model in compressing process.
+            The criterion function used to train the model.
         """
         pass
 
     @classmethod
     @abstractmethod
-    def sparsifying_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
+    def sparsifying_trainer(cls, compress_algorithm_name: str) -> Optional[Callable[[Module, Optimizer, Callable, int], None]]:
         """
         The trainer is used in sparsifying process.
 
         Parameters
         ----------
-        compressor_type: str
-            Support 'pruner' and 'quantizer'
-        algorithm_name: str
-            The name of pruner and quantizer, i.e. 'level', 'l1', 'qat'
+        compress_algorithm_name: str
+            The name of pruner and quantizer, i.e. 'level', 'l1', 'qat'.
 
         Returns
         -------
-        function
-            Used to train model in compress stage
+        Optional[Callable[[Module, Optimizer, Callable, int], None]]
+            Used to train model in compress stage, include `model, optimizer, criterion, epoch` as function arguments.
         """
         pass
 
     @classmethod
     @abstractmethod
-    def post_compress_finetuning_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
+    def post_compress_finetuning_trainer(cls, compress_algorithm_name: str) -> Optional[Callable[[Module, Optimizer, Callable, int], None]]:
         """
         The trainer is used in post-compress finetuning process.
 
         Parameters
         ----------
-        compressor_type: str
-            Support 'pruner' and 'quantizer'
-        algorithm_name: str
-            The name of pruner and quantizer, i.e. 'level', 'l1', 'qat'
+        compress_algorithm_name: str
+            The name of pruner and quantizer, i.e. 'level', 'l1', 'qat'.
 
         Returns
         -------
-        function
-            Used to train model in finetune stage
+        Optional[Callable[[Module, Optimizer, Callable, int], None]]
+            Used to train model in finetune stage, include `model, optimizer, criterion, epoch` as function arguments.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def post_compress_finetuning_epochs(cls, compress_algorithm_name: str) -> int:
+        """
+        The epochs in post-compress finetuning process.
+
+        Parameters
+        ----------
+        compress_algorithm_name: str
+            The name of pruner and quantizer, i.e. 'level', 'l1', 'qat'.
+
+        Returns
+        -------
+        int
+            The finetuning epoch number.
         """
         pass

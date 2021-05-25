@@ -3,6 +3,8 @@
 
 from typing import Any
 
+from .constants import PRUNER_DICT, QUANTIZER_DICT
+
 
 class AutoCompressSearchSpaceGenerator:
     """
@@ -10,10 +12,19 @@ class AutoCompressSearchSpaceGenerator:
     """
 
     def __init__(self):
-        self.pruner_choice_list = []
-        self.quantizer_choice_list = []
+        self.algorithm_choice_list = []
 
-    def add_pruner_config(self, pruner_name: str, config_list: list, **algo_kwargs):
+    def add_config(self, algorithm_name: str, config_list: list, **algo_kwargs):
+        """
+        This function used for distinguish algorithm type is pruning or quantization.
+        Then call `self._add_pruner_config()` or `self._add_quantizer_config()`.
+        """
+        if algorithm_name in PRUNER_DICT:
+            self._add_pruner_config(algorithm_name, config_list, **algo_kwargs)
+        if algorithm_name in QUANTIZER_DICT:
+            self._add_quantizer_config(algorithm_name, config_list, **algo_kwargs)
+
+    def _add_pruner_config(self, pruner_name: str, config_list: list, **algo_kwargs):
         """
         Parameters
         ----------
@@ -22,7 +33,7 @@ class AutoCompressSearchSpaceGenerator:
         config_list
             Except 'op_types' and 'op_names', other config value can be written as `{'_type': ..., '_value': ...}`.
         **algo_kwargs
-            The additional pruner parameters except 'model', 'config_list', 'optimizer'.
+            The additional pruner parameters except 'model', 'config_list', 'optimizer', 'trainer', 'criterion'.
             i.e., you can set `statistics_batch_num={'_type': 'choice', '_value': [1, 2, 3]}` in TaylorFOWeightFilterPruner or just `statistics_batch_num=1`.
         """
         sub_search_space = {'_name': pruner_name}
@@ -35,9 +46,9 @@ class AutoCompressSearchSpaceGenerator:
         for parameter_name, parameter_search_space in algo_kwargs.items():
             key_prefix = 'parameter'
             sub_search_space['{}::{}'.format(key_prefix, parameter_name)] = self._wrap_single_value(parameter_search_space)
-        self.pruner_choice_list.append(sub_search_space)
+        self.algorithm_choice_list.append(sub_search_space)
 
-    def add_quantizer_config(self, quantizer_name: str, config_list: list, **algo_kwargs):
+    def _add_quantizer_config(self, quantizer_name: str, config_list: list, **algo_kwargs):
         """
         Parameters
         ----------
@@ -59,33 +70,16 @@ class AutoCompressSearchSpaceGenerator:
         for parameter_name, parameter_search_space in algo_kwargs.items():
             key_prefix = 'parameter'
             sub_search_space['{}::{}'.format(key_prefix, parameter_name)] = self._wrap_single_value(parameter_search_space)
-        self.quantizer_choice_list.append(sub_search_space)
+        self.algorithm_choice_list.append(sub_search_space)
 
     def dumps(self) -> dict:
         """
         Dump the search space as a dict.
         """
-        compressor_choice_value = []
-        if self.pruner_choice_list:
-            compressor_choice_value.append({
-                '_name': 'pruner',
-                'algorithm_name': {
-                    '_type': 'choice',
-                    '_value': self.pruner_choice_list
-                }
-            })
-        if self.quantizer_choice_list:
-            compressor_choice_value.append({
-                '_name': 'quantizer',
-                'algorithm_name': {
-                    '_type': 'choice',
-                    '_value': self.quantizer_choice_list
-                }
-            })
         search_space = {
-            'compressor_type': {
+            'algorithm_name': {
                 '_type': 'choice',
-                '_value': compressor_choice_value
+                '_value': self.algorithm_choice_list
             }
         }
         return search_space
@@ -96,11 +90,7 @@ class AutoCompressSearchSpaceGenerator:
         Return a AutoCompressSearchSpaceGenerator instance load from a search space dict.
         """
         generator = AutoCompressSearchSpaceGenerator()
-        for v in search_space['compressor_type']['_value']:
-            if v['_name'] == 'pruner':
-                generator.pruner_choice_list = v['algorithm_name']['_value']
-            if v['_name'] == 'quantizer':
-                generator.quantizer_choice_list = v['algorithm_name']['_value']
+        generator.algorithm_choice_list = search_space['algorithm_name']['_value']
         return generator
 
     def _wrap_single_value(self, value) -> dict:

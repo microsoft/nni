@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Callable, Optional
+from typing import Callable, Optional, Iterable
 
 import torch
 import torch.nn as nn
@@ -63,13 +63,13 @@ _test_loader = torch.utils.data.DataLoader(_dataset2, **_test_kwargs)
 _device = torch.device("cuda" if _use_cuda else "cpu")
 _epoch = 2
 
-def _train(model, optimizer):
+def _train(model, optimizer, criterion, epoch):
     model.train()
     for data, target in _train_loader:
         data, target = data.to(_device), target.to(_device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.nll_loss(output, target)
+        loss = criterion(output, target)
         loss.backward()
         optimizer.step()
 
@@ -92,12 +92,11 @@ def _test(model):
 
 _model = LeNet().to(_device)
 
-_pre_train_optimizer = optim.Adadelta(_model.parameters(), lr=1)
-_scheduler = StepLR(_pre_train_optimizer, step_size=1, gamma=0.7)
-for _ in range(_epoch):
-    _train(_model, _pre_train_optimizer)
-    _test(_model)
-    _scheduler.step()
+# _pre_train_optimizer = optim.Adadelta(_model.parameters(), lr=1)
+# _scheduler = StepLR(_pre_train_optimizer, step_size=1, gamma=0.7)
+# for i in range(_epoch):
+#     _train(_model, _pre_train_optimizer, F.nll_loss, i)
+#     _scheduler.step()
 
 class AutoCompressModule(AbstractAutoCompressModule):
     @classmethod
@@ -105,16 +104,27 @@ class AutoCompressModule(AbstractAutoCompressModule):
         return _model
 
     @classmethod
-    def optimizer(cls) -> torch.optim.Optimizer:
-        return torch.optim.SGD(_model.parameters(), lr=0.01)
-
-    @classmethod
     def evaluator(cls) -> Callable[[nn.Module], float]:
         return _test
 
     @classmethod
-    def finetune_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[nn.Module, optim.Optimizer], None]]:
-        def _trainer(model, optimizer):
-            for _ in range(_epoch):
-                _train(model, optimizer)
-        return _trainer
+    def optimizer_factory(cls) -> Optional[Callable[[Iterable], optim.Optimizer]]:
+        def _optimizer_factory(params: Iterable):
+            return torch.optim.SGD(params, lr=0.01)
+        return _optimizer_factory
+
+    @classmethod
+    def criterion(cls) -> Optional[Callable]:
+        return F.nll_loss
+
+    @classmethod
+    def sparsifying_trainer(cls, compress_algorithm_name: str) -> Optional[Callable[[nn.Module, optim.Optimizer, Callable, int], None]]:
+        return _train
+
+    @classmethod
+    def post_compress_finetuning_trainer(cls, compress_algorithm_name: str) -> Optional[Callable[[nn.Module, optim.Optimizer, Callable, int], None]]:
+        return _train
+
+    @classmethod
+    def post_compress_finetuning_epochs(cls, compress_algorithm_name: str) -> int:
+        return 2

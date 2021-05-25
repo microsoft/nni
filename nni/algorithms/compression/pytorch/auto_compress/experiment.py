@@ -1,53 +1,70 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
+import inspect
+from pathlib import Path, PurePath
+from typing import overload, Union, List
 
-import dataclasses
-from pathlib import Path
-from subprocess import Popen
-from typing import Optional
+from numpy import tri
 
-import nni
 from nni.experiment import Experiment, ExperimentConfig, AlgorithmConfig
+from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressModule
 
-
-class AutoCompressExperimentConfig(ExperimentConfig):
-    auto_compress_module_file_name: str = './auto_compress_module.py'
-
-    def __setattr__(self, key, value):
-        fixed_attrs = {'trial_command': 'python3 -m nni.algorithms.compression.pytorch.auto_compress.trial_entry'}
-        if key in fixed_attrs and type(value) is not type(dataclasses.MISSING) and not value.startswith(fixed_attrs[key]):
-            raise AttributeError(f'{key} is not supposed to be set in AutoCompress mode by users!')
-        # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
-            raise AttributeError(f'{key} is not supposed to be set in AutoCompress mode by users!')
-        self.__dict__[key] = value
-
-    def validate(self, initialized_tuner: bool = False) -> None:
-        super().validate(initialized_tuner=initialized_tuner)
-        if not Path(self.trial_code_directory, self.auto_compress_module_file_name).exists():
-            raise ValueError('{} not exsisted under {}'.format(self.auto_compress_module_file_name, self.trial_code_directory))
 
 class AutoCompressExperiment(Experiment):
-    def __init__(self, config=None, training_service=None):
-        nni.runtime.log.init_logger_experiment()
 
-        self.config: Optional[AutoCompressExperimentConfig] = None
-        self.id: Optional[str] = None
-        self.port: Optional[int] = None
-        self._proc: Optional[Popen] = None
-        self.mode = 'new'
+    @overload
+    def __init__(self, auto_compress_module: AbstractAutoCompressModule, config: ExperimentConfig) -> None:
+        """
+        Prepare an experiment.
 
-        args = [config, training_service]  # deal with overloading
-        if isinstance(args[0], (str, list)):
-            self.config = AutoCompressExperimentConfig(args[0])
-            self.config.tuner = AlgorithmConfig(name='_none_', class_args={})
-            self.config.assessor = AlgorithmConfig(name='_none_', class_args={})
-            self.config.advisor = AlgorithmConfig(name='_none_', class_args={})
-        else:
-            self.config = args[0]
+        Use `Experiment.run()` to launch it.
+
+        Parameters
+        ----------
+        auto_compress_module
+            The module provided by the user implements the `AbstractAutoCompressModule` interfaces.
+            Remember put the module file under `trial_code_directory`.
+        config
+            Experiment configuration.
+        """
+        ...
+
+    @overload
+    def __init__(self, auto_compress_module: AbstractAutoCompressModule, training_service: Union[str, List[str]]) -> None:
+        """
+        Prepare an experiment, leaving configuration fields to be set later.
+
+        Example usage::
+
+            experiment = Experiment(auto_compress_module, 'remote')
+            experiment.config.trial_command = 'python3 trial.py'
+            experiment.config.machines.append(RemoteMachineConfig(ip=..., user_name=...))
+            ...
+            experiment.run(8080)
+
+        Parameters
+        ----------
+        auto_compress_module
+            The module provided by the user implements the `AbstractAutoCompressModule` interfaces.
+            Remember put the module file under `trial_code_directory`.
+        training_service
+            Name of training service.
+            Supported value: "local", "remote", "openpai", "aml", "kubeflow", "frameworkcontroller", "adl" and hybrid training service.
+        """
+        ...
+
+    def __init__(self, auto_compress_module: AbstractAutoCompressModule, config=None, training_service=None):
+        super().__init__(config, training_service)
+
+        self.module_file_path = str(PurePath(inspect.getfile(auto_compress_module)))
+        self.module_name = auto_compress_module.__name__
 
     def start(self, port: int, debug: bool) -> None:
-        self.config.trial_command = 'python3 -m nni.algorithms.compression.pytorch.auto_compress.trial_entry --module_file_name {}'.format(self.config.auto_compress_module_file_name)
+        trial_code_directory = str(PurePath(Path(self.config.trial_code_directory).absolute())) + '/'
+        assert self.module_file_path.startswith(trial_code_directory), 'The file path of the user-provided module should under trial_code_directory.'
+        relative_module_path = self.module_file_path.split(trial_code_directory)[1]
+        # only support linux, need refactor?
+        command = 'python3 -m nni.algorithms.compression.pytorch.auto_compress.trial_entry --module_file_name {} --module_class_name {}'
+        self.config.trial_command = command.format(relative_module_path, self.module_name)
         super().start(port=port, debug=debug)

@@ -5,8 +5,10 @@ from pathlib import Path
 
 from nni.algorithms.compression.pytorch.auto_compress import AutoCompressExperiment, AutoCompressSearchSpaceGenerator
 
+from auto_compress_module import AutoCompressModule
+
 generator = AutoCompressSearchSpaceGenerator()
-generator.add_pruner_config('level', [
+generator.add_config('level', [
     {
         "sparsity": {
             "_type": "uniform",
@@ -15,7 +17,7 @@ generator.add_pruner_config('level', [
         'op_types': ['default']
     }
 ])
-generator.add_pruner_config('l1', [
+generator.add_config('l1', [
     {
         "sparsity": {
             "_type": "uniform",
@@ -24,7 +26,7 @@ generator.add_pruner_config('l1', [
         'op_types': ['Conv2d']
     }
 ])
-generator.add_quantizer_config('qat', [
+generator.add_config('qat', [
     {
         'quant_types': ['weight', 'output'],
         'quant_bits': {
@@ -35,7 +37,7 @@ generator.add_quantizer_config('qat', [
     }])
 search_space = generator.dumps()
 
-experiment = AutoCompressExperiment('local')
+experiment = AutoCompressExperiment(AutoCompressModule, 'local')
 experiment.config.experiment_name = 'auto compress torch example'
 experiment.config.trial_concurrency = 1
 experiment.config.max_trial_number = 10
@@ -44,8 +46,5 @@ experiment.config.trial_code_directory = Path(__file__).parent
 experiment.config.tuner.name = 'TPE'
 experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
 experiment.config.training_service.use_active_gpu = True
-
-# the relative file path under trial_code_directory, which contains the class AutoCompressModule
-experiment.config.auto_compress_module_file_name = './auto_compress_module.py'
 
 experiment.run(8088)
