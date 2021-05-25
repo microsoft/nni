@@ -96,7 +96,7 @@ class DependencyawareTest(TestCase):
                         net, cfg_list, optimizer, trainer=trainer, criterion=criterion, dependency_aware=True, dummy_input=dummy_input)
                 else:
                     tmp_pruner = pruner(
-                        net, cfg_list, optimizer, dependency_aware=True, dummy_input=dummy_input)
+                        net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
 
                 tmp_pruner.compress()
                 tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
@@ -106,7 +106,7 @@ class DependencyawareTest(TestCase):
                 ms.speedup_model()
                 for name, module in net.named_modules():
                     if isinstance(module, nn.Conv2d):
-                        expected = int(ori_filters[name] * (1-sparsity))
+                        expected = int(ori_filters[name] * (1 - sparsity))
                         filter_diff = abs(expected - module.out_channels)
                         errmsg = '%s Ori: %d, Expected: %d, Real: %d' % (
                             name, ori_filters[name], expected, module.out_channels)
@@ -145,7 +145,7 @@ class DependencyawareTest(TestCase):
                             net, cfg_list, optimizer, trainer=trainer, criterion=criterion, dependency_aware=True, dummy_input=dummy_input)
                     else:
                         tmp_pruner = pruner(
-                            net, cfg_list, optimizer, dependency_aware=True, dummy_input=dummy_input)
+                            net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
 
                     tmp_pruner.compress()
                     tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
