@@ -62,8 +62,8 @@ As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE",
 
 After the script finishes, the final scores of each tuner is summarized in the file ``results[time]/reports/performances.txt``. Since the file is large, we only show the following screenshot and summarize other important statistics instead. 
 
-.. image:: ../../img/hpo_benchmark/performances.png
-   :target: ../../img/hpo_benchmark/performances.png
+.. image:: ../img/hpo_benchmark/performances.png
+   :target: ../img/hpo_benchmark/performances.png
    :alt: 
 
 When the results are parsed, the tuners are ranked based on their final performance. ``results[time]/reports/rankings.txt`` presents a ranking of the tuners for each metric (logloss, rmse, auc), and the rankings of tuners for each metric (another view of the same data).
