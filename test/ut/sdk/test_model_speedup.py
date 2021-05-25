@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 import os
 import gc
 import psutil
@@ -19,7 +20,7 @@ from unittest import TestCase, main
 from nni.compression.pytorch import ModelSpeedup, apply_compression_results
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
-from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
+from nni.algorithms.compression.pytorch.pruning.one_shot import LevelPruner, _StructuredFilterPruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -285,27 +286,6 @@ def channel_prune(model):
 
 
 class SpeedupTestCase(TestCase):
-    # def test_speedup_vgg11(self):
-    #     prune_model_l1(vgg11())
-    #     model = vgg11()
-    #     model.train()
-    #     # import pdb; pdb.set_trace()
-    #     ms = ModelSpeedup(model, torch.randn(2, 3, 32, 32), MASK_FILE, confidence=2)
-    #     ms.speedup_model()
-
-    #     orig_model = vgg11()
-    #     assert model.training
-    #     assert model.features[2].out_channels == int(
-    #         orig_model.features[2].out_channels * SPARSITY)
-    #     print(model.classifier[0].in_features)
-    #     print(int(orig_model.classifier[0].in_features * SPARSITY))
-    #     print("Original model")
-    #     print(orig_model)
-    #     print("speeduped model")
-    #     print(model)
-
-    #     assert model.classifier[0].in_features == int(
-    #         orig_model.classifier[0].in_features * SPARSITY)
 
     def test_speedup_bigmodel(self):
         prune_model_l1(BigModel())
@@ -469,7 +449,7 @@ class SpeedupTestCase(TestCase):
     def test_speedup_tupleunpack(self):
         """This test is reported in issue3645"""
         model = TupleUnpack_Model()
-        cfg_list = [{'op_types':['Conv2d'], 'sparsity':0.5}]
+        cfg_list = [{'op_types': ['Conv2d'], 'sparsity':0.5}]
         dummy_input = torch.rand(2, 3, 224, 224)
         pruner = L1FilterPruner(model, cfg_list)
         pruner.compress()
@@ -478,7 +458,36 @@ class SpeedupTestCase(TestCase):
         ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=2)
         ms.speedup_model()
 
+    def test_finegrained_speedup(self):
+        """ Test the speedup on the fine-grained sparsity"""
+        class MLP(nn.Module):
+            def __init__(self):
+                super(MLP, self).__init__()
+                self.fc1 = nn.Linear(1024, 1024)
+                self.fc2 = nn.Linear(1024, 1024)
+                self.fc3 = nn.Linear(1024, 512)
+                self.fc4 = nn.Linear(512, 10)
 
+            def forward(self, x):
+                x = x.view(-1, 1024)
+                x = self.fc1(x)
+                x = self.fc2(x)
+                x = self.fc3(x)
+                x = self.fc4(x)
+                return x
+        model = MLP().to(device)
+        dummy_input = torch.rand(16, 1, 32, 32).to(device)
+        cfg_list = [{'op_types': ['Linear'], 'sparsity':0.99}]
+        pruner = LevelPruner(model, cfg_list)
+        pruner.compress()
+        print('Original Arch')
+        print(model)
+        pruner.export_model(MODEL_FILE, MASK_FILE)
+        pruner._unwrap_model()
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=4)
+        ms.speedup_model()
+        print("Fine-grained speeduped model")
+        print(model)
 
     def tearDown(self):
         if os.path.exists(MODEL_FILE):
