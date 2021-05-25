@@ -212,8 +212,9 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     Container.restore(ExperimentManager);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedipv4Address: string = '';
