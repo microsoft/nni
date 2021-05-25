@@ -78,6 +78,7 @@ class ParameterChoiceMutator(Mutator):
 
 class RepeatMutator(Mutator):
     def __init__(self, nodes: List[Node]):
+        # nodes is a subgraph consisting of repeated blocks.
         super().__init__()
         self.nodes = nodes
 
@@ -107,6 +108,7 @@ class RepeatMutator(Mutator):
                 for edge in rm_node.outgoing_edges:
                     edge.remove()
                 rm_node.remove()
+            # to delete the unused parameters.
             model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
 
 

@@ -320,8 +320,9 @@ class Repeat(nn.Module):
     Parameters
     ----------
     blocks : function, list of function, module or list of module
-        The block to be repeated. If not a list, it will be replicated into a list. If a function, it will be called to
-        instantiate a module. Otherwise the module will be deep-copied.
+        The block to be repeated. If not a list, it will be replicated into a list.
+        If a list, it should be of length ``max_depth``, the modules will be instantiated in order and a prefix will be taken.
+        If a function, it will be called to instantiate a module. Otherwise the module will be deep-copied.
     depth : int or tuple of int
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
         meaning that the block will be repeated at least `min` times and at most `max` times.
@@ -330,7 +331,7 @@ class Repeat(nn.Module):
                  blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
                  depth: Union[int, Tuple[int, int]], label=None):
         super().__init__()
-        self._label = label if label is not None else f'valuechoice_{uid()}'
+        self._label = label if label is not None else f'repeat_{uid()}'
         self.min_depth = depth if isinstance(depth, int) else depth[0]
         self.max_depth = depth if isinstance(depth, int) else depth[1]
         assert self.max_depth >= self.min_depth > 0
