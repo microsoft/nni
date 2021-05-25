@@ -25,7 +25,7 @@ import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo().getLogDir();
+    return getExperimentStartupInfo().logDir;
 }
 
 function getLogDir(): string {
@@ -33,7 +33,7 @@ function getLogDir(): string {
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo().getLogLevel();
+    return getExperimentStartupInfo().logLevel;
 }
 
 function getDefaultDatabaseDir(): string {

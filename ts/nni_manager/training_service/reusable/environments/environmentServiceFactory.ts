@@ -4,24 +4,22 @@ import { LocalEnvironmentService } from './localEnvironmentService';
 import { RemoteEnvironmentService } from './remoteEnvironmentService';
 import { EnvironmentService } from '../environment';
 import { ExperimentConfig } from '../../../common/experimentConfig';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { getCustomEnvironmentServiceConfig } from '../../../common/nniConfig';
-import { getExperimentRootDir, importModule } from '../../../common/utils';
-
+import { importModule } from '../../../common/utils';
 
 export async function createEnvironmentService(name: string, config: ExperimentConfig): Promise<EnvironmentService> {
-    const expId = getExperimentId();
-    const rootDir = getExperimentRootDir();
+    const info = ExperimentStartupInfo.getInstance();
 
     switch(name) {
         case 'local':
-            return new LocalEnvironmentService(rootDir, expId, config);
+            return new LocalEnvironmentService(config, info);
         case 'remote':
-            return new RemoteEnvironmentService(rootDir, expId, config);
+            return new RemoteEnvironmentService(config, info);
         case 'aml':
-            return new AMLEnvironmentService(rootDir, expId, config);
+            return new AMLEnvironmentService(config, info);
         case 'openpai':
-            return new OpenPaiEnvironmentService(rootDir, expId, config);
+            return new OpenPaiEnvironmentService(config, info);
     }
 
     const esConfig = await getCustomEnvironmentServiceConfig(name);
@@ -30,5 +28,5 @@ export async function createEnvironmentService(name: string, config: ExperimentC
     }
     const esModule = importModule(esConfig.nodeModulePath);
     const esClass = esModule[esConfig.nodeClassName] as any;
-    return new esClass(rootDir, expId, config);
+    return new esClass(config, info);
 }
