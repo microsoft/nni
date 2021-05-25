@@ -3,6 +3,7 @@ import pytest
 
 import nni
 import nni.retiarii.evaluator.pytorch.lightning as pl
+import nni.runtime.platform.test
 import pytorch_lightning
 import torch
 import torch.nn as nn
