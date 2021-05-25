@@ -68,6 +68,13 @@ def get_importable_name(cls, relocate_module=False):
 
 
 class ContextStack:
+    """
+    This is to maintain a globally-accessible context envinronment that is visible to everywhere.
+
+    Use ``with ContextStack(namespace, value):`` to initiate, and use ``get_current_context(namespace)`` to
+    get the corresponding value in the namespace.
+    """
+
     _stack: Dict[str, List[Any]] = defaultdict(list)
 
     def __init__(self, key: str, value: Any):

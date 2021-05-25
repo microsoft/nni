@@ -129,9 +129,12 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
 
 
 class ManyChooseManyMutator(Mutator):
-    def __init__(self, label: Optional[str], name: Optional[str] = None):
+    """
+    Choose based on labels. Will not affect the model itself.
+    """
+
+    def __init__(self, label: Optional[str]):
         super().__init__(label=label)
-        self.name = name
 
     @staticmethod
     def candidates(node):
@@ -171,22 +174,21 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         if hasattr(module, '_init_parameters'):
             for key, value in module._init_parameters.items():
                 if isinstance(value, ValueChoice):
-                    node = model.root_graph.add_node(name + '.init.' + key, 'ValueChoice', {'candidates': value.candidates})
+                    node = graph.add_node(name + '.init.' + key, 'ValueChoice', {'candidates': value.candidates})
                     node.label = value.label
 
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
             # TODO: check the label of module and warn if it's auto-generated
             pass
         if isinstance(module, LayerChoice):
-            node = model.root_graph.add_node(name, 'LayerChoice', {'candidates': module.names})
+            node = graph.add_node(name, 'LayerChoice', {'candidates': module.names})
             node.label = module.label
         if isinstance(module, InputChoice):
-            node = model.root_graph.add_node(name, 'InputChoice',
-                                             {'n_candidates': module.n_candidates, 'n_chosen': module.n_chosen})
+            node = graph.add_node(name, 'InputChoice',
+                                  {'n_candidates': module.n_candidates, 'n_chosen': module.n_chosen})
             node.label = module.label
         if isinstance(module, ValueChoice):
-            node = model.root_graph.add_node(name, 'ValueChoice',
-                                             {'candidates': module.candidates})
+            node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
             node.label = module.label
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
