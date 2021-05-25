@@ -54,7 +54,7 @@ prune_config = {
             'sparsity': 0.7,
             'op_types': ['BatchNorm2d']
         }],
-        'trainer': lambda model, optimizer, criterion, epoch, callback: model,
+        'trainer': lambda model, optimizer, criterion, epoch: model,
         'validators': [
             lambda model: validate_sparsity(model.bn1, 0.7, model.bias)
         ]
@@ -95,7 +95,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
-        'trainer': lambda model, optimizer, criterion, epoch, callback: model,
+        'trainer': lambda model, optimizer, criterion, epoch: model,
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
@@ -106,7 +106,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
-        'trainer': lambda model, optimizer, criterion, epoch, callback: model,
+        'trainer': lambda model, optimizer, criterion, epoch: model,
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
@@ -117,7 +117,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
-        'trainer': lambda model, optimizer, criterion, epoch, callback: model,
+        'trainer': lambda model, optimizer, criterion, epoch: model,
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
@@ -128,7 +128,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d']
         }],
-        'short_term_fine_tuner': lambda model:model, 
+        'short_term_fine_tuner': lambda model: model, 
         'evaluator':lambda model: 0.9,
         'validators': []
     },
@@ -147,7 +147,7 @@ prune_config = {
             'sparsity': 0.5,
             'op_types': ['Conv2d'],
         }],
-        'trainer': lambda model, optimizer, criterion, epoch, callback : model, 
+        'trainer': lambda model, optimizer, criterion, epoch : model, 
         'validators': [
             lambda model: validate_sparsity(model.conv1, 0.5, model.bias)
         ]
@@ -159,7 +159,7 @@ prune_config = {
             'op_types': ['Conv2d'],
         }],
         'base_algo': 'l1',
-        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'trainer': lambda model, optimizer, criterion, epoch : model,
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
         'validators': []
@@ -171,7 +171,7 @@ prune_config = {
             'op_types': ['Conv2d'],
         }],
         'base_algo': 'l2',
-        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'trainer': lambda model, optimizer, criterion, epoch : model,
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
         'validators': []
@@ -183,7 +183,7 @@ prune_config = {
             'op_types': ['Conv2d'],
         }],
         'base_algo': 'fpgm',
-        'trainer': lambda model, optimizer, criterion, epoch, callback : model,
+        'trainer': lambda model, optimizer, criterion, epoch : model,
         'evaluator': lambda model: 0.9,
         'dummy_input': torch.randn([64, 1, 28, 28]),
         'validators': []
@@ -214,7 +214,7 @@ class SimpleDataset:
     def __len__(self):
         return 1000
 
-def train(model, train_loader, criterion, optimizer, callback=None):
+def train(model, train_loader, criterion, optimizer):
     model.train()
     device = next(model.parameters()).device
     x = torch.randn(2, 1, 28, 28).to(device)
@@ -227,25 +227,21 @@ def train(model, train_loader, criterion, optimizer, callback=None):
         optimizer.zero_grad()
         loss.backward()
 
-        # callback should be inserted between loss.backward() and optimizer.step()
-        if callback:
-            callback()
-
         optimizer.step()
 
 def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'taylorfo', 'mean_activation', 'apoz', 'netadapt', 'simulatedannealing', 'admm', 'autocompress_l1', 'autocompress_l2', 'autocompress_fpgm',], bias=True):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     dummy_input = torch.randn(2, 1, 28, 28).to(device)
-    
+
     criterion = torch.nn.CrossEntropyLoss()
     train_loader = torch.utils.data.DataLoader(SimpleDataset(), batch_size=16, shuffle=False, drop_last=True)
 
-    def trainer(model, optimizer, criterion, epoch, callback=None):
-        return train(model, train_loader, criterion, optimizer, callback)
+    def trainer(model, optimizer, criterion, epoch):
+        return train(model, train_loader, criterion, optimizer)
 
     for pruner_name in pruner_names:
         print('testing {}...'.format(pruner_name))
-        
+
         model = Model(bias=bias).to(device)
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config[pruner_name]['config_list']
@@ -259,7 +255,7 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         elif pruner_name.startswith('autocompress'):
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], criterion=torch.nn.CrossEntropyLoss(), dummy_input=dummy_input, base_algo=prune_config[pruner_name]['base_algo'])
         else:
-            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, optimizer)
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list)
 
         pruner.compress()
         pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=(2,1,28,28), device=device)
@@ -267,7 +263,6 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         for v in prune_config[pruner_name]['validators']:
             v(model)
 
-    
     filePaths = ['./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', './search_history.csv', './search_result.json']
     for f in filePaths:
         if os.path.exists(f):
@@ -275,21 +270,21 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
 
 
 def _test_agp(pruning_algorithm):
-        train_loader = torch.utils.data.DataLoader(SimpleDataset(), batch_size=16, shuffle=False, drop_last=True)
-        model = Model()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
+    train_loader = torch.utils.data.DataLoader(SimpleDataset(), batch_size=16, shuffle=False, drop_last=True)
+    model = Model()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
 
-        def trainer(model, optimizer, criterion, epoch, callback=None):
-            return train(model, train_loader, criterion, optimizer, callback)
-             
-        config_list = prune_config['agp']['config_list']
-        pruner = AGPPruner(model, config_list, optimizer=optimizer, trainer=trainer, criterion=torch.nn.CrossEntropyLoss(), pruning_algorithm=pruning_algorithm)
-        pruner.compress()
+    def trainer(model, optimizer, criterion, epoch):
+        return train(model, train_loader, criterion, optimizer)
 
-        target_sparsity = pruner.compute_target_sparsity(config_list[0])
-        actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
-        # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
-        assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
+    config_list = prune_config['agp']['config_list']
+    pruner = AGPPruner(model, config_list, optimizer=optimizer, trainer=trainer, criterion=torch.nn.CrossEntropyLoss(), pruning_algorithm=pruning_algorithm)
+    pruner.compress()
+
+    target_sparsity = pruner.compute_target_sparsity(config_list[0])
+    actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
+    # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
+    assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
 
 
 class PrunerTestCase(TestCase):

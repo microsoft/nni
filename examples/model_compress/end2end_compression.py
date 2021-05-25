@@ -115,16 +115,16 @@ def main(args):
     flops, params, _ = count_flops_params(model, (1, 1, 28, 28), verbose=False)
 
     if args.pretrained_model_dir is None:
-        args.pretrained_model_dir=os.path.join(args.experiment_data_dir, f'pretrained.pth')
-        
+        args.pretrained_model_dir = os.path.join(args.experiment_data_dir, f'pretrained.pth')
+
         best_acc = 0
         for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
-            acc=test(args, model, device, criterion, test_loader)
+            acc = test(args, model, device, criterion, test_loader)
             if acc > best_acc:
-                best_acc=acc
-                state_dict=model.state_dict()
+                best_acc = acc
+                state_dict = model.state_dict()
 
         model.load_state_dict(state_dict)
         torch.save(state_dict, args.pretrained_model_dir)
@@ -146,22 +146,22 @@ def main(args):
         'op_types': ['Conv2d']
     }]
 
-    kw_args={}
+    kw_args = {}
     if args.dependency_aware:
-        dummy_input=torch.randn([1000, 1, 28, 28]).to(device)
+        dummy_input = torch.randn([1000, 1, 28, 28]).to(device)
         print('Enable the dependency_aware mode')
         # note that, not all pruners support the dependency_aware mode
-        kw_args['dependency_aware']=True
-        kw_args['dummy_input']=dummy_input
+        kw_args['dependency_aware'] = True
+        kw_args['dummy_input'] = dummy_input
 
-    pruner = L1FilterPruner(model, config_list, optimizer, **kw_args)
+    pruner = L1FilterPruner(model, config_list, **kw_args)
     model = pruner.compress()
     pruner.get_pruned_weights()
 
     mask_path = os.path.join(args.experiment_data_dir, 'mask.pth')
     model_path = os.path.join(args.experiment_data_dir, 'pruned.pth')
     pruner.export_model(model_path=model_path, mask_path=mask_path)
-    pruner._unwrap_model() # unwrap all modules to normal state
+    pruner._unwrap_model()  # unwrap all modules to normal state
 
     # Step3. Model Speedup
     m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
@@ -181,7 +181,7 @@ def main(args):
     for epoch in range(args.finetune_epochs):
         train(args, model, device, train_loader, criterion, optimizer, epoch)
         scheduler.step()
-        acc=test(args, model, device, criterion, test_loader)
+        acc = test(args, model, device, criterion, test_loader)
         if acc > best_acc:
             best_acc = acc
             state_dict = model.state_dict()
@@ -199,23 +199,22 @@ def main(args):
 
     # Step5. Model Quantization via QAT
     config_list = [{
-            'quant_types': ['weight', 'output'],
-            'quant_bits': {'weight':8, 'output':8},
-            'op_names': ['conv1']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['relu1']
-        }, {
-            'quant_types': ['weight', 'output'],
-            'quant_bits': {'weight':8, 'output':8},
-            'op_names': ['conv2']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output':8},
-            'op_names': ['relu2']
-        }
-    ]
+        'quant_types': ['weight', 'output'],
+        'quant_bits': {'weight': 8, 'output': 8},
+        'op_names': ['conv1']
+    }, {
+        'quant_types': ['output'],
+        'quant_bits': {'output':8},
+        'op_names': ['relu1']
+    }, {
+        'quant_types': ['weight', 'output'],
+        'quant_bits': {'weight': 8, 'output': 8},
+        'op_names': ['conv2']
+    }, {
+        'quant_types': ['output'],
+        'quant_bits': {'output': 8},
+        'op_names': ['relu2']
+    }]
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
     quantizer = QAT_Quantizer(model, config_list, optimizer)
@@ -226,11 +225,10 @@ def main(args):
     for epoch in range(1):
         train(args, model, device, train_loader, criterion, optimizer, epoch)
         scheduler.step()
-        acc=test(args, model, device, criterion, test_loader)
+        acc = test(args, model, device, criterion, test_loader)
         if acc > best_acc:
-            best_acc=acc
-            state_dict=model.state_dict()
-
+            best_acc = acc
+            state_dict = model.state_dict()
 
     calibration_path = os.path.join(args.experiment_data_dir, 'calibration.pth')
     calibration_config = quantizer.export_model(model_path, calibration_path)
@@ -246,13 +244,13 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser=argparse.ArgumentParser(description='PyTorch Example for model comporession')
+    parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
 
     # dataset and model
-    parser.add_argument('--dataset', type=str, default='mnist',
-                        help='dataset to use, mnist, cifar10 or imagenet')
-    parser.add_argument('--data-dir', type=str, default='./data/',
-                        help='dataset directory')
+    # parser.add_argument('--dataset', type=str, default='mnist',
+    #                     help='dataset to use, mnist, cifar10 or imagenet')
+    # parser.add_argument('--data-dir', type=str, default='./data/',
+    #                     help='dataset directory')
     parser.add_argument('--pretrained-model-dir', type=str, default=None,
                         help='path to pretrained model')
     parser.add_argument('--pretrain-epochs', type=int, default=10,
@@ -266,16 +264,16 @@ if __name__ == '__main__':
                         help='how many batches to wait before logging training status')
     parser.add_argument('--dry-run', action='store_true', default=False,
                         help='quickly check a single pass')
-    parser.add_argument('--multi-gpu', action='store_true', default=False,
-                        help='run on mulitple gpus')
-    parser.add_argument('--test-only', action='store_true', default=False,
-                        help='run test only')
+    # parser.add_argument('--multi-gpu', action='store_true', default=False,
+    #                     help='run on mulitple gpus')
+    # parser.add_argument('--test-only', action='store_true', default=False,
+    #                     help='run test only')
 
     # pruner
-    parser.add_argument('--pruner', type=str, default='l1filter',
-                        choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                                 'fpgm', 'mean_activation', 'apoz', 'admm'],
-                        help='pruner to use')
+    # parser.add_argument('--pruner', type=str, default='l1filter',
+    #                     choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
+    #                              'fpgm', 'mean_activation', 'apoz', 'admm'],
+    #                     help='pruner to use')
     parser.add_argument('--sparsity', type=float, default=0.5,
                         help='target overall target sparsity')
     parser.add_argument('--dependency-aware', action='store_true', default=False,
@@ -284,19 +282,19 @@ if __name__ == '__main__':
     # finetuning
     parser.add_argument('--finetune-epochs', type=int, default=5,
                         help='epochs to fine tune')
-    parser.add_argument('--kd', action='store_true', default=False,
-                        help='quickly check a single pass')
-    parser.add_argument('--kd_T', type=float, default=4,
-                        help='temperature for KD distillation')
-    parser.add_argument('--finetune-lr', type=float, default=0.5,
-                        help='learning rate to finetune the model')
+    # parser.add_argument('--kd', action='store_true', default=False,
+    #                     help='quickly check a single pass')
+    # parser.add_argument('--kd_T', type=float, default=4,
+    #                     help='temperature for KD distillation')
+    # parser.add_argument('--finetune-lr', type=float, default=0.5,
+    #                     help='learning rate to finetune the model')
 
     # speedup
-    parser.add_argument('--speed-up', action='store_true', default=False,
-                        help='whether to speed-up the pruned model')
+    # parser.add_argument('--speed-up', action='store_true', default=False,
+    #                     help='whether to speed-up the pruned model')
 
-    parser.add_argument('--nni', action='store_true', default=False,
-                        help="whether to tune the pruners using NNi tuners")
+    # parser.add_argument('--nni', action='store_true', default=False,
+    #                     help="whether to tune the pruners using NNi tuners")
 
-    args=parser.parse_args()
+    args = parser.parse_args()
     main(args)
