@@ -40,6 +40,8 @@ class PolicyBasedRL(BaseStrategy):
         If true, in each step, collector won't wait for all the envs to complete.
         This should generally not affect the result, but might affect the efficiency. Note that a slightly more trials
         than expected might be collected if this is enabled.
+        If asynchronous is false, collector will wait for all parallel environments to complete in each step.
+        See ``tianshou.data.AsyncCollector`` for more details.
 
     References
     ----------
