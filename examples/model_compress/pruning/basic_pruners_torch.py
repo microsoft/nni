@@ -199,6 +199,7 @@ def main(args):
     print(f"FLOPs: {flops}, params: {params}")
 
     print(f'start {args.pruner} pruning...')
+
     def trainer(model, optimizer, criterion, epoch):
         return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch)
 
@@ -210,13 +211,6 @@ def main(args):
         'op_types': ['Conv2d']
     }]
 
-    if args.dependency_aware:
-        dummy_input = get_dummy_input(args, device)
-        print('Enable the dependency_aware mode')
-        # note that, not all pruners support the dependency_aware mode
-        kw_args['dependency_aware'] = True
-        kw_args['dummy_input'] = dummy_input
-
     if args.pruner == 'level':
         config_list = [{
             'sparsity': args.sparsity,
@@ -224,30 +218,39 @@ def main(args):
         }]
 
     else:
-        kw_args['trainer'] = trainer
-
-        if args.pruner not in ('l1filter', 'l2filter', 'fpgmfilter'):
+        if args.dependency_aware:
+            dummy_input = get_dummy_input(args, device)
+            print('Enable the dependency_aware mode')
+            # note that, not all pruners support the dependency_aware mode
+            kw_args['dependency_aware'] = True
+            kw_args['dummy_input'] = dummy_input
+        if args.pruner not in ('l1filter', 'l2filter', 'fpgm'):
             # set only work for training aware pruners
+            kw_args['trainer'] = trainer
             kw_args['optimizer'] = optimizer
             kw_args['criterion'] = criterion
-            kw_args['training_epochs'] = 5
+
+        if args.pruner in ('slim', 'mean_activation', 'apoz', 'taylorfo'):
+            kw_args['sparsity_training_epochs'] = 5
+
+        if args.pruner == 'agp':
+            kw_args['pruning_algorithm'] = 'l1'
+            kw_args['num_iterations'] = 5
+            kw_args['epochs_per_iteration'] = 1
 
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
         if args.pruner == 'slim':
             config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['BatchNorm2d'],
-        }]
+                'sparsity': args.sparsity,
+                'op_types': ['BatchNorm2d'],
+            }]
         else:
             config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['Conv2d'],
-            'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
-        }]
-
-        if args.pruner == 'agp':
-            kw_args['pruning_algorithm'] = 'l1'
+                'sparsity': args.sparsity,
+                'op_types': ['Conv2d'],
+                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+            }]
 
     pruner = pruner_cls(model, config_list, **kw_args)
 

@@ -250,8 +250,10 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, short_term_fine_tuner=prune_config[pruner_name]['short_term_fine_tuner'], evaluator=prune_config[pruner_name]['evaluator'])
         elif pruner_name == 'simulatedannealing':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, evaluator=prune_config[pruner_name]['evaluator'])
-        elif pruner_name in ('admm', 'agp', 'slim', 'taylorfo', 'apoz', 'mean_activation'):
+        elif pruner_name in ('agp', 'slim', 'taylorfo', 'apoz', 'mean_activation'):
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=trainer, optimizer=optimizer, criterion=criterion)
+        elif pruner_name == 'admm':
+            pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=trainer)
         elif pruner_name.startswith('autocompress'):
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, trainer=prune_config[pruner_name]['trainer'], evaluator=prune_config[pruner_name]['evaluator'], criterion=torch.nn.CrossEntropyLoss(), dummy_input=dummy_input, base_algo=prune_config[pruner_name]['base_algo'])
         else:
