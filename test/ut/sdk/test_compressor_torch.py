@@ -61,9 +61,8 @@ class CompressorTestCase(TestCase):
 
     def test_torch_level_pruner(self):
         model = TorchModel()
-        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
         configure_list = [{'sparsity': 0.8, 'op_types': ['default']}]
-        torch_pruner.LevelPruner(model, configure_list, optimizer).compress()
+        torch_pruner.LevelPruner(model, configure_list).compress()
 
     def test_torch_naive_quantizer(self):
         model = TorchModel()
@@ -93,7 +92,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         config_list = [{'sparsity': 0.6, 'op_types': ['Conv2d']}, {'sparsity': 0.2, 'op_types': ['Conv2d']}]
-        pruner = torch_pruner.FPGMPruner(model, config_list, torch.optim.SGD(model.parameters(), lr=0.01))
+        pruner = torch_pruner.FPGMPruner(model, config_list)
 
         model.conv2.module.weight.data = torch.tensor(w).float()
         masks = pruner.calc_mask(model.conv2)
@@ -202,8 +201,8 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, training_epochs=1)
-        
+        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, sparsity_training_epochs=1)
+
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
         model.conv1.module.weight.data = torch.tensor(w1).float()
         model.conv2.module.weight.data = torch.tensor(w2).float()
@@ -345,7 +344,7 @@ class CompressorTestCase(TestCase):
             ],
             [
                 {'sparsity': 0.2 },
-                {'sparsity': 0.6, 'op_names': 'abc' }
+                {'sparsity': 0.6, 'op_names': 'abc'}
             ]
         ]
         model = TorchModel()
