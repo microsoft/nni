@@ -1,5 +1,5 @@
 import copy
-from typing import Callable, List, Union, Tuple
+from typing import Callable, List, Union, Tuple, Optional
 
 import torch
 import torch.nn as nn
@@ -7,6 +7,9 @@ import torch.nn as nn
 from ...utils import uid
 from .api import LayerChoice, InputChoice
 from .nn import ModuleList
+
+from .utils import generate_new_label, get_fixed_value
+
 
 __all__ = ['Repeat', 'Cell']
 
@@ -26,24 +29,23 @@ class Repeat(nn.Module):
         meaning that the block will be repeated at least `min` times and at most `max` times.
     """
 
+    def __new__(cls, blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
+                depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
+        try:
+            repeat = get_fixed_value(label)
+            return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
+        except AssertionError:
+            return super().__new__(cls)
+
     def __init__(self,
                  blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], label=None):
+                 depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
         super().__init__()
-        self._label = label if label is not None else f'repeat_{uid()}'
+        self._label = generate_new_label(label)
         self.min_depth = depth if isinstance(depth, int) else depth[0]
         self.max_depth = depth if isinstance(depth, int) else depth[1]
         assert self.max_depth >= self.min_depth > 0
-        if not isinstance(blocks, list):
-            if isinstance(blocks, nn.Module):
-                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(self.max_depth - 1)]
-            else:
-                blocks = [blocks for _ in range(self.max_depth)]
-        assert len(blocks) > 0
-        if not isinstance(blocks[0], nn.Module):
-            blocks = [b() for b in blocks]
-        assert self.max_depth <= len(blocks)
-        self.blocks = nn.ModuleList(blocks)
+        self.blocks = nn.ModuleList(self._replicate_and_instantiate(blocks, self.max_depth))
 
     @property
     def label(self):
@@ -53,6 +55,20 @@ class Repeat(nn.Module):
         for block in self.blocks:
             x = block(x)
         return x
+
+    @staticmethod
+    def _replicate_and_instantiate(blocks, repeat):
+        if not isinstance(blocks, list):
+            if isinstance(blocks, nn.Module):
+                blocks = [blocks] + [copy.deepcopy(blocks) for _ in range(repeat - 1)]
+            else:
+                blocks = [blocks for _ in range(repeat)]
+        assert len(blocks) > 0
+        assert repeat <= len(blocks), f'Not enough blocks to be used. {repeat} expected, only found {len(blocks)}.'
+        blocks = blocks[:repeat]
+        if not isinstance(blocks[0], nn.Module):
+            blocks = [b() for b in blocks]
+        return blocks
 
 
 class Cell(nn.Module):
@@ -97,7 +113,7 @@ class Cell(nn.Module):
                  merge_op: str = 'all',
                  label: str = None):
         super().__init__()
-        self._label = f'cell_{uid()}' if label is None else label
+        self._label = generate_new_label(label)
         self.ops = ModuleList()
         self.inputs = ModuleList()
         self.num_nodes = num_nodes

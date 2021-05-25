@@ -419,6 +419,7 @@ class GraphIR(unittest.TestCase):
             def forward(self, x):
                 return x + 1
 
+        @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -427,8 +428,7 @@ class GraphIR(unittest.TestCase):
             def forward(self, x):
                 return self.block(x)
 
-        model = self._convert_to_ir(Net())
-        mutators = process_inline_mutation(model)
+        model, mutators = self._get_model_with_mutators(Net())
         self.assertEqual(len(mutators), 1)
         mutator = mutators[0].bind_sampler(EnumerateSampler())
         model1 = mutator.apply(model)
@@ -439,6 +439,7 @@ class GraphIR(unittest.TestCase):
         self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
 
     def test_cell(self):
+        @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -448,8 +449,7 @@ class GraphIR(unittest.TestCase):
             def forward(self, x, y):
                 return self.cell([x, y])
 
-        raw_model = self._convert_to_ir(Net())
-        mutators = process_inline_mutation(raw_model)
+        raw_model, mutators = self._get_model_with_mutators(Net())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model
@@ -458,6 +458,7 @@ class GraphIR(unittest.TestCase):
             self.assertTrue(self._get_converted_pytorch_model(model)(
                 torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
+        @self.get_serializer()
         class Net2(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -466,8 +467,7 @@ class GraphIR(unittest.TestCase):
             def forward(self, x):
                 return self.cell([x])
 
-        raw_model = self._convert_to_ir(Net2())
-        mutators = process_inline_mutation(raw_model)
+        raw_model, mutators = self._get_model_with_mutators(Net2())
         for _ in range(10):
             sampler = EnumerateSampler()
             model = raw_model

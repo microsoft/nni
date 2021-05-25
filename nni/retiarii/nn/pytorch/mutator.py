@@ -9,6 +9,7 @@ import torch.nn as nn
 from ...mutator import Mutator
 from ...graph import Cell, Graph, Model, ModelStatus, Node
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
+from .component import Repeat
 from ...utils import uid
 
 
@@ -234,6 +235,11 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
             node.label = module.label
         if isinstance(module, ValueChoice):
             node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
+            node.label = module.label
+        if isinstance(module, Repeat) and module.min_depth <= module.max_depth:
+            node = graph.add_node(name, 'Repeat', {
+                'candidates': list(range(module.min_depth, module.max_depth + 1))
+            })
             node.label = module.label
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
