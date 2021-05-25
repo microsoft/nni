@@ -19,7 +19,7 @@ import * as util from 'util';
 import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
