@@ -7,7 +7,7 @@ Its using experience is similar to launch the NNI experiment from python.
 The main differences are as follows:
 
 * Use a generator to help generate search space object.
-* Need to implement the abstract class ``AbstractAutoCompressModule`` as ``AutoCompressModule``.
+* Need to provide the model to be compressed, and the model should have already pre-trained.
 * No need to set ``trial_command``, additional need to set ``auto_compress_module_file_name``.
 
 Generate search space
@@ -64,11 +64,29 @@ Now we support the following pruners and quantizers:
         'bnn': BNNQuantizer
     }
 
-Implement ``AbstractAutoCompressModule``
-----------------------------------------
+Provide user model for compression
+----------------------------------
 
-This class will be called by ``AutoCompressEngine`` on training service.
-Users need to implement at least ``model()`` and ``evaluator``, and naming the class as ``AutoCompressModule``.
+Users need to inherit ``AbstractAutoCompressModule`` and override the abstract class function.
+
+.. code-block:: python
+
+    from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressModule
+
+    class AutoCompressModule(AbstractAutoCompressModule):
+        @classmethod
+        def model(cls) -> nn.Module:
+            ...
+            return _model
+
+        @classmethod
+        def evaluator(cls) -> Callable[[nn.Module], float]:
+            ...
+            return _evaluator
+
+Users need to implement at least ``model()`` and ``evaluator()``.
+If you use iterative pruner, you need to additional implement ``optimizer()``, ``criterion()`` and ``sparsifying_trainer()``.
+If you want to finetune the model after compression, you need to implement ``post_compress_finetuning_trainer()``.
 The path of file that contains the ``AutoCompressModule`` needs to be specified in experiment config.
 The full abstract interface refers to :githublink:`interface.py <nni/algorithms/compression/pytorch/auto_compress/interface.py>`.
 An example of ``AutoCompressModule`` implementation refers to :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`.

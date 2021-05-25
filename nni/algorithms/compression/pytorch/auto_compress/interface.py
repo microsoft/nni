@@ -51,14 +51,27 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         torch.optim.Optimizer
-            Optimizer used to train the model
+            Optimizer used to train the model in compressing process.
         """
         pass
 
     @classmethod
     @abstractmethod
-    def trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
+    def criterion(cls) -> Optional[Callable]:
         """
+        Returns
+        -------
+        Optional[Callable]
+            The criterion used to train the model in compressing process.
+        """
+        pass
+
+    @classmethod
+    @abstractmethod
+    def sparsifying_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
+        """
+        The trainer is used in sparsifying process.
+
         Parameters
         ----------
         compressor_type: str
@@ -75,8 +88,10 @@ class AbstractAutoCompressModule(ABC):
 
     @classmethod
     @abstractmethod
-    def finetune_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
+    def post_compress_finetuning_trainer(cls, compressor_type: str, algorithm_name: str) -> Optional[Callable[[Module, Optimizer], None]]:
         """
+        The trainer is used in post-compress finetuning process.
+
         Parameters
         ----------
         compressor_type: str
