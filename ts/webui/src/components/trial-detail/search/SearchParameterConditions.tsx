@@ -79,44 +79,48 @@ function SearchParameterConditions(props): any {
 
     // click Apply button
     function startFilterTrials(): void {
-        if (isChoiceTypeSearchFilter) {
-            if (choiceList.length === 0) {
-                alert('Please input related value!');
-                return;
-            }
-        } else {
+        if (isChoiceTypeSearchFilter === false) {
             if (firstInputVal === '') {
                 alert('Please input related value!');
                 return;
             }
-            if (firstInputVal.match(/[a-zA-Z]/) || secondInputVal.match(/[a-zA-Z]/)) {
-                alert('Please input a number!');
-                return;
-            }
         }
 
-        const newSearchFilters = JSON.parse(JSON.stringify(searchFilter));
+        if (firstInputVal.match(/[a-zA-Z]/) || secondInputVal.match(/[a-zA-Z]/)) {
+            alert('Please input a number!');
+            return;
+        }
+
+        let newSearchFilters = JSON.parse(JSON.stringify(searchFilter));
         const find = newSearchFilters.filter(ele => ele.name === parameter);
 
         if (find.length > 0) {
-            newSearchFilters.forEach(item => {
-                if (item.name === parameter) {
-                    item.operator = operatorVal;
-                    item.value1 = firstInputVal;
-                    item.value2 = getSecondInputVal();
-                    item.choice = choiceList;
-                    item.isChoice = isChoiceTypeSearchFilter ? true : false;
-                }
-            });
+            // if user clear all selected options, will clear this filter condition on the searchFilter list
+            // eg: conv_size -> choiceList = [], searchFilter will remove (name === 'conv_size')
+            if ((isChoiceTypeSearchFilter && choiceList.length !== 0) || isChoiceTypeSearchFilter === false) {
+                newSearchFilters.forEach(item => {
+                    if (item.name === parameter) {
+                        item.operator = operatorVal;
+                        item.value1 = firstInputVal;
+                        item.value2 = getSecondInputVal();
+                        item.choice = choiceList;
+                        item.isChoice = isChoiceTypeSearchFilter ? true : false;
+                    }
+                });
+            } else {
+                newSearchFilters = newSearchFilters.filter(item => item.name !== parameter);
+            }
         } else {
-            newSearchFilters.push({
-                name: parameter,
-                operator: operatorVal,
-                value1: firstInputVal,
-                value2: getSecondInputVal(),
-                choice: choiceList,
-                isChoice: isChoiceTypeSearchFilter ? true : false
-            });
+            if ((isChoiceTypeSearchFilter && choiceList.length !== 0) || isChoiceTypeSearchFilter === false) {
+                newSearchFilters.push({
+                    name: parameter,
+                    operator: operatorVal,
+                    value1: firstInputVal,
+                    value2: getSecondInputVal(),
+                    choice: choiceList,
+                    isChoice: isChoiceTypeSearchFilter ? true : false
+                });
+            }
         }
 
         setSearchInputVal(getSearchInputValueBySearchList(newSearchFilters));
