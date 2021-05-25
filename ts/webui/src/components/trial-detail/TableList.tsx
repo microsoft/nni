@@ -143,7 +143,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             const ret = {
                 sequenceId: trial.sequenceId,
                 id: trial.id,
-                checked: selectedRowIds.includes(trial.id) ? true : false,
+                _checked: selectedRowIds.includes(trial.id) ? true : false,
                 startTime: (trial as Trial).info.startTime, // FIXME: why do we need info here?
                 endTime: (trial as Trial).info.endTime,
                 duration: trial.duration,
@@ -184,7 +184,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }
         items.forEach(item => {
             if (item.id === id) {
-                item.checked = !!checked;
+                item._checked = !!checked;
             }
         });
         this.setState(() => ({ displayedItems: items, selectedRowIds: temp }));
@@ -194,7 +194,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
         const { displayedItems } = this.state;
         const newDisplayedItems = displayedItems;
         newDisplayedItems.forEach(item => {
-            item.checked = false;
+            item._checked = false;
         });
         this.setState(() => ({
             selectedRowIds: [],
@@ -216,7 +216,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 onRender: (record): React.ReactNode => (
                     <Checkbox
                         label={undefined}
-                        checked={record.checked}
+                        checked={record._checked}
                         className='detail-check'
                         onChange={this.selectedTrialOnChangeEvent.bind(this, record.id)}
                     />
