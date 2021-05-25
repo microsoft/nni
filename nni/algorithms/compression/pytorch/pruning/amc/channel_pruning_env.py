@@ -85,7 +85,7 @@ class ChannelPruningEnv:
         args:
             A Namespace object containing following arguments:
             model_type: str
-                model type to prune, currently 'mobilenet' and 'mobilenetv2' are supported.
+                model type to prune, currently 'mobilenet', 'mobilenetv2' and 'resnet' are supported.
             flops_ratio: float
                 preserve flops ratio.
             lbound: float

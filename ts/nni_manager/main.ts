@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as component from './common/component';
 import { Database, DataStore } from './common/datastore';
 import { setExperimentStartupInfo } from './common/experimentStartupInfo';
-import { getLogger, Logger, logLevelNameMap } from './common/log';
+import { getLogger, setLogLevel, startLogging } from './common/log';
 import { Manager, ExperimentStartUpMode } from './common/manager';
 import { ExperimentManager } from './common/experimentManager';
 import { TensorboardManager } from './common/tensorboardManager';
@@ -25,9 +25,9 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
-    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
+    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string, urlprefix: string): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
+    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -47,14 +47,15 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         .to(NNITensorboardManager)
         .scope(Scope.Singleton);
     const DEFAULT_LOGFILE: string = path.join(getLogDir(), 'nnimanager.log');
-    if (foreground) {
-        logFileName = undefined;
-    } else if (logFileName === undefined) {
-        logFileName = DEFAULT_LOGFILE;
+    if (!foreground) {
+        if (logFileName === undefined) {
+            startLogging(DEFAULT_LOGFILE);
+        } else {
+            startLogging(logFileName);
+        }
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        setLogLevel(logLevel);
     }
-    Container.bind(Logger).provider({
-        get: (): Logger => new Logger(logFileName)
-    });
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -110,9 +111,6 @@ if (logDir.length > 0) {
 }
 
 const logLevel: string = parseArg(['--log_level', '-ll']);
-if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
-    console.log(`FATAL: invalid log_level: ${logLevel}`);
-}
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
 if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
@@ -124,7 +122,9 @@ const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
+const urlPrefix: string = parseArg(['--url_prefix']);
+
+initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe, urlPrefix);
 
 mkDirP(getLogDir())
     .then(async () => {
@@ -132,11 +132,9 @@ mkDirP(getLogDir())
             await initContainer(foreground, mode);
             const restServer: NNIRestServer = component.get(NNIRestServer);
             await restServer.start();
-            const log: Logger = getLogger();
-            log.info(`Rest server listening on: ${restServer.endPoint}`);
+            getLogger('main').info(`Rest server listening on: ${restServer.endPoint}`);
         } catch (err) {
-            const log: Logger = getLogger();
-            log.error(`${err.stack}`);
+            getLogger('main').error(`${err.stack}`);
             throw err;
         }
     })

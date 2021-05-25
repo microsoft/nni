@@ -14,9 +14,18 @@ NNI provides a model compression toolkit to help user compress and speed up thei
 * Provide friendly and easy-to-use compression utilities for users to dive into the compression process and results.
 * Concise interface for users to customize their own compression algorithms.
 
+
+Compression Pipeline
+--------------------
+
+.. image:: ../../img/compression_flow.jpg
+   :target: ../../img/compression_flow.jpg
+   :alt: 
+
+The overall compression pipeline in NNI. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
+
 .. note::
   Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency. To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__. The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.
-
 
 Supported Algorithms
 --------------------
@@ -26,7 +35,7 @@ The algorithms include pruning algorithms and quantization algorithms.
 Pruning Algorithms
 ^^^^^^^^^^^^^^^^^^
 
-Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and address the over-ﬁtting issue. 
+Pruning algorithms compress the original network by removing redundant weights or channels of layers, which can reduce model complexity and mitigate the over-ﬁtting issue.
 
 .. list-table::
    :header-rows: 1
@@ -87,12 +96,15 @@ Quantization algorithms compress the original network by reducing the number of 
      - DoReFa-Net: Training Low Bitwidth Convolutional Neural Networks with Low Bitwidth Gradients. `Reference Paper <https://arxiv.org/abs/1606.06160>`__
    * - `BNN Quantizer <../Compression/Quantizer.rst#bnn-quantizer>`__
      - Binarized Neural Networks: Training Deep Neural Networks with Weights and Activations Constrained to +1 or -1. `Reference Paper <https://arxiv.org/abs/1602.02830>`__
+   * - `LSQ Quantizer <../Compression/Quantizer.rst#lsq-quantizer>`__
+     - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
 
 
 Model Speedup
 -------------
 
 The final goal of model compression is to reduce inference latency and model size. However, existing model compression algorithms mainly use simulation to check the performance (e.g., accuracy) of compressed model, for example, using masks for pruning algorithms, and storing quantized values still in float32 for quantization algorithms. Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model. The detailed tutorial of Masked Model Speedup can be found `here <./ModelSpeedup.rst>`__, The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <./QuantizationSpeedup.rst>`__.
+
 
 Compression Utilities
 ---------------------
@@ -107,7 +119,6 @@ NNI model compression leaves simple interface for users to customize a new compr
 
 Reference and Feedback
 ----------------------
-
 
 * To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub;
 * To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub;

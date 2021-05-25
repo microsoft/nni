@@ -474,8 +474,8 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     def __init__(self, model, pruner, statistics_batch_num=1):
         super().__init__(model, pruner)
         self.pruner.statistics_batch_num = statistics_batch_num
-        self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.iterations = 0
+        self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
@@ -499,6 +499,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         """
         if self.pruner.iterations >= self.pruner.statistics_batch_num:
             return
+
         for wrapper in self.pruner.get_modules_wrapper():
             filters = wrapper.module.weight.size(0)
             contribution = (
@@ -677,16 +678,24 @@ class SlimPrunerMasker(WeightMasker):
 
     def __init__(self, model, pruner, **kwargs):
         super().__init__(model, pruner)
+        self.global_threshold = None
+
+    def _get_global_threshold(self):
         weight_list = []
-        for (layer, _) in pruner.get_modules_to_compress():
+        for (layer, _) in self.pruner.get_modules_to_compress():
             weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
-        k = int(all_bn_weights.shape[0] * pruner.config_list[0]['sparsity'])
+        k = int(all_bn_weights.shape[0] * self.pruner.config_list[0]['sparsity'])
         self.global_threshold = torch.topk(
             all_bn_weights.view(-1), k, largest=False)[0].max()
+        print(f'set global threshold to {self.global_threshold}')
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         assert wrapper.type == 'BatchNorm2d', 'SlimPruner only supports 2d batch normalization layer pruning'
+
+        if self.global_threshold is None:
+            self._get_global_threshold()
+
         weight = wrapper.module.weight.data.clone()
         if wrapper.weight_mask is not None:
             # apply base mask for iterative pruning
@@ -705,7 +714,6 @@ class SlimPrunerMasker(WeightMasker):
             mask = {'weight_mask': mask_weight.detach(
             ), 'bias_mask': mask_bias.detach()}
         return mask
-
 
 def least_square_sklearn(X, Y):
     from sklearn.linear_model import LinearRegression

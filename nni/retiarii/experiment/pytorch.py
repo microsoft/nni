@@ -52,7 +52,7 @@ class RetiariiExeConfig(ConfigBase):
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: Optional[PathLike] = None
+    experiment_working_directory: PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
 
