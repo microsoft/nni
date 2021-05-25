@@ -15,8 +15,20 @@ function compareDate(date1: Date, date2: Date): boolean {
     return false;
 }
 
-const filterByStatusOrPlatform = (val: string, type: string, data: AllExperimentList[]): AllExperimentList[] => {
-    return data.filter(temp => temp[type] === val);
+const filterByStatusOrPlatform = (
+    val: string | string[],
+    type: string,
+    data: AllExperimentList[]
+): AllExperimentList[] => {
+    if (typeof val === 'string' && val !== '') {
+        return data.filter(temp => temp[type] === val);
+    }
+
+    if (Array.isArray(val) && val.length !== 0) {
+        return data.filter(temp => val.includes(temp[type]));
+    }
+
+    return data;
 };
 
 function fillOptions(arr: string[]): any {

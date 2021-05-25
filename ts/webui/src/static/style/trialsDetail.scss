@@ -85,9 +85,11 @@
     min-width: 245px;
     max-width: 350px;
     max-height: 350px;
-    padding: 10px 10px;
     white-space: normal;
+    padding: 10px;
     overflow: auto;
+    background: #6f6f6f;
+    color: #fff;
 
     pre {
         overflow: inherit;

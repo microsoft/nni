@@ -8,9 +8,8 @@ from pathlib import Path
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
-from nni.retiarii.experiment import RetiariiExperiment, RetiariiExeConfig
-from nni.retiarii.strategies import TPEStrategy
-from nni.retiarii.trainer.pytorch import DartsTrainer
+from nni.retiarii.experiment.pytorch import RetiariiExperiment
+from nni.retiarii.oneshot.pytorch import DartsTrainer
 
 from darts_model import CNN
 
@@ -56,8 +55,8 @@ def get_dataset(cls, cutout_length=0):
     valid_transform = transforms.Compose(normalize)
 
     if cls == "cifar10":
-        dataset_train = CIFAR10(root="./data", train=True, download=True, transform=train_transform)
-        dataset_valid = CIFAR10(root="./data", train=False, download=True, transform=valid_transform)
+        dataset_train = CIFAR10(root="./data/cifar10", train=True, download=True, transform=train_transform)
+        dataset_valid = CIFAR10(root="./data/cifar10", train=False, download=True, transform=valid_transform)
     else:
         raise NotImplementedError
     return dataset_train, dataset_valid

@@ -273,7 +273,8 @@ infer_from_inshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_inshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_inshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_inshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_inshape(module_masks, mask)
 }
 
 """
@@ -308,7 +309,8 @@ infer_from_outshape = {
     'aten::mean': lambda module_masks, mask, shape: mean_outshape(module_masks, mask, shape),
     'Dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
     'Dropout2d': lambda module_masks, mask: dropout_outshape(module_masks, mask),
-    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask)
+    'aten::dropout': lambda module_masks, mask: dropout_outshape(module_masks, mask),
+    'aten::detach': lambda module_masks, mask: dropout_outshape(module_masks, mask)
 }
 
 
@@ -595,15 +597,15 @@ def view_outshape(module_masks, mask, shape):
     Parameters
     ----------
     module_masks : ModuleMasks
-        The ModuleMasks instance of the ```flatten``` op
+        The ModuleMasks instance of the ```view``` op
     mask : CoarseMask
-        The mask of its input tensor
+        The mask of its output tensor
     shape : dict
         Original shape of its input and output tensors
     Returns
     -------
     CoarseMask
-        The mask of its output tensor
+        The mask of its input tensor
     """
     # NOTE: the case constrained by the following four asserts
     assert shape['in_shape'][0] == shape['out_shape'][0]
@@ -618,10 +620,11 @@ def view_outshape(module_masks, mask, shape):
 
     module_masks.set_output_mask(mask)
     input_cmask = CoarseMask(num_dim=4)
-    index = []
+    index = set()
     step_size = shape['in_shape'][2] * shape['in_shape'][3]
     for loc in mask.mask_index[1]:
-        index.extend([loc * step_size + i for i in range(step_size)])
+        index.add(loc // step_size)
+    index = sorted(list(index))
     input_cmask.add_index_mask(dim=1, index=torch.tensor(index).to(mask.mask_index[1].device))  # pylint: disable=not-callable
     module_masks.set_input_mask(input_cmask)
 
@@ -889,23 +892,18 @@ def conv2d_mask(module_masks, mask):
         sum_idx = (1, 2, 3) if dim == 0 else (0, 2, 3)
         index = torch.nonzero(weight_mask.abs().sum(
             sum_idx) != 0, as_tuple=True)[0]
-        if len(index) == weight_mask.shape[dim]:  # full mask
-            index = None
 
-        if index is None:
-            return None, None, None
-        else:
-            index = index.long().to(weight_mask.device)
-            weight_cmask = CoarseMask(num_dim=4)
-            weight_cmask.add_index_mask(dim=dim, index=index)
-            bias_cmask = None
-            if dim == 0 and 'bias' in mask and mask['bias'] is not None:
-                bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
-                assert torch.all(torch.eq(index, bias_index)), \
-                    "bias mask should be consistent with weight mask"
-                bias_cmask = CoarseMask(num_dim=1)
-                bias_cmask.add_index_mask(dim=0, index=bias_index)
-            return index, weight_cmask, bias_cmask
+        index = index.long().to(weight_mask.device)
+        weight_cmask = CoarseMask(num_dim=4)
+        weight_cmask.add_index_mask(dim=dim, index=index)
+        bias_cmask = None
+        if dim == 0 and 'bias' in mask and mask['bias'] is not None:
+            bias_index = torch.nonzero(mask['bias'], as_tuple=True)[0]
+            assert torch.all(torch.eq(index, bias_index)), \
+                "bias mask should be consistent with weight mask"
+            bias_cmask = CoarseMask(num_dim=1)
+            bias_cmask.add_index_mask(dim=0, index=bias_index)
+        return index, weight_cmask, bias_cmask
 
     index, weight_cmask, bias_cmask = convert_to_coarse_mask(
         mask, dim=conv_prune_dim)
@@ -960,6 +958,7 @@ def conv2d_inshape(module_masks, mask):
         # the same conv layer may be accessed more
         # than once, such as a concat operation.
         # mask conflict should be solved by fix_mask_conflict before speedup
+
         assert module_masks.input_mask == mask
 
     # shape changes pass through depths wise conv layers

@@ -21,8 +21,8 @@ How to use?
 
 .. code-block:: python
 
-   from nni.feature_engineering.gradient_selector import FeatureGradientSelector
-   # from nni.feature_engineering.gbdt_selector import GBDTSelector
+   from nni.algorithms.feature_engineering.gradient_selector import FeatureGradientSelector
+   # from nni.algorithms.feature_engineering.gbdt_selector import GBDTSelector
 
    # load data
    ...

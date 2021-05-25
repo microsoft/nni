@@ -5,7 +5,7 @@ import { Trial } from '../static/model/trial';
 import { AppContext } from '../App';
 import { Title } from './overview/Title';
 import SuccessTable from './overview/table/SuccessTable';
-import Accuracy from './overview/Accuracy';
+import DefaultPoint from './trial-detail/DefaultMetricPoint';
 import { BasicInfo } from './overview/params/BasicInfo';
 import { ExpDuration } from './overview/count/ExpDuration';
 import { ExpDurationContext } from './overview/count/ExpDurationContext';
@@ -60,11 +60,8 @@ class Overview extends React.Component<{}, OverviewState> {
         const bestTrials = this.findBestTrials();
         // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
         const bestAccuracy = bestTrials.length > 0 ? bestTrials[0].accuracy! : NaN;
-        const accuracyGraphData = this.generateAccuracyGraph(bestTrials);
-        const noDataMessage = bestTrials.length > 0 ? '' : 'No data';
-
-        const maxExecDuration = EXPERIMENT.profile.params.maxExecDuration;
         const execDuration = EXPERIMENT.profile.execDuration;
+
         return (
             <AppContext.Consumer>
                 {(value): React.ReactNode => {
@@ -72,14 +69,16 @@ class Overview extends React.Component<{}, OverviewState> {
                         metricGraphMode,
                         bestTrialEntries,
                         maxDurationUnit,
+                        expandRowIDs,
                         updateOverviewPage,
-                        changeMaxDurationUnit
+                        changeMaxDurationUnit,
+                        changeExpandRowIDs
                     } = value;
                     const maxActive = metricGraphMode === 'max' ? 'active' : '';
                     const minActive = metricGraphMode === 'min' ? 'active' : '';
                     return (
                         <div className='overview'>
-                            <div className='wrapper'>
+                            <div className='overviewWrapper'>
                                 {/* exp params */}
                                 <div className='overviewBasicInfo'>
                                     <TitleContext.Provider value={{ text: 'Experiment', icon: 'AutoRacing' }}>
@@ -96,7 +95,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </TitleContext.Provider>
                                     <ExpDurationContext.Provider
                                         value={{
-                                            maxExecDuration,
+                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
                                             execDuration,
                                             updateOverviewPage,
                                             maxDurationUnit,
@@ -112,7 +111,7 @@ class Overview extends React.Component<{}, OverviewState> {
                                     </TitleContext.Provider>
                                     <ExpDurationContext.Provider
                                         value={{
-                                            maxExecDuration,
+                                            maxExecDuration: EXPERIMENT.maxExperimentDurationSeconds,
                                             execDuration,
                                             updateOverviewPage,
                                             maxDurationUnit,
@@ -167,10 +166,17 @@ class Overview extends React.Component<{}, OverviewState> {
                                         </div>
                                     </Stack>
                                     <div className='overviewChart'>
-                                        <Accuracy accuracyData={accuracyGraphData} accNodata={noDataMessage} />
+                                        <DefaultPoint
+                                            trialIds={bestTrials.map(trial => trial.info.trialJobId)}
+                                            chartHeight={300}
+                                            hasBestCurve={false}
+                                            changeExpandRowIDs={changeExpandRowIDs}
+                                        />
                                         <SuccessTable
                                             trialIds={bestTrials.map(trial => trial.info.trialJobId)}
                                             updateOverviewPage={updateOverviewPage}
+                                            expandRowIDs={expandRowIDs}
+                                            changeExpandRowIDs={changeExpandRowIDs}
                                         />
                                     </div>
                                 </div>
@@ -195,40 +201,6 @@ class Overview extends React.Component<{}, OverviewState> {
             bestTrials.splice(JSON.parse(bestTrialEntries));
         }
         return bestTrials;
-    }
-
-    private generateAccuracyGraph(bestTrials: Trial[]): object {
-        const xSequence = bestTrials.map(trial => trial.sequenceId);
-        const ySequence = bestTrials.map(trial => trial.accuracy);
-
-        return {
-            // support max show 0.0000000
-            grid: {
-                x: 60,
-                y: 40
-            },
-            tooltip: {
-                trigger: 'item'
-            },
-            xAxis: {
-                name: 'Trial',
-                type: 'category',
-                data: xSequence
-            },
-            yAxis: {
-                name: 'Default metric',
-                type: 'value',
-                scale: true,
-                data: ySequence
-            },
-            series: [
-                {
-                    symbolSize: 6,
-                    type: 'scatter',
-                    data: ySequence
-                }
-            ]
-        };
     }
 }
 

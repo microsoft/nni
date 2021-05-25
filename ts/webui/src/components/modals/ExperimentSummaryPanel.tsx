@@ -32,9 +32,6 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
 
     getExperimentContent = (): void => {
         const experimentData = JSON.parse(JSON.stringify(this.props.experimentProfile));
-        if (experimentData.params.searchSpace) {
-            experimentData.params.searchSpace = JSON.parse(experimentData.params.searchSpace);
-        }
         const trialMessagesArr = TRIALS.getTrialJobList();
         const interResultList = TRIALS.getMetricsList();
         Object.keys(trialMessagesArr).map(item => {
@@ -57,7 +54,7 @@ class ExperimentSummaryPanel extends React.Component<ExpDrawerProps, ExpDrawerSt
             this.setState({ experiment: JSON.stringify(result, null, 4) });
         }
 
-        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status)) {
+        if (['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status)) {
             if (this.refreshId !== null || this.refreshId !== undefined) {
                 window.clearInterval(this.refreshId);
             }

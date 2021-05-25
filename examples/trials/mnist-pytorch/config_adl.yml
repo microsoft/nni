@@ -3,7 +3,7 @@ experimentName: example_mnist_pytorch
 trialConcurrency: 1
 maxExecDuration: 1h
 maxTrialNum: 10
-
+nniManagerIp: {replace_with_your_ip}
 logCollection: http
 trainingServicePlatform: adl
 
@@ -15,7 +15,14 @@ tuner:
     optimize_mode: maximize
 
 trial:
-  image: {replace_to_your_image_tag}
+  # the user needs to have a docker image built by the adl.Dockerfile
+  # the docker image should be pushed to a registry for the cluster to pull
+  # in our example we provide a docker image from our public docker hub
+  image: petuum/train-demo:mnist-pytorch-adl 
+  # optional: 
+  # the user needs to provide the secret if the image is pulled from a private registry
+  # imagePullSecrets:
+  #  - name: {secret}
   command: python3 mnist.py
   codeDir: .
   gpuNum: 1

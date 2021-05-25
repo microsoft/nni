@@ -3,8 +3,7 @@ import { Stack, Panel, PrimaryButton } from '@fluentui/react';
 import { EXPERIMENT } from '../../static/datamodel';
 import MonacoEditor from 'react-monaco-editor';
 import { MONACO } from '../../static/const';
-import { AppContext } from '../../App';
-import { convertDuration, convertTimeAsUnit, caclMonacoEditorHeight } from '../../static/function';
+import { convertDuration, caclMonacoEditorHeight } from '../../static/function';
 import { prettyStringify } from '../../static/json_util';
 import lodash from 'lodash';
 import '../../static/style/logDrawer.scss';
@@ -69,56 +68,45 @@ class TrialConfigPanel extends React.Component<LogDrawerProps, LogDrawerState> {
 
         const prettyWidth = innerWidth > 1400 ? 100 : 60;
 
+        const showProfile = JSON.stringify(profile, filter, 2);
         return (
-            <AppContext.Consumer>
-                {(value): React.ReactNode => {
-                    const unit = value.maxDurationUnit;
-                    profile.params.maxExecDuration = `${convertTimeAsUnit(
-                        unit,
-                        profile.params.maxExecDuration
-                    )}${unit}`;
-                    const showProfile = JSON.stringify(profile, filter, 2);
-                    return (
-                        <Stack>
-                            <Panel
-                                isOpen={true}
-                                hasCloseButton={false}
-                                isFooterAtBottom={true}
-                                isLightDismiss={true}
-                                onLightDismissClick={hideConfigPanel}
-                            >
-                                <div className='panel'>
-                                    {panelName === 'search space' ? (
-                                        <div>
-                                            <div className='panelName'>Search space</div>
-                                            <MonacoEditor
-                                                height={monacoEditorHeight}
-                                                language='json'
-                                                theme='vs-light'
-                                                value={prettyStringify(EXPERIMENT.searchSpace, prettyWidth, 2)}
-                                                options={MONACO}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <div className='profile'>
-                                            <div className='panelName'>Config</div>
-                                            <MonacoEditor
-                                                width='100%'
-                                                height={monacoEditorHeight}
-                                                language='json'
-                                                theme='vs-light'
-                                                value={showProfile}
-                                                options={MONACO}
-                                            />
-                                        </div>
-                                    )}
-                                    <PrimaryButton text='Close' className='configClose' onClick={hideConfigPanel} />
-                                </div>
-                            </Panel>
-                        </Stack>
-                    );
-                }}
-            </AppContext.Consumer>
+            <Stack>
+                <Panel
+                    isOpen={true}
+                    hasCloseButton={false}
+                    isFooterAtBottom={true}
+                    isLightDismiss={true}
+                    onLightDismissClick={hideConfigPanel}
+                >
+                    <div className='panel'>
+                        {panelName === 'search space' ? (
+                            <div>
+                                <div className='panelName'>Search space</div>
+                                <MonacoEditor
+                                    height={monacoEditorHeight}
+                                    language='json'
+                                    theme='vs-light'
+                                    value={prettyStringify(EXPERIMENT.searchSpace, prettyWidth, 2)}
+                                    options={MONACO}
+                                />
+                            </div>
+                        ) : (
+                            <div className='profile'>
+                                <div className='panelName'>Config</div>
+                                <MonacoEditor
+                                    width='100%'
+                                    height={monacoEditorHeight}
+                                    language='json'
+                                    theme='vs-light'
+                                    value={showProfile}
+                                    options={MONACO}
+                                />
+                            </div>
+                        )}
+                        <PrimaryButton text='Close' className='configClose' onClick={hideConfigPanel} />
+                    </div>
+                </Panel>
+            </Stack>
         );
     }
 }

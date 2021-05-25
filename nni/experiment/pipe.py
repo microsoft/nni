@@ -31,7 +31,6 @@ if sys.platform == 'win32':
         def close(self) -> None:
             if self.file is not None:
                 self.file.close()
-            _winapi.CloseHandle(self._handle)
 
     Pipe = WindowsPipe
 

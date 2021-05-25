@@ -13,6 +13,9 @@ from nni.retiarii import Model
 
 from nni.retiarii import Model, submit_models
 from nni.retiarii.integration import RetiariiAdvisor
+from nni.retiarii.evaluator.pytorch import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
+from nni.retiarii.utils import import_
+
 
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'converted_mnist_pytorch.json'

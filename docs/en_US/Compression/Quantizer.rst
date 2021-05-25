@@ -8,6 +8,7 @@ Index of supported quantization algorithms
 * `QAT Quantizer <#qat-quantizer>`__
 * `DoReFa Quantizer <#dorefa-quantizer>`__
 * `BNN Quantizer <#bnn-quantizer>`__
+* `LSQ Quantizer <#lsq-quantizer>`__
 
 Naive Quantizer
 ---------------
@@ -88,6 +89,61 @@ batch normalization folding is currently not supported.
 
 ----
 
+LSQ Quantizer
+-------------
+
+In `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__\ , authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+
+..
+
+   The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
+
+
+Usage
+^^^^^
+You can add codes below before your training codes. Three things must be done:
+
+
+1. configure which layer to be quantized and which tensor (input/output/weight) of that layer to be quantized.
+2. construct the lsq quantizer
+3. call the `compress` API
+
+
+PyTorch code
+
+.. code-block:: python
+
+    from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+    model = Mnist()
+
+    configure_list = [{
+            'quant_types': ['weight', 'input'],
+            'quant_bits': {
+                'weight': 8,
+                'input': 8,
+            },
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output': 8,},
+            'op_names': ['relu1']
+    }]
+
+    quantizer = LsqQuantizer(model, configure_list, optimizer)
+    quantizer.compress()
+
+You can view example for more information. :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
+
+User configuration for LSQ Quantizer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+
+configuration needed by this algorithm :
+
+
+----
+
 DoReFa Quantizer
 ----------------
 
@@ -157,7 +213,7 @@ PyTorch code
    quantizer = BNNQuantizer(model, configure_list)
    model = quantizer.compress()
 
-You can view example :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/BNN_quantizer_cifar10.py>` for more information.
+You can view example :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` for more information.
 
 User configuration for BNN Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,4 +237,4 @@ We implemented one of the experiments in `Binarized Neural Networks: Training De
      - 86.93%
 
 
-The experiments code can be found at :githublink:`examples/model_compress/BNN_quantizer_cifar10.py <examples/model_compress/BNN_quantizer_cifar10.py>` 
+The experiments code can be found at :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 

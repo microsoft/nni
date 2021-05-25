@@ -218,7 +218,7 @@ Once a trial job is completed, you can goto NNI WebUI's overview page (like http
 
 Expand a trial information in trial list view, click the logPath link like:
 
-.. image:: ../../img/nni_webui_joblist.jpg
+.. image:: ../../img/nni_webui_joblist.png
    :scale: 30%
 
 And you will be redirected to HDFS web portal to browse the output files of that trial in HDFS:
@@ -247,5 +247,5 @@ Check policy:
 If you could not run your experiment and want to know if it is caused by version check, you could check your webUI, and there will be an error message about version check.
 
 
-.. image:: ../../img/version_check.png
+.. image:: ../../img/webui-img/experimentError.png
    :scale: 80%

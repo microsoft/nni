@@ -73,7 +73,7 @@ BOHB advisor requires the `ConfigSpace <https://github.com/automl/ConfigSpace>`_
 
 .. code-block:: bash
 
-   nnictl package install --name=BOHB
+   pip install nni[BOHB]
 
 To use BOHB, you should add the following spec in your experiment's YAML config file:
 

@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import argparse
+import logging
 import os
 import pkg_resources
 from colorama import init
@@ -15,7 +16,6 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
-from .tensorboard_utils import start_tensorboard, stop_tensorboard
 init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
@@ -32,6 +32,8 @@ def nni_info(*args):
         print('please run "nnictl {positional argument} --help" to see nnictl guidance')
 
 def parse_args():
+    logging.getLogger().setLevel(logging.ERROR)
+
     '''Definite the arguments users need to follow and input'''
     parser = argparse.ArgumentParser(prog='nnictl', description='use nnictl command to control nni experiments')
     parser.add_argument('--version', '-v', action='store_true')
@@ -52,6 +54,7 @@ def parse_args():
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_start.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
     parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_start.set_defaults(func=create_experiment)
 
@@ -243,24 +246,9 @@ def parse_args():
     def show_messsage_for_nnictl_package(args):
         print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
 
-    parser_package_subparsers = subparsers.add_parser('package', help='control nni tuner and assessor packages').add_subparsers()
-    parser_package_subparsers.add_parser('install', help='install packages').set_defaults(func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('uninstall', help='uninstall packages').set_defaults(func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('show', help='show the information of packages').set_defaults(
-        func=show_messsage_for_nnictl_package)
-    parser_package_subparsers.add_parser('list', help='list installed packages').set_defaults(func=show_messsage_for_nnictl_package)
-
-    #parse tensorboard command
-    parser_tensorboard = subparsers.add_parser('tensorboard', help='manage tensorboard')
-    parser_tensorboard_subparsers = parser_tensorboard.add_subparsers()
-    parser_tensorboard_start = parser_tensorboard_subparsers.add_parser('start', help='start tensorboard')
-    parser_tensorboard_start.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_start.add_argument('--trial_id', '-T', dest='trial_id', help='the id of trial')
-    parser_tensorboard_start.add_argument('--port', dest='port', default=6006, type=int, help='the port to start tensorboard')
-    parser_tensorboard_start.set_defaults(func=start_tensorboard)
-    parser_tensorboard_stop = parser_tensorboard_subparsers.add_parser('stop', help='stop tensorboard')
-    parser_tensorboard_stop.add_argument('id', nargs='?', help='the id of experiment')
-    parser_tensorboard_stop.set_defaults(func=stop_tensorboard)
+    parser_package_subparsers = subparsers.add_parser('package', help='this argument is replaced by algo', prefix_chars='\n')
+    parser_package_subparsers.add_argument('args', nargs=argparse.REMAINDER)
+    parser_package_subparsers.set_defaults(func=show_messsage_for_nnictl_package)
 
     #parse top command
     parser_top = subparsers.add_parser('top', help='monitor the experiment')

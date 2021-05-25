@@ -23,7 +23,7 @@ from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
 it_variables = {}
 
 
-def update_training_service_config(config, training_service):
+def update_training_service_config(config, training_service, config_file_path):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
 
     # hack for kubeflow trial config
@@ -38,8 +38,25 @@ def update_training_service_config(config, training_service):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
-
-    deep_update(config, it_ts_config['all'])
+    
+    if training_service == 'adl':
+        # hack for adl trial config, codeDir in adl mode refers to path in container
+        containerCodeDir = config['trial']['codeDir']
+        # replace metric test folders to container folder
+        if config['trial']['codeDir'] == '.':
+            containerCodeDir = '/' + config_file_path[:config_file_path.rfind('/')]
+        elif config['trial']['codeDir'] == '../naive_trial':
+            containerCodeDir = '/test/config/naive_trial'
+        elif '../../../' in config['trial']['codeDir']:
+            # replace example folders to container folder
+            containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
+        it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
+        it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
+    
+    if training_service == 'hybrid':
+        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+    else:
+        deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
 
@@ -58,7 +75,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
     # the hack for kubeflow should be applied at last step
-    update_training_service_config(test_yml_config, args.ts)
+    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'])
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
@@ -109,7 +126,10 @@ def invoke_validator(test_case_config, nni_source_dir, training_service):
 
 def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
-    return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    if experiment_config.get('maxExecDuration'):
+        return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    else:
+        return parse_max_duration_time(experiment_config['maxExperimentDuration']), experiment_config['maxTrialNumber']
 
 
 def get_command(test_case_config, commandKey):
@@ -245,10 +265,14 @@ def run(args):
                 name, args.ts, test_case_config['trainingService']))
             continue
         # remote mode need more time to cleanup 
-        if args.ts == 'remote':
-            wait_for_port_available(8080, 180)
+        if args.ts == 'remote' or args.ts == 'hybrid':
+            wait_for_port_available(8080, 240)
         else:
-            wait_for_port_available(8080, 30)
+            wait_for_port_available(8080, 60)
+
+        # adl mode need more time to cleanup PVC
+        if args.ts == 'adl' and name == 'nnictl-resume-2':
+            time.sleep(30)
         print('## {}Testing: {}{} ##'.format(GREEN, name, CLEAR))
         begin_time = time.time()
 
@@ -263,7 +287,7 @@ if __name__ == '__main__':
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai',
-                                                   'kubeflow', 'frameworkcontroller'], default='local')
+                                                   'kubeflow', 'frameworkcontroller', 'adl', 'aml', 'hybrid'], default='local')
     args = parser.parse_args()
 
     run(args)

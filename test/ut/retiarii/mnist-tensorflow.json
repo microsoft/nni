@@ -38,8 +38,7 @@
         ]
     },
 
-    "_training_config": {
-        "module": "_debug_no_trainer",
-        "kwargs": {}
+    "_evaluator": {
+        "__type__": "_debug_no_trainer"
     }
 }

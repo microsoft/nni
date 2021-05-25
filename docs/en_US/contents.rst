@@ -20,4 +20,4 @@ Neural Network Intelligence
     Research and Publications <ResearchPublications>
     FAQ <Tutorial/FAQ>
     How to Contribute <contribution>
-    Changelog <Release>
+    Change Log <Release>

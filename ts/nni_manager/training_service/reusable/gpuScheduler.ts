@@ -10,7 +10,7 @@ import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { EnvironmentInformation } from './environment';
 import { TrialDetail } from './trial';
 
-type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
+type SCHEDULE_POLICY_NAME = 'random' | 'round-robin' | 'recently-idle';
 
 export class GpuSchedulerSetting {
     public useActiveGpu: boolean = false;
@@ -30,7 +30,7 @@ export class GpuScheduler {
 
     // private readonly machineExecutorMap: Set<TrialDetail>;
     private readonly log: Logger = getLogger();
-    private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
+    private readonly policyName: SCHEDULE_POLICY_NAME = 'recently-idle';
     private defaultSetting: GpuSchedulerSetting;
     private roundRobinIndex: number = 0;
 
@@ -101,6 +101,7 @@ export class GpuScheduler {
             trial.environment.defaultGpuSummary !== undefined &&
             trial.assignedGpus !== undefined &&
             trial.assignedGpus.length > 0) {
+            
             for (const gpuInfo of trial.assignedGpus) {
                 const defaultGpuSummary = trial.environment.defaultGpuSummary;
                 const num: number | undefined = defaultGpuSummary.assignedGpuIndexMap.get(gpuInfo.index);
@@ -190,9 +191,29 @@ export class GpuScheduler {
             return randomSelect(qualifiedEnvironments);
         } else if (this.policyName === 'round-robin') {
             return this.roundRobinSelect(qualifiedEnvironments, allEnvironments);
+        } else if (this.policyName === 'recently-idle') {
+            return this.recentlyIdleSelect(qualifiedEnvironments, allEnvironments);
         } else {
             throw new Error(`Unsupported schedule policy: ${this.policyName}`);
         }
+    }
+    
+    // Select the environment which is idle most recently. If all environments are not idle, use round robin to select an environment.
+    private recentlyIdleSelect(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]): EnvironmentInformation {
+        const now = Date.now();
+        let selectedEnvironment: EnvironmentInformation | undefined = undefined;
+        let minTimeInterval = Number.MAX_SAFE_INTEGER;
+        for (const environment of qualifiedEnvironments) {
+            if (environment.latestTrialReleasedTime > 0 && (now - environment.latestTrialReleasedTime) < minTimeInterval) {
+                selectedEnvironment = environment;
+                minTimeInterval = now - environment.latestTrialReleasedTime;
+            }
+        }
+        if (selectedEnvironment === undefined) {
+            return this.roundRobinSelect(qualifiedEnvironments, allEnvironments);
+        }
+        selectedEnvironment.latestTrialReleasedTime = -1;
+        return selectedEnvironment;
     }
 
     private roundRobinSelect(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]): EnvironmentInformation {

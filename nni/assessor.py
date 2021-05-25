@@ -43,7 +43,7 @@ class Assessor(Recoverable):
     it hints NNI framework that the trial is likely to result in a poor final accuracy,
     and therefore should be killed to save resource.
 
-    If an accessor want's to be notified when a trial ends, it can also override :meth:`trial_end`.
+    If an assessor want's to be notified when a trial ends, it can also override :meth:`trial_end`.
 
     To write a new assessor, you can reference :class:`~nni.medianstop_assessor.MedianstopAssessor`'s code as an example.
 

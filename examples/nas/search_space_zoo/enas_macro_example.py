@@ -8,7 +8,7 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
 from nni.nas.pytorch import mutables
-from nni.nas.pytorch import enas
+from nni.algorithms.nas.pytorch import enas
 from utils import accuracy, reward_accuracy
 from nni.nas.pytorch.callbacks import (ArchitectureCheckpoint,
                                        LRSchedulerCallback)

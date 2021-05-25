@@ -124,21 +124,31 @@ class LinuxCommands extends OsCommands {
             command = `bash '${script}'`;
         } else {
             script = script.replace(/"/g, '\\"');
+            const result = script.match(/[^\\]\\\\"/g);
+            if (result) {
+                result.forEach((res) => {
+                    script = script.replace(res, res.replace(/"$/g, '\\"'));
+                })
+            }
             command = `bash -c "${script}"`;
         }
         return command;
     }
 
-    public addPreCommand(preCommand: string | undefined, command: string | undefined): string | undefined{
-        if (command === undefined || command === '' || preCommand === undefined || preCommand === ''){
+    public setPythonPath(pythonPath: string | undefined, command: string | undefined): string | undefined{
+        if (command === undefined || command === '' || pythonPath === undefined || pythonPath === ''){
             return command;
         } else {
-            return `${preCommand} && ${command}`;
+            return `export PATH=${pythonPath}:$PATH && ${command}`;
         }
     }
 
     public fileExistCommand(filePath: string): string {
         return `test -e ${filePath} && echo True || echo False`;
+    }
+
+    public getCurrentPath(): string {
+        return `pwd`;
     }
 }
 

@@ -110,7 +110,7 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable : LayerChoice
+        mutable : nni.nas.pytorch.mutables.LayerChoice
             Module whose forward is called.
         args : list of torch.Tensor
             The arguments of its forward function.
@@ -130,7 +130,7 @@ class BaseMutator(nn.Module):
 
         Parameters
         ----------
-        mutable : InputChoice
+        mutable : nni.nas.pytorch.mutables.InputChoice
             Mutable that is called.
         tensor_list : list of torch.Tensor
             The arguments mutable is called with.

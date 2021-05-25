@@ -1,7 +1,19 @@
 import * as JSON5 from 'json5';
 import axios from 'axios';
+import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
-import { MetricDataRecord, FinalType, TableObj } from './interface';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
+
+function getPrefix(): string | undefined {
+    const pathName = window.location.pathname;
+    let newPathName = pathName;
+
+    if (pathName.endsWith('/oview') || pathName.endsWith('/detail') || pathName.endsWith('/experiment')) {
+        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
+    }
+
+    return newPathName === '' ? undefined : newPathName;
+}
 
 async function requestAxios(url: string): Promise<any> {
     const response = await axios.get(url);
@@ -305,7 +317,47 @@ function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: bool
         return (isSortedDescending ? a[key] < b[key] : a[key] > b[key]) ? 1 : -1;
     });
 }
+
+function disableTensorboard(selectedRowIds: string[], queryTensorboardList: Tensorboard[]): boolean {
+    let flag = true;
+
+    if (selectedRowIds.length !== 0) {
+        flag = false;
+    }
+
+    if (selectedRowIds.length === 0 && queryTensorboardList.length !== 0) {
+        flag = false;
+    }
+
+    return flag;
+}
+
+function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDetailFunc): IContextualMenuProps {
+    const result: Array<object> = [];
+    if (queryTensorboardList.length !== 0) {
+        result.push({
+            key: 'delete',
+            text: 'Stop all tensorBoard',
+            className: 'clearAll',
+            onClick: stopFunc
+        });
+        queryTensorboardList.forEach(item => {
+            result.push({
+                key: item.id,
+                text: `${item.id}`,
+                className: `CommandBarButton-${item.status}`,
+                onClick: (): void => seeDetailFunc(item)
+            });
+        });
+    }
+    const tensorboardMenu: IContextualMenuProps = {
+        items: result.reverse() as any
+    };
+
+    return tensorboardMenu;
+}
 export {
+    getPrefix,
     convertTime,
     convertDuration,
     convertTimeAsUnit,
@@ -327,5 +379,7 @@ export {
     formatComplexTypeValue,
     isManagerExperimentPage,
     caclMonacoEditorHeight,
-    copyAndSort
+    copyAndSort,
+    disableTensorboard,
+    getTensorboardMenu
 };

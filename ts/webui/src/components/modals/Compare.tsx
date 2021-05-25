@@ -4,9 +4,9 @@ import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentu
 import ReactEcharts from 'echarts-for-react';
 import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
-import '../../static/style/compare.scss';
 import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import '../../static/style/compare.scss';
 
 function _getWebUIWidth(): number {
     return window.innerWidth;
@@ -51,6 +51,7 @@ interface CompareProps {
     title: string;
     showDetails: boolean;
     onHideDialog: () => void;
+    changeSelectTrialIds?: () => void;
 }
 
 class Compare extends React.Component<CompareProps, {}> {
@@ -83,13 +84,7 @@ class Compare extends React.Component<CompareProps, {}> {
             tooltip: {
                 trigger: 'item',
                 enterable: true,
-                position: (point: number[], data: TooltipForIntermediate): [number, number] => {
-                    if (data.dataIndex < xAxisMax / 2) {
-                        return [point[0], 80];
-                    } else {
-                        return [point[0] - 300, 80];
-                    }
-                },
+                confine: true,
                 formatter: (data: TooltipForIntermediate): string => {
                     const item = items.find(k => k.id === data.seriesName) as Item;
                     return this._generateTooltipSummary(item, data.data);
@@ -103,7 +98,7 @@ class Compare extends React.Component<CompareProps, {}> {
             legend: {
                 type: 'scroll',
                 right: 40,
-                left: legend.length > 6 ? 80 : null,
+                left: legend.length > 6 ? '15%' : null,
                 data: legend
             },
             xAxis: {
@@ -119,11 +114,13 @@ class Compare extends React.Component<CompareProps, {}> {
             series: dataForEchart
         };
         return (
-            <ReactEcharts
-                option={option}
-                style={{ width: '100%', height: 418, margin: '0 auto' }}
-                notMerge={true} // update now
-            />
+            <div className='graph'>
+                <ReactEcharts
+                    option={option}
+                    style={{ width: '100%', height: 418, margin: '0 auto' }}
+                    notMerge={true} // update now
+                />
+            </div>
         );
     }
 
@@ -139,7 +136,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 <td className='column'>{rowName}</td>
                 {items.map(item => (
                     <td className={className} key={item.id}>
-                        {formatter(item)}
+                        {formatter(item) || '--'}
                     </td>
                 ))}
             </tr>
@@ -178,6 +175,7 @@ class Compare extends React.Component<CompareProps, {}> {
         }
         const parameterKeys = this._overlapKeys(items.map(item => item.parameters));
         const metricKeys = this._overlapKeys(items.map(item => item.metrics));
+
         return (
             <table className={`compare-modal-table ${scrollClass}`}>
                 <tbody>
@@ -199,8 +197,17 @@ class Compare extends React.Component<CompareProps, {}> {
         );
     }
 
+    private closeCompareModal = (): void => {
+        const { showDetails, changeSelectTrialIds, onHideDialog } = this.props;
+        if (showDetails === true) {
+            // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+            changeSelectTrialIds!();
+        }
+        onHideDialog();
+    };
+
     render(): React.ReactNode {
-        const { onHideDialog, trials, title, showDetails } = this.props;
+        const { trials, title, showDetails } = this.props;
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -221,7 +228,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
-                onDismiss={onHideDialog}
+                onDismiss={this.closeCompareModal}
             >
                 <div>
                     <div className={contentStyles.header}>
@@ -230,7 +237,7 @@ class Compare extends React.Component<CompareProps, {}> {
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
                             ariaLabel='Close popup modal'
-                            onClick={onHideDialog}
+                            onClick={this.closeCompareModal}
                         />
                     </div>
                     <Stack className='compare-modal-intermediate'>

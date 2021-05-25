@@ -1,9 +1,12 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import graphviz
 
 
 def convert_to_visualize(graph_ir, vgraph):
     for name, graph in graph_ir.items():
-        if name == '_training_config':
+        if name == '_evaluator':
             continue
         with vgraph.subgraph(name='cluster'+name) as subgraph:
             subgraph.attr(color='blue')

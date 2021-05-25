@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn } from '@fluentui/react';
+import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
 import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
@@ -12,10 +12,15 @@ import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
 import '../../App.scss';
+import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/overview/probar.scss';
 import '../../static/style/tableStatus.css';
+
+const expTokens: IStackTokens = {
+    childrenGap: 25
+};
 
 interface ExpListState {
     columns: IColumn[];
@@ -23,7 +28,7 @@ interface ExpListState {
     errorMessage: string;
     hideFilter: boolean;
     searchInputVal: string;
-    selectedStatus: string;
+    selectedStatus: string[];
     selectedPlatform: string;
     selectedStartDate?: Date;
     selectedEndDate?: Date;
@@ -42,7 +47,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             errorMessage: '',
             hideFilter: true,
             searchInputVal: '',
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             source: [], // data in table
             originExperimentList: [], // api /experiments-info
@@ -110,7 +115,11 @@ class Experiment extends React.Component<{}, ExpListState> {
                                     </DefaultButton>
                                 </div>
                             </Stack>
-                            <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
+                            <Stack
+                                className={`${hideFilter ? 'hidden' : ''} filter-condition`}
+                                horizontal
+                                tokens={expTokens}
+                            >
                                 <FilterBtns
                                     platform={platform}
                                     selectedStatus={selectedStatus}
@@ -132,7 +141,6 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 compact={true}
                                 selectionMode={0} // close selector function
                                 className='table'
-                                onActiveItemChanged={this.experimentClicked}
                             />
                         </Stack>
                     </Stack>
@@ -174,7 +182,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='succeed-padding'>{item.experimentName}</div>
+            onRender: (item: any): React.ReactNode => <div>{item.experimentName}</div>
         },
         {
             name: 'ID',
@@ -196,9 +204,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             maxWidth: MAXSCREENCOLUMNWIDHT,
             isResizable: true,
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className={`${item.status} commonStyle succeed-padding`}>{item.status}</div>
-            )
+            onRender: (item: any): React.ReactNode => <div className={`${item.status} commonStyle`}>{item.status}</div>
         },
         {
             name: 'Port',
@@ -210,8 +216,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             data: 'number',
             onColumnClick: this.onColumnClick,
             onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div>{item.port !== undefined ? item.port : '--'}</div>
+                <div className={item.status === 'STOPPED' ? 'gray-port' : ''}>
+                    {item.port !== undefined ? item.port : '--'}
                 </div>
             )
         },
@@ -224,7 +230,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <div className='commonStyle succeed-padding'>{item.platform}</div>
+            onRender: (item: any): React.ReactNode => <div className='commonStyle'>{item.platform}</div>
         },
         {
             name: 'Start time',
@@ -235,11 +241,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div>{expformatTimestamp(item.startTime)}</div>
-                </div>
-            )
+            onRender: (item: any): React.ReactNode => <div>{expformatTimestamp(item.startTime)}</div>
         },
         {
             name: 'End time',
@@ -250,22 +252,9 @@ class Experiment extends React.Component<{}, ExpListState> {
             isResizable: true,
             data: 'number',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => (
-                <div className='succeed-padding'>
-                    <div>{expformatTimestamp(item.endTime)}</div>
-                </div>
-            )
+            onRender: (item: any): React.ReactNode => <div>{expformatTimestamp(item.endTime)}</div>
         }
     ];
-
-    private experimentClicked = (item?: any, _index?: number, _ev?: React.FocusEvent<HTMLElement>): void => {
-        if (item.status !== 'STOPPED' && item.port !== undefined) {
-            const hostname = window.location.hostname;
-            const protocol = window.location.protocol;
-            const webuiPortal = `${protocol}//${hostname}:${item.port}/oview`;
-            window.open(webuiPortal);
-        }
-    };
 
     private clickFilter(_e: any): void {
         const { hideFilter } = this.state;
@@ -320,39 +309,28 @@ class Experiment extends React.Component<{}, ExpListState> {
      */
     private commonSelectString = (data: AllExperimentList[], field: string): AllExperimentList[] => {
         const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate } = this.state;
-        const hasStatus = selectedStatus === '' ? false : true;
-        const hasPlatform = selectedPlatform === '' ? false : true;
-        const hasStartDate = selectedStartDate === undefined ? false : true;
-        const hasEndDate = selectedEndDate === undefined ? false : true;
 
         if (field === 'status') {
-            if (hasPlatform) {
-                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
-            }
+            data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
         }
         if (field === 'platform') {
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = filterByStatusOrPlatform(selectedStatus, 'status', data);
         }
 
         if (field === '') {
-            if (hasPlatform) {
-                data = filterByStatusOrPlatform(selectedPlatform, 'platform', data);
-            }
-            if (hasStatus) {
-                data = filterByStatusOrPlatform(selectedStatus, 'status', data);
-            }
+            data = Array.from(
+                new Set([
+                    ...filterByStatusOrPlatform(selectedPlatform, 'platform', data),
+                    ...filterByStatusOrPlatform(selectedStatus, 'status', data)
+                ])
+            );
         }
 
-        if (hasStartDate) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            data = data.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
-        }
-        if (hasEndDate) {
-            // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-            data = data.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
-        }
+        data = data.filter(
+            item =>
+                (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate)) &&
+                (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
+        );
 
         return data;
     };
@@ -360,10 +338,16 @@ class Experiment extends React.Component<{}, ExpListState> {
     // status platform startTime endTime
     private selectStatus = (_event: React.FormEvent<HTMLDivElement>, item: any): void => {
         if (item !== undefined) {
-            const { searchSource, sortInfo } = this.state;
-            let result = filterByStatusOrPlatform(item.key, 'status', searchSource);
+            const { searchSource, sortInfo, selectedStatus } = this.state;
+            const newSelectedStatus = item.selected
+                ? [...selectedStatus, item.key as string]
+                : selectedStatus.filter(key => key !== item.key);
+            let result = filterByStatusOrPlatform(newSelectedStatus, 'status', searchSource);
             result = this.commonSelectString(result, 'status');
-            this.setState({ selectedStatus: item.key, source: getSortedSource(result, sortInfo) });
+            this.setState({
+                selectedStatus: newSelectedStatus,
+                source: getSortedSource(result, sortInfo)
+            });
         }
     };
 
@@ -386,41 +370,30 @@ class Experiment extends React.Component<{}, ExpListState> {
                 searchSource,
                 sortInfo
             } = this.state;
-            const hasStatus = selectedStatus === '' ? false : true;
             const hasPlatform = selectedPlatform === '' ? false : true;
-            const hasStartDate = selectedStartDate === undefined ? false : true;
-            const hasEndDate = selectedEndDate === undefined ? false : true;
-            let result;
+
+            // filter status, platform
+            let result = filterByStatusOrPlatform(selectedStatus, 'status', searchSource);
+            if (hasPlatform) {
+                result = result.filter(temp => temp.platform === selectedPlatform);
+            }
+
             if (type === 'start') {
-                // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                result = searchSource.filter(item => compareDate(new Date(item.startTime), date));
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
-                if (hasPlatform) {
-                    result = result.filter(temp => temp.platform === selectedPlatform);
-                }
-                if (hasEndDate) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => compareDate(new Date(temp.endTime), selectedEndDate!));
-                }
+                result = result.filter(
+                    item =>
+                        compareDate(new Date(item.startTime), date) &&
+                        (selectedEndDate === undefined || compareDate(new Date(item.endTime), selectedEndDate))
+                );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
                     selectedStartDate: date
                 }));
             } else {
-                result = searchSource.filter(item => compareDate(new Date(item.endTime), date));
-
-                if (hasStatus) {
-                    result = result.filter(temp => temp.status === selectedStatus);
-                }
-                if (hasPlatform) {
-                    result = result.filter(temp => temp.platform === selectedPlatform);
-                }
-                if (hasStartDate) {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    result = result.filter(temp => compareDate(new Date(temp.startTime), selectedStartDate!));
-                }
+                result = result.filter(
+                    item =>
+                        compareDate(new Date(item.endTime), date) &&
+                        (selectedStartDate === undefined || compareDate(new Date(item.startTime), selectedStartDate))
+                );
                 this.setState(() => ({
                     source: getSortedSource(result, sortInfo),
                     selectedEndDate: date
@@ -442,7 +415,7 @@ class Experiment extends React.Component<{}, ExpListState> {
         );
         this.setState(() => ({
             source: getSortedSource(result, sortInfo),
-            selectedStatus: '',
+            selectedStatus: [],
             selectedPlatform: '',
             selectedStartDate: undefined,
             selectedEndDate: undefined

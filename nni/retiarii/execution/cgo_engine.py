@@ -1,5 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
-from typing import List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
@@ -46,7 +49,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
             data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement),
-                                 model.training_config.module, model.training_config.kwargs)
+                                 model.evaluator)
             for m in grouped_models:
                 self._original_models[m.model_id] = m
                 self._original_model_to_multi_model[m.model_id] = model
@@ -56,6 +59,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         #     data = BaseGraphData(codegen.model_to_pytorch_script(model),
         #                          model.config['trainer_module'], model.config['trainer_kwargs'])
         #     self._running_models[send_trial(data.dump())] = model
+
+    def list_models(self) -> Iterable[Model]:
+        raise NotImplementedError
 
     def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice]]:
         # unique_models = set()
@@ -128,6 +134,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     def query_available_resource(self) -> List[WorkerInfo]:
         raise NotImplementedError  # move the method from listener to here?
+
+    def budget_exhausted(self) -> bool:
+        raise NotImplementedError
 
     @classmethod
     def trial_execute_graph(cls) -> None:

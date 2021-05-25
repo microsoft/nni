@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from ..graph import Model, ModelStatus
 from .interface import MetricData, AbstractGraphListener
 

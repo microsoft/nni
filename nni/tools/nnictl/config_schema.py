@@ -4,11 +4,17 @@
 import json
 import logging
 import os
+
 import netifaces
-from schema import Schema, And, Optional, Regex, Or, SchemaError
-from nni.tools.package_utils import create_validator_instance, get_all_builtin_names, get_registered_algo_meta
-from .constants import SCHEMA_TYPE_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_PATH_ERROR
+from nni.tools.package_utils import (
+    create_validator_instance,
+    get_all_builtin_names,
+    get_registered_algo_meta,
+)
+from schema import And, Optional, Or, Regex, Schema, SchemaError
+
 from .common_utils import get_yml_content, print_warning
+from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
 
 
 def setType(key, valueType):
@@ -124,7 +130,7 @@ common_schema = {
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'paiYarn', 'dlts', 'aml', 'adl', 'heterogeneous'),
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -142,6 +148,18 @@ common_schema = {
         Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool)
+    },
+    Optional('sharedStorage'): {
+        'storageType': setChoice('storageType', 'NFS', 'AzureBlob'),
+        Optional('localMountPoint'): setType('localMountPoint', str),
+        Optional('remoteMountPoint'): setType('remoteMountPoint', str),
+        Optional('nfsServer'): setType('nfsServer', str),
+        Optional('exportedDirectory'): setType('exportedDirectory', str),
+        Optional('storageAccountName'): setType('storageAccountName', str),
+        Optional('storageAccountKey'): setType('storageAccountKey', str),
+        Optional('containerName'): setType('containerName', str),
+        Optional('resourceGroupName'): setType('resourceGroupName', str),
+        Optional('localMounted'): setChoice('localMounted', 'usermount', 'nnimount', 'nomount')
     }
 }
 
@@ -171,23 +189,11 @@ pai_yarn_trial_schema = {
         Optional('virtualCluster'): setType('virtualCluster', str),
         Optional('nasMode'): setChoice('nasMode', 'classic_mode', 'enas_mode', 'oneshot_mode', 'darts_mode'),
         Optional('portList'): [{
-            "label": setType('label', str),
-            "beginAt": setType('beginAt', int),
-            "portNumber": setType('portNumber', int)
+            'label': setType('label', str),
+            'beginAt': setType('beginAt', int),
+            'portNumber': setType('portNumber', int)
         }]
     }
-}
-
-pai_yarn_config_schema = {
-    'paiYarnConfig': Or({
-        'userName': setType('userName', str),
-        'passWord': setType('passWord', str),
-        'host': setType('host', str)
-    }, {
-        'userName': setType('userName', str),
-        'token': setType('token', str),
-        'host': setType('host', str)
-    })
 }
 
 
@@ -262,7 +268,7 @@ aml_config_schema = {
     }
 }
 
-heterogeneous_trial_schema = {
+hybrid_trial_schema = {
     'trial': {
         'codeDir': setPathCheck('codeDir'),
         Optional('nniManagerNFSMountPath'): setPathCheck('nniManagerNFSMountPath'),
@@ -279,8 +285,8 @@ heterogeneous_trial_schema = {
     }
 }
 
-heterogeneous_config_schema = {
-    'heterogeneousConfig': {
+hybrid_config_schema = {
+    'hybridConfig': {
         'trainingServicePlatforms': ['local', 'remote', 'pai', 'aml']
     }
 }
@@ -376,7 +382,7 @@ kubeflow_config_schema = {
 frameworkcontroller_trial_schema = {
     'trial': {
         'codeDir':  setPathCheck('codeDir'),
-        'taskRoles': [{
+        Optional('taskRoles'): [{
             'name': setType('name', str),
             'taskNum': setType('taskNum', int),
             'frameworkAttemptCompletionPolicy': {
@@ -395,14 +401,22 @@ frameworkcontroller_trial_schema = {
 
 frameworkcontroller_config_schema = {
     'frameworkcontrollerConfig': Or({
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
-        }
+        },
+        Optional('namespace'): setType('namespace', str),
+        Optional('configPath'): setType('configPath', str),
     }, {
-        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage'),
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
+        Optional('serviceAccountName'): setType('serviceAccountName', str),
+        'configPath': setType('configPath', str),
+        'pvc': {'path': setType('server', str)},
+        Optional('namespace'): setType('namespace', str),
+    }, {
+        Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'keyVault': {
             'vaultName': And(Regex('([0-9]|[a-z]|[A-Z]|-){1,127}'),
@@ -416,7 +430,9 @@ frameworkcontroller_config_schema = {
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
                               error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
-        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
+        Optional('namespace'): setType('namespace', str),
+        Optional('configPath'): setType('configPath', str),
     })
 }
 
@@ -437,7 +453,7 @@ machine_list_schema = {
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool),
-            Optional('preCommand'): setType('preCommand', str)
+            Optional('pythonPath'): setType('pythonPath', str)
         },
         {
             'ip': setType('ip', str),
@@ -447,7 +463,7 @@ machine_list_schema = {
             Optional('gpuIndices'): Or(int, And(str, lambda x: len([int(i) for i in x.split(',')]) > 0), error='gpuIndex format error!'),
             Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
             Optional('useActiveGpu'): setType('useActiveGpu', bool),
-            Optional('preCommand'): setType('preCommand', str)
+            Optional('pythonPath'): setType('pythonPath', str)
         })]
 }
 
@@ -456,12 +472,11 @@ training_service_schema_dict = {
     'local': Schema({**common_schema, **common_trial_schema}),
     'remote': Schema({**common_schema, **common_trial_schema, **machine_list_schema, **remote_config_schema}),
     'pai': Schema({**common_schema, **pai_trial_schema, **pai_config_schema}),
-    'paiYarn': Schema({**common_schema, **pai_yarn_trial_schema, **pai_yarn_config_schema}),
     'kubeflow': Schema({**common_schema, **kubeflow_trial_schema, **kubeflow_config_schema}),
     'frameworkcontroller': Schema({**common_schema, **frameworkcontroller_trial_schema, **frameworkcontroller_config_schema}),
     'aml': Schema({**common_schema, **aml_trial_schema, **aml_config_schema}),
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
-    'heterogeneous': Schema({**common_schema, **heterogeneous_trial_schema, **heterogeneous_config_schema, **machine_list_schema,
+    'hybrid': Schema({**common_schema, **hybrid_trial_schema, **hybrid_config_schema, **machine_list_schema,
                              **pai_config_schema, **aml_config_schema, **remote_config_schema}),
 }
 
@@ -479,7 +494,8 @@ class NNIConfigSchema:
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
         self.validate_eth0_device(experiment_config)
-        self.validate_heterogeneous_platforms(experiment_config)
+        self.validate_hybrid_platforms(experiment_config)
+        self.validate_frameworkcontroller_trial_config(experiment_config)
 
     def validate_tuner_adivosr_assessor(self, experiment_config):
         if experiment_config.get('advisor'):
@@ -569,7 +585,7 @@ class NNIConfigSchema:
 
     def validate_pai_trial_conifg(self, experiment_config):
         '''validate the trial config in pai platform'''
-        if experiment_config.get('trainingServicePlatform') in ['pai', 'paiYarn']:
+        if experiment_config.get('trainingServicePlatform') in ['pai']:
             if experiment_config.get('trial').get('shmMB') and \
                     experiment_config['trial']['shmMB'] > experiment_config['trial']['memoryMB']:
                 raise SchemaError('shmMB should be no more than memoryMB!')
@@ -589,16 +605,37 @@ class NNIConfigSchema:
                 and not experiment_config.get('nniManagerIp') \
                 and 'eth0' not in netifaces.interfaces():
             raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
-    
-    def validate_heterogeneous_platforms(self, experiment_config):
+
+    def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {
             'remote': 'machineList',
             'aml': 'amlConfig',
             'pai': 'paiConfig'
         }
-        if experiment_config.get('trainingServicePlatform') == 'heterogeneous':
-            for platform in experiment_config['heterogeneousConfig']['trainingServicePlatforms']:
+        if experiment_config.get('trainingServicePlatform') == 'hybrid':
+            for platform in experiment_config['hybridConfig']['trainingServicePlatforms']:
                 config_name = required_config_name_map.get(platform)
                 if config_name and not experiment_config.get(config_name):
-                    raise SchemaError('Need to set {0} for {1} in heterogeneous mode!'.format(config_name, platform))
-                
+                    raise SchemaError('Need to set {0} for {1} in hybrid mode!'.format(config_name, platform))
+
+    def validate_frameworkcontroller_trial_config(self, experiment_config):
+        if experiment_config.get('trainingServicePlatform') == 'frameworkcontroller':
+            if not experiment_config.get('trial').get('taskRoles'):
+                if not experiment_config.get('frameworkcontrollerConfig').get('configPath'):
+                    raise SchemaError("""If no taskRoles are specified a valid custom frameworkcontroller config should
+                                         be set using the configPath attribute in frameworkcontrollerConfig!""")
+                config_content = get_yml_content(experiment_config.get('frameworkcontrollerConfig').get('configPath'))
+                if not config_content.get('spec').get('taskRoles') or not len(config_content.get('spec').get('taskRoles')):
+                    raise SchemaError('Invalid frameworkcontroller config! No taskRoles were specified!')
+                if not config_content.get('spec').get('taskRoles')[0].get('task'):
+                    raise SchemaError('Invalid frameworkcontroller config! No task was specified for taskRole!')
+                names = []
+                for taskRole in config_content.get('spec').get('taskRoles'):
+                    if not "name" in taskRole:
+                        raise SchemaError('Invalid frameworkcontroller config! Name is missing for taskRole!')
+                    names.append(taskRole.get("name"))
+                if len(names) > len(set(names)):
+                    raise SchemaError('Invalid frameworkcontroller config! Duplicate taskrole names!')
+                if not config_content.get('metadata').get('name'):
+                    raise SchemaError('Invalid frameworkcontroller config! No experiment name was specified!')
+

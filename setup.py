@@ -55,32 +55,6 @@ from setuptools.command.develop import develop
 
 import setup_ts
 
-
-dependencies = [
-    'astor',
-    'hyperopt==0.1.2',
-    'json_tricks',
-    'netifaces',
-    'psutil',
-    'ruamel.yaml',
-    'requests',
-    'responses',
-    'schema',
-    'PythonWebHDFS',
-    'colorama',
-    'scikit-learn>=0.23.2',
-    'pkginfo',
-    'websockets',
-    'filelock',
-    'prettytable',
-    'dataclasses ; python_version < "3.7"',
-    'numpy < 1.19.4 ; sys_platform == "win32"',
-    'numpy < 1.20 ; sys_platform != "win32" and python_version < "3.7"',
-    'numpy ; sys.platform != "win32" and python_version >= "3.7"',
-    'scipy < 1.6 ; python_version < "3.7"',
-    'scipy ; python_version >= "3.7"',
-]
-
 release = os.environ.get('NNI_RELEASE')
 
 def _setup():
@@ -110,11 +84,11 @@ def _setup():
         },
 
         python_requires = '>=3.6',
-        install_requires = dependencies,
+        install_requires = _read_requirements_txt('dependencies/required.txt'),
         extras_require = {
-            'SMAC': ['ConfigSpaceNNI', 'smac4nni'],
-            'BOHB': ['ConfigSpace==0.4.7', 'statsmodels==0.10.0'],
-            'PPOTuner': ['enum34', 'gym']
+            'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),
+            'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
+            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner')
         },
         setup_requires = ['requests'],
 
@@ -162,6 +136,23 @@ def _find_node_files():
     if '__init__.py' in files:
         files.remove('__init__.py')
     return sorted(files)
+
+def _read_requirements_txt(file_path, section=None):
+    with open(file_path) as f:
+        lines = [line.strip() for line in f.readlines() if line.strip()]  # remove whitespaces and empty lines
+    if section is None:
+        return [line for line in lines if not line.startswith('#')]
+    selected_lines = []
+    started = False
+    for line in lines:
+        if started:
+            if line.startswith('#'):
+                return selected_lines
+            else:
+                selected_lines.append(line)
+        elif line.startswith('# ' + section):
+            started = True
+    return selected_lines
 
 def _using_conda_or_virtual_environment():
     return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))

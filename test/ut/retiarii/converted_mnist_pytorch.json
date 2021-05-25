@@ -340,7 +340,7 @@
           }
        ]
     },
-    "_training_config": {
+    "_evaluator": {
         "module": "nni.retiarii.trainer.PyTorchImageClassificationTrainer",
         "kwargs": {
             "dataset_cls": "MNIST",

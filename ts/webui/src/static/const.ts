@@ -1,10 +1,16 @@
+import { getPrefix } from './function';
+
 // when there are more trials than this threshold, metrics will be updated in group of this size to avoid freezing
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-const MANAGER_IP = `/api/v1/nni`;
+const prefix = getPrefix();
+
+const MANAGER_IP = prefix === undefined ? '/api/v1/nni' : `${prefix}`;
 const DOWNLOAD_IP = `/logs`;
+
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
+
 const trialJobStatus = [
     'UNKNOWN',
     'WAITING',
@@ -21,6 +27,7 @@ const EXPERIMENTSTATUS = [
     'ERROR',
     'STOPPING',
     'STOPPED',
+    'VIEWED',
     'DONE',
     'NO_MORE_TRIAL',
     'TUNER_NO_MORE_TRIAL'
@@ -39,18 +46,6 @@ const DRAWEROPTION = {
 const OPERATION = 'Operation';
 // defatult selected column
 const COLUMN = ['Trial No.', 'ID', 'Duration', 'Status', 'Default', OPERATION];
-// all choice column !dictory final
-const COLUMNPro = [
-    'Trial No.',
-    'ID',
-    'Start time',
-    'End time',
-    'Duration',
-    'Status',
-    'Intermediate result',
-    'Default',
-    OPERATION
-];
 const CONCURRENCYTOOLTIP = 'Trial concurrency is the number of trials running concurrently.';
 const SUPPORTED_SEARCH_SPACE_TYPE = [
     'choice',
@@ -75,7 +70,6 @@ export {
     DOWNLOAD_IP,
     trialJobStatus,
     EXPERIMENTSTATUS,
-    COLUMNPro,
     WEBUIDOC,
     CONTROLTYPE,
     MONACO,

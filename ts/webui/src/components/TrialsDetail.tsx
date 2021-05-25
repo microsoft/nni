@@ -7,7 +7,6 @@ import Duration from './trial-detail/Duration';
 import Para from './trial-detail/Para';
 import Intermediate from './trial-detail/Intermediate';
 import TableList from './trial-detail/TableList';
-import '../static/style/trialsDetail.scss';
 import '../static/style/search.scss';
 
 interface TrialDetailState {
@@ -53,22 +52,23 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                 {/* <PivotItem tab={this.titleOfacc} key="1"> doesn't work*/}
                                 <PivotItem headerText='Default metric' itemIcon='HomeGroup' key='Default metric'>
                                     <Stack className='graph'>
-                                        <DefaultPoint trialIds={trialIds} visible={whichChart === 'Default metric'} />
+                                        <DefaultPoint
+                                            trialIds={trialIds}
+                                            hasBestCurve={true}
+                                            chartHeight={402}
+                                            changeExpandRowIDs={_value.changeExpandRowIDs}
+                                        />
                                     </Stack>
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfhyper} key="2"> */}
                                 <PivotItem headerText='Hyper-parameter' itemIcon='Equalizer' key='Hyper-parameter'>
                                     <Stack className='graph'>
-                                        <Para
-                                            trials={source}
-                                            searchSpace={EXPERIMENT.searchSpaceNew}
-                                            whichChart={whichChart}
-                                        />
+                                        <Para trials={source} searchSpace={EXPERIMENT.searchSpaceNew} />
                                     </Stack>
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfDuration} key="3"> */}
                                 <PivotItem headerText='Duration' itemIcon='BarChartHorizontal' key='Duration'>
-                                    <Duration source={source} whichChart={whichChart} />
+                                    <Duration source={source} />
                                 </PivotItem>
                                 {/* <PivotItem tab={this.titleOfIntermediate} key="4"> */}
                                 <PivotItem
@@ -77,7 +77,7 @@ class TrialsDetail extends React.Component<{}, TrialDetailState> {
                                     key='Intermediate result'
                                 >
                                     {/* *why this graph has small footprint? */}
-                                    <Intermediate source={source} whichChart={whichChart} />
+                                    <Intermediate source={source} />
                                 </PivotItem>
                             </Pivot>
                         </div>

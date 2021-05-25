@@ -24,7 +24,6 @@ interface ParaState {
 interface ParaProps {
     trials: Array<TableObj>;
     searchSpace: SearchSpace;
-    whichChart: string;
 }
 
 class Para extends React.Component<ParaProps, ParaState> {
@@ -52,7 +51,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
-            chosenDimensions: []
+            chosenDimensions:
+                localStorage.getItem('paraColumns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('paraColumns')!)
+                    : []
         };
     }
 
@@ -81,10 +84,7 @@ class Para extends React.Component<ParaProps, ParaState> {
     componentDidUpdate(prevProps: ParaProps): void {
         // FIXME: redundant update
         if (this.props.trials !== prevProps.trials || this.props.searchSpace !== prevProps.searchSpace) {
-            const { whichChart } = this.props;
-            if (whichChart === 'Hyper-parameter') {
-                this.renderParallelCoordinates();
-            }
+            this.renderParallelCoordinates();
         }
     }
 
@@ -134,6 +134,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
                         minSelected={2}
+                        whichComponent='para'
                     />
                 )}
                 <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />

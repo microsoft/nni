@@ -13,7 +13,6 @@ interface Runtrial {
 
 interface DurationProps {
     source: Array<TableObj>;
-    whichChart: string;
 }
 
 interface DurationState {
@@ -102,15 +101,13 @@ class Duration extends React.Component<DurationProps, DurationState> {
                 axisPointer: {
                     type: 'shadow'
                 },
+                enterable: true,
                 formatter: (data: any): React.ReactNode =>
-                    '<div>' +
-                    '<div>Trial No.: ' +
-                    data[0].dataIndex +
-                    '</div>' +
-                    '<div>Duration: ' +
-                    convertDuration(data[0].data) +
-                    '</div>' +
-                    '</div>'
+                    `<div class="tooldetailAccuracy">
+                        <div>Trial No.: ${data[0].dataIndex}</div>
+                        <div>Duration: ${convertDuration(data[0].data)}</div>
+                    </div>
+                    `
             },
             grid: {
                 bottom: '3%',
@@ -177,21 +174,20 @@ class Duration extends React.Component<DurationProps, DurationState> {
     componentDidUpdate(prevProps: DurationProps): void {
         // add this if to prevent endless loop
         if (this.props.source !== prevProps.source) {
-            if (this.props.whichChart === 'Duration') {
-                this.drawDurationGraph(this.props.source);
-            }
+            this.drawDurationGraph(this.props.source);
         }
     }
 
     render(): React.ReactNode {
         const { durationSource } = this.state;
         const onEvents = { dataZoom: this.durationDataZoom };
+
         return (
-            <div>
+            <div className='graph'>
                 <ReactEcharts
                     option={durationSource}
                     style={{ width: '94%', height: 412, margin: '0 auto', marginTop: 15 }}
-                    theme='my_theme'
+                    theme='nni_theme'
                     notMerge={true} // update now
                     onEvents={onEvents}
                 />

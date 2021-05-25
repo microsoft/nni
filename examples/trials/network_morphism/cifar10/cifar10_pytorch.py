@@ -20,7 +20,7 @@ import logging
 import sys
 
 import nni
-from nni.networkmorphism_tuner.graph import json_to_graph
+from nni.algorithms.hpo.networkmorphism_tuner.graph import json_to_graph
 
 import torch
 import torch.nn as nn

@@ -22,7 +22,7 @@ import numpy as np
 from sklearn.datasets import load_svmlight_file
 from sklearn.model_selection import train_test_split
 
-from nni.feature_engineering.gbdt_selector import GBDTSelector
+from nni.algorithms.feature_engineering.gbdt_selector import GBDTSelector
 
 url_zip_train = 'https://www.csie.ntu.edu.tw/~cjlin/libsvmtools/datasets/binary/rcv1_train.binary.bz2'
 urllib.request.urlretrieve(url_zip_train, filename='train.bz2')

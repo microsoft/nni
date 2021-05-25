@@ -1,81 +1,87 @@
 $pageMargin: 24px;
 
 .expBackground {
-	background: #f2f2f2;
-	height: 100%;
+    background: #f2f2f2;
+    height: 100%;
 
-	.content {
-		/* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
-		margin-top: 32px;
-		margin-bottom: $pageMargin;
-		background: #fff;
-	}
+    .content {
+        /* TODO: here is 32 rather than $pageMargin is because experiment page `content` position */
+        margin-top: 32px;
+        margin-bottom: $pageMargin;
+        background: #fff;
+    }
 }
 
 .experimentList {
-	padding: $pageMargin 42px;
+    padding: $pageMargin 42px;
 
-	.box {
-		margin-top: 20px;
+    .ms-DetailsRow {
+        &:hover,
+        &:focus {
+            background: #f3f2f1 !important;
+        }
+    }
 
-		.search {
-			width: 90%;
+    .box {
+        margin-top: 20px;
 
-			&-input {
-				width: 330px;
-			}
-		}
+        .search {
+            width: 90%;
 
-		.filter {
-			width: 10%;
-			text-align: right;
+            &-input {
+                width: 330px;
+            }
+        }
 
-			&-button-open {
-				background: #f3f2f1;
-			}
-		}
-	}
+        .filter {
+            width: 10%;
+            text-align: right;
 
-	.filter-condition {
-		margin-top: 26px;
-		.reset {
-			width: 80px;
-			position: relative;
-			top: 29px;
-		}
+            &-button-open {
+                background: #f3f2f1;
+            }
+        }
+    }
 
-		&-status {
-			width: 194px;
-		}
-		&-platform {
-			width: 150px;
-		}
-	}
+    .filter-condition {
+        margin-top: 26px;
 
-	.hidden {
-		display: none;
-	}
+        .reset {
+            width: 80px;
+            position: relative;
+            top: 29px;
+        }
 
-	.margin {
-		margin-left: 10px;
-	}
+        &-status {
+            width: 194px;
+        }
 
-	.idColor {
-		color: #615f5d !important;
-	}
+        &-platform {
+            width: 150px;
+        }
+    }
 
-	.toAnotherExp {
+    .hidden {
+        display: none;
+    }
 
-		&:hover {
-			color: #333231 !important;
-		}
+    .margin {
+        margin-left: 10px;
+    }
 
-		&:hover {
-			color:  #615f5d !important;
-		}
-	}
+    .idColor {
+        color: #615f5d !important;
+    }
 
-	.ms-DetailsRow:focus {
-		background: #e1dfdd;
-	}
+    .toAnotherExp {
+        color: #0071bc !important;
+    }
+
+    .ms-DetailsRow:focus {
+        background: #e1dfdd;
+    }
+}
+
+.gray-port {
+    color: #bebebe;
 }

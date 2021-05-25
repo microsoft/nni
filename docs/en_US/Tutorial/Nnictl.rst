@@ -28,8 +28,7 @@ nnictl support commands:
 * `nnictl config <#config>`__
 * `nnictl log <#log>`__
 * `nnictl webui <#webui>`__
-* `nnictl tensorboard <#tensorboard>`__
-* `nnictl package <#package>`__
+* `nnictl algo <#algo>`__
 * `nnictl ss_gen <#ss_gen>`__
 * `nnictl --version <#version>`__
 
@@ -96,7 +95,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
   ..
 
@@ -105,7 +104,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088
 
   ..
 
@@ -114,7 +113,7 @@ nnictl create
 
   .. code-block:: bash
 
-     nnictl create --config nni/examples/trials/mnist-tfv1/config.yml --port 8088 --debug
+     nnictl create --config nni/examples/trials/mnist-pytorch/config.yml --port 8088 --debug
 
 Note:
 
@@ -363,11 +362,11 @@ nnictl update
 * 
   Example
 
-  ``update experiment's new search space with file dir 'examples/trials/mnist-tfv1/search_space.json'``
+  ``update experiment's new search space with file dir 'examples/trials/mnist-pytorch/search_space.json'``
 
   .. code-block:: bash
 
-     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-tfv1/search_space.json
+     nnictl update searchspace [experiment_id] --filename examples/trials/mnist-pytorch/search_space.json
 
 
 * 
@@ -1311,174 +1310,80 @@ Manage webui
      - Experiment ID
 
 
-:raw-html:`<a name="tensorboard"></a>`
 
-Manage tensorboard
-^^^^^^^^^^^^^^^^^^
+:raw-html:`<a name="algo"></a>`
+
+Manage builtin algorithms
+^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 
-  **nnictl tensorboard start**
+  **nnictl algo register**
 
 
   * 
     Description
 
-    Start the tensorboard process.
+    Register customized algorithms as builtin tuner/assessor/advisor.
 
   * 
     Usage
 
     .. code-block:: bash
 
-       nnictl tensorboard start
+       nnictl algo register --meta <path_to_meta_file>
 
-  * 
-    Options
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name, shorthand
-     - Required
-     - Default
-     - Description
-   * - id
-     - False
-     - 
-     - ID of the experiment you want to set
-   * - --trial_id, -T
-     - False
-     - 
-     - ID of the trial
-   * - --port
-     - False
-     - 6006
-     - The port of the tensorboard process
-
-
-
-* 
-  Detail
-
-
-  #. NNICTL support tensorboard function in local and remote platform for the moment, other platforms will be supported later.
-  #. If you want to use tensorboard, you need to write your tensorboard log data to environment variable [NNI_OUTPUT_DIR] path.
-  #. In local mode, nnictl will set --logdir=[NNI_OUTPUT_DIR] directly and start a tensorboard process.
-  #. In remote mode, nnictl will create a ssh client to copy log data from remote machine to local temp directory firstly, and then start a tensorboard process in your local machine. You need to notice that nnictl only copy the log data one time when you use the command, if you want to see the later result of tensorboard, you should execute nnictl tensorboard command again.
-  #. If there is only one trial job, you don't need to set trial id. If there are multiple trial jobs running, you should set the trial id, or you could use [nnictl tensorboard start --trial_id all] to map --logdir to all trial log paths.
-
-
-* 
-  **nnictl tensorboard stop**
-
-
-  * 
-    Description
-
-    Stop all of the tensorboard process.
-
-  * 
-    Usage
-
-    .. code-block:: bash
-
-       nnictl tensorboard stop
-
-  * 
-    Options
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name, shorthand
-     - Required
-     - Default
-     - Description
-   * - id
-     - False
-     - 
-     - ID of the experiment you want to set
-
-
-:raw-html:`<a name="package"></a>`
-
-Manage package
-^^^^^^^^^^^^^^
-
-
-* 
-  **nnictl package install**
-
-
-  * 
-    Description
-
-    Install a package (customized algorithms or nni provided algorithms) as builtin tuner/assessor/advisor.
-
-  * 
-    Usage
-
-    .. code-block:: bash
-
-       nnictl package install --name <package name>
-
-    The available ``<package name>`` can be checked via ``nnictl package list`` command.
-
-    or
-
-    .. code-block:: bash
-
-       nnictl package install <installation source>
-
-    Reference `Install customized algorithms <InstallCustomizedAlgos.rst>`__ to prepare the installation source.
+    ``<path_to_meta_file>`` is the path to the meta data file in yml format, which has following keys:
+    
+    *
+      ``algoType``: type of algorithms, could be one of ``tuner``, ``assessor``, ``advisor``
+    
+    *
+      ``builtinName``: builtin name used in experiment configuration file
+    
+    *
+      ``className``: tuner class name, including its module name, for example: ``demo_tuner.DemoTuner``
+    
+    *
+      ``classArgsValidator``: class args validator class name, including its module name, for example: ``demo_tuner.MyClassArgsValidator``
 
   * 
     Example
 
     ..
 
-       Install SMAC tuner
+       Install a customized tuner in nni examples
 
 
     .. code-block:: bash
 
-       nnictl package install --name SMAC
-
-    ..
-
-       Install a customized tuner
-
-
-    .. code-block:: bash
-
-       nnictl package install nni/examples/tuners/customized_tuner/dist/demo_tuner-0.1-py3-none-any.whl
+       cd nni/examples/tuners/customized_tuner
+       python3 setup.py develop
+       nnictl algo register --meta meta_file.yml
 
 
 * 
-  **nnictl package show**
+  **nnictl algo show**
 
 
   * 
     Description
 
-    Show the detailed information of specified packages.
+    Show the detailed information of specified registered algorithms.
 
   * 
     Usage
 
     .. code-block:: bash
 
-       nnictl package show <package name>
+       nnictl algo show <builtinName>
 
   * 
     Example
 
     .. code-block:: bash
 
-       nnictl package show SMAC
+       nnictl algo show SMAC
 
 * 
   **nnictl package list**
@@ -1487,78 +1392,46 @@ Manage package
   * 
     Description
 
-    List the installed/all packages.
+    List the registered builtin algorithms.
 
   * 
     Usage
 
     .. code-block:: bash
 
-       nnictl package list [OPTIONS]
-
-  * 
-    Options
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Name, shorthand
-     - Required
-     - Default
-     - Description
-   * - --all
-     - False
-     - 
-     - List all packages
-
+       nnictl algo list
 
 
 * 
   Example
 
-  ..
-
-     List installed packages
-
-
   .. code-block:: bash
 
-     nnictl package list
-
-  ..
-
-     List all packages
-
-
-  .. code-block:: bash
-
-     nnictl package list --all
+     nnictl algo list
 
 
 * 
-  **nnictl package uninstall**
+  **nnictl algo unregister**
 
 
   * 
     Description
 
-    Uninstall a package.
+    Unregister a registered customized builtin algorithms. The NNI provided builtin algorithms can not be unregistered.
 
   * 
     Usage
 
     .. code-block:: bash
 
-       nnictl package uninstall <package name>
+       nnictl algo unregister <builtinName>
 
   * 
     Example
-    Uninstall SMAC package
 
     .. code-block:: bash
 
-       nnictl package uninstall SMAC
+       nnictl algo unregister demotuner
 
 :raw-html:`<a name="ss_gen"></a>`
 

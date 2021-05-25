@@ -51,6 +51,8 @@ export class EnvironmentInformation {
     // uses to count how many trial runs on this environment.
     // it can be used in many scenarios, but for now, it uses for reusable.
     public assignedTrialCount: number = 0;
+    // it is used to get environment idle time interval
+    public latestTrialReleasedTime: number = -1;
 
     // NNI environment ID
     public id: string;
@@ -76,6 +78,8 @@ export class EnvironmentInformation {
     public useActiveGpu?: boolean;
 
     public environmentService?: EnvironmentService;
+
+    public useSharedStorage?: boolean;
 
     constructor(id: string, name: string, envId?: string) {
         this.log = getLogger();
@@ -124,8 +128,11 @@ export class EnvironmentInformation {
 
 export abstract class EnvironmentService {
 
+    public async init(): Promise<void> {
+        return;
+    }
+
     public abstract get hasStorageService(): boolean;
-    public abstract config(key: string, value: string): Promise<void>;
     public abstract refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void>;
     public abstract stopEnvironment(environment: EnvironmentInformation): Promise<void>;
     public abstract startEnvironment(environment: EnvironmentInformation): Promise<void>;

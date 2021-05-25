@@ -21,7 +21,6 @@ def _setattr(model, name, module):
         model = getattr(model, name)
     setattr(model, name_list[-1], module)
 
-
 class Compressor:
     """
     Abstract base PyTorch compressor
@@ -422,8 +421,8 @@ class Pruner(Compressor):
         """
         Load the state dict saved from unwrapped model.
 
-        Parameters:
-        -----------
+        Parameters
+        ----------
         model_state : dict
             state dict saved from unwrapped model
         """
@@ -475,26 +474,27 @@ class QuantizerModuleWrapper(torch.nn.Module):
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
-            inputs = self.quantizer.quant_grad.apply(
+            inputs = self.quantizer.quant_grad(
                 inputs,
                 QuantType.QUANT_INPUT,
                 self)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
-            self.quantizer.quant_grad.apply(
+            self.quantizer.quant_grad(
                 self.module.old_weight,
                 QuantType.QUANT_WEIGHT,
-                self)
+                self, inputs[0])
             result = self.module(*inputs)
         else:
             result = self.module(*inputs)
 
         if 'output' in self.config['quant_types']:
-            result = self.quantizer.quant_grad.apply(
+            result = self.quantizer.quant_grad(
                 result,
                 QuantType.QUANT_OUTPUT,
                 self)
         return result
+
 
 class Quantizer(Compressor):
     """
@@ -503,7 +503,7 @@ class Quantizer(Compressor):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        self.quant_grad = QuantGrad
+        self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
             self.patch_optimizer(self.step_with_optimizer)
             for wrapper in self.get_modules_wrapper():
@@ -512,14 +512,12 @@ class Quantizer(Compressor):
                     # and it is trainable, therefore, it should be added to optimizer.
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
         Parameters
         ----------
-        weight : Tensor
-            weight that needs to be quantized
         wrapper : QuantizerModuleWrapper
             the wrapper for origin module
         """
@@ -573,6 +571,67 @@ class Quantizer(Compressor):
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
+    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None, \
+        input_shape=None, device=None):
+        """
+        This method helps save pytorch model, calibration config, onnx model in quantizer.
+
+        Parameters
+        ----------
+        model : pytorch model
+            pytorch model to be saved
+        model_path : str
+            path to save pytorch
+        calibration_config: dict
+            (optional) config of calibration parameters
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
+        """
+        torch.save(model.state_dict(), model_path)
+        _logger.info('Model state_dict saved to %s', model_path)
+        if calibration_path is not None:
+            torch.save(calibration_config, calibration_path)
+            _logger.info('Mask dict saved to %s', calibration_path)
+        if onnx_path is not None:
+            assert input_shape is not None, 'input_shape must be specified to export onnx model'
+            # input info needed
+            if device is None:
+                device = torch.device('cpu')
+            input_data = torch.Tensor(*input_shape)
+            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
+            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+
+    def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
+        """
+        Export quantized model weights and calibration parameters
+
+        Parameters
+        ----------
+        model_path : str
+            path to save quantized model weight
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
+        """
+        raise NotImplementedError('Quantizer must overload export_model()')
+
     def step_with_optimizer(self):
         pass
 
@@ -580,10 +639,15 @@ class QuantType:
     """
     Enum class for quantization type.
     """
-    QUANT_INPUT = 'input'
-    QUANT_WEIGHT = 'weight'
-    QUANT_OUTPUT = 'output'
+    QUANT_INPUT = 0
+    QUANT_WEIGHT = 1
+    QUANT_OUTPUT = 2
 
+QType_Dict = {
+    0: "input",
+    1: "weight",
+    2: "output"
+}
 
 class QuantGrad(torch.autograd.Function):
     """
@@ -628,7 +692,7 @@ class QuantGrad(torch.autograd.Function):
             return config["quant_bits"].get(quant_type)
 
     @staticmethod
-    def quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax):
+    def quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax):
         """
         This method should be overrided by subclass to provide customized backward function,
         default implementation is Straight-Through Estimator
@@ -652,31 +716,26 @@ class QuantGrad(torch.autograd.Function):
         tensor
             gradient of the input of quantization operation
         """
-        tensor_q = QuantGrad._quantize(tensor, scale, zero_point)
-        mask = (tensor_q < qmin) | (tensor_q > qmax)
-        grad_output[mask] = 0
         return grad_output
 
     @staticmethod
-    def forward(ctx, tensor, quant_type, wrapper, **kwargs):
-        if quant_type == QuantType.QUANT_INPUT:
-            output = wrapper.quantizer.quantize_input(tensor, wrapper, **kwargs)
-        elif quant_type == QuantType.QUANT_WEIGHT:
-            output = wrapper.quantizer.quantize_weight(wrapper, **kwargs)
-        elif quant_type == QuantType.QUANT_OUTPUT:
-            output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
-        else:
-            raise ValueError("unrecognized QuantType.")
+    def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+        output = quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
 
-        bits = QuantGrad.get_bits_length(wrapper.config, quant_type)
-        qmin, qmax = torch.Tensor([0]).to(device=tensor.device), torch.Tensor([(1 << bits)-1]).to(device=tensor.device)
-        ctx.save_for_backward(tensor, wrapper.module.scale, wrapper.module.zero_point, qmin, qmax)
+        bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
+        qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
+        if hasattr(wrapper.module, 'scale') and hasattr(wrapper.module, 'zero_point'):
+            scale = wrapper.module.scale
+            zero_point = wrapper.module.zero_point
+        else:
+            scale, zero_point = None, None
+        ctx.save_for_backward(tensor, torch.Tensor([quant_type]), scale, zero_point, qmin, qmax)
         return output
 
     @classmethod
     def backward(cls, ctx, grad_output):
-        tensor, scale, zero_point, qmin, qmax = ctx.saved_variables
-        output = cls.quant_backward(tensor, grad_output, scale, zero_point, qmin, qmax)
+        tensor, quant_type, scale, zero_point, qmin, qmax = ctx.saved_variables
+        output = cls.quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax)
         return output, None, None, None
 
 def _check_weight(module):
@@ -684,3 +743,24 @@ def _check_weight(module):
         return isinstance(module.weight.data, torch.Tensor)
     except AttributeError:
         return False
+
+def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+    if quant_type == QuantType.QUANT_INPUT:
+        output = wrapper.quantizer.quantize_input(*tensor, wrapper=wrapper, **kwargs)
+    elif quant_type == QuantType.QUANT_WEIGHT:
+        output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
+    elif quant_type == QuantType.QUANT_OUTPUT:
+        output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
+    else:
+        raise ValueError("unrecognized QuantType.")
+
+    return output
+
+class QuantForward(torch.nn.Module):
+    """
+    Base class for executing quantization operations. This is for quantization algorithms
+    that do not need to customize gradient.
+    """
+
+    def forward(self, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
+        return quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)

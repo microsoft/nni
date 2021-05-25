@@ -8,8 +8,9 @@ MNIST examples
 CNN MNIST classifier for deep learning is similar to ``hello world`` for programming languages. Thus, we use MNIST as example to introduce different features of NNI. The examples are listed below:
 
 
-* `MNIST with NNI API (TensorFlow v1.x) <#mnist-tfv1>`__
+* `MNIST with NNI API (PyTorch) <#mnist-pytorch>`__
 * `MNIST with NNI API (TensorFlow v2.x) <#mnist-tfv2>`__
+* `MNIST with NNI API (TensorFlow v1.x) <#mnist-tfv1>`__
 * `MNIST with NNI annotation <#mnist-annotation>`__
 * `MNIST in keras <#mnist-keras>`__
 * `MNIST -- tuning with batch tuner <#mnist-batch>`__
@@ -18,19 +19,29 @@ CNN MNIST classifier for deep learning is similar to ``hello world`` for program
 * `distributed MNIST (tensorflow) using kubeflow <#mnist-kubeflow-tf>`__
 * `distributed MNIST (pytorch) using kubeflow <#mnist-kubeflow-pytorch>`__
 
-:raw-html:`<a name="mnist-tfv1"></a>`
-**MNIST with NNI API (TensorFlow v1.x)**
+:raw-html:`<a name="mnist-pytorch"></a>`
+**MNIST with NNI API (PyTorch)**
 
-This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer. We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc. It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random. We also provide an exmaple YAML file which enables assessor.
+This is a simple network which has two convolutional layers, two pooling layers and a fully connected layer.
+We tune hyperparameters, such as dropout rate, convolution size, hidden size, etc.
+It can be tuned with most NNI built-in tuners, such as TPE, SMAC, Random.
+We also provide an exmaple YAML file which enables assessor.
 
-code directory: :githublink:`mnist-tfv1/ <examples/trials/mnist-tfv1/>`
+code directory: :githublink:`mnist-pytorch/ <examples/trials/mnist-pytorch/>`
 
 :raw-html:`<a name="mnist-tfv2"></a>`
 **MNIST with NNI API (TensorFlow v2.x)**
 
-Same network to the example above, but written in TensorFlow v2.x Keras API.
+Same network to the example above, but written in TensorFlow.
 
 code directory: :githublink:`mnist-tfv2/ <examples/trials/mnist-tfv2/>`
+
+:raw-html:`<a name="mnist-tfv1"></a>`
+**MNIST with NNI API (TensorFlow v1.x)**
+
+Same network to the example above, but written in TensorFlow v1.x API.
+
+code directory: :githublink:`mnist-tfv1/ <examples/trials/mnist-tfv1/>`
 
 :raw-html:`<a name="mnist-annotation"></a>`
 **MNIST with NNI annotation**
@@ -38,13 +49,6 @@ code directory: :githublink:`mnist-tfv2/ <examples/trials/mnist-tfv2/>`
 This example is similar to the example above, the only difference is that this example uses NNI annotation to specify search space and report results, while the example above uses NNI apis to receive configuration and report results.
 
 code directory: :githublink:`mnist-annotation/ <examples/trials/mnist-annotation/>`
-
-:raw-html:`<a name="mnist-keras"></a>`
-**MNIST in keras**
-
-This example is implemented in keras. It is also a network for MNIST dataset, with two convolution layers, one pooling layer, and two fully connected layers.
-
-code directory: :githublink:`mnist-keras/ <examples/trials/mnist-keras/>`
 
 :raw-html:`<a name="mnist-batch"></a>`
 **MNIST -- tuning with batch tuner**

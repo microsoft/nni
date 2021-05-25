@@ -84,7 +84,7 @@ class Mutator(BaseMutator):
         data = dict()
         for k, v in self._cache.items():
             if torch.is_tensor(v):
-                v = v.detach().cpu().numpy()
+                v = v.detach().cpu().numpy().tolist()
             if isinstance(v, np.ndarray):
                 v = v.astype(np.float32).tolist()
             data[k] = v
@@ -147,7 +147,7 @@ class Mutator(BaseMutator):
 
         Parameters
         ----------
-        mutable : LayerChoice
+        mutable : nni.nas.pytorch.mutables.LayerChoice
             Layer choice module.
         args : list of torch.Tensor
             Inputs
@@ -180,7 +180,7 @@ class Mutator(BaseMutator):
 
         Parameters
         ----------
-        mutable : InputChoice
+        mutable : nni.nas.pytorch.mutables.InputChoice
             Input choice module.
         tensor_list : list of torch.Tensor
             Tensor list to apply the decision on.
