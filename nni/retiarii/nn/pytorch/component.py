@@ -4,7 +4,6 @@ from typing import Callable, List, Union, Tuple, Optional
 import torch
 import torch.nn as nn
 
-from ...utils import uid
 from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
