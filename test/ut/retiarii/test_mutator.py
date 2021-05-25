@@ -60,7 +60,14 @@ def test_mutation():
     model2 = mutator.apply(model1)
     assert _get_pools(model2) == (global_pool, max_pool)
 
-    assert model2.history == [model0, model1]
+    assert len(model2.history) == 2
+    assert model2.history[0].from_ == model0
+    assert model2.history[0].to == model1
+    assert model2.history[1].from_ == model1
+    assert model2.history[1].to == model2
+    assert model2.history[0].mutator == mutator
+    assert model2.history[1].mutator == mutator
+
     assert _get_pools(model0) == (max_pool, max_pool)
     assert _get_pools(model1) == (avg_pool, global_pool)
 

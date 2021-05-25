@@ -10,3 +10,5 @@ pytorch-lightning >= 1.1.1
 onnx
 peewee
 graphviz
+gym
+tianshou >= 0.4.1
