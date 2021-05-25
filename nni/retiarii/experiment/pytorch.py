@@ -28,11 +28,11 @@ from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
-from ..execution import list_models
+from ..execution import list_models, set_execution_engine
 from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import process_inline_mutation
+from ..nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
 from ..strategy import BaseStrategy
 from ..oneshot.interface import BaseOneShotTrainer
 
@@ -43,7 +43,7 @@ _logger = logging.getLogger(__name__)
 class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space: Any = ''  # TODO: remove
-    trial_command: str = 'python3 -m nni.retiarii.trial_entry'
+    trial_command: str = '_reserved'
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
@@ -55,21 +55,26 @@ class RetiariiExeConfig(ConfigBase):
     experiment_working_directory: PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
+    execution_engine: str = 'base'
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
             self.training_service = util.training_service_config_factory(platform = training_service_platform)
+        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry base'
 
     def __setattr__(self, key, value):
         fixed_attrs = {'search_space': '',
-                       'trial_command': 'python3 -m nni.retiarii.trial_entry'}
+                       'trial_command': '_reserved'}
         if key in fixed_attrs and fixed_attrs[key] != value:
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
         if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
+        if key == 'execution_engine':
+            assert value in ['base', 'py', 'cgo'], f'The specified execution engine "{value}" is not supported.'
+            self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
     def validate(self, initialized_tuner: bool = False) -> None:
@@ -100,23 +105,27 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
-def preprocess_model(base_model, trainer, applied_mutators):
+def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
+    # TODO: this logic might need to be refactored into execution engine
+    if full_ir:
         try:
             script_module = torch.jit.script(base_model)
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
         base_model_ir = convert_to_graph(script_module, base_model)
-        base_model_ir.evaluator = trainer
-
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
-        if mutators is not None and applied_mutators:
-            raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
-                               'do not use mutators when you use LayerChoice/InputChoice')
-        if mutators is not None:
-            applied_mutators = mutators
-        return base_model_ir, applied_mutators
+    else:
+        base_model_ir, mutators = extract_mutation_from_pt_module(base_model)
+    base_model_ir.evaluator = trainer
+
+    if mutators is not None and applied_mutators:
+        raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
+                            'do not use mutators when you use LayerChoice/InputChoice')
+    if mutators is not None:
+        applied_mutators = mutators
+    return base_model_ir, applied_mutators
 
 def debug_mutated_model(base_model, trainer, applied_mutators):
     """
@@ -160,7 +169,8 @@ class RetiariiExperiment(Experiment):
         self._pipe: Optional[Pipe] = None
 
     def _start_strategy(self):
-        base_model_ir, self.applied_mutators = preprocess_model(self.base_model, self.trainer, self.applied_mutators)
+        base_model_ir, self.applied_mutators = preprocess_model(
+            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py')
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
@@ -181,6 +191,18 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+
+        # we will probably need a execution engine factory to make this clean and elegant
+        if self.config.execution_engine == 'base':
+            from ..execution.base import BaseExecutionEngine
+            engine = BaseExecutionEngine()
+        elif self.config.execution_engine == 'cgo':
+            from ..execution.cgo_engine import CGOExecutionEngine
+            engine = CGOExecutionEngine()
+        elif self.config.execution_engine == 'py':
+            from ..execution.python import PurePythonExecutionEngine
+            engine = PurePythonExecutionEngine()
+        set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
 
