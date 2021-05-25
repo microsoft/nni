@@ -444,3 +444,20 @@ class TestHighLevelAPI(unittest.TestCase):
                 model = mutator.bind_sampler(sampler).apply(model)
             self.assertTrue(self._get_converted_pytorch_model(model)(
                 torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
+
+        class Net2(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=4)
+
+            def forward(self, x):
+                return self.cell([x])
+
+        raw_model = self._convert_to_ir(Net2())
+        mutators = process_inline_mutation(raw_model)
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
