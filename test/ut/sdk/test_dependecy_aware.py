@@ -46,6 +46,24 @@ def generate_random_sparsity_v2(model):
                              'sparsity': sparsity})
     return cfg_list
 
+def train(model, criterion, optimizer, callback=None):
+    model.train()
+    device = next(model.parameters()).device
+    data = torch.randn(2, 3, 224, 224).to(device)
+    target = torch.tensor([0, 1]).long().to(device)
+    optimizer.zero_grad()
+    output = model(data)
+    loss = criterion(output, target)
+    loss.backward()
+
+    # callback should be inserted between loss.backward() and optimizer.step()
+    if callback:
+        callback()
+
+    optimizer.step()
+
+def trainer(model, optimizer, criterion, epoch, callback=None):
+    return train(model, criterion, optimizer, callback=callback)
 
 class DependencyawareTest(TestCase):
     @unittest.skipIf(torch.__version__ < "1.3.0", "not supported")
@@ -55,6 +73,7 @@ class DependencyawareTest(TestCase):
         sparsity = 0.7
         cfg_list = [{'op_types': ['Conv2d'], 'sparsity':sparsity}]
         dummy_input = torch.ones(1, 3, 224, 224)
+
         for model_name in model_zoo:
             for pruner in pruners:
                 print('Testing on ', pruner)
@@ -72,16 +91,12 @@ class DependencyawareTest(TestCase):
                                  momentum=0.9,
                                  weight_decay=4e-5)
                 criterion = torch.nn.CrossEntropyLoss()
-                tmp_pruner = pruner(
-                    net, cfg_list, optimizer, dependency_aware=True, dummy_input=dummy_input)
-                # train one single batch so that the the pruner can collect the
-                # statistic
-                optimizer.zero_grad()
-                out = net(dummy_input)
-                batchsize = dummy_input.size(0)
-                loss = criterion(out, torch.zeros(batchsize, dtype=torch.int64))
-                loss.backward()
-                optimizer.step()
+                if pruner == TaylorFOWeightFilterPruner:
+                    tmp_pruner = pruner(
+                        net, cfg_list, optimizer, trainer=trainer, criterion=criterion, dependency_aware=True, dummy_input=dummy_input)
+                else:
+                    tmp_pruner = pruner(
+                        net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
 
                 tmp_pruner.compress()
                 tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
@@ -91,7 +106,7 @@ class DependencyawareTest(TestCase):
                 ms.speedup_model()
                 for name, module in net.named_modules():
                     if isinstance(module, nn.Conv2d):
-                        expected = int(ori_filters[name] * (1-sparsity))
+                        expected = int(ori_filters[name] * (1 - sparsity))
                         filter_diff = abs(expected - module.out_channels)
                         errmsg = '%s Ori: %d, Expected: %d, Real: %d' % (
                             name, ori_filters[name], expected, module.out_channels)
@@ -124,16 +139,13 @@ class DependencyawareTest(TestCase):
                                     momentum=0.9,
                                     weight_decay=4e-5)
                     criterion = torch.nn.CrossEntropyLoss()
-                    tmp_pruner = pruner(
-                        net, cfg_list, optimizer, dependency_aware=True, dummy_input=dummy_input)
-                    # train one single batch so that the the pruner can collect the
-                    # statistic
-                    optimizer.zero_grad()
-                    out = net(dummy_input)
-                    batchsize = dummy_input.size(0)
-                    loss = criterion(out, torch.zeros(batchsize, dtype=torch.int64))
-                    loss.backward()
-                    optimizer.step()
+
+                    if pruner in (TaylorFOWeightFilterPruner, ActivationMeanRankFilterPruner, ActivationAPoZRankFilterPruner):
+                        tmp_pruner = pruner(
+                            net, cfg_list, optimizer, trainer=trainer, criterion=criterion, dependency_aware=True, dummy_input=dummy_input)
+                    else:
+                        tmp_pruner = pruner(
+                            net, cfg_list, dependency_aware=True, dummy_input=dummy_input)
 
                     tmp_pruner.compress()
                     tmp_pruner.export_model(MODEL_FILE, MASK_FILE)
