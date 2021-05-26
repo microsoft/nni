@@ -148,6 +148,7 @@ class QAT_Quantizer(Quantizer):
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
+        device = next(model.parameters()).device
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
@@ -161,7 +162,7 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('activation_bit', torch.zeros(1))
                 layer.module.register_buffer('tracked_min_activation', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_activation', torch.zeros(1))
-                
+        self.bound_model.to(device)
 
     def _del_simulated_attr(self, module):
         """
@@ -359,7 +360,7 @@ class QAT_Quantizer(Quantizer):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
         """
-        self.bound_model.steps +=1
+        self.bound_model.steps += 1
 
 
 class DoReFaQuantizer(Quantizer):
@@ -370,10 +371,12 @@ class DoReFaQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+        device = next(model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bit', torch.zeros(1))
+        self.bound_model.to(device)
 
     def _del_simulated_attr(self, module):
         """
@@ -474,11 +477,13 @@ class BNNQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+        device = next(model.parameters()).device
         self.quant_grad = ClipGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bit', torch.zeros(1))
+        self.bound_model.to(device)
 
     def _del_simulated_attr(self, module):
         """
@@ -589,6 +594,7 @@ class LsqQuantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
+        device = next(model.parameters()).device
         self.quant_grad = QuantForward()
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
@@ -630,6 +636,8 @@ class LsqQuantizer(Quantizer):
                 layer.module.input_qmin = qmin
 
                 self.optimizer.add_param_group({"params": layer.module.input_scale})
+
+        self.bound_model.to(device)
 
     @staticmethod
     def grad_scale(x, scale):

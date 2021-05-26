@@ -10,6 +10,8 @@ import * as component from '../common/component';
 
 @component.Singleton
 class ExperimentStartupInfo {
+    private readonly API_ROOT_URL: string = '/api/v1/nni';
+
     private experimentId: string = '';
     private newExperiment: boolean = true;
     private basePort: number = -1;
@@ -19,8 +21,9 @@ class ExperimentStartupInfo {
     private readonly: boolean = false;
     private dispatcherPipe: string | null = null;
     private platform: string = '';
+    private urlprefix: string = '';
 
-    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, platform: string, logDir?: string, logLevel?: string, readonly?: boolean, dispatcherPipe?: string): void {
+    public setStartupInfo(newExperiment: boolean, experimentId: string, basePort: number, platform: string, logDir?: string, logLevel?: string, readonly?: boolean, dispatcherPipe?: string, urlprefix?: string): void {
         assert(!this.initialized);
         assert(experimentId.trim().length > 0);
         this.newExperiment = newExperiment;
@@ -45,6 +48,10 @@ class ExperimentStartupInfo {
 
         if (dispatcherPipe != undefined && dispatcherPipe.length > 0) {
             this.dispatcherPipe = dispatcherPipe;
+        }
+
+        if(urlprefix != undefined && urlprefix.length > 0){
+            this.urlprefix = urlprefix;
         }
     }
 
@@ -94,6 +101,11 @@ class ExperimentStartupInfo {
         assert(this.initialized);
         return this.dispatcherPipe;
     }
+
+    public getAPIRootUrl(): string {
+        assert(this.initialized);
+        return this.urlprefix==''?this.API_ROOT_URL:`/${this.urlprefix}`;
+    }
 }
 
 function getExperimentId(): string {
@@ -117,9 +129,9 @@ function getExperimentStartupInfo(): ExperimentStartupInfo {
 }
 
 function setExperimentStartupInfo(
-    newExperiment: boolean, experimentId: string, basePort: number, platform: string, logDir?: string, logLevel?: string, readonly?: boolean, dispatcherPipe?: string): void {
+    newExperiment: boolean, experimentId: string, basePort: number, platform: string, logDir?: string, logLevel?: string, readonly?: boolean, dispatcherPipe?: string, urlprefix?: string): void {
     component.get<ExperimentStartupInfo>(ExperimentStartupInfo)
-        .setStartupInfo(newExperiment, experimentId, basePort, platform, logDir, logLevel, readonly, dispatcherPipe);
+        .setStartupInfo(newExperiment, experimentId, basePort, platform, logDir, logLevel, readonly, dispatcherPipe, urlprefix);
 }
 
 function isReadonly(): boolean {
@@ -130,7 +142,11 @@ function getDispatcherPipe(): string | null {
     return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getDispatcherPipe();
 }
 
+function getAPIRootUrl(): string {
+    return component.get<ExperimentStartupInfo>(ExperimentStartupInfo).getAPIRootUrl();
+}
+
 export {
     ExperimentStartupInfo, getBasePort, getExperimentId, isNewExperiment, getPlatform, getExperimentStartupInfo,
-    setExperimentStartupInfo, isReadonly, getDispatcherPipe
+    setExperimentStartupInfo, isReadonly, getDispatcherPipe, getAPIRootUrl
 };

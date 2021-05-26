@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import inspect
 from typing import Any, List, Optional, Tuple
 
+import torch.nn as nn
+
 from ...mutator import Mutator
-from ...graph import Cell, Model, Node
-from .api import ValueChoice
+from ...graph import Cell, Graph, Model, ModelStatus, Node
+from ...utils import uid
+from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
 
 
 class LayerChoiceMutator(Mutator):
@@ -40,7 +44,7 @@ class InputChoiceMutator(Mutator):
 
     def mutate(self, model):
         n_candidates = self.nodes[0].operation.parameters['n_candidates']
-        n_chosen =  self.nodes[0].operation.parameters['n_chosen']
+        n_chosen = self.nodes[0].operation.parameters['n_chosen']
         candidates = list(range(n_candidates))
         chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
@@ -116,10 +120,94 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         mutator = LayerChoiceMutator(node_list)
         applied_mutators.append(mutator)
 
-
     if applied_mutators:
         return applied_mutators
     return None
+
+
+# The following are written for pure-python mode
+
+
+class ManyChooseManyMutator(Mutator):
+    """
+    Choose based on labels. Will not affect the model itself.
+    """
+
+    def __init__(self, label: Optional[str]):
+        super().__init__(label=label)
+
+    @staticmethod
+    def candidates(node):
+        if 'n_candidates' in node.operation.parameters:
+            return list(range(node.operation.parameters['n_candidates']))
+        else:
+            return node.operation.parameters['candidates']
+
+    @staticmethod
+    def number_of_chosen(node):
+        if 'n_chosen' in node.operation.parameters:
+            return node.operation.parameters['n_chosen']
+        return 1
+
+    def mutate(self, model: Model):
+        # this mutate does not have any effect, but it is recorded in the mutation history
+        for node in model.get_nodes_by_label(self.label):
+            for _ in range(self.number_of_chosen(node)):
+                self.choice(self.candidates(node))
+            break
+
+
+def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Optional[List[Mutator]]]:
+    model = Model(_internal=True)
+    graph = Graph(model, uid(), '_model', _internal=True)._register()
+    model.python_class = pytorch_model.__class__
+    if len(inspect.signature(model.python_class.__init__).parameters) > 1:
+        if not hasattr(pytorch_model, '_init_parameters'):
+            raise ValueError('Please annotate the model with @serialize decorator in python execution mode '
+                             'if your model has init parameters.')
+        model.python_init_params = pytorch_model._init_parameters
+    else:
+        model.python_init_params = {}
+
+    for name, module in pytorch_model.named_modules():
+        # tricky case: value choice that serves as parameters are stored in _init_parameters
+        if hasattr(module, '_init_parameters'):
+            for key, value in module._init_parameters.items():
+                if isinstance(value, ValueChoice):
+                    node = graph.add_node(name + '.init.' + key, 'ValueChoice', {'candidates': value.candidates})
+                    node.label = value.label
+
+        if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
+            # TODO: check the label of module and warn if it's auto-generated
+            pass
+        if isinstance(module, LayerChoice):
+            node = graph.add_node(name, 'LayerChoice', {'candidates': module.names})
+            node.label = module.label
+        if isinstance(module, InputChoice):
+            node = graph.add_node(name, 'InputChoice',
+                                  {'n_candidates': module.n_candidates, 'n_chosen': module.n_chosen})
+            node.label = module.label
+        if isinstance(module, ValueChoice):
+            node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
+            node.label = module.label
+        if isinstance(module, Placeholder):
+            raise NotImplementedError('Placeholder is not supported in python execution mode.')
+
+    model.status = ModelStatus.Frozen
+    if not graph.hidden_nodes:
+        return model, None
+
+    mutators = []
+    for nodes in _group_by_label_and_type(graph.hidden_nodes):
+        assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
+            f'Node with label "{nodes[0].label}" does not all have the same type.'
+        assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
+            f'Node with label "{nodes[0].label}" does not agree on parameters.'
+        mutators.append(ManyChooseManyMutator(nodes[0].label))
+    return model, mutators
+
+
+# utility functions
 
 
 def _is_all_equal(lst):
@@ -129,6 +217,16 @@ def _is_all_equal(lst):
             return False
         last = x
     return True
+
+
+def _group_by_label_and_type(nodes: List[Node]) -> List[List[Node]]:
+    result = {}
+    for node in nodes:
+        key = (node.label, node.operation.type)
+        if key not in result:
+            result[key] = []
+        result[key].append(node)
+    return list(result.values())
 
 
 def _group_by_label(nodes: List[Node]) -> List[List[Node]]:
