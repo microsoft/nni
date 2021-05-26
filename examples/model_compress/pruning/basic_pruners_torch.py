@@ -271,10 +271,11 @@ def main(args):
     if args.test_only:
         test(args, model, device, criterion, test_loader)
 
-    # Unwrap all modules to normal state
-    pruner._unwrap_model() 
-    m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
-    m_speedup.speedup_model()
+    if args.speed_up:
+        # Unwrap all modules to normal state
+        pruner._unwrap_model() 
+        m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
+        m_speedup.speedup_model()
 
     print('start finetuning...')
     best_top1 = 0
@@ -334,6 +335,10 @@ if __name__ == '__main__':
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
                                  'fpgm', 'mean_activation', 'apoz', 'taylorfo'],
                         help='pruner to use')
+
+    # speed-up
+    parser.add_argument('--speed-up', action='store_true', default=False,
+                        help='Whether to speed-up the pruned model')
 
     # fine-tuning
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
