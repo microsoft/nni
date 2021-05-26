@@ -3,6 +3,7 @@
 
 from .finegrained_pruning_masker import *
 from .structured_pruning_masker import *
+from .mixed_pruning_masker import *
 from .one_shot_pruner import *
 from .iterative_pruner import *
 from .lottery_ticket import LotteryTicketPruner

@@ -50,7 +50,8 @@ str2pruner = {
     'fpgm': FPGMPruner,
     'mean_activation': ActivationMeanRankFilterPruner,
     'apoz': ActivationAPoZRankFilterPruner,
-    'taylorfo': TaylorFOWeightFilterPruner
+    'taylorfo': TaylorFOWeightFilterPruner,
+    'mixed': MixedMaskerPruner
 }
 
 def get_dummy_input(args, device):
@@ -186,6 +187,7 @@ def test(args, model, device, criterion, test_loader):
 
 
 def main(args):
+    torch.manual_seed(0)
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     os.makedirs(args.experiment_data_dir, exist_ok=True)
 
@@ -238,12 +240,27 @@ def main(args):
             kw_args['num_iterations'] = 5
             kw_args['epochs_per_iteration'] = 1
 
+        if args.pruner == 'mixed':
+            kw_args['num_iterations'] = 1
+            kw_args['epochs_per_iteration'] = 5
+
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
         if args.pruner == 'slim':
             config_list = [{
                 'sparsity': args.sparsity,
                 'op_types': ['BatchNorm2d'],
+            }]
+        elif args.pruner == 'mixed':
+            config_list = [{
+                'sparsity': args.sparsity,
+                'op_types': ['BatchNorm2d'],
+                'pruning_algo': ('slim', {})
+            }, {
+                'sparsity': args.sparsity,
+                'op_types': ['Conv2d'],
+                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37'],
+                'pruning_algo': ('l1', {})
             }]
         else:
             config_list = [{
@@ -329,7 +346,7 @@ if __name__ == '__main__':
                         help='toggle dependency aware mode')
     parser.add_argument('--pruner', type=str, default='l1filter',
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                                 'fpgm', 'mean_activation', 'apoz', 'taylorfo'],
+                                 'fpgm', 'mean_activation', 'apoz', 'taylorfo', 'mixed'],
                         help='pruner to use')
 
     # fine-tuning

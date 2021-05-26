@@ -682,7 +682,9 @@ class SlimPrunerMasker(WeightMasker):
 
     def _get_global_threshold(self):
         weight_list = []
-        for (layer, _) in self.pruner.get_modules_to_compress():
+        for (layer, config) in self.pruner.get_modules_to_compress():
+            if 'masker_name' in config and 'slim' not in config['masker_name']:
+                continue
             weight_list.append(layer.module.weight.data.abs().clone())
         all_bn_weights = torch.cat(weight_list)
         k = int(all_bn_weights.shape[0] * self.pruner.config_list[0]['sparsity'])

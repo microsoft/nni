@@ -4,13 +4,13 @@
 import logging
 from typing import Any
 from .weight_masker import WeightMasker
-from .structured_pruning import StructuredWeightMasker
-from .finegrained_pruning import LevelPrunerMasker
-from .structured_pruning import SlimPrunerMasker, L1FilterPrunerMasker, \
+from .structured_pruning_masker import StructuredWeightMasker
+from .finegrained_pruning_masker import LevelPrunerMasker
+from .structured_pruning_masker import SlimPrunerMasker, L1FilterPrunerMasker, \
     L2FilterPrunerMasker, FPGMPrunerMasker, TaylorFOWeightFilterPrunerMasker, \
     ActivationAPoZRankFilterPrunerMasker, ActivationMeanRankFilterPrunerMasker
 
-__all__ = ['MixedPrunerMasker']
+__all__ = ['MixedMasker']
 
 MASKER_DICT = {
     'level': LevelPrunerMasker,
@@ -26,7 +26,7 @@ MASKER_DICT = {
 _logger = logging.getLogger('torch pruner')
 
 
-class MixedPrunerMasker(WeightMasker):
+class MixedMasker(WeightMasker):
     def __init__(self, model, pruner, maskers_config_dict):
         self.model = model
         self.pruner = pruner
