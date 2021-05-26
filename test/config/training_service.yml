@@ -90,26 +90,6 @@ remote:
   sharedStorage:
     storageAccountKey:
     nfsServer:
-hybrid:
-  maxExecDuration: 15m
-  nniManagerIp:
-  maxTrialNum: 2
-  trialConcurrency: 2
-  trial:
-    gpuNum: 0
-  trainingServicePlatform: hybrid
-  hybridConfig:
-    # TODO: Add more platforms
-    trainingServicePlatforms:
-      - remote
-      - local
-  machineList:
-  - ip:
-    passwd:
-    port:
-    username:
-  remoteConfig:
-    reuse: true
 adl:
   maxExecDuration: 15m
   nniManagerIp:
