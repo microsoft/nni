@@ -23,7 +23,7 @@ from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
 it_variables = {}
 
 
-def update_training_service_config(config, training_service, config_file_path):
+def update_training_service_config(config, training_service, config_file_path, nni_source_dir):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
 
     # hack for kubeflow trial config
@@ -54,7 +54,7 @@ def update_training_service_config(config, training_service, config_file_path):
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
     if training_service == 'remote':
-        testcase_config = get_yml_content(args.nni_source_dir + config_file_path)
+        testcase_config = get_yml_content(nni_source_dir + config_file_path)
         sharedStorage = testcase_config.get('sharedStorage')
         if sharedStorage is None:
             it_ts_config[training_service].pop('sharedStorage')
@@ -87,7 +87,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
     # the hack for kubeflow should be applied at last step
-    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'])
+    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'], args.nni_source_dir)
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
@@ -250,10 +250,10 @@ def match_training_service(test_case_config, cur_training_service):
         return True
     return False
 
-def match_remoteConfig(test_case_config):
+def match_remoteConfig(test_case_config, nni_source_dir):
     trainingservice_config = get_yml_content(os.path.join('config', 'training_service.yml'))
     trainingservice_config_reuse_value = str(trainingservice_config['remote']['remoteConfig']['reuse']).lower()
-    testcase_config = get_yml_content(args.nni_source_dir + test_case_config['configFile'])
+    testcase_config = get_yml_content(nni_source_dir + test_case_config['configFile'])
     if testcase_config.get('remoteConfig') is not None:
         if testcase_config['remoteConfig'].get('reuse') is not None:
             return str(testcase_config['remoteConfig']['reuse']).lower() == trainingservice_config_reuse_value
@@ -286,12 +286,15 @@ def run(args):
                 name, args.ts, test_case_config['trainingService']))
             continue
 
-        if not match_remoteConfig(test_case_config):
-            print('skipped {}, remoteConfig not match.'.format(name))
-            continue
-
         # remote mode need more time to cleanup 
+<<<<<<< HEAD
         if args.ts == 'remote' or args.ts == 'hybrid':
+=======
+        if args.ts == 'remote':
+            if not match_remoteConfig(test_case_config, args.nni_source_dir):
+                print('skipped {}, remoteConfig not match.'.format(name))
+                continue
+>>>>>>> 2fab5345 (fix comments)
             wait_for_port_available(8080, 240)
         else:
             wait_for_port_available(8080, 60)

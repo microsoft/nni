@@ -35,7 +35,7 @@ testCases:
   experimentStatusCheck: True
 
 - name: shared-storage-remote-azureblob
-  configFile: test/config/examples/config_sharedstorage_remote_azureblob.yml
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_azureblob.yml
   config:
     sharedStorage:
       localMountPoint: /tmp/nnimount/testlocalrootpath
@@ -50,7 +50,7 @@ testCases:
 
 # TODO: Enable this case after nfs server is ready
 #- name: shared-storage-remote-nfs
-#  configFile: test/config/examples/config_sharedstorage_remote_nfs.yml
+#  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
 #  config:
 #    sharedStorage:
 #      localMountPoint: /tmp/nnimount/testlocalrootpath
