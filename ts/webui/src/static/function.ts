@@ -7,10 +7,13 @@ import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface'
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
     let newPathName = pathName;
+    const pathArr: string[] = ['/oview', '/detail', '/experiment'];
 
-    if (pathName.endsWith('/oview') || pathName.endsWith('/detail') || pathName.endsWith('/experiment')) {
-        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
-    }
+    pathArr.forEach(item => {
+        if (pathName.endsWith(item)) {
+            newPathName = pathName.replace(item, '');
+        }
+    });
 
     return newPathName === '' ? undefined : newPathName;
 }

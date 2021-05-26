@@ -5,8 +5,8 @@ const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const prefix = getPrefix();
-
-const MANAGER_IP = prefix === undefined ? '/api/v1/nni' : `${prefix}`;
+const RESTAPI = '/api/v1/nni';
+const MANAGER_IP = prefix === undefined ? RESTAPI : `${RESTAPI}${prefix}`;
 const DOWNLOAD_IP = `/logs`;
 
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
