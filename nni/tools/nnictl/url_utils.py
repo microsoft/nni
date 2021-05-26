@@ -81,5 +81,5 @@ def get_local_urls(port,prefix):
     for _, info in psutil.net_if_addrs().items():
         for addr in info:
             if socket.AddressFamily.AF_INET == addr.family:
-                url_list.append('http://{0}:{1}{2}'.format(addr.address, port, formatURLPath(prefix)))
+                url_list.append('http://{0}:{1}{2}'.format(addr.address, port, prefix))
     return url_list
