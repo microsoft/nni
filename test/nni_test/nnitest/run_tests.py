@@ -238,6 +238,15 @@ def match_training_service(test_case_config, cur_training_service):
         return True
     return False
 
+def match_remoteConfig(test_case_config):
+    trainingservice_config = get_yml_content(os.path.join('config', 'training_service.yml'))
+    trainingservice_config_reuse_value = str(trainingservice_config['remote']['remoteConfig']['reuse']).lower()
+    testcase_config = get_yml_content(args.nni_source_dir + test_case_config['configFile'])
+    if testcase_config.get('remoteConfig') is not None:
+        if testcase_config['remoteConfig'].get('reuse') is not None:
+            return str(testcase_config['remoteConfig']['reuse']).lower() == trainingservice_config_reuse_value
+    return True
+
 
 def run(args):
     it_config = get_yml_content(args.config)
@@ -264,6 +273,11 @@ def run(args):
             print('skipped {}, training service {} not match [{}]'.format(
                 name, args.ts, test_case_config['trainingService']))
             continue
+
+        if not match_remoteConfig(test_case_config):
+            print('skipped {}, remoteConfig not match.'.format(name))
+            continue
+
         # remote mode need more time to cleanup 
         if args.ts == 'remote' or args.ts == 'hybrid':
             wait_for_port_available(8080, 240)

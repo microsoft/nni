@@ -14,8 +14,6 @@ def update_training_service_config(args):
     config = get_yml_content(TRAINING_SERVICE_FILE)
     if args.nni_manager_ip is not None and args.config_version == 'v1':
         config[args.ts]['nniManagerIp'] = args.nni_manager_ip
-    if args.azurestoragetoken is not None:
-        config[args.ts]['sharedStorage']['storageAccountKey'] = args.azurestoragetoken
     if args.ts == 'pai':
         if args.pai_user is not None:
             config[args.ts]['paiConfig']['userName'] = args.pai_user
@@ -76,6 +74,8 @@ def update_training_service_config(args):
             config[args.ts]['machineList'][0]['passwd'] = args.remote_pwd
         if args.remote_reuse is not None:
             config[args.ts]['remoteConfig']['reuse'] = args.remote_reuse.lower() == 'true'
+        if args.azurestoragetoken is not None:
+            config[args.ts]['sharedStorage']['storageAccountKey'] = args.azurestoragetoken
     elif args.ts == 'adl':
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
