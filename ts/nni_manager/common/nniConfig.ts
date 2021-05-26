@@ -4,8 +4,9 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
+import { promisify } from 'util';
+import { runPythonScript } from './pythonScript';
 
 export interface CustomEnvironmentServiceConfig {
     name: string;
@@ -13,18 +14,18 @@ export interface CustomEnvironmentServiceConfig {
     nodeClassName: string;
 }
 
-function readConfigFile(fileName: string): string {
-    let configPath: string;
-    if (process.platform === 'win32') {
-        configPath = path.join(process.env.APPDATA as string, 'nni', fileName);
-    } else {
-        configPath = path.join(os.homedir(), '.config/nni', fileName);
-    }
-    return fs.readFileSync(configPath).toString();
+const readFile = promisify(fs.readFile);
+
+async function readConfigFile(fileName: string): Promise<string> {
+    const script = 'import nni.runtime.config ; print(nni.runtime.config.get_config_directory())';
+    const configDir = await runPythonScript(script);
+    const stream = await readFile(path.join(configDir, fileName));
+    return stream.toString();
 }
 
-export function getCustomEnvironmentServiceConfig(name: string): CustomEnvironmentServiceConfig | null {
-    const config = JSON.parse(readConfigFile('training_services.json'));
+export async function getCustomEnvironmentServiceConfig(name: string): Promise<CustomEnvironmentServiceConfig | null> {
+    const configJson = await readConfigFile('training_services.json');
+    const config = JSON.parse(configJson);
     if (config[name] === undefined) {
         return null;
     }

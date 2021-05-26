@@ -459,7 +459,7 @@ class NNIManager implements Manager {
             return new module_.AdlTrainingService();
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
-            return new module_.RouterTrainingService(config);
+            return await module_.RouterTrainingService.construct(config);
         }
 
         throw new Error(`Unsupported training service platform "${platform}"`);
