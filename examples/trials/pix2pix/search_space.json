@@ -1,0 +1,11 @@
+{
+    "ngf": {"_type":"choice","_value":[16, 32, 64, 128, 256]},
+    "ndf": {"_type":"choice","_value":[16, 32, 64, 128, 256]},
+    "netG": {"_type":"choice","_value":["resnet_9blocks", "unet_256"]},
+    "netD": {"_type":"choice","_value":["basic", "pixel"]},
+    "norm": {"_type":"choice","_value":["batch", "instance", "none"]},
+    "init_type": {"_type":"choice","_value":["xavier", "normal", "kaiming", "orthogonal"]},
+    "lr":{"_type":"choice","_value":[0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]},
+    "lr_policy": {"_type":"choice","_value":["linear", "step", "plateau", "cosine"]},
+    "gan_mode": {"_type":"choice","_value":["vanilla", "lsgan", "wgangp"]} 
+}
