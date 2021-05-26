@@ -145,7 +145,13 @@ abstract class KubernetesCRDClient {
     protected crdSchema: any;
 
     constructor() {
-        this.client = new Client1_10({config: config.fromKubeconfig()});
+        var kubernetes_config;
+        if ('KUBERNETES_SERVICE_HOST' in process.env) {
+            kubernetes_config = config.getInCluster();
+        } else {
+            kubernetes_config = config.fromKubeconfig();
+        }
+        this.client = new Client1_10({config: kubernetes_config});
         this.client.loadSpec();
     }
 
