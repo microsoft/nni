@@ -38,7 +38,7 @@ def update_training_service_config(config, training_service, config_file_path):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
-    
+
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
         containerCodeDir = config['trial']['codeDir']
@@ -52,6 +52,12 @@ def update_training_service_config(config, training_service, config_file_path):
             containerCodeDir = config['trial']['codeDir'].replace('../../../', '/')
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
+
+    if training_service == 'remote':
+        testcase_config = get_yml_content(args.nni_source_dir + config_file_path)
+        sharedStorage = testcase_config.get('sharedStorage')
+        if sharedStorage is None or str(sharedStorage.get('storageType')).lower() != 'azureblob':
+            it_ts_config[training_service].pop('sharedStorage')
     
     if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
