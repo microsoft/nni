@@ -34,6 +34,8 @@ This script runs the benchmark 'nnivalid', which consists of a regression task, 
 
 By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "Hyperband", "BOHB". It is also possible to evaluate custom tuners. See the next sections for details. 
 
+By default, the script runs the specified tuners against the specified benchmark one by one. To run all the experiments simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``. 
+
 Note: the SMAC tuner and the BOHB advisor has to be manually installed before any experiments can be run on it. Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details on installing SMAC and BOHB.
 
 Run customized benchmarks on existing tuners
