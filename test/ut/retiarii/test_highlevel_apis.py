@@ -379,7 +379,7 @@ class GraphIR(unittest.TestCase):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.dropout_rate = nn.ValueChoice([[0.,], [1.,]])
+                self.dropout_rate = nn.ValueChoice([[0., ], [1., ]])
 
             def forward(self, x):
                 return F.dropout(x, self.dropout_rate()[0])
@@ -398,7 +398,7 @@ class GraphIR(unittest.TestCase):
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
-                self.dropout_rate = nn.ValueChoice([[1.05,], [1.1,]])
+                self.dropout_rate = nn.ValueChoice([[1.05, ], [1.1, ]])
 
             def forward(self, x):
                 # if expression failed, the exception would be:
@@ -413,6 +413,67 @@ class GraphIR(unittest.TestCase):
         self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
+
+    def test_repeat(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(AddOne(), (3, 5))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        model1 = mutator.apply(model)
+        model2 = mutator.apply(model)
+        model3 = mutator.apply(model)
+        self.assertTrue((self._get_converted_pytorch_model(model1)(torch.zeros(1, 16)) == 3).all())
+        self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
+        self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
+
+    def test_cell(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
+                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
+
+            def forward(self, x, y):
+                return self.cell([x, y])
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(
+                torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 64]))
+
+        @self.get_serializer()
+        class Net2(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)], num_nodes=4)
+
+            def forward(self, x):
+                return self.cell([x])
+
+        raw_model, mutators = self._get_model_with_mutators(Net2())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
 
 class Python(GraphIR):
