@@ -1,27 +1,29 @@
 Auto Compression with NNI Experiment
 ====================================
 
-This approach is mainly a combination of compression and nni experiments.
-It allows users to define compressor search space, including types, parameters, etc.
-Its using experience is similar to launch the NNI experiment from python.
+If you want to compress your model, but don't know what compression algorithm to choose, or don't know what sparsity is suitable for your model, or just want to try more possibilities, auto compression may help you.
+Users can choose different compression algorithms and define the algorithms' search space, then auto compression will launch an NNI experiment and try different compression algorithms with varying sparsity automatically. 
+Of course, in addition to the sparsity rate, users can also introduce other related parameters into the search space.
+If you don't know what is search space or how to write search space, `this <./Tutorial/SearchSpaceSpec.rst>`__ is for your reference.
+Auto compression using experience is similar to the NNI experiment in python.
 The main differences are as follows:
 
 * Use a generator to help generate search space object.
 * Need to provide the model to be compressed, and the model should have already pre-trained.
-* No need to set ``trial_command``, additional need to set ``auto_compress_module_file_name``.
+* No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressExperiment`` input.
 
 Generate search space
 ---------------------
 
-Due to the extensive use of nested search space, we recommend using generator to configure search space.
-The following is an example. Using ``add_pruner_config()`` and ``add_quantizer_config()`` add subconfig, then ``dumps()`` search space dict.
+Due to the extensive use of nested search space, we recommend a using generator to configure search space.
+The following is an example. Using ``add_config()`` add subconfig, then ``dumps()`` search space dict.
 
 .. code-block:: python
 
     from nni.algorithms.compression.pytorch.auto_compress import AutoCompressSearchSpaceGenerator
 
     generator = AutoCompressSearchSpaceGenerator()
-    generator.add_pruner_config('level', [
+    generator.add_config('level', [
         {
             "sparsity": {
                 "_type": "uniform",
@@ -30,7 +32,7 @@ The following is an example. Using ``add_pruner_config()`` and ``add_quantizer_c
             'op_types': ['default']
         }
     ])
-    generator.add_quantizer_config('qat', [
+    generator.add_config('qat', [
     {
         'quant_types': ['weight', 'output'],
         'quant_bits': {
@@ -85,25 +87,26 @@ Users need to inherit ``AbstractAutoCompressModule`` and override the abstract c
             return _evaluator
 
 Users need to implement at least ``model()`` and ``evaluator()``.
-If you use iterative pruner, you need to additional implement ``optimizer()``, ``criterion()`` and ``sparsifying_trainer()``.
-If you want to finetune the model after compression, you need to implement ``post_compress_finetuning_trainer()``.
-The path of file that contains the ``AutoCompressModule`` needs to be specified in experiment config.
+If you use iterative pruner, you need to additional implement ``optimizer_factory()``, ``criterion()`` and ``sparsifying_trainer()``.
+If you want to finetune the model after compression, you need to implement ``optimizer_factory()``, ``criterion()``, ``post_compress_finetuning_trainer()`` and ``post_compress_finetuning_epochs()``.
+The ``optimizer_factory()`` should return a factory function, the input is an iterable variable, i.e. your ``model.parameters()``, and the output is an optimizer instance.
+The two kinds of ``trainer()`` should return a trainer with input ``model, optimizer, criterion, current_epoch``.
 The full abstract interface refers to :githublink:`interface.py <nni/algorithms/compression/pytorch/auto_compress/interface.py>`.
 An example of ``AutoCompressModule`` implementation refers to :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`.
 
 Launch NNI experiment
 ---------------------
 
-Similar to launch from python, the difference is no need to set ``trial_command``.
-By default, ``auto_compress_module_file_name`` is set as ``./auto_compress_module.py``.
-Remember that ``auto_compress_module_file_name`` is the relative file path under ``trial_code_directory``.
+Similar to launch from python, the difference is no need to set ``trial_command`` and put the user-provided ``AutoCompressModule`` as ``AutoCompressExperiment`` input.
 
 .. code-block:: python
 
     from pathlib import Path
     from nni.algorithms.compression.pytorch.auto_compress import AutoCompressExperiment
 
-    experiment = AutoCompressExperiment('local')
+    from auto_compress_module import AutoCompressModule
+
+    experiment = AutoCompressExperiment(AutoCompressModule, 'local')
     experiment.config.experiment_name = 'auto compress torch example'
     experiment.config.trial_concurrency = 1
     experiment.config.max_trial_number = 10
@@ -112,8 +115,5 @@ Remember that ``auto_compress_module_file_name`` is the relative file path under
     experiment.config.tuner.name = 'TPE'
     experiment.config.tuner.class_args['optimize_mode'] = 'maximize'
     experiment.config.training_service.use_active_gpu = True
-
-    # the relative file path under trial_code_directory, which contains the class AutoCompressModule
-    experiment.config.auto_compress_module_file_name = './auto_compress_module.py'
 
     experiment.run(8088)

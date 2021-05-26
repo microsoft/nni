@@ -81,7 +81,7 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         Optional[Callable[[Module, Optimizer, Callable, int], None]]
-            Used to train model in compress stage, include `model, optimizer, criterion, epoch` as function arguments.
+            Used to train model in compress stage, include `model, optimizer, criterion, current_epoch` as function arguments.
         """
         pass
 
@@ -99,7 +99,7 @@ class AbstractAutoCompressModule(ABC):
         Returns
         -------
         Optional[Callable[[Module, Optimizer, Callable, int], None]]
-            Used to train model in finetune stage, include `model, optimizer, criterion, epoch` as function arguments.
+            Used to train model in finetune stage, include `model, optimizer, criterion, current_epoch` as function arguments.
         """
         pass
 
