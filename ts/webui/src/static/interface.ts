@@ -203,6 +203,16 @@ interface Tensorboard {
     port: string;
 }
 
+// for TableList search
+interface SearchItems {
+    name: string;
+    operator: string;
+    value1: string; // first input value
+    value2: string; // second input value
+    choice: string[]; // use select multiy value list
+    isChoice: boolean; // for parameters: type = choice and status also as choice type
+}
+
 export {
     TableObj,
     TableRecord,
@@ -226,5 +236,6 @@ export {
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard
+    Tensorboard,
+    SearchItems
 };
