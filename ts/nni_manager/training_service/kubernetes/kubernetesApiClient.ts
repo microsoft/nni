@@ -16,7 +16,11 @@ class GeneralK8sClient {
     protected namespace: string = 'default';
 
     constructor() {
-        this.client = new Client1_10({config: config.fromKubeconfig(), version: '1.9'});
+        if 'KUBERNETES_SERVICE_HOST' in process.env:
+            var kubernetes_config = config.getInCluster()
+        else:
+            var kubernetes_config = config.fromKubeconfig()
+        this.client = new Client1_10({config: kubernetes_config, version: '1.9'});
         this.client.loadSpec();
     }
 
