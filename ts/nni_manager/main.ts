@@ -25,9 +25,9 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
-    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
+    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string, urlprefix: string): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
+    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -122,7 +122,9 @@ const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
+const urlPrefix: string = parseArg(['--url_prefix']);
+
+initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe, urlPrefix);
 
 mkDirP(getLogDir())
     .then(async () => {

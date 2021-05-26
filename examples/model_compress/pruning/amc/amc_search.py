@@ -12,7 +12,7 @@ from nni.algorithms.compression.pytorch.pruning import AMCPruner
 from data import get_split_dataset
 from utils import AverageMeter, accuracy
 
-sys.path.append('../models')
+sys.path.append('../../models')
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC search script')

@@ -7,7 +7,7 @@ import torch
 from schema import And, Optional
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
-from .finegrained_pruning import LevelPrunerMasker
+from .finegrained_pruning_masker import LevelPrunerMasker
 
 logger = logging.getLogger('torch pruner')
 
