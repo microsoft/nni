@@ -287,14 +287,11 @@ def run(args):
             continue
 
         # remote mode need more time to cleanup 
-<<<<<<< HEAD
         if args.ts == 'remote' or args.ts == 'hybrid':
-=======
-        if args.ts == 'remote':
-            if not match_remoteConfig(test_case_config, args.nni_source_dir):
-                print('skipped {}, remoteConfig not match.'.format(name))
-                continue
->>>>>>> 2fab5345 (fix comments)
+            if args.ts == 'remote':
+                if not match_remoteConfig(test_case_config, args.nni_source_dir):
+                    print('skipped {}, remoteConfig not match.'.format(name))
+                    continue
             wait_for_port_available(8080, 240)
         else:
             wait_for_port_available(8080, 60)
