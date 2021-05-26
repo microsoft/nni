@@ -67,7 +67,7 @@ def trial_job_id_url(port, job_id):
 
 def export_data_url(port):
     '''get export_data url'''
-    return '{0}:{1}{2}{3}{4}'.format(BASE_URL, port, API_ROOT_URL, EXPORT_DATA_API)
+    return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, EXPORT_DATA_API)
 
 
 def tensorboard_url(port):
