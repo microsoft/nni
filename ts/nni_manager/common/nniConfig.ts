@@ -18,7 +18,7 @@ const readFile = promisify(fs.readFile);
 
 async function readConfigFile(fileName: string): Promise<string> {
     const script = 'import nni.runtime.config ; print(nni.runtime.config.get_config_directory())';
-    const configDir = await runPythonScript(script);
+    const configDir = (await runPythonScript(script)).trim();
     const stream = await readFile(path.join(configDir, fileName));
     return stream.toString();
 }
