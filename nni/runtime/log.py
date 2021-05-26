@@ -85,6 +85,7 @@ def _init_logger_dispatcher() -> None:
     log_level = log_level_map.get(dispatcher_env_vars.NNI_LOG_LEVEL, logging.INFO)
     _register_handler(FileHandler(log_path), log_level)
 
+
 def _init_logger_trial() -> None:
     log_path = _prepare_log_dir(trial_env_vars.NNI_OUTPUT_DIR) / 'trial.log'
     log_file = open(log_path, 'a')
