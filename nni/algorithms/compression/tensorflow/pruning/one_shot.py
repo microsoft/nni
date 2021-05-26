@@ -79,8 +79,8 @@ class SlimPrunerMasker(WeightMasker):
             assert len(weights) == 1, f'Bad weights: {[w.name for w in wrapper.layer.weights]}'
             weight_list.append(tf.math.abs(weights[0].read_value()))
         all_bn_weights = tf.concat(weight_list, 0)
-        k = int(all_bn_weights.shape[0] * (1 - pruner.wrappers[0].config['sparsity']))
-        top_k = tf.math.top_k(tf.reshape(all_bn_weights, [-1]), k).values
+        k = int(all_bn_weights.shape[0] * pruner.wrappers[0].config['sparsity'])
+        top_k = -tf.math.top_k(-tf.reshape(all_bn_weights, [-1]), k).values
         self.global_threshold = top_k.numpy()[-1]
 
     def calc_masks(self, sparsity, wrapper, wrapper_idx=None):
@@ -102,12 +102,7 @@ class SlimPrunerMasker(WeightMasker):
         if wrapper.masks.get(weight_name) is not None:
             weight *= wrapper.masks[weight_name]
 
-        filters = weight.shape[0]
-        num_prune = int(filters * sparsity)
-        if filters >= 2 and num_prune >= 1:
-            mask = tf.cast(tf.math.abs(weight) > self.global_threshold, weight.dtype)
-        else:
-            mask = tf.ones_like(weight)
+        mask = tf.cast(tf.math.abs(weight) > self.global_threshold, weight.dtype)
 
         masks = {weight_name: mask}
         if bias_name:
