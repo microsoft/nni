@@ -125,7 +125,7 @@ def print_trial_job_log(training_service, trial_jobs_url):
     trial_jobs = get_trial_jobs(trial_jobs_url)
     for trial_job in trial_jobs:
         trial_log_dir = os.path.join(get_experiment_dir(EXPERIMENT_URL), 'trials', trial_job['trialJobId'])
-        log_files = ['stderr', 'trial.log'] if training_service == 'local' else ['stdout_log_collection.log']
+        log_files = ['stderr', 'stdout'] if training_service == 'local' else ['stdout_log_collection.log']
         for log_file in log_files:
             print_file_content(os.path.join(trial_log_dir, log_file))
 
