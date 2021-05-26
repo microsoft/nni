@@ -1,0 +1,152 @@
+nnismall:
+This benchmark contains 24 tasks: 8 tasks each for binary classfication, multi-class classification, and regression. 
+
+Binary Classification: 
+- name: Australian
+  openml_task_id: 146818
+  Introduction: Australian Credit Approval dataset, originating from the StatLog project. It concerns credit card applications. 
+  Features: 6 numerical and 8 categorical features, all normalized to [-1,1].
+  Number of instances: 690
+
+- name: blood-transfusion
+  openml_task_id: 10101
+  Introduction: Data taken from the Blood Transfusion Service Center in Hsin-Chu City in Taiwan. The target attribute is a binary variable representing whether he/she donated blood in March 2007 (2 stands for donating blood; 1 stands for not donating blood).
+  Features: 4 numerical features.
+  Number of instances: 748
+
+- name: christine
+  openml_task_id: 168908
+  Introduction: An Openml challenge dataset on classification. The identity of the datasets and the type of data is concealed. 
+  Features: 1599 numerical features and 38 categorical features
+  Number of instances: 5418
+
+- name: credit-g
+  openml_task_id: 31
+  Introduction: This dataset classifies people described by a set of attributes as good or bad credit risks.
+  Features: 7 numerical features and 13 categorical features
+  Number of instances: 1000
+
+- name: kc1
+  openml_task_id: 3917
+  Introduction: One of the NASA Metrics Data Program defect data sets. Data from software for storage management for receiving and processing ground data.
+  Features: 21 numerical features
+  Number of instances: 2109
+
+- name: kr-vs-kp
+  openml_task_id: 3
+  Introduction: Given a board configuration, predict whether white can win or not. 
+  Features: 37 categorical features
+  Number of instances: 3196
+
+- name: phoneme
+  openml_task_id: 9952
+  Introduction: The aim of this dataset is to distinguish between nasal (class 0) and oral sounds (class 1). 
+  Features: 5 numerical features
+  Number of instances: 5404
+
+- name: sylvine
+  openml_task_id: 168912
+  Introduction: An Openml challenge dataset on classification. The identity of the datasets and the type of data is concealed.
+  Features: 20 numerical features
+  Number of instances: 5124
+
+
+
+Multi-class Classification
+- name: car
+  openml_task_id: 146821
+  Introduction: The model evaluates cars using six intermediate concepts. 
+  Features: 6 categorical features
+  Number of instances: 1728
+
+- name: cnae-9
+  openml_task_id: 9981
+  Introduction: This is a data set containing 1080 documents of free text business descriptions of Brazilian companies categorized into a subset of 9 categories.
+  Features: 856 numerical features (word frequency)
+  Number of instances: 1080
+
+- name: dilbert
+  openml_task_id: 168909
+  Introduction: An Openml challenge dataset on classification. The identity of the datasets and the type of data is concealed. 
+  Features: 2000 numerical features
+  Number of instances: 10000
+
+- name: fabert
+  openml_task_id: 168910
+  Introduction: An Openml challenge dataset on classification. The identity of the datasets and the type of data is concealed. 
+  Features: 800 numerical features
+  Number of instances: 8237
+
+- name: jasmine
+  openml_task_id: 168911
+  Introduction: An Openml challenge dataset on classification. The identity of the datasets and the type of data is concealed.
+  Features: 8 numerical features and 137 categorical features 
+  Number of instances: 2984
+
+- name: mfeat-factors
+  openml_task_id: 12
+  Introduction: Hand-written numeral classification. 
+  Features: 216 numerical features(corresponding to binarized image) 
+  Number of instances: 2000
+
+- name: segment
+  openml_task_id: 146822
+  Introduction: segmentation of outdoor images into 7 classes
+  Features: 19 numerical features
+  Number of instances: 2310  (3x3 patches from 7 images)
+
+- name: vehicle
+  openml_task_id: 53
+  Introduction: Classify a given silhouette as one of four types of vehicle, using a set of features extracted from the silhouette. The vehicle may be viewed from one of many different angles.
+  Features: 18 numerical features
+  Number of instances: 846
+
+
+Regression
+- name: cholesterol
+  openml_task_id: 2295
+  Introduction: Predict the cholesterol level of patients. 
+  Features: 6 numerical features and 7 categorical features 
+  Number of instances: 303
+
+- name: liver-disorders
+  openml_task_id: 52948
+  Introduction: Predict alcohol assumption based on blood test results. 
+  Features: 5 numerical features
+  Number of instances: 345
+
+- name: kin8nm
+  openml_task_id: 2280
+  Introduction: This dataset is concerned with the forward kinematics of an 8 link robot arm.
+  Features: 8 numerical features
+  Number of instances: 8192
+
+- name: cpu_small
+  openml_task_id: 4883
+  Introduction: Predict the portion of time that cpus run in user mode.
+  Features: 12 numerical features
+  Number of instances: 8192
+
+- name: titanic_2
+  openml_task_id: 211993
+  Introduction: Predict probability of survival
+  Features: 7 numerical features
+  Number of instances: 891
+
+- name: boston
+  openml_task_id: 4857
+  Introduction: Boston house price. 
+  Features: 11 numerical features and 2 categorical features 
+  Number of instances: 506
+
+- name: stock
+  openml_task_id: 2311
+  Introduction: This is a dataset obtained from the StatLib repository. The data provided are daily stock prices from January 1988 through October 1991, for ten aerospace companies.
+  Features: 11 numerical features
+  Number of instances: 950
+
+- name: space_ga
+  openml_task_id: 4835
+  Introduction: Predict the log of the proportion of votes cast for both candidates in the 1980 presidential election.
+  Features: 6 numerical attributes
+  Number of instances: 3107

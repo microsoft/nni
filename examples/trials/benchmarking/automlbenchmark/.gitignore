@@ -1,0 +1,13 @@
+# data files 
+nni/data/
+
+# benchmark repository 
+automlbenchmark/
+
+# all experiment results
+results*
+
+# intermediate outputs of tuners
+smac3-output*
+param_config_space.pcs
+scenario.txt
