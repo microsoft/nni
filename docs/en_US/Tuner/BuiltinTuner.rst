@@ -45,7 +45,8 @@ Currently, we support the following algorithms:
      - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
    * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. `Reference Paper <https://arxiv.org/abs/1711.09846v1>`__
-
+   * - `DNGO Tuner <#DNGOTuner>`__
+     - Use of neural networks as an alternative to GPs to model distributions over functions in bayesian optimization.
 
 Usage of Built-in Tuners
 ------------------------
@@ -573,6 +574,36 @@ Population Based Training (PBT) bridges and extends parallel search methods and 
        optimize_mode: maximize
 
 Note that, to use this tuner, your trial code should be modified accordingly, please refer to `the document of PBTTuner <./PBTTuner.rst>`__ for details.
+
+DNGO Tuner
+^^^^^^^^^^
+
+..
+
+   Built-in Tuner Name: **DNGOTuner**
+
+
+**Suggested scenario**
+
+Applicable to large scale hyperparameter optimization. Bayesian optimization that rapidly finds competitive models on benchmark object recognition tasks using convolutional networks, and image caption generation using neural language models.
+
+**classArgs requirements:**
+
+
+* **optimize_mode** (*'maximize' or 'minimize'*\ ) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **sample_size** (*int, default = 1000*) - Number of samples to select in each iteration. The best one will be picked from the sample.
+* **trials_per_update** (*int, default = 20*) - Number of trials to collect before updating the model.
+* **num_epochs_per_training** (*int, default = 500*) - Number of epochs to train DNGO model.
+
+**Usage example**
+
+.. code-block:: yaml
+
+   # config.yml
+   tuner:
+     builtinTunerName: DNGOTuner
+     classArgs:
+       optimize_mode: maximize
 
 **Reference and Feedback**
 ------------------------------
