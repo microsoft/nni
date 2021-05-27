@@ -24,6 +24,13 @@ TENSORBOARD_API = '/tensorboard'
 
 METRIC_DATA_API = '/metric-data'
 
+def formatURLPath(path):
+    return '' if path is None else '/{0}'.format(path)
+
+def setPrefixUrl(prefix_path):
+    global API_ROOT_URL
+    API_ROOT_URL = formatURLPath(prefix_path)
+
 def metric_data_url(port):
     '''get metric_data url'''
     return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, METRIC_DATA_API)
@@ -68,11 +75,11 @@ def tensorboard_url(port):
     return '{0}:{1}{2}{3}'.format(BASE_URL, port, API_ROOT_URL, TENSORBOARD_API)
 
 
-def get_local_urls(port):
+def get_local_urls(port,prefix):
     '''get urls of local machine'''
     url_list = []
     for _, info in psutil.net_if_addrs().items():
         for addr in info:
             if socket.AddressFamily.AF_INET == addr.family:
-                url_list.append('http://{}:{}'.format(addr.address, port))
+                url_list.append('http://{0}:{1}{2}'.format(addr.address, port, formatURLPath(prefix)))
     return url_list

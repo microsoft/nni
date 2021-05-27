@@ -1,6 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom';
 import App from './App';
+import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/Overview'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
@@ -9,8 +10,10 @@ import './index.css';
 import './static/style/loading.scss';
 import * as serviceWorker from './serviceWorker';
 
+const path = getPrefix();
+
 ReactDOM.render(
-    <Router>
+    <Router basename={path === undefined ? null : path}>
         <Suspense
             fallback={
                 <div className='loading'>

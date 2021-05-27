@@ -1,0 +1,16 @@
+---
+input_dir: '{user}/data'
+
+frameworks:
+  definition_file:
+    - '{root}/resources/frameworks.yaml'
+    - '{user}/frameworks.yaml'
+
+benchmarks:
+  definition_dir:
+    - '{user}/benchmarks'
+    - '{root}/resources/benchmarks'
+    
+  constraints_file:
+    - '{user}/constraints.yaml'
+    - '{root}/resources/constraints.yaml'
