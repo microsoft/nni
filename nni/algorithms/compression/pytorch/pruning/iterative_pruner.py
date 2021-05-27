@@ -60,7 +60,10 @@ class IterativePruner(DependencyAwarePruner):
             assert len(epochs_per_iteration) == num_iterations, 'num_iterations should equal to the length of epochs_per_iteration'
             self.epochs_per_iteration = epochs_per_iteration
         else:
+            assert num_iterations > 0, 'num_iterations should >= 1'
             self.epochs_per_iteration = [epochs_per_iteration] * num_iterations
+
+        self._validate_iteration_params()
 
         self._trainer = trainer
         self._criterion = criterion
@@ -68,6 +71,9 @@ class IterativePruner(DependencyAwarePruner):
     def _fresh_calculated(self):
         for wrapper in self.get_modules_wrapper():
             wrapper.if_calculated = False
+
+    def _validate_iteration_params(self):
+        assert all(num >= 0 for num in self.epochs_per_iteration), 'all epoch number need >= 0'
 
     def compress(self):
         training = self.bound_model.training
