@@ -461,6 +461,8 @@ class TaylorFOWeightFilterPruner(IterativePruner):
         Function used to calculate the loss between the target and the output.
     sparsity_training_epochs: int
         The number of epochs to collect the contributions.
+    statistics_batch_num: int
+        The number of batches to statistic the activation.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -472,14 +474,14 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     dummy_input : torch.Tensor
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
-
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsity_training_epochs=1, dependency_aware=False,
-                 dummy_input=None):
+    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsity_training_epochs=1,
+                 statistics_batch_num=1, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
-                         criterion=criterion, num_iterations=1, epochs_per_iteration=sparsity_training_epochs,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+                         criterion=criterion, statistics_batch_num=statistics_batch_num, num_iterations=1,
+                         epochs_per_iteration=sparsity_training_epochs, dependency_aware=dependency_aware,
+                         dummy_input=dummy_input)
 
     def _supported_dependency_aware(self):
         return True
@@ -507,6 +509,8 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
         The activation type.
     sparsity_training_epochs: int
         The number of epochs to statistic the activation.
+    statistics_batch_num: int
+        The number of batches to statistic the activation.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -522,10 +526,11 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, activation='relu',
-                 sparsity_training_epochs=1, dependency_aware=False, dummy_input=None):
+                 sparsity_training_epochs=1, statistics_batch_num=1, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+                         activation=activation, statistics_batch_num=statistics_batch_num, num_iterations=1,
+                         epochs_per_iteration=sparsity_training_epochs)
 
     def _supported_dependency_aware(self):
         return True
@@ -553,6 +558,8 @@ class ActivationMeanRankFilterPruner(IterativePruner):
         The activation type.
     sparsity_training_epochs: int
         The number of batches to statistic the activation.
+    statistics_batch_num: int
+        The number of batches to statistic the activation.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -567,10 +574,11 @@ class ActivationMeanRankFilterPruner(IterativePruner):
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, activation='relu',
-                 sparsity_training_epochs=1, dependency_aware=False, dummy_input=None):
+                 sparsity_training_epochs=1, statistics_batch_num=1, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+                         activation=activation, statistics_batch_num=statistics_batch_num, num_iterations=1,
+                         epochs_per_iteration=sparsity_training_epochs)
 
     def _supported_dependency_aware(self):
         return True
