@@ -137,7 +137,6 @@ if __name__ == '__main__':
     parser.add_argument("--nni_manager_nfs_mount_path", type=str)
     parser.add_argument("--container_nfs_mount_path", type=str)
     # args for kubeflow and frameworkController
-    parser.add_argument("--nfs_server", type=str)
     parser.add_argument("--nfs_path", type=str)
     parser.add_argument("--keyvault_vaultname", type=str)
     parser.add_argument("--keyvault_name", type=str)
