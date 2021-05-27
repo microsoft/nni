@@ -203,7 +203,7 @@ describe('Unit Test for TrialDispatcher', () => {
     });
 
     beforeEach(async () => {
-        trialDispatcher = new TrialDispatcher(config);
+        trialDispatcher = await TrialDispatcher.construct(config);
 
         // set ut environment
         let environmentServiceList: EnvironmentService[] = [];

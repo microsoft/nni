@@ -7,11 +7,10 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tkill from 'tree-kill';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { ExperimentConfig } from '../../../common/experimentConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
+import { isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
 import { SharedStorageService } from '../sharedStorage'
 
@@ -22,10 +21,10 @@ export class LocalEnvironmentService extends EnvironmentService {
     private experimentRootDir: string;
     private experimentId: string;
 
-    constructor(_config: ExperimentConfig) {
+    constructor(experimentRootDir: string, experimentId: string, _config: ExperimentConfig) {
         super();
-        this.experimentId = getExperimentId();
-        this.experimentRootDir = getExperimentRootDir();
+        this.experimentId = experimentId;
+        this.experimentRootDir = experimentRootDir;
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -110,8 +109,6 @@ export class LocalEnvironmentService extends EnvironmentService {
         const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
             this.experimentRootDir = sharedStorageService.localWorkingRoot;
-        } else {
-            this.experimentRootDir = getExperimentRootDir();
         }
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
         if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {
