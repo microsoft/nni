@@ -4,7 +4,21 @@ import json
 from nni.runtime.config import get_config_file
 from .common_utils import print_error, print_green
 
+_builtin_training_services = [
+    'local',
+    'remote',
+    'openpai', 'pai',
+    'aml',
+    'kubeflow',
+    'frameworkcontroller',
+    'adl',
+]
+
 def register(args):
+    if args.package in _builtin_training_services:
+        print_error(f'{args.package} is a builtin training service')
+        return
+
     try:
         module = importlib.import_module(args.package)
     except Exception:
