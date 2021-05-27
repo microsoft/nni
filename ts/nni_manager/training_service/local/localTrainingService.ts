@@ -173,6 +173,8 @@ class LocalTrainingService implements TrainingService {
     public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
         let logPath: string;
         if (logType === 'TRIAL_LOG') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
+        } else if (logType === 'TRIAL_STDOUT'){
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'stdout');
         } else if (logType === 'TRIAL_ERROR') {
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');

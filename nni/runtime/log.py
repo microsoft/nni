@@ -91,6 +91,10 @@ def _init_logger_trial() -> None:
     log_file = open(log_path, 'a')
     _register_handler(StreamHandler(log_file), logging.INFO)
 
+    if trial_env_vars.NNI_PLATFORM == 'local':
+        sys.stdout = _LogFileWrapper(log_file)
+
+
 def _init_logger_standalone() -> None:
     _register_handler(StreamHandler(sys.stdout), logging.INFO)
 
