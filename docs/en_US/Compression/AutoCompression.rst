@@ -9,7 +9,7 @@ Auto compression using experience is similar to the NNI experiment in python.
 The main differences are as follows:
 
 * Use a generator to help generate search space object.
-* Need to provide the model to be compressed, and the model should have already pre-trained.
+* Need to provide the model to be compressed, and the model should have already been pre-trained.
 * No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressExperiment`` input.
 
 Generate search space

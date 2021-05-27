@@ -97,6 +97,7 @@ class AutoCompressEngine(BaseAutoCompressEngine):
             optimizer = optimizer_factory(compressed_model.parameters())
             for i in range(finetuning_epochs):
                 finetuning_trainer(compressed_model, optimizer, criterion, i)
+        pruner.get_pruned_weights()
         return compressed_model
 
     @classmethod

@@ -7,7 +7,6 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
-from torch.optim.lr_scheduler import StepLR
 from torchvision import datasets, transforms
 
 from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressModule
@@ -55,15 +54,16 @@ _transform = transforms.Compose([
     transforms.Normalize((0.1307,), (0.3081,))
 ])
 
-_dataset1 = datasets.MNIST('./data', train=True, download=True, transform=_transform)
-_dataset2 = datasets.MNIST('./data', train=False, transform=_transform)
-_train_loader = torch.utils.data.DataLoader(_dataset1, **_train_kwargs)
-_test_loader = torch.utils.data.DataLoader(_dataset2, **_test_kwargs)
-
 _device = torch.device("cuda" if _use_cuda else "cpu")
-_epoch = 2
+
+_train_loader = None
+_test_loader = None
 
 def _train(model, optimizer, criterion, epoch):
+    global _train_loader
+    if _train_loader is None:
+        dataset = datasets.MNIST('./data', train=True, download=True, transform=_transform)
+        _train_loader = torch.utils.data.DataLoader(dataset, **_train_kwargs)
     model.train()
     for data, target in _train_loader:
         data, target = data.to(_device), target.to(_device)
@@ -74,6 +74,10 @@ def _train(model, optimizer, criterion, epoch):
         optimizer.step()
 
 def _test(model):
+    global _test_loader
+    if _test_loader is None:
+        dataset = datasets.MNIST('./data', train=False, transform=_transform)
+        _test_loader = torch.utils.data.DataLoader(dataset, **_test_kwargs)
     model.eval()
     test_loss = 0
     correct = 0
@@ -91,12 +95,7 @@ def _test(model):
     return acc
 
 _model = LeNet().to(_device)
-
-# _pre_train_optimizer = optim.Adadelta(_model.parameters(), lr=1)
-# _scheduler = StepLR(_pre_train_optimizer, step_size=1, gamma=0.7)
-# for i in range(_epoch):
-#     _train(_model, _pre_train_optimizer, F.nll_loss, i)
-#     _scheduler.step()
+_model.load_state_dict(torch.load('mnist_pretrain_lenet.pth'))
 
 class AutoCompressModule(AbstractAutoCompressModule):
     @classmethod
