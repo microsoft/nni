@@ -4,13 +4,13 @@
 import copy
 import warnings
 from collections import OrderedDict
-from typing import Any, List, Union, Dict
+from typing import Any, List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
-from ...utils import uid
+from .utils import generate_new_label, get_fixed_value
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
@@ -55,7 +55,17 @@ class LayerChoice(nn.Module):
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
-    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
+    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: Optional[str] = None, **kwargs):
+        try:
+            chosen = get_fixed_value(label)
+            if isinstance(candidates, list):
+                return candidates[int(chosen)]
+            else:
+                return candidates[chosen]
+        except AssertionError:
+            return super().__new__(cls)
+
+    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: Optional[str] = None, **kwargs):
         super(LayerChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -65,7 +75,7 @@ class LayerChoice(nn.Module):
         if 'reduction' in kwargs:
             warnings.warn(f'"reduction" is deprecated. Ignoring...')
         self.candidates = candidates
-        self._label = label if label is not None else f'layerchoice_{uid()}'
+        self._label = generate_new_label(label)
 
         self.names = []
         if isinstance(candidates, OrderedDict):
@@ -163,7 +173,13 @@ class InputChoice(nn.Module):
         Identifier of the input choice.
     """
 
-    def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
+    def __new__(cls, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: Optional[str] = None, **kwargs):
+        try:
+            return ChosenInputs(get_fixed_value(label), reduction=reduction)
+        except AssertionError:
+            return super().__new__(cls)
+
+    def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: Optional[str] = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -176,7 +192,7 @@ class InputChoice(nn.Module):
         self.n_chosen = n_chosen
         self.reduction = reduction
         assert self.reduction in ['mean', 'concat', 'sum', 'none']
-        self._label = label if label is not None else f'inputchoice_{uid()}'
+        self._label = generate_new_label(label)
 
     @property
     def key(self):
@@ -265,10 +281,16 @@ class ValueChoice(Translatable, nn.Module):
         Identifier of the value choice.
     """
 
-    def __init__(self, candidates: List[Any], label: str = None):
+    def __new__(cls, candidates: List[Any], label: Optional[str] = None):
+        try:
+            return get_fixed_value(label)
+        except AssertionError:
+            return super().__new__(cls)
+
+    def __init__(self, candidates: List[Any], label: Optional[str] = None):
         super().__init__()
         self.candidates = candidates
-        self._label = label if label is not None else f'valuechoice_{uid()}'
+        self._label = generate_new_label(label)
         self._accessor = []
 
     @property
@@ -296,6 +318,14 @@ class ValueChoice(Translatable, nn.Module):
         except KeyError:
             raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
         return v
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        new_item = ValueChoice(self.candidates, self.label)
+        new_item._accessor = [*self._accessor]
+        return new_item
 
     def __getitem__(self, item):
         """
@@ -331,9 +361,9 @@ class ChosenInputs(nn.Module):
     The already-chosen version of InputChoice.
     """
 
-    def __init__(self, chosen: List[int], reduction: str):
+    def __init__(self, chosen: Union[List[int], int], reduction: str):
         super().__init__()
-        self.chosen = chosen
+        self.chosen = chosen if isinstance(chosen, list) else [chosen]
         self.reduction = reduction
 
     def forward(self, candidate_inputs):

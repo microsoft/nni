@@ -12,32 +12,30 @@ import logging
 
 import argparse
 import os
-import time
+import sys
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
-from models.mnist.lenet import LeNet
-from models.cifar10.vgg import VGG
+sys.path.append('../models')
+from mnist.lenet import LeNet
+from cifar10.vgg import VGG
 
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 import nni
-from nni.compression.pytorch import apply_compression_results, ModelSpeedup
+from nni.compression.pytorch import ModelSpeedup
 from nni.algorithms.compression.pytorch.pruning import (
     LevelPruner,
     SlimPruner,
     FPGMPruner,
+    TaylorFOWeightFilterPruner,
     L1FilterPruner,
     L2FilterPruner,
     AGPPruner,
     ActivationMeanRankFilterPruner,
     ActivationAPoZRankFilterPruner
 )
-
 
 _logger = logging.getLogger('mnist_example')
 _logger.setLevel(logging.INFO)
@@ -50,7 +48,8 @@ str2pruner = {
     'agp': AGPPruner,
     'fpgm': FPGMPruner,
     'mean_activation': ActivationMeanRankFilterPruner,
-    'apoz': ActivationAPoZRankFilterPruner
+    'apoz': ActivationAPoZRankFilterPruner,
+    'taylorfo': TaylorFOWeightFilterPruner
 }
 
 def get_dummy_input(args, device):
@@ -60,53 +59,6 @@ def get_dummy_input(args, device):
         dummy_input = torch.randn([args.test_batch_size, 3, 32, 32]).to(device)
     return dummy_input
 
-def get_pruner(model, pruner_name, device, optimizer=None, dependency_aware=False):
-
-    pruner_cls = str2pruner[pruner_name]
-
-    if pruner_name == 'level':
-        config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['default']
-        }]
-    elif pruner_name in ['l1filter', 'mean_activation', 'apoz']:
-        # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
-        # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
-        config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['Conv2d'],
-            'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
-        }]
-    elif pruner_name == 'slim':
-        config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['BatchNorm2d'],
-        }]
-    elif pruner_name == 'agp':
-        config_list = [{
-            'initial_sparsity': 0.,
-            'final_sparsity': 0.8,
-            'start_epoch': 0,
-            'end_epoch': 10,
-            'frequency': 1,
-            'op_types': ['Conv2d']
-        }]
-    else:
-        config_list = [{
-            'sparsity': args.sparsity,
-            'op_types': ['Conv2d']
-        }]
-
-    kw_args = {}
-    if dependency_aware:
-        dummy_input = get_dummy_input(args, device)
-        print('Enable the dependency_aware mode')
-        # note that, not all pruners support the dependency_aware mode
-        kw_args['dependency_aware'] = True
-        kw_args['dummy_input'] = dummy_input
-
-    pruner = pruner_cls(model, config_list, optimizer, **kw_args)
-    return pruner
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
     kwargs = {'num_workers': 1, 'pin_memory': True} if torch.cuda.is_available() else {
@@ -174,7 +126,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
         print('start pre-training...')
         best_acc = 0
         for epoch in range(args.pretrain_epochs):
-            train(args, model, device, train_loader, criterion, optimizer, epoch, sparse_bn=True if args.pruner == 'slim' else False)
+            train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
             acc = test(args, model, device, criterion, test_loader)
             if acc > best_acc:
@@ -198,12 +150,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
     print('Pretrained model acc:', best_acc)
     return model, optimizer, scheduler
 
-def updateBN(model):
-    for m in model.modules():
-        if isinstance(m, nn.BatchNorm2d):
-            m.weight.grad.data.add_(0.0001 * torch.sign(m.weight.data))
-
-def train(args, model, device, train_loader, criterion, optimizer, epoch, sparse_bn=False):
+def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -211,11 +158,6 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch, sparse
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
-
-        if sparse_bn:
-            # L1 regularization on BN layer
-            updateBN(model)
-
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -256,63 +198,98 @@ def main(args):
     flops, params, results = count_flops_params(model, dummy_input)
     print(f"FLOPs: {flops}, params: {params}")
 
-    print('start pruning...')
+    print(f'start {args.pruner} pruning...')
+
+    def trainer(model, optimizer, criterion, epoch):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch)
+
+    pruner_cls = str2pruner[args.pruner]
+
+    kw_args = {}
+    config_list = [{
+        'sparsity': args.sparsity,
+        'op_types': ['Conv2d']
+    }]
+
+    if args.pruner == 'level':
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ['default']
+        }]
+
+    else:
+        if args.dependency_aware:
+            dummy_input = get_dummy_input(args, device)
+            print('Enable the dependency_aware mode')
+            # note that, not all pruners support the dependency_aware mode
+            kw_args['dependency_aware'] = True
+            kw_args['dummy_input'] = dummy_input
+        if args.pruner not in ('l1filter', 'l2filter', 'fpgm'):
+            # set only work for training aware pruners
+            kw_args['trainer'] = trainer
+            kw_args['optimizer'] = optimizer
+            kw_args['criterion'] = criterion
+
+        if args.pruner in ('slim', 'mean_activation', 'apoz', 'taylorfo'):
+            kw_args['sparsity_training_epochs'] = 5
+
+        if args.pruner == 'agp':
+            kw_args['pruning_algorithm'] = 'l1'
+            kw_args['num_iterations'] = 5
+            kw_args['epochs_per_iteration'] = 1
+
+        # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
+        # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+        if args.pruner == 'slim':
+            config_list = [{
+                'sparsity': args.sparsity,
+                'op_types': ['BatchNorm2d'],
+            }]
+        else:
+            config_list = [{
+                'sparsity': args.sparsity,
+                'op_types': ['Conv2d'],
+                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+            }]
+
+    pruner = pruner_cls(model, config_list, **kw_args)
+
+    # Pruner.compress() returns the masked model
+    model = pruner.compress()
+    pruner.get_pruned_weights()
+
+    # export the pruned model masks for model speedup
     model_path = os.path.join(args.experiment_data_dir, 'pruned_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
     mask_path = os.path.join(args.experiment_data_dir, 'mask_{}_{}_{}.pth'.format(
         args.model, args.dataset, args.pruner))
-
-    pruner = get_pruner(model, args.pruner, device, optimizer, args.dependency_aware)
-    model = pruner.compress()
-
-    if args.multi_gpu and torch.cuda.device_count() > 1:
-        model = nn.DataParallel(model)
+    pruner.export_model(model_path=model_path, mask_path=mask_path)
 
     if args.test_only:
         test(args, model, device, criterion, test_loader)
 
+    # Unwrap all modules to normal state
+    pruner._unwrap_model() 
+    m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
+    m_speedup.speedup_model()
+
+    print('start finetuning...')
     best_top1 = 0
+    save_path = os.path.join(args.experiment_data_dir, f'finetuned.pth')
     for epoch in range(args.fine_tune_epochs):
-        pruner.update_epoch(epoch)
         print('# Epoch {} #'.format(epoch))
         train(args, model, device, train_loader, criterion, optimizer, epoch)
         scheduler.step()
         top1 = test(args, model, device, criterion, test_loader)
         if top1 > best_top1:
             best_top1 = top1
-            # Export the best model, 'model_path' stores state_dict of the pruned model,
-            # mask_path stores mask_dict of the pruned model
-            pruner.export_model(model_path=model_path, mask_path=mask_path)
+            torch.save(model.state_dict(), save_path)
+
+    flops, params, results = count_flops_params(model, dummy_input)
+    print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_top1: .2f}')
 
     if args.nni:
         nni.report_final_result(best_top1)
-
-    if args.speed_up:
-        # reload the best checkpoint for speed-up
-        args.pretrained_model_dir = model_path
-        model, _, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
-        model.eval()
-
-        apply_compression_results(model, mask_path, device)
-
-        # test model speed
-        start = time.time()
-        for _ in range(32):
-            use_mask_out = model(dummy_input)
-        print('elapsed time when use mask: ', time.time() - start)
-
-        m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
-        m_speedup.speedup_model()
-
-        flops, params, results = count_flops_params(model, dummy_input)
-        print(f"FLOPs: {flops}, params: {params}")
-
-        start = time.time()
-        for _ in range(32):
-            use_speedup_out = model(dummy_input)
-        print('elapsed time when use speedup: ', time.time() - start)
-
-        top1 = test(args, model, device, criterion, test_loader)
 
 if __name__ == '__main__':
 
@@ -352,16 +329,12 @@ if __name__ == '__main__':
                         help='toggle dependency aware mode')
     parser.add_argument('--pruner', type=str, default='l1filter',
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
-                                 'fpgm', 'mean_activation', 'apoz'],
+                                 'fpgm', 'mean_activation', 'apoz', 'taylorfo'],
                         help='pruner to use')
 
     # fine-tuning
     parser.add_argument('--fine-tune-epochs', type=int, default=160,
                         help='epochs to fine tune')
-
-    # speed-up
-    parser.add_argument('--speed-up', action='store_true', default=False,
-                        help='whether to speed-up the pruned model')
 
     parser.add_argument('--nni', action='store_true', default=False,
                         help="whether to tune the pruners using NNi tuners")

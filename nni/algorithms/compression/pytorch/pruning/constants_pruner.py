@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 
-from .one_shot import LevelPruner, L1FilterPruner, L2FilterPruner, FPGMPruner
+from .one_shot_pruner import LevelPruner, L1FilterPruner, L2FilterPruner, FPGMPruner
 
 PRUNER_DICT = {
     'level': LevelPruner,

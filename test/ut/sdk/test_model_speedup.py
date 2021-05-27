@@ -17,7 +17,7 @@ from unittest import TestCase, main
 from nni.compression.pytorch import ModelSpeedup, apply_compression_results
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
 from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
-from nni.algorithms.compression.pytorch.pruning.one_shot import _StructuredFilterPruner
+from nni.algorithms.compression.pytorch.pruning.dependency_aware_pruner import DependencyAwarePruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -205,7 +205,7 @@ class L1ChannelMasker(WeightMasker):
             return {'weight_mask': mask_weight.detach(), 'bias_mask': mask_bias}
 
 
-class L1ChannelPruner(_StructuredFilterPruner):
+class L1ChannelPruner(DependencyAwarePruner):
     def __init__(self, model, config_list, optimizer=None, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='l1', optimizer=optimizer,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)

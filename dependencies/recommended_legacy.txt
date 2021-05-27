@@ -11,3 +11,5 @@ keras == 2.1.6
 onnx
 peewee
 graphviz
+gym
+tianshou >= 0.4.1

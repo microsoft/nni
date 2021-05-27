@@ -1,0 +1,14 @@
+experimentName: default_test
+searchSpaceFile: seach_space_classic_nas.json
+trialCommand: python3 mnist.py --epochs 1
+trialCodeDirectory: ../../../examples/nas/legacy/classic_nas
+trialGpuNumber: 0
+trialConcurrency: 1
+maxExperimentDuration: 15m
+maxTrialNumber: 1
+tuner:
+  name: RegularizedEvolutionTuner
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local
