@@ -10,13 +10,13 @@ from torch.optim import Optimizer
 
 import nni
 from .constants import PRUNER_DICT, QUANTIZER_DICT
-from .interface import BaseAutoCompressEngine, AbstractAutoCompressModule
+from .interface import BaseAutoCompressionEngine, AbstractAutoCompressionModule
 from .utils import import_
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
 
-class AutoCompressEngine(BaseAutoCompressEngine):
+class AutoCompressionEngine(BaseAutoCompressionEngine):
     @classmethod
     def __convert_compact_pruner_params_to_config_list(cls, compact_config: dict) -> list:
         config_dict = {}
@@ -141,7 +141,7 @@ class AutoCompressEngine(BaseAutoCompressEngine):
 
     @classmethod
     def trial_execute_compress(cls, module_name):
-        auto_compress_module: AbstractAutoCompressModule = import_(module_name)
+        auto_compress_module: AbstractAutoCompressionModule = import_(module_name)
 
         algorithm_config = nni.get_next_parameter()['algorithm_name']
         algorithm_name = algorithm_config['_name']

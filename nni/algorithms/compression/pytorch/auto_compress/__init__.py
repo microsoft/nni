@@ -1,6 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from .experiment import AutoCompressExperiment
-from .interface import AbstractAutoCompressModule
-from .utils import AutoCompressSearchSpaceGenerator
+from .experiment import AutoCompressionExperiment
+from .interface import AbstractAutoCompressionModule
+from .utils import AutoCompressionSearchSpaceGenerator

@@ -9,7 +9,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressModule
+from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressionModule
 
 torch.manual_seed(1)
 
@@ -97,7 +97,7 @@ def _test(model):
 _model = LeNet().to(_device)
 _model.load_state_dict(torch.load('mnist_pretrain_lenet.pth'))
 
-class AutoCompressModule(AbstractAutoCompressModule):
+class AutoCompressionModule(AbstractAutoCompressionModule):
     @classmethod
     def model(cls) -> nn.Module:
         return _model

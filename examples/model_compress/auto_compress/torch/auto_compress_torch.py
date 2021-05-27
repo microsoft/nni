@@ -3,11 +3,11 @@
 
 from pathlib import Path
 
-from nni.algorithms.compression.pytorch.auto_compress import AutoCompressExperiment, AutoCompressSearchSpaceGenerator
+from nni.algorithms.compression.pytorch.auto_compress import AutoCompressionExperiment, AutoCompressionSearchSpaceGenerator
 
-from auto_compress_module import AutoCompressModule
+from auto_compress_module import AutoCompressionModule
 
-generator = AutoCompressSearchSpaceGenerator()
+generator = AutoCompressionSearchSpaceGenerator()
 generator.add_config('level', [
     {
         "sparsity": {
@@ -37,7 +37,7 @@ generator.add_config('qat', [
     }])
 search_space = generator.dumps()
 
-experiment = AutoCompressExperiment(AutoCompressModule, 'local')
+experiment = AutoCompressionExperiment(AutoCompressionModule, 'local')
 experiment.config.experiment_name = 'auto compress torch example'
 experiment.config.trial_concurrency = 1
 experiment.config.max_trial_number = 10

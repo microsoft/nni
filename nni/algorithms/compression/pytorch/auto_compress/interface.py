@@ -8,7 +8,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 
-class BaseAutoCompressEngine(ABC):
+class BaseAutoCompressionEngine(ABC):
     @classmethod
     @abstractmethod
     def trial_execute_compress(cls):
@@ -18,7 +18,7 @@ class BaseAutoCompressEngine(ABC):
         pass
 
 
-class AbstractAutoCompressModule(ABC):
+class AbstractAutoCompressionModule(ABC):
     """
     The abstract container that user need to implement.
     """

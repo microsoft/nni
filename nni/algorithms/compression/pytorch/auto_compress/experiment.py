@@ -7,14 +7,14 @@ from typing import overload, Union, List
 
 from numpy import tri
 
-from nni.experiment import Experiment, ExperimentConfig, AlgorithmConfig
-from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressModule
+from nni.experiment import Experiment, ExperimentConfig
+from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressionModule
 
 
-class AutoCompressExperiment(Experiment):
+class AutoCompressionExperiment(Experiment):
 
     @overload
-    def __init__(self, auto_compress_module: AbstractAutoCompressModule, config: ExperimentConfig) -> None:
+    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config: ExperimentConfig) -> None:
         """
         Prepare an experiment.
 
@@ -23,7 +23,7 @@ class AutoCompressExperiment(Experiment):
         Parameters
         ----------
         auto_compress_module
-            The module provided by the user implements the `AbstractAutoCompressModule` interfaces.
+            The module provided by the user implements the `AbstractAutoCompressionModule` interfaces.
             Remember put the module file under `trial_code_directory`.
         config
             Experiment configuration.
@@ -31,7 +31,7 @@ class AutoCompressExperiment(Experiment):
         ...
 
     @overload
-    def __init__(self, auto_compress_module: AbstractAutoCompressModule, training_service: Union[str, List[str]]) -> None:
+    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, training_service: Union[str, List[str]]) -> None:
         """
         Prepare an experiment, leaving configuration fields to be set later.
 
@@ -46,7 +46,7 @@ class AutoCompressExperiment(Experiment):
         Parameters
         ----------
         auto_compress_module
-            The module provided by the user implements the `AbstractAutoCompressModule` interfaces.
+            The module provided by the user implements the `AbstractAutoCompressionModule` interfaces.
             Remember put the module file under `trial_code_directory`.
         training_service
             Name of training service.
@@ -54,7 +54,7 @@ class AutoCompressExperiment(Experiment):
         """
         ...
 
-    def __init__(self, auto_compress_module: AbstractAutoCompressModule, config=None, training_service=None):
+    def __init__(self, auto_compress_module: AbstractAutoCompressionModule, config=None, training_service=None):
         super().__init__(config, training_service)
 
         self.module_file_path = str(PurePath(inspect.getfile(auto_compress_module)))

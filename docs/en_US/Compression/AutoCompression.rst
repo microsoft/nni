@@ -10,7 +10,7 @@ The main differences are as follows:
 
 * Use a generator to help generate search space object.
 * Need to provide the model to be compressed, and the model should have already been pre-trained.
-* No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressExperiment`` input.
+* No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressionExperiment`` input.
 
 Generate search space
 ---------------------
@@ -20,9 +20,9 @@ The following is an example. Using ``add_config()`` add subconfig, then ``dumps(
 
 .. code-block:: python
 
-    from nni.algorithms.compression.pytorch.auto_compress import AutoCompressSearchSpaceGenerator
+    from nni.algorithms.compression.pytorch.auto_compress import AutoCompressionSearchSpaceGenerator
 
-    generator = AutoCompressSearchSpaceGenerator()
+    generator = AutoCompressionSearchSpaceGenerator()
     generator.add_config('level', [
         {
             "sparsity": {
@@ -69,13 +69,13 @@ Now we support the following pruners and quantizers:
 Provide user model for compression
 ----------------------------------
 
-Users need to inherit ``AbstractAutoCompressModule`` and override the abstract class function.
+Users need to inherit ``AbstractAutoCompressionModule`` and override the abstract class function.
 
 .. code-block:: python
 
-    from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressModule
+    from nni.algorithms.compression.pytorch.auto_compress import AbstractAutoCompressionModule
 
-    class AutoCompressModule(AbstractAutoCompressModule):
+    class AutoCompressionModule(AbstractAutoCompressionModule):
         @classmethod
         def model(cls) -> nn.Module:
             ...
@@ -92,21 +92,21 @@ If you want to finetune the model after compression, you need to implement ``opt
 The ``optimizer_factory()`` should return a factory function, the input is an iterable variable, i.e. your ``model.parameters()``, and the output is an optimizer instance.
 The two kinds of ``trainer()`` should return a trainer with input ``model, optimizer, criterion, current_epoch``.
 The full abstract interface refers to :githublink:`interface.py <nni/algorithms/compression/pytorch/auto_compress/interface.py>`.
-An example of ``AutoCompressModule`` implementation refers to :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`.
+An example of ``AutoCompressionModule`` implementation refers to :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`.
 
 Launch NNI experiment
 ---------------------
 
-Similar to launch from python, the difference is no need to set ``trial_command`` and put the user-provided ``AutoCompressModule`` as ``AutoCompressExperiment`` input.
+Similar to launch from python, the difference is no need to set ``trial_command`` and put the user-provided ``AutoCompressionModule`` as ``AutoCompressionExperiment`` input.
 
 .. code-block:: python
 
     from pathlib import Path
-    from nni.algorithms.compression.pytorch.auto_compress import AutoCompressExperiment
+    from nni.algorithms.compression.pytorch.auto_compress import AutoCompressionExperiment
 
-    from auto_compress_module import AutoCompressModule
+    from auto_compress_module import AutoCompressionModule
 
-    experiment = AutoCompressExperiment(AutoCompressModule, 'local')
+    experiment = AutoCompressionExperiment(AutoCompressionModule, 'local')
     experiment.config.experiment_name = 'auto compress torch example'
     experiment.config.trial_concurrency = 1
     experiment.config.max_trial_number = 10

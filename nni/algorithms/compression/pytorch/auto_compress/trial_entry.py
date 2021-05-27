@@ -8,7 +8,7 @@ import argparse
 from pathlib import Path
 import re
 
-from .auto_compress_engine import AutoCompressEngine
+from .auto_compress_engine import AutoCompressionEngine
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='trial entry for auto compress.')
@@ -18,4 +18,4 @@ if __name__ == '__main__':
 
     module_name = Path(args.module_file_name).as_posix()
     module_name = re.sub(re.escape('.py') + '$', '', module_name).replace('/', '.') + '.' + args.module_class_name
-    AutoCompressEngine.trial_execute_compress(module_name)
+    AutoCompressionEngine.trial_execute_compress(module_name)

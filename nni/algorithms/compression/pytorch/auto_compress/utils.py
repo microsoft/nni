@@ -6,7 +6,7 @@ from typing import Any
 from .constants import PRUNER_DICT, QUANTIZER_DICT
 
 
-class AutoCompressSearchSpaceGenerator:
+class AutoCompressionSearchSpaceGenerator:
     """
     For convenient generation of search space that can be used by tuner.
     """
@@ -87,9 +87,9 @@ class AutoCompressSearchSpaceGenerator:
     @classmethod
     def loads(cls, search_space: dict):
         """
-        Return a AutoCompressSearchSpaceGenerator instance load from a search space dict.
+        Return a AutoCompressionSearchSpaceGenerator instance load from a search space dict.
         """
-        generator = AutoCompressSearchSpaceGenerator()
+        generator = AutoCompressionSearchSpaceGenerator()
         generator.algorithm_choice_list = search_space['algorithm_name']['_value']
         return generator
 
