@@ -2,7 +2,7 @@ authorName: default
 experimentName: example_pix2pix
 trialConcurrency: 1
 maxExecDuration: 10h
-maxTrialNum: 10
+maxTrialNum: 1
 #choice: local, remote, pai
 trainingServicePlatform: local
 searchSpacePath: search_space.json
@@ -21,4 +21,4 @@ trial:
   gpuNum: 1
 localConfig:
   useActiveGpu: true
-  gpuIndices: '3'
+  gpuIndices: '0'

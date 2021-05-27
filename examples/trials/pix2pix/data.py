@@ -9,6 +9,15 @@ import torchvision.transforms as transforms
 from abc import ABC, abstractmethod
 
 
+IMG_EXTENSIONS = [
+    '.jpg', '.JPG', '.jpeg', '.JPEG',
+    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
+    '.tif', '.TIF', '.tiff', '.TIFF',
+]
+def is_image_file(filename):
+    return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
+
+
 class BaseDataset(data.Dataset, ABC):
     """This class is an abstract base class (ABC) for datasets.
     To create a subclass, you need to implement the following four functions:
@@ -148,15 +157,6 @@ def __print_size_warning(ow, oh, w, h):
               "(%d, %d). This adjustment will be done to all images "
               "whose sizes are not multiples of 4" % (ow, oh, w, h))
         __print_size_warning.has_printed = True
-
-
-IMG_EXTENSIONS = [
-    '.jpg', '.JPG', '.jpeg', '.JPEG',
-    '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
-    '.tif', '.TIF', '.tiff', '.TIFF',
-]
-def is_image_file(filename):
-    return any(filename.endswith(extension) for extension in IMG_EXTENSIONS)
 
 
 def make_dataset(dir, max_dataset_size=float("inf")):
