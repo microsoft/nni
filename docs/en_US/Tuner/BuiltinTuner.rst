@@ -582,6 +582,11 @@ DNGO Tuner
 
    Built-in Tuner Name: **DNGOTuner**
 
+DNGO advisor requires `pybnn`, which can be installed with the following command.
+
+.. code-block:: bash
+
+   pip install nni[DNGO]
 
 **Suggested scenario**
 
