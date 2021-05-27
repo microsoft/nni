@@ -231,10 +231,10 @@ def main(args):
             kw_args['criterion'] = criterion
 
         if args.pruner in ('mean_activation', 'apoz', 'taylorfo'):
-            kw_args['sparsity_training_epochs'] = 1
+            kw_args['sparsifying_training_batches'] = 1
 
         if args.pruner == 'slim':
-            kw_args['sparsity_training_epochs'] = 5
+            kw_args['sparsifying_training_epochs'] = 5
 
         if args.pruner == 'agp':
             kw_args['pruning_algorithm'] = 'l1'

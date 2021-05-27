@@ -473,7 +473,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
 
     def __init__(self, model, pruner, statistics_batch_num=1):
         super().__init__(model, pruner)
-        self.pruner.statistics_batch_num = statistics_batch_num
+        self.statistics_batch_num = statistics_batch_num
         self.pruner.iterations = 0
         self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
@@ -497,13 +497,13 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         Calculate the estimated importance of filters as a sum of individual contribution
         based on the first order taylor expansion.
         """
-        if self.pruner.iterations >= self.pruner.statistics_batch_num:
+        if self.pruner.iterations >= self.statistics_batch_num:
             return
 
         for wrapper in self.pruner.get_modules_wrapper():
             filters = wrapper.module.weight.size(0)
             contribution = (
-                wrapper.module.weight*wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
+                wrapper.module.weight * wrapper.module.weight.grad).data.pow(2).view(filters, -1).sum(dim=1)
             if wrapper.contribution is None:
                 wrapper.contribution = contribution
             else:
@@ -512,7 +512,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         self.pruner.iterations += 1
 
     def get_channel_sum(self, wrapper, wrapper_idx):
-        if self.pruner.iterations < self.pruner.statistics_batch_num:
+        if self.pruner.iterations < self.statistics_batch_num:
             return None
         if wrapper.contribution is None:
             return None
@@ -524,6 +524,8 @@ class ActivationFilterPrunerMasker(StructuredWeightMasker):
         super().__init__(model, pruner)
         self.statistics_batch_num = statistics_batch_num
         self.pruner.hook_id = self._add_activation_collector(self.pruner)
+        self.pruner.iterations = 0
+        self.pruner.patch_optimizer(self._iteration_counter)
 
         assert activation in ['relu', 'relu6']
         if activation == 'relu':
@@ -532,6 +534,9 @@ class ActivationFilterPrunerMasker(StructuredWeightMasker):
             self.pruner.activation = torch.nn.functional.relu6
         else:
             self.pruner.activation = None
+
+    def _iteration_counter(self):
+        self.pruner.iterations += 1
 
     def _add_activation_collector(self, pruner):
         def collector(collected_activation):

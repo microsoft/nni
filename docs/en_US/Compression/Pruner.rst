@@ -71,7 +71,7 @@ PyTorch code
 
    from nni.algorithms.compression.pytorch.pruning import SlimPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-   pruner = SlimPruner(model, config_list)
+   pruner = SlimPruner(model, config_list, optimizer, trainer, criterion)
    pruner.compress()
 
 User configuration for Slim Pruner
@@ -269,7 +269,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationAPoZRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -304,7 +304,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationMeanRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -344,7 +344,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 User configuration for TaylorFOWeightFilter Pruner
@@ -389,7 +389,7 @@ PyTorch code
    # optimizer.step(), so an optimizer is required to prune the model.
    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
-   pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm='level')
+   pruner = AGPPruner(model, config_list, optimizer, trainer, criterion, pruning_algorithm='level')
    pruner.compress()
 
 AGP pruner uses ``LevelPruner`` algorithms to prune the weight by default, however you can set ``pruning_algorithm`` parameter to other values to use other pruning algorithms:
@@ -403,14 +403,6 @@ AGP pruner uses ``LevelPruner`` algorithms to prune the weight by default, howev
 * ``taylorfo``\ : TaylorFOWeightFilterPruner
 * ``apoz``\ : ActivationAPoZRankFilterPruner
 * ``mean_activation``\ : ActivationMeanRankFilterPruner
-
-You should add code below to update epoch number when you finish one epoch in your training code.
-
-PyTorch code
-
-.. code-block:: python
-
-   pruner.update_epoch(epoch)
 
 
 User configuration for AGP Pruner
@@ -620,7 +612,7 @@ PyTorch code
                'op_types': ['Conv2d'],
                'op_names': ['conv2']
            }]
-   pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
+   pruner = ADMMPruner(model, config_list, trainer, num_iterations=30, epochs_per_iteration=5)
    pruner.compress()
 
 You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.
