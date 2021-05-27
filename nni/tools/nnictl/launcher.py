@@ -452,10 +452,11 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         except Exception:
             raise Exception(ERROR_INFO % 'Restful server stopped!')
         exit(1)
+    url_prefix_format = '' if args.url_prefix is None else '/{0}'.format(args.url_prefix)
     if experiment_config.get('nniManagerIp'):
-        web_ui_url_list = ['http://{0}:{1}{2}'.format(experiment_config['nniManagerIp'], str(args.port), formatURLPath(args.url_prefix))]
+        web_ui_url_list = ['http://{0}:{1}{2}'.format(experiment_config['nniManagerIp'], str(args.port), url_prefix_format)]
     else:
-        web_ui_url_list = get_local_urls(args.port, args.url_prefix)
+        web_ui_url_list = get_local_urls(args.port, url_prefix_format)
     Experiments().update_experiment(experiment_id, 'webuiUrl', web_ui_url_list)
 
     print_normal(EXPERIMENT_SUCCESS_INFO % (experiment_id, '   '.join(web_ui_url_list)))

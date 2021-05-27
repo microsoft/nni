@@ -531,6 +531,7 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, statistics_batch_num=statistics_batch_num, num_iterations=1,
                          epochs_per_iteration=sparsity_training_epochs)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
@@ -579,6 +580,7 @@ class ActivationMeanRankFilterPruner(IterativePruner):
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, statistics_batch_num=statistics_batch_num, num_iterations=1,
                          epochs_per_iteration=sparsity_training_epochs)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
