@@ -12,32 +12,32 @@ _logger = logging.getLogger(__name__)
 
 
 def _random_config(search_space, random_state):
-    chosen_arch = {}
+    chosen_config = {}
     for key, val in search_space.items():
         if val['_type'] == 'choice':
             choices = val['_value']
             index = random_state.randint(len(choices))
             if all([isinstance(c, (int, float)) for c in choices]):
-                chosen_arch[key] = choices[index]
+                chosen_config[key] = choices[index]
             else:
                 raise ValueError('Choices with type other than int and float is not supported.')
         elif val['_type'] == 'uniform':
-            chosen_arch[key] = random_state.uniform(val['_value'][0], val['_value'][1])
+            chosen_config[key] = random_state.uniform(val['_value'][0], val['_value'][1])
         elif val['_type'] == 'randint':
-            chosen_arch[key] = random_state.randint(
+            chosen_config[key] = random_state.randint(
                 val['_value'][0], val['_value'][1])
         elif val['_type'] == 'quniform':
-            chosen_arch[key] = parameter_expressions.quniform(
+            chosen_config[key] = parameter_expressions.quniform(
                 val['_value'][0], val['_value'][1], val['_value'][2], random_state)
         elif val['_type'] == 'loguniform':
-            chosen_arch[key] = parameter_expressions.loguniform(
+            chosen_config[key] = parameter_expressions.loguniform(
                 val['_value'][0], val['_value'][1], random_state)
         elif val['_type'] == 'qloguniform':
-            chosen_arch[key] = parameter_expressions.qloguniform(
+            chosen_config[key] = parameter_expressions.qloguniform(
                 val['_value'][0], val['_value'][1], val['_value'][2], random_state)
         else:
             raise ValueError('Unknown key %s and value %s' % (key, val))
-    return chosen_arch
+    return chosen_config
 
 
 class DngoTuner(Tuner):
