@@ -269,7 +269,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationAPoZRankFilterPruner(model, config_list, optimizer, trainer, criterion, statistics_batch_num=1)
+   pruner = ActivationAPoZRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -304,7 +304,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationMeanRankFilterPruner(model, config_list, optimizer, trainer, criterion, statistics_batch_num=1)
+   pruner = ActivationMeanRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -344,7 +344,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer, criterion, statistics_batch_num=1)
+   pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 User configuration for TaylorFOWeightFilter Pruner

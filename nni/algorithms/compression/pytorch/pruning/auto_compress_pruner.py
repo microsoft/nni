@@ -36,6 +36,7 @@ class AutoCompressPruner(Pruner):
         and include `model, optimizer, criterion, epoch` as function arguments.
     criterion: function
         Function used to calculate the loss between the target and the output. By default, we use CrossEntropyLoss.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     evaluator : function
         function to evaluate the pruned model.
         This function should include `model` as the only parameter, and returns a scalar value.
