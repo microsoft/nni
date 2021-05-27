@@ -38,7 +38,7 @@ generator.add_config('qat', [
 search_space = generator.dumps()
 
 experiment = AutoCompressionExperiment(AutoCompressionModule, 'local')
-experiment.config.experiment_name = 'auto compress torch example'
+experiment.config.experiment_name = 'auto compression torch example'
 experiment.config.trial_concurrency = 1
 experiment.config.max_trial_number = 10
 experiment.config.search_space = search_space

@@ -107,7 +107,7 @@ Similar to launch from python, the difference is no need to set ``trial_command`
     from auto_compress_module import AutoCompressionModule
 
     experiment = AutoCompressionExperiment(AutoCompressionModule, 'local')
-    experiment.config.experiment_name = 'auto compress torch example'
+    experiment.config.experiment_name = 'auto compression torch example'
     experiment.config.trial_concurrency = 1
     experiment.config.max_trial_number = 10
     experiment.config.search_space = search_space
