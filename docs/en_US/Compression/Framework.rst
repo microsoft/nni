@@ -102,7 +102,7 @@ Users can also remove this collector like this:
 Pruner
 ------
 
-A pruner receives ``model``\ , ``config_list`` as arguments. 
+A pruner receives ``model`` , ``config_list`` as arguments. 
 Some pruners like ``TaylorFOWeightFilter Pruner`` prune the model per the ``config_list`` during training loop by adding a hook on ``optimizer.step()``.
 
 Pruner class is a subclass of Compressor, so it contains everything in the Compressor class and some additional components only for pruning, it contains:
