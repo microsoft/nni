@@ -284,9 +284,7 @@ def _test_agp(pruning_algorithm):
     pruner.compress()
 
     target_sparsity = pruner.compute_target_sparsity(config_list[0])
-    actual_sparsity = (model.conv1.weight_mask == 0).sum().item() / model.conv1.weight_mask.numel()
-    # set abs_tol = 0.2, considering the sparsity error for channel pruning when number of channels is small.
-    assert math.isclose(actual_sparsity, target_sparsity, abs_tol=0.2)
+    assert abs(target_sparsity * model.conv1.weight_mask.numel() - (model.conv1.weight_mask == 0).sum().item()) < 1
 
 
 class PrunerTestCase(TestCase):
