@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import { Writable } from 'stream';
+import * as util from 'util';
 
 /* log level constants */
 
@@ -80,20 +81,7 @@ export class Logger {
 
         const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
-        const words = [];
-        for (const arg of args) {
-            if (arg === undefined) {
-                words.push('undefined');
-            } else if (arg === null) {
-                words.push('null');
-            } else if (typeof arg === 'object') {
-                const json = JSON.stringify(arg);
-                words.push(json === undefined ? arg : json);
-            } else {
-                words.push(arg);
-            }
-        }
-        const message = words.join(' ');
+        const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
         const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
         logFile.write(record);
