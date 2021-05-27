@@ -480,7 +480,6 @@ class TaylorFOWeightFilterPruner(IterativePruner):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, num_iterations=1, epochs_per_iteration=sparsity_training_epochs,
                          dependency_aware=dependency_aware, dummy_input=dummy_input)
-        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
