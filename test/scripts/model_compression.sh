@@ -26,7 +26,7 @@ echo 'testing level pruner pruning'
 python3 basic_pruners_torch.py --pruner level --pretrain-epochs 1 --fine-tune-epochs 1 --model lenet --dataset mnist
 
 echo 'testing agp pruning'
-python3 basic_pruners_torch.py --pruner agp --pretrain-epochs 1 --fine-tune-epochs 1 --model lenet --dataset mnist
+python3 basic_pruners_torch.py --pruner agp --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
 
 echo 'testing mean_activation pruning'
 python3 basic_pruners_torch.py --pruner mean_activation --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10

@@ -526,6 +526,7 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
         super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
@@ -571,6 +572,7 @@ class ActivationMeanRankFilterPruner(IterativePruner):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
                          activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
