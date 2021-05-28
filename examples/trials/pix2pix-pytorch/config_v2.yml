@@ -1,3 +1,4 @@
+experimentName: example_pix2pix 
 searchSpace:
   ngf:
     _type: choice
@@ -21,7 +22,7 @@ searchSpace:
     _type: choice
     _value: [0.0001, 0.0005, 0.001, 0.005, 0.01, 0.1]
   beta1:
-    _type: choice
+    _type: uniform
     _value: [0, 1]
   lr_policy:
     _type: choice
