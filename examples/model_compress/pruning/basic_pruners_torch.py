@@ -234,11 +234,11 @@ def main(args):
             kw_args['sparsifying_training_batches'] = 1
 
         if args.pruner == 'slim':
-            kw_args['sparsifying_training_epochs'] = 5
+            kw_args['sparsifying_training_epochs'] = 1
 
         if args.pruner == 'agp':
             kw_args['pruning_algorithm'] = 'l1'
-            kw_args['num_iterations'] = 5
+            kw_args['num_iterations'] = 2
             kw_args['epochs_per_iteration'] = 1
 
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
