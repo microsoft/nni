@@ -129,6 +129,7 @@ def main(dataset_name, train_params, test_params):
     _logger.info("Training done. Saving the final model.")
     
     l1_score = evaluate_L1(test_config, model, test_dataset)
+    _logger.info("The final L1 loss the test set is {}".format(l1_score))  
     nni.report_final_result(l1_score)
 
     
