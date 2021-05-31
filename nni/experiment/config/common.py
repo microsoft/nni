@@ -118,7 +118,7 @@ class ExperimentConfig(ConfigBase):
     def json(self) -> Dict[str, Any]:
         obj = super().json()
         if obj.get('searchSpaceFile'):
-            obj['searchSpace'] = yaml.load(open(obj.pop('searchSpaceFile')))
+            obj['searchSpace'] = yaml.safe_load(open(obj.pop('searchSpaceFile')))
         return obj
 
 ## End of public API ##
