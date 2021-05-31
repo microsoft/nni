@@ -1,15 +1,11 @@
 Supported Pruning Algorithms on NNI
 ===================================
 
-We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized hardware or software to speed up the sparse network. **Filter Pruning** achieves acceleration by removing the entire filter. Some pruning algorithms use one-shot method that prune weights at once based on an importance metric. Other pruning algorithms control the **pruning schedule** that prune weights during optimization, including some automatic pruning algorithms.
+We provide several pruning algorithms that support fine-grained weight pruning and structural filter pruning. **Fine-grained Pruning** generally results in  unstructured models, which need specialized hardware or software to speed up the sparse network. **Filter Pruning** achieves acceleration by removing the entire filter. Some pruning algorithms use one-shot method that prune weights at once based on an importance metric (It is necessary to finetune the model to compensate for the loss of accuracy). Other pruning algorithms **iteratively** prune weights during optimization, which control the pruning schedule, including some automatic pruning algorithms.
 
 
-**Fine-grained Pruning**
-
-* `Level Pruner <#level-pruner>`__
-
-**Filter Pruning**
-
+**One-shot Pruning**
+* `Level Pruner <#level-pruner>`__ ((fine-grained pruning))
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
 * `L1Filter Pruner <#l1filter-pruner>`__
@@ -18,7 +14,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `Activation Mean Rank Filter Pruner <#activationmeanrankfilter-pruner>`__
 * `Taylor FO On Weight Pruner <#taylorfoweightfilter-pruner>`__
 
-**Pruning Schedule**
+**Iteratively Pruning**
 
 * `AGP Pruner <#agp-pruner>`__
 * `NetAdapt Pruner <#netadapt-pruner>`__
@@ -26,10 +22,9 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `AutoCompress Pruner <#autocompress-pruner>`__
 * `AMC Pruner <#amc-pruner>`__
 * `Sensitivity Pruner <#sensitivity-pruner>`__
+* `ADMM Pruner <#admm-pruner>`__
 
 **Others**
-
-* `ADMM Pruner <#admm-pruner>`__
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
 
 Level Pruner
@@ -76,7 +71,7 @@ PyTorch code
 
    from nni.algorithms.compression.pytorch.pruning import SlimPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-   pruner = SlimPruner(model, config_list)
+   pruner = SlimPruner(model, config_list, optimizer, trainer, criterion)
    pruner.compress()
 
 User configuration for Slim Pruner
@@ -274,7 +269,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationAPoZRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationAPoZRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -309,7 +304,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationMeanRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 Note: ActivationMeanRankFilterPruner is used to prune convolutional layers within deep neural networks, therefore the ``op_types`` field supports only convolutional layers.
@@ -349,7 +344,7 @@ PyTorch code
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1)
    pruner.compress()
 
 User configuration for TaylorFOWeightFilter Pruner
@@ -382,11 +377,7 @@ PyTorch code
 
    from nni.algorithms.compression.pytorch.pruning import AGPPruner
    config_list = [{
-       'initial_sparsity': 0,
-       'final_sparsity': 0.8,
-       'start_epoch': 0,
-       'end_epoch': 10,
-       'frequency': 1,
+       'sparsity': 0.8,
        'op_types': ['default']
    }]
 
@@ -398,7 +389,7 @@ PyTorch code
    # optimizer.step(), so an optimizer is required to prune the model.
    optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
 
-   pruner = AGPPruner(model, config_list, optimizer, pruning_algorithm='level')
+   pruner = AGPPruner(model, config_list, optimizer, trainer, criterion, pruning_algorithm='level')
    pruner.compress()
 
 AGP pruner uses ``LevelPruner`` algorithms to prune the weight by default, however you can set ``pruning_algorithm`` parameter to other values to use other pruning algorithms:
@@ -412,14 +403,6 @@ AGP pruner uses ``LevelPruner`` algorithms to prune the weight by default, howev
 * ``taylorfo``\ : TaylorFOWeightFilterPruner
 * ``apoz``\ : ActivationAPoZRankFilterPruner
 * ``mean_activation``\ : ActivationMeanRankFilterPruner
-
-You should add code below to update epoch number when you finish one epoch in your training code.
-
-PyTorch code
-
-.. code-block:: python
-
-   pruner.update_epoch(epoch)
 
 
 User configuration for AGP Pruner
@@ -629,7 +612,7 @@ PyTorch code
                'op_types': ['Conv2d'],
                'op_names': ['conv2']
            }]
-   pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=30, epochs=5)
+   pruner = ADMMPruner(model, config_list, trainer, num_iterations=30, epochs_per_iteration=5)
    pruner.compress()
 
 You can view :githublink:`example <examples/model_compress/pruning/auto_pruners_torch.py>` for more information.

@@ -22,7 +22,7 @@ from nni.compression.pytorch import ModelSpeedup
 from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar
 
-sys.path.append('../models')
+sys.path.append('../../models')
 from mobilenet import MobileNet
 from mobilenet_v2 import MobileNetV2
 

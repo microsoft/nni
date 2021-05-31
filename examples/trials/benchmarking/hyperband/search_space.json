@@ -1,0 +1,8 @@
+{
+    "0_1": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]},
+    "0_2": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]},
+    "0_3": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]},
+    "1_2": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]},
+    "1_3": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]},
+    "2_3": {"_type": "choice", "_value": ["none", "skip_connect", "conv_1x1", "conv_3x3", "avg_pool_3x3"]}
+}

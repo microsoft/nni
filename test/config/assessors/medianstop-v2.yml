@@ -1,0 +1,18 @@
+experimentName: default_test
+searchSpaceFile: ../naive_trial/search_space.json
+trialCommand: python3 trial.py
+trialCodeDirectory: ../naive_trial
+trialGpuNumber: 0
+trialConcurrency: 8
+maxExperimentDuration: 15m
+maxTrialNumber: 8
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize

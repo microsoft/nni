@@ -13,8 +13,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .simulated_annealing_pruner import SimulatedAnnealingPruner
-from .admm_pruner import ADMMPruner
-
+from .iterative_pruner import ADMMPruner
 
 _logger = logging.getLogger(__name__)
 
@@ -34,26 +33,10 @@ class AutoCompressPruner(Pruner):
     trainer : function
         Function used for the first subproblem of ADMM Pruner.
         Users should write this function as a normal function to train the Pytorch model
-        and include `model, optimizer, criterion, epoch, callback` as function arguments.
-        Here `callback` acts as an L2 regulizer as presented in the formula (7) of the original paper.
-        The logic of `callback` is implemented inside the Pruner,
-        users are just required to insert `callback()` between `loss.backward()` and `optimizer.step()`.
-        Example::
-
-            def trainer(model, criterion, optimizer, epoch, callback):
-                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-                train_loader = ...
-                model.train()
-                for batch_idx, (data, target) in enumerate(train_loader):
-                    data, target = data.to(device), target.to(device)
-                    optimizer.zero_grad()
-                    output = model(data)
-                    loss = criterion(output, target)
-                    loss.backward()
-                    # callback should be inserted between loss.backward() and optimizer.step()
-                    if callback:
-                        callback()
-                    optimizer.step()
+        and include `model, optimizer, criterion, epoch` as function arguments.
+    criterion: function
+        Function used to calculate the loss between the target and the output. By default, we use CrossEntropyLoss.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     evaluator : function
         function to evaluate the pruned model.
         This function should include `model` as the only parameter, and returns a scalar value.
@@ -80,8 +63,8 @@ class AutoCompressPruner(Pruner):
     optimize_mode : str
         optimize mode, `maximize` or `minimize`, by default `maximize`.
     base_algo : str
-        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among the ops,
-        the assigned `base_algo` is used to decide which filters/channels/weights to prune.
+        Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among
+        the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
     start_temperature : float
         Start temperature of the simulated annealing process.
     stop_temperature : float
@@ -92,7 +75,7 @@ class AutoCompressPruner(Pruner):
         Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
     admm_num_iterations : int
         Number of iterations of ADMM Pruner.
-    admm_training_epochs : int
+    admm_epochs_per_iteration : int
         Training epochs of the first optimization subproblem of ADMMPruner.
     row : float
         Penalty parameters for ADMM training.
@@ -100,18 +83,19 @@ class AutoCompressPruner(Pruner):
         PATH to store temporary experiment data.
     """
 
-    def __init__(self, model, config_list, trainer, evaluator, dummy_input,
+    def __init__(self, model, config_list, trainer, evaluator, dummy_input, criterion=torch.nn.CrossEntropyLoss(),
                  num_iterations=3, optimize_mode='maximize', base_algo='l1',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,
                  # ADMM related
-                 admm_num_iterations=30, admm_training_epochs=5, row=1e-4,
+                 admm_num_iterations=30, admm_epochs_per_iteration=5, row=1e-4,
                  experiment_data_dir='./'):
         # original model
         self._model_to_prune = model
         self._base_algo = base_algo
 
         self._trainer = trainer
+        self._criterion = criterion
         self._evaluator = evaluator
         self._dummy_input = dummy_input
         self._num_iterations = num_iterations
@@ -125,7 +109,7 @@ class AutoCompressPruner(Pruner):
 
         # hyper parameters for ADMM algorithm
         self._admm_num_iterations = admm_num_iterations
-        self._admm_training_epochs = admm_training_epochs
+        self._admm_epochs_per_iteration = admm_epochs_per_iteration
         self._row = row
 
         # overall pruning rate
@@ -174,12 +158,12 @@ class AutoCompressPruner(Pruner):
         """
         _logger.info('Starting AutoCompress pruning...')
 
-        sparsity_each_round = 1 - pow(1-self._sparsity, 1/self._num_iterations)
+        sparsity_each_round = 1 - pow(1 - self._sparsity, 1 / self._num_iterations)
 
         for i in range(self._num_iterations):
             _logger.info('Pruning iteration: %d', i)
             _logger.info('Target sparsity this round: %s',
-                         1-pow(1-sparsity_each_round, i+1))
+                         1 - pow(1 - sparsity_each_round, i + 1))
 
             # SimulatedAnnealingPruner
             _logger.info(
@@ -204,9 +188,10 @@ class AutoCompressPruner(Pruner):
             ADMMpruner = ADMMPruner(
                 model=copy.deepcopy(self._model_to_prune),
                 config_list=config_list,
+                criterion=self._criterion,
                 trainer=self._trainer,
                 num_iterations=self._admm_num_iterations,
-                training_epochs=self._admm_training_epochs,
+                epochs_per_iteration=self._admm_epochs_per_iteration,
                 row=self._row,
                 base_algo=self._base_algo)
             ADMMpruner.compress()
@@ -214,12 +199,13 @@ class AutoCompressPruner(Pruner):
             ADMMpruner.export_model(os.path.join(self._experiment_data_dir, 'model_admm_masked.pth'), os.path.join(
                 self._experiment_data_dir, 'mask.pth'))
 
-            # use speed up to prune the model before next iteration, because SimulatedAnnealingPruner & ADMMPruner don't take masked models
+            # use speed up to prune the model before next iteration,
+            # because SimulatedAnnealingPruner & ADMMPruner don't take masked models
             self._model_to_prune.load_state_dict(torch.load(os.path.join(
                 self._experiment_data_dir, 'model_admm_masked.pth')))
 
             masks_file = os.path.join(self._experiment_data_dir, 'mask.pth')
-            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            device = next(self._model_to_prune.parameters()).device
 
             _logger.info('Speeding up models...')
             m_speedup = ModelSpeedup(self._model_to_prune, self._dummy_input, masks_file, device)

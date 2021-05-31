@@ -58,6 +58,8 @@ NNI currently supports the one-shot NAS algorithms listed below and is adding mo
      - `Cyclic Differentiable Architecture Search <https://arxiv.org/pdf/2006.10724.pdf>`__ builds a cyclic feedback mechanism between the search and evaluation networks. It introduces a cyclic differentiable architecture search framework which integrates the two networks into a unified architecture.
    * - `ProxylessNAS <Proxylessnas.rst>`__
      - `ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware <https://arxiv.org/abs/1812.00332>`__. It removes proxy, directly learns the architectures for large-scale target tasks and target hardware platforms.
+   * - `FBNet <FBNet.rst>`__
+     - `FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural Architecture Search <https://arxiv.org/abs/1812.03443>`__. It is a block-wise differentiable neural network architecture search method with the hardware-aware constraint.
    * - `TextNAS <TextNAS.rst>`__
      - `TextNAS: A Neural Architecture Search Space tailored for Text Representation <https://arxiv.org/pdf/1912.10729.pdf>`__. It is a neural architecture search algorithm tailored for text representation.
    * - `Cream <Cream.rst>`__

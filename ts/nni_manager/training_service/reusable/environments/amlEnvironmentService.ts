@@ -6,9 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
-import { getExperimentRootDir } from '../../../common/utils';
 import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
@@ -31,10 +29,10 @@ export class AMLEnvironmentService extends EnvironmentService {
     private experimentRootDir: string;
     private config: FlattenAmlConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(experimentRootDir: string, experimentId: string, config: ExperimentConfig) {
         super();
-        this.experimentId = getExperimentId();
-        this.experimentRootDir = getExperimentRootDir();
+        this.experimentId = experimentId;
+        this.experimentRootDir = experimentRootDir;
         this.config = flattenConfig(config, 'aml');
         validateCodeDir(this.config.trialCodeDirectory);
     }
@@ -101,7 +99,9 @@ export class AMLEnvironmentService extends EnvironmentService {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        amlEnvironment.useActiveGpu = !!this.config.deprecated.useActiveGpu;
+        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
+            amlEnvironment.useActiveGpu = this.config.deprecated.useActiveGpu;
+        }
         amlEnvironment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });

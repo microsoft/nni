@@ -76,3 +76,7 @@ tuners:
   classArgsValidator: nni.algorithms.hpo.regularized_evolution_tuner.EvolutionClassArgsValidator
   className: nni.algorithms.hpo.regularized_evolution_tuner.RegularizedEvolutionTuner
   source: nni
+- builtinName: DNGOTuner
+  classArgsValidator: nni.algorithms.hpo.dngo_tuner.DNGOClassArgsValidator
+  className: nni.algorithms.hpo.dngo_tuner.DNGOTuner
+  source: nni

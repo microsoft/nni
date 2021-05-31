@@ -108,7 +108,7 @@ class Experiments:
             self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
-                       tag=[], pid=None, webuiUrl=[], logDir=''):
+                       tag=[], pid=None, webuiUrl=[], logDir='', prefixUrl=None):
         '''set {key:value} pairs to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()
@@ -124,6 +124,7 @@ class Experiments:
             self.experiments[expId]['pid'] = pid
             self.experiments[expId]['webuiUrl'] = webuiUrl
             self.experiments[expId]['logDir'] = str(logDir)
+            self.experiments[expId]['prefixUrl'] = prefixUrl
             self.write_file()
 
     def update_experiment(self, expId, key, value):

@@ -31,7 +31,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
         # if the input is the path of the mask_file
         assert os.path.exists(masks)
         masks = torch.load(masks)
-    assert len(masks) > 0,  'Mask tensor cannot be empty'
+    assert len(masks) > 0, 'Mask tensor cannot be empty'
     # if the user uses the model and dummy_input to trace the model, we
     # should get the traced model handly, so that, we only trace the
     # model once, GroupMaskConflict and ChannelMaskConflict will reuse
@@ -181,10 +181,8 @@ class GroupMaskConflict(MaskFix):
             w_mask = self.masks[layername]['weight']
             shape = w_mask.size()
             count = np.prod(shape[1:])
-            all_ones = (w_mask.flatten(1).sum(-1) ==
-                        count).nonzero().squeeze(1).tolist()
-            all_zeros = (w_mask.flatten(1).sum(-1) ==
-                         0).nonzero().squeeze(1).tolist()
+            all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
+            all_zeros = (w_mask.flatten(1).sum(-1) == 0).nonzero().squeeze(1).tolist()
             if len(all_ones) + len(all_zeros) < w_mask.size(0):
                 # In fine-grained pruning, skip this layer
                 _logger.info('Layers %s using fine-grained pruning', layername)
@@ -198,7 +196,7 @@ class GroupMaskConflict(MaskFix):
             group_masked = []
             for i in range(group):
                 _start = step * i
-                _end = step * (i+1)
+                _end = step * (i + 1)
                 _tmp_list = list(
                     filter(lambda x: _start <= x and x < _end, all_zeros))
                 group_masked.append(_tmp_list)
@@ -286,7 +284,7 @@ class ChannelMaskConflict(MaskFix):
                             0, 2, 3) if self.conv_prune_dim == 0 else (1, 2, 3)
                         channel_mask = (mask.abs().sum(tmp_sum_idx) != 0).int()
                         channel_masks.append(channel_mask)
-                        if (channel_mask.sum() * (mask.numel() / mask.shape[1-self.conv_prune_dim])).item() != (mask > 0).sum().item():
+                        if (channel_mask.sum() * (mask.numel() / mask.shape[1 - self.conv_prune_dim])).item() != (mask > 0).sum().item():
                             fine_grained = True
                     else:
                         raise RuntimeError(
@@ -333,7 +331,7 @@ class ChannelMaskConflict(MaskFix):
                 elif type(m).__name__ == 'Linear':
                     new_mask[:, merged_index] = 1.
                 elif type(m).__name__ == 'BatchNorm2d':
-                    new_mask = merged_index.type_as(orig_mask)
+                    new_mask = merged_channel_mask.type_as(orig_mask)
                 else:
                     raise RuntimeError(
                         f'unsupported module type: {type(m).__name__}')
