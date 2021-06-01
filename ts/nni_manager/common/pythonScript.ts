@@ -22,7 +22,7 @@ export async function runPythonScript(script: string, logger?: Logger): Promise<
 
     if (stderr) {
         if (logger === undefined) {
-            logger = getLogger();
+            logger = getLogger('pythonScript');
         }
         logger.warning('python script has stderr.');
         logger.warning('script:', script);

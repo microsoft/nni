@@ -111,7 +111,7 @@ export async function execCopydir(source: string, destination: string): Promise<
                 await fs.promises.mkdir(destPath);
             }
         } else {
-            getLogger().debug(`Copying file from ${sourcePath} to ${destPath}`);
+            getLogger('execCopydir').debug(`Copying file from ${sourcePath} to ${destPath}`);
             await fs.promises.copyFile(sourcePath, destPath);
         }
     }

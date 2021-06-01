@@ -24,7 +24,7 @@ interface FlattenAmlConfig extends ExperimentConfig, AmlConfig { }
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('AMLEnvironmentService');
     private experimentId: string;
     private experimentRootDir: string;
     private config: FlattenAmlConfig;

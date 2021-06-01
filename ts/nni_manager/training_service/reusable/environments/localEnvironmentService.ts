@@ -17,7 +17,7 @@ import { SharedStorageService } from '../sharedStorage'
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('LocalEnvironmentService');
     private experimentRootDir: string;
     private experimentId: string;
 
