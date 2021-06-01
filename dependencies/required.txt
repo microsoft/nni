@@ -3,7 +3,7 @@ hyperopt == 0.1.2
 json_tricks
 netifaces
 psutil
-ruamel.yaml
+pyyaml
 requests
 responses
 schema

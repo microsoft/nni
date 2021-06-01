@@ -6,7 +6,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar
 
-import ruamel.yaml as yaml
+import yaml
 
 from . import util
 
@@ -72,7 +72,7 @@ class ConfigBase:
         Load config from YAML (or JSON) file.
         Keys in YAML file can either be camelCase or snake_case.
         """
-        data = yaml.load(open(path), Loader=yaml.SafeLoader)
+        data = yaml.safe_load(open(path))
         if not isinstance(data, dict):
             raise ValueError(f'Content of config file {path} is not a dict/object')
         return cls(**data, _base_path=Path(path).parent)

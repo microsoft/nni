@@ -9,7 +9,7 @@ import time
 import socket
 import string
 import random
-import ruamel.yaml as yaml
+import yaml
 import psutil
 import filelock
 import glob
@@ -21,7 +21,7 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file, Loader=yaml.SafeLoader)
+            return yaml.safe_load(file)
     except yaml.scanner.ScannerError as err:
         print_error('yaml file format error!')
         print_error(err)

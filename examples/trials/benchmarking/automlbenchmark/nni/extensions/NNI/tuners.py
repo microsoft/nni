@@ -18,7 +18,7 @@ def get_tuner_class_dict():
     config_file = str(get_config_file('registered_algorithms.yml'))
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
+            config = yaml.safe_load(f)
     else:
         config = {}
     ret = {}
