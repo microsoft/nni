@@ -24,6 +24,7 @@ class PhysicalDevice:
 class AbstractLogicalNode(Node):
     def __init__(self, graph, node_id, name, operation, _internal=False):
         super().__init__(graph, node_id, name, operation, _internal=_internal)
+        self.related_models = []
 
     def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
         raise NotImplementedError
@@ -144,22 +145,28 @@ class LogicalPlan:
             -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
         phy_model = Model(_internal=True)  # self.lp_model.fork()
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
+        phy_graph._rename_graph(phy_graph.name, "_model")
+        print("phy_graph name", phy_graph.name)
 
-        # Add a flag to mark multi-model in graph json.
-        # Multi-model has a list of training configs in kwargs['model_kwargs']
-        if len(multi_model_placement) > 1:
-            phy_model.evaluator.kwargs['is_multi_model'] = True
-            phy_model.evaluator.kwargs['model_cls'] = phy_graph.name
-            phy_model.evaluator.kwargs['model_kwargs'] = []
-            # FIXME: allow user to specify
-            phy_model.evaluator.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
+        # # Add a flag to mark multi-model in graph json.
+        # # Multi-model has a list of training configs in kwargs['model_kwargs']
+        # if len(multi_model_placement) > 1:
+        #     # phy_model.evaluator.kwargs['is_multi_model'] = True
+        #     # phy_model.evaluator.kwargs['model_cls'] = phy_graph.name
+        #     # phy_model.evaluator.kwargs['model_kwargs'] = []
+        #     # FIXME: allow user to specify
+        #     # phy_model.evaluator.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
 
         # merge sub-graphs
         for model in multi_model_placement:
+            if phy_model.evaluator == None and model.evaluator != None:
+                phy_model.evaluator = model.evaluator
             for graph_name in model.graphs:
                 if graph_name != model._root_graph_name:
                     model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
+        
+        assert(phy_model.evaluator != None)
 
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
@@ -169,6 +176,9 @@ class LogicalPlan:
         # Replace all logical nodes to executable physical nodes
         hidden_nodes = phy_graph.hidden_nodes.copy()
         node_placements = {}
+
+        added_models = []
+        
         for node in hidden_nodes:
             if isinstance(node, OriginNode):
                 model_id = node.original_graph.model.model_id
@@ -185,12 +195,13 @@ class LogicalPlan:
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in evaluator_slot:
-                        phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
-                        evaluator_slot[model_id] = len(phy_model.evaluator.kwargs['model_kwargs']) - 1
+                        # phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
+                        added_models.append(model_id)
+                        evaluator_slot[model_id] = len(added_models) - 1 #len(phy_model.evaluator.kwargs['model_kwargs']) - 1
                         slot = evaluator_slot[model_id]
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = False
+                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
+                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
+                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = False
                     else:
                         slot = evaluator_slot[model_id]
                     # If a model's inputs/outputs are not used in the multi-model
@@ -199,10 +210,10 @@ class LogicalPlan:
                     # an input/output of a model is used in a multi-model
                     if new_node.operation.type == '_inputs':
                         input_slot_mapping[new_node] = slot
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = True
+                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = True
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = True
+                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = True
 
                 self.node_replace(node, new_node)
 
@@ -228,8 +239,10 @@ class LogicalPlan:
                 if (edge.head, tail_placement) in copied_op:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
-                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device})
-                    to_node = Node(phy_graph, uid(), edge.head.name + "_to_" + edge.tail.name, to_operation)._register()
+                    print("ToDevice", tail_placement.device)
+                    dst_name = edge.head.name + "_to_" + edge.tail.name
+                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device, "src": (edge.head.name, edge.head_slot), "dst": dst_name})
+                    to_node = Node(phy_graph, uid(), dst_name, to_operation)._register()
                     Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node
                 edge.head = to_node

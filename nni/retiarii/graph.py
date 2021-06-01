@@ -458,6 +458,11 @@ class Graph:
     def _register(self) -> 'Graph':
         self.model.graphs[self.name] = self
         return self
+    
+    def _rename_graph(self, old_name, new_name):
+        self.model.graphs[old_name].name = new_name
+        self.model.graphs[new_name] = self.model.graphs[old_name]
+        del self.model.graphs[old_name]
 
     @staticmethod
     def _load(model: Model, name: str, ir: Any) -> 'Graph':

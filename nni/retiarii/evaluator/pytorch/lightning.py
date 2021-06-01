@@ -83,7 +83,21 @@ class Lightning(Evaluator):
         return self.fit(model_cls)
 
     def __eq__(self, other):
-        return self.function == other.function and self.arguments == other.arguments
+        eq_func = False
+        eq_args = False
+        if other == None:
+            return False
+        if hasattr(self, "function") and hasattr(other, "function"):
+            eq_func = (self.function == other.function)
+        elif not (hasattr(self, "function") or hasattr(other, "function")):
+            eq_func = True
+        
+        if hasattr(self, "arguments") and hasattr(other, "arguments"):
+            eq_args = (self.arguments == other.arguments)
+        elif not (hasattr(self, "arguments") or hasattr(other, "arguments")):
+            eq_args = True
+        
+        return eq_func and eq_args
 
     def fit(self, model):
         """

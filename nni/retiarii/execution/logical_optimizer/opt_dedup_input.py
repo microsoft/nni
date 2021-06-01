@@ -8,8 +8,9 @@ from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
                            OriginNode, PhysicalDevice)
+from nni.retiarii.evaluator.pytorch.lightning import _ClassificationModule, _RegressionModule
 
-_supported_training_modules = ['nni.retiarii.trainer.pytorch.PyTorchImageClassificationTrainer']
+_supported_evaluators = [_ClassificationModule, _RegressionModule]
 
 
 class DedupInputNode(AbstractLogicalNode):
@@ -19,6 +20,7 @@ class DedupInputNode(AbstractLogicalNode):
                          "Dedup_"+nodes_to_dedup[0].name,
                          nodes_to_dedup[0].operation)
         self.origin_nodes: List[OriginNode] = nodes_to_dedup.copy()
+        self.related_models = [_.original_graph.model for _ in self.origin_nodes]
 
     def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
         for node in self.origin_nodes:
@@ -41,6 +43,12 @@ class DedupInputOptimizer(AbstractOptimizer):
     def __init__(self) -> None:
         pass
 
+    def _check_supported_evaluator(self, evaluator):
+        for e in _supported_evaluators:
+            if isinstance(evaluator, e):
+                return True
+        return False
+        
     def _check_deduplicate_by_node(self, root_node, node_to_check):
         if root_node == node_to_check:
             return True
@@ -48,7 +56,7 @@ class DedupInputOptimizer(AbstractOptimizer):
             node_to_check.operation.type == '_inputs' and \
                 isinstance(root_node, OriginNode) and \
                 isinstance(node_to_check, OriginNode):
-            if root_node.original_graph.model.evaluator.module not in _supported_training_modules:
+            if self._check_supported_evaluator(root_node.original_graph.model.evaluator):
                 return False
             if root_node.original_graph.model.evaluator == node_to_check.original_graph.model.evaluator:
                 return True

@@ -2,13 +2,16 @@
 # Licensed under the MIT license.
 
 import logging
+import os
+import random
+import string
 from typing import Iterable, List, Dict, Tuple
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
-from ..graph import Model, ModelStatus, MetricData
+from ..graph import Model, ModelStatus, MetricData, Node
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
-from .logical_optimizer.logical_plan import LogicalPlan, PhysicalDevice
+from .logical_optimizer.logical_plan import LogicalPlan, PhysicalDevice, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 
 from .base import BaseGraphData
@@ -17,7 +20,7 @@ _logger = logging.getLogger(__name__)
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
-    def __init__(self, available_devices = None) -> None:
+    def __init__(self, available_devices=None) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
@@ -48,8 +51,9 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
+            new_evaluator = self._generate_evaluator(grouped_models)
             data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement),
-                                 model.evaluator)
+                                 new_evaluator)
             for m in grouped_models:
                 self._original_models[m.model_id] = m
                 self._original_model_to_multi_model[m.model_id] = model
@@ -62,6 +66,10 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     def list_models(self) -> Iterable[Model]:
         raise NotImplementedError
+
+    def _generate_evaluator(self, grouped_models : List[Model]):
+        # TODO:
+        pass
 
     def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice]]:
         # unique_models = set()
@@ -89,8 +97,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def _send_trial_callback(self, paramater: dict) -> None:
         if self.resources <= 0:
             _logger.warning('There is no available resource, but trial is submitted.')
-        print(paramater)
-        self.resources -= paramater['training_kwargs']['n_model']
+        print("_send_trial_callback", paramater)
+        # self.resources -= paramater['training_kwargs']['n_model']
         _logger.info('on_resource_used: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
@@ -124,13 +132,18 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 listener.on_intermediate_metric(self._original_models[int_model_id], merged_metrics[model_id])
 
     def _final_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
-        merged_metrics = dict(metrics)
-        for model_id in merged_metrics:
-            int_model_id = int(model_id)
-            self._original_models[int_model_id].intermediate_metrics.append(merged_metrics[model_id])
-            # model.intermediate_metrics.append(metrics)
-            for listener in self._listeners:
-                listener.on_metric(self._original_models[int_model_id], merged_metrics[model_id])
+        _logger.error(metrics)
+
+        if isinstance(metrics, float):
+            self._listeners[0].on_metric(self._running_models[trial_id], metrics)
+        else:
+            merged_metrics = dict(metrics)
+            for model_id in merged_metrics:
+                int_model_id = int(model_id)
+                self._original_models[int_model_id].intermediate_metrics.append(merged_metrics[model_id])
+                # model.intermediate_metrics.append(metrics)
+                for listener in self._listeners:
+                    listener.on_metric(self._original_models[int_model_id], merged_metrics[model_id])
 
     def query_available_resource(self) -> List[WorkerInfo]:
         raise NotImplementedError  # move the method from listener to here?
@@ -145,27 +158,55 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         """
         graph_data = BaseGraphData.load(receive_trial_parameters())
         _logger.info('CGO_ENGINE trial parameters received')
-        with open('_generated_model.py', 'w') as f:
+        random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+        file_name = f'_generated_model/{random_str}.py'
+        os.makedirs(os.path.dirname(file_name), exist_ok=True)
+        with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
         # with open('_debug_graph_data.json', 'w') as f:
         #     json.dump(graph_data.dump(), f)
-        trainer_cls = utils.import_(graph_data.training_module)
-        model_cls = utils.import_(f"_generated_model.{graph_data.training_kwargs['model_cls']}")
-        trainer_instance = trainer_cls(model_cls(), graph_data.training_kwargs)
-        trainer_instance.fit()
+        print("graph_data", graph_data)
+        trainer_instance = graph_data.evaluator  # utils.import_(graph_data.evaluator)
+        model_cls = utils.import_(f'_generated_model.{random_str}._model')
+        # trainer_instance.set_model(model_cls())
+        # trainer_instance = trainer_cls(model_cls(), graph_data.training_kwargs)
+        trainer_instance.fit(model_cls())
 
 
 class AssemblePolicy:
     @staticmethod
+    def _is_related_node(model: Model, node: Node):
+        if isinstance(node, AbstractLogicalNode):
+            if model in node.related_models:
+                return True
+        else:
+            if model == node.graph.model:
+                return True
+        return False
+
+    @staticmethod
+    def _check_graph_connectivity(model: Model, group_model: Dict[Model, PhysicalDevice], logical_plan: LogicalPlan):
+        for edge in logical_plan.logical_graph.edges:
+            if AssemblePolicy._is_related_node(model, edge.head) or \
+                    AssemblePolicy._is_related_node(model, edge.tail):
+                for grouped_model in group_model:
+                    if AssemblePolicy._is_related_node(grouped_model, edge.head) or \
+                            AssemblePolicy._is_related_node(grouped_model, edge.tail):
+                        return True
+        return False
+
+    @staticmethod
     def group(logical_plan, available_devices):
-        #TODO: Packing multiple model in one GPU
+        # TODO: Packing multiple model in one GPU
         # Currently, we only support one model per GPU
         all_grouped_models = []
         group_model = {}
-        assert(len(available_devices) > 0) # There should be at least 1 device, set in CGO_DEVICES
+        assert(len(available_devices) > 0)  # There should be at least 1 device, set in CGO_DEVICES
         for idx, m in enumerate(logical_plan.models):
             group_model[m] = PhysicalDevice('server', available_devices[idx % len(available_devices)])
-            if len(group_model) == len(available_devices) or idx == len(logical_plan.models)-1:
+            if len(group_model) == len(available_devices) or \
+                    idx == len(logical_plan.models) - 1 or \
+                    AssemblePolicy._check_graph_connectivity(m, group_model, logical_plan) == False:
                 all_grouped_models.append(group_model)
                 group_model = {}
         return all_grouped_models
