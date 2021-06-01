@@ -176,5 +176,5 @@ def create_supernet_scheduler(cfg, optimizer):
     ITERS = cfg.EPOCHS * \
         (1280000 / (cfg.NUM_GPU * cfg.DATASET.BATCH_SIZE))
     lr_scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lambda step: (
-        cfg.LR - step / ITERS) if step <= ITERS else 0, last_epoch=-1)
+        1.0 - step / ITERS) if step <= ITERS else 0, last_epoch=-1)
     return lr_scheduler, cfg.EPOCHS
