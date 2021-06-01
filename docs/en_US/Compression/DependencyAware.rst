@@ -54,11 +54,11 @@ To enable the dependency-aware mode for ``L1FilterPruner``\ :
    # for FPGMPruner
    # pruner = FPGMPruner(model, config_list, dependency_aware=True, dummy_input=dummy_input)
    # for ActivationAPoZRankFilterPruner
-   # pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1, , dependency_aware=True, dummy_input=dummy_input)
+   # pruner = ActivationAPoZRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1, dependency_aware=True, dummy_input=dummy_input)
    # for ActivationMeanRankFilterPruner
-   # pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
+   # pruner = ActivationMeanRankFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1, dependency_aware=True, dummy_input=dummy_input)
    # for TaylorFOWeightFilterPruner
-   # pruner = TaylorFOWeightFilterPruner(model, config_list, statistics_batch_num=1, dependency_aware=True, dummy_input=dummy_input)
+   # pruner = TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1, dependency_aware=True, dummy_input=dummy_input)
 
    pruner.compress()
 

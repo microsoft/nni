@@ -445,10 +445,7 @@ class NNIManager implements Manager {
             throw new Error('Cannot detect training service platform');
         }
 
-        if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
-            const module_ = await import('../training_service/reusable/routerTrainingService');
-            return new module_.RouterTrainingService(config);
-        } else if (platform === 'local') {
+        if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
         } else if (platform === 'kubeflow') {
@@ -460,6 +457,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
+        } else {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return await module_.RouterTrainingService.construct(config);
         }
 
         throw new Error(`Unsupported training service platform "${platform}"`);

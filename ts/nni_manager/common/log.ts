@@ -5,6 +5,7 @@
 
 import * as fs from 'fs';
 import { Writable } from 'stream';
+import * as util from 'util';
 
 /* log level constants */
 
@@ -28,7 +29,6 @@ const levelNames = new Map<number, string>([
 
 /* global_ states */
 
-let logFile: Writable | null = null;
 let logLevel: number = 0;
 const loggers = new Map<string, Logger>();
 
@@ -70,7 +70,8 @@ export class Logger {
     }
 
     private log(level: number, args: any[]): void {
-        if (level < logLevel || logFile === null) {
+        const logFile: Writable | undefined = (global as any).logFile;
+        if (level < logLevel || logFile === undefined) {
             return;
         }
 
@@ -80,20 +81,7 @@ export class Logger {
 
         const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
-        const words = [];
-        for (const arg of args) {
-            if (arg === undefined) {
-                words.push('undefined');
-            } else if (arg === null) {
-                words.push('null');
-            } else if (typeof arg === 'object') {
-                const json = JSON.stringify(arg);
-                words.push(json === undefined ? arg : json);
-            } else {
-                words.push(arg);
-            }
-        }
-        const message = words.join(' ');
+        const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
         const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
         logFile.write(record);
@@ -124,7 +112,7 @@ export function setLogLevel(levelName: string): void {
 }
 
 export function startLogging(logPath: string): void {
-    logFile = fs.createWriteStream(logPath, {
+    (global as any).logFile = fs.createWriteStream(logPath, {
         flags: 'a+',
         encoding: 'utf8',
         autoClose: true
@@ -132,8 +120,8 @@ export function startLogging(logPath: string): void {
 }
 
 export function stopLogging(): void {
-    if (logFile !== null) {
-        logFile.end();
-        logFile = null;
+    if ((global as any).logFile !== undefined) {
+        (global as any).logFile.end();
+        (global as any).logFile = undefined;
     }
 }

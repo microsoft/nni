@@ -29,8 +29,7 @@ Compressor is the base class for pruner and quntizer, it provides a unified inte
        'op_types': ['Conv2d', 'Linear'],
    }]
 
-   optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
-   pruner = LevelPruner(model, configure_list, optimizer)
+   pruner = LevelPruner(model, configure_list)
    model = pruner.compress()
 
    # model is ready for pruning, now start finetune the model,
@@ -103,7 +102,8 @@ Users can also remove this collector like this:
 Pruner
 ------
 
-A pruner receives ``model``\ , ``config_list`` and ``optimizer`` as arguments. It prunes the model per the ``config_list`` during training loop by adding a hook on ``optimizer.step()``.
+A pruner receives ``model`` , ``config_list`` as arguments. 
+Some pruners like ``TaylorFOWeightFilter Pruner`` prune the model per the ``config_list`` during training loop by adding a hook on ``optimizer.step()``.
 
 Pruner class is a subclass of Compressor, so it contains everything in the Compressor class and some additional components only for pruning, it contains:
 

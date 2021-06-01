@@ -161,7 +161,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
     # Need del later
@@ -246,7 +246,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended_legacy.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
     # Need del later
@@ -335,7 +335,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
     # Need del later
@@ -398,6 +398,7 @@ stages:
 
     - script: |
         python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[DNGO]
       displayName: Install extra dependencies
 
     # Need del later

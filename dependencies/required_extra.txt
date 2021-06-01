@@ -11,3 +11,6 @@ statsmodels==0.12.0
 
 # PPOTuner
 gym
+
+# DNGO
+pybnn

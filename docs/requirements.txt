@@ -20,7 +20,7 @@ websockets
 filelock
 prettytable
 psutil
-ruamel.yaml
+pyyaml
 ipython
 gym
 tianshou

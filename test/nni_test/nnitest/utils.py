@@ -9,7 +9,7 @@ import sys
 import subprocess
 import requests
 import time
-import ruamel.yaml as yaml
+import yaml
 import shlex
 
 EXPERIMENT_DONE_SIGNAL = 'Experiment done'
@@ -43,12 +43,12 @@ def remove_files(file_list):
 def get_yml_content(file_path):
     '''Load yaml file content'''
     with open(file_path, 'r') as file:
-        return yaml.load(file, Loader=yaml.Loader)
+        return yaml.safe_load(file)
 
 def dump_yml_content(file_path, content):
     '''Dump yaml file content'''
     with open(file_path, 'w') as file:
-        file.write(yaml.dump(content, default_flow_style=False))
+        file.write(yaml.safe_dump(content, default_flow_style=False))
 
 def setup_experiment(installed=True):
     '''setup the experiment if nni is not installed'''
