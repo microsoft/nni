@@ -12,7 +12,7 @@ from collections import deque
 from unittest import TestCase, main
 
 from nni.algorithms.hpo.batch_tuner import BatchTuner
-from nni.algorithms.hpo.dngo_tuner import DngoTuner
+from nni.algorithms.hpo.dngo_tuner import DNGOTuner
 from nni.algorithms.hpo.evolution_tuner import EvolutionTuner
 from nni.algorithms.hpo.gp_tuner import GPTuner
 from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
@@ -390,7 +390,7 @@ class BuiltinTunersTestCase(TestCase):
         self.import_data_test_for_pbt()
 
     def test_dngo(self):
-        tuner_fn = lambda: DngoTuner(trials_per_update=100, num_epochs_per_training=1)
+        tuner_fn = lambda: DNGOTuner(trials_per_update=100, num_epochs_per_training=1)
         self.search_space_test_all(tuner_fn, fail_types=["choice_str", "choice_mixed",
                                                          "normal", "lognormal", "qnormal", "qlognormal"])
         self.import_data_test(tuner_fn, stype='choice_num')
