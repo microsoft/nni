@@ -2,12 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import json_tricks
-import shutil
 import sqlite3
-import time
+import json_tricks
 from .constants import NNI_HOME_DIR
-from .command_utils import print_error
 from .common_utils import get_file_lock
 
 def config_v0_to_v1(config: dict) -> dict:

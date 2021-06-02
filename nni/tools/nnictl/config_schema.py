@@ -6,12 +6,12 @@ import logging
 import os
 
 import netifaces
+from schema import And, Optional, Or, Regex, Schema, SchemaError
 from nni.tools.package_utils import (
     create_validator_instance,
     get_all_builtin_names,
     get_registered_algo_meta,
 )
-from schema import And, Optional, Or, Regex, Schema, SchemaError
 
 from .common_utils import get_yml_content, print_warning
 from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
@@ -625,7 +625,7 @@ class NNIConfigSchema:
                     raise SchemaError("""If no taskRoles are specified a valid custom frameworkcontroller config should
                                          be set using the configPath attribute in frameworkcontrollerConfig!""")
                 config_content = get_yml_content(experiment_config.get('frameworkcontrollerConfig').get('configPath'))
-                if not config_content.get('spec').get('taskRoles') or not len(config_content.get('spec').get('taskRoles')):
+                if not config_content.get('spec').get('taskRoles') or not config_content.get('spec').get('taskRoles'):
                     raise SchemaError('Invalid frameworkcontroller config! No taskRoles were specified!')
                 if not config_content.get('spec').get('taskRoles')[0].get('task'):
                     raise SchemaError('Invalid frameworkcontroller config! No task was specified for taskRole!')

@@ -9,11 +9,11 @@ import time
 import socket
 import string
 import random
-import yaml
-import psutil
-import filelock
 import glob
 from colorama import Fore
+import filelock
+import psutil
+import yaml
 
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
 
