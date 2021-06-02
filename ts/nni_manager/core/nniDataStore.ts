@@ -71,7 +71,6 @@ class NNIDataStore implements DataStore {
 
     public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        //this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail:`, jobDetail);
 
         // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
         let timestamp: number | undefined;
