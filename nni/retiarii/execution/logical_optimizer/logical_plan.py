@@ -159,14 +159,14 @@ class LogicalPlan:
 
         # merge sub-graphs
         for model in multi_model_placement:
-            if phy_model.evaluator == None and model.evaluator != None:
+            if phy_model.evaluator is None and model.evaluator is not None:
                 phy_model.evaluator = model.evaluator
             for graph_name in model.graphs:
                 if graph_name != model._root_graph_name:
                     model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
-        
-        assert(phy_model.evaluator != None)
+
+        assert(phy_model.evaluator is not None)
 
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
@@ -178,7 +178,7 @@ class LogicalPlan:
         node_placements = {}
 
         added_models = []
-        
+
         for node in hidden_nodes:
             if isinstance(node, OriginNode):
                 model_id = node.original_graph.model.model_id
@@ -197,7 +197,7 @@ class LogicalPlan:
                     if model_id not in evaluator_slot:
                         # phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
                         added_models.append(model_id)
-                        evaluator_slot[model_id] = len(added_models) - 1 #len(phy_model.evaluator.kwargs['model_kwargs']) - 1
+                        evaluator_slot[model_id] = len(added_models) - 1  # len(phy_model.evaluator.kwargs['model_kwargs']) - 1
                         slot = evaluator_slot[model_id]
                         # phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
                         # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
@@ -241,7 +241,10 @@ class LogicalPlan:
                 else:
                     print("ToDevice", tail_placement.device)
                     dst_name = edge.head.name + "_to_" + edge.tail.name
-                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device, "src": (edge.head.name, edge.head_slot), "dst": dst_name})
+                    to_operation = Operation.new(
+                        'ToDevice', {
+                            "device": tail_placement.device, "src": (
+                                edge.head.name, edge.head_slot), "dst": dst_name})
                     to_node = Node(phy_graph, uid(), dst_name, to_operation)._register()
                     Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node

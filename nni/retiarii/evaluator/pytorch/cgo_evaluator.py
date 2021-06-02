@@ -8,10 +8,6 @@ from typing import Dict, Union, Optional, List
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.autograd.grad_mode import no_grad
-from torch.utils.data import DataLoader
-
-import nni
 
 import pytorch_lightning as pl
 from pytorch_lightning.accelerators.accelerator import Accelerator
@@ -20,6 +16,9 @@ from pytorch_lightning.trainer.connectors.accelerator_connector import Accelerat
 
 from pytorch_lightning.plugins import Plugin
 from pytorch_lightning.plugins.environments import ClusterEnvironment
+
+
+import nni
 
 from .lightning import LightningModule
 from ...serializer import serialize_cls
@@ -70,9 +69,9 @@ class MultiModelSupervisedLearningModule(LightningModule):
         multi_y_hat = self(x)
         assert(len(multi_y_hat) == self.n_models)
         for idx, y_hat in enumerate(multi_y_hat):
-            self.log('test_loss_{idx}', self.criterion(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
+            self.log(f'test_loss_{idx}', self.criterion(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
             for name, metric in self.metrics.items():
-                self.log('test_{idx}_' + name, metric(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
+                self.log(f'test_{idx}_' + name, metric(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
 
     def configure_optimizers(self):
         return self.optimizer(self.parameters(), lr=self.hparams.learning_rate, weight_decay=self.hparams.weight_decay)
@@ -125,8 +124,8 @@ def get_accelerator_connector(
 
 
 class BypassAccelerator(Accelerator):
-    def __init__(self, precision_plugin = None, device = torch.device("cuda:0")):
-        if precision_plugin == None:
+    def __init__(self, precision_plugin=None, device=torch.device("cuda:0")):
+        if precision_plugin is None:
             precision_plugin = get_accelerator_connector().precision_plugin
         super().__init__(precision_plugin=precision_plugin, training_type_plugin=BypassPlugin(device))
 

@@ -69,6 +69,7 @@ class _model_cpu(nn.Module):
         M_2_softmax = self.M_2_softmax(M_2_fc2)
         return M_1_softmax, M_2_softmax
 
+
 class _model_gpu(nn.Module):
     def __init__(self):
         super().__init__()
@@ -200,10 +201,10 @@ class CGOEngineTest(unittest.TestCase):
 
         for _ in result:
             assert _ > 0.8
-        
+
     def test_multi_model_trainer_gpu(self):
         _reset()
-        if not (torch.cuda.is_available() and torch.cuda.device_count() >=2):
+        if not (torch.cuda.is_available() and torch.cuda.device_count() >= 2):
             pytest.skip('test requires GPU and torch+cuda')
         transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
@@ -237,8 +238,6 @@ class CGOEngineTest(unittest.TestCase):
             old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
 
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
-    
-
 
     @pytest.mark.skip(reason="no way of currently testing this")
     def test_submit_models(self):

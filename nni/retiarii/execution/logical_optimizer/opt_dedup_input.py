@@ -4,11 +4,13 @@
 from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
+from nni.retiarii.evaluator.pytorch.lightning import _ClassificationModule, _RegressionModule
+
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
                            OriginNode, PhysicalDevice)
-from nni.retiarii.evaluator.pytorch.lightning import _ClassificationModule, _RegressionModule
+
 
 _supported_evaluators = [_ClassificationModule, _RegressionModule]
 
@@ -17,7 +19,7 @@ class DedupInputNode(AbstractLogicalNode):
     def __init__(self, logical_graph: LogicalGraph, node_id: int,
                  nodes_to_dedup: List[Node], _internal=False):
         super().__init__(logical_graph, node_id,
-                         "Dedup_"+nodes_to_dedup[0].name,
+                         "Dedup_" + nodes_to_dedup[0].name,
                          nodes_to_dedup[0].operation)
         self.origin_nodes: List[OriginNode] = nodes_to_dedup.copy()
         self.related_models = [_.original_graph.model for _ in self.origin_nodes]
@@ -48,7 +50,7 @@ class DedupInputOptimizer(AbstractOptimizer):
             if isinstance(evaluator, e):
                 return True
         return False
-        
+
     def _check_deduplicate_by_node(self, root_node, node_to_check):
         if root_node == node_to_check:
             return True
@@ -76,7 +78,7 @@ class DedupInputOptimizer(AbstractOptimizer):
                     continue
                 root_node = node
                 break
-            if root_node == None:
+            if root_node is None:
                 break  # end of convert
             else:
                 nodes_to_dedup = []
