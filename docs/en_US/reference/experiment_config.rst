@@ -269,7 +269,7 @@ For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``loggin
 experimentWorkingDirectory
 --------------------------
 
-Specify the `directory <path>`_ to place log, checkpoint, metadata, and other run-time stuff.
+Specify the :ref:`directory <path>` to place log, checkpoint, metadata, and other run-time stuff.
 
 type: ``Optional[str]``
 
@@ -322,6 +322,14 @@ Specify `training service <../TrainingService/Overview.rst>`__.
 type: `TrainingServiceConfig`_
 
 
+sharedStorage
+-------------
+
+Configure the shared storage, detailed `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+
+type: Optional `SharedStorageConfig`_
+
+
 AlgorithmConfig
 ^^^^^^^^^^^^^^^
 
@@ -329,7 +337,7 @@ AlgorithmConfig
 
 For custom algorithms, there are two ways to describe them:
 
-  1. `Register the algorithm <../Tuner/InstallCustomizedTuner.rst>`__ to use it like built-in. (preferred)
+  1. `Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to use it like built-in. (preferred)
 
   2. Specify code directory and class name directly.
 
@@ -377,11 +385,11 @@ One of the following:
 
 - `LocalConfig`_
 - `RemoteConfig`_
-- `OpenpaiConfig <openpai-class>`_
+- :ref:`OpenpaiConfig <openpai-class>`
 - `AmlConfig`_
 - `HybridConfig`_
 
-For `Kubeflow <../TrainingService/KubeflowMode.rst>`_\ , `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_\ , and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platform, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
+For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, NNI suggests to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
 
 LocalConfig
@@ -605,6 +613,30 @@ type: ``str``
 This can be found in your OpenPAI user settings page.
 
 
+trialCpuNumber
+""""""""""""""
+
+Specify the CPU number of each trial to be used in OpenPAI container.
+
+type: ``int``
+
+
+trialMemorySize
+"""""""""""""""
+
+Specify the memory size of each trial to be used in OpenPAI container, in megabytes.
+
+type: ``str``
+
+
+storageConfigName
+"""""""""""""""""
+
+Specify the storage name used in OpenPAI.
+
+type: ``str``
+
+
 dockerImage
 """""""""""
 
@@ -615,10 +647,10 @@ type: ``str``
 default: ``"msranni/nni:latest"``
 
 
-nniManagerStorageMountPoint
-"""""""""""""""""""""""""""
+localStorageMountPoint
+""""""""""""""""""""""
 
-`Mount point <path>`_ of storage service (typically NFS) on current machine.
+:ref:`Mount point <path>` of storage service (typically NFS) on current machine.
 
 type: ``str``
 
@@ -714,5 +746,130 @@ AML compute cluster name.
 
 type: ``str``
 
+
 HybridConfig
 ------------
+
+List of `TrainingServiceConfig`_, currently only supports `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed `here <../TrainingService/HybridMode.rst>`__.
+
+type: list of `TrainingServiceConfig`_
+
+
+SharedStorageConfig
+^^^^^^^^^^^^^^^^^^^
+
+Detailed `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+
+
+nfsConfig
+---------
+
+storageType
+"""""""""""
+
+Constant string ``"NFS"``.
+
+
+localMountPoint
+"""""""""""""""
+
+Local mount point.
+
+type: ``str``
+
+
+remoteMountPoint
+""""""""""""""""
+
+Remote mount point.
+
+type: ``str``
+
+
+localMounted
+""""""""""""
+
+Specify local mount status. ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in local machine, will support partial storages in the future.
+
+type: ``str``
+
+
+nfsServer
+"""""""""
+
+NFS server ip.
+
+type: ``str``
+
+
+exportedDirectory
+"""""""""""""""""
+
+NFS exported directory.
+
+type: ``str``
+
+
+azureBlobConfig
+---------------
+
+storageType
+"""""""""""
+
+Constant string ``"AzureBlob"``.
+
+
+localMountPoint
+"""""""""""""""
+
+Local mount point.
+
+type: ``str``
+
+
+remoteMountPoint
+""""""""""""""""
+
+Remote mount point.
+
+type: ``str``
+
+
+localMounted
+""""""""""""
+
+Specify local mount status. ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in local machine, will support partial storages in the future.
+
+type: ``str``
+
+
+storageAccountName
+""""""""""""""""""
+
+AzureBlob account name.
+
+type: ``str``
+
+
+storageAccountKey
+"""""""""""""""""
+
+AzureBlob account key. When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
+
+type: ``Optional[str]``
+
+
+resourceGroupName
+"""""""""""""""""
+
+AzureBlob resource group name.
+
+type: ``Optional[str]``
+
+
+containerName
+"""""""""""""
+
+AzureBlob container name.
+
+type: ``Optional[str]``
