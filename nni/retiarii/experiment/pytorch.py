@@ -318,7 +318,7 @@ class RetiariiExperiment(Experiment):
         """
         Export several top performing models.
 
-        For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` asnd ``formatter`` is
+        For one-shot algorithms, only top-1 is supported. For others, ``optimize_mode`` and ``formatter`` are
         available for customization.
 
         top_k : int
