@@ -24,12 +24,12 @@ TENSORBOARD_API = '/tensorboard'
 
 METRIC_DATA_API = '/metric-data'
 
-def formatURLPath(path):
-    return API_ROOT_URL if path is None else '/{0}{1}'.format(path, API_ROOT_URL)
+def format_url_path(path):
+    return API_ROOT_URL if path is None else f'/{path}{API_ROOT_URL}'
 
-def setPrefixUrl(prefix_path):
+def set_prefix_url(prefix_path):
     global API_ROOT_URL
-    API_ROOT_URL = formatURLPath(prefix_path)
+    API_ROOT_URL = format_url_path(prefix_path)
 
 def metric_data_url(port):
     '''get metric_data url'''
