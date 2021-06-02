@@ -1,4 +1,5 @@
 import json
+from nni.retiarii.graph import Node
 import os
 import threading
 import unittest
@@ -18,6 +19,7 @@ from nni.retiarii import Model, submit_models
 from nni.retiarii.integration import RetiariiAdvisor
 from nni.retiarii.execution import set_execution_engine
 from nni.retiarii.evaluator.pytorch import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
+from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
 from nni.retiarii.utils import import_
 
 from nni.retiarii import serialize_cls, serialize
@@ -201,7 +203,7 @@ class CGOEngineTest(unittest.TestCase):
         
     def test_multi_model_trainer_gpu(self):
         _reset()
-        if not torch.cuda.is_available():
+        if not (torch.cuda.is_available() and torch.cuda.device_count() >=2):
             pytest.skip('test requires GPU and torch+cuda')
         transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
         train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
@@ -221,6 +223,22 @@ class CGOEngineTest(unittest.TestCase):
 
         for _ in result:
             assert _ > 0.8
+
+    def _build_logical_with_mnist(self, n_models: int):
+        lp = LogicalPlan()
+        models = _load_mnist(n_models=n_models)
+        for m in models:
+            lp.add_model(m)
+        return lp, models
+
+    def test_add_model(self):
+        lp, models = self._build_logical_with_mnist(3)
+        for node in lp.logical_graph.hidden_nodes:
+            old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
+
+            self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
+    
+
 
     @pytest.mark.skip(reason="no way of currently testing this")
     def test_submit_models(self):
@@ -271,4 +289,5 @@ class CGOEngineTest(unittest.TestCase):
 if __name__ == '__main__':
     # CGOEngineTest().test_trainer()
     # CGOEngineTest().test_submit_models()
+    # CGOEngineTest().test_add_model()
     unittest.main()
