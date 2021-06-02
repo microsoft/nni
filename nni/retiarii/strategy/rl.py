@@ -25,8 +25,6 @@ class PolicyBasedRL(BaseStrategy):
     This is a wrapper of algorithms provided in tianshou (PPO by default),
     and can be easily customized with other algorithms that inherit ``BasePolicy`` (e.g., REINFORCE [1]_).
 
-    Note that RL algorithms are known to have issues on Windows and MacOS. They will be supported in future.
-
     Parameters
     ----------
     max_collect : int
