@@ -38,7 +38,7 @@ class PolicyBasedRL(BaseStrategy):
         Takes ``ModelEvaluationEnv`` as input and return a policy. See ``_default_policy_fn`` for an example.
     asynchronous : bool
         If true, in each step, collector won't wait for all the envs to complete.
-        This should generally not affect the result, but might affect the efficiency. Note that a slightly more trials
+        This should generally not affect the result, but might increase efficiency. Note that a slightly more trials
         than expected might be collected if this is enabled.
         If asynchronous is false, collector will wait for all parallel environments to complete in each step.
         See ``tianshou.data.AsyncCollector`` for more details.

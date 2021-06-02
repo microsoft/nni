@@ -13,6 +13,8 @@ Two steps are needed to enable this engine now.
 1. Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch model.
 2. Add ``config.execution_engine = 'py'`` to ``RetiariiExeConfig``.
 
+.. note:: You should always use ``super().__init__()` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
+
 ``@basic_unit`` and ``serializer``
 ----------------------------------
 
