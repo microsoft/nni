@@ -14,7 +14,7 @@ import {getLogger, Logger} from '../../common/log';
  * If it is, it returns the in-cluster config
  * instead of the kubeconfig.
  */
-function getKubernetesConfig() {
+function getKubernetesConfig(): any {
     if ('KUBERNETES_SERVICE_HOST' in process.env) {
         return config.getInCluster();
     } else {
