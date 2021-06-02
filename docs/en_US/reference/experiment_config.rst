@@ -1,26 +1,29 @@
-===========================
-Experiment Config Reference
-===========================
+==============================
+Experiment Config V2 Reference
+==============================
 
-Notes
-=====
+A config file is needed when creating an experiment. This document describes the rules to write a config file in the V2 schema and provides some examples.
 
-1. This document list field names is ``camelCase``.
-   They need to be converted to ``snake_case`` for Python library ``nni.experiment``.
+.. Note::
 
-2. In this document type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__.
-   Therefore JSON objects are called `dict` and arrays are called `list`.
+    1. This document lists field names with ``camelCase``. They need to be converted to ``snake_case`` for Python library ``nni.experiment``.
 
-.. _path:
+    2. In this document, the type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__. Therefore JSON objects are called `dict` and arrays are called `list`.
 
-3. Some fields take a path to file or directory.
-   Unless otherwise noted, both absolute path and relative path are supported, and ``~`` will be expanded to home directory.
+    .. _path: 
 
-   - When written in YAML file, relative paths are relative to the directory containing that file.
-   - When assigned in Python code, relative paths are relative to current working directory.
-   - All relative paths are converted to absolute when loading YAML file into Python class, and when saving Python class to YAML file.
+    3. Some fields take a path to a file or directory. Unless otherwise noted, both absolute path and relative path are supported, and ``~`` will be expanded to the home directory.
 
-4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
+       - When written in the YAML file, relative paths are relative to the directory containing that file.
+       - When assigned in Python code, relative paths are relative to the current working directory.
+       - All relative paths are converted to absolute when loading YAML file into Python class, and when saving Python class to YAML file.
+
+    4. Setting a field to ``None`` or ``null`` is equivalent to not setting the field.
+
+.. contents:: Contents
+   :local:
+   :depth: 3
+ 
 
 Examples
 ========
@@ -113,11 +116,11 @@ type: ``Optional[str]``
 searchSpaceFile
 ---------------
 
-Path_ to a JSON file containing the search space.
+Path_ to the JSON file containing the search space.
 
 type: ``Optional[str]``
 
-Search space format is determined by tuner. Common format for built-in tuners is documeted `here <../Tutorial/SearchSpaceSpec.rst>`__.
+Search space format is determined by tuner. The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
 
 Mutually exclusive to `searchSpace`_.
 
@@ -155,8 +158,8 @@ type: ``str``
 
 default: ``"."``
 
-All files in this directory will be sent to training machine, unless there is a ``.nniignore`` file.
-(See nniignore section of `quick start guide <../Tutorial/QuickStart.rst>`__ for details.)
+All files in this directory will be sent to the training machine, unless there is a ``.nniignore`` file.
+(See :ref:`nniignore <nniignore>` for details.)
 
 
 trialConcurrency
@@ -176,9 +179,9 @@ Number of GPUs used by each trial.
 
 type: ``Optional[int]``
 
-This field might have slightly different meaning for various training services,
+This field might have slightly different meanings for various training services,
 especially when set to ``0`` or ``None``.
-See training service's document for details.
+See `training service's document <../training_services.rst>`__ for details.
 
 In local mode, setting the field to zero will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
 And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
@@ -242,13 +245,13 @@ type: ``bool``
 
 default: ``False``
 
-When enabled, logging will be more verbose and some internal validation will be loosen.
+When enabled, logging will be more verbose and some internal validation will be loosened.
 
 
 logLevel
 --------
 
-Set log level of whole system.
+Set log level of the whole system.
 
 type: ``Optional[str]``
 
@@ -272,7 +275,7 @@ type: ``Optional[str]``
 
 By default uses ``~/nni-experiments``.
 
-NNI will create a subdirectory named by experiment ID, so it is safe to use same directory for multiple experiments.
+NNI will create a subdirectory named by experiment ID, so it is safe to use the same directory for multiple experiments.
 
 
 tunerGpuIndices
@@ -284,7 +287,7 @@ type: ``Optional[list[int] | str]``
 
 This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
 
-Because tuner, assessor, and advisor run in same process, this option will affect them all.
+Because tuner, assessor, and advisor run in the same process, this option will affect them all.
 
 
 tuner
@@ -334,9 +337,9 @@ For custom algorithms, there are two ways to describe them:
 name
 ----
 
-Name of built-in or registered algorithm.
+Name of the built-in or registered algorithm.
 
-type: ``str`` for built-in and registered algorithm, ``None`` for other custom algorithm
+type: ``str`` for the built-in and registered algorithm, ``None`` for other custom algorithms.
 
 
 className
@@ -344,7 +347,7 @@ className
 
 Qualified class name of not registered custom algorithm.
 
-type: ``None`` for built-in and registered algorithm, ``str`` for other custom algorithm
+type: ``None`` for the built-in and registered algorithm, ``str`` for other custom algorithms.
 
 example: ``"my_tuner.MyTuner"``
 
@@ -352,9 +355,9 @@ example: ``"my_tuner.MyTuner"``
 codeDirectory
 -------------
 
-`Path`_ to directory containing the custom algorithm class.
+`Path`_ to the directory containing the custom algorithm class.
 
-type: ``None`` for built-in and registered algorithm, ``str`` for other custom algorithm
+type: ``None`` for the built-in and registered algorithm, ``str`` for other custom algorithms.
 
 
 classArgs
@@ -370,29 +373,30 @@ See algorithm's document for supported value.
 TrainingServiceConfig
 ^^^^^^^^^^^^^^^^^^^^^
 
-One of following:
+One of the following:
 
 - `LocalConfig`_
 - `RemoteConfig`_
 - `OpenpaiConfig <openpai-class>`_
 - `AmlConfig`_
+- `HybridConfig`_
 
-For other training services, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
+For `Kubeflow <../TrainingService/KubeflowMode.rst>`_\ , `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_\ , and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platform, we suggest to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
 
 LocalConfig
-^^^^^^^^^^^
+-----------
 
 Detailed `here <../TrainingService/LocalMode.rst>`__.
 
 platform
---------
+""""""""
 
 Constant string ``"local"``.
 
 
 useActiveGpu
-------------
+""""""""""""
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
@@ -400,11 +404,11 @@ type: ``Optional[bool]``
 
 Must be set when `trialGpuNumber` greater than zero.
 
-If your are using desktop system with GUI, set this to ``True``.
+If you are using the desktop system with GUI, set this to ``True``.
 
 
 maxTrialNumberPerGpu
----------------------
+""""""""""""""""""""
 
 Specify how many trials can share one GPU.
 
@@ -414,7 +418,7 @@ default: ``1``
 
 
 gpuIndices
-----------
+""""""""""
 
 Limit the GPUs visible to trial processes.
 
@@ -426,18 +430,18 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
 RemoteConfig
-^^^^^^^^^^^^
+------------
 
 Detailed `here <../TrainingService/RemoteMachineMode.rst>`__.
 
 platform
---------
+""""""""
 
 Constant string ``"remote"``.
 
 
 machineList
------------
+"""""""""""
 
 List of training machines.
 
@@ -445,7 +449,7 @@ type: list of `RemoteMachineConfig`_
 
 
 reuseMode
----------
+"""""""""
 
 Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
@@ -453,10 +457,10 @@ type: ``bool``
 
 
 RemoteMachineConfig
-^^^^^^^^^^^^^^^^^^^
+"""""""""""""""""""
 
 host
-----
+****
 
 IP or hostname (domain name) of the machine.
 
@@ -464,7 +468,7 @@ type: ``str``
 
 
 port
-----
+****
 
 SSH service port.
 
@@ -474,7 +478,7 @@ default: ``22``
 
 
 user
-----
+****
 
 Login user name.
 
@@ -482,7 +486,7 @@ type: ``str``
 
 
 password
---------
+********
 
 Login password.
 
@@ -492,7 +496,7 @@ If not specified, `sshKeyFile`_ will be used instead.
 
 
 sshKeyFile
-----------
+**********
 
 `Path`_ to sshKeyFile (identity file).
 
@@ -502,7 +506,7 @@ Only used when `password`_ is not specified.
 
 
 sshPassphrase
--------------
+*************
 
 Passphrase of SSH identity file.
 
@@ -510,7 +514,7 @@ type: ``Optional[str]``
 
 
 useActiveGpu
-------------
+************
 
 Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
@@ -520,7 +524,7 @@ default: ``False``
 
 
 maxTrialNumberPerGpu
---------------------
+********************
 
 Specify how many trials can share one GPU.
 
@@ -530,7 +534,7 @@ default: ``1``
 
 
 gpuIndices
-----------
+**********
 
 Limit the GPUs visible to trial processes.
 
@@ -542,15 +546,17 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 
 pythonPath
--------------------
+**********
 
-Specify a python environment, this path will insert at the front of PATH. Here are some examples: 
-   - (linux) pythonPath: /opt/python3.7/bin
-   - (windows) pythonPath: C:/Python37
+Specify a Python environment, this path will insert at the front of PATH. Here are some examples: 
 
-Notice: If you are working on anaconda，there are some difference. You have to add "../script" and "../Library/bin" to this and separated by ";" on windows, example as below:
-   - (linux anaconda) pythonPath: /home/yourname/anaconda3/envs/myenv/bin/
-   - (windows anaconda) pythonPath: C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin
+    - (linux) pythonPath: ``/opt/python3.7/bin``
+    - (windows) pythonPath: ``C:/Python37``
+
+If you are working on Anaconda, there is some difference. You also have to add ``../script`` and ``../Library/bin`` which separated them by ``;`` on Windows, examples are as below:
+
+    - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
+    - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
 
 type: ``Optional[str]``
 
@@ -559,30 +565,30 @@ This is useful if preparing steps vary for different machines.
 .. _openpai-class:
 
 OpenpaiConfig
-^^^^^^^^^^^^^
+-------------
 
 Detailed `here <../TrainingService/PaiMode.rst>`__.
 
 platform
---------
+""""""""
 
 Constant string ``"openpai"``.
 
 
 host
-----
+""""
 
 Hostname of OpenPAI service.
 
 type: ``str``
 
-This may includes ``https://`` or ``http://`` prefix.
+This may include ``https://`` or ``http://`` prefix.
 
 HTTPS will be used by default.
 
 
 username
---------
+""""""""
 
 OpenPAI user name.
 
@@ -590,7 +596,7 @@ type: ``str``
 
 
 token
------
+"""""
 
 OpenPAI user token.
 
@@ -600,7 +606,7 @@ This can be found in your OpenPAI user settings page.
 
 
 dockerImage
------------
+"""""""""""
 
 Name and tag of docker image to run the trials.
 
@@ -610,7 +616,7 @@ default: ``"msranni/nni:latest"``
 
 
 nniManagerStorageMountPoint
----------------------------
+"""""""""""""""""""""""""""
 
 `Mount point <path>`_ of storage service (typically NFS) on current machine.
 
@@ -618,7 +624,7 @@ type: ``str``
 
 
 containerStorageMountPoint
---------------------------
+""""""""""""""""""""""""""
 
 Mount point of storage service (typically NFS) in docker container.
 
@@ -628,7 +634,7 @@ This must be an absolute path.
 
 
 reuseMode
----------
+"""""""""
 
 Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
 
@@ -638,7 +644,7 @@ default: ``False``
 
 
 openpaiConfig
--------------
+"""""""""""""
 
 Embedded OpenPAI config file.
 
@@ -646,7 +652,7 @@ type: ``Optional[JSON]``
 
 
 openpaiConfigFile
------------------
+"""""""""""""""""
 
 `Path`_ to OpenPAI config file.
 
@@ -656,19 +662,19 @@ An example can be found `here <https://github.com/microsoft/pai/blob/master/docs
 
 
 AmlConfig
-^^^^^^^^^
+---------
 
 Detailed `here <../TrainingService/AMLMode.rst>`__.
 
 
 platform
---------
+""""""""
 
 Constant string ``"aml"``.
 
 
 dockerImage
------------
+"""""""""""
 
 Name and tag of docker image to run the trials.
 
@@ -678,7 +684,7 @@ default: ``"msranni/nni:latest"``
 
 
 subscriptionId
---------------
+""""""""""""""
 
 Azure subscription ID.
 
@@ -686,7 +692,7 @@ type: ``str``
 
 
 resourceGroup
--------------
+"""""""""""""
 
 Azure resource group name.
 
@@ -694,7 +700,7 @@ type: ``str``
 
 
 workspaceName
--------------
+"""""""""""""
 
 Azure workspace name.
 
@@ -702,8 +708,11 @@ type: ``str``
 
 
 computeTarget
--------------
+"""""""""""""
 
 AML compute cluster name.
 
 type: ``str``
+
+HybridConfig
+------------
