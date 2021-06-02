@@ -489,7 +489,7 @@ def _validate_prefix_path(path):
     assert not path.startswith('/'), 'URL prefix should not start with "/".'
     parts = path.split('/')
     valid = all(re.match('^[A-Za-z0-9_-]*$', part) for part in parts)
-    assert valid, 'URL prefix should only contains letter, number, underscore, and hyphen.'
+    assert valid, 'URL prefix should only contain letter, number, underscore, and hyphen.'
 
 def create_experiment(args):
     '''start a new experiment'''
