@@ -239,7 +239,6 @@ class LogicalPlan:
                 if (edge.head, tail_placement) in copied_op:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
-                    print("ToDevice", tail_placement.device)
                     dst_name = edge.head.name + "_to_" + edge.tail.name
                     to_operation = Operation.new(
                         'ToDevice', {
