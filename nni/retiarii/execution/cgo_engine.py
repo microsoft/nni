@@ -27,18 +27,22 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
-        self.available_devices = available_devices if available_devices else []
+        self.available_devices: List[PhysicalDevice] = [PhysicalDevice('server', device_name)
+                                                        for device_name in available_devices] if available_devices else []
+        self.all_devices = self.available_devices.copy()
+
         self._optimizers = [DedupInputOptimizer()]
         self._original_models = {}
         self._original_model_to_multi_model = {}
         self._trial_to_original_models = {}
+        self._trial_used_devices = {}
 
-        self.resources = 0
+        self._history: List[Model] = []
 
         # register advisor callbacks
         advisor = get_advisor()
-        advisor.send_trial_callback = self._send_trial_callback
-        advisor.request_trial_jobs_callback = self._request_trial_jobs_callback
+        # advisor.send_trial_callback = self._send_trial_callback
+        # advisor.request_trial_jobs_callback = self._request_trial_jobs_callback
         advisor.trial_end_callback = self._trial_end_callback
         advisor.intermediate_metric_callback = self._intermediate_metric_callback
         advisor.final_metric_callback = self._final_metric_callback
@@ -57,19 +61,31 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         for model, placement, grouped_models in phy_models_and_placements:
             data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
             trial_id = send_trial(data.dump())
+            self._trial_used_devices[trial_id] = list(set(placement.values()))  # unique devices used by the trial
+
+            for used_device in self._trial_used_devices[trial_id]:
+                self.available_devices.remove(used_device)  # used_device must be in self.available_devices
+
             self._trial_to_original_models[trial_id] = []
             for m in grouped_models:
                 self._original_models[m.model_id] = m
                 self._original_model_to_multi_model[m.model_id] = model
                 self._trial_to_original_models[trial_id].append(m.model_id)
+                self._history.append(m)
             self._running_models[trial_id] = model
 
-
     def list_models(self) -> Iterable[Model]:
-        raise NotImplementedError
+        return self._history
 
-    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice, List[Model]]]:
-        grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
+    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]]:
+        # try to use the available_devices first so that it can be launched as early as possible
+        # if free devices are not enough to assemble all models in one trial, try all devices
+        if len(self.available_devices) > 0:
+            grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
+        
+        if len(self.available_devices) == 0 or len(grouped_models) > 1:
+            grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.all_devices)
+
         phy_models_and_placements = []
         for multi_model in grouped_models:
             model, model_placement = logical_plan.assemble(multi_model)
@@ -94,14 +110,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
         self._listeners.append(listener)
 
-    def _send_trial_callback(self, paramater: dict) -> None:
-        if self.resources <= 0:
-            _logger.warning('There is no available resource, but trial is submitted.')
-        _logger.info('on_resource_used: %d', self.resources)
+    # def _send_trial_callback(self, paramater: dict) -> None:
+    #     if len(self.available_devices) == 0:
+    #         _logger.warning('There is no available devices, but trial is submitted.')
+    #     _logger.debug('Resource used. Remaining: %d', len(self.available_devices))
 
-    def _request_trial_jobs_callback(self, num_trials: int) -> None:
-        self.resources += num_trials
-        _logger.info('on_resource_available: %d', self.resources)
+    # def _request_trial_jobs_callback(self, num_trials: int) -> None:
+    #     self.resources += num_trials
+    #     _logger.info('on_resource_available: %d', self.resources)
 
     def _trial_end_callback(self, trial_id: int, success: bool) -> None:
         model = self._running_models[trial_id]
@@ -118,6 +134,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                     original_model.status = ModelStatus.Failed
                 for listener in self._listeners:
                     listener.on_training_end(original_model, success)
+        self.available_devices.extend(self._trial_used_devices)
+        self.available_devices = sorted(list(set(self.available_devices)))
 
     def _intermediate_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
         merged_metrics = {}
@@ -143,7 +161,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                     listener.on_metric(self._original_models[model_id], merged_metrics[model_id])
 
     def query_available_resource(self) -> List[WorkerInfo]:
-        raise NotImplementedError  # move the method from listener to here?
+        return self.available_devices
 
     def budget_exhausted(self) -> bool:
         raise NotImplementedError
@@ -218,7 +236,7 @@ class AssemblePolicy:
                     AssemblePolicy._check_evaluator(m, group_model) == False):
                 all_grouped_models.append(group_model)
                 group_model = {}
-            group_model[m] = PhysicalDevice('server', available_devices[idx % len(available_devices)])
+            group_model[m] = available_devices[idx % len(available_devices)]
             if len(group_model) == len(available_devices) or \
                     idx == len(logical_plan.models) - 1:
                 all_grouped_models.append(group_model)

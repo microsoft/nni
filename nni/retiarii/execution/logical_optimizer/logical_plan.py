@@ -16,6 +16,14 @@ class PhysicalDevice:
 
     def __eq__(self, o) -> bool:
         return self.server == o.server and self.device == o.device
+    
+    def __less__(self, o) -> bool:
+        if self.server < o.server:
+            return True
+        elif self.server > o.server :
+            return False
+        else:
+            return self.device < o.device
 
     def __hash__(self) -> int:
         return hash(self.server + '_' + self.device)
@@ -145,7 +153,7 @@ class LogicalPlan:
             -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
         phy_model = Model(_internal=True)  # self.lp_model.fork()
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
-        phy_graph._rename_graph(phy_graph.name, "_model"
+        phy_graph._rename_graph(phy_graph.name, "_model")
 
         # merge sub-graphs
         for model in multi_model_placement:
