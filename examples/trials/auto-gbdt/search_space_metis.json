@@ -1,5 +1,0 @@
-{
-    "num_leaves":{"_type":"choice","_value":[31, 28, 24, 20]},
-    "learning_rate":{"_type":"choice","_value":[0.01, 0.05, 0.1, 0.2]},
-    "bagging_freq":{"_type":"choice","_value":[1, 2, 4, 8, 10]}
-}

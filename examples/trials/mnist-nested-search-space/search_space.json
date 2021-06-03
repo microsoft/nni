@@ -1,114 +1,114 @@
 {
-	"layer0": {
-		"_type": "choice",
-		"_value": [{
-				"_name": "Empty"
-			},
-			{
-				"_name": "Conv",
-				"kernel_size": {
-					"_type": "choice",
-					"_value": [1, 2, 3, 5]
-				}
-			},
-			{
-				"_name": "Max_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			},
-			{
-				"_name": "Avg_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			}
-		]
-	},
-	"layer1": {
-		"_type": "choice",
-		"_value": [{
-				"_name": "Empty"
-			},
-			{
-				"_name": "Conv",
-				"kernel_size": {
-					"_type": "choice",
-					"_value": [1, 2, 3, 5]
-				}
-			},
-			{
-				"_name": "Max_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			},
-			{
-				"_name": "Avg_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			}
-		]
-	},
-	"layer2": {
-		"_type": "choice",
-		"_value": [{
-				"_name": "Empty"
-			},
-			{
-				"_name": "Conv",
-				"kernel_size": {
-					"_type": "choice",
-					"_value": [1, 2, 3, 5]
-				}
-			},
-			{
-				"_name": "Max_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			},
-			{
-				"_name": "Avg_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			}
-		]
-	},
-	"layer3": {
-		"_type": "choice",
-		"_value": [{
-				"_name": "Empty"
-			},
-			{
-				"_name": "Conv",
-				"kernel_size": {
-					"_type": "choice",
-					"_value": [1, 2, 3, 5]
-				}
-			},
-			{
-				"_name": "Max_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			},
-			{
-				"_name": "Avg_pool",
-				"pooling_size": {
-					"_type": "choice",
-					"_value": [2, 3, 5]
-				}
-			}
-		]
-	}
+    "layer0": {
+        "_type": "choice",
+        "_value": [{
+                "_name": "Empty"
+            },
+            {
+                "_name": "Conv",
+                "kernel_size": {
+                    "_type": "choice",
+                    "_value": [1, 2, 3, 5]
+                }
+            },
+            {
+                "_name": "Max_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            },
+            {
+                "_name": "Avg_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            }
+        ]
+    },
+    "layer1": {
+        "_type": "choice",
+        "_value": [{
+                "_name": "Empty"
+            },
+            {
+                "_name": "Conv",
+                "kernel_size": {
+                    "_type": "choice",
+                    "_value": [1, 2, 3, 5]
+                }
+            },
+            {
+                "_name": "Max_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            },
+            {
+                "_name": "Avg_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            }
+        ]
+    },
+    "layer2": {
+        "_type": "choice",
+        "_value": [{
+                "_name": "Empty"
+            },
+            {
+                "_name": "Conv",
+                "kernel_size": {
+                    "_type": "choice",
+                    "_value": [1, 2, 3, 5]
+                }
+            },
+            {
+                "_name": "Max_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            },
+            {
+                "_name": "Avg_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            }
+        ]
+    },
+    "layer3": {
+        "_type": "choice",
+        "_value": [{
+                "_name": "Empty"
+            },
+            {
+                "_name": "Conv",
+                "kernel_size": {
+                    "_type": "choice",
+                    "_value": [1, 2, 3, 5]
+                }
+            },
+            {
+                "_name": "Max_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            },
+            {
+                "_name": "Avg_pool",
+                "pooling_size": {
+                    "_type": "choice",
+                    "_value": [2, 3, 5]
+                }
+            }
+        ]
+    }
 }

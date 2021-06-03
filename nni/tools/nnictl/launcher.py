@@ -403,9 +403,13 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
-        nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
-        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
-        experiment_config['trial']['codeDir'] = code_dir
+        if config_version == 1:
+            nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
+            code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
+            experiment_config['trial']['codeDir'] = code_dir
+        else:
+            code_dir = expand_annotations(experiment_config['trialCodeDirectory'], path)
+            experiment_config['trialCodeDirectory'] = code_dir
         search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = search_space
         assert search_space, ERROR_INFO % 'Generated search space is empty'
@@ -513,17 +517,17 @@ def create_experiment(args):
         config_v2 = _validate_v2(config_yml, config_path)
         schema = 2
 
-    try:
-        if schema == 1:
-            launch_experiment(args, config_v1, 'new', experiment_id, 1)
-        else:
-            launch_experiment(args, config_v2, 'new', experiment_id, 2)
-    except Exception as exception:
-        restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
-        if restServerPid:
-            kill_command(restServerPid)
-        print_error(exception)
-        exit(1)
+    #try:
+    if schema == 1:
+        launch_experiment(args, config_v1, 'new', experiment_id, 1)
+    else:
+        launch_experiment(args, config_v2, 'new', experiment_id, 2)
+    #except Exception as exception:
+    #    restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
+    #    if restServerPid:
+    #        kill_command(restServerPid)
+    #    print_error(exception)
+    #    exit(1)
 
 def manage_stopped_experiment(args, mode):
     '''view a stopped experiment'''

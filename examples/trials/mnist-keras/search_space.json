@@ -1,4 +1,0 @@
-{
-    "optimizer":{"_type":"choice","_value":["Adam", "SGD"]},
-    "learning_rate":{"_type":"choice","_value":[0.0001, 0.001, 0.002, 0.005, 0.01]}
-}

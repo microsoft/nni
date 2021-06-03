@@ -29,6 +29,8 @@ class _AlgorithmConfig(ConfigBase):
         super().validate()
         _validate_algo(self)
 
+    _canonical_rules = {'code_directory': util.canonical_path}
+
 @dataclass(init=False)
 class AlgorithmConfig(_AlgorithmConfig):
     name: str
@@ -37,7 +39,7 @@ class AlgorithmConfig(_AlgorithmConfig):
 @dataclass(init=False)
 class CustomAlgorithmConfig(_AlgorithmConfig):
     class_name: str
-    class_directory: Optional[PathLike] = '.'
+    code_directory: Optional[PathLike] = '.'
     class_args: Optional[Dict[str, Any]] = None
 
 
@@ -67,7 +69,7 @@ class ExperimentConfig(ConfigBase):
     debug: bool = False
     log_level: Optional[str] = None
     experiment_working_directory: PathLike = '~/nni-experiments'
-    tuner_gpu_indices: Optional[Union[List[int], str]] = None
+    tuner_gpu_indices: Union[List[int], str, int, None] = None
     tuner: Optional[_AlgorithmConfig] = None
     assessor: Optional[_AlgorithmConfig] = None
     advisor: Optional[_AlgorithmConfig] = None
@@ -137,7 +139,7 @@ _canonical_rules = {
     'trial_code_directory': util.canonical_path,
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
-    'tuner_gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
+    'tuner_gpu_indices': util.canonical_gpu_indices,
     'tuner': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
     'assessor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
     'advisor': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
