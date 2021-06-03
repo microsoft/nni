@@ -43,8 +43,8 @@ RUN ln -s python3 /usr/bin/python
 #
 RUN python3 -m pip install --upgrade pip==20.2.4 setuptools==50.3.2
 
-# numpy 1.14.3  scipy 1.1.0
-RUN python3 -m pip --no-cache-dir install numpy==1.19.5 scipy==1.6.3
+# numpy 1.19.5  scipy 1.5.4
+RUN python3 -m pip --no-cache-dir install numpy==1.19.5 scipy==1.5.4
 
 #
 # TensorFlow
@@ -54,7 +54,7 @@ RUN python3 -m pip --no-cache-dir install tensorflow==2.3.1
 #
 # Keras
 #
-RUN python3 -m pip --no-cache-dir install Keras==2.4.0
+RUN python3 -m pip --no-cache-dir install Keras==2.4.3
 
 #
 # PyTorch
