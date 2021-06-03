@@ -136,8 +136,8 @@ def main(test_params):
         Image.fromarray(cur_input).save(os.path.join(test_config.output_dir, 'input', image_name))
         Image.fromarray(cur_label).save(os.path.join(test_config.output_dir, 'label', image_name))
         Image.fromarray(cur_output).save(os.path.join(test_config.output_dir, 'output', image_name))
-        
-    print("\nImages successfully saved to", test_config.output_dir)
+
+    _logger.info("Images successfully saved to " + test_config.output_dir)
 
     
 if __name__ == '__main__':
