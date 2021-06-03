@@ -145,10 +145,17 @@ def _new_trainer():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-    lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                  max_epochs=2, limit_train_batches=0.25,  # for faster training
-                                  progress_bar_refresh_rate=progress_bar_refresh_rate)
+    # lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+    #                               val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+    #                               max_epochs=2, limit_train_batches=0.25,  # for faster training
+    #                               progress_bar_refresh_rate=progress_bar_refresh_rate)
+    multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=100)
+
+    lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
+                                                      limit_train_batches=0.25,
+                                                      accelerator=BypassAccelerator(device='cuda:0')),
+                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     return lightning
 
 
@@ -191,7 +198,7 @@ class CGOEngineTest(unittest.TestCase):
 
         lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
                                                           limit_train_batches=0.25,
-                                                          accelerator=BypassAccelerator(device=torch.device('cpu'))),
+                                                          accelerator=BypassAccelerator(device='cpu')),
                                  train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
         lightning._execute(_model_cpu)
@@ -214,7 +221,7 @@ class CGOEngineTest(unittest.TestCase):
 
         lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
                                                           limit_train_batches=0.25,
-                                                          accelerator=BypassAccelerator(device=torch.device('cuda:0'))),
+                                                          accelerator=BypassAccelerator(device='cuda:0')),
                                  train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
         lightning._execute(_model_gpu)
@@ -233,14 +240,15 @@ class CGOEngineTest(unittest.TestCase):
         return lp, models
 
     def test_add_model(self):
+        _reset()
         lp, models = self._build_logical_with_mnist(3)
         for node in lp.logical_graph.hidden_nodes:
             old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
 
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
 
-    @pytest.mark.skip(reason="no way of currently testing this")
     def test_submit_models(self):
+        _reset()
         # os.environ['CGO_DEVICES'] = 'cuda:0,cuda:1,cuda:2,cuda:3'
         nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
@@ -287,6 +295,6 @@ class CGOEngineTest(unittest.TestCase):
 
 if __name__ == '__main__':
     # CGOEngineTest().test_trainer()
-    # CGOEngineTest().test_submit_models()
+    #CGOEngineTest().test_submit_models()
     # CGOEngineTest().test_add_model()
     unittest.main()
