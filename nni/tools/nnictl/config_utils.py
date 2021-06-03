@@ -2,12 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import json_tricks
-import shutil
 import sqlite3
-import time
+import json_tricks
 from .constants import NNI_HOME_DIR
-from .command_utils import print_error
 from .common_utils import get_file_lock
 
 def config_v0_to_v1(config: dict) -> dict:
@@ -108,7 +105,7 @@ class Experiments:
             self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
-                       tag=[], pid=None, webuiUrl=[], logDir=''):
+                       tag=[], pid=None, webuiUrl=[], logDir='', prefixUrl=None):
         '''set {key:value} pairs to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()
@@ -124,6 +121,7 @@ class Experiments:
             self.experiments[expId]['pid'] = pid
             self.experiments[expId]['webuiUrl'] = webuiUrl
             self.experiments[expId]['logDir'] = str(logDir)
+            self.experiments[expId]['prefixUrl'] = prefixUrl
             self.write_file()
 
     def update_experiment(self, expId, key, value):

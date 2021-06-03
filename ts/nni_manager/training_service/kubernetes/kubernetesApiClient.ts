@@ -12,7 +12,7 @@ import {getLogger, Logger} from '../../common/log';
  */
 class GeneralK8sClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('GeneralK8sClient');
     protected namespace: string = 'default';
 
     constructor() {
@@ -135,7 +135,7 @@ class GeneralK8sClient {
  */
 abstract class KubernetesCRDClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('KubernetesCRDClient');
     protected crdSchema: any;
 
     constructor() {

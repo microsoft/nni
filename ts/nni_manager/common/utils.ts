@@ -25,8 +25,7 @@ import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo()
-        .getLogDir();
+    return getExperimentStartupInfo().getLogDir();
 }
 
 function getLogDir(): string {
@@ -34,8 +33,7 @@ function getLogDir(): string {
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo()
-        .getLogLevel();
+    return getExperimentStartupInfo().getLogLevel();
 }
 
 function getDefaultDatabaseDir(): string {
@@ -479,6 +477,11 @@ async function getFreePort(host: string, start: number, end: number): Promise<nu
     } else {
         return start;
     }
+}
+
+export function importModule(modulePath: string): any {
+    module.paths.unshift(path.dirname(modulePath));
+    return require(path.basename(modulePath));
 }
 
 export {

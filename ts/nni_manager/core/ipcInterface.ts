@@ -56,7 +56,7 @@ class IpcInterface {
     private incomingStream: Readable;
     private eventEmitter: EventEmitter;
     private readBuffer: Buffer;
-    private logger: Logger = getLogger();
+    private logger: Logger = getLogger('IpcInterface');
 
     /**
      * Construct a IPC proxy

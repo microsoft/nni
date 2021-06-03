@@ -13,14 +13,16 @@ import torch
 from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
-from models.mnist.lenet import LeNet
-from models.cifar10.vgg import VGG
-from models.cifar10.resnet import ResNet18, ResNet50
 from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, L2FilterPruner, FPGMPruner
 from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner, ADMMPruner, NetAdaptPruner, AutoCompressPruner
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
+import sys
+sys.path.append('../models')
+from mnist.lenet import LeNet
+from cifar10.vgg import VGG
+from cifar10.resnet import ResNet18, ResNet50
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
     '''
@@ -67,7 +69,7 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
     return train_loader, val_loader, criterion
 
 
-def train(args, model, device, train_loader, criterion, optimizer, epoch, callback=None):
+def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -75,9 +77,6 @@ def train(args, model, device, train_loader, criterion, optimizer, epoch, callba
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
-        # callback should be inserted between loss.backward() and optimizer.step()
-        if callback:
-            callback()
         optimizer.step()
         if batch_idx % args.log_interval == 0:
             print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
@@ -198,8 +197,8 @@ def main(args):
         for epoch in range(epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
 
-    def trainer(model, optimizer, criterion, epoch, callback):
-        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch, callback=callback)
+    def trainer(model, optimizer, criterion, epoch):
+        return train(args, model, device, train_loader, criterion, optimizer, epoch=epoch)
 
     def evaluator(model):
         return test(model, device, criterion, val_loader)
@@ -264,7 +263,7 @@ def main(args):
                 }]
         else:
             raise ValueError('Example only implemented for LeNet.')
-        pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=2, training_epochs=2)
+        pruner = ADMMPruner(model, config_list, trainer=trainer, num_iterations=2, epochs_per_iteration=2)
     elif args.pruner == 'SimulatedAnnealingPruner':
         pruner = SimulatedAnnealingPruner(
             model, config_list, evaluator=evaluator, base_algo=args.base_algo,
@@ -273,7 +272,7 @@ def main(args):
         pruner = AutoCompressPruner(
             model, config_list, trainer=trainer, evaluator=evaluator, dummy_input=dummy_input,
             num_iterations=3, optimize_mode='maximize', base_algo=args.base_algo,
-            cool_down_rate=args.cool_down_rate, admm_num_iterations=30, admm_training_epochs=5,
+            cool_down_rate=args.cool_down_rate, admm_num_iterations=30, admm_epochs_per_iteration=5,
             experiment_data_dir=args.experiment_data_dir)
     else:
         raise ValueError(

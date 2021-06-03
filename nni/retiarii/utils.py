@@ -4,7 +4,7 @@
 import inspect
 import warnings
 from collections import defaultdict
-from typing import Any
+from typing import Any, List, Dict
 from pathlib import Path
 
 
@@ -29,6 +29,10 @@ _last_uid = defaultdict(int)
 def uid(namespace: str = 'default') -> int:
     _last_uid[namespace] += 1
     return _last_uid[namespace]
+
+
+def reset_uid(namespace: str = 'default') -> None:
+    _last_uid[namespace] = 0
 
 
 def get_module_name(cls_or_func):
@@ -61,3 +65,42 @@ def get_module_name(cls_or_func):
 def get_importable_name(cls, relocate_module=False):
     module_name = get_module_name(cls) if relocate_module else cls.__module__
     return module_name + '.' + cls.__name__
+
+
+class ContextStack:
+    """
+    This is to maintain a globally-accessible context envinronment that is visible to everywhere.
+
+    Use ``with ContextStack(namespace, value):`` to initiate, and use ``get_current_context(namespace)`` to
+    get the corresponding value in the namespace.
+    """
+
+    _stack: Dict[str, List[Any]] = defaultdict(list)
+
+    def __init__(self, key: str, value: Any):
+        self.key = key
+        self.value = value
+
+    def __enter__(self):
+        self.push(self.key, self.value)
+        return self
+
+    def __exit__(self, *args, **kwargs):
+        self.pop(self.key)
+
+    @classmethod
+    def push(cls, key: str, value: Any):
+        cls._stack[key].append(value)
+
+    @classmethod
+    def pop(cls, key: str) -> None:
+        cls._stack[key].pop()
+
+    @classmethod
+    def top(cls, key: str) -> Any:
+        assert cls._stack[key], 'Context is empty.'
+        return cls._stack[key][-1]
+
+
+def get_current_context(key: str) -> Any:
+    return ContextStack.top(key)

@@ -18,6 +18,12 @@ Inline Mutation APIs
 ..  autoclass:: nni.retiarii.nn.pytorch.ChosenInputs
     :members:
 
+..  autoclass:: nni.retiarii.nn.pytorch.Repeat
+    :members:
+
+..  autoclass:: nni.retiarii.nn.pytorch.Cell
+    :members:
+
 Graph Mutation APIs
 -------------------
 

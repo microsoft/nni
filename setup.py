@@ -88,7 +88,8 @@ def _setup():
         extras_require = {
             'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),
             'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
-            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner')
+            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner'),
+            'DNGO': _read_requirements_txt('dependencies/required_extra.txt', 'DNGO'),
         },
         setup_requires = ['requests'],
 

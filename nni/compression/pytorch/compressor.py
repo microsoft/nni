@@ -8,7 +8,6 @@ from . import default_layers
 
 _logger = logging.getLogger(__name__)
 
-
 class LayerInfo:
     def __init__(self, name, module):
         self.module = module
@@ -235,7 +234,6 @@ class Compressor:
         """
         raise NotImplementedError()
 
-
     def add_activation_collector(self, collector):
         self._fwd_hook_id += 1
         self._fwd_hook_handles[self._fwd_hook_id] = []
@@ -259,6 +257,18 @@ class Compressor:
                 # calculate mask
                 for task in tasks:
                     task()
+                return output
+            return new_step
+        if self.optimizer is not None:
+            self.optimizer.step = types.MethodType(patch_step(self.optimizer.step), self.optimizer)
+
+    def patch_optimizer_before(self, *tasks):
+        def patch_step(old_step):
+            def new_step(_, *args, **kwargs):
+                for task in tasks:
+                    task()
+                # call origin optimizer step method
+                output = old_step(*args, **kwargs)
                 return output
             return new_step
         if self.optimizer is not None:
@@ -319,8 +329,6 @@ class Pruner(Compressor):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
-        if optimizer is not None:
-            self.patch_optimizer(self.update_mask)
 
     def compress(self):
         self.update_mask()
@@ -386,7 +394,7 @@ class Pruner(Compressor):
         """
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
-        self._unwrap_model() # used for generating correct state_dict name without wrapper state
+        self._unwrap_model()  # used for generating correct state_dict name without wrapper state
 
         for wrapper in self.get_modules_wrapper():
             weight_mask = wrapper.weight_mask
@@ -432,6 +440,27 @@ class Pruner(Compressor):
             self._wrap_model()
         else:
             self.bound_model.load_state_dict(model_state)
+
+    def get_pruned_weights(self, dim=0):
+        """
+        Log the simulated prune sparsity.
+
+        Parameters
+        ----------
+        dim : int
+            the pruned dim.
+        """
+        for _, wrapper in enumerate(self.get_modules_wrapper()):
+            weight_mask = wrapper.weight_mask
+            mask_size = weight_mask.size()
+            if len(mask_size) == 1:
+                index = torch.nonzero(weight_mask.abs() != 0).tolist()
+            else:
+                sum_idx = list(range(len(mask_size)))
+                sum_idx.remove(dim)
+                index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0).tolist()
+            _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
+
 
 class QuantizerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, quantizer):
@@ -549,7 +578,6 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
 
-
     def _wrap_modules(self, layer, config):
         """
         Create a wrapper forward function to replace the original one.
@@ -571,8 +599,8 @@ class Quantizer(Compressor):
 
         return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
 
-    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None, \
-        input_shape=None, device=None):
+    def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None,
+                          input_shape=None, device=None):
         """
         This method helps save pytorch model, calibration config, onnx model in quantizer.
 
@@ -671,6 +699,7 @@ class QuantGrad(torch.autograd.Function):
             quantized x without clamped
         """
         return ((x / scale) + zero_point).round()
+
     @classmethod
     def get_bits_length(cls, config, quant_type):
         """
@@ -703,8 +732,8 @@ class QuantGrad(torch.autograd.Function):
         grad_output : Tensor
             gradient of the output of quantization operation
         scale : Tensor
-            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
-            you can define different behavior for different types.
+            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`,
+            `QuantType.QUANT_OUTPUT`, you can define different behavior for different types.
         zero_point : Tensor
             zero_point for quantizing tensor
         qmin : Tensor

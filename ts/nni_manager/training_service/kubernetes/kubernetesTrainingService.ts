@@ -54,7 +54,7 @@ abstract class KubernetesTrainingService {
     protected expContainerCodeFolder: string;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('KubernetesTrainingService');
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
         this.trialLocalTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');

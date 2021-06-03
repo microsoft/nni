@@ -25,7 +25,7 @@ export abstract class RestServer {
     protected hostName: string = '0.0.0.0';
     protected port?: number;
     protected app: express.Application = express();
-    protected log: Logger = getLogger();
+    protected log: Logger = getLogger('RestServer');
     protected basePort?: number;
 
     constructor() {

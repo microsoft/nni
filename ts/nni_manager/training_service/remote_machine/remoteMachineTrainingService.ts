@@ -67,7 +67,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.sshConnectionPromises = [];
         this.expRootDir = getExperimentRootDir();
         this.timer = component.get(ObservableTimer);
-        this.log = getLogger();
+        this.log = getLogger('RemoteMachineTrainingService');
         this.log.info('Construct remote machine training service.');
         this.config = flattenConfig(config, 'remote');
 

@@ -19,7 +19,7 @@ import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
 class NNIDataStore implements DataStore {
     private db: Database = component.get(Database);
-    private log: Logger = getLogger();
+    private log: Logger = getLogger('NNIDataStore');
     private initTask!: Deferred<void>;
 
     public init(): Promise<void> {
@@ -71,7 +71,6 @@ class NNIDataStore implements DataStore {
 
     public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        //this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
 
         // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
         let timestamp: number | undefined;
@@ -243,7 +242,7 @@ class NNIDataStore implements DataStore {
         for (const metric of metrics) {
             const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
             if (existMetrics !== undefined) {
-                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
+                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics:`, metrics);
             } else {
                 map.set(metric.trialJobId, [metric]);
             }
