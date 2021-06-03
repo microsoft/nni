@@ -2,14 +2,11 @@
 # Licensed under the MIT license.
 
 import logging
-import os
 from typing import Any, Callable
 
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
-from nni.retiarii.execution.base import BaseExecutionEngine
-from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
 
 from .graph import MetricData
 from .integration_api import register_advisor
@@ -60,16 +57,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.final_metric_callback: Callable[[int, MetricData], None] = None
 
         self.parameters_count = 0
-
-        engine = self._create_execution_engine()
-        # set_execution_engine(engine)
-
-    def _create_execution_engine(self):
-        if 'CGO_DEVICES' in os.environ:
-            available_devices = os.environ.get('CGO_DEVICES').split(',')
-            return CGOExecutionEngine(available_devices=available_devices)
-        else:
-            return BaseExecutionEngine()
 
     def handle_initialize(self, data):
         """callback for initializing the advisor

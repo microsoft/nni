@@ -1,9 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import enum
 import logging
-from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
 import os
 import random
 import string
@@ -16,6 +14,7 @@ from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 from .logical_optimizer.logical_plan import LogicalPlan, PhysicalDevice, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 from ..evaluator.pytorch.lightning import Lightning
+from ..evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
 
 from .base import BaseGraphData
 

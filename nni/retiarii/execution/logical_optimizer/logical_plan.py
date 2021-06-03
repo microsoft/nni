@@ -16,11 +16,11 @@ class PhysicalDevice:
 
     def __eq__(self, o) -> bool:
         return self.server == o.server and self.device == o.device
-    
+
     def __less__(self, o) -> bool:
         if self.server < o.server:
             return True
-        elif self.server > o.server :
+        elif self.server > o.server:
             return False
         else:
             return self.device < o.device
