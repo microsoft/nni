@@ -872,4 +872,4 @@ containerName
 
 AzureBlob container name.
 
-type: ``Optional[str]``
+type: ``str``
