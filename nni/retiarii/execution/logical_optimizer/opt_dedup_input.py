@@ -4,7 +4,7 @@
 from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
-from nni.retiarii.evaluator.pytorch.lightning import _ClassificationModule, _RegressionModule
+from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule
 
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
@@ -12,7 +12,7 @@ from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
                            OriginNode, PhysicalDevice)
 
 
-_supported_evaluators = [_ClassificationModule, _RegressionModule]
+_supported_evaluators = [MultiModelSupervisedLearningModule]
 
 
 class DedupInputNode(AbstractLogicalNode):

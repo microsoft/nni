@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import enum
 import logging
+from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule
 import os
 import random
 import string
@@ -13,6 +15,7 @@ from ..graph import Model, ModelStatus, MetricData, Node
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 from .logical_optimizer.logical_plan import LogicalPlan, PhysicalDevice, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
+from ..evaluator.pytorch.lightning import Lightning
 
 from .base import BaseGraphData
 
@@ -28,6 +31,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._optimizers = [DedupInputOptimizer()]
         self._original_models = {}
         self._original_model_to_multi_model = {}
+        self._trial_to_original_models = {}
 
         self.resources = 0
 
@@ -51,13 +55,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
-            new_evaluator = self._generate_evaluator(grouped_models)
-            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement),
-                                 new_evaluator)
+            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
+            trial_id = send_trial(data.dump())
+            self._trial_to_original_models[trial_id] = []
             for m in grouped_models:
                 self._original_models[m.model_id] = m
                 self._original_model_to_multi_model[m.model_id] = model
-            self._running_models[send_trial(data.dump())] = model
+                self._trial_to_original_models[trial_id].append(m.model_id)
+            self._running_models[trial_id] = model
 
         # for model in models:
         #     data = BaseGraphData(codegen.model_to_pytorch_script(model),
@@ -67,11 +72,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def list_models(self) -> Iterable[Model]:
         raise NotImplementedError
 
-    def _generate_evaluator(self, grouped_models : List[Model]):
-        # TODO:
-        pass
-
-    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice]]:
+    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice, List[Model]]]:
         # unique_models = set()
         # for node in logical_plan.graph.nodes:
         #     if node.graph.model not in unique_models:
@@ -81,6 +82,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         phy_models_and_placements = []
         for multi_model in grouped_models:
             model, model_placement = logical_plan.assemble(multi_model)
+            assert(isinstance(model.evaluator, Lightning))
+            assert(isinstance(model.evaluator.module, MultiModelSupervisedLearningModule))
+            # replace the module with a new instance whose n_models is set
+            # n_models must be set in __init__, otherwise it cannot be captured by serialize_cls
+            new_module_init_params = model.evaluator.module._init_parameters.copy()
+            new_module_init_params['n_models'] = len(multi_model)
+            new_module = MultiModelSupervisedLearningModule(**new_module_init_params)
+            model.evaluator.module = new_module
             phy_models_and_placements.append((model, model_placement, multi_model.keys()))
         return phy_models_and_placements
 
@@ -123,13 +132,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     def _intermediate_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
         # model = self._running_models[trial_id]
-        merged_metrics = dict(metrics)
+        merged_metrics = {}
+        for idx, _ in enumerate(metrics):
+            merged_metrics[self._trial_to_original_models[trial_id][idx]] = metrics[idx]
         for model_id in merged_metrics:
-            int_model_id = int(model_id)
-            self._original_models[int_model_id].intermediate_metrics.append(merged_metrics[model_id])
+            self._original_models[model_id].intermediate_metrics.append(merged_metrics[model_id])
             # model.intermediate_metrics.append(metrics)
             for listener in self._listeners:
-                listener.on_intermediate_metric(self._original_models[int_model_id], merged_metrics[model_id])
+                listener.on_intermediate_metric(self._original_models[model_id], merged_metrics[model_id])
 
     def _final_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
         _logger.error(metrics)
@@ -137,13 +147,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         if isinstance(metrics, float):
             self._listeners[0].on_metric(self._running_models[trial_id], metrics)
         else:
-            merged_metrics = dict(metrics)
+            merged_metrics = {}
+            for idx, _ in enumerate(metrics):
+                merged_metrics[self._trial_to_original_models[trial_id][idx]] = metrics[idx]
             for model_id in merged_metrics:
-                int_model_id = int(model_id)
-                self._original_models[int_model_id].intermediate_metrics.append(merged_metrics[model_id])
+                self._original_models[model_id].intermediate_metrics.append(merged_metrics[model_id])
                 # model.intermediate_metrics.append(metrics)
                 for listener in self._listeners:
-                    listener.on_metric(self._original_models[int_model_id], merged_metrics[model_id])
+                    listener.on_metric(self._original_models[model_id], merged_metrics[model_id])
 
     def query_available_resource(self) -> List[WorkerInfo]:
         raise NotImplementedError  # move the method from listener to here?
@@ -185,7 +196,9 @@ class AssemblePolicy:
         return False
 
     @staticmethod
-    def _check_graph_connectivity(model: Model, group_model: Dict[Model, PhysicalDevice], logical_plan: LogicalPlan):
+    def _check_graph_connectivity(model: Model,
+                                  group_model: Dict[Model, PhysicalDevice],
+                                  logical_plan: LogicalPlan) -> bool:
         for edge in logical_plan.logical_graph.edges:
             if AssemblePolicy._is_related_node(model, edge.head) or \
                     AssemblePolicy._is_related_node(model, edge.tail):
@@ -196,6 +209,16 @@ class AssemblePolicy:
         return False
 
     @staticmethod
+    def _check_evaluator(new_model: Model, group_model: Dict[Model, PhysicalDevice]) -> bool:
+        if not (isinstance(new_model.evaluator, Lightning)
+                and isinstance(new_model.evaluator.module, MultiModelSupervisedLearningModule)):
+            return False
+        for m in group_model:
+            if not m.evaluator == new_model.evaluator:
+                return False
+        return True
+
+    @staticmethod
     def group(logical_plan, available_devices):
         # TODO: Packing multiple model in one GPU
         # Currently, we only support one model per GPU
@@ -203,10 +226,18 @@ class AssemblePolicy:
         group_model = {}
         assert(len(available_devices) > 0)  # There should be at least 1 device, set in CGO_DEVICES
         for idx, m in enumerate(logical_plan.models):
+            # models in one group should
+            # (1) not use more GPUs than available_devices
+            # (2) be connected in the logical plan (independent models should be assembled in multiple groups)
+            # (3) use same MultiModelSupervisedLearningModule
+            if len(group_model) > 0 and \
+                (AssemblePolicy._check_graph_connectivity(m, group_model, logical_plan) == False or
+                    AssemblePolicy._check_evaluator(m, group_model) == False):
+                all_grouped_models.append(group_model)
+                group_model = {}
             group_model[m] = PhysicalDevice('server', available_devices[idx % len(available_devices)])
             if len(group_model) == len(available_devices) or \
-                    idx == len(logical_plan.models) - 1 or \
-                    AssemblePolicy._check_graph_connectivity(m, group_model, logical_plan) == False:
+                    idx == len(logical_plan.models) - 1:
                 all_grouped_models.append(group_model)
                 group_model = {}
         return all_grouped_models
