@@ -58,6 +58,8 @@ def get_base_params(dataset_name, checkpoint_dir):
     
     test_params = {'phase': 'test',
                    'isTrain': False,
+                   'load_iter': -1,
+                   'epoch': 'latest',
                    'load_size': 256,
                    'crop_size': 256,
                    # 'batch_size': 1,
