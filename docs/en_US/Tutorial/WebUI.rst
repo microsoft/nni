@@ -253,6 +253,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :alt: searchStatus
 
 4. Trial parameters:
+
 (1) parameters that type is choice:
 
 .. image:: ../../img/webui-img/detail/searchParameterChoice.png
@@ -306,6 +307,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 .. image:: ../../img/webui-img/detail/customizedTrialButton.png
    :target: ../../img/webui-img/detail/customizedTrialButton.png
    :alt: customizedTrialButton
+
 
 
 .. image:: ../../img/webui-img/detail/customizedTrial.png
