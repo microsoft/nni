@@ -207,29 +207,6 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* The button named ``Add column`` can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column ``Intermediate count`` to watch the trial's progress.
-
-
-.. image:: ../../img/webui-img/addColumn.png
-   :target: ../../img/webui-img/addColumn.png
-   :alt: addColumnGraph
-
-
-
-* If you want to compare some trials, you can select them and then click ``Compare`` to see the results.
-
-
-.. image:: ../../img/webui-img/select-trial.png
-   :target: ../../img/webui-img/select-trial.png
-   :alt: selectTrialGraph
-
-
-.. image:: ../../img/webui-img/compare.png
-   :target: ../../img/webui-img/compare.png
-   :alt: compareTrialsGraph
-
-
-
 * Support to search for a specific trial by its id, status, Trial No. and trial parameters.
 
 1. Trial id: 
@@ -265,6 +242,32 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
    :target: ../../img/webui-img/detail/searchParameterRange.png
    :alt: searchParameterRange
+
+
+* The button named ``Add column`` can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column ``Intermediate count`` to watch the trial's progress.
+
+
+.. image:: ../../img/webui-img/addColumn.png
+   :target: ../../img/webui-img/addColumn.png
+   :alt: addColumnGraph
+
+
+
+* If you want to compare some trials, you can select them and then click ``Compare`` to see the results.
+
+
+.. image:: ../../img/webui-img/select-trial.png
+   :target: ../../img/webui-img/select-trial.png
+   :alt: selectTrialGraph
+
+
+.. image:: ../../img/webui-img/compare.png
+   :target: ../../img/webui-img/compare.png
+   :alt: compareTrialsGraph
+
+
+* ``Tensorboard`` please refer `doc <Tensorboard.rst>`__.
+
 
 * You can use the button named ``Copy as python`` to copy the trial's parameters.
 
