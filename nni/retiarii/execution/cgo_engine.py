@@ -174,13 +174,11 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
-        # with open('_debug_graph_data.json', 'w') as f:
-        #     json.dump(graph_data.dump(), f)
+
         print("graph_data", graph_data)
-        trainer_instance = graph_data.evaluator  # utils.import_(graph_data.evaluator)
+        trainer_instance = graph_data.evaluator
         model_cls = utils.import_(f'_generated_model.{random_str}._model')
-        # trainer_instance.set_model(model_cls())
-        # trainer_instance = trainer_cls(model_cls(), graph_data.training_kwargs)
+
         trainer_instance.fit(model_cls())
 
 
