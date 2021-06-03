@@ -3,11 +3,11 @@
 
 import enum
 import logging
-from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule
+from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
 import os
 import random
 import string
-from typing import Iterable, List, Dict, Tuple
+from typing import Iterable, List, Dict, Tuple, Union
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
@@ -23,12 +23,31 @@ _logger = logging.getLogger(__name__)
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
-    def __init__(self, available_devices=None) -> None:
+    """
+    The execution engine with Cross-Graph Optimization (CGO).
+
+    Only models using PyTorch Lighting and MultiModelSupervisedLearningModule as the evaluator can be optimized.
+    Otherwise, a model will be submitted independently without any cross-graph optimization.
+
+    Parameters
+    ----------
+    available_devices : List[str] or List[PhysicalDevice]
+        Available devices for execution.
+        If a list of str is provided, it will build a list of PhysicalDevices in a server named ``single_server``
+    """
+
+    def __init__(self, available_devices: List[Union[str, PhysicalDevice]] = None) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
-        self.available_devices: List[PhysicalDevice] = [PhysicalDevice('server', device_name)
-                                                        for device_name in available_devices] if available_devices else []
+        self.available_devices: List[PhysicalDevice] = []
+        for device in available_devices:
+            if isinstance(device, str):
+                self.available_devices.append(PhysicalDevice("single_server", device))
+            elif isinstance(device, PhysicalDevice):
+                self.available_devices.append(device)
+            else:
+                raise ValueError("device must be either str or PhysicalDevice")
         self.all_devices = self.available_devices.copy()
 
         self._optimizers = [DedupInputOptimizer()]
@@ -82,7 +101,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         # if free devices are not enough to assemble all models in one trial, try all devices
         if len(self.available_devices) > 0:
             grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
-        
+
         if len(self.available_devices) == 0 or len(grouped_models) > 1:
             grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.all_devices)
 
@@ -91,11 +110,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             model, model_placement = logical_plan.assemble(multi_model)
             assert(isinstance(model.evaluator, Lightning))
             assert(isinstance(model.evaluator.module, MultiModelSupervisedLearningModule))
+
             # replace the module with a new instance whose n_models is set
             # n_models must be set in __init__, otherwise it cannot be captured by serialize_cls
             new_module_init_params = model.evaluator.module._init_parameters.copy()
+
+            # MultiModelSupervisedLearningModule hides n_models of _MultiModelSupervisedLearningModule from users
             new_module_init_params['n_models'] = len(multi_model)
-            new_module = MultiModelSupervisedLearningModule(**new_module_init_params)
+            new_module = _MultiModelSupervisedLearningModule(**new_module_init_params)
             model.evaluator.module = new_module
             phy_models_and_placements.append((model, model_placement, multi_model.keys()))
         return phy_models_and_placements

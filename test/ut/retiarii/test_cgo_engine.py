@@ -30,7 +30,7 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-from nni.retiarii.evaluator.pytorch.cgo_evaluator import BypassAccelerator, MultiModelSupervisedLearningModule
+from nni.retiarii.evaluator.pytorch.cgo_evaluator import BypassAccelerator, MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
 
 import pytest
 
@@ -148,8 +148,8 @@ def _new_trainer():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-    
-    multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=100)
+
+    multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
 
     lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
                                                       limit_train_batches=0.25,
@@ -194,7 +194,7 @@ class CGOEngineTest(unittest.TestCase):
         train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
         test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
 
-        multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
+        multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
         lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
                                                           limit_train_batches=0.25,
@@ -217,7 +217,7 @@ class CGOEngineTest(unittest.TestCase):
         train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
         test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
 
-        multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
+        multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
         lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
                                                           limit_train_batches=0.25,
@@ -246,7 +246,7 @@ class CGOEngineTest(unittest.TestCase):
             old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
 
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
-    
+
     def test_dedup_input_four_devices(self):
         _reset()
         lp, models = self._build_logical_with_mnist(3)
@@ -259,17 +259,17 @@ class CGOEngineTest(unittest.TestCase):
         #lp_dump = lp.logical_graph._dump()
 
         # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-        
+
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']
-        cgo = CGOExecutionEngine(available_devices = available_devices)
+        cgo = CGOExecutionEngine(available_devices=available_devices)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 1)
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
-    
+
     def test_dedup_input_two_devices(self):
         _reset()
         lp, models = self._build_logical_with_mnist(3)
@@ -282,10 +282,10 @@ class CGOEngineTest(unittest.TestCase):
         #lp_dump = lp.logical_graph._dump()
 
         # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-        
+
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1']
-        cgo = CGOExecutionEngine(available_devices = available_devices)
+        cgo = CGOExecutionEngine(available_devices=available_devices)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 2)

@@ -25,7 +25,7 @@ from ...serializer import serialize_cls
 
 
 @serialize_cls
-class MultiModelSupervisedLearningModule(LightningModule):
+class _MultiModelSupervisedLearningModule(LightningModule):
     def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
                  n_models: int = 0,
                  learning_rate: float = 0.001,
@@ -95,6 +95,30 @@ class MultiModelSupervisedLearningModule(LightningModule):
         else:
             warnings.warn('Multiple metrics without "default" is not supported by current framework.')
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
+
+
+class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
+    """
+    Lightning Module of SupervisedLearning for Cross-Graph Optimization.
+    Users who needs cross-graph optimization should use this module.
+
+    Parameters
+    ----------
+    criterion : nn.Module
+        Class for criterion module (not an instance). default: ``nn.CrossEntropyLoss``
+    learning_rate : float
+        Learning rate. default: 0.001
+    weight_decay : float
+        L2 weight decay. default: 0
+    optimizer : Optimizer
+        Class for optimizer (not an instance). default: ``Adam``
+    """
+
+    def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
+                 learning_rate: float = 0.001,
+                 weight_decay: float = 0.,
+                 optimizer: optim.Optimizer = optim.Adam):
+        super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
 class BypassPlugin(TrainingTypePlugin):
