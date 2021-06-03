@@ -338,5 +338,4 @@ class CGOEngineTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    CGOEngineTest().test_dedup_input_two_devices()
-    # unittest.main()
+    unittest.main()
