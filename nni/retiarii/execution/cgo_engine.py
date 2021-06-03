@@ -64,20 +64,11 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 self._trial_to_original_models[trial_id].append(m.model_id)
             self._running_models[trial_id] = model
 
-        # for model in models:
-        #     data = BaseGraphData(codegen.model_to_pytorch_script(model),
-        #                          model.config['trainer_module'], model.config['trainer_kwargs'])
-        #     self._running_models[send_trial(data.dump())] = model
 
     def list_models(self) -> Iterable[Model]:
         raise NotImplementedError
 
     def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, PhysicalDevice, List[Model]]]:
-        # unique_models = set()
-        # for node in logical_plan.graph.nodes:
-        #     if node.graph.model not in unique_models:
-        #         unique_models.add(node.graph.model)
-        # return [m for m in unique_models]
         grouped_models: List[Dict[Model, PhysicalDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
         phy_models_and_placements = []
         for multi_model in grouped_models:
@@ -106,8 +97,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def _send_trial_callback(self, paramater: dict) -> None:
         if self.resources <= 0:
             _logger.warning('There is no available resource, but trial is submitted.')
-        print("_send_trial_callback", paramater)
-        # self.resources -= paramater['training_kwargs']['n_model']
         _logger.info('on_resource_used: %d', self.resources)
 
     def _request_trial_jobs_callback(self, num_trials: int) -> None:
@@ -131,13 +120,11 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                     listener.on_training_end(original_model, success)
 
     def _intermediate_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
-        # model = self._running_models[trial_id]
         merged_metrics = {}
         for idx, _ in enumerate(metrics):
             merged_metrics[self._trial_to_original_models[trial_id][idx]] = metrics[idx]
         for model_id in merged_metrics:
             self._original_models[model_id].intermediate_metrics.append(merged_metrics[model_id])
-            # model.intermediate_metrics.append(metrics)
             for listener in self._listeners:
                 listener.on_intermediate_metric(self._original_models[model_id], merged_metrics[model_id])
 
@@ -152,7 +139,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 merged_metrics[self._trial_to_original_models[trial_id][idx]] = metrics[idx]
             for model_id in merged_metrics:
                 self._original_models[model_id].intermediate_metrics.append(merged_metrics[model_id])
-                # model.intermediate_metrics.append(metrics)
                 for listener in self._listeners:
                     listener.on_metric(self._original_models[model_id], merged_metrics[model_id])
 

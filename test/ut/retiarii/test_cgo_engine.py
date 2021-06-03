@@ -140,16 +140,15 @@ def _reset():
     nni.trial._intermediate_seq = 0
     nni.trial._params = {'foo': 'bar', 'parameter_id': 0}
     nni.runtime.platform.test._last_metric = None
+    nni.retiarii.integration_api._advisor = None
+    nni.retiarii.execution.api._execution_engine = None
 
 
 def _new_trainer():
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-    # lightning = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-    #                               val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-    #                               max_epochs=2, limit_train_batches=0.25,  # for faster training
-    #                               progress_bar_refresh_rate=progress_bar_refresh_rate)
+    
     multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=100)
 
     lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
@@ -248,7 +247,7 @@ class CGOEngineTest(unittest.TestCase):
 
             self.assertTrue(any([old_nodes[0].__repr__() == Node.__repr__(x) for x in old_nodes]))
     
-    def test_dedup_input(self):
+    def test_dedup_input_four_devices(self):
         _reset()
         lp, models = self._build_logical_with_mnist(3)
         opt = DedupInputOptimizer()
@@ -260,14 +259,36 @@ class CGOEngineTest(unittest.TestCase):
         #lp_dump = lp.logical_graph._dump()
 
         # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
-        nni.retiarii.integration_api._advisor = None
-        nni.retiarii.execution.api._execution_engine = None
+        
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']
         cgo = CGOExecutionEngine(available_devices = available_devices)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 1)
+        advisor.stopping = True
+        advisor.default_worker.join()
+        advisor.assessor_worker.join()
+    
+    def test_dedup_input_two_devices(self):
+        _reset()
+        lp, models = self._build_logical_with_mnist(3)
+        opt = DedupInputOptimizer()
+        opt.convert(lp)
+        # TODO: topo_sort may not be stable that leads to different dump. skip
+        # correct_json_path = Path(__file__).parent / 'dedup_logical_graph.json'
+        # with open(correct_json_path , 'r') as fp:
+        #     correct_dump = fp.readlines()
+        #lp_dump = lp.logical_graph._dump()
+
+        # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
+        
+        advisor = RetiariiAdvisor()
+        available_devices = ['cuda:0', 'cuda:1']
+        cgo = CGOExecutionEngine(available_devices = available_devices)
+
+        phy_models = cgo._assemble(lp)
+        self.assertTrue(len(phy_models) == 2)
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
@@ -283,8 +304,6 @@ class CGOEngineTest(unittest.TestCase):
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
         models = _load_mnist(2)
-        nni.retiarii.integration_api._advisor = None
-        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         set_execution_engine(CGOExecutionEngine(available_devices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']))
         submit_models(*models)
@@ -319,4 +338,5 @@ class CGOEngineTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    unittest.main()
+    CGOEngineTest().test_dedup_input_two_devices()
+    # unittest.main()
