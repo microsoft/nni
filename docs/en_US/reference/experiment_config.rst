@@ -8,7 +8,7 @@ A config file is needed when creating an experiment. This document describes the
 
     1. This document lists field names with ``camelCase``. If users use these fields in the pythonic way with NNI Python APIs (e.g., ``nni.experiment``), the field names should be converted to ``snake_case``.
 
-    2. In this document, the type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__. Therefore JSON objects are called `dict` and arrays are called `list`.
+    2. In this document, the type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`_. Therefore JSON objects are called `dict` and arrays are called `list`.
 
     .. _path: 
 
@@ -108,7 +108,7 @@ ExperimentConfig
 experimentName
 --------------
 
-Mnemonic name of the experiment. This will be shown in web UI and nnictl.
+Mnemonic name of the experiment. This will be shown in WebUI and nnictl.
 
 type: ``Optional[str]``
 
@@ -146,7 +146,7 @@ Command to launch trial.
 
 type: ``str``
 
-The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
+The command will be executed in bash on Linux and macOS, and in PowerShell on Windows. Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
 
 
 trialCodeDirectory
@@ -183,7 +183,7 @@ This field might have slightly different meanings for various training services,
 especially when set to ``0`` or ``None``.
 See `training service's document <../training_services.rst>`__ for details.
 
-In local mode, setting the field to zero will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
+In local mode, setting the field to ``0`` will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
 And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
 but they can still use all GPU resources if they want.
 
@@ -199,7 +199,7 @@ format: ``number + s|m|h|d``
 
 examples: ``"10m"``, ``"0.5h"``
 
-When time runs out, the experiment will stop creating trials but continue to serve web UI.
+When time runs out, the experiment will stop creating trials but continue to serve WebUI.
 
 
 maxTrialNumber
@@ -209,19 +209,19 @@ Limit the number of trials to create if specified.
 
 type: ``Optional[int]``
 
-When the budget runs out, the experiment will stop creating trials but continue to serve web UI.
+When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
 
 
 nniManagerIp
 ------------
 
-IP of current machine, used by training machines to access NNI manager. Not used in local mode.
+IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
 
 type: ``Optional[str]``
 
 If not specified, IPv4 address of ``eth0`` will be used.
 
-Must be set on Windows and systems using predictable network interface name, except for local mode.
+Except for the local mode, it is highly recommended to set this field manually.
 
 
 useAnnotation
@@ -257,7 +257,7 @@ type: ``Optional[str]``
 
 values: ``"trace"``, ``"debug"``, ``"info"``, ``"warning"``, ``"error"``, ``"fatal"``
 
-Defaults to "info" or "debug", depending on `debug`_ option.
+Defaults to "info" or "debug", depending on `debug`_ option. When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
 
 Most modules of NNI will be affected by this value, including NNI manager, tuner, training service, etc.
 
@@ -283,7 +283,7 @@ tunerGpuIndices
 
 Limit the GPUs visible to tuner, assessor, and advisor.
 
-type: ``Optional[list[int] | str]``
+type: ``Optional[list[int] | str | int]``
 
 This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
 
@@ -293,7 +293,7 @@ Because tuner, assessor, and advisor run in the same process, this option will a
 tuner
 -----
 
-Specify the tuner.
+Specify the tuner. The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
 
 type: Optional `AlgorithmConfig`_
 
@@ -301,7 +301,7 @@ type: Optional `AlgorithmConfig`_
 assessor
 --------
 
-Specify the assessor.
+Specify the assessor. The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
 
 type: Optional `AlgorithmConfig`_
 
@@ -309,7 +309,7 @@ type: Optional `AlgorithmConfig`_
 advisor
 -------
 
-Specify the advisor.
+Specify the advisor. NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
 
 type: Optional `AlgorithmConfig`_
 
@@ -317,7 +317,7 @@ type: Optional `AlgorithmConfig`_
 trainingService
 ---------------
 
-Specify `training service <../TrainingService/Overview.rst>`__.
+Specify the `training service <../TrainingService/Overview.rst>`__.
 
 type: `TrainingServiceConfig`_
 
@@ -325,7 +325,7 @@ type: `TrainingServiceConfig`_
 sharedStorage
 -------------
 
-Configure the shared storage, detailed `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
 
 type: Optional `SharedStorageConfig`_
 
@@ -335,7 +335,7 @@ AlgorithmConfig
 
 ``AlgorithmConfig`` describes a tuner / assessor / advisor algorithm.
 
-For custom algorithms, there are two ways to describe them:
+For customized algorithms, there are two ways to describe them:
 
   1. `Register the algorithm <../Tutorial/InstallCustomizedAlgos.rst>`__ to use it like built-in. (preferred)
 
@@ -347,15 +347,15 @@ name
 
 Name of the built-in or registered algorithm.
 
-type: ``str`` for the built-in and registered algorithm, ``None`` for other custom algorithms.
+type: ``str`` for the built-in and registered algorithm, ``None`` for other customized algorithms.
 
 
 className
 ---------
 
-Qualified class name of not registered custom algorithm.
+Qualified class name of not registered customized algorithm.
 
-type: ``None`` for the built-in and registered algorithm, ``str`` for other custom algorithms.
+type: ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
 
 example: ``"my_tuner.MyTuner"``
 
@@ -363,9 +363,9 @@ example: ``"my_tuner.MyTuner"``
 codeDirectory
 -------------
 
-`Path`_ to the directory containing the custom algorithm class.
+`Path`_ to the directory containing the customized algorithm class.
 
-type: ``None`` for the built-in and registered algorithm, ``str`` for other custom algorithms.
+type: ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
 
 
 classArgs
@@ -389,13 +389,13 @@ One of the following:
 - `AmlConfig`_
 - `HybridConfig`_
 
-For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, NNI suggests to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
+For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
 
 
 LocalConfig
 -----------
 
-Detailed `here <../TrainingService/LocalMode.rst>`__.
+Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
 
 platform
 """"""""
@@ -410,9 +410,18 @@ Specify whether NNI should submit trials to GPUs occupied by other tasks.
 
 type: ``Optional[bool]``
 
-Must be set when `trialGpuNumber` greater than zero.
+Must be set when `trialGpuNumber`_ greater than zero.
 
-If you are using the desktop system with GUI, set this to ``True``.
+Following processes can make GPU "active":
+
+  - non-NNI CUDA programs
+  - graphical desktop
+  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
+  - other users' CUDA programs, if you are using a shared server
+  
+If you are using a graphical OS like Windows 10 or Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+
+When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to one GPU.
 
 
 maxTrialNumberPerGpu
@@ -430,7 +439,7 @@ gpuIndices
 
 Limit the GPUs visible to trial processes.
 
-type: ``Optional[list[int] | str]``
+type: ``Optional[list[int] | str | int]``
 
 If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
@@ -440,7 +449,7 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 RemoteConfig
 ------------
 
-Detailed `here <../TrainingService/RemoteMachineMode.rst>`__.
+Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
 
 platform
 """"""""
@@ -530,6 +539,19 @@ type: ``bool``
 
 default: ``False``
 
+Must be set when `trialGpuNumber`_ greater than zero.
+
+Following processes can make GPU "active":
+
+  - non-NNI CUDA programs
+  - graphical desktop
+  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
+  - other users' CUDA programs, if you are using a shared server
+  
+If your remote machine is a graphical OS like Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+
+When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to one GPU.
+
 
 maxTrialNumberPerGpu
 ********************
@@ -546,7 +568,7 @@ gpuIndices
 
 Limit the GPUs visible to trial processes.
 
-type: ``Optional[list[int] | str]``
+type: ``Optional[list[int] | str | int]``
 
 If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
 
@@ -556,12 +578,12 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 pythonPath
 **********
 
-Specify a Python environment, this path will insert at the front of PATH. Here are some examples: 
+Specify a Python environment, this path will be inserted at the front of PATH. Here are some examples: 
 
     - (linux) pythonPath: ``/opt/python3.7/bin``
     - (windows) pythonPath: ``C:/Python37``
 
-If you are working on Anaconda, there is some difference. You also have to add ``../script`` and ``../Library/bin`` which separated them by ``;`` on Windows, examples are as below:
+If you are working on Anaconda, there is some difference. On Windows, you also have to add ``../script`` and ``../Library/bin`` separated by ``;``. Examples are as below:
 
     - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
     - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
@@ -575,7 +597,7 @@ This is useful if preparing steps vary for different machines.
 OpenpaiConfig
 -------------
 
-Detailed `here <../TrainingService/PaiMode.rst>`__.
+Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 
 platform
 """"""""
@@ -624,9 +646,13 @@ type: ``int``
 trialMemorySize
 """""""""""""""
 
-Specify the memory size of each trial to be used in OpenPAI container, in megabytes.
+Specify the memory size of each trial to be used in OpenPAI container.
 
 type: ``str``
+
+format: ``number + tb|gb|mb|kb``
+
+examples: ``"8gb"``, ``"8192mb"``
 
 
 storageConfigName
@@ -650,7 +676,7 @@ default: ``"msranni/nni:latest"``
 localStorageMountPoint
 """"""""""""""""""""""
 
-:ref:`Mount point <path>` of storage service (typically NFS) on current machine.
+:ref:`Mount point <path>` of storage service (typically NFS) on the local machine.
 
 type: ``str``
 
@@ -696,7 +722,7 @@ An example can be found `here <https://github.com/microsoft/pai/blob/master/docs
 AmlConfig
 ---------
 
-Detailed `here <../TrainingService/AMLMode.rst>`__.
+Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
 
 
 platform
@@ -750,7 +776,7 @@ type: ``str``
 HybridConfig
 ------------
 
-List of `TrainingServiceConfig`_, currently only supports `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed `here <../TrainingService/HybridMode.rst>`__.
+List of `TrainingServiceConfig`_, currently only supports `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
 
 type: list of `TrainingServiceConfig`_
 
@@ -758,7 +784,7 @@ type: list of `TrainingServiceConfig`_
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
 
 
 nfsConfig
@@ -773,31 +799,39 @@ Constant string ``"NFS"``.
 localMountPoint
 """""""""""""""
 
-Local mount point.
+The path that the storage has been or will be mounted in the local machine.
 
 type: ``str``
+
+If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
 
 
 remoteMountPoint
 """"""""""""""""
 
-Remote mount point.
+The path that the storage will be mounted in the remote achine.
 
 type: ``str``
+
+If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
 
 
 localMounted
 """"""""""""
 
-Specify local mount status. ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in local machine, will support partial storages in the future.
+Specify the object and status to mount the shared storage.
 
 type: ``str``
+
+values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
+
+``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
 
 
 nfsServer
 """""""""
 
-NFS server ip.
+NFS server host.
 
 type: ``str``
 
@@ -805,7 +839,7 @@ type: ``str``
 exportedDirectory
 """""""""""""""""
 
-NFS exported directory.
+Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
 
 type: ``str``
 
@@ -822,31 +856,41 @@ Constant string ``"AzureBlob"``.
 localMountPoint
 """""""""""""""
 
-Local mount point.
+The path that the storage has been or will be mounted in the local machine.
 
 type: ``str``
+
+If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
 
 
 remoteMountPoint
 """"""""""""""""
 
-Remote mount point.
+The path that the storage will be mounted in the remote achine.
 
 type: ``str``
+
+If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
+
+Note that the directory must be empty when using AzureBlob. 
 
 
 localMounted
 """"""""""""
 
-Specify local mount status. ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in local machine, will support partial storages in the future.
+Specify the object and status to mount the shared storage.
 
 type: ``str``
+
+values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
+
+``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
 
 
 storageAccountName
 """"""""""""""""""
 
-AzureBlob account name.
+Azure storage account name.
 
 type: ``str``
 
@@ -854,18 +898,21 @@ type: ``str``
 storageAccountKey
 """""""""""""""""
 
-AzureBlob account key. When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
+Azure storage account key.
 
 type: ``Optional[str]``
+
+When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
 
 
 resourceGroupName
 """""""""""""""""
 
-AzureBlob resource group name.
+Resource group that AzureBlob container belongs to.
 
 type: ``Optional[str]``
 
+Required if ``storageAccountKey`` not set.
 
 containerName
 """""""""""""
