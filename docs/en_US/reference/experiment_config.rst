@@ -6,7 +6,7 @@ A config file is needed when creating an experiment. This document describes the
 
 .. Note::
 
-    1. This document lists field names with ``camelCase``. They need to be converted to ``snake_case`` for Python library ``nni.experiment``.
+    1. This document lists field names with ``camelCase``. If users use these fields in the pythonic way with NNI Python APIs (e.g., ``nni.experiment``), the field names should be converted to ``snake_case``.
 
     2. In this document, the type of fields are formatted as `Python type hint <https://docs.python.org/3.10/library/typing.html>`__. Therefore JSON objects are called `dict` and arrays are called `list`.
 
