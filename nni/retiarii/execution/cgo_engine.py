@@ -175,7 +175,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         with open(file_name, 'w') as f:
             f.write(graph_data.model_script)
 
-        print("graph_data", graph_data)
         trainer_instance = graph_data.evaluator
         model_cls = utils.import_(f'_generated_model.{random_str}._model')
 
