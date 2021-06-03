@@ -145,17 +145,7 @@ class LogicalPlan:
             -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
         phy_model = Model(_internal=True)  # self.lp_model.fork()
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
-        phy_graph._rename_graph(phy_graph.name, "_model")
-        print("phy_graph name", phy_graph.name)
-
-        # # Add a flag to mark multi-model in graph json.
-        # # Multi-model has a list of training configs in kwargs['model_kwargs']
-        # if len(multi_model_placement) > 1:
-        #     # phy_model.evaluator.kwargs['is_multi_model'] = True
-        #     # phy_model.evaluator.kwargs['model_cls'] = phy_graph.name
-        #     # phy_model.evaluator.kwargs['model_kwargs'] = []
-        #     # FIXME: allow user to specify
-        #     # phy_model.evaluator.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
+        phy_graph._rename_graph(phy_graph.name, "_model"
 
         # merge sub-graphs
         for model in multi_model_placement:
