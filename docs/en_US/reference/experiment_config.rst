@@ -2,7 +2,7 @@
 Experiment Config Reference
 ===========================
 
-A config file is needed when creating an experiment. This document describes the rules to write a config file in the V2 schema and provides some examples.
+A config file is needed when creating an experiment. This document describes the rules to write a config file and provides some examples.
 
 .. Note::
 

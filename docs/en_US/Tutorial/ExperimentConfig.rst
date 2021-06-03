@@ -1,10 +1,11 @@
-Experiment Config Reference
-===========================
+Experiment Config Reference (legacy)
+====================================
 
 A config file is needed when creating an experiment. The path of the config file is provided to ``nnictl``.
 The config file is in YAML format.
 This document describes the rules to write the config file, and provides some examples and templates.
 
+.. Note:: This experiment config is still supported for now, but will be migrated to new `Experiment Config <../reference/experiment_config.rst>`_ in NNI v. 
 
 * `Experiment Config Reference <#experiment-config-reference>`__
 
