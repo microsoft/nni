@@ -32,14 +32,14 @@ class NNIRestHandler {
         this.experimentsManager = component.get(ExperimentManager);
         this.tensorboardManager = component.get(TensorboardManager);
         this.restServer = rs;
-        this.log = getLogger();
+        this.log = getLogger('NNIRestHandler');
     }
 
     public createRestHandler(): Router {
         const router: Router = Router();
 
         router.use((req: Request, res: Response, next) => {
-            this.log.debug(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            this.log.debug(`${req.method}: ${req.url}: body:`, req.body);
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
 

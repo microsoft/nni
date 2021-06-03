@@ -50,7 +50,7 @@ export class NFSSharedStorageService extends SharedStorageService {
 
     constructor() {
         super();
-        this.log = getLogger();
+        this.log = getLogger('NFSSharedStorageService');
         this.internalStorageService = new MountedStorageService();
         this.experimentId = getExperimentId();
     }

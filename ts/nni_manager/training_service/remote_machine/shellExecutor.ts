@@ -36,7 +36,7 @@ class ShellExecutor {
     public isWindows: boolean = false;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('ShellExecutor');
         this.sshClient = new Client();
     }
 

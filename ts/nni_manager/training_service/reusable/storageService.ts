@@ -30,7 +30,7 @@ export abstract class StorageService {
     protected abstract internalBasename(...paths: string[]): string;
 
     constructor() {
-        this.logger = getLogger();
+        this.logger = getLogger('StorageService');
     }
 
     public initialize(localRoot: string, remoteRoot: string): void {

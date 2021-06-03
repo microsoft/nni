@@ -63,7 +63,7 @@ class PAITrainingService implements TrainingService {
     private config: FlattenOpenpaiConfig;
 
     constructor(config: ExperimentConfig) {
-        this.log = getLogger();
+        this.log = getLogger('PAITrainingService');
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         this.jobQueue = [];
@@ -308,7 +308,7 @@ class PAITrainingService implements TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
+        this.log.info('submitTrialJob: form:',  form);
 
         const trialJobId: string = uniqueString(5);
         //TODO: use HDFS working folder instead

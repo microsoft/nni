@@ -37,7 +37,7 @@ class NNITensorboardManager implements TensorboardManager {
     private nniManager: Manager;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('NNITensorboardManager');
         this.tensorboardTaskMap = new Map<string, TensorboardTaskDetail>();
         this.setTensorboardVersion();
         this.nniManager = component.get(Manager);

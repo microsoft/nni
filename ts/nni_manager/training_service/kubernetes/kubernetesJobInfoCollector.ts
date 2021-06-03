@@ -15,7 +15,7 @@ import { KubernetesTrialJobDetail } from './kubernetesData';
  */
 export class KubernetesJobInfoCollector {
     protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('KubernetesJobInfoCollector');
     protected readonly statusesNeedToCheck: TrialJobStatus[];
 
     constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {

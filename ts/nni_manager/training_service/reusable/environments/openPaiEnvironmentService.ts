@@ -23,7 +23,7 @@ interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 @component.Singleton
 export class OpenPaiEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('OpenPaiEnvironmentService');
     private paiClusterConfig: PAIClusterConfig | undefined;
     private paiTrialConfig: NNIPAITrialConfig | undefined;
     private paiToken: string;
@@ -77,7 +77,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             // Status code 200 for success
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
-                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(body)}`;
+                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body:' ${JSON.stringify(body)}`;
                 this.log.error(`${errorMessage}`);
                 deferred.reject(errorMessage);
             } else {
@@ -113,7 +113,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                                 this.log.debug(`OpenPAI: job ${environment.envId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
                             }
                         } else {
-                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:${JSON.stringify(jobResponse)}`);
+                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:`, jobResponse);
                             // some error happens, and mark this environment
                             environment.status = 'FAILED';
                         }

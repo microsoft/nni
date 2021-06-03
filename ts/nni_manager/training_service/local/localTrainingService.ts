@@ -98,7 +98,7 @@ class LocalTrainingService implements TrainingService {
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];
         this.stopping = false;
-        this.log = getLogger();
+        this.log = getLogger('LocalTrainingService');
         this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
@@ -204,7 +204,7 @@ class LocalTrainingService implements TrainingService {
         this.jobQueue.push(trialJobId);
         this.jobMap.set(trialJobId, trialJobDetail);
 
-        this.log.debug(`submitTrialJob: return: ${JSON.stringify(trialJobDetail)} `);
+        this.log.debug('submitTrialJob: return:',  trialJobDetail);
 
         return Promise.resolve(trialJobDetail);
     }

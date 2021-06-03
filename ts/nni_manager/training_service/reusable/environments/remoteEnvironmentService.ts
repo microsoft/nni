@@ -39,7 +39,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
         this.experimentRootDir = experimentRootDir;
-        this.log = getLogger();
+        this.log = getLogger('RemoteEnvironmentService');
         this.config = flattenConfig(config, 'remote');
 
         // codeDir is not a valid directory, throw Error
