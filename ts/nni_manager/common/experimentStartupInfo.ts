@@ -86,7 +86,6 @@ export function setExperimentStartupInfo(
         readonly?: boolean,
         dispatcherPipe?: string,
         urlprefix?: string): void {
-    assert(singleton === null);
     singleton = new ExperimentStartupInfo(
         newExperiment,
         experimentId,

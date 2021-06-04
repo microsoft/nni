@@ -184,7 +184,6 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
  * Must be paired with `cleanupUnitTest()`.
  */
 function prepareUnitTest(): void {
-    Container.snapshot(ExperimentStartupInfo);
     Container.snapshot(Database);
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
@@ -213,7 +212,7 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    Container.restore(ExperimentStartupInfo);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     Container.restore(ExperimentManager);
 }
 
