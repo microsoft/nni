@@ -5,6 +5,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 
 
 **One-shot Pruning**
+
 * `Level Pruner <#level-pruner>`__ ((fine-grained pruning))
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
@@ -25,6 +26,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 * `ADMM Pruner <#admm-pruner>`__
 
 **Others**
+
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
 
 Level Pruner
