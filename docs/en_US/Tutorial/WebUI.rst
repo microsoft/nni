@@ -207,7 +207,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* Support to search for a specific trial by its id, status, Trial No. and trial parameters.
+* Support searching for a specific trial by its id, status, Trial No. and trial parameters.
 
 1. Trial id: 
 
@@ -231,13 +231,13 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 4. Trial parameters:
 
-(1) parameters that type is choice:
+(1) parameters whose type is choice:
 
 .. image:: ../../img/webui-img/detail/searchParameterChoice.png
    :target: ../../img/webui-img/detail/searchParameterChoice.png
    :alt: searchParameterChoice
 
-(2) parameters that type is not choice:
+(2) parameters whose type is not choice:
 
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
    :target: ../../img/webui-img/detail/searchParameterRange.png
