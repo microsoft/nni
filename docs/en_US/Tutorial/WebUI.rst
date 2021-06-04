@@ -278,13 +278,20 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* You could see all logs about this trial on the tab of ``Log``. There are three button ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
+* You could see trial logs on the tab of ``Log``. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
 
+1. local mode:
+
+.. image:: ../../img/webui-img/detail/log-local.png
+   :target: ../../img/webui-img/detail/log-local.png
+   :alt: detailPai
+
+
+2. OpenPAI, Kubeflow and other mode:
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
    :alt: detailPai
-
 
 
 * Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
