@@ -35,7 +35,7 @@ Preparations
 
 This example requires the GPU version of PyTorch. PyTorch install package should be chosen based on system, python version, and cuda version.
 
-Please refer to the detailed instruction of installing `PyTorch <https://pytorch.org/get-started/locally/>`__\ :
+Please refer to the detailed instruction of installing `PyTorch <https://pytorch.org/get-started/locally/>`__ 
 
 
 Pix2pix with NNI
@@ -67,7 +67,7 @@ Note: starting from v2.0, the search space is directly included in the config, p
 
 **Trial**
 
-To experiment on this set of hyperparameters using NNI, we have to write a trial code, which receives a set of parameter settings from NNI, trains a generator and discriminator using these parameters, and then report the final scores back to NNI. Then, in the experiment, NNI can repeatedly call this trial code with different set of parameter settings. It is important that the following three lines are incorporated in the trial code: 
+To experiment on this set of hyperparameters using NNI, we have to write a trial code, which receives a set of parameter settings from NNI, trains a generator and discriminator using these parameters, and then reports the final scores back to NNI. Then, in the experiment, NNI can repeatedly call this trial code with different set of parameter settings. It is important that the following three lines are incorporated in the trial code: 
 
 * Use ``nni.get_next_parameter()`` to get next hyperparameter set.
 * (Optional) Use ``nni.report_intermediate_result(score)`` to report the intermediate result after finishing each epoch.
@@ -85,7 +85,7 @@ Some notes on the implementation:
 
 **Config**
 
-Here is the example of running this experiment on local(with a single GPU):
+Here is the example of running this experiment on local (with a single GPU):
 
 code directory: :githublink:`examples/trials/pix2pix-pytorch/config_v2.yml <examples/trials/pix2pix-pytorch/config_v2.yml>`
 
