@@ -284,7 +284,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 .. image:: ../../img/webui-img/detail/log-local.png
    :target: ../../img/webui-img/detail/log-local.png
-   :alt: detailPai
+   :alt: logOnLocal
 
 
 2. OpenPAI, Kubeflow and other mode:
