@@ -278,7 +278,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* If you run on the OpenPAI or Kubeflow platform, you can also see the nfs log.
+* You could see all logs about this trial on the tab of ``Log``. There are three button ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
 
 
 .. image:: ../../img/webui-img/detail-pai.png
