@@ -9,6 +9,8 @@ import * as path from 'path';
 
 const API_ROOT_URL: string = '/api/v1/nni';
 
+let singleton: ExperimentStartupInfo | null = null;
+
 export class ExperimentStartupInfo {
 
     public experimentId: string = '';
@@ -69,8 +71,6 @@ export class ExperimentStartupInfo {
         return singleton!;
     }
 }
-
-let singleton: ExperimentStartupInfo | null = null;
 
 export function getExperimentStartupInfo(): ExperimentStartupInfo {
     return ExperimentStartupInfo.getInstance();
