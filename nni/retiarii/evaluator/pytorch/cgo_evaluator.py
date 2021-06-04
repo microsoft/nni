@@ -182,10 +182,6 @@ class BypassPlugin(TrainingTypePlugin):
     def broadcast(self, obj: object, src: int = 0) -> object:
         return obj
 
-    def setup(self, model: torch.nn.Module) -> torch.nn.Module:
-        # self.model_to_device()
-        return self.model
-
 
 def get_accelerator_connector(
         num_processes: int = 1,
