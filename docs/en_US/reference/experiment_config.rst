@@ -108,7 +108,7 @@ ExperimentConfig
 experimentName
 --------------
 
-Mnemonic name of the experiment. This will be shown in WebUI and nnictl.
+Mnemonic name of the experiment, which will be shown in WebUI and nnictl.
 
 type: ``Optional[str]``
 
@@ -146,7 +146,9 @@ Command to launch trial.
 
 type: ``str``
 
-The command will be executed in bash on Linux and macOS, and in PowerShell on Windows. Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
+The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
+
+Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
 
 
 trialCodeDirectory
@@ -158,7 +160,7 @@ type: ``str``
 
 default: ``"."``
 
-All files in this directory will be sent to the training machine, unless there is a ``.nniignore`` file.
+All files in this directory will be sent to the training machine, unless in the ``.nniignore`` file.
 (See :ref:`nniignore <nniignore>` for details.)
 
 
@@ -293,25 +295,31 @@ Because tuner, assessor, and advisor run in the same process, this option will a
 tuner
 -----
 
-Specify the tuner. The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
+Specify the tuner. 
 
 type: Optional `AlgorithmConfig`_
+
+The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
 
 
 assessor
 --------
 
-Specify the assessor. The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
+Specify the assessor. 
 
 type: Optional `AlgorithmConfig`_
+
+The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
 
 
 advisor
 -------
 
-Specify the advisor. NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
+Specify the advisor. 
 
 type: Optional `AlgorithmConfig`_
+
+NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
 
 
 trainingService
@@ -421,7 +429,7 @@ Following processes can make GPU "active":
   
 If you are using a graphical OS like Windows 10 or Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
 
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to one GPU.
+When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
 
 
 maxTrialNumberPerGpu
@@ -468,7 +476,7 @@ type: list of `RemoteMachineConfig`_
 reuseMode
 """""""""
 
-Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
+Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
 
 type: ``bool``
 
@@ -550,7 +558,7 @@ Following processes can make GPU "active":
   
 If your remote machine is a graphical OS like Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
 
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to one GPU.
+When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
 
 
 maxTrialNumberPerGpu
@@ -578,7 +586,11 @@ This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 pythonPath
 **********
 
-Specify a Python environment, this path will be inserted at the front of PATH. Here are some examples: 
+Specify a Python environment.
+
+type: ``Optional[str]``
+
+This path will be inserted at the front of PATH. Here are some examples: 
 
     - (linux) pythonPath: ``/opt/python3.7/bin``
     - (windows) pythonPath: ``C:/Python37``
@@ -587,8 +599,6 @@ If you are working on Anaconda, there is some difference. On Windows, you also h
 
     - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
     - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
-
-type: ``Optional[str]``
 
 This is useful if preparing steps vary for different machines.
 
@@ -694,7 +704,7 @@ This must be an absolute path.
 reuseMode
 """""""""
 
-Enable reuse `mode <../Tutorial/ExperimentConfig.rst#reuse>`__.
+Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
 
 type: ``bool``
 
@@ -716,7 +726,7 @@ openpaiConfigFile
 
 type: ``Optional[str]``
 
-An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__
+An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__.
 
 
 AmlConfig
@@ -776,7 +786,7 @@ type: ``str``
 HybridConfig
 ------------
 
-List of `TrainingServiceConfig`_, currently only supports `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
+Currently only support `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
 
 type: list of `TrainingServiceConfig`_
 
