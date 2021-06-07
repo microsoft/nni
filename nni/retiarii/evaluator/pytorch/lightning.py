@@ -10,6 +10,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 import nni
+import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
 from ...graph import Evaluator
 from ...serializer import serialize_cls
 
@@ -27,7 +28,6 @@ class LightningModule(pl.LightningModule):
 
 Trainer = serialize_cls(pl.Trainer)
 DataLoader = serialize_cls(DataLoader)
-
 
 class Lightning(Evaluator):
     """
@@ -59,7 +59,8 @@ class Lightning(Evaluator):
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
-        assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}.'
+        assert isinstance(trainer, Trainer) or isinstance(trainer, cgo_trainer.Trainer), \
+            f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
         assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         self.module = lightning_module
