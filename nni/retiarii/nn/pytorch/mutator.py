@@ -69,7 +69,8 @@ class ValueChoiceMutator(Mutator):
 
 class ParameterChoiceMutator(Mutator):
     def __init__(self, nodes: List[Tuple[Node, str]], candidates: List[Any]):
-        super().__init__(label=nodes[0].operation.parameters['label'])
+        node, argname = nodes[0]
+        super().__init__(label=node.operation.parameters[argname].label)
         self.nodes = nodes
         self.candidates = candidates
 
