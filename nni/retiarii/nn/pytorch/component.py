@@ -72,7 +72,7 @@ class Repeat(nn.Module):
 
 class Cell(nn.Module):
     """
-    Cell structure [1]_ [2]_ that is popularly used in NAS literature.
+    Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS literature.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
@@ -95,8 +95,8 @@ class Cell(nn.Module):
 
     References
     ----------
-    .. [1] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
-    .. [2] Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le,
+    .. [zophnas] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
+    .. [zophnasnet] Barret Zoph, Vijay Vasudevan, Jonathon Shlens, Quoc V. Le,
         "Learning Transferable Architectures for Scalable Image Recognition". https://arxiv.org/abs/1707.07012
     """
 

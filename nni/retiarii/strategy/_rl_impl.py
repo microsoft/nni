@@ -1,6 +1,7 @@
 # This file might cause import error for those who didn't install RL-related dependencies
 
 import logging
+import threading
 from multiprocessing.pool import ThreadPool
 
 import gym
@@ -18,6 +19,7 @@ from ..execution import submit_models, wait_models
 
 
 _logger = logging.getLogger(__name__)
+_thread_lock = threading.Lock()
 
 
 class MultiThreadEnvWorker(EnvWorker):
@@ -100,7 +102,8 @@ class ModelEvaluationEnv(gym.Env):
                 if self.cur_step < self.num_steps else self.action_dim
         }
         if self.cur_step == self.num_steps:
-            model = get_targeted_model(self.base_model, self.mutators, self.sample)
+            with _thread_lock:
+                model = get_targeted_model(self.base_model, self.mutators, self.sample)
             _logger.info(f'New model created: {self.sample}')
             submit_models(model)
             wait_models(model)
