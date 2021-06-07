@@ -4,7 +4,7 @@
 from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
-from nni.retiarii.evaluator.pytorch.cgo_evaluator import MultiModelSupervisedLearningModule
+from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
 
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
