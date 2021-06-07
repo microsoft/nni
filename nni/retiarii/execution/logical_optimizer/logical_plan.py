@@ -24,7 +24,7 @@ class PhysicalDevice:
             return False
         else:
             return self.device < o.device
-    
+
     def __repr__(self) -> str:
         return "{Server: %s, Device: %s}" % (self.server, self.device)
 
@@ -222,7 +222,7 @@ class LogicalPlan:
                     old_cell_name = new_node.operation.cell_name
                     new_node.operation = copy.deepcopy(new_node.operation)
                     new_node.operation.cell_name = f'M_{model_id}_{old_cell_name}'
-                
+
                 # input should be at CPU, move it to GPU first if necessary
                 if isinstance(new_node.operation, _IOPseudoOperation) and new_node.operation.type == '_inputs':
                     # hack: only support single_server
