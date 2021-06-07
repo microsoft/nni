@@ -19,13 +19,13 @@ import * as util from 'util';
 import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo().getLogDir();
+    return getExperimentStartupInfo().logDir;
 }
 
 function getLogDir(): string {
@@ -33,7 +33,7 @@ function getLogDir(): string {
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo().getLogLevel();
+    return getExperimentStartupInfo().logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
@@ -184,7 +184,6 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
  * Must be paired with `cleanupUnitTest()`.
  */
 function prepareUnitTest(): void {
-    Container.snapshot(ExperimentStartupInfo);
     Container.snapshot(Database);
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
@@ -213,8 +212,9 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    Container.restore(ExperimentStartupInfo);
     Container.restore(ExperimentManager);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedipv4Address: string = '';

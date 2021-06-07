@@ -8,6 +8,7 @@ import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { PAIClusterConfig } from '../../pai/paiConfig';
 import { NNIPAITrialConfig } from '../../pai/paiConfig';
@@ -31,9 +32,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     private experimentId: string;
     private config: FlattenOpenpaiConfig;
 
-    constructor(_experimentRootDir: string, experimentId: string, config: ExperimentConfig) {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = experimentId;
+        this.experimentId = info.experimentId;
         this.config = flattenConfig(config, 'openpai');
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
