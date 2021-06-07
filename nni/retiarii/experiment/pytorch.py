@@ -3,6 +3,7 @@
 
 import atexit
 import logging
+from nni.retiarii.execution.logical_optimizer.logical_plan import PhysicalDevice
 import time
 from dataclasses import dataclass
 import os
@@ -47,6 +48,7 @@ class RetiariiExeConfig(ConfigBase):
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
+    devices: Optional[List[Union[str, PhysicalDevice]]] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
     nni_manager_ip: Optional[str] = None
@@ -198,7 +200,9 @@ class RetiariiExperiment(Experiment):
             engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
-            engine = CGOExecutionEngine()
+            assert self.config.devices is not None, "devices must be set to use CGOExecutionEngine"
+            assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
+            engine = CGOExecutionEngine(self.config.devices, max_concurrency=self.config.trial_concurrency)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
