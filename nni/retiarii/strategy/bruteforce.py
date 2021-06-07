@@ -62,7 +62,7 @@ class GridSearch(BaseStrategy):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
         for sample in grid_generator(search_space, shuffle=self.shuffle):
             _logger.debug('New model created. Waiting for resource. %s', str(sample))
-            if query_available_resources() <= 0:
+            while query_available_resources() <= 0:
                 time.sleep(self._polling_interval)
             submit_models(get_targeted_model(base_model, applied_mutators, sample))
 
@@ -113,6 +113,6 @@ class Random(BaseStrategy):
             search_space = dry_run_for_search_space(base_model, applied_mutators)
             for sample in random_generator(search_space, dedup=self.dedup):
                 _logger.debug('New model created. Waiting for resource. %s', str(sample))
-                if query_available_resources() <= 0:
+                while query_available_resources() <= 0:
                     time.sleep(self._polling_interval)
                 submit_models(get_targeted_model(base_model, applied_mutators, sample))
