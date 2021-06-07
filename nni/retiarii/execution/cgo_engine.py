@@ -248,6 +248,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         model_cls = utils.import_(f'_generated_model.{random_str}._model')
 
         trainer_instance.fit(model_cls())
+        os.remove(file_name)
 
 
 class AssemblePolicy:
