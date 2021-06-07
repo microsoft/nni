@@ -1,4 +1,4 @@
-from typing import Any, Dict, Union, Optional, List
+from typing import Any, Union, Optional, List
 import torch
 
 from pytorch_lightning.accelerators.accelerator import Accelerator
