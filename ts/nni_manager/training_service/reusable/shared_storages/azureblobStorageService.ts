@@ -66,7 +66,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
 
     constructor() {
         super();
-        this.log = getLogger();
+        this.log = getLogger('AzureBlobSharedStorageService');
         this.internalStorageService = new MountedStorageService();
         this.experimentId = getExperimentId();
     }

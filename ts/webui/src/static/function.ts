@@ -2,17 +2,19 @@ import * as JSON5 from 'json5';
 import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
+import { EXPERIMENT } from './datamodel';
 import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
     let newPathName = pathName;
-
-    if (pathName.endsWith('/oview') || pathName.endsWith('/detail') || pathName.endsWith('/experiment')) {
-        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
-    }
-
-    return newPathName === '' ? undefined : newPathName;
+    const pathArr: string[] = ['/oview', '/detail', '/experiment'];
+    pathArr.forEach(item => {
+        if (pathName.endsWith(item)) {
+            newPathName = pathName.replace(item, '');
+        }
+    });
+    return newPathName === '' || newPathName === '/' ? undefined : newPathName;
 }
 
 async function requestAxios(url: string): Promise<any> {
@@ -356,6 +358,19 @@ function getTensorboardMenu(queryTensorboardList: Tensorboard[], stopFunc, seeDe
 
     return tensorboardMenu;
 }
+
+// search space type map list: now get type from search space
+const parametersType = (): Map<string, string> => {
+    const parametersTypeMap = new Map();
+    const trialParameterlist = Object.keys(EXPERIMENT.searchSpace);
+
+    trialParameterlist.forEach(item => {
+        parametersTypeMap.set(item, typeof EXPERIMENT.searchSpace[item]._value[0]);
+    });
+
+    return parametersTypeMap;
+};
+
 export {
     getPrefix,
     convertTime,
@@ -381,5 +396,6 @@ export {
     caclMonacoEditorHeight,
     copyAndSort,
     disableTensorboard,
-    getTensorboardMenu
+    getTensorboardMenu,
+    parametersType
 };

@@ -201,7 +201,7 @@ class CompressorTestCase(TestCase):
 
         model = TorchModel()
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, sparsity_training_epochs=1)
+        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, sparsifying_training_batches=1)
 
         x = torch.rand((1, 1, 28, 28), requires_grad=True)
         model.conv1.module.weight.data = torch.tensor(w1).float()

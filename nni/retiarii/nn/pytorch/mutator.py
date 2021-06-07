@@ -15,7 +15,7 @@ from ...utils import uid
 
 class LayerChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
 
     def mutate(self, model):
@@ -40,7 +40,7 @@ class LayerChoiceMutator(Mutator):
 
 class InputChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
 
     def mutate(self, model):
@@ -56,7 +56,7 @@ class InputChoiceMutator(Mutator):
 
 class ValueChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node], candidates: List[Any]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
         self.candidates = candidates
 
@@ -69,7 +69,8 @@ class ValueChoiceMutator(Mutator):
 
 class ParameterChoiceMutator(Mutator):
     def __init__(self, nodes: List[Tuple[Node, str]], candidates: List[Any]):
-        super().__init__()
+        node, argname = nodes[0]
+        super().__init__(label=node.operation.parameters[argname].label)
         self.nodes = nodes
         self.candidates = candidates
 
@@ -84,7 +85,7 @@ class ParameterChoiceMutator(Mutator):
 class RepeatMutator(Mutator):
     def __init__(self, nodes: List[Node]):
         # nodes is a subgraph consisting of repeated blocks.
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
 
     def _retrieve_chain_from_graph(self, graph: Graph) -> List[Node]:

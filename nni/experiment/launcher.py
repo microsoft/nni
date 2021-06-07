@@ -39,7 +39,7 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, mode=mode)
-        _logger.info('Statring web server...')
+        _logger.info('Starting web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,
@@ -74,7 +74,7 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
-        _logger.info('Statring web server...')
+        _logger.info('Starting web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,

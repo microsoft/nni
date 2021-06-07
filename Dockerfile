@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-FROM nvidia/cuda:9.2-cudnn7-runtime-ubuntu18.04
+FROM nvidia/cuda:10.2-cudnn8-runtime-ubuntu18.04
 
 ARG NNI_RELEASE
 
@@ -43,8 +43,8 @@ RUN ln -s python3 /usr/bin/python
 #
 RUN python3 -m pip install --upgrade pip==20.2.4 setuptools==50.3.2
 
-# numpy 1.14.3  scipy 1.1.0
-RUN python3 -m pip --no-cache-dir install numpy==1.14.3 scipy==1.1.0
+# numpy 1.19.5  scipy 1.5.4
+RUN python3 -m pip --no-cache-dir install numpy==1.19.5 scipy==1.5.4
 
 #
 # TensorFlow
@@ -52,15 +52,14 @@ RUN python3 -m pip --no-cache-dir install numpy==1.14.3 scipy==1.1.0
 RUN python3 -m pip --no-cache-dir install tensorflow==2.3.1
 
 #
-# Keras 2.1.6
+# Keras
 #
-RUN python3 -m pip --no-cache-dir install Keras==2.1.6
+RUN python3 -m pip --no-cache-dir install Keras==2.4.3
 
 #
 # PyTorch
 #
-RUN python3 -m pip --no-cache-dir install torch==1.6.0
-RUN python3 -m pip install torchvision==0.7.0
+RUN python3 -m pip --no-cache-dir install torch==1.7.1 torchvision==0.8.2 pytorch-lightning==1.3.3
 
 #
 # sklearn 0.24.1
@@ -70,7 +69,7 @@ RUN python3 -m pip --no-cache-dir install scikit-learn==0.24.1
 #
 # pandas==0.23.4 lightgbm==2.2.2
 #
-RUN python3 -m pip --no-cache-dir install pandas==0.23.4 lightgbm==2.2.2
+RUN python3 -m pip --no-cache-dir install pandas==1.1 lightgbm==2.2.2
 
 #
 # Install NNI

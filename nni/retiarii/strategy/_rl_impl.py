@@ -1,6 +1,8 @@
 # This file might cause import error for those who didn't install RL-related dependencies
 
 import logging
+import threading
+from multiprocessing.pool import ThreadPool
 
 import gym
 import numpy as np
@@ -9,6 +11,7 @@ import torch.nn as nn
 
 from gym import spaces
 from tianshou.data import to_torch
+from tianshou.env.worker import EnvWorker
 
 from .utils import get_targeted_model
 from ..graph import ModelStatus
@@ -16,6 +19,42 @@ from ..execution import submit_models, wait_models
 
 
 _logger = logging.getLogger(__name__)
+_thread_lock = threading.Lock()
+
+
+class MultiThreadEnvWorker(EnvWorker):
+    def __init__(self, env_fn):
+        self.env = env_fn()
+        self.pool = ThreadPool(processes=1)
+        super().__init__(env_fn)
+
+    def __getattr__(self, key):
+        return getattr(self.env, key)
+
+    def reset(self):
+        return self.env.reset()
+
+    @staticmethod
+    def wait(*args, **kwargs):
+        raise NotImplementedError('Async collect is not supported yet.')
+
+    def send_action(self, action) -> None:
+        # self.result is actually a handle
+        self.result = self.pool.apply_async(self.env.step, (action,))
+
+    def get_result(self):
+        return self.result.get()
+
+    def seed(self, seed):
+        super().seed(seed)
+        return self.env.seed(seed)
+
+    def render(self, **kwargs):
+        return self.env.render(**kwargs)
+
+    def close_env(self) -> None:
+        self.pool.terminate()
+        return self.env.close()
 
 
 class ModelEvaluationEnv(gym.Env):
@@ -63,7 +102,8 @@ class ModelEvaluationEnv(gym.Env):
                 if self.cur_step < self.num_steps else self.action_dim
         }
         if self.cur_step == self.num_steps:
-            model = get_targeted_model(self.base_model, self.mutators, self.sample)
+            with _thread_lock:
+                model = get_targeted_model(self.base_model, self.mutators, self.sample)
             _logger.info(f'New model created: {self.sample}')
             submit_models(model)
             wait_models(model)
@@ -107,7 +147,7 @@ class Actor(nn.Module):
         # to take care of choices with different number of options
         mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         out[mask.to(out.device)] = float('-inf')
-        return nn.functional.softmax(out), kwargs.get('state', None)
+        return nn.functional.softmax(out, dim=-1), kwargs.get('state', None)
 
 
 class Critic(nn.Module):

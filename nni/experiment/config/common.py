@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
-from ruamel.yaml import YAML
+import yaml
 
 from .base import ConfigBase, PathLike
 from . import util
@@ -118,7 +118,7 @@ class ExperimentConfig(ConfigBase):
     def json(self) -> Dict[str, Any]:
         obj = super().json()
         if obj.get('searchSpaceFile'):
-            obj['searchSpace'] = YAML().load(open(obj.pop('searchSpaceFile')))
+            obj['searchSpace'] = yaml.safe_load(open(obj.pop('searchSpaceFile')))
         return obj
 
 ## End of public API ##

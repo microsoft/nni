@@ -1,0 +1,3 @@
+pandas>=1.2.0
+pyyaml>=5.4.1
+matplotlib>=3.4.1

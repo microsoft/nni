@@ -141,7 +141,6 @@ def test_evolution():
     _reset_execution_engine()
 
 
-@pytest.mark.skipif(sys.platform in ('win32', 'darwin'), reason='Does not run on Windows and MacOS')
 def test_rl():
     rl = strategy.PolicyBasedRL(max_collect=2, trial_per_collect=10)
     engine = MockExecutionEngine(failure_prob=0.2)
@@ -150,7 +149,7 @@ def test_rl():
     wait_models(*engine.models)
     _reset_execution_engine()
 
-    rl = strategy.PolicyBasedRL(max_collect=2, trial_per_collect=10, asynchronous=False)
+    rl = strategy.PolicyBasedRL(max_collect=2, trial_per_collect=10)
     engine = MockExecutionEngine(failure_prob=0.2)
     _reset_execution_engine(engine)
     rl.run(*_get_model_and_mutators())

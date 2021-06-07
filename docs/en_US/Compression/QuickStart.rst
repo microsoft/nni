@@ -31,17 +31,16 @@ The specification of configuration can be found `here <./Tutorial.rst#specify-th
 Step2. Choose a pruner and compress the model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model. Note that, some algorithms may check gradients for compressing, so we also define an optimizer and pass it to the pruner.
+First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model. Note that, some algorithms may check gradients for compressing, so we may also define an optimizer and pass it to the pruner.
 
 .. code-block:: python
 
    from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
-   optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01)
-   pruner = LevelPruner(model, config_list, optimizer_finetune)
+   pruner = LevelPruner(model, config_list)
    model = pruner.compress()
 
-Then, you can train your model using traditional training approach (e.g., SGD), pruning is applied transparently during the training. Some pruners (e.g., L1FilterPruner, FPGMPruner) prune once at the beginning, the following training can be seen as fine-tune. Some pruners (e.g., AGPPruner) prune your model iteratively, the masks are adjusted epoch by epoch during training.
+Some pruners (e.g., L1FilterPruner, FPGMPruner) prune once, some pruners (e.g., AGPPruner) prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
 Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine-tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
 
