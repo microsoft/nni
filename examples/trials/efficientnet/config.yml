@@ -1,6 +1,6 @@
 searchSpaceFile: search_net.json
 trialCodeDirectory: EfficientNet-PyTorch
-trialCommand: python main.py /data/imagenet -j 12 -a efficientnet --batch-size 48 --lr 0.048 --wd 1e-5 --epochs 5 --request-from-nni
+trialCommand: python3 main.py /data/imagenet -j 12 -a efficientnet --batch-size 48 --lr 0.048 --wd 1e-5 --epochs 5 --request-from-nni
 trialGpuNumber: 1
 trialConcurrency: 4
 maxTrialNumber: 100
