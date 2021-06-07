@@ -30,7 +30,10 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-from nni.retiarii.evaluator.pytorch.cgo_evaluator import BypassAccelerator, MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
+from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
+from nni.retiarii.evaluator.pytorch.cgo.accelerator import BypassAccelerator
+import nni.retiarii.evaluator.pytorch.cgo.evaluator as cgo_evaluator
+import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
 
 import pytest
 
@@ -85,9 +88,11 @@ class _model_gpu(nn.Module):
         self.M_1_softmax = torch.nn.Softmax().to('cuda:0')
         self.M_2_softmax = torch.nn.Softmax().to('cuda:1')
 
+    # TODO: bypass_accelerator to avoid change placement of model
     def forward(self, *_inputs):
+        M_1__inputs_to_M_1_stem = _inputs[0].to("cuda:0")
         M_1__inputs_to_M_2_stem = _inputs[0].to("cuda:1")
-        M_1_stem = self.M_1_stem(_inputs[0])
+        M_1_stem = self.M_1_stem(M_1__inputs_to_M_1_stem)
         M_2_stem = self.M_2_stem(M_1__inputs_to_M_2_stem)
         M_1_flatten = self.M_1_flatten(M_1_stem)
         M_2_flatten = self.M_2_flatten(M_2_stem)
@@ -125,9 +130,6 @@ class M_2_stem(nn.Module):
         self.pool2 = torch.nn.MaxPool2d(kernel_size=2)
 
     def forward(self, *_inputs):
-        # self.to('cuda:1')
-        # print(_inputs[0].get_device())
-        # print(self.conv1.weight.get_device())
         conv1 = self.conv1(_inputs[0])
         pool1 = self.pool1(conv1)
         conv2 = self.conv2(pool1)
@@ -151,9 +153,9 @@ def _new_trainer():
 
     multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
 
-    lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
-                                                      limit_train_batches=0.25,
-                                                      accelerator=BypassAccelerator(device='cuda:0')),
+    lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                               max_epochs=1,
+                                                               limit_train_batches=0.25),
                              train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     return lightning
@@ -196,9 +198,9 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
-                                                          limit_train_batches=0.25,
-                                                          accelerator=BypassAccelerator(device='cpu')),
+        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                   max_epochs=1,
+                                                                   limit_train_batches=0.25),
                                  train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
         lightning._execute(_model_cpu)
@@ -219,9 +221,9 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        lightning = pl.Lightning(multi_module, pl.Trainer(max_epochs=1,
-                                                          limit_train_batches=0.25,
-                                                          accelerator=BypassAccelerator(device='cuda:0')),
+        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                   max_epochs=1,
+                                                                   limit_train_batches=0.25),
                                  train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                  val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
         lightning._execute(_model_gpu)
@@ -262,7 +264,7 @@ class CGOEngineTest(unittest.TestCase):
 
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']
-        cgo = CGOExecutionEngine(available_devices=available_devices)
+        cgo = CGOExecutionEngine(available_devices=available_devices, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 1)
@@ -275,17 +277,10 @@ class CGOEngineTest(unittest.TestCase):
         lp, models = self._build_logical_with_mnist(3)
         opt = DedupInputOptimizer()
         opt.convert(lp)
-        # TODO: topo_sort may not be stable that leads to different dump. skip
-        # correct_json_path = Path(__file__).parent / 'dedup_logical_graph.json'
-        # with open(correct_json_path , 'r') as fp:
-        #     correct_dump = fp.readlines()
-        #lp_dump = lp.logical_graph._dump()
-
-        # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
 
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1']
-        cgo = CGOExecutionEngine(available_devices=available_devices)
+        cgo = CGOExecutionEngine(available_devices=available_devices, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 2)
@@ -305,8 +300,10 @@ class CGOEngineTest(unittest.TestCase):
 
         models = _load_mnist(2)
         advisor = RetiariiAdvisor()
-        set_execution_engine(CGOExecutionEngine(available_devices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']))
+        cgo_engine = CGOExecutionEngine(available_devices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'], batch_waiting_time=0)
+        set_execution_engine(cgo_engine)
         submit_models(*models)
+        time.sleep(3)
 
         if torch.cuda.is_available() and torch.cuda.device_count() >= 2:
             cmd, data = protocol.receive()
@@ -335,7 +332,9 @@ class CGOEngineTest(unittest.TestCase):
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
+        cgo_engine.join()
 
 
 if __name__ == '__main__':
-    unittest.main()
+    CGOEngineTest().test_submit_models()
+    # unittest.main()
