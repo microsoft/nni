@@ -39,8 +39,8 @@ def register(args):
 
     try:
         service_config = {
-            'node_module_path': info.node_module_path,
-            'node_class_name': info.node_class_name,
+            'nodeModulePath': str(info.node_module_path),
+            'nodeClassName': info.node_class_name,
         }
         json.dumps(service_config)
     except Exception:

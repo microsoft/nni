@@ -61,7 +61,7 @@ export class WebCommandChannel extends CommandChannel {
         this.webSocketServer.on('connection', (client: WebSocket) => {
             this.log.debug(`WebCommandChannel: received connection`);
             client.onerror = (event): void => {
-                this.log.error(`error on client ${JSON.stringify(event)}`);
+                this.log.error('error on client', event);
             }
 
             this.clients.set(client, undefined);
@@ -109,7 +109,7 @@ export class WebCommandChannel extends CommandChannel {
             // undefined means it's expecting initializing message.
             const commands = this.parseCommands(rawCommands);
             let isValid = false;
-            this.log.debug(`WebCommandChannel: received initialize message: ${JSON.stringify(rawCommands)}`);
+            this.log.debug('WebCommandChannel: received initialize message:', rawCommands);
 
             if (commands.length > 0) {
                 const commandType = commands[0][0];

@@ -6,7 +6,6 @@ import os
 import sys
 import json
 import time
-import re
 import shutil
 import subprocess
 from functools import cmp_to_key
@@ -528,7 +527,7 @@ def experiment_clean(args):
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
         # clean local data
-        local_base_dir = experiments_config[experiment_id]['logDir']
+        local_base_dir = experiments_config.experiments[experiment_id]['logDir']
         if not local_base_dir:
             local_base_dir = NNI_HOME_DIR
         local_experiment_dir = os.path.join(local_base_dir, experiment_id)

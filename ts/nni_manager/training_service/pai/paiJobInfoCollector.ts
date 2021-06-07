@@ -18,7 +18,7 @@ interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
  */
 export class PAIJobInfoCollector {
     private readonly trialJobsMap: Map<string, PAITrialJobDetail>;
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('PAIJobInfoCollector');
     private readonly statusesNeedToCheck: TrialJobStatus[];
     private readonly finalStatuses: TrialJobStatus[];
 

@@ -9,6 +9,7 @@ import * as tkill from 'tree-kill';
 import * as component from '../../../common/component';
 import { getLogger, Logger } from '../../../common/log';
 import { ExperimentConfig } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
@@ -17,14 +18,14 @@ import { SharedStorageService } from '../sharedStorage'
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('LocalEnvironmentService');
     private experimentRootDir: string;
     private experimentId: string;
 
-    constructor(experimentRootDir: string, experimentId: string, _config: ExperimentConfig) {
+    constructor(_config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = experimentId;
-        this.experimentRootDir = experimentRootDir;
+        this.experimentId = info.experimentId;
+        this.experimentRootDir = info.logDir;
     }
 
     public get environmentMaintenceLoopInterval(): number {

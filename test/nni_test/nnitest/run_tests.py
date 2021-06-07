@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 
-import ruamel.yaml as yaml
+import yaml
 
 import validators
 from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
@@ -80,7 +80,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
     dump_yml_content(new_config_file, test_yml_config)
-    print(yaml.dump(test_yml_config, default_flow_style=False), flush=True)
+    print(yaml.safe_dump(test_yml_config, default_flow_style=False), flush=True)
 
     return new_config_file
 

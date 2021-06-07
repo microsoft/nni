@@ -10,6 +10,7 @@ import { getLogger, Logger } from '../../../common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { getLogLevel } from '../../../common/utils';
 import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { execMkdir } from '../../common/util';
 import { ExecutorManager } from '../../remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
@@ -32,14 +33,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private experimentId: string;
     private config: FlattenRemoteConfig;
 
-    constructor(experimentRootDir: string, experimentId: string, config: ExperimentConfig) {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = experimentId;
+        this.experimentId = info.experimentId;
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
-        this.experimentRootDir = experimentRootDir;
-        this.log = getLogger();
+        this.experimentRootDir = info.logDir;
+        this.log = getLogger('RemoteEnvironmentService');
         this.config = flattenConfig(config, 'remote');
 
         // codeDir is not a valid directory, throw Error

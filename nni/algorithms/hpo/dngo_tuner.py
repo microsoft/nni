@@ -40,7 +40,7 @@ def _random_config(search_space, random_state):
     return chosen_config
 
 
-class DngoTuner(Tuner):
+class DNGOTuner(Tuner):
 
     def __init__(self, optimize_mode='maximize', sample_size=1000, trials_per_update=20, num_epochs_per_training=500):
         self.searchspace_json = None

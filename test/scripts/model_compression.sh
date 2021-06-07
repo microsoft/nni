@@ -15,21 +15,21 @@ python3 basic_pruners_torch.py --pruner slim --pretrain-epochs 1 --fine-tune-epo
 python3 model_speedup.py --example_name slim
 
 echo "testing l1filter pruning and speedup..."
-python3 basic_pruners_torch.py --pruner l1filter --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
+python3 basic_pruners_torch.py --pruner l1filter --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10 --pretrained-model-dir experiment_data/pretrain_cifar10_vgg16.pth
 python3 model_speedup.py --example_name l1filter
 
 echo "testing apoz pruning and speedup..."
-python3 basic_pruners_torch.py --pruner apoz --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
+python3 basic_pruners_torch.py --pruner apoz --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10 --pretrained-model-dir experiment_data/pretrain_cifar10_vgg16.pth
 python3 model_speedup.py --example_name apoz
 
 echo 'testing level pruner pruning'
 python3 basic_pruners_torch.py --pruner level --pretrain-epochs 1 --fine-tune-epochs 1 --model lenet --dataset mnist
 
 echo 'testing agp pruning'
-python3 basic_pruners_torch.py --pruner agp --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
+python3 basic_pruners_torch.py --pruner agp --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10 --pretrained-model-dir experiment_data/pretrain_cifar10_vgg16.pth
 
 echo 'testing mean_activation pruning'
-python3 basic_pruners_torch.py --pruner mean_activation --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10
+python3 basic_pruners_torch.py --pruner mean_activation --pretrain-epochs 1 --fine-tune-epochs 1 --model vgg16 --dataset cifar10 --pretrained-model-dir experiment_data/pretrain_cifar10_vgg16.pth
 
 echo "testing lottery ticket pruning..."
 python3 lottery_torch_mnist_fc.py --train_epochs 1

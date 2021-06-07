@@ -8,6 +8,7 @@ import * as request from 'request';
 import { Deferred } from 'ts-deferred';
 import * as component from '../../../common/component';
 import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
 import { PAIClusterConfig } from '../../pai/paiConfig';
 import { NNIPAITrialConfig } from '../../pai/paiConfig';
@@ -23,7 +24,7 @@ interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 @component.Singleton
 export class OpenPaiEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('OpenPaiEnvironmentService');
     private paiClusterConfig: PAIClusterConfig | undefined;
     private paiTrialConfig: NNIPAITrialConfig | undefined;
     private paiToken: string;
@@ -31,9 +32,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
     private experimentId: string;
     private config: FlattenOpenpaiConfig;
 
-    constructor(_experimentRootDir: string, experimentId: string, config: ExperimentConfig) {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = experimentId;
+        this.experimentId = info.experimentId;
         this.config = flattenConfig(config, 'openpai');
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
@@ -77,7 +78,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
             // Status code 200 for success
             if ((error !== undefined && error !== null) || response.statusCode >= 400) {
                 const errorMessage: string = (error !== undefined && error !== null) ? error.message :
-                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body: ${JSON.stringify(body)}`;
+                    `OpenPAI: get environment list from PAI Cluster failed!, http code:${response.statusCode}, http body:' ${JSON.stringify(body)}`;
                 this.log.error(`${errorMessage}`);
                 deferred.reject(errorMessage);
             } else {
@@ -113,7 +114,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                                 this.log.debug(`OpenPAI: job ${environment.envId} change status ${oldEnvironmentStatus} to ${environment.status} due to job is ${jobResponse.state}.`)
                             }
                         } else {
-                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:${JSON.stringify(jobResponse)}`);
+                            this.log.error(`OpenPAI: job ${environment.envId} has no state returned. body:`, jobResponse);
                             // some error happens, and mark this environment
                             environment.status = 'FAILED';
                         }

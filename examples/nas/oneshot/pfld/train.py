@@ -63,6 +63,7 @@ def main(args):
         alpha=args.alpha,
         beta=args.beta,
         search_space=search_space,
+        start_epoch=args.start_epoch,
     )
     # look-up table with information of search space, flops per block, etc.
     lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
@@ -162,6 +163,7 @@ def parse_args():
     )
     parser.add_argument("--alpha", default=0.25, type=float)
     parser.add_argument("--beta", default=0.6, type=float)
+    parser.add_argument("--start_epoch", default=50, type=int)
     parser.add_argument("--end_epoch", default=300, type=int)
     parser.add_argument(
         "--snapshot", default="models", type=str, metavar="PATH"

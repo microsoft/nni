@@ -17,10 +17,9 @@ from nni.tools.package_utils import get_builtin_module_class_name
 import nni_node  # pylint: disable=import-error
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
-from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, setPrefixUrl, formatURLPath
+from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, set_prefix_url
 from .config_utils import Config, Experiments
-from .common_utils import get_yml_content, get_json_content, print_error, print_normal, print_warning, \
-                          detect_port, get_user
+from .common_utils import get_yml_content, get_json_content, print_error, print_normal, detect_port, get_user
 
 from .constants import NNI_HOME_DIR, ERROR_INFO, REST_TIME_OUT, EXPERIMENT_SUCCESS_INFO, LOG_HEADER
 from .command_utils import check_output_command, kill_command
@@ -84,7 +83,7 @@ def start_rest_server(port, platform, mode, experiment_id, foreground=False, log
         cmds += ['--foreground', 'true']
     if url_prefix:
         _validate_prefix_path(url_prefix)
-        setPrefixUrl(url_prefix)
+        set_prefix_url(url_prefix)
         cmds += ['--url_prefix', url_prefix]
 
     stdout_full_path, stderr_full_path = get_log_path(experiment_id)
@@ -167,7 +166,8 @@ def set_V1_common_config(experiment_config, port, config_file_name):
     response = rest_put(cluster_metadata_url(port), json.dumps({'version_check': version_check}), REST_TIME_OUT)
     validate_response(response, config_file_name)
     if experiment_config.get('logCollection'):
-        response = rest_put(cluster_metadata_url(port), json.dumps({'log_collection': experiment_config.get('logCollection')}), REST_TIME_OUT)
+        data = json.dumps({'log_collection': experiment_config.get('logCollection')})
+        response = rest_put(cluster_metadata_url(port), data, REST_TIME_OUT)
         validate_response(response, config_file_name)
 
 def setNNIManagerIp(experiment_config, port, config_file_name):
@@ -229,7 +229,8 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
 
 def set_shared_storage(experiment_config, port, config_file_name):
     if 'sharedStorage' in experiment_config:
-        response = rest_put(cluster_metadata_url(port), json.dumps({'shared_storage_config': experiment_config['sharedStorage']}), REST_TIME_OUT)
+        data = json.dumps({'shared_storage_config': experiment_config['sharedStorage']})
+        response = rest_put(cluster_metadata_url(port), data, REST_TIME_OUT)
         err_message = None
         if not response or not response.status_code == 200:
             if response is not None:
@@ -485,7 +486,10 @@ def _validate_v2(config, path):
         print_error(f'Config V2 validation failed: {repr(e)}')
 
 def _validate_prefix_path(path):
-    assert re.match("^[A-Za-z0-9_-]*$", path), "prefix url is invalid."
+    assert not path.startswith('/'), 'URL prefix should not start with "/".'
+    parts = path.split('/')
+    valid = all(re.match('^[A-Za-z0-9_-]*$', part) for part in parts)
+    assert valid, 'URL prefix should only contain letter, number, underscore, and hyphen.'
 
 def create_experiment(args):
     '''start a new experiment'''
@@ -504,7 +508,6 @@ def create_experiment(args):
             config_v1 = config_yml
         else:
             schema = 2
-            from nni.experiment.config import convert
             config_v2 = convert.to_v2(config_yml).json()
     else:
         config_v2 = _validate_v2(config_yml, config_path)
