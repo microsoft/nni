@@ -1,5 +1,7 @@
-Experiment Config Reference
-===========================
+Experiment Config Reference (legacy)
+====================================
+
+This is the previous version (V1) of experiment configuration specification. It is still supported for now, but we recommend users to use `the new version of experiment configuration (V2) <../reference/experiment_config.rst>`_.
 
 A config file is needed when creating an experiment. The path of the config file is provided to ``nnictl``.
 The config file is in YAML format.
