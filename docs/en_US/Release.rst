@@ -6,7 +6,7 @@ Change Log
 ==========
 
 Release 2.3 - 6/9/2021
------------------------
+----------------------
 
 Major Updates
 ^^^^^^^^^^^^^
@@ -20,6 +20,7 @@ Neural Architecture Search
   * Support pure-python execution engine (#3605)
   * Support policy-based RL strategy (#3650)
   * Support nested ModuleList (#3652)
+  * Improve documentation and deprecate old NAS framework
   * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
 
 * Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
@@ -56,7 +57,6 @@ WebUI
 Examples & Documentation
 """"""""""""""""""""""""
 
-* Promote Retiarii documentation and deprecate old NAS framework
 * Convert all trial examples' from config v1 to config v2 (#3721 #3733 #3711 #3600)
 * Add new jupyter notebook examples (#3599 #3700)
 * Add pipeline badge in README (#3589)
