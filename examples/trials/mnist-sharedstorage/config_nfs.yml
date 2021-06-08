@@ -1,28 +1,27 @@
-authorName: default
-experimentName: example_mnist
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-trainingServicePlatform: aml
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 10
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  image: msranni/nni
-amlConfig:
-  subscriptionId: ${replace_to_your_subscriptionId}
-  resourceGroup: ${replace_to_your_resourceGroup}
-  workspaceName: ${replace_to_your_workspaceName}
-  computeTarget: ${replace_to_your_computeTarget}
+trainingService:
+  platform: remote
+  machineList:
+    - host: ${your server's IP or domain name}
+      user: ${your user name}
+      ssh_key_file: ~/.ssh/id_rsa  # We recommend public key over password, it's more secure and convenient.
+    # You can specify more than one SSH servers:
+    - host: 123.123.123.123
+      port: 10022
+      user: nniuser
+      password: 12345
+      pythonPath: /usr/bin  # Other examples:
+                            #   /opt/python3.9/bin
+                            #   C:/Python39
+                            #   C:/Users/USERNAME/.conda/envs/ENVNAME;C:/Users/USERNAME/.conda/envs/ENVNAME/Scripts;C:/Users/USERNAME/.conda/envs/ENVNAME/Library/bin
 sharedStorage:
   storageType: NFS
   localMountPoint: ${your/local/mount/point}
