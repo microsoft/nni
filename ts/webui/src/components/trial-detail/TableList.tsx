@@ -492,6 +492,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
             searchItems
         } = this.state;
 
+        console.info([intermediateDialogTrial]);
         return (
             <div id='tableList'>
                 <Stack horizontal className='panelTitle' style={{ marginTop: 10 }}>

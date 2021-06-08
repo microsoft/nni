@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu, Dropdown, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
@@ -20,7 +20,8 @@ const dragOptions: IDragOptions = {
 
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
-function _parseIntermediates(trial: TableObj): number[] {
+// key: intermdediate dict key
+function _parseIntermediates(trial: TableObj, key: string): number[] {
     const intermediates: number[] = [];
     for (const metric of trial.intermediates) {
         if (metric === undefined) {
@@ -29,7 +30,8 @@ function _parseIntermediates(trial: TableObj): number[] {
         const parsedMetric = parseMetrics(metric.data);
         if (typeof parsedMetric === 'object') {
             // TODO: should handle more types of metric keys
-            intermediates.push(parsedMetric.default);
+            intermediates.push(parsedMetric[key]);
+            // intermediates.push(parsedMetric.default);
         } else {
             intermediates.push(parsedMetric);
         }
@@ -54,9 +56,19 @@ interface CompareProps {
     changeSelectTrialIds?: () => void;
 }
 
-class Compare extends React.Component<CompareProps, {}> {
+interface CompareState {
+    intermediateKey: string; // default, dict other keys
+    intermediateAllKeysList: string[];
+}
+
+class Compare extends React.Component<CompareProps, CompareState> {
     constructor(props: CompareProps) {
         super(props);
+
+        this.state = {
+            intermediateKey: 'default',
+            intermediateAllKeysList: []
+        };
     }
 
     private _generateTooltipSummary = (row: Item, value: string): string =>
@@ -206,8 +218,15 @@ class Compare extends React.Component<CompareProps, {}> {
         onHideDialog();
     };
 
+    private selectOtherKeys = (_event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        if (item !== undefined) {
+            const value = item.text;
+            console.info(value);
+        }
+    };
     render(): React.ReactNode {
         const { trials, title, showDetails } = this.props;
+        const { intermediateKey, intermediateAllKeysList } = this.state;
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -218,7 +237,7 @@ class Compare extends React.Component<CompareProps, {}> {
             duration: convertDuration(trial.duration),
             parameters: flatten(trial.parameters(inferredSearchSpace)),
             metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
-            intermediates: _parseIntermediates(trial)
+            intermediates: _parseIntermediates(trial, intermediateKey)
         }));
 
         return (
@@ -240,6 +259,21 @@ class Compare extends React.Component<CompareProps, {}> {
                             onClick={this.closeCompareModal}
                         />
                     </div>
+                    {intermediateAllKeysList.length > 1 ? (
+                        <Stack horizontalAlign='end' className='selectKeys'>
+                            <Dropdown
+                                className='select'
+                                selectedKey={intermediateKey}
+                                options={intermediateAllKeysList.map((key, item) => {
+                                    return {
+                                        key: key,
+                                        text: intermediateAllKeysList[item]
+                                    };
+                                })}
+                                onChange={this.selectOtherKeys}
+                            />
+                        </Stack>
+                    ) : null}
                     <Stack className='compare-modal-intermediate'>
                         {this._intermediates(items)}
                         <Stack className='compare-yAxis'># Intermediate result</Stack>
