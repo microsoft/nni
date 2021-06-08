@@ -41,6 +41,7 @@ from torchvision.datasets import MNIST
 
 import pytest
 
+
 class _model_cpu(nn.Module):
     def __init__(self):
         super().__init__()
