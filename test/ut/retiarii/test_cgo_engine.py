@@ -1,5 +1,4 @@
 import json
-from nni.retiarii.graph import Node
 import os
 import threading
 import unittest
@@ -12,28 +11,33 @@ import torch.optim as optim
 from pathlib import Path
 
 import nni
-from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
-from nni.retiarii import Model
 
-from nni.retiarii import Model, submit_models
-from nni.retiarii.integration import RetiariiAdvisor
-from nni.retiarii.execution import set_execution_engine
-from nni.retiarii.evaluator.pytorch import PyTorchImageClassificationTrainer, PyTorchMultiModelTrainer
-from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
-from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
-from nni.retiarii.utils import import_
+try:
+    from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
+    from nni.retiarii import Model
+    from nni.retiarii.graph import Node
 
-from nni.retiarii import serialize_cls, serialize
-import nni.retiarii.evaluator.pytorch.lightning as pl
+    from nni.retiarii import Model, submit_models
+    from nni.retiarii.integration import RetiariiAdvisor
+    from nni.retiarii.execution import set_execution_engine
+    from nni.retiarii.execution.logical_optimizer.opt_dedup_input import DedupInputOptimizer
+    from nni.retiarii.execution.logical_optimizer.logical_plan import LogicalPlan
+    from nni.retiarii.utils import import_
+
+    from nni.retiarii import serialize_cls, serialize
+    import nni.retiarii.evaluator.pytorch.lightning as pl
+    from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
+    import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
+    
+    module_import_failed = False
+except ImportError:
+    module_import_failed = True
+
 from sklearn.datasets import load_diabetes
 from torch.utils.data import Dataset
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
-from nni.retiarii.evaluator.pytorch.cgo.accelerator import BypassAccelerator
-import nni.retiarii.evaluator.pytorch.cgo.evaluator as cgo_evaluator
-import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
 
 import pytest
 
@@ -48,19 +52,19 @@ if debug:
 class _model_cpu(nn.Module):
     def __init__(self):
         super().__init__()
-        self.M_1_stem = M_1_stem()  # .to('cuda:0')
-        self.M_2_stem = M_2_stem()  # .to('cuda:1')
-        self.M_1_flatten = torch.nn.Flatten()  # .to('cuda:0')
-        self.M_2_flatten = torch.nn.Flatten()  # .to('cuda:1')
-        self.M_1_fc1 = torch.nn.Linear(out_features=256, in_features=1024)  # .to('cuda:0')
-        self.M_2_fc1 = torch.nn.Linear(out_features=256, in_features=1024)  # .to('cuda:1')
-        self.M_1_fc2 = torch.nn.Linear(out_features=10, in_features=256)  # .to('cuda:0')
-        self.M_2_fc2 = torch.nn.Linear(out_features=10, in_features=256)  # .to('cuda:1')
-        self.M_1_softmax = torch.nn.Softmax()  # .to('cuda:0')
-        self.M_2_softmax = torch.nn.Softmax()  # .to('cuda:1')
+        self.M_1_stem = M_1_stem()
+        self.M_2_stem = M_2_stem()
+        self.M_1_flatten = torch.nn.Flatten()
+        self.M_2_flatten = torch.nn.Flatten()
+        self.M_1_fc1 = torch.nn.Linear(out_features=256, in_features=1024)
+        self.M_2_fc1 = torch.nn.Linear(out_features=256, in_features=1024)
+        self.M_1_fc2 = torch.nn.Linear(out_features=10, in_features=256)
+        self.M_2_fc2 = torch.nn.Linear(out_features=10, in_features=256)
+        self.M_1_softmax = torch.nn.Softmax()
+        self.M_2_softmax = torch.nn.Softmax()
 
     def forward(self, *_inputs):
-        M_1__inputs_to_M_2_stem = _inputs[0]  # .to("cuda:1")
+        M_1__inputs_to_M_2_stem = _inputs[0]
         M_1_stem = self.M_1_stem(_inputs[0])
         M_2_stem = self.M_2_stem(M_1__inputs_to_M_2_stem)
         M_1_flatten = self.M_1_flatten(M_1_stem)
@@ -88,7 +92,6 @@ class _model_gpu(nn.Module):
         self.M_1_softmax = torch.nn.Softmax().to('cuda:0')
         self.M_2_softmax = torch.nn.Softmax().to('cuda:1')
 
-    # TODO: bypass_accelerator to avoid change placement of model
     def forward(self, *_inputs):
         M_1__inputs_to_M_1_stem = _inputs[0].to("cuda:0")
         M_1__inputs_to_M_2_stem = _inputs[0].to("cuda:1")
@@ -189,6 +192,9 @@ def _get_final_result():
 
 
 class CGOEngineTest(unittest.TestCase):
+    def setUp(self):
+        if module_import_failed:
+            self.skipTest('test skip due to failed import of nni.retiarii.evaluator.pytorch.lightning')
 
     def test_multi_model_trainer_cpu(self):
         _reset()
@@ -254,13 +260,6 @@ class CGOEngineTest(unittest.TestCase):
         lp, models = self._build_logical_with_mnist(3)
         opt = DedupInputOptimizer()
         opt.convert(lp)
-        # TODO: topo_sort may not be stable that leads to different dump. skip
-        # correct_json_path = Path(__file__).parent / 'dedup_logical_graph.json'
-        # with open(correct_json_path , 'r') as fp:
-        #     correct_dump = fp.readlines()
-        #lp_dump = lp.logical_graph._dump()
-
-        # self.assertTrue(correct_dump[0] == json.dumps(lp_dump))
 
         advisor = RetiariiAdvisor()
         available_devices = ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']
@@ -290,7 +289,6 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_submit_models(self):
         _reset()
-        # os.environ['CGO_DEVICES'] = 'cuda:0,cuda:1,cuda:2,cuda:3'
         nni.retiarii.debug_configs.framework = 'pytorch'
         os.makedirs('generated', exist_ok=True)
         from nni.runtime import protocol
@@ -308,7 +306,6 @@ class CGOEngineTest(unittest.TestCase):
         if torch.cuda.is_available() and torch.cuda.device_count() >= 2:
             cmd, data = protocol.receive()
             params = json.loads(data)
-            # params['parameters']['training_kwargs']['max_steps'] = 100
 
             tt.init_params(params)
 
@@ -336,5 +333,4 @@ class CGOEngineTest(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    CGOEngineTest().test_submit_models()
-    # unittest.main()
+    unittest.main()
