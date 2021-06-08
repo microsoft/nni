@@ -1,6 +1,9 @@
 from io import BufferedIOBase
+import logging
 import os
 import sys
+
+_logger = logging.getLogger(__name__)
 
 if sys.platform == 'win32':
     import _winapi
@@ -29,8 +32,11 @@ if sys.platform == 'win32':
             return self.file
 
         def close(self) -> None:
-            if self.file is not None:
-                self.file.close()
+            try:
+                if self.file is not None:
+                    self.file.close()
+            except Exception as e:
+                _logger.debug('Error on closing Windows pipe: %s', e)
 
     Pipe = WindowsPipe
 
@@ -55,9 +61,12 @@ else:
             return self.file
 
         def close(self) -> None:
-            if self.file is not None:
-                self.file.close()
-            self._socket.close()
-            os.unlink(self.path)
+            try:
+                if self.file is not None:
+                    self.file.close()
+                self._socket.close()
+                os.unlink(self.path)
+            except Exception as e:
+                _logger.debug('Error on closing POSIX pipe: %s', e)
 
     Pipe = UnixPipe
