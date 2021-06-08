@@ -41,14 +41,6 @@ from torchvision.datasets import MNIST
 
 import pytest
 
-
-debug = False
-
-progress_bar_refresh_rate = 0
-if debug:
-    progress_bar_refresh_rate = 1
-
-
 class _model_cpu(nn.Module):
     def __init__(self):
         super().__init__()
