@@ -5,6 +5,93 @@
 Change Log
 ==========
 
+Release 2.3 - 6/9/2021
+-----------------------
+
+Major Updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Beta Release)
+
+  * Support new high-level APIs: ``Repeat`` and ``Cell`` (#3481)
+  * Support pure-python execution engine (#3605)
+  * Support policy-based RL strategy (#3650)
+  * Support nested ModuleList (#3652)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+* Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
+
+Model Compression
+"""""""""""""""""
+
+* Support Auto Compression Framework (#3631)
+* Support slim pruner in Tensorflow (#3614)
+* Support LSQ quantizer (#3503, thanks the external contributor @chenbohua3)
+* Improve APIs for iterative pruners (#3507 #3688)
+
+Training service & Rest
+"""""""""""""""""""""""
+
+* Support 3rd-party training service (#3662 #3726)
+* Support setting prefix URL (#3625 #3674 #3672 #3643)
+* Improve NNI manager logging (#3624)
+* Remove tensorboard code on nnictl (#3613)
+
+Hyper-Parameter Optimization
+""""""""""""""""""""""""""""
+
+* Add new tuner: DNGO (#3479 #3707)
+* Add benchmark for tuners (#3644 #3720 #3689)
+
+WebUI
+"""""
+
+* Improve search parameters on trial detail page (#3651 #3723 #3715)
+* Make selected trials consistent after auto-refresh in detail table (#3597)
+* Add trial stdout button on local mode (#3653 #3690)
+
+Examples & Documentation
+""""""""""""""""""""""""
+
+* Promote Retiarii documentation and deprecate old NAS framework
+* Convert all trial examples' from config v1 to config v2 (#3721 #3733 #3711 #3600)
+* Add new jupyter notebook examples (#3599 #3700)
+* Add pipeline badge in README (#3589)
+
+Others
+""""""
+
+* Upgrade dependencies in Dockerfile (#3713 #3722)
+* Substitute PyYAML for ``ruamel.yaml`` (#3702)
+* Update issue bug report template (#3501)
+* Add pipelines for AML and hybrid training service and experiment config V2 (#3477 #3648)
+
+
+Bug Fixes & Minor Updates
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix syntax error on Windows (#3634)
+* Fix a logging related bug (#3705)
+* Fix a bug in GPU indices (#3721)
+* Fix a bug in FrameworkController (#3730)
+* Fix a bug in ``export_data_url format`` (#3665)
+* Report version check failure as a warning (#3654)
+* Fix bugs and lints in nnictl (#3712)
+* Fix bug of ``optimize_mode`` on WebUI (#3731)
+* Fix bug of ``useActiveGpu`` in AML v2 config (#3655)
+* Fix bug of ``experiment_working_directory`` in Retiarii config (#3607)
+* Fix a bug in mask conflict (#3629, thanks the external contributor @Davidxswang) 
+* Fix a bug in model speedup shape inference (#3588, thanks the external contributor @Davidxswang)
+* Fix a bug in multithread on Windows (#3604, thanks the external contributor @Ivanfangsc)
+* Delete redundant code in training service (#3526, thanks the external contributor @maxsuren)
+* Fix typo in DoReFa compression doc (#3693, thanks the external contributor @Erfandarzi)
+* Update docstring in model compression (#3647, thanks the external contributor @ichejun)
+* Fix a bug when using Kubernetes container (#3719, thanks the external contributor @rmfan)
+
+
 Release 2.2 - 4/26/2021
 -----------------------
 
