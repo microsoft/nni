@@ -1,21 +1,22 @@
-authorName: default
-experimentName: example_auto-gbdt-metis
+# The search space of Metis tuner is slightly different from TPE and others.
+# See Metis tuner' doc for details: https://nni.readthedocs.io/en/stable/Tuner/MetisTuner.html
+searchSpace:
+  num_leaves:
+    _type: choice
+    _value: [31, 28, 24, 20]
+  learning_rate:
+    _type: choice
+    _value: [0.01, 0.05, 0.1, 0.2]
+  bagging_freq:
+    _type: choice
+    _value: [1, 2, 4, 8, 10]
+
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 10h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space_metis.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 10
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: MetisTuner
+  name: MetisTuner
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: minimize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+trainingService:
+  platform: local

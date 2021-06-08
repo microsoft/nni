@@ -1,23 +1,18 @@
-authorName: default
-experimentName: example_mnist_bohb
+# Run following command first to install dependencies of BOHB tuner:
+#   $ python3 -m pip install nni[BOHB]
+
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
 trialConcurrency: 1
-maxExecDuration: 10h
-maxTrialNum: 1000
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxExperimentDuration: 10h
+maxTrialNumber: 1000
 advisor:
-  #choice: Hyperband, BOHB
-  #(BOHB should be installed through nnictl)
-  builtinAdvisorName: BOHB
+  name: BOHB
   classArgs:
     max_budget: 27
     min_budget: 1
     eta: 3
     optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

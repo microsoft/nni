@@ -1,4 +1,4 @@
-from nni.gridsearch_tuner.gridsearch_tuner import GridSearchTuner
+from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
 
 
 class FixedProductTuner(GridSearchTuner):
