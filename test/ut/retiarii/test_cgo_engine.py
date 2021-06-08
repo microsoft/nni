@@ -28,7 +28,7 @@ try:
     import nni.retiarii.evaluator.pytorch.lightning as pl
     from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
     import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
-    
+
     module_import_failed = False
 except ImportError:
     module_import_failed = True
@@ -309,11 +309,10 @@ class CGOEngineTest(unittest.TestCase):
 
             tt.init_params(params)
 
-            trial_thread = threading.Thread(target=CGOExecutionEngine.trial_execute_graph())
+            trial_thread = threading.Thread(target=CGOExecutionEngine.trial_execute_graph)
             trial_thread.start()
             last_metric = None
             while True:
-                time.sleep(1)
                 if tt._last_metric:
                     metric = tt.get_last_metric()
                     if metric == last_metric:
@@ -323,9 +322,11 @@ class CGOEngineTest(unittest.TestCase):
                     advisor.handle_report_metric_data(metric)
                     last_metric = metric
                 if not trial_thread.is_alive():
+                    trial_thread.join()
                     break
 
             trial_thread.join()
+        
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
