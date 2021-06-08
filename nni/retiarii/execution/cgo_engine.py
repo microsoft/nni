@@ -220,7 +220,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             for idx, _ in enumerate(metrics):
                 merged_metrics[self._trial_to_original_models[trial_id][idx]] = metrics[idx]
             for model_id in merged_metrics:
-                self._original_models[model_id].intermediate_metrics.append(merged_metrics[model_id])
+                self._original_models[model_id].metric = merged_metrics[model_id]
                 for listener in self._listeners:
                     listener.on_metric(self._original_models[model_id], merged_metrics[model_id])
 
