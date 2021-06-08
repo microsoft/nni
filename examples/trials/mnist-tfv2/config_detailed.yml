@@ -1,6 +1,8 @@
 # This example shows more configurable fields comparing to the minimal "config.yml"
 # You can use "nnictl create --config config_detailed.yml" to launch this experiment.
-# If you see an error message saying "port 8080 is used", use "nnictl stop --all" to stop previous experiment.
+# If you see an error message saying "port 8080 is used", use "nnictl stop --all" to stop previous experiments.
+
+name: MNIST                     # An optional name to help you distinguish experiments.
 
 # Hyper-parameter search space can either be configured here or in a seperate file.
 # "config.yml" shows how to specify a seperate search space file.
@@ -25,7 +27,7 @@ searchSpace:
 
 trialCommand: python3 mnist.py  # The command to launch a trial. NOTE: change "python3" to "python" if you are using Windows.
 trialCodeDirectory: .           # The path of trial code. By default it's ".", which means the same directory of this config file.
-trialGpuNumber: 1               # How many GPUs should each trial use. CUDA is required when it's greator than zero.
+trialGpuNumber: 1               # How many GPUs should each trial use. CUDA is required when it's greater than zero.
 
 trialConcurrency: 4             # Run 4 trials concurrently.
 maxTrialNumber: 10              # Generate at most 10 trials.
