@@ -264,6 +264,7 @@ class CGOEngineTest(unittest.TestCase):
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
+        cgo.join()
 
     def test_dedup_input_two_devices(self):
         _reset()
@@ -280,6 +281,7 @@ class CGOEngineTest(unittest.TestCase):
         advisor.stopping = True
         advisor.default_worker.join()
         advisor.assessor_worker.join()
+        cgo.join()
 
     def test_submit_models(self):
         _reset()
@@ -307,6 +309,7 @@ class CGOEngineTest(unittest.TestCase):
             trial_thread.start()
             last_metric = None
             while True:
+                time.sleep(1)
                 if tt._last_metric:
                     metric = tt.get_last_metric()
                     if metric == last_metric:
