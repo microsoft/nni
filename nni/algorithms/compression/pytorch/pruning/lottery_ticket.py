@@ -3,8 +3,9 @@
 
 import copy
 import logging
+from nni.utils import OptimizeMode
 import torch
-from schema import And, Optional
+from schema import And, Optional, SchemaError
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
 from .finegrained_pruning_masker import LevelPrunerMasker
@@ -57,14 +58,18 @@ class LotteryTicketPruner(Pruner):
                 - sparsity : The final sparsity when the compression is done.
         """
         schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             'prune_iterations': And(int, lambda n: n > 0),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
         assert len(set([x['prune_iterations'] for x in config_list])) == 1, 'The values of prune_iterations must be equal in your config'
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _calc_sparsity(self, sparsity):
         keep_ratio_once = (1 - sparsity) ** (1 / self.prune_iterations)

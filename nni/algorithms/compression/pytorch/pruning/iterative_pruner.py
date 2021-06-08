@@ -3,8 +3,9 @@
 
 import logging
 import copy
+from nni.utils import OptimizeMode
 import torch
-from schema import And, Optional
+from schema import And, Optional, SchemaError
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from .constants import MASKER_DICT
 from .dependency_aware_pruner import DependencyAwarePruner
@@ -127,23 +128,6 @@ class AGPPruner(IterativePruner):
         self.freq = epochs_per_iteration
         self.end_epoch = epochs_per_iteration * num_iterations
         self.set_wrappers_attribute("if_calculated", False)
-
-    def validate_config(self, model, config_list):
-        """
-        Parameters
-        ----------
-        model : torch.nn.Module
-            Model to be pruned
-        config_list : list
-            List on pruning configs
-        """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 <= n <= 1),
-            Optional('op_types'): [str],
-            Optional('op_names'): [str]
-        }], model, logger)
-
-        schema.validate(config_list)
 
     def _supported_dependency_aware(self):
         return False
@@ -300,18 +284,23 @@ class ADMMPruner(IterativePruner):
 
         if self._base_algo == 'level':
             schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
         elif self._base_algo in ['l1', 'l2', 'fpgm']:
             schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
-                Optional('op_names'): [str]
+                Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _supported_dependency_aware(self):
         return False
@@ -436,15 +425,19 @@ class SlimPruner(IterativePruner):
 
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             'op_types': ['BatchNorm2d'],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
 
         if len(config_list) > 1:
             logger.warning('Slim pruner only supports 1 configuration')
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _supported_dependency_aware(self):
         return True

@@ -4,7 +4,7 @@
 import logging
 import copy
 import torch
-from schema import Schema, And, Or, Optional
+from schema import Schema, And, Or, Optional, SchemaError
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
 
@@ -26,10 +26,14 @@ class NaiveQuantizer(Quantizer):
             Optional('quant_types'): ['weight'],
             Optional('quant_bits'): Or(8, {'weight': 8}),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -191,10 +195,14 @@ class QAT_Quantizer(Quantizer):
             })),
             Optional('quant_start_step'): And(int, lambda n: n >= 0),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _quantize(self, bits, op, real_val):
         """
@@ -402,10 +410,14 @@ class DoReFaQuantizer(Quantizer):
                 Optional('weight'): And(int, lambda n: 0 < n < 32)
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -510,10 +522,14 @@ class BNNQuantizer(Quantizer):
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
+        for config in config_list:
+            if 'exclude' not in config and 'sparsity' not in config:
+                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
