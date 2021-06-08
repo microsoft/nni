@@ -299,10 +299,7 @@ You can use these commands to get more information about the experiment
 
 * Open the `Web UI url` in your browser, you can view detailed information of the experiment and all the submitted trial jobs as shown below. [Here](https://nni.readthedocs.io/en/stable/Tutorial/WebUI.html) are more Web UI pages.
 
-<table style="border: none">
-    <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
-    <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
-</table>
+<img src="./docs/img/webui-img/webui.gif" alt="webui" height="350"/>
 
 ## **Releases and Contributing**
 NNI has a monthly release cycle (major releases). Please let us know if you encounter a bug by [filling an issue](https://github.com/microsoft/nni/issues/new/choose).
