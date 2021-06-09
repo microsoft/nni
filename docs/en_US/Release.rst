@@ -21,7 +21,7 @@ Neural Architecture Search
   * Support policy-based RL strategy (#3650)
   * Support nested ModuleList (#3652)
   * Updated documentation
-**Note**: there are more exciting Retiarii features planned in future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/issues/3301>`__  for more information.
+**Note**: there are more exciting Retiarii features planned in future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/discussions/3744>`__  for more information.
 
 * Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
 
