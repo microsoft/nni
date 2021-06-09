@@ -14,14 +14,14 @@ Major Updates
 Neural Architecture Search
 """"""""""""""""""""""""""
 
-* Improve NAS 2.0 (Retiarii) Framework (Beta Release)
+* Retiarii Framework (NNI NAS 2.0) Beta Release with new features:
 
   * Support new high-level APIs: ``Repeat`` and ``Cell`` (#3481)
   * Support pure-python execution engine (#3605)
   * Support policy-based RL strategy (#3650)
   * Support nested ModuleList (#3652)
-  * Improve documentation and deprecate old NAS framework
-  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+  * Updated documentation
+**Note**: there are more exciting Retiarii features planned in future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/issues/3301>`__  for more information.
 
 * Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
 
