@@ -75,8 +75,8 @@ Oneshot Trainers
 ..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
     :members:
 
-Strategies
-----------
+Exploration Strategies
+----------------------
 
 ..  autoclass:: nni.retiarii.strategy.Random
     :members:
@@ -88,6 +88,9 @@ Strategies
     :members:
 
 ..  autoclass:: nni.retiarii.strategy.TPEStrategy
+    :members:
+
+..  autoclass:: nni.retiarii.strategy.PolicyBasedRL
     :members:
 
 Retiarii Experiments

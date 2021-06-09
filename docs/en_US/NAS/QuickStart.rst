@@ -1,23 +1,16 @@
-Neural Architecture Search with Retiarii (Alpha)
-================================================
+Quick Start of Retiarii on NNI
+==============================
 
-*This is a pre-release, its interfaces may subject to minor changes. The roadmap of this feature is: experimental in V2.0 -> alpha version in V2.1 -> beta version in V2.2 -> official release in V2.3. Feel free to give us your comments and suggestions.*
-
-`Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ is a new framework to support neural architecture search and hyper-parameter tuning. It allows users to express various search space with high flexibility, to reuse many SOTA search algorithms, and to leverage system level optimizations to speed up the search process. This framework provides the following new user experiences.
-
-* Search space can be expressed directly in user model code. A tuning space can be expressed during defining a model.
-* Neural architecture candidates and hyper-parameter candidates are more friendly supported in an experiment.
-* The experiment can be launched directly from python code.
-
-.. Note:: `Our previous NAS framework <../Overview.rst>`__ is still supported for now, but will be migrated to Retiarii framework in V2.3.
 
 .. contents::
 
-There are mainly two crucial components for a neural architecture search task, namely,
+In this quick start tutorial, we use multi-trial NAS as an example to show how to construct and explore a model space. There are mainly three crucial components for a neural architecture search task, namely,
 
 * Model search space that defines the set of models to explore.
 * A proper strategy as the method to explore this search space.
 * A model evaluator that reports the performance of a given model.
+
+One-shot NAS tutorial can be found `here <./OneshotTrainer.rst>`__.
 
 .. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested with **PyTorch 1.6 and 1.7**. This documentation assumes PyTorch context but it should also apply to other frameworks, that is in our future plan.
 

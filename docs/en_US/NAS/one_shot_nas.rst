@@ -7,8 +7,9 @@ One-shot NAS algorithms leverage weight sharing among models in neural architect
 ..  toctree::
     :maxdepth: 1
 
-    One-shot NAS Experiment <OneshotTrainer>
+    Run One-shot NAS <OneshotTrainer>
     ENAS <ENAS>
     DARTS <DARTS>
     SPOS <SPOS>
     ProxylessNAS <Proxylessnas>
+    Customize one-shot NAS <WriteOneshot>

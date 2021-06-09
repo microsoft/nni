@@ -1,7 +1,7 @@
 Express Mutations with Mutators
 ===============================
 
-Besides inline mutations which have been demonstrated `here <./Tutorial.rst>`__, Retiarii provides a more general approach to express a model space: *Mutator*. Inline mutations APIs are also implemented with mutator, which can be seen as a special case of model mutation.
+Besides the inline mutation APIs demonstrated `here <./MutationPrimitives.rst>`__, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
 
 .. note:: Mutator and inline mutation APIs cannot be used together.
 
