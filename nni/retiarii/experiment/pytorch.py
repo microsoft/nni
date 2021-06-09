@@ -52,6 +52,7 @@ class RetiariiExeConfig(ConfigBase):
     devices: Optional[List[Union[str, PhysicalDevice]]] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
+    batch_waiting_time: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
@@ -64,7 +65,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(platform = training_service_platform)
+            self.training_service = util.training_service_config_factory(platform=training_service_platform)
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry base'
 
     def __setattr__(self, key, value):
@@ -105,8 +106,9 @@ _validation_rules = {
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
-    'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
+    'training_service': lambda value: (not isinstance(value, TrainingServiceConfig), 'cannot be abstract base class')
 }
+
 
 def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
     # TODO: this logic might need to be refactored into execution engine
@@ -125,10 +127,11 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
 
     if mutators is not None and applied_mutators:
         raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
-                            'do not use mutators when you use LayerChoice/InputChoice')
+                           'do not use mutators when you use LayerChoice/InputChoice')
     if mutators is not None:
         applied_mutators = mutators
     return base_model_ir, applied_mutators
+
 
 def debug_mutated_model(base_model, trainer, applied_mutators):
     """
@@ -179,7 +182,7 @@ class RetiariiExperiment(Experiment):
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
         # TODO: find out a proper way to show no more trial message on WebUI
-        #self._dispatcher.mark_experiment_as_ending()
+        # self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -202,8 +205,11 @@ class RetiariiExperiment(Experiment):
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
             assert self.config.devices is not None, "devices must be set to use CGOExecutionEngine"
-            assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
-            engine = CGOExecutionEngine(self.config.devices, max_concurrency=self.config.trial_concurrency)
+            # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
+            assert self.config.batch_waiting_time is not None
+            engine = CGOExecutionEngine(self.config.devices,
+                                        max_concurrency=self.config.trial_concurrency,
+                                        batch_waiting_time=self.config.batch_waiting_time)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
@@ -290,7 +296,7 @@ class RetiariiExperiment(Experiment):
         """
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
- 
+
         if self.id is not None:
             nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:

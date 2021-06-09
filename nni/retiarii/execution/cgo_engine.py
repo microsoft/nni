@@ -35,11 +35,17 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     available_devices : List[str] or List[PhysicalDevice]
         Available devices for execution.
         If a list of str is provided, it will build a list of PhysicalDevices in a server named ``single_server``
+    max_concurrency : int
+        The maximum number of trials to run concurrently.
+    batch_waiting_time: int
+        Seconds to wait for each batch of trial submission.
+        The trials within one batch could apply cross-graph optimization.
     """
 
     def __init__(self, available_devices: List[Union[str, PhysicalDevice]] = None,
                  max_concurrency: int = None,
-                 batch_waiting_time: int = 60) -> None:
+                 batch_waiting_time: int = 60,
+                 ) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
@@ -211,7 +217,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 listener.on_intermediate_metric(self._original_models[model_id], merged_metrics[model_id])
 
     def _final_metric_callback(self, trial_id: int, metrics: MetricData) -> None:
-        _logger.error(metrics)
+        _logger.debug(metrics)
 
         if isinstance(metrics, float):
             self._listeners[0].on_metric(self._running_models[trial_id], metrics)
@@ -229,7 +235,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         return len(self.available_devices) - len(self._queuing_jobs)
 
     def budget_exhausted(self) -> bool:
-        raise NotImplementedError
+        advisor = get_advisor()
+        return advisor.stopping
 
     @classmethod
     def trial_execute_graph(cls) -> None:

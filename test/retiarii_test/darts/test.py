@@ -31,7 +31,8 @@ if __name__ == '__main__':
     test_dataset = serialize(CIFAR10, root='data/cifar10', train=False, download=True, transform=valid_transform)
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                max_epochs=1, limit_train_batches=0.2)
+                                max_epochs=1, limit_train_batches=0.2,
+                                progress_bar_refresh_rate=0)
 
     simple_strategy = strategy.Random()
 
