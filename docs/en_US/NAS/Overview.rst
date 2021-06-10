@@ -19,7 +19,9 @@ There are three key characteristics of the Retiarii framework:
 * Users can directly use many SOTA NAS algorithms to explore their model space.
 * There are system level optimizations in Retiarii to speed up the exploration process.
 
-There are two types of model space exploration approach: multi-trial NAS and one-shot NAS. Users can construct a model space and use either exploration appraoch to explore the space. Please refer to `Quick Start <./QuickStart.rst>`__ for how to run a NAS experiment on NNI.
+There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration appraoch to explore the model space. 
+
+Please refer to `Quick Start <./QuickStart.rst>`__ for how to run a NAS experiment on NNI.
 
 .. Note:: `The previous NAS framework <https://nni.readthedocs.io/en/v1.9/nas.html>`__ is deprecated, we highly recommend users to move to this Retiarii framework.
 
