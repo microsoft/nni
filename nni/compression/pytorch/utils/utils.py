@@ -50,7 +50,7 @@ def rand_like_with_shape(shape, ori_t):
     else:
         return torch.rand(shape, dtype=dtype, device=device, requires_grad=require_grad)
 
-def randomize_tensor(tensor, start=1, end=10):
+def randomize_tensor(tensor, start=1, end=100):
     """
     Randomize the target tensor according to the given
     range.

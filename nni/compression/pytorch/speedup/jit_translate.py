@@ -74,7 +74,22 @@ def mean_python(node, speedup):
 
 
 def add_python(node, speedup):
-    return torch.add
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    constant = None
+    for i in range(2):
+        input_i = inputs[i]
+        debug_name = input_i.debugName()
+        if debug_name not in speedup.internal_result:
+            # this input is a constant value
+            # TODO: what if this input is a constant tensor
+            constant = input_i.toIValue()
+            break
+    if constant is None:
+        return torch.add
+    else:
+        new_add = partial(torch.add, constant)
+        return new_add
 
 
 def slice_python(node, speedup):
@@ -261,6 +276,41 @@ def tupleunpack_python(node, speedup):
     return None
 
 
+def to_python(node, speedup):
+    # for the time being, only device parameters are supported
+    class ToModule(torch.nn.Module):
+        def __init__(self, device):
+            super(ToModule, self).__init__()
+
+        def forward(self, x):
+            return x.to(device)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    device = inputs[3].toIValue()
+    return ToModule(device)
+
+
+def typeas_python(node, speedup):
+    raise NotImplementedError
+
+
+def upsample_bilinear2d_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    size_list_node = inputs[1].node()
+    scale_list_node = inputs[3].node()
+    size_list = None
+    scale_list = None
+    if size_list_node.kind() == 'prim::ListConstruct':
+        size_list = translate_list(inputs[1])
+    if scale_list_node.kind() == 'prim::ListConstruct':
+        scale_list = translate_list(inputs[3])
+    new_upsample = partial(torch.nn.functional.upsample_bilinear,
+                           size=size_list, scale_factor=scale_list)
+    return new_upsample
+
+
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
@@ -289,7 +339,12 @@ trans_from_jit_to_python = {
     'aten::avg_pool2d': avgpool2d_python,
     'aten::max_pool2d': avgpool2d_python,
     'aten::adaptive_avg_pool2d': adaptive_avgpool_python,
-    'prim::TupleUnpack': tupleunpack_python
+    'aten::to': to_python,
+    'aten::type_as': typeas_python,
+    'aten::upsample_bilinear2d': upsample_bilinear2d_python,
+    'prim::TupleUnpack': tupleunpack_python,
+    'prim::ListUnpack': tupleunpack_python
+
 }
 
 
@@ -314,8 +369,8 @@ def jit_to_python_function(node, speedup):
     logger.debug(
         'Translate C function %s into its python version', node.op_type)
     if node.op_type not in trans_from_jit_to_python:
-        logger.warning(
-            '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~')
+        logger.error(
+            '%s is not Supported! Please report an issue at https://github.com/microsoft/nni. Thanks~', node.op_type)
         # return None to skip the mask inference for this node
         return None
     return trans_from_jit_to_python[node.op_type](node, speedup)
