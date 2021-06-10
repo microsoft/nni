@@ -106,7 +106,7 @@ _validation_rules = {
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
-    'training_service': lambda value: (not isinstance(value, TrainingServiceConfig), 'cannot be abstract base class')
+    'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
 
