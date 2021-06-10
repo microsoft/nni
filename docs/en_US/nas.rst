@@ -15,7 +15,7 @@ Exploratory training with Retiarii allows user to express various search space f
 
 Some frequently used terminologies in this document:
 
-* *Model search space*: it means a set of models from which the best model is explored/searched. It has the same meaning as *search space* used in NAS papers.
+* *Model search space*: it means a set of models from which the best model is explored/searched. Sometimes we use *search space* or *model space* in short.
 * *Exploration strategy*: the algorithm that is used to explore a model search space.
 * *Model evaluator*: it is used to train a model and evaluate the model's performance.
 
