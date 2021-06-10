@@ -10,11 +10,14 @@ However, it takes great efforts to implement NAS algorithms, and it is hard to r
 To facilitate NAS innovations (e.g., design and implement new NAS models, compare different NAS models side-by-side),
 an easy-to-use and flexible programming interface is crucial.
 
-Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model. 
+Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model.
+Exploratory training with Retiarii allows user to express various search space for *Neural Architecture Search* and *Hyper-Parameter Tuning* with high flexibility.
 
-Exploratory training with Retiarii allows user to express various search space for **Neural Architecture Search** and **Hyper-Parameter Tuning** with high flexibility. 
+Some frequently used terminologies in this document:
 
-The Retiarii framework continued the ability for allowing user to reuse SOTA search algorithms, and to leverage system level optimizations to speed up the search process.
+* *Model search space*: it means a set of models from which the best model is explored/searched. It has the same meaning as *search space* used in NAS papers.
+* *Exploration strategy*: the algorithm that is used to explore a model search space.
+* *Model evaluator*: it is used to train a model and evaluate the model's performance.
 
 Follow the instructions below to start your journey with Retiarii.
 
@@ -26,6 +29,5 @@ Follow the instructions below to start your journey with Retiarii.
     Construct Model Space <NAS/construct_space>
     Multi-trial NAS <NAS/multi_trial_nas>
     One-shot NAS <NAS/one_shot_nas>
-    Execution Engines <NAS/ExecutionEngines>
     NAS Benchmarks <NAS/Benchmarks>
     NAS API References <NAS/ApiReference>

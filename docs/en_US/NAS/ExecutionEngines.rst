@@ -6,15 +6,14 @@ Execution engine is for running NAS experiment. NNI supports three execution eng
 Pure-python Execution Engine
 ----------------------------
 
-We recommend users to use this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. This execution engine will become the default execution engine in future version of Retiarii.
+We recommend users to use this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. This execution engine is the default execution engine in Retiarii.
 
-Three steps are needed to use this engine now.
+Two steps are needed to use this engine now.
 
 1. Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch model.
-2. Add ``config.execution_engine = 'py'`` to ``RetiariiExeConfig``.
 3. If you need to export top models, formatter needs to be set to ``dict``. Exporting ``code`` won't work with this engine.
 
-.. note:: You should always use ``super().__init__()` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
+.. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
 
 Graph-based Execution Engine
 ----------------------------
@@ -44,7 +43,7 @@ Users may find ``@basic_unit`` helpful in some cases. ``@basic_unit`` here means
 Three steps are need to use graph-based execution engine.
 
 1. Remove ``@nni.retiarii.model_wrapper`` if there is any in your model.
-2. Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The execution engine is 'base' by default for now, will be changed to 'py' in future release.
+2. Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The default value of ``execution_engine`` is 'py', which means pure-python execution engine.
 3. Add ``@basic_unit`` when necessary following the above guidelines.
 
 CGO Execution Engine

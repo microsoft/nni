@@ -1,10 +1,12 @@
-Neural Architecture Search (Retiarii)
-=====================================
+Retiarii for Neural Architecture Search
+=======================================
+
+.. Note:: NNI's latest NAS supports are all based on Retiarii Framework, users who are still on `early version using NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ shall migrate your work to Retiarii as soon as possible.
 
 .. contents::
 
 Motivation
---------
+----------
 
 Automatic neural architecture search is playing an increasingly important role in finding better models. Recent research has proven the feasibility of automatic NAS and has led to models that beat many manually designed and tuned models. Representative works include `NASNet <https://arxiv.org/abs/1707.07012>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1806.09055>`__\ , `Network Morphism <https://arxiv.org/abs/1806.10282>`__\ , and `Evolution <https://arxiv.org/abs/1703.01041>`__. In addition, new innovations continue to emerge.
 
@@ -15,15 +17,11 @@ Overview
 
 There are three key characteristics of the Retiarii framework:
 
-* Users can easily express model space on their original PyTorch/TensorFlow model. The model space could include both neural architectures and hyper-parameters.
-* Users can directly use many SOTA NAS algorithms to explore their model space.
-* There are system level optimizations in Retiarii to speed up the exploration process.
+* Simple APIs are provided for defining model search space within PyTorch/TensorFlow model.
+* SOTA NAS algorithms are built-in to be used for exploring model search space.
+* System-level optimizations are implemented for speeding up the exploration.
 
 There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration appraoch to explore the model space. 
-
-Please refer to `Quick Start <./QuickStart.rst>`__ for how to run a NAS experiment on NNI.
-
-.. Note:: `The previous NAS framework <https://nni.readthedocs.io/en/v2.2/nas.html>`__ is deprecated, we highly recommend users to move to this Retiarii framework.
 
 
 Multi-trial NAS
@@ -35,7 +33,7 @@ Multi-trial NAS means each sampled model from model space is trained independent
    :header-rows: 1
    :widths: auto
 
-   * - Name
+   * - Exploration Strategy Name
      - Brief Introduction of Algorithm
    * - Random Strategy
      - Randomly sampling new model(s) from user defined model space. (``nni.retiarii.strategy.Random``)
@@ -61,7 +59,7 @@ Below is the supported one-shot NAS algorithms. More one-shot NAS will be suppor
    :header-rows: 1
    :widths: auto
 
-   * - Name
+   * - One-shot Algorithm Name
      - Brief Introduction of Algorithm
    * - `ENAS <ENAS.rst>`__
      - `Efficient Neural Architecture Search via Parameter Sharing <https://arxiv.org/abs/1802.03268>`__. In ENAS, a controller learns to discover neural network architectures by searching for an optimal subgraph within a large computational graph. It uses parameter sharing between child models to achieve fast speed and excellent performance.
@@ -79,5 +77,6 @@ Reference and Feedback
 
 * `Quick Start <./QuickStart.rst>`__ ;
 * `Construct Your Model Space <./construct_space.rst>`__ ;
+* `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ ;
 * To `report a bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__ for this feature in GitHub ;
 * To `file a feature or improvement request <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__ for this feature in GitHub .

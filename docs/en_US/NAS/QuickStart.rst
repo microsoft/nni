@@ -173,10 +173,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp_config.trial_concurrency = 2
   exp_config.max_trial_number = 10
   exp_config.training_service.use_active_gpu = False
-  exp_config.execution_engine = 'py'
   exp.run(exp_config, 8081)
-
-Users can choose different execution engines to run the model search, according to their needs. The detailed descriptions of the supported execution engiens can be found `here <./ExecutionEngines.rst>`__.
 
 The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`.
 
@@ -185,8 +182,8 @@ Visualize the Experiment
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../../Tutorial/WebUI.rst>`__ for details.
 
-Export Found Top Models
------------------------
+Export Top Models
+-----------------
 
 Users can export top models after the exploration is done using ``export_top_models``.
 
