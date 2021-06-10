@@ -39,7 +39,11 @@ class _MultiModelSupervisedLearningModule(LightningModule):
     def training_step(self, batch, batch_idx):
         x, y = batch
         multi_y_hat = self(x)
-        assert(len(multi_y_hat) == self.n_models)
+        if isinstance(multi_y_hat, tuple):
+            assert len(multi_y_hat) == self.n_models
+        else:
+            assert self.n_models == 1
+            multi_y_hat = [multi_y_hat]
         multi_loss = []
         for idx, y_hat in enumerate(multi_y_hat):
             loss = self.criterion(y_hat.to("cpu"), y.to("cpu"))
@@ -52,7 +56,11 @@ class _MultiModelSupervisedLearningModule(LightningModule):
     def validation_step(self, batch, batch_idx):
         x, y = batch
         multi_y_hat = self(x)
-        assert(len(multi_y_hat) == self.n_models)
+        if isinstance(multi_y_hat, tuple):
+            assert len(multi_y_hat) == self.n_models
+        else:
+            assert self.n_models == 1
+            multi_y_hat = [multi_y_hat]
         for idx, y_hat in enumerate(multi_y_hat):
             self.log(f'val_loss_{idx}', self.criterion(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
             for name, metric in self.metrics.items():
@@ -61,7 +69,11 @@ class _MultiModelSupervisedLearningModule(LightningModule):
     def test_step(self, batch, batch_idx):
         x, y = batch
         multi_y_hat = self(x)
-        assert(len(multi_y_hat) == self.n_models)
+        if isinstance(multi_y_hat, tuple):
+            assert len(multi_y_hat) == self.n_models
+        else:
+            assert self.n_models == 1
+            multi_y_hat = [multi_y_hat]
         for idx, y_hat in enumerate(multi_y_hat):
             self.log(f'test_loss_{idx}', self.criterion(y_hat.to("cpu"), y.to("cpu")), prog_bar=True)
             for name, metric in self.metrics.items():
