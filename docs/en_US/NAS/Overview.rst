@@ -3,12 +3,15 @@ Neural Architecture Search (Retiarii)
 
 .. contents::
 
-Overview
+Motivation
 --------
 
-Automatic neural architecture search is taking an increasingly important role in finding better models. Recent research has proved the feasibility of automatic NAS and has lead to models that beat many manually designed and tuned models. Some representative works are `NASNet <https://arxiv.org/abs/1707.07012>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1806.09055>`__\ , `Network Morphism <https://arxiv.org/abs/1806.10282>`__\ , and `Evolution <https://arxiv.org/abs/1703.01041>`__. Further, new innovations keep emerging.
+Automatic neural architecture search is playing an increasingly important role in finding better models. Recent research has proven the feasibility of automatic NAS and has led to models that beat many manually designed and tuned models. Representative works include `NASNet <https://arxiv.org/abs/1707.07012>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1806.09055>`__\ , `Network Morphism <https://arxiv.org/abs/1806.10282>`__\ , and `Evolution <https://arxiv.org/abs/1703.01041>`__. In addition, new innovations continue to emerge.
 
-However, it is pretty hard to leverage existing NAS works to help common DNN model development. Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, a novel NAS/HPO framework, and implement it in NNI. It helps users easily construct a model space (or search space, tuning space), and leverage existing NAS algorithms. This framework also facilitates NAS innovations, for designing new NAS algorithms.
+However, it is pretty hard to use existing NAS work to help develop common DNN models. Therefore, we designed `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, a novel NAS/HPO framework, and implemented it in NNI. It helps users easily construct a model space (or search space, tuning space), and utilize existing NAS algorithms. The framework also facilitates NAS innovation and is used to design new NAS algorithms.
+
+Overview
+--------
 
 There are three key characteristics of the Retiarii framework:
 
@@ -16,7 +19,9 @@ There are three key characteristics of the Retiarii framework:
 * Users can directly use many SOTA NAS algorithms to explore their model space.
 * There are system level optimizations in Retiarii to speed up the exploration process.
 
-There are two types of model space exploration approach: multi-trial NAS and one-shot NAS. Users can construct a model space and use either exploration appraoch to explore the space. Please refer to `Quick Start <./QuickStart.rst>`__ for how to run a NAS experiment on NNI.
+There are two types of model space exploration approach: **Multi-trial NAS** and **One-shot NAS**. Mutli-trial NAS trains each sampled model in the model space independently, while One-shot NAS samples the model from a super model. After constructing the model space, users can use either exploration appraoch to explore the model space. 
+
+Please refer to `Quick Start <./QuickStart.rst>`__ for how to run a NAS experiment on NNI.
 
 .. Note:: `The previous NAS framework <https://nni.readthedocs.io/en/v2.2/nas.html>`__ is deprecated, we highly recommend users to move to this Retiarii framework.
 
