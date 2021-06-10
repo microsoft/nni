@@ -12,7 +12,7 @@ Neural Network Intelligence
     Installation <installation>
     QuickStart <Tutorial/QuickStart>
     Auto (Hyper-parameter) Tuning <hyperparameter_tune>
-    Neural Architecture Search (Retiarii) <nas>
+    Neural Architecture Search <nas>
     Model Compression <model_compression>
     Feature Engineering <feature_engineering>
     References <reference>
