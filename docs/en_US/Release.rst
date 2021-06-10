@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.3 - 6/9/2021
+Release 2.3 - 6//2021
 ----------------------
 
 Major Updates
@@ -20,8 +20,9 @@ Neural Architecture Search
   * Support pure-python execution engine (#3605)
   * Support policy-based RL strategy (#3650)
   * Support nested ModuleList (#3652)
-  * Updated documentation
-**Note**: there are more exciting Retiarii features planned in future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/discussions/3744>`__  for more information.
+  * Improve documentation (#3785)
+
+  **Note**: there are more exciting features of Retiarii planned in the future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/discussions/3744>`__  for more information.
 
 * Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
 
@@ -39,7 +40,7 @@ Training service & Rest
 * Support 3rd-party training service (#3662 #3726)
 * Support setting prefix URL (#3625 #3674 #3672 #3643)
 * Improve NNI manager logging (#3624)
-* Remove tensorboard code on nnictl (#3613)
+* Remove outdated TensorBoard code on nnictl (#3613)
 
 Hyper-Parameter Optimization
 """"""""""""""""""""""""""""
@@ -59,15 +60,15 @@ Examples & Documentation
 
 * Convert all trial examples' from config v1 to config v2 (#3721 #3733 #3711 #3600)
 * Add new jupyter notebook examples (#3599 #3700)
-* Add pipeline badge in README (#3589)
 
-Others
-""""""
+Dev Excellent
+"""""""""""""
 
 * Upgrade dependencies in Dockerfile (#3713 #3722)
 * Substitute PyYAML for ``ruamel.yaml`` (#3702)
-* Update issue bug report template (#3501)
 * Add pipelines for AML and hybrid training service and experiment config V2 (#3477 #3648)
+* Add pipeline badge in README (#3589)
+* Update issue bug report template (#3501)
 
 
 Bug Fixes & Minor Updates
