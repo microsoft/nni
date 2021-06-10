@@ -139,6 +139,7 @@ def serialize(cls, *args, **kwargs):
     To create an serializable instance inline without decorator. For example,
 
     .. code-block:: python
+
         self.op = serialize(MyCustomOp, hidden_units=128)
     """
     return serialize_cls(cls)(*args, **kwargs)

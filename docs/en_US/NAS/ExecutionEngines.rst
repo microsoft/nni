@@ -1,16 +1,14 @@
 Execution Engines
 =================
 
-Execution engine is for running NAS experiment. NNI supports several execution engines, each of them has their own characteristics. **Pure-python execution engine** does not have special requirement on user model, it only supports model space expressed with inline mutation APIs. **Graph-based execution engine** requires that user's model should be able to be parsed by TorchScript, it supports model space expressed with both inline mutation APIs and mutators. **CGO execution engine** has the same requirement and ability to graph-based execution engine, it further enables cross-model optimizations, which makes model space exploration faster.
+Execution engine is for running NAS experiment. NNI supports three execution engines, each of them has their own characteristics. **Pure-python execution engine** does not have special requirement on user model, it supports the model space expressed with `inline mutation APIs <./MutationPrimitives.rst>`__. **Graph-based execution engine** requires that user's model should be able to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, it supports model space expressed with both `inline mutation APIs <./MutationPrimitives.rst>`__ and `mutators <./Mutators.rst>`__. **CGO execution engine** has the same requirement and ability to graph-based execution engine, it further enables cross-model optimizations, which makes model space exploration faster.
 
 Pure-python Execution Engine
 ----------------------------
 
-If you are experiencing issues with TorchScript, or the generated model code by Retiarii, there is another execution engine called Pure-python execution engine which doesn't need the code-graph conversion. This should generally not affect models and strategies in most cases, but customized mutation might not be supported.
+We recommend users to use this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. This execution engine will become the default execution engine in future version of Retiarii.
 
-This will come as the default execution engine in future version of Retiarii.
-
-Three steps are needed to enable this engine now.
+Three steps are needed to use this engine now.
 
 1. Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch model.
 2. Add ``config.execution_engine = 'py'`` to ``RetiariiExeConfig``.
@@ -21,7 +19,9 @@ Three steps are needed to enable this engine now.
 Graph-based Execution Engine
 ----------------------------
 
-**@basic_unit** annotates that a module is a basic unit, i.e, no need to understand the details of this module. The effect is that it prevents Retiarii to parse this module. To understand this, we first briefly explain how Retiarii works: it converts user-defined model to a graph representation (called graph IR) using `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, each instantiated module in the model is converted to a subgraph. Then mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed. ``@basic_unit`` here means the module will not be converted to a subgraph, instead, it is converted to a single graph node as a basic unit. That is, the module will not be unfolded anymore. When the module is not unfolded, mutations on initialization parameters of this module becomes easier.
+For graph-based execution engine, it converts user-defined model to a graph representation (called graph IR) using `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, each instantiated module in the model is converted to a subgraph. Then mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed on the user specified training service.
+
+Users may find ``@basic_unit`` helpful in some cases. ``@basic_unit`` here means the module will not be converted to a subgraph, instead, it is converted to a single graph node as a basic unit.
 
 ``@basic_unit`` is usually used in the following cases:
 
@@ -41,6 +41,11 @@ Graph-based Execution Engine
 
 * Some inline mutation APIs require their handled module to be decorated with ``@basic_unit``. For example, user-defined module that is provided to ``LayerChoice`` as a candidate op should be decorated.
 
+Three steps are need to use graph-based execution engine.
+
+1. Remove ``@nni.retiarii.model_wrapper`` if there is any in your model.
+2. Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The execution engine is 'base' by default for now, will be changed to 'py' in future release.
+3. Add ``@basic_unit`` when necessary following the above guidelines.
 
 CGO Execution Engine
 --------------------

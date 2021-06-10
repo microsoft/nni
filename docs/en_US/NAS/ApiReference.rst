@@ -101,3 +101,8 @@ Retiarii Experiments
 
 ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:
+
+Utilities
+---------
+
+..  autofunction:: nni.retiarii.serialize

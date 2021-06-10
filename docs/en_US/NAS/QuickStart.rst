@@ -30,8 +30,8 @@ Below is a very simple example of defining a base model, it is almost the same a
 
   import torch.nn.functional as F
   import nni.retiarii.nn.pytorch as nn
+  from nni.retiarii import model_wrapper
 
-  @basic_unit
   class BasicBlock(nn.Module):
     def __init__(self, const):
       self.const = const
@@ -46,6 +46,7 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return self.pool(self.conv(x))
 
+  @model_wrapper      # this decorator should be put on the out most PyTorch module
   class Model(nn.Module):
     def __init__(self):
       super().__init__()
@@ -54,10 +55,6 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return F.relu(self.convpool(self.mymodule(x)))
 
-The above example also shows how to use ``@basic_unit``. ``@basic_unit`` is decorated on a user-defined module to tell Retiarii that there will be no mutation within this module, Retiarii can treat it as a basic unit (i.e., as a blackbox). It is useful when (1) users want to mutate the initialization parameters of this module, or (2) Retiarii fails to parse this module due to complex control flow (e.g., ``for``, ``while``). More detailed description of ``@basic_unit`` can be found `here <./Advanced.rst>`__.
-
-Users can refer to :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>` and :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>` for more complicated examples.
-
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
 
@@ -65,7 +62,7 @@ A base model is only one concrete model not a model space. We provide APIs and p
 
 We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <./Advanced.rst>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.
+* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
 
   .. code-block:: python
 
@@ -107,27 +104,21 @@ All the APIs have an optional argument called ``label``, mutations with the same
         nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
     )
 
-Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutations, to make it easier to express a new search space.
-
-If the inline mutation APIs are not enough for your scenario, you can refer to `defining model space using mutators <./Advanced.rst#express-mutations-with-mutators>`__ to write more complex model spaces.
+Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutation APIs, to make it easier to express a new search space. Please refer to `here <./construct_space.rst>`__ for more tutorials about how to express complex model spaces.
 
 Explore the Defined Model Space
 -------------------------------
 
 There are basically two exploration approaches: (1) search by evaluating each sampled model independently and (2) one-shot weight-sharing based search. We demonstrate the first approach below in this tutorial. Users can refer to `here <./OneshotTrainer.rst>`__ for the second approach.
 
-Users can choose a proper search strategy to explore the model space, and use a chosen or user-defined model evaluator to evaluate the performance of each sampled model.
+Users can choose a proper exploration strategy to explore the model space, and use a chosen or user-defined model evaluator to evaluate the performance of each sampled model.
 
-Choose a search strategy
+Pick a search strategy
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retiarii currently supports the following search strategies:
+Retiarii supports many `exploration strategies <./ExplorationStrategies.rst>`__.
 
-* Grid search: enumerate all the possible models defined in the space.
-* Random: randomly pick the models from search space.
-* Regularized evolution: a genetic algorithm that explores the space based on inheritance and mutation.
-
-Choose (i.e., instantiate) a search strategy is very easy. An example is as follows,
+Simply choosing (i.e., instantiate) an exploration strategy as below.
 
 .. code-block:: python
 
@@ -135,14 +126,10 @@ Choose (i.e., instantiate) a search strategy is very easy. An example is as foll
 
   search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
 
-Detailed descriptions and usages of available strategies can be found `here <./ApiReference.rst>`__ .
-
-Choose or write a model evaluator
+Pick or write a model evaluator
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the NAS process, the search strategy repeatedly generates new models. A model evaluator is for training and validating each generated model. The obtained performance of a generated model is collected and sent to search strategy for generating better models.
-
-The model evaluator should correctly identify the use case of the model and the optimization goal. For example, on a classification task, an <input, label> dataset is needed, the loss function could be cross entropy and the optimized metric could be accuracy. On a regression task, the optimized metric could be mean-squared-error.
+In the NAS process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model. The obtained performance of a generated model is collected and sent to the exploration strategy for generating better models.
 
 In the context of PyTorch, Retiarii has provided two built-in model evaluators, designed for simple use cases: classification and regression. These two evaluators are built upon the awesome library PyTorch-Lightning.
 
@@ -165,7 +152,7 @@ As the model evaluator is running in another process (possibly in some remote ma
 
 Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
 
-If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new evaluator <./WriteTrainer.rst>`__ .
+If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new model evaluator <./WriteTrainer.rst>`__ .
 
 .. note:: In case you want to run the model evaluator locally for debug purpose, you can directly run the evaluator via ``evaluator._execute(Net)`` (note that it has to be ``Net``, not ``Net()``). However, this API is currently internal and subject to change.
 
@@ -186,13 +173,24 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp_config.trial_concurrency = 2
   exp_config.max_trial_number = 10
   exp_config.training_service.use_active_gpu = False
+  exp_config.execution_engine = 'py'
   exp.run(exp_config, 8081)
 
-The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`.
+Users can choose different execution engines to run the model search, according to their needs. The detailed descriptions of the supported execution engiens can be found `here <./ExecutionEngines.rst>`__.
 
-**Local Debug Mode**: When running an experiment, it is easy to get some trivial errors in trial code, such as shape mismatch, undefined variable. To quickly fix these kinds of errors, we provide local debug mode which locally applies mutators once and runs only that generated model. To use local debug mode, users can simply invoke the API `debug_mutated_model(base_model, trainer, applied_mutators)`.
+The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`.
 
 Visualize the Experiment
 ------------------------
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../../Tutorial/WebUI.rst>`__ for details.
+
+Export Found Top Models
+-----------------------
+
+Users can export top models after the exploration is done using ``export_top_models``.
+
+.. code-block:: python
+
+  for model_code in exp.export_top_models(formatter='dict'):
+    print(model_code)

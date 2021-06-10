@@ -1,6 +1,6 @@
-##########################
-Neural Architecture Search
-##########################
+#####################################
+Neural Architecture Search (Retiarii)
+#####################################
 
 Automatic neural architecture search is taking an increasingly important role on finding better models.
 Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually tuned models.
@@ -10,20 +10,22 @@ However, it takes great efforts to implement NAS algorithms, and it is hard to r
 To facilitate NAS innovations (e.g., design and implement new NAS models, compare different NAS models side-by-side),
 an easy-to-use and flexible programming interface is crucial.
 
-Therefore, we provide a unified interface for NAS,
-to accelerate innovations on NAS, and apply state-of-art algorithms on real world problems faster.
-For details, please refer to the following tutorials:
+Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model. 
+
+Exploratory training with Retiarii allows user to express various search space for **Neural Architecture Search** and **Hyper-Parameter Tuning** with high flexibility. 
+
+The Retiarii framework continued the ability for allowing user to reuse SOTA search algorithms, and to leverage system level optimizations to speed up the search process.
+
+Follow the instructions below to start your journey with Retiarii.
 
 ..  toctree::
     :maxdepth: 2
 
     Overview <NAS/Overview>
-    Write A Search Space <NAS/WriteSearchSpace>
-    Classic NAS <NAS/ClassicNas>
+    Quick Start <NAS/QuickStart>
+    Construct Model Space <NAS/construct_space>
+    Multi-trial NAS <NAS/multi_trial_nas>
     One-shot NAS <NAS/one_shot_nas>
-    Retiarii NAS (Alpha) <NAS/retiarii/retiarii_index>
-    Customize a NAS Algorithm <NAS/Advanced>
-    NAS Visualization <NAS/Visualization>
-    Search Space Zoo <NAS/SearchSpaceZoo>
+    Execution Engines <NAS/ExecutionEngines>
     NAS Benchmarks <NAS/Benchmarks>
-    API Reference <NAS/NasReference>
+    NAS API References <NAS/ApiReference>

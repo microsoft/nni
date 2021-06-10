@@ -1,6 +1,20 @@
 Exploration Strategies for Multi-trial NAS
 ==========================================
 
+Usage of Exploration Strategy
+-----------------------------
+
+To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to ``RetiariiExperiment``. Below is a simple example.
+
+.. code-block:: python
+
+  import nni.retiarii.strategy as strategy
+
+  search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+
+Supported Exploration Strategies
+--------------------------------
+
 NNI provides the following exploration strategies for multi-trial NAS. Users could also customize new exploration strategies.
 
 .. list-table::
