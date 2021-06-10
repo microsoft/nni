@@ -3,12 +3,15 @@ Neural Architecture Search (Retiarii)
 
 .. contents::
 
-Overview
+Motivation
 --------
 
 Automatic neural architecture search is playing an increasingly important role in finding better models. Recent research has proven the feasibility of automatic NAS and has led to models that beat many manually designed and tuned models. Representative works include `NASNet <https://arxiv.org/abs/1707.07012>`__\ , `ENAS <https://arxiv.org/abs/1802.03268>`__\ , `DARTS <https://arxiv.org/abs/1806.09055>`__\ , `Network Morphism <https://arxiv.org/abs/1806.10282>`__\ , and `Evolution <https://arxiv.org/abs/1703.01041>`__. In addition, new innovations continue to emerge.
 
-However, it is pretty hard to leverage existing NAS works to help common DNN model development. Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, a novel NAS/HPO framework, and implement it in NNI. It helps users easily construct a model space (or search space, tuning space), and leverage existing NAS algorithms. This framework also facilitates NAS innovations, for designing new NAS algorithms.
+However, it is pretty hard to use existing NAS work to help develop common DNN models. Therefore, we designed `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__, a novel NAS/HPO framework, and implemented it in NNI. It helps users easily construct a model space (or search space, tuning space), and utilize existing NAS algorithms. The framework also facilitates NAS innovation and is used to design new NAS algorithms.
+
+Overview
+--------
 
 There are three key characteristics of the Retiarii framework:
 
