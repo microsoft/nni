@@ -1,6 +1,6 @@
 pylint
 flake8
-sphinx
+sphinx<4.0
 sphinx-argparse
 sphinx-rtd-theme
 sphinxcontrib-websupport
