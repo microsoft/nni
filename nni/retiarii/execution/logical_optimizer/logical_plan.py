@@ -52,8 +52,7 @@ class LogicalGraph(Graph):
         nodes_dump = {}
         for node in self.hidden_nodes:
             if isinstance(node, OriginNode):
-                nodes_dump[f"{node.original_graph.model.model_id}_{node.name}"] = node._dump(
-                )
+                nodes_dump[f"{node.original_graph.model.model_id}_{node.name}"] = node._dump()
             else:
                 nodes_dump[f"{node.graph.model.model_id}_{node.name}"] = node._dump()
 
@@ -149,12 +148,11 @@ class LogicalPlan:
         for edge in from_graph.edges:
             new_head = id_to_new_node[edge.head.id]
             new_tail = id_to_new_node[edge.tail.id]
-            Edge((new_head, edge.head_slot), (new_tail,
-                                              edge.tail_slot), _internal=True)._register()
+            Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
 
     def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) \
             -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
-        phy_model = Model(_internal=True)  # self.lp_model.fork()
+        phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
         phy_graph._rename_graph(phy_graph.name, "_model")
 
@@ -164,8 +162,15 @@ class LogicalPlan:
                 phy_model.evaluator = model.evaluator
             for graph_name in model.graphs:
                 if graph_name != model._root_graph_name:
-                    model.graphs[graph_name]._fork_to(
+                    new_graph = model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
+
+                    # prefix of M_ of hidden_nodes name in non-root graphs is added here
+                    for new_node in new_graph.hidden_nodes:
+                        if isinstance(new_node.operation, Cell):
+                            old_cell_name = new_node.operation.cell_name
+                            new_node.operation = copy.deepcopy(new_node.operation)
+                            new_node.operation.cell_name = f'M_{model.model_id}_{old_cell_name}'
 
         assert(phy_model.evaluator is not None)
 
@@ -196,13 +201,9 @@ class LogicalPlan:
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in evaluator_slot:
-                        # phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
                         added_models.append(model_id)
-                        evaluator_slot[model_id] = len(added_models) - 1  # len(phy_model.evaluator.kwargs['model_kwargs']) - 1
+                        evaluator_slot[model_id] = len(added_models) - 1
                         slot = evaluator_slot[model_id]
-                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
-                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
-                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = False
                     else:
                         slot = evaluator_slot[model_id]
                     # If a model's inputs/outputs are not used in the multi-model
@@ -211,13 +212,13 @@ class LogicalPlan:
                     # an input/output of a model is used in a multi-model
                     if new_node.operation.type == '_inputs':
                         input_slot_mapping[new_node] = slot
-                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = True
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
-                        # phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = True
 
                 self.node_replace(node, new_node)
 
+                # name prefix of M_ of cells in hidden_nodes of root graphs is added here
+                # FIXME: merge this rename with non-root graph, only do once.
                 if isinstance(new_node.operation, Cell):
                     old_cell_name = new_node.operation.cell_name
                     new_node.operation = copy.deepcopy(new_node.operation)
