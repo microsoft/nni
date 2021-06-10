@@ -117,7 +117,7 @@ Three steps to start an experiment
               train(args, model, device, train_loader, optimizer, epoch)
               test_acc = test(args, model, device, test_loader)
     -         print(test_acc)
-    +         nni.report_intermeidate_result(test_acc)
+    +         nni.report_intermediate_result(test_acc)
     -     print('final accuracy:', test_acc)
     +     nni.report_final_result(test_acc)
            
