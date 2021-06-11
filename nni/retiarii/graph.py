@@ -6,7 +6,6 @@ Model representation.
 """
 
 import abc
-import copy
 import json
 from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
@@ -143,7 +142,7 @@ class Model:
         new_model.python_class = self.python_class
         new_model.python_init_params = self.python_init_params
         new_model.graphs = {name: graph._fork_to(new_model) for name, graph in self.graphs.items()}
-        new_model.evaluator = copy.deepcopy(self.evaluator)  # TODO this may be a problem when evaluator is large
+        new_model.evaluator = self.evaluator  # TODO this needs a clever copy (not deepcopy) if we need mutation
         new_model.history = [*self.history]
         # Note: the history is not updated. It will be updated when the model is changed, that is in mutator.
         return new_model
