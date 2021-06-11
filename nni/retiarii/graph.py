@@ -6,7 +6,6 @@ Model representation.
 """
 
 import abc
-import copy
 import json
 from enum import Enum
 from typing import (Any, Dict, Iterable, List, Optional, Tuple, Type, Union, overload)
