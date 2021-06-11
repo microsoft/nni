@@ -1,21 +1,15 @@
-authorName: default
 experimentName: auto_rocksdb_SMAC
+searchSpaceFile: search_space.json
+trialCommand: python3 main.py
+trialCodeDirectory: .
+trialGpuNumber: 0
 trialConcurrency: 1
-maxExecDuration: 12h
-maxTrialNum: 256
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxExperimentDuration: 24h
+maxTrialNumber: 256
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: SMAC
+  name: SMAC
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+trainingService:
+  platform: local
+  useActiveGpu: False
