@@ -314,7 +314,7 @@ class RetiariiExperiment(Experiment):
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 
-    def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'code') -> Any:
+    def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'dict') -> Any:
         """
         Export several top performing models.
 
