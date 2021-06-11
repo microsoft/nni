@@ -1,12 +1,18 @@
 Execution Engines
 =================
 
-Execution engine is for running NAS experiment. NNI supports three execution engines, each of them has their own characteristics. **Pure-python execution engine** does not have special requirement on user model, it supports the model space expressed with `inline mutation APIs <./MutationPrimitives.rst>`__. **Graph-based execution engine** requires that user's model should be able to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, it supports model space expressed with both `inline mutation APIs <./MutationPrimitives.rst>`__ and `mutators <./Mutators.rst>`__. **CGO execution engine** has the same requirement and ability to graph-based execution engine, it further enables cross-model optimizations, which makes model space exploration faster.
+Execution engine is for running Retiarii Experiment. NNI supports three execution engines, users can choose a speicific engine according to the type of their model mutation definition and their requirements for cross-model optimizations. 
+
+* **Pure-python execution engine** is the default engine, it supports the model space expressed by `inline mutation API <./MutationPrimitives.rst>`__. 
+
+* **Graph-based execution engine** supports the use of `inline mutation APIs <./MutationPrimitives.rst>`__ and model spaces represented by `mutators <./Mutators.rst>`__. It requires the user's model to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__.
+
+* **CGO execution engine** has the same requirements and capabilities as the **Graph-based execution engine**. But further enables cross-model optimizations, which makes model space exploration faster.
 
 Pure-python Execution Engine
 ----------------------------
 
-We recommend users to use this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. This execution engine is the default execution engine in Retiarii.
+Pure-python Execution Engine is the default engine, we recommend users to keep using this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. 
 
 Two steps are needed to use this engine now.
 
