@@ -129,6 +129,24 @@ class AGPPruner(IterativePruner):
         self.end_epoch = epochs_per_iteration * num_iterations
         self.set_wrappers_attribute("if_calculated", False)
 
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        """
+        schema = CompressorSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 <= n <= 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
+        }], model, logger)
+
+        schema.validate(config_list)
+
     def _supported_dependency_aware(self):
         return False
 
