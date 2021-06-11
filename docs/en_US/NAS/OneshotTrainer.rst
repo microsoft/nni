@@ -6,7 +6,7 @@ Before reading this tutorial, we highly recommend you to first go through the tu
 Model Search with One-shot Trainer
 ----------------------------------
 
-With a defined model space, users can explore the space in two ways. One is using strategy and single-arch evaluator as demonstrated `here <./Tutorial.rst#explore-the-defined-model-space>`__. The other is using one-shot trainer, which consumes much less computational resource compared to the first one. In this tutorial we focus on this one-shot approach. The principle of one-shot approach is combining all the models in a model space into one big model (usually called super-model or super-graph). It takes charge of both search, training and testing, by training and evaluating this big model.
+With a defined model space, users can explore the space in two ways. One is using strategy and single-arch evaluator as demonstrated `here <./QuickStart.rst#explore-the-defined-model-space>`__. The other is using one-shot trainer, which consumes much less computational resource compared to the first one. In this tutorial we focus on this one-shot approach. The principle of one-shot approach is combining all the models in a model space into one big model (usually called super-model or super-graph). It takes charge of both search, training and testing, by training and evaluating this big model.
 
 We list the supported one-shot trainers here:
 

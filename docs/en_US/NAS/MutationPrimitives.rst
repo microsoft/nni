@@ -3,7 +3,7 @@ Mutation Primitives
 
 To make users easily express a model space within their PyTorch/TensorFlow model, NNI provides some inline mutation APIs as shown below.
 
-* `nn.LayerChoice <./ApiReference.rst#nni.retiarii.nn.pytorch.LayerChoice>`__. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model. Note that if the candidate is a user-defined module, it should be decorated as a `basic unit <./Advanced.rst>`__ with ``@basic_unit``. In the following example, ``ops.PoolBN`` and ``ops.SepConv`` should be decorated.
+* `nn.LayerChoice <./ApiReference.rst#nni.retiarii.nn.pytorch.LayerChoice>`__. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
 
   .. code-block:: python
 

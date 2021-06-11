@@ -1,7 +1,7 @@
 FBNet
 ======
 
-.. note:: This one-shot NAS is still implemented under NNI NAS 1.0, and will migrated to Retiarii framework in v2.4.
+.. note:: This one-shot NAS is still implemented under NNI NAS 1.0, and will `be migrated to Retiarii framework in v2.4 <https://github.com/microsoft/nni/issues/3814>`__.
 
 For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuracy. References are listed as below:
 

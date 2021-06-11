@@ -4,7 +4,7 @@ Model Evaluators
 Usage of Model Evaluator
 ------------------------
 
-In multi-trial NAS, a sampled model should be able to be executed on a remote machine or a training platform (e.g., AzureML, OpenPAI). Thus, both the model and its model evaluator should be correctly serialized. To make NNI correctly serialize model evaluator, users should apply ``serialize`` on some of their functions and objects
+In multi-trial NAS, a sampled model should be able to be executed on a remote machine or a training platform (e.g., AzureML, OpenPAI). Thus, both the model and its model evaluator should be correctly serialized. To make NNI correctly serialize model evaluator, users should apply ``serialize`` on some of their functions and objects.
 
 .. _serializer:
 

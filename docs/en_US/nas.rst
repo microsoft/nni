@@ -1,6 +1,6 @@
-#####################################
-Neural Architecture Search (Retiarii)
-#####################################
+#############################################
+Retiarii for Neural Architecture Search (NAS)
+#############################################
 
 Automatic neural architecture search is taking an increasingly important role on finding better models.
 Recent research works have proved the feasibility of automatic NAS, and also found some models that could beat manually tuned models.
@@ -11,7 +11,7 @@ To facilitate NAS innovations (e.g., design and implement new NAS models, compar
 an easy-to-use and flexible programming interface is crucial.
 
 Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model.
-Exploratory training with Retiarii allows user to express various search space for *Neural Architecture Search* and *Hyper-Parameter Tuning* with high flexibility.
+Exploratory training with Retiarii allows user to express various search spaces for *Neural Architecture Search* and *Hyper-Parameter Tuning* with high flexibility.
 
 Some frequently used terminologies in this document:
 

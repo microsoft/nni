@@ -10,12 +10,12 @@ To use an exploration strategy, users simply instantiate an exploration strategy
 
   import nni.retiarii.strategy as strategy
 
-  search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+  exploration_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
 
 Supported Exploration Strategies
 --------------------------------
 
-NNI provides the following exploration strategies for multi-trial NAS. Users could also customize new exploration strategies.
+NNI provides the following exploration strategies for multi-trial NAS. Users could also `customize new exploration strategies <./WriteStrategy.rst>`__.
 
 .. list-table::
    :header-rows: 1

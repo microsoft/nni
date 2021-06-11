@@ -175,7 +175,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
 
-The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`.
+The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`. Users can also run Retiarii Experiment on `different training services <../training_services.rst>`__ besides ``local`` training service.
 
 Visualize the Experiment
 ------------------------

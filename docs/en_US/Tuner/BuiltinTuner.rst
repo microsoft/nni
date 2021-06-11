@@ -41,8 +41,6 @@ Currently, we support the following algorithms:
      - BOHB is a follow-up work to Hyperband. It targets the weakness of Hyperband that new configurations are generated randomly without leveraging finished trials. For the name BOHB, HB means Hyperband, BO means Bayesian Optimization. BOHB leverages finished trials by building multiple TPE models, a proportion of new configurations are generated through these models. `Reference Paper <https://arxiv.org/abs/1807.01774>`__
    * - `GP Tuner <#GPTuner>`__
      - Gaussian Process Tuner is a sequential model-based optimization (SMBO) approach with Gaussian Process as the surrogate. `Reference Paper <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__\ , `Github Repo <https://github.com/fmfn/BayesianOptimization>`__
-   * - `PPO Tuner <#PPOTuner>`__
-     - PPO Tuner is a Reinforcement Learning tuner based on PPO algorithm. `Reference Paper <https://arxiv.org/abs/1707.06347>`__
    * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner is a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. `Reference Paper <https://arxiv.org/abs/1711.09846v1>`__
    * - `DNGO Tuner <#DNGOTuner>`__

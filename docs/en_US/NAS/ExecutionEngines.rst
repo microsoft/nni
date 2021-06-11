@@ -1,17 +1,16 @@
 Execution Engines
 =================
 
-Execution engine is for running NAS experiment. NNI supports three execution engines, each of them has their own characteristics. **Pure-python execution engine** does not have special requirement on user model, it supports the model space expressed with `inline mutation APIs <./MutationPrimitives.rst>`__. **Graph-based execution engine** requires that user's model should be able to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, it supports model space expressed with both `inline mutation APIs <./MutationPrimitives.rst>`__ and `mutators <./Mutators.rst>`__. **CGO execution engine** has the same requirement and ability to graph-based execution engine, it further enables cross-model optimizations, which makes model space exploration faster.
+Execution engine is for running Retiarii experiment. NNI supports three execution engines, each of them has their own characteristics. **Pure-python execution engine** does not have special requirement on user model, it supports the model space expressed with `inline mutation APIs <./MutationPrimitives.rst>`__. **Graph-based execution engine** requires that user's model should be able to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, it supports model space expressed with both `inline mutation APIs <./MutationPrimitives.rst>`__ and `mutators <./Mutators.rst>`__. **CGO execution engine** has the same requirement and ability to graph-based execution engine, it further enables cross-model optimizations, which makes model space exploration faster.
 
 Pure-python Execution Engine
 ----------------------------
 
 We recommend users to use this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. This execution engine is the default execution engine in Retiarii.
 
-Two steps are needed to use this engine now.
+One steps are needed to use this engine now.
 
 1. Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch model.
-2. If you need to export top models, formatter needs to be set to ``dict``. Exporting ``code`` won't work with this engine.
 
 .. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
 
@@ -46,7 +45,9 @@ Three steps are need to use graph-based execution engine.
 2. Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The default value of ``execution_engine`` is 'py', which means pure-python execution engine.
 3. Add ``@basic_unit`` when necessary following the above guidelines.
 
+For exporting top models, graph-based execution engine supports exporting source code for top models by running ``exp.export_top_models(formatter='code')``.
+
 CGO Execution Engine
 --------------------
 
-CGO execution engine does cross-model optimizations based on the graph-based execution engine. This execution engine will be release in v2.4.
+CGO execution engine does cross-model optimizations based on the graph-based execution engine. This execution engine will be `release in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
