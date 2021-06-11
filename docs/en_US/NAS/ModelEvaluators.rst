@@ -1,6 +1,8 @@
 Model Evaluators
 ================
 
+A model evaluator is for training and validating each generated model.
+
 Usage of Model Evaluator
 ------------------------
 
