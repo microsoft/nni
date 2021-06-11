@@ -53,9 +53,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         } else {
             startLogging(logFileName);
         }
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        setLogLevel(logLevel);
     }
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    setLogLevel(logLevel);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
