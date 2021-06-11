@@ -39,6 +39,24 @@ class OneshotPruner(DependencyAwarePruner):
         """
         super().__init__(model, config_list, None, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
 
+    def validate_config(self, model, config_list):
+        """
+        Parameters
+        ----------
+        model : torch.nn.Module
+            Model to be pruned
+        config_list : list
+            List on pruning configs
+        """
+        schema = CompressorSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
+        }], model, logger)
+
+        schema.validate(config_list)
+
 
 class LevelPruner(OneshotPruner):
     """
