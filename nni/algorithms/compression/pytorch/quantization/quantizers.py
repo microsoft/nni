@@ -32,8 +32,8 @@ class NaiveQuantizer(Quantizer):
 
         schema.validate(config_list)
         for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
+            if 'exclude' not in config and 'quant_types' not in config:
+                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -201,8 +201,8 @@ class QAT_Quantizer(Quantizer):
 
         schema.validate(config_list)
         for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
+            if 'exclude' not in config and 'quant_types' not in config:
+                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def _quantize(self, bits, op, real_val):
         """
@@ -416,8 +416,8 @@ class DoReFaQuantizer(Quantizer):
 
         schema.validate(config_list)
         for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
+            if 'exclude' not in config and 'quant_types' not in config:
+                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -528,8 +528,8 @@ class BNNQuantizer(Quantizer):
 
         schema.validate(config_list)
         for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
+            if 'exclude' not in config and 'quant_types' not in config:
+                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
