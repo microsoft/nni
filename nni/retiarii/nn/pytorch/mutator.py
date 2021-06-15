@@ -33,7 +33,7 @@ class LayerChoiceMutator(Mutator):
             model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
 
             # remove redundant nodes
-            for rm_node in target.hidden_nodes:
+            for rm_node in list(target.hidden_nodes):  # remove from a list on the fly will cause issues
                 if rm_node.name != chosen_node.name:
                     rm_node.remove()
 
