@@ -55,13 +55,14 @@ if __name__ == '__main__':
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnasnet_search'
     exp_config.execution_engine = 'cgo'
-    exp_config.trial_concurrency = 1
+    exp_config.trial_concurrency = 3
     # since CGO may merge multiple trials into one, RetiariiExperiment may run more trials than max_trial_number
     # when max_trial_number = 3, it actually runs 9 models since each merged trial contains 3 trials from strategy
-    exp_config.max_trial_number = 1
+    exp_config.max_trial_number = 100
+    exp_config.max_concurrency_cgo = 1
     exp_config.batch_waiting_time = 0
     exp_config.devices = ['cuda:0', 'cuda:1', 'cuda:2']
-    exp_config.trial_gpu_number = 3
+    exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = True
     exp_config.training_service.gpu_indices = [0, 1, 2]
 

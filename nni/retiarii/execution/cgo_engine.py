@@ -104,8 +104,10 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             if len(self._queuing_jobs) > 0:
                 curr_time = time.time()
                 self._queue_lock.acquire()
-                if (self.max_concurrency and len(self._queuing_jobs) >= self.max_concurrency) or \
-                    (len(self.available_devices) <= len(self._queuing_jobs)) or \
+                if (self.max_concurrency and len(self._queuing_jobs) >= self.max_concurrency):
+                    self._submit_models_in_batch(*[_[1] for _ in self._queuing_jobs[:self.max_concurrency]])
+                    self._queuing_jobs = self._queuing_jobs[self.max_concurrency:]
+                elif len(self.available_devices) <= len(self._queuing_jobs) or \
                         (curr_time - self._queuing_jobs[0][0] > self._batch_waiting_time):
                     self._submit_models_in_batch(*[_[1] for _ in self._queuing_jobs])
                     self._queuing_jobs = []
@@ -258,6 +260,18 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         os.remove(file_name)
 
 
+def _remap_cuda_device(group_model: Dict[Model, PhysicalDevice]):
+    used_devices = {}
+    for m in group_model:
+        if group_model[m].server not in used_devices:
+            used_devices[group_model[m].server] = {}
+        if 'cuda' in group_model[m].device:
+            if group_model[m].device not in used_devices[group_model[m].server]:
+                n_used_gpu_in_server = len(used_devices[group_model[m].server])
+                used_devices[group_model[m].server][group_model[m].device] = f'cuda:{n_used_gpu_in_server}'
+            group_model[m].device = used_devices[group_model[m].server][group_model[m].device]
+    return group_model
+
 class AssemblePolicy:
     @staticmethod
     def _is_related_node(model: Model, node: Node):
@@ -307,11 +321,11 @@ class AssemblePolicy:
             if len(group_model) > 0 and \
                 (AssemblePolicy._check_graph_connectivity(m, group_model, logical_plan) == False or
                     AssemblePolicy._check_evaluator(m, group_model) == False):
-                all_grouped_models.append(group_model)
+                all_grouped_models.append(_remap_cuda_device(group_model))
                 group_model = {}
             group_model[m] = available_devices[idx % len(available_devices)]
             if len(group_model) == len(available_devices) or \
                     idx == len(logical_plan.models) - 1:
-                all_grouped_models.append(group_model)
+                all_grouped_models.append(_remap_cuda_device(group_model))
                 group_model = {}
         return all_grouped_models

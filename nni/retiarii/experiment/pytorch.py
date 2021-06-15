@@ -52,6 +52,7 @@ class RetiariiExeConfig(ConfigBase):
     devices: Optional[List[Union[str, PhysicalDevice]]] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
+    max_concurrency_cgo: Optional[int] = None
     batch_waiting_time: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     debug: bool = False
@@ -208,7 +209,7 @@ class RetiariiExperiment(Experiment):
             # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
             assert self.config.batch_waiting_time is not None
             engine = CGOExecutionEngine(self.config.devices,
-                                        max_concurrency=self.config.trial_concurrency,
+                                        max_concurrency=self.config.max_concurrency_cgo,
                                         batch_waiting_time=self.config.batch_waiting_time)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
