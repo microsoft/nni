@@ -103,7 +103,7 @@ def slice_python(node, speedup):
 
     c_node = node.key_node
     inputs = list(c_node.inputs())
-    print(inputs)
+    # print(inputs)
     slice_dim = inputs[1].toIValue()
     slice_start = inputs[2].toIValue()
     slice_end = inputs[3].toIValue()
@@ -114,6 +114,20 @@ def slice_python(node, speedup):
         slice_list.append(slice(None, None))
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))
+
+def select_python(node, speedup):
+    class SelectModule(torch.nn.Module):
+        def __init__(self, dim, index):
+            super(SelectModule, self).__init__()
+            self.dim = dim
+            self.index = index
+        def forward(self, x):
+            return x.select(self.dim, self.index)
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim = inputs[1].toIValue()
+    index = inputs[2].toIValue()
+    return SelectModule(dim, index)
 
 
 def size_python(node, speedup):
@@ -292,8 +306,17 @@ def to_python(node, speedup):
 
 
 def typeas_python(node, speedup):
-    raise NotImplementedError
-
+    """
+    currently only support type_as float.
+    TODO: support more types in the type_as, need to figure out
+    how to get the scalar type from torch._C.TensorType.
+    """
+    class TypeasModule(torch.nn.Module, dtype=torch.float):
+        def __init__(self):
+            self.example = torch.zeros(1, dtype=dtype)
+        def forward(self, x):
+            return x.type_as(self.example)
+    return TypeasModule()
 
 def upsample_bilinear2d_python(node, speedup):
     c_node = node.key_node
@@ -323,6 +346,7 @@ trans_from_jit_to_python = {
     'aten::dropout': dropout_python,
     'aten::relu_': relu_inplace_python,
     'aten::slice': slice_python,
+    'aten::select': select_python,
     'aten::size': size_python,
     'aten::t': transpose_python,
     'aten::transpose': transpose2_python,
