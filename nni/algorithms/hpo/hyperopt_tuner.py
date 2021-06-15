@@ -236,7 +236,7 @@ class HyperoptTuner(Tuner):
             return hp.anneal.suggest
         raise RuntimeError('Not support tuner algorithm in hyperopt.')
 
-    def update_search_space(self, search_space):
+    def update_search_space(self, search_space, rstate=None):
         """
         Update search space definition in tuner by search_space in parameters.
 
@@ -249,7 +249,8 @@ class HyperoptTuner(Tuner):
         self.json = search_space
 
         search_space_instance = json2space(self.json)
-        rstate = np.random.RandomState()
+        if not rstate:
+            rstate = np.random.RandomState()
         trials = hp.Trials()
         domain = hp.Domain(None,
                            search_space_instance,
