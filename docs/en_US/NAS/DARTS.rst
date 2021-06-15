@@ -56,11 +56,8 @@ Reference
 PyTorch
 ^^^^^^^
 
-..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsTrainer
-    :members:
-
-..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsMutator
-    :members:
+..  autoclass:: nni.retiarii.oneshot.pytorch.DartsTrainer
+    :noindex:
 
 Limitations
 -----------

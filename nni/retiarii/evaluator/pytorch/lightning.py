@@ -202,7 +202,7 @@ class Classification(Lightning):
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
-        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
@@ -250,7 +250,7 @@ class Regression(Lightning):
         If the ``lightning_module`` has a predefined val_dataloaders method this will be skipped.
     trainer_kwargs : dict
         Optional keyword arguments passed to trainer. See
-        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/trainer.html>`__ for details.
+        `Lightning documentation <https://pytorch-lightning.readthedocs.io/en/stable/common/trainer.html>`__ for details.
     """
 
     def __init__(self, criterion: nn.Module = nn.MSELoss,

@@ -26,9 +26,9 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * ML Platform owners who want to **support AutoML in their platform**.
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
-* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on April-26-2021_
-* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on Apr-21-2021_
 
+* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on April-26-2021_
+* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New use case sharing**: [Cost-effective Hyper-parameter Tuning using AdaptDL with NNI](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - _posted on Feb-23-2021_
 
 ## **NNI capabilities in a glance**
@@ -299,10 +299,7 @@ You can use these commands to get more information about the experiment
 
 * Open the `Web UI url` in your browser, you can view detailed information of the experiment and all the submitted trial jobs as shown below. [Here](https://nni.readthedocs.io/en/stable/Tutorial/WebUI.html) are more Web UI pages.
 
-<table style="border: none">
-    <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
-    <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
-</table>
+<img src="docs/static/img/webui.gif" alt="webui" width="100%"/>
 
 ## **Releases and Contributing**
 NNI has a monthly release cycle (major releases). Please let us know if you encounter a bug by [filling an issue](https://github.com/microsoft/nni/issues/new/choose).

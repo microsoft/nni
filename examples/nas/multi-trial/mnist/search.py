@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-# uncomment this for python execution engine
-# @model_wrapper
+# comment the follwing line for graph-based execution engine
+@model_wrapper
 class Net(nn.Module):
     def __init__(self, hidden_size):
         super().__init__()
@@ -43,10 +43,6 @@ if __name__ == '__main__':
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=2)
 
-    # uncomment the following two lines to debug a generated model
-    #debug_mutated_model(base_model, trainer, [])
-    #exit(0)
-
     simple_strategy = strategy.Random()
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
@@ -56,11 +52,11 @@ if __name__ == '__main__':
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 2
     exp_config.training_service.use_active_gpu = False
-    export_formatter = 'code'
+    export_formatter = 'dict'
 
-    # uncomment this for python execution engine
-    # exp_config.execution_engine = 'py'
-    # export_formatter = 'dict'
+    # uncomment this for graph-based execution engine
+    # exp_config.execution_engine = 'base'
+    # export_formatter = 'code'
 
     exp.run(exp_config, 8081 + random.randint(0, 100))
     print('Final model:')
