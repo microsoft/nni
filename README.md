@@ -123,25 +123,19 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#SMAC">SMAC</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#MetisTuner">Metis Tuner</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#GPTuner">GP Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#DNGOTuner">DNGO Tuner</a></li>
             </ul>
-          <b>RL Based</b>
-          <ul>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#PPOTuner">PPO Tuner</a> </li>
-          </ul>
         </ul>
-          <a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">Neural Architecture Search</a>
+          <a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">Neural Architecture Search (Retiarii)</a>
           <ul>
-            <ul>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/ENAS.html">ENAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/PDARTS.html">P-DARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/CDARTS.html">CDARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#NetworkMorphism">Network Morphism</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/TextNAS.html">TextNAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/Cream.html">Cream</a></li>
-            </ul>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ENAS.html">ENAS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/FBNet.html">FBNet</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Reinforcement Learning</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Regularized Evolution</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">More...</a></li>
           </ul>
           <a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">Model Compression</a>
           <ul>
@@ -154,11 +148,13 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#admm-pruner">ADMM Pruner</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#autocompress-pruner">AutoCompress Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">More...</a></li>
             </ul>
             <b>Quantization</b>
             <ul>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#qat-quantizer">QAT Quantizer</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#bnn-quantizer">BNN Quantizer</a></li>
             </ul>
           </ul>
           <a href="https://nni.readthedocs.io/en/stable/FeatureEngineering/Overview.html">Feature Engineering (Beta)</a>
@@ -208,6 +204,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
         <li><a href="https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html">CustomizeTuner</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Assessor/CustomizeAssessor.html">CustomizeAssessor</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Tutorial/InstallCustomizedAlgos.html">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/QuickStart.html#define-your-model-space">Define NAS Model Space</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/ApiReference.html">NAS/Retiarii APIs</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
