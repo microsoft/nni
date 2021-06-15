@@ -29,7 +29,8 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 * **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
-* **New use case sharing**: [Cost-effective Hyper-parameter Tuning using AdaptDL with NNI](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - _posted on Feb-23-2021_
+* **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
+* **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
 
 ## **NNI capabilities in a glance**
 
@@ -317,6 +318,7 @@ We appreciate all contributions and thank all the contributors!
 
 ## **Feedback**
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* Open or participate in a [discussion](https://github.com/microsoft/nni/discussions). 
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 
 Join IM discussion groups:
