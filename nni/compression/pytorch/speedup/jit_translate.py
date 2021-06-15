@@ -67,8 +67,6 @@ def mean_python(node, speedup):
     inputs = list(c_node.inputs())
     dim_list = translate_list(inputs[1], speedup)
     keep_dim = inputs[2].toIValue()
-    print(dim_list)
-    print(keep_dim)
     new_mean = partial(torch.mean, dim=tuple(dim_list), keepdim=keep_dim)
     return new_mean
 
@@ -103,7 +101,7 @@ def slice_python(node, speedup):
 
     c_node = node.key_node
     inputs = list(c_node.inputs())
-    # print(inputs)
+
     slice_dim = inputs[1].toIValue()
     slice_start = inputs[2].toIValue()
     slice_end = inputs[3].toIValue()
@@ -227,7 +225,7 @@ def div_python(node, speedup):
     else:
         other = inputs[1].toIValue()
         new_div = partial(torch.div, other=other)
-        # print(other)
+
         return new_div
 
 
@@ -311,8 +309,8 @@ def typeas_python(node, speedup):
     TODO: support more types in the type_as, need to figure out
     how to get the scalar type from torch._C.TensorType.
     """
-    class TypeasModule(torch.nn.Module, dtype=torch.float):
-        def __init__(self):
+    class TypeasModule(torch.nn.Module):
+        def __init__(self, dtype=torch.float):
             self.example = torch.zeros(1, dtype=dtype)
         def forward(self, x):
             return x.type_as(self.example)
