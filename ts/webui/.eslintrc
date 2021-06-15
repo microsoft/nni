@@ -29,6 +29,17 @@
         "@typescript-eslint/no-use-before-define": [2, "nofunc"],
         "@typescript-eslint/no-var-requires": 0,
         "@typescript-eslint/no-unused-vars": [2, { "argsIgnorePattern": "^_" }],
+        "@typescript-eslint/ban-types": [
+            "error",
+            {
+                "extendDefaults": true,
+                "types": {
+                    "{}": false,
+                    "object": false,
+                    "Function": false
+                }
+            }
+        ],
         "arrow-parens": [2, "as-needed"],
         "no-inner-declarations": 0,
         "no-empty": 2,

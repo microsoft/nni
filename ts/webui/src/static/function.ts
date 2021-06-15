@@ -133,6 +133,7 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
+            // eslint-disable-next-line no-prototype-builtins
         } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')) {
             return showDefault;
         }

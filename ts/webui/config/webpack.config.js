@@ -11,7 +11,7 @@ const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
 const safePostCssParser = require('postcss-safe-parser');
 const ManifestPlugin = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
@@ -164,7 +164,7 @@ module.exports = function(webpackEnv) {
         ? 'static/js/[name].[contenthash:8].js'
         : isEnvDevelopment && 'static/js/bundle.js',
       // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
+      //futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: isEnvProduction
         ? 'static/js/[name].[contenthash:8].chunk.js'
@@ -185,65 +185,65 @@ module.exports = function(webpackEnv) {
       minimize: isEnvProduction,
       minimizer: [
         // This is only used in production mode
-        new TerserPlugin({
-          terserOptions: {
-            parse: {
-              // we want terser to parse ecma 8 code. However, we don't want it
-              // to apply any minfication steps that turns valid ecma 5 code
-              // into invalid ecma 5 code. This is why the 'compress' and 'output'
-              // sections only apply transformations that are ecma 5 safe
-              // https://github.com/facebook/create-react-app/pull/4234
-              ecma: 8,
-            },
-            compress: {
-              ecma: 5,
-              warnings: false,
-              // Disabled because of an issue with Uglify breaking seemingly valid code:
-              // https://github.com/facebook/create-react-app/issues/2376
-              // Pending further investigation:
-              // https://github.com/mishoo/UglifyJS2/issues/2011
-              comparisons: false,
-              // Disabled because of an issue with Terser breaking valid code:
-              // https://github.com/facebook/create-react-app/issues/5250
-              // Pending futher investigation:
-              // https://github.com/terser-js/terser/issues/120
-              inline: 2,
-            },
-            mangle: {
-              safari10: true,
-            },
-            output: {
-              ecma: 5,
-              comments: false,
-              // Turned on because emoji and regex is not minified properly using default
-              // https://github.com/facebook/create-react-app/issues/2488
-              ascii_only: true,
-            },
-          },
-          // Use multi-process parallel running to improve the build speed
-          // Default number of concurrent runs: os.cpus().length - 1
-          // Disabled on WSL (Windows Subsystem for Linux) due to an issue with Terser
-          // https://github.com/webpack-contrib/terser-webpack-plugin/issues/21
-          parallel: !isWsl,
-          // Enable file caching
-          cache: true,
-          sourceMap: shouldUseSourceMap,
-        }),
+        //new TerserPlugin({
+        //  terserOptions: {
+        //    parse: {
+        //      // we want terser to parse ecma 8 code. However, we don't want it
+        //      // to apply any minfication steps that turns valid ecma 5 code
+        //      // into invalid ecma 5 code. This is why the 'compress' and 'output'
+        //      // sections only apply transformations that are ecma 5 safe
+        //      // https://github.com/facebook/create-react-app/pull/4234
+        //      ecma: 8,
+        //    },
+        //    compress: {
+        //      ecma: 5,
+        //      warnings: false,
+        //      // Disabled because of an issue with Uglify breaking seemingly valid code:
+        //      // https://github.com/facebook/create-react-app/issues/2376
+        //      // Pending further investigation:
+        //      // https://github.com/mishoo/UglifyJS2/issues/2011
+        //      comparisons: false,
+        //      // Disabled because of an issue with Terser breaking valid code:
+        //      // https://github.com/facebook/create-react-app/issues/5250
+        //      // Pending futher investigation:
+        //      // https://github.com/terser-js/terser/issues/120
+        //      inline: 2,
+        //    },
+        //    mangle: {
+        //      safari10: true,
+        //    },
+        //    output: {
+        //      ecma: 5,
+        //      comments: false,
+        //      // Turned on because emoji and regex is not minified properly using default
+        //      // https://github.com/facebook/create-react-app/issues/2488
+        //      ascii_only: true,
+        //    },
+        //  },
+        //  // Use multi-process parallel running to improve the build speed
+        //  // Default number of concurrent runs: os.cpus().length - 1
+        //  // Disabled on WSL (Windows Subsystem for Linux) due to an issue with Terser
+        //  // https://github.com/webpack-contrib/terser-webpack-plugin/issues/21
+        //  parallel: !isWsl,
+        //  // Enable file caching
+        //  cache: true,
+        //  sourceMap: shouldUseSourceMap,
+        //}),
         // This is only used in production mode
-        new OptimizeCSSAssetsPlugin({
-          cssProcessorOptions: {
-            parser: safePostCssParser,
-            map: shouldUseSourceMap
-              ? {
-                  // `inline: false` forces the sourcemap to be output into a
-                  // separate file
-                  inline: false,
-                  // `annotation: true` appends the sourceMappingURL to the end of
-                  // the css file, helping the browser find the sourcemap
-                  annotation: true,
-                }
-              : false,
-          },
+        new CssMinimizerPlugin({
+          //cssProcessorOptions: {
+          //  parser: safePostCssParser,
+          //  map: shouldUseSourceMap
+          //    ? {
+          //        // `inline: false` forces the sourcemap to be output into a
+          //        // separate file
+          //        inline: false,
+          //        // `annotation: true` appends the sourceMappingURL to the end of
+          //        // the css file, helping the browser find the sourcemap
+          //        annotation: true,
+          //      }
+          //    : false,
+          //},
         }),
       ],
       // Automatically split vendor and commons
@@ -552,20 +552,20 @@ module.exports = function(webpackEnv) {
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
       // having to parse `index.html`.
-      new ManifestPlugin({
-        fileName: 'asset-manifest.json',
-        publicPath: publicPath,
-        generate: (seed, files) => {
-          const manifestFiles = files.reduce(function(manifest, file) {
-            manifest[file.name] = file.path;
-            return manifest;
-          }, seed);
+      //new ManifestPlugin({
+      //  fileName: 'asset-manifest.json',
+      //  publicPath: publicPath,
+      //  generate: (seed, files) => {
+      //    const manifestFiles = files.reduce(function(manifest, file) {
+      //      manifest[file.name] = file.path;
+      //      return manifest;
+      //    }, seed);
 
-          return {
-            files: manifestFiles,
-          };
-        },
-      }),
+      //    return {
+      //      files: manifestFiles,
+      //    };
+      //  },
+      //}),
       // Moment.js is an extremely popular library that bundles large locale files
       // by default due to how Webpack interprets its code. This is a practical
       // solution that requires the user to opt into importing specific locales.
@@ -578,9 +578,9 @@ module.exports = function(webpackEnv) {
         new WorkboxWebpackPlugin.GenerateSW({
           clientsClaim: true,
           exclude: [/\.map$/, /asset-manifest\.json$/],
-          importWorkboxFrom: 'cdn',
+          //importWorkboxFrom: 'cdn',
           navigateFallback: publicUrl + '/index.html',
-          navigateFallbackBlacklist: [
+          navigateFallbackDenylist: [
             // Exclude URLs starting with /_, as they're likely an API call
             new RegExp('^/_'),
             // Exclude URLs containing a dot, as they're likely a resource in
@@ -614,16 +614,16 @@ module.exports = function(webpackEnv) {
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
-    node: {
-      module: 'empty',
-      dgram: 'empty',
-      dns: 'mock',
-      fs: 'empty',
-      http2: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty',
-    },
+    //node: {
+    //  module: 'empty',
+    //  dgram: 'empty',
+    //  dns: 'mock',
+    //  fs: 'empty',
+    //  http2: 'empty',
+    //  net: 'empty',
+    //  tls: 'empty',
+    //  child_process: 'empty',
+    //},
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,

@@ -20,11 +20,11 @@ interface SimpleColumn {
     name: string; // name to display
 }
 
-interface CheckBoxItems {
-    label: string;
-    checked: boolean;
-    onChange: () => void;
-}
+//interface CheckBoxItems {
+//    label: string;
+//    checked: boolean;
+//    onChange: () => void;
+//}
 
 class ChangeColumnComponent extends React.Component<ChangeColumnProps, ChangeColumnState> {
     constructor(props: ChangeColumnProps) {

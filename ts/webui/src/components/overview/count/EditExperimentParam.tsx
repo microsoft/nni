@@ -109,7 +109,6 @@ export const EditExperimentParam = (): any => {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                // eslint-disable-next-line @typescript-eslint/camelcase
                 params: { update_type: editType }
             });
             if (res.status === 200) {
