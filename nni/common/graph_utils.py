@@ -389,14 +389,9 @@ class TorchModuleGraph(TorchGraph):
                                 visited.add(successor_node)
                         else:
                             outputs.append(output_name)
-                            # if(len(outputs)>1):
-                            #     import pdb; pdb.set_trace()
                             break
                 else:
                     outputs.append(output_name)
-                    # if(len(outputs)>1):
-                    #     import pdb; pdb.set_trace()
-                # print(_output)
 
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
                              node_group, inputs=list(inputs), outputs=list(outputs))
