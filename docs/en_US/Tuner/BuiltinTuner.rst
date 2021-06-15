@@ -497,47 +497,6 @@ As a strategy in a Sequential Model-based Global Optimization (SMBO) algorithm, 
        selection_num_warm_up: 100000
        selection_num_starting_points: 250
 
-:raw-html:`<a name="PPOTuner"></a>`
-
-PPO Tuner
-^^^^^^^^^
-
-..
-
-   Built-in Tuner Name: **PPOTuner**
-
-
-Note that the only acceptable types within the search space are ``layer_choice`` and ``input_choice``. For ``input_choice``\ , ``n_chosen`` can only be 0, 1, or [0, 1]. Note, the search space file for NAS is usually automatically generated through the command `nnictl ss_gen <../Tutorial/Nnictl.rst>`__.
-
-**Suggested scenario**
-
-PPOTuner is a Reinforcement Learning tuner based on the PPO algorithm. PPOTuner can be used when using the NNI NAS interface to do neural architecture search. In general, the Reinforcement Learning algorithm needs more computing resources, though the PPO algorithm is relatively more efficient than others. It's recommended to use this tuner when you have a large amount of computional resources available. You could try it on a very simple task, such as the :githublink:`mnist-nas <examples/nas/legacy/classic_nas>` example. `See details <./PPOTuner.rst>`__
-
-**classArgs Requirements:**
-
-
-* **optimize_mode** (*'maximize' or 'minimize'*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **trials_per_update** (*int, optional, default = 20*\ ) - The number of trials to be used for one update. It must be divisible by minibatch_size. ``trials_per_update`` is recommended to be an exact multiple of ``trialConcurrency`` for better concurrency of trials.
-* **epochs_per_update** (*int, optional, default = 4*\ ) - The number of epochs for one update.
-* **minibatch_size** (*int, optional, default = 4*\ ) - Mini-batch size (i.e., number of trials for a mini-batch) for the update. Note that trials_per_update must be divisible by minibatch_size.
-* **ent_coef** (*float, optional, default = 0.0*\ ) - Policy entropy coefficient in the optimization objective.
-* **lr** (*float, optional, default = 3e-4*\ ) - Learning rate of the model (lstm network); constant.
-* **vf_coef** (*float, optional, default = 0.5*\ ) - Value function loss coefficient in the optimization objective.
-* **max_grad_norm** (*float, optional, default = 0.5*\ ) - Gradient norm clipping coefficient.
-* **gamma** (*float, optional, default = 0.99*\ ) - Discounting factor.
-* **lam** (*float, optional, default = 0.95*\ ) - Advantage estimation discounting factor (lambda in the paper).
-* **cliprange** (*float, optional, default = 0.2*\ ) - Cliprange in the PPO algorithm, constant.
-
-**Example Configuration:**
-
-.. code-block:: yaml
-
-   # config.yml
-   tuner:
-     builtinTunerName: PPOTuner
-     classArgs:
-       optimize_mode: maximize
-
 :raw-html:`<a name="PBTTuner"></a>`
 
 PBT Tuner
@@ -572,6 +531,8 @@ Population Based Training (PBT) bridges and extends parallel search methods and 
        optimize_mode: maximize
 
 Note that, to use this tuner, your trial code should be modified accordingly, please refer to `the document of PBTTuner <./PBTTuner.rst>`__ for details.
+
+:raw-html:`<a name="DNGOTuner"></a>`
 
 DNGO Tuner
 ^^^^^^^^^^
