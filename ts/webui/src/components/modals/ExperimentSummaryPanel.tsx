@@ -9,7 +9,7 @@ import '../../static/style/logDrawer.scss';
 
 interface ExpDrawerProps {
     closeExpDrawer: () => void;
-    experimentProfile: any;
+    experimentProfile: object;
 }
 
 interface ExpDrawerState {

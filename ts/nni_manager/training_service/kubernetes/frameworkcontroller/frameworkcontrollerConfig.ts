@@ -32,7 +32,7 @@ export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfi
         frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy, privateRegistryFilePath?: string | undefined) {
         super(command, gpuNum, cpuNum, memoryMB, image, privateRegistryFilePath);
         this.frameworkAttemptCompletionPolicy = frameworkAttemptCompletionPolicy;
-        this.name = 'FIXME';
+        this.name = name;
         this.taskNum = taskNum;
     }
 }

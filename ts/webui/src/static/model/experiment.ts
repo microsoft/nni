@@ -131,8 +131,8 @@ class Experiment {
 
     get optimizeMode(): string {
         for (const algo of [this.config.tuner, this.config.advisor, this.config.assessor]) {
-            if (algo && algo.classArgs && algo.classArgs['optimizeMode']) {
-                return algo.classArgs['optimizeMode'];
+            if (algo && algo.classArgs && algo.classArgs['optimize_mode']) {
+                return algo.classArgs['optimize_mode'];
             }
         }
         return 'unknown';

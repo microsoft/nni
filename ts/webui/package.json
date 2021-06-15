@@ -37,7 +37,6 @@
     "postcss-loader": "3.0.0",
     "postcss-normalize": "7.0.1",
     "postcss-preset-env": "6.6.0",
-    "postcss-safe-parser": "4.0.1",
     "react": "^16.8.6",
     "react-app-polyfill": "^1.0.0",
     "react-dev-utils": "^11.0.4",

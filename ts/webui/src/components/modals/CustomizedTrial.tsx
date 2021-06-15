@@ -17,9 +17,9 @@ interface CustomizeState {
     isShowSubmitSucceed: boolean;
     isShowSubmitFailed: boolean;
     isShowWarning: boolean;
-    searchSpace: any;
-    copyTrialParameter: any; // user click the trial's parameters
-    customParameters: any; // customized trial, maybe user change trial's parameters
+    searchSpace: object;
+    copyTrialParameter: object; // user click the trial's parameters
+    customParameters: object; // customized trial, maybe user change trial's parameters
     customID: number; // submit customized trial succeed, return the new customized trial id
     changeMap: Map<string, string | number>; // store change key: value
 }

@@ -1,4 +1,4 @@
-// FIXME: This file is copied from react-dev-utils master branch. Waiting for next release.
+// FIXME: This file is copied from react-dev-utils master branch. Waiting for its next release.
 
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
