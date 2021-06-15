@@ -27,7 +27,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on April-26-2021_
+* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New use case sharing**: [Cost-effective Hyper-parameter Tuning using AdaptDL with NNI](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - _posted on Feb-23-2021_
 
