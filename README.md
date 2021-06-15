@@ -131,6 +131,7 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/FBNet.html">FBNet</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Reinforcement Learning</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Regularized Evolution</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">More...</a></li>
@@ -202,6 +203,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
         <li><a href="https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html">CustomizeTuner</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Assessor/CustomizeAssessor.html">CustomizeAssessor</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Tutorial/InstallCustomizedAlgos.html">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/QuickStart.html#define-your-model-space">Define NAS Model Space</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/ApiReference.html">NAS/Retiarii APIs</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
