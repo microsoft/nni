@@ -8,5 +8,5 @@ module.exports = {
     singleQuote: true,
     eslintIntegration: true,
     jsxSingleQuote: true,
-    endOfline: 'lf'
+    endOfline: 'auto'
 };
