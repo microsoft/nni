@@ -12,15 +12,8 @@ function _getWebUIWidth(): number {
     return window.innerWidth;
 }
 
-const dragOptions: IDragOptions = {
-    moveMenuItemText: 'Move',
-    closeMenuItemText: 'Close',
-    menu: ContextualMenu
-};
-
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
-// key: intermdediate dict key
 function _parseIntermediates(trial: TableObj, key: string): number[] {
     const intermediates: number[] = [];
     for (const metric of trial.intermediates) {
@@ -31,13 +24,18 @@ function _parseIntermediates(trial: TableObj, key: string): number[] {
         if (typeof parsedMetric === 'object') {
             // TODO: should handle more types of metric keys
             intermediates.push(parsedMetric[key]);
-            // intermediates.push(parsedMetric.default);
         } else {
             intermediates.push(parsedMetric);
         }
     }
     return intermediates;
 }
+
+const dragOptions: IDragOptions = {
+    moveMenuItemText: 'Move',
+    closeMenuItemText: 'Close',
+    menu: ContextualMenu
+};
 
 interface Item {
     id: string;
@@ -220,10 +218,27 @@ class Compare extends React.Component<CompareProps, CompareState> {
 
     private selectOtherKeys = (_event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
         if (item !== undefined) {
-            const value = item.text;
-            console.info(value);
+            this.setState(() => ({ intermediateKey: item.text }));
         }
     };
+
+    componentDidMount(): void {
+        const { trials } = this.props;
+        const a = trials[0].intermediates as any;
+        const parsedMetric = parseMetrics(a.data);
+        if (typeof parsedMetric === 'object') {
+            const allIntermediateKeys: string[] = [];
+            // just add type=number keys
+            // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+            for (const key in parsedMetric) {
+                if (typeof parsedMetric[key] === 'number') {
+                    allIntermediateKeys.push(key);
+                }
+            }
+            this.setState(() => ({ intermediateAllKeysList: allIntermediateKeys }));
+        }
+    }
+
     render(): React.ReactNode {
         const { trials, title, showDetails } = this.props;
         const { intermediateKey, intermediateAllKeysList } = this.state;
