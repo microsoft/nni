@@ -26,10 +26,11 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * ML Platform owners who want to **support AutoML in their platform**.
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
-* **New release**: [v2.2 is available](https://github.com/microsoft/nni/releases) - _released on April-26-2021_
-* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 
-* **New use case sharing**: [Cost-effective Hyper-parameter Tuning using AdaptDL with NNI](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - _posted on Feb-23-2021_
+* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
+* **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
+* **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
+* **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
 
 ## **NNI capabilities in a glance**
 
@@ -122,25 +123,19 @@ Within the following table, we summarized the current NNI capabilities, we are g
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#SMAC">SMAC</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#MetisTuner">Metis Tuner</a></li>
             <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#GPTuner">GP Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#DNGOTuner">DNGO Tuner</a></li>
             </ul>
-          <b>RL Based</b>
-          <ul>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#PPOTuner">PPO Tuner</a> </li>
-          </ul>
         </ul>
-          <a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">Neural Architecture Search</a>
+          <a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">Neural Architecture Search (Retiarii)</a>
           <ul>
-            <ul>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/ENAS.html">ENAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/PDARTS.html">P-DARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/CDARTS.html">CDARTS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#NetworkMorphism">Network Morphism</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/TextNAS.html">TextNAS</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/NAS/Cream.html">Cream</a></li>
-            </ul>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ENAS.html">ENAS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/FBNet.html">FBNet</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Reinforcement Learning</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">Regularized Evolution</a></li>
+            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">More...</a></li>
           </ul>
           <a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">Model Compression</a>
           <ul>
@@ -153,11 +148,13 @@ Within the following table, we summarized the current NNI capabilities, we are g
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#admm-pruner">ADMM Pruner</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#autocompress-pruner">AutoCompress Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">More...</a></li>
             </ul>
             <b>Quantization</b>
             <ul>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#qat-quantizer">QAT Quantizer</a></li>
               <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#bnn-quantizer">BNN Quantizer</a></li>
             </ul>
           </ul>
           <a href="https://nni.readthedocs.io/en/stable/FeatureEngineering/Overview.html">Feature Engineering (Beta)</a>
@@ -207,6 +204,8 @@ Within the following table, we summarized the current NNI capabilities, we are g
         <li><a href="https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html">CustomizeTuner</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Assessor/CustomizeAssessor.html">CustomizeAssessor</a></li>
         <li><a href="https://nni.readthedocs.io/en/stable/Tutorial/InstallCustomizedAlgos.html">Install Customized Algorithms as Builtin Tuners/Assessors/Advisors</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/QuickStart.html#define-your-model-space">Define NAS Model Space</a></li>
+        <li><a href="https://nni.readthedocs.io/en/stable/NAS/ApiReference.html">NAS/Retiarii APIs</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
@@ -252,7 +251,7 @@ Note:
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v2.2 https://github.com/Microsoft/nni.git
+  git clone -b v2.3 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -317,6 +316,7 @@ We appreciate all contributions and thank all the contributors!
 
 ## **Feedback**
 * [File an issue](https://github.com/microsoft/nni/issues/new/choose) on GitHub.
+* Open or participate in a [discussion](https://github.com/microsoft/nni/discussions). 
 * Discuss on the NNI [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) in NNI.
 
 Join IM discussion groups:
