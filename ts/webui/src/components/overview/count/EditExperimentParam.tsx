@@ -27,9 +27,8 @@ export const EditExperimentParam = (): any => {
     const hideSucceedInfo = useCallback(() => {
         setShowSucceedInfo(false);
     }, []);
-    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
-        EditExpeParamContext
-    );
+    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } =
+        useContext(EditExpeParamContext);
     const originMaxDurationStr = EXPERIMENT.profile.params.maxExperimentDuration;
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);

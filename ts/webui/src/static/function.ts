@@ -233,7 +233,7 @@ const downFile = (content: string, fileName: string): void => {
     }
     if (navigator.userAgent.indexOf('Firefox') > -1) {
         const downTag = document.createElement('a');
-        downTag.addEventListener('click', function() {
+        downTag.addEventListener('click', function () {
             downTag.download = fileName;
             downTag.href = URL.createObjectURL(file);
         });
@@ -271,10 +271,7 @@ function metricAccuracy(metric: MetricDataRecord): number {
 
 function formatAccuracy(accuracy: number): string {
     // TODO: how to format NaN?
-    return accuracy
-        .toFixed(6)
-        .replace(/0+$/, '')
-        .replace(/\.$/, '');
+    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 function formatComplexTypeValue(value: any): string | number {
@@ -298,7 +295,7 @@ function caclMonacoEditorHeight(height): number {
 
 function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
     const key = columnKey as keyof T;
-    return items.slice(0).sort(function(a: T, b: T): any {
+    return items.slice(0).sort(function (a: T, b: T): any {
         if (
             a[key] === undefined ||
             Object.is(a[key], NaN) ||
