@@ -8,5 +8,5 @@ module.exports = {
     singleQuote: true,
     eslintIntegration: true,
     jsxSingleQuote: true,
-    endOfLine: 'lf',
+    endOfLine: process.platform === 'win32' ? 'auto' : 'lf'
 };
