@@ -207,29 +207,29 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 
 
-* 支持通过 id，状态，Trial 编号， 以及参数来搜索。 and trial parameters.
+* 支持通过 id，状态，Trial 编号， 以及参数来搜索。  
 
-1. Trial id: 
+1. Trial id： 
 
 .. image:: ../../img/webui-img/search-trial.png
    :target: ../../img/webui-img/search-trial.png
    :alt: searchTrial
 
 
-2. Trial No.: 
+2. Trial No.： 
 
 .. image:: ../../img/webui-img/detail/searchNo.png
    :target: ../../img/webui-img/detail/searchNo.png
    :alt: searchTrialNo.
 
 
-3. Trial status:
+3. Trial 状态：
 
 .. image:: ../../img/webui-img/detail/searchStatus.png
    :target: ../../img/webui-img/detail/searchStatus.png
    :alt: searchStatus
 
-4. Trial parameters:
+4. Trial 参数：
 
 (1) parameters whose type is choice:
 
