@@ -14,7 +14,18 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
 * 提供优化且易用的压缩工具，帮助用户深入了解压缩过程和结果。
 * 提供简洁的接口，帮助用户实现自己的压缩算法。
 
-* 注意，PyTorch 和 TensorFlow 有统一的 API 接口，当前仅支持 PyTorch 版本，未来会提供 TensorFlow 的支持。
+
+Compression Pipeline
+--------------------
+
+.. image:: ../../img/compression_flow.jpg
+   :target: ../../img/compression_flow.jpg
+   :alt: 
+
+The overall compression pipeline in NNI. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
+
+.. note::
+  Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency. To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__. * 注意，PyTorch 和 TensorFlow 有统一的 API 接口，当前仅支持 PyTorch 版本，未来会提供 TensorFlow 的支持。
 
 支持的算法
 --------------------
@@ -85,12 +96,15 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
      - DoReFa-Net: 通过低位宽的梯度算法来训练低位宽的卷积神经网络。 `参考论文 <https://arxiv.org/abs/1606.06160>`__
    * - `BNN Quantizer <../Compression/Quantizer.rst#bnn-quantizer>`__
      - 二进制神经网络：使用权重和激活限制为 +1 或 -1 的深度神经网络。 `参考论文 <https://arxiv.org/abs/1602.02830>`__
+   * - `LSQ Quantizer <../Compression/Quantizer.rst#lsq-quantizer>`__
+     - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
 
 
 模型加速
 -------------
 
-模型压缩的目的是减少推理延迟和模型大小。 但现有的模型压缩算法主要通过模拟的方法来检查压缩模型性能（如精度）。例如，剪枝算法中使用掩码，而量化算法中量化值仍然是以 32 位浮点数来存储。 只要给出这些算法产生的掩码和量化位，NNI 可真正的加速模型。 模型加速的详细文档参考 `这里 <./ModelSpeedup.rst>`__。
+模型压缩的目的是减少推理延迟和模型大小。 但现有的模型压缩算法主要通过模拟的方法来检查压缩模型性能（如精度）。例如，剪枝算法中使用掩码，而量化算法中量化值仍然是以 32 位浮点数来存储。 只要给出这些算法产生的掩码和量化位，NNI 可真正的加速模型。 The detailed tutorial of Masked Model Speedup can be found `here <./ModelSpeedup.rst>`__, The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <./QuantizationSpeedup.rst>`__.
+
 
 压缩工具
 ---------------------
@@ -105,7 +119,6 @@ NNI 模型压缩提供了简洁的接口，用于自定义新的压缩算法。 
 
 参考和反馈
 ----------------------
-
 
 * 在Github 中 `提交此功能的 Bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__
 * 在Github 中 `提交新功能或请求改进 <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__
