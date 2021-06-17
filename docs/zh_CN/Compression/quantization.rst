@@ -15,4 +15,4 @@
     :maxdepth: 2
 
     Quantizers <Quantizer>
-    Quantization Speedup <QuantizationSpeedup>
+    量化加速 <QuantizationSpeedup>
