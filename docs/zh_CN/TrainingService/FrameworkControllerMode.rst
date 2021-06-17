@@ -29,13 +29,13 @@ Azure 部署的 Kubernetes 的准备工作
 #. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 `Azure Key Vault <https://azure.microsoft.com/zh-cn/services/key-vault/>`__ 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考 `指南 <https://docs.microsoft.com/zh-cn/azure/key-vault/quick-create-cli>`__ 来存储访问密钥。
 
 
-Prerequisite for PVC storage mode
+部署 PVC 存储模式的准备工作
 -----------------------------------------
-In order to use persistent volume claims instead of NFS or Azure storage, related storage must
-be created manually, in the namespace your trials will run later. This restriction is due to the
-fact, that persistent volume claims are hard to recycle and thus can quickly mess with a cluster's
-storage management. Persistent volume claims can be created by e.g. using kubectl. Please refer
-to the official Kubernetes documentation for `further information <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__.
+为了使用 PVC（persistent volume claims）而不是 NFS 或 Azure 存储，相关存储必须
+在你的 Trial 以后要运行的命名空间中手动创建。 这一限制是由于
+PVC 很难被回收，因此会迅速扰乱一个集群的
+存储管理， PVC 可以通过 kubectl 被创建。 请参考
+`Kubernetes 官方文档 <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__ 获取更多信息。
 
 
 安装 FrameworkController
@@ -126,8 +126,8 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
   * image: 用来创建 pod，并运行程序的 Docker 映像。
   * frameworkAttemptCompletionPolicy: 运行框架的策略，参考 `用户手册 <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy>`__ 了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 还在运行，要通过完成策略来停止 ps。
 
-NNI also offers the possibility to include a customized frameworkcontroller template similar
-to the aforementioned tensorflow example. A valid configuration the may look like:
+NNI还提供了一个定制 FrameworkController 模板的可能性，类似于
+前面提到的 TensorFlow 示例。 一个有效的配置大致如下：
 
 .. code-block:: yaml
 
@@ -155,7 +155,7 @@ to the aforementioned tensorflow example. A valid configuration the may look lik
       pvc:
         path: /mnt/data
 
-Note that in this example a persistent volume claim has been used, that must be created manually in the specified namespace beforehand. Stick to the mnist-pytorch example (:githublink: `<examples/trials/mnist-pytorch>`__) for a more detailed config (:githublink: `<examples/trials/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) and frameworkcontroller template (:githublink: `<examples/trials/fc_template.yml>`__).
+请注意，在这个例子中，已经使用了 PVC 存储，其必须事先在指定的命名空间中手动创建。 点击 mnist-pytorch 示例 (:githublink: `<examples/trials/mnist-pytorch>`__) 获取更加详细的配置 (:githublink: `<examples/trials/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) 和 FrameworkController 模板 (:githublink: `<examples/trials/fc_template.yml>`__)。
 
 如何运行示例
 ------------------
