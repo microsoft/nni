@@ -33,7 +33,7 @@ NNI 上调优张量算子
 运行 Experiment
 ----------------
 
-这里从 BERT 和 AlexNet 中选择了三种有代表性的张量算子：**矩阵乘法**、**批处理的矩阵乘法**，以及 **二维卷积**，并使用 NNI 进行调优。 所有张量算子的 ``Trial`` 代码都是 ``/root/compiler_auto_tune_stable.py``，每个调优算法的 ``搜索空间`` 和 ``配置`` 文件都在按张量算子分类的 ``/root/experiments/`` 目录中。 这里的 ``/root`` 表示容器中的 root 目录。
+这里从 BERT 和 AlexNet 中选择了三种有代表性的张量算子：**矩阵乘法**、**批处理的矩阵乘法**，以及 **二维卷积**，并使用 NNI 进行调优。 所有张量算子的 ``Trial`` 代码都是 ``/root/compiler_auto_tune_stable.py``，每个调优算法的 ``搜索空间`` 和 ``配置`` 文件都在按张量算子分类的 ``/root/experiments/`` 目录中。 这里的 ``/root`` 表示容器中的 root 目录。 所有张量算子的 ``Trial`` 代码都是 ``/root/compiler_auto_tune_stable.py``，每个调优算法的 ``搜索空间`` 和 ``配置`` 文件都在按张量算子分类的 ``/root/experiments/`` 目录中。 这里的 ``/root`` 表示容器中的 root 目录。
 
 在 ``/root`` 中运行以下命令来调优矩阵乘法：
 
