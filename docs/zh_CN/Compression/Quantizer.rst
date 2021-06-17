@@ -8,6 +8,7 @@
 * `QAT Quantizer <#qat-quantizer>`__
 * `DoReFa Quantizer <#dorefa-quantizer>`__
 * `BNN Quantizer <#bnn-quantizer>`__
+* `LSQ Quantizer <#lsq-quantizer>`__
 
 Naive Quantizer
 ---------------
@@ -88,6 +89,61 @@ QAT Quantizer 的用户配置
 
 ----
 
+LSQ Quantizer
+-------------
+
+In `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__\ , authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+
+..
+
+   The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
+
+
+用法
+^^^^^
+You can add codes below before your training codes. Three things must be done:
+
+
+1. configure which layer to be quantized and which tensor (input/output/weight) of that layer to be quantized.
+2. construct the lsq quantizer
+3. call the `compress` API
+
+
+PyTorch 代码
+
+.. code-block:: python
+
+    from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+    model = Mnist()
+
+    configure_list = [{
+            'op_types': 'default'
+            'quant_bits': {
+                'weight': 8,
+                'input': 8,
+            },
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output': 8,},
+            'op_names': ['relu1']
+    }]
+
+    quantizer = LsqQuantizer(model, configure_list, optimizer)
+    quantizer.compress()
+
+You can view example for more information. :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
+
+User configuration for LSQ Quantizer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+
+此算法所需的配置：
+
+
+----
+
 DoReFa Quantizer
 ----------------
 
@@ -106,7 +162,7 @@ PyTorch 代码
    config_list = [{ 
        'quant_types': ['weight'],
        'quant_bits': 8, 
-       'op_types': 'default' 
+       'op_types': ['default'] 
    }]
    quantizer = DoReFaQuantizer(model, config_list)
    quantizer.compress()
@@ -132,10 +188,10 @@ BNN Quantizer
    引入了一种训练二进制神经网络（BNN）的方法 - 神经网络在运行时使用二进制权重。 在训练时，二进制权重和激活用于计算参数梯度。 在 forward 过程中，BNN 会大大减少内存大小和访问，并将大多数算术运算替换为按位计算，可显著提高能源效率。
 
 
-用法
+Usage
 ^^^^^
 
-PyTorch 代码
+PyTorch code
 
 .. code-block:: python
 
@@ -164,7 +220,7 @@ BNN Quantizer 的用户配置
 
 压缩算法的公共配置可在 `config_list 说明 <./QuickStart.rst>`__ 中找到。
 
-此算法所需的配置：
+configuration needed by this algorithm :
 
 实验
 ^^^^^^^^^^
