@@ -54,9 +54,9 @@
 
     experiment.run(port=8081)
 
-现在，您已经成功启动了 NNI Experiment。 您可以在浏览器中输入``localhost:8081`` 以实时观察实验。 And you can type ``localhost:8080`` in your browser to observe your experiment in real time.
+现在，您已经成功启动了 NNI Experiment。 您可以在浏览器中输入``localhost:8081`` 以实时观察实验。 您可以在浏览器中输入``localhost:8080`` 以实时观察实验。
 
-.. Note:: 实验将在前台运行，实验结束后自动退出。 如果要以交互方式运行 Experiment，请在步骤3中使用 ``start()``。 If you want to run an experiment in an interactive way, use ``start()`` in Step 2. 
+.. Note:: 实验将在前台运行，实验结束后自动退出。 如果要以交互方式运行 Experiment，请在步骤3中使用 ``start()``。 如果要以交互方式运行 Experiment，请在步骤2中使用 ``start()``。 
 
 示例
 ^^^^^^^
@@ -106,11 +106,11 @@
 
 .. Note:: 连接到现有 Experiment 时，可以使用 ``stop()`` 停止 Experiment。
 
-Resume/View and Manage a Stopped Experiment
--------------------------------------------
+恢复/查看和管理已停止的 Experiment
+--------------------------------------------------------------------------------------
 
-You can use ``Experiment.resume()`` and ``Experiment.view()`` to resume and view a stopped experiment, these functions behave like ``nnictl resume`` and ``nnictl view``.
-If you want to manage the experiment, set ``wait_completion`` as ``False`` and the functions will return an ``Experiment`` instance. For more parameters, please refer to API.
+您可以使用 ``Experiment.resume()`` 和 ``Experiment.view()`` 来恢复和查看停止的 Experiment，这些函数的行为类似于 ``nnictl resume`` 和 ``nnictl view``。
+如果你想管理 Experiment，设置 ``wait_completion`` 为 ``False`` ，函数将返回一个 ``Experiment`` 实例。 更多参数请参考API。
 
 API
 ---
