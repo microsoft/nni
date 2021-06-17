@@ -1,7 +1,7 @@
 One-shot NAS
 ============
 
-Before reading this tutorial, we highly recommend you to first go through the tutorial of how to `define a model space <./QuickStart.rst#define-your-model-space>`__.
+在阅读本教程之前，我们强烈建议您先阅读有关如何 `定义一个模型空间 <./QuickStart.rst#define-your-model-space>`__ 的教程。
 
 Model Search with One-shot Trainer
 ----------------------------------
