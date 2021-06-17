@@ -114,67 +114,67 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <ul>
               <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#BOHB">BOHB</a></li>
               <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#TPE">TPE</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#SMAC">SMAC</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#MetisTuner">Metis Tuner</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#GPTuner">GP Tuner</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html#DNGOTuner">PPO Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#SMAC">SMAC</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#MetisTuner">Metis Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#GPTuner">GP Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#DNGOTuner">PPO Tuner</a></li>
             </ul>
         </ul>
-          <a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">神经网络架构搜索</a>
+          <a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">神经网络架构搜索</a>
           <ul>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ENAS.html">ENAS</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/DARTS.html">DARTS</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/SPOS.html">SPOS</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/FBNet.html">微信</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">基于强化学习</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/ExplorationStrategies.html">正则进化</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Overview.html">更多...</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ENAS.html">ENAS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/DARTS.html">DARTS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/SPOS.html">SPOS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/FBNet.html">微信</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">基于强化学习</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">正则进化</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">更多...</a></li>
           </ul>
-          <a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">模型压缩</a>
+          <a href="https://nni.readthedocs.io/zh/stable/Compression/Overview.html">模型压缩</a>
           <ul>
             <b>剪枝</b>
             <ul>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#agp-pruner">AGP Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#slim-pruner">Slim Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#fpgm-pruner">FPGM Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#netadapt-pruner">NetAdapt Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#admm-pruner">ADMM Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Pruner.html#autocompress-pruner">AutoCompress Pruner</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Overview.html">更多...</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#agp-pruner">AGP Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#slim-pruner">Slim Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#netadapt-pruner">NetAdapt Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#admm-pruner">ADMM Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#autocompress-pruner">AutoCompress Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Overview.html">更多...</a></li>
             </ul>
             <b>量化</b>
             <ul>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#qat-quantizer">QAT Quantizer</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#dorefa-quantizer">DoReFa Quantizer</a></li>
-              <li><a href="https://nni.readthedocs.io/en/stable/Compression/Quantizer.html#bnn-quantizer">BNN Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#qat-quantizer">QAT Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#bnn-quantizer">BNN Quantizer</a></li>
             </ul>
           </ul>
-          <a href="https://nni.readthedocs.io/en/stable/FeatureEngineering/Overview.html">特征工程（测试版）</a>
+          <a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/Overview.html">特征工程（测试版）</a>
           <ul>
-          <li><a href="https://nni.readthedocs.io/en/stable/FeatureEngineering/GradientFeatureSelector.html">GradientFeatureSelector</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/FeatureEngineering/GBDTSelector.html">GBDTSelector</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/GradientFeatureSelector.html">GradientFeatureSelector</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/GBDTSelector.html">GBDTSelector</a></li>
           </ul>
-          <a href="https://nni.readthedocs.io/en/stable/Assessor/BuiltinAssessor.html">提前终止算法</a>
+          <a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html">提前终止算法</a>
           <ul>
-          <li><a href="https://nni.readthedocs.io/en/stable/Assessor/BuiltinAssessor.html#MedianStop">Median Stop（中位数终止）</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/Assessor/BuiltinAssessor.html#Curvefitting">Curve Fitting（曲线拟合）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html#MedianStop">Median Stop（中位数终止）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html#Curvefitting">Curve Fitting（曲线拟合）</a></li>
           </ul>
       </td>
       <td>
       <ul>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/LocalMode.html">本机</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/RemoteMachineMode.html">远程计算机</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/HybridMode.html">混合模式</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/AMLMode.html">AML(Azure Machine Learning)</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/LocalMode.html">本机</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/RemoteMachineMode.html">远程计算机</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/HybridMode.html">混合模式</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/AMLMode.html">AML(Azure Machine Learning)</a></li>
         <li><b>基于 Kubernetes 的平台</b></li>
         <ul>
-          <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/PaiMode.html">OpenPAI</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/KubeflowMode.html">Kubeflow</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/FrameworkControllerMode.html">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/DLTSMode.html">DLWorkspace（又称  DLTS）</a></li>
-          <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/AdaptDLMode.html">AdaptDL（又称 ADL）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/PaiMode.html">OpenPAI</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/KubeflowMode.html">Kubeflow</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/FrameworkControllerMode.html">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/DLTSMode.html">DLWorkspace（又称  DLTS）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/AdaptDLMode.html">AdaptDL（又称 ADL）</a></li>
         </ul>
       </ul>
       </td>
@@ -188,24 +188,24 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="https://nni.readthedocs.io/en/stable/autotune_ref.html#trial">Python API</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/Tutorial/AnnotationSpec.html">NNI Annotation</a></li>
-         <li><a href="https://nni.readthedocs.io/en/stable/installation.html">支持的操作系统</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/autotune_ref.html#trial">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tutorial/AnnotationSpec.html">NNI Annotation</a></li>
+         <li><a href="https://nni.readthedocs.io/zh/stable/installation.html">支持的操作系统</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html">自定义 Tuner</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/Assessor/CustomizeAssessor.html">自定义 Assessor</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/Tutorial/InstallCustomizedAlgos.html">安装自定义的 Tuner，Assessor，Advisor</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/NAS/QuickStart.html#define-your-model-space">定义模型空间</a></li>
-        <li><a href="https://nni.readthedocs.io/en/stable/NAS/ApiReference.html">docs/zh_CN/NAS/ENAS.rst</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/CustomizeTuner.html">自定义 Tuner</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/CustomizeAssessor.html">自定义 Assessor</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tutorial/InstallCustomizedAlgos.html">安装自定义的 Tuner，Assessor，Advisor</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/QuickStart.html#define-your-model-space">定义模型空间</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ApiReference.html">docs/zh_CN/NAS/ENAS.rst</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/Overview.html">支持训练平台</li>
-        <li><a href="https://nni.readthedocs.io/en/stable/TrainingService/HowToImplementTrainingService.html">实现训练平台</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/Overview.html">支持训练平台</li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/HowToImplementTrainingService.html">实现训练平台</a></li>
       </ul>
       </td>
     </tr>
