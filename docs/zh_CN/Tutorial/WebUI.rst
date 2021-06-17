@@ -231,13 +231,13 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 4. Trial 参数：
 
-(1) parameters whose type is choice:
+(1) 类型为 choice 的参数：
 
 .. image:: ../../img/webui-img/detail/searchParameterChoice.png
    :target: ../../img/webui-img/detail/searchParameterChoice.png
    :alt: searchParameterChoice
 
-(2) parameters whose type is not choice:
+(2) 类型不是 choice 的参数：
 
 .. image:: ../../img/webui-img/detail/searchParameterRange.png
    :target: ../../img/webui-img/detail/searchParameterRange.png
@@ -266,7 +266,8 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
    :alt: compareTrialsGraph
 
 
-* ``Tensorboard`` please refer `doc <Tensorboard.rst>`__.
+* ``Tensorboard`` 请参考 `此文档 <Tensorboard.rst>`__。
+
 
 
 * 可使用 ``Copy as python`` 按钮来拷贝 Trial 的参数。
@@ -278,16 +279,16 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 
 
-* You could see trial logs on the tab of ``Log``. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. * 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
+* 您可以在 ``Log`` 选项卡上看到 Trial 日志。 在本地模式下有 ``View trial log``, ``View trial error`` 和 ``View trial stdout`` 三个按钮。 * 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
-1. local mode:
+1. 本机模式
 
 .. image:: ../../img/webui-img/detail/log-local.png
    :target: ../../img/webui-img/detail/log-local.png
    :alt: logOnLocal
 
 
-2. OpenPAI, Kubeflow and other mode:
+2. OpenPAI、Kubeflow 等模式：
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
@@ -312,7 +313,7 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 
 
-* Customized trial: you can change this trial parameters and then submit it to the experiment. If you want to rerun a failed trial you could submit the same parameters to the experiment.
+* 自定义 Trial：您可以更改此 Trial 参数，然后将其提交给 Experiment。 如果您想重新运行失败的 Trial ，您可以向 Experiment 提交相同的参数。
 
 .. image:: ../../img/webui-img/detail/customizedTrialButton.png
    :target: ../../img/webui-img/detail/customizedTrialButton.png
