@@ -70,11 +70,11 @@ NNI 训练平台让用户专注于 AutoML 任务，不需要关心 Trial 实际�
 步骤 3. **收集 metrics。**  NNI 监视记录 trial 状态，更新 trial 的状态（例如，从 ``WAITING`` to ``RUNNING``，从 ``RUNNING`` 到 ``SUCCEEDED``），并收集 metrics 。 当前，大部分训练平台都实现为 "主动" 模式，即，训练平台会调用 NNI 管理器上的 RESTful API 来更新指标。 注意，这也需要运行 NNI 管理器的计算机能被工作节点访问到。
 
 
-Training Service Under Reuse Mode
+重用模式下的训练平台
 ---------------------------------
 
-When reuse mode is enabled, a cluster, such as a remote machine or a computer instance on AML, will launch a long-running environment, so that NNI will submit trials to these environments iteratively, which saves the time to create new jobs. For instance, using OpenPAI training platform under reuse mode can avoid the overhead of pulling docker images, creating containers, and downloading data repeatedly.
+启用重用模式后，一个集群，例如远程机器或 AML 上的计算实例，将启动一个长期运行的环境，以便 NNI 将 Trial 迭代地提交到这些环境，从而节省创建新任务的时间。 例如，在重用模式下使用 OpenPAI 训练平台可以避免重复拉取 docker 镜像、创建容器和下载数据的开销。
 
-In the reuse mode, user needs to make sure each trial can run independently in the same job (e.g., avoid loading checkpoints from previous trials).
+在重用模式下，用户需要确保每个 Trial 可以在同一任务中独立运行（例如，避免加载先前 Trial 的检查点）。
 
-.. note:: Currently, only `Local <./LocalMode.rst>`__, `Remote <./RemoteMachineMode.rst>`__, `OpenPAI <./PaiMode.rst>`__ and `AML <./AMLMode.rst>`__ training services support resue mode. For Remote and OpenPAI training platforms, you can enable reuse mode according to `here <../reference/experiment_config.rst>`__ manually. AML is implemented under reuse mode, so the default mode is reuse mode, no need to manually enable.
+.. note:: 目前，只有 `Local <./LocalMode.rst>`__, `Remote <./RemoteMachineMode.rst>`__, `OpenPAI <./PaiMode.rst>`__ 和 `AML <./AMLMode.rst>`__ 训练平台支持重用模式。 对于 Remote 和 OpenPAI 训练平台，您可以根据 `这里 <../reference/experiment_config.rst>`__ 手动启用重用模式。 AML是在重用模式下实现的，所以默认模式是重用模式，不需要手动启用。
