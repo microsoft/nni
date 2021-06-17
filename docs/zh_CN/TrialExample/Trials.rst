@@ -208,6 +208,7 @@ Trial 存放在什么地方？
 -------------------
 
 
+* `Write logs to trial output directory for tensorboard <../Tutorial/Tensorboard.rst>`__
 * `MNIST 示例 <MnistExamples.rst>`__
 * `为 CIFAR 10 分类找到最佳的 optimizer <Cifar10Examples.rst>`__
 * `如何在 NNI 调优 SciKit-learn 的参数 <SklearnExamples.rst>`__
