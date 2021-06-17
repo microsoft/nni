@@ -1,6 +1,6 @@
 # TextNAS: A Neural Architecture Search Space tailored for Text Representation
 
-TextNAS 由 MSRA 提出 正式版本。
+TextNAS 由 MSRA 提出 正式版本。 Official Release.
 
 [论文链接](https://arxiv.org/abs/1912.10729)
 
