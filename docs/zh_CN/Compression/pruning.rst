@@ -23,4 +23,3 @@ NNI 提供了多种非结构化和结构化剪枝算法。
     Pruners <Pruner>
     Dependency Aware Mode <DependencyAware>
     Model Speedup <ModelSpeedup>
-    Automatic Model Pruning with NNI Tuners <AutoPruningUsingTuners>
