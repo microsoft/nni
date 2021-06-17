@@ -1,11 +1,11 @@
 #####################
-Construct Model Space
+构建模型空间
 #####################
 
-NNI provides powerful APIs for users to easily express model space (or search space). First, users can use mutation primitives (e.g., ValueChoice, LayerChoice) to inline a space in their model. Second, NNI provides simple interface for users to customize new mutators for expressing more complicated model spaces. In most cases, the mutation primitives are enough to express users' model spaces.
+NNI为用户提供了强大的API，以方便表达模型空间（或搜索空间）。 首先，用户可以使用 mutation 原语（如 ValueChoice、LayerChoice）在他们的模型中内联一个空间。 其次，NNI为用户提供了简单的接口，可以定制新的 mutators 来表达更复杂的模型空间。 在大多数情况下，mutation 原语足以表达用户的模型空间。
 
 ..  toctree::
     :maxdepth: 1
 
-    Mutation Primitives <MutationPrimitives>
-    Customize Mutators <Mutators>
+    mutation 原语 <MutationPrimitives>
+    定制 mutator <Mutators>
