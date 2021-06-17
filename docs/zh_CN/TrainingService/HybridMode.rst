@@ -35,5 +35,5 @@
             passwd: bob123
       - local
 
-To use hybrid training services, users should set training service configurations as a list in `trainingService` field.  
-Currently, hybrid support setting `local`, `remote`, `pai` and `aml` training services.
+要使用混合训练平台，用户应在 `trainingService` 字段中将训练平台设置为列表。  
+目前，混合训练平台只支持 `local`, `remote`, `pai` 和 `aml` 训练平台。
