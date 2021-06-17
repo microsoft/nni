@@ -876,31 +876,31 @@ localMountPoint
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+远程挂载存储的路径。
 
 类型：``str``
 
-If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
+如果路径不存在，它将被自动创建。 建议使用相对路径。 即， ``./nni-shared-storage``
 
-Note that the directory must be empty when using AzureBlob. 
+注意：使用 AzureBlob 时，此目录必须是空的。 
 
 
 localMounted
 """"""""""""
 
-Specify the object and status to mount the shared storage.
+指定挂载共享存储的对象和状态。
 
 类型：``str``
 
-values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
+候选值：``"usermount"``, ``"nnimount"``, ``"nomount"``
 
-``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
+``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 NNI 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。
 
 
 storageAccountName
 """"""""""""""""""
 
-Azure storage account name.
+Azure 存储账户名称。
 
 类型：``str``
 
@@ -908,11 +908,11 @@ Azure storage account name.
 storageAccountKey
 """""""""""""""""
 
-Azure storage account key.
+Azure 存储账户密钥。
 
 类型：``Optional[str]``
 
-When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
+如果未设置 storageAccountKey，则首先需要在 Azure CLI 中使用 ``az login`` 并设置 `resourceGroupName`_ 。
 
 
 resourceGroupName
