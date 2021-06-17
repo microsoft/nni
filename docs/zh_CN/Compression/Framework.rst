@@ -103,7 +103,7 @@ Pruner
 ------
 
 Pruner 接收 ``模型``，``配置`` 和 ``优化器`` 作为参数。 通过往 ``optimizer.step()`` 上增加回调，在训练过程中根据 ``config_list`` 来对模型剪枝。 
-Some pruners like ``TaylorFOWeightFilter Pruner`` prune the model per the ``config_list`` during training loop by adding a hook on ``optimizer.step()``.
+一些剪枝器，比如 ``TaylorFOWeightFilter Pruner`` 通过在 ``optimizer.step()`` 上添加一个钩子，在训练循环期间根据 ``config_list`` 修剪模型。
 
 Pruner 类是 Compressor 的子类，因此它包含了 Compressor 的所有功能，并添加了剪枝所需要的组件，包括：
 
