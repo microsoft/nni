@@ -8,7 +8,7 @@ NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/
 
 步骤 1. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 NNI。   
 
-步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。
+步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。 如果已有 Azure 账户/订阅，跳过此步骤。
 
 步骤 3. 在机器上安装 Azure CLI，参照 `此 <https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 安装指南。
 
@@ -125,3 +125,8 @@ amlConfig 需要的信息可以从步骤 5 下载的 ``config.json`` 找到。
    nnictl create --config config_aml.yml
 
 将 ``${NNI_VERSION}`` 替换为发布的版本或分支名称，例如：``v2.0``。
+
+Monitor your code in the cloud by using the studio
+--------------------------------------------------
+
+To monitor your job's code, you need to visit your studio which you create at step 5. Once the job completes, go to the Outputs + logs tab. There you can see a 70_driver_log.txt file, This file contains the standard output from a run and can be useful when you're debugging remote runs in the cloud. Learn more about aml from `here <https://docs.microsoft.com/en-us/azure/machine-learning/tutorial-1st-experiment-hello-world>`__.
