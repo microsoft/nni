@@ -10,16 +10,16 @@
 为了促进 NAS 创新 (如, 设计实现新的 NAS 模型，比较不同的 NAS 模型)，
 易于使用且灵活的编程接口非常重要。
 
-Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model.
-Exploratory training with Retiarii allows user to express various search spaces for *Neural Architecture Search* and *Hyper-Parameter Tuning* with high flexibility.
+因此，NNI 设计了 `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__， 它是一个深度学习框架，支持在神经网络模型空间，而不是单个神经网络模型上进行探索性训练。
+Retiarii 的探索性训练允许用户以高度灵活的方式表达 *神经网络架构搜索* 和 *超参数调整* 的各种搜索空间。
 
-Some frequently used terminologies in this document:
+本文档中的一些常用术语：
 
-* *Model search space*: it means a set of models from which the best model is explored/searched. Sometimes we use *search space* or *model space* in short.
-* *Exploration strategy*: the algorithm that is used to explore a model search space.
-* *Model evaluator*: it is used to train a model and evaluate the model's performance.
+* *Model search space（模型搜索空间）* ：它意味着一组模型，用于从中探索/搜索出最佳模型。 有时我们简称为 *search space（搜索空间）* 或 *model space（模型空间）* 。
+* *Exploration strategy（探索策略）*：用于探索模型搜索空间的算法。
+* *Model evaluator（模型评估器）*：用于训练模型并评估模型的性能。
 
-Follow the instructions below to start your journey with Retiarii.
+按照以下说明开始您的 Retiarii 之旅。
 
 ..  toctree::
     :maxdepth: 2
