@@ -106,10 +106,10 @@ Quantizers
 ..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
     :members:
 
-Model Speedup
+模型加速
 -------------
 
-Quantization Speedup
+量化模型加速
 ^^^^^^^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.quantization_speedup.backend.BaseModelSpeedup
