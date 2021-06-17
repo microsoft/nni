@@ -44,7 +44,7 @@
    * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner 是一种简单的异步优化算法，在固定的计算资源下，它能有效的联合优化一组模型及其超参来最大化性能。 `参考论文 <https://arxiv.org/abs/1711.09846v1>`__
    PPO Tuner
-     - Use of neural networks as an alternative to GPs to model distributions over functions in bayesian optimization.
+     - 使用神经网络作为 GP 的替代方法，对贝叶斯优化中的函数分布进行建模。
 
 用法
 ------------------------
@@ -539,9 +539,9 @@ DNGO Tuner
 
 ..
 
-   Built-in Tuner Name: **DNGOTuner**
+   名称：**DNGOTuner**
 
-DNGO advisor requires `pybnn`, which can be installed with the following command.
+DNGO Advisor 需要 `pybnn`，可以使用以下命令安装。
 
 .. code-block:: bash
 
@@ -549,15 +549,15 @@ DNGO advisor requires `pybnn`, which can be installed with the following command
 
 **建议场景**
 
-Applicable to large scale hyperparameter optimization. Bayesian optimization that rapidly finds competitive models on benchmark object recognition tasks using convolutional networks, and image caption generation using neural language models.
+适用于大规模超参数优化。 贝叶斯优化使用卷积网络快速找到基准对象识别任务的竞争模型，并使用神经语言模型生成图像标题。
 
 **classArgs 要求：**
 
 
-* **optimize_mode** (*'maximize' or 'minimize'*\ ) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **sample_size** (*int, default = 1000*) - Number of samples to select in each iteration. The best one will be picked from the samples as the next trial.
+* **optimize_mode** (*‘maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **sample_size** (*int，默认是 1000*) - 每次迭代中选择的样本数。 最好的一个将从样本中挑选出来作为下一次 Trial。
 * **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 ``trials_per_update`` 设为 ``trialConcurrency`` 的倍数，以提高 Trial 的并发效率。
-* **num_epochs_per_training** (*int, default = 500*) - Number of epochs to train DNGO model.
+* **num_epochs_per_training** (*int，默认是500*) - 训练 DNGO 模型的 epoch 数。
 
 **配置示例：**
 
