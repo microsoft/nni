@@ -2,7 +2,7 @@
 Experiment 配置
 ===========================
 
-A config file is needed when creating an experiment. This document describes the rules to write a config file and provides some examples.
+创建 Experiment 所需要的配置文件。 本文介绍了配置文件的内容，并提供了一些示例。
 
 .. 注意
 
@@ -15,7 +15,7 @@ A config file is needed when creating an experiment. This document describes the
     3. 一些字段采用文件或目录的路径， 除特别说明，均支持绝对路径和相对路径，``~`` 将扩展到 home 目录。
 
        - 在写入 YAML 文件时，相对路径是相对于包含该文件目录的路径。
-       - When assigned in Python code, relative paths are relative to the current working directory.
+       - 在 Python 代码中赋值时，相对路径是相对于当前工作目录的路径。
        - 在将 YAML 文件加载到 Python 类，以及将 Python 类保存到 YAML 文件时，所有相对路径都转换为绝对路径。
 
     4. 将字段设置为 ``None`` 或 ``null`` 时相当于不设置该字段。
@@ -120,7 +120,7 @@ searchSpaceFile
 
 类型：``Optional[str]``
 
-搜索空间格式由 Tuner 决定， 内置 Tuner 的通用格式在 `这里 <../Tutorial/SearchSpaceSpec.rst>`__。 The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
+搜索空间格式由 Tuner 决定， 内置 Tuner 的通用格式在 `这里 <../Tutorial/SearchSpaceSpec.rst>`__。 内置 Tuner 的通用格式在 `这里 <../Tutorial/SearchSpaceSpec.rst>`__。
 
 与 `searchSpace`_ 互斥。
 
@@ -148,7 +148,7 @@ trialCommand
 
 该命令将在 Linux 和 macOS 上的 bash 中执行，在 Windows 上的 PowerShell 中执行。
 
-Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
+注意在 Linux 和 macOS 中使用``python3``，在 Windows 中使用 ``python``。
 
 
 trialCodeDirectory
@@ -223,7 +223,7 @@ nniManagerIp
 
 如果未指定，将使用 ``eth0`` 的 IPv4 地址。
 
-Except for the local mode, it is highly recommended to set this field manually.
+除本地模式外，强烈建议手动设置此字段。
 
 
 useAnnotation
@@ -259,7 +259,7 @@ logLevel
 
 候选项：``"trace"``, ``"debug"``, ``"info"``, ``"warning"``, ``"error"``, ``"fatal"``
 
-默认为 "info" 或 "debug"，取决于 `debug`_ 选项。 When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
+默认为 "info" 或 "debug"，取决于 `debug`_ 选项。 启用调试模式时，LogLevel 设置为 “debug”，否则，LogLevel 设置为 “Info”。
 
 NNI 的大多数模块都会受到此值的影响，包括 NNI 管理器、Tuner、训练平台等。
 
@@ -285,7 +285,7 @@ tunerGpuIndices
 
 设定对 Tuner、Assessor 和 Advisor 可见的 GPU。
 
-type: ``Optional[list[int] | str | int]``
+类型： ``Optional[list[int] | str | int]``
 
 这将是 Tuner 进程的 ``CUDA_VISIBLE_DEVICES`` 环境变量，
 
@@ -299,7 +299,7 @@ tuner
 
 类型：Optional `AlgorithmConfig`_
 
-The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
+内置的 Tuner 可以在 `这里 <../builtin_tuner.rst>`__ 找到，你可以按照 `此教程 <../Tuner/CustomizeTuner.rst>`__ 来定制一个新的 Tuner。
 
 
 assessor
@@ -309,7 +309,7 @@ assessor
 
 类型：Optional `AlgorithmConfig`_
 
-The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
+内置的 Assessor 可以在 `这里 <../builtin_assessor.rst>`__ 找到，你可以按照 `此教程 <../Assessor/CustomizeAssessor.rst>`__ 来定制一个新的 Assessor。
 
 
 advisor
@@ -319,7 +319,7 @@ advisor
 
 类型：Optional `AlgorithmConfig`_
 
-NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
+NNI 提供了两个内置的 Advisor：`BOHB <../Tuner/BohbAdvisor.rst>`__ 和 `Hyperband <../Tuner/HyperbandAdvisor.rst>`__，你可以按照 `此教程 <../Tuner/CustomizeAdvisor.rst>`__ 来定制一个新的 Advisor。
 
 
 trainingService
@@ -333,9 +333,9 @@ trainingService
 sharedStorage
 -------------
 
-Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+配置共享存储，详细的用法可以在 `这里 <../Tutorial/HowToUseSharedStorage.rst>`__ 找到。
 
-type: Optional `SharedStorageConfig`_
+类型：Optional `SharedStorageConfig`_
 
 
 AlgorithmConfig
@@ -389,7 +389,7 @@ classArgs
 TrainingServiceConfig
 ^^^^^^^^^^^^^^^^^^^^^
 
-One of the following:
+以下之一：
 
 - `LocalConfig`_
 - `RemoteConfig`_
@@ -420,16 +420,16 @@ useActiveGpu
 
 必须在 ``trialgpunmber`` 大于零时设置。
 
-Following processes can make GPU "active":
+以下过程可以使GPU "active" 起来：
 
-  - non-NNI CUDA programs
-  - graphical desktop
-  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
-  - other users' CUDA programs, if you are using a shared server
+  - 非 NNI 的 CUDA 程序
+  - 图形化桌面
+  - 其他 NNI 实例提交的 Trial，如果您在同一时间运行了多个 NNI Experiment
+  - 其他用户的 CUDA 程序，如果你使用共享服务器
   
-If you are using a graphical OS like Windows 10 or Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+如果你使用的是图形操作系统，如 Windows 10 或 Ubuntu 桌面，请将此字段设置为 ``True``，否则，图形用户界面将阻止 NNI 启动任何 Trial。
 
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
+当你创建多个 NNI Experiment 并且将 ``useActiveGpu`` 设置为 ``True`` 时，它们将同时提交多个 Trial 到同一个 GPU。
 
 
 maxTrialNumberPerGpu
@@ -447,7 +447,7 @@ gpuIndices
 
 设定对 Trial 进程可见的 GPU。
 
-type: ``Optional[list[int] | str | int]``
+类型： ``Optional[list[int] | str | int]``
 
 如果 `trialGpuNumber`_ 小于此值的长度，那么每个 Trial 只能看到一个子集。
 
@@ -547,18 +547,18 @@ useActiveGpu
 
 默认值：``false``
 
-Must be set when `trialGpuNumber`_ greater than zero.
+必须在 ``trialgpunmber`` 大于零时设置。
 
-Following processes can make GPU "active":
+以下过程可以使GPU "active" 起来：
 
-  - non-NNI CUDA programs
-  - graphical desktop
-  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
-  - other users' CUDA programs, if you are using a shared server
+  - 非 NNI 的 CUDA 程序
+  - 图形化桌面
+  - 其他 NNI 实例提交的 Trial，如果您在同一时间运行了多个 NNI Experiment
+  - 其他用户的 CUDA 程序，如果你使用共享服务器
   
-If your remote machine is a graphical OS like Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+如果你使用的是图形操作系统，如 Ubuntu 桌面，请将此字段设置为 ``True``，否则，图形用户界面将阻止 NNI 启动任何 Trial。
 
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
+当你创建多个 NNI Experiment 并且将 ``useActiveGpu`` 设置为 ``True`` 时，它们将同时提交多个 Trial 到同一个 GPU。
 
 
 maxTrialNumberPerGpu
@@ -576,7 +576,7 @@ gpuIndices
 
 设定对 Trial 进程可见的 GPU。
 
-type: ``Optional[list[int] | str | int]``
+类型： ``Optional[list[int] | str | int]``
 
 如果 `trialGpuNumber`_ 小于此值的长度，那么每个 Trial 只能看到一个子集。
 
@@ -586,16 +586,16 @@ type: ``Optional[list[int] | str | int]``
 - 在 Python 代码中赋值时，相对路径是相对于当前工作目录的路径。
 --------------------
 
-Specify a Python environment.
+指定 Python 环境。
 
 类型：``Optional[list[int] | str]``
 
-This path will be inserted at the front of PATH. 以下之一： 
+这个路径将被插入到 PATH 的前面。 以下之一： 
 
     - (linux) pythonPath: ``/opt/python3.7/bin``
     - (windows) pythonPath: ``C:/Python37``
 
-If you are working on Anaconda, there is some difference. On Windows, you also have to add ``../script`` and ``../Library/bin`` separated by ``;``. Examples are as below:
+如果你是在 Anaconda 上工作，那就有所不同。 在Windows上，你还必须添加 ``.../script`` 和 ``.../Library/bin``，并用 ``;`` 分隔。 示例如下：
 
     - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
     - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
@@ -648,7 +648,7 @@ OpenPAI 用户令牌。
 trialPrepareCommand
 """"""""""""""
 
-Specify the CPU number of each trial to be used in OpenPAI container.
+指定每个 Trial 在 OpenPAI 容器中使用的 CPU 数。
 
 类型：``bool``
 
@@ -656,19 +656,19 @@ Specify the CPU number of each trial to be used in OpenPAI container.
 trialMemorySize
 """""""""""""""
 
-Specify the memory size of each trial to be used in OpenPAI container.
+指定每个 Trial 在 OpenPAI 容器中的内存限制。
 
 类型：``str``
 
-format: ``number + tb|gb|mb|kb``
+格式：``数字 + tb|gb|mb|kb``
 
-examples: ``"8gb"``, ``"8192mb"``
+示例：``"8gb"``, ``"8192mb"``
 
 
 nniManagerStorageMountPoint
 """""""""""""""""
 
-Specify the storage name used in OpenPAI.
+设置 OpenPAI 中使用的存储名称。
 
 类型：``str``
 
@@ -732,7 +732,7 @@ openpaiConfigFile
 AmlConfig
 ---------
 
-Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
+详细用法参考 `这里 <../TrainingService/AMLMode.rst>`__。
 
 
 platform
@@ -772,7 +772,7 @@ workspaceName
 
 Azure 工作区名称。
 
-type: ``str``
+类型：``str``
 
 
 computeTarget
@@ -780,21 +780,21 @@ computeTarget
 
 AML 计算集群名称。
 
-type: ``str``
+类型：``str``
 
 
 HybridConfig
 ------------
 
-Currently only support `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
+目前仅支持 `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` 和 `AmlConfig`_ 配置。 详细用法参考 `这里 <../TrainingService/HybridMode.rst>`__。
 
-type: list of `TrainingServiceConfig`_
+类型：`TrainingServiceConfig`_ 列表
 
 
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
-Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+详细用法参考 `这里 <../Tutorial/HowToUseSharedStorage.rst>`__。
 
 
 nfsConfig
@@ -803,55 +803,55 @@ nfsConfig
 storageType
 """""""""""
 
-Constant string ``"NFS"``.
+字符串常量 ``"NFS"``
 
 
 localMountPoint
 """""""""""""""
 
-The path that the storage has been or will be mounted in the local machine.
+已经或将要在本地挂载存储的路径。
 
-type: ``str``
+类型：``str``
 
-If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
+如果路径不存在，则会自动创建。 推荐使用绝对路径，即 ``/tmp/nni-shared-storage``
 
 
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+远程挂载存储的路径。
 
-type: ``str``
+类型：``str``
 
-If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
+如果路径不存在，则会自动创建。 推荐使用相对路径。 即， ``./nni-shared-storage``
 
 
 localMounted
 """"""""""""
 
-Specify the object and status to mount the shared storage.
+指定挂载共享存储的对象和状态。
 
-type: ``str``
+类型：``str``
 
-values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
+候选项：``"usermount"``, ``"nnimount"``, ``"nomount"``
 
-``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
+``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 NNI 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。
 
 
 nfsServer
 """""""""
 
-NFS server host.
+NFS 服务器主机
 
-type: ``str``
+类型：``str``
 
 
 exportedDirectory
 """""""""""""""""
 
-Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
+NFS 服务器导出目录，详情参考 `这里 <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_ 。
 
-type: ``str``
+类型：``str``
 
 
 azureBlobConfig
@@ -860,17 +860,17 @@ azureBlobConfig
 storageType
 """""""""""
 
-Constant string ``"AzureBlob"``.
+字符串常量 ``"AzureBlob"``
 
 
 localMountPoint
 """""""""""""""
 
-The path that the storage has been or will be mounted in the local machine.
+已经或将要在本地挂载存储的路径。
 
-type: ``str``
+类型：``str``
 
-If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
+如果路径不存在，则会自动创建。 推荐使用绝对路径，即 ``/tmp/nni-shared-storage``
 
 
 remoteMountPoint
@@ -878,7 +878,7 @@ remoteMountPoint
 
 The path that the storage will be mounted in the remote achine.
 
-type: ``str``
+类型：``str``
 
 If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
 
@@ -890,7 +890,7 @@ localMounted
 
 Specify the object and status to mount the shared storage.
 
-type: ``str``
+类型：``str``
 
 values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
 
@@ -902,7 +902,7 @@ storageAccountName
 
 Azure storage account name.
 
-type: ``str``
+类型：``str``
 
 
 storageAccountKey
@@ -910,7 +910,7 @@ storageAccountKey
 
 Azure storage account key.
 
-type: ``Optional[str]``
+类型：``Optional[str]``
 
 When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
 
@@ -918,15 +918,15 @@ When not set storageAccountKey, should use ``az login`` with Azure CLI at first 
 resourceGroupName
 """""""""""""""""
 
-Resource group that AzureBlob container belongs to.
+AzureBlob 容器所属的资源组。
 
-type: ``Optional[str]``
+类型：``Optional[str]``
 
-Required if ``storageAccountKey`` not set.
+如果 ``storageAccountKey`` 没有设置则必必需。
 
 containerName
 """""""""""""
 
-AzureBlob container name.
+AzureBlob 容器名。
 
-type: ``str``
+类型：``str``
