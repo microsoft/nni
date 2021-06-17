@@ -285,40 +285,6 @@ function countFilesRecursively(directory: string): Promise<number> {
     });
 }
 
-export function validateFileName(fileName: string): boolean {
-    const pattern: string = '^[a-z0-9A-Z._-]+$';
-    const validateResult = fileName.match(pattern);
-    if (validateResult) {
-        return true;
-    }
-    return false;
-}
-
-async function validateFileNameRecursively(directory: string): Promise<boolean> {
-    if (!fs.existsSync(directory)) {
-        throw Error(`Direcotory ${directory} doesn't exist`);
-    }
-
-    const fileNameArray: string[] = fs.readdirSync(directory);
-    let result = true;
-    for (const name of fileNameArray) {
-        const fullFilePath: string = path.join(directory, name);
-        try {
-            // validate file names and directory names
-            result = validateFileName(name);
-            if (fs.lstatSync(fullFilePath).isDirectory()) {
-                result = result && await validateFileNameRecursively(fullFilePath);
-            }
-            if (!result) {
-                return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
-            }
-        } catch (error) {
-            return Promise.reject(error);
-        }
-    }
-    return Promise.resolve(result);
-}
-
 /**
  * get the version of current package
  */
@@ -485,7 +451,7 @@ export function importModule(modulePath: string): any {
 }
 
 export {
-    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
+    countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };
