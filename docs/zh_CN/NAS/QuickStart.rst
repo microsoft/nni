@@ -175,17 +175,17 @@ Retiarii 支持许多 `探索策略（exploration strategies） <./ExplorationSt
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
 
-The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`. Users can also run Retiarii Experiment on `different training services <../training_services.rst>`__ besides ``local`` training service.
+一个简单 MNIST 示例的完整代码在 :githublink:`这里 <test/retiarii_test/mnist/test.py>`。 除了本地训练平台，用户还可以在 `不同的训练平台 <../training_services.rst>`__ 上运行 Retiarii 的实验。
 
-Visualize the Experiment
+可视化 Experiment
 ------------------------
 
-Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../../Tutorial/WebUI.rst>`__ for details.
+用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../../Tutorial/WebUI.rst>`__ 了解更多细节。
 
-Export Top Models
+导出最佳模型
 -----------------
 
-Users can export top models after the exploration is done using ``export_top_models``.
+探索完成后，用户可以使用 ``export_top_models`` 导出最佳模型。
 
 .. code-block:: python
 
