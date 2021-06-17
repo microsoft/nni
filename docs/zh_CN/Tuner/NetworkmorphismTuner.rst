@@ -226,7 +226,7 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
         ]
     }
 
-可将模型视为 `有向无环图 <https://zh.wikipedia.org/wiki/Directed_acyclic_graph>`__。 每个模型的定义都是一个 JSON 对象：
+可将模型视为 `有向无环图 <https://zh.wikipedia.org/wiki/Directed_acyclic_graph>`__。 每个模型的定义都是一个 JSON 对象： 每个模型的定义都是一个 JSON 对象：
 
 
 * ``input_shape`` 是整数的列表，不包括批量维度。
