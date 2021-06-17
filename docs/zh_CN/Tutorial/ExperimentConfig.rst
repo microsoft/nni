@@ -1,7 +1,7 @@
-Experiment Config Reference (legacy)
+Experiment 配置（遗产）
 ====================================
 
-This is the previous version (V1) of experiment configuration specification. It is still supported for now, but we recommend users to use `the new version of experiment configuration (V2) <../reference/experiment_config.rst>`_.
+这是上一个版本（V1）的实验配置规范。 目前仍然支持，但我们建议用户使用 `新版实验配置（V2） <../reference/experiment_config.rst>`_。
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 ``nnictl`` 命令。
 配置文件的格式为 YAML。
@@ -840,14 +840,14 @@ localMountPoint
 
 必填。 字符串。
 
-已经或将要在本地挂载存储的绝对路径。 If the path does not exist, it will be created automatically. Recommended to use an absolute path. =========================== ``/tmp/nni-shared-storage``.
+已经或将要在本地挂载存储的绝对路径。 如果路径不存在，则会自动创建。 建议使用绝对路径。 =========================== ``/tmp/nni-shared-storage``
 
 remoteMountPoint
 ^^^^^^^^^^^^^^^^
 
 必填。 字符串。
 
-远程挂载存储的绝对路径。 If the path does not exist, it will be created automatically. Note that the directory must be empty if using AzureBlob. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
+远程挂载存储的绝对路径。 如果路径不存在，则会自动创建。 请注意，如果使用 AzureBlob，该目录必须为空。 建议使用相对路径。 即， ``./nni-shared-storage``
 
 localMounted
 ^^^^^^^^^^^^
