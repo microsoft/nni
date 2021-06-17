@@ -263,7 +263,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 NNI �
 -------------
 
 
-* `Launch Tensorboard on WebUI <Tensorboard.rst>`__
+* `在 Web 界面中启动 TensorBoard <Tensorboard.rst>`__
 * `尝试不同的 Tuner <../Tuner/BuiltinTuner.rst>`__
 * `尝试不同的 Assessor <../Assessor/BuiltinAssessor.rst>`__
 * `如何使用命令行工具 nnictl <Nnictl.rst>`__
