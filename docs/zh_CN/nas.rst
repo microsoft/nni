@@ -10,20 +10,24 @@
 为了促进 NAS 创新 (如, 设计实现新的 NAS 模型，比较不同的 NAS 模型)，
 易于使用且灵活的编程接口非常重要。
 
-因此，我们为 NAS 提供了统一的接口，
-来加速 NAS 创新，并更快的将最先进的算法用于现实世界的问题上。
-详细信息，参考以下教程：
+Thus, we design `Retiarii <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__. It is a deep learning framework that supports the exploratory training on a neural network model space, rather than on a single neural network model.
+Exploratory training with Retiarii allows user to express various search spaces for *Neural Architecture Search* and *Hyper-Parameter Tuning* with high flexibility.
+
+Some frequently used terminologies in this document:
+
+* *Model search space*: it means a set of models from which the best model is explored/searched. Sometimes we use *search space* or *model space* in short.
+* *Exploration strategy*: the algorithm that is used to explore a model search space.
+* *Model evaluator*: it is used to train a model and evaluate the model's performance.
+
+Follow the instructions below to start your journey with Retiarii.
 
 ..  toctree::
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    编写搜索空间 <NAS/WriteSearchSpace>
-    经典 NAS <NAS/ClassicNas>
-    One-Shot NAS <NAS/one_shot_nas>
-    Retiarii NAS（实验性） <NAS/retiarii/retiarii_index>
     自定义 NAS 算法 <NAS/Advanced>
+    编写搜索空间 <NAS/WriteSearchSpace>
     NAS 可视化 <NAS/Visualization>
-    搜索空间集合 <NAS/SearchSpaceZoo>
+    One-Shot NAS <NAS/one_shot_nas>
     NAS 基准测试 <NAS/Benchmarks>
     API 参考 <NAS/NasReference>
