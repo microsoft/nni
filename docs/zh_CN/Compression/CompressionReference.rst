@@ -3,7 +3,7 @@
 
 .. contents::
 
-Compressor
+压缩工具
 -----------
 
 Compressor
@@ -49,9 +49,6 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.LevelPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.SlimPruner
-    :members:
-
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L1FilterPruner
     :members:
 
@@ -59,6 +56,12 @@ Pruners
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.FPGMPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.SlimPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.TaylorFOWeightFilterPruner
@@ -70,13 +73,10 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationMeanRankFilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
-    :members:
-
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp.AGPPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ADMMPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
@@ -86,6 +86,9 @@ Pruners
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.simulated_annealing_pruner.SimulatedAnnealingPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
 
@@ -103,6 +106,20 @@ Quantizers
 ..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
     :members:
 
+Model Speedup
+-------------
+
+Quantization Speedup
+^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.backend.BaseModelSpeedup
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.integrated_tensorrt.ModelSpeedupTensorRT
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.calibrator.Calibrator
+    :members:
 
 
 压缩工具
