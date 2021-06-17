@@ -24,9 +24,19 @@ Azure 部署的 Kubernetes 的准备工作
 
 
 #. NNI 支持基于 Azure Kubernetes Service 的 Kubeflow，参考 `指南 <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__ 来设置 Azure Kubernetes Service。
-#. 安装 `Azure CLI <https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 和 ``kubectl``。  使用 ``az login`` 命令来设置 Azure 账户，并将 kubectl 客户端连接到 AKS，参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-walkthrough#connect-to-the-cluster>`__。
-#. 参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ 来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
+#. 安装 `Azure CLI <https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 和 ``kubectl``。  使用 ``az login`` 命令来设置 Azure 账户，并将 kubectl 客户端连接到 AKS，参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-walkthrough#connect-to-the-cluster>`__。  使用 ``az login`` 命令来设置 Azure 账户，并将 kubectl 客户端连接到 AKS，参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/aks/kubernetes-walkthrough#connect-to-the-cluster>`__。
+#. 参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ 来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
 #. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 `Azure Key Vault <https://azure.microsoft.com/zh-cn/services/key-vault/>`__ 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考 `指南 <https://docs.microsoft.com/zh-cn/azure/key-vault/quick-create-cli>`__ 来存储访问密钥。
+
+
+Prerequisite for PVC storage mode
+-----------------------------------------
+In order to use persistent volume claims instead of NFS or Azure storage, related storage must
+be created manually, in the namespace your trials will run later. This restriction is due to the
+fact, that persistent volume claims are hard to recycle and thus can quickly mess with a cluster's
+storage management. Persistent volume claims can be created by e.g. using kubectl. Please refer
+to the official Kubernetes documentation for `further information <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__.
+
 
 安装 FrameworkController
 -------------------------
@@ -115,6 +125,37 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
   * memoryMB: 容器的内存限制。
   * image: 用来创建 pod，并运行程序的 Docker 映像。
   * frameworkAttemptCompletionPolicy: 运行框架的策略，参考 `用户手册 <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy>`__ 了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 还在运行，要通过完成策略来停止 ps。
+
+NNI also offers the possibility to include a customized frameworkcontroller template similar
+to the aforementioned tensorflow example. A valid configuration the may look like:
+
+.. code-block:: yaml
+
+    experimentName: example_mnist_pytorch
+    trialConcurrency: 1
+    maxExecDuration: 1h
+    maxTrialNum: 2
+    logLevel: trace
+    trainingServicePlatform: frameworkcontroller
+    searchSpacePath: search_space.json
+    tuner:
+      builtinTunerName: TPE
+      classArgs:
+        optimize_mode: maximize
+    assessor:
+      builtinAssessorName: Medianstop
+      classArgs:
+        optimize_mode: maximize
+    trial:
+      codeDir: .
+    frameworkcontrollerConfig:
+      configPath: fc_template.yml
+      storage: pvc
+      namespace: twin-pipelines
+      pvc:
+        path: /mnt/data
+
+Note that in this example a persistent volume claim has been used, that must be created manually in the specified namespace beforehand. Stick to the mnist-pytorch example (:githublink: `<examples/trials/mnist-pytorch>`__) for a more detailed config (:githublink: `<examples/trials/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) and frameworkcontroller template (:githublink: `<examples/trials/fc_template.yml>`__).
 
 如何运行示例
 ------------------
