@@ -31,7 +31,7 @@ Step1. 编写配置
 Step2. 选择 Pruner 来压缩模型
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。 Note that, some algorithms may check gradients for compressing, so we may also define an optimizer and pass it to the pruner.
+首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。 请注意，有些算法可能会检查压缩的梯度，因此我们还定义了一个优化器并传递给 Pruner。
 
 .. code-block:: python
 
