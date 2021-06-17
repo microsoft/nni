@@ -1,30 +1,30 @@
-Quick Start of Retiarii on NNI
+快速入门 Retiarii
 ==============================
 
 
 .. contents::
 
-In this quick start tutorial, we use multi-trial NAS as an example to show how to construct and explore a model space. There are mainly three crucial components for a neural architecture search task, namely,
+在快速入门教程中，我们以 multi-trial NAS 为例来展示如何构建和探索模型空间。 神经网络架构搜索任务主要有三个关键组件，即：
 
-* Model search space that defines the set of models to explore.
-* A proper strategy as the method to explore this search space.
-* A model evaluator that reports the performance of a given model.
+* 模型搜索空间（Model search space），定义了要探索的模型集合。
+* 一个适当的策略（strategy），作为探索这个搜索空间的方法。
+* 一个模型评估器（model evaluator），报告一个给定模型的性能。
 
-One-shot NAS tutorial can be found `here <./OneshotTrainer.rst>`__.
+One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
-.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested with **PyTorch 1.6 and 1.7**. This documentation assumes PyTorch context but it should also apply to other frameworks, that is in our future plan.
+.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.6和1.7** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
 
-Define your Model Space
+定义模型空间
 -----------------------
 
-Model space is defined by users to express a set of models that users want to explore, which contains potentially good-performing models. In this framework, a model space is defined with two parts: a base model and possible mutations on the base model.
+模型空间是由用户定义的，用来表达用户想要探索、认为包含性能良好模型的一组模型。 模型空间是由用户定义的，用来表达用户想要探索、认为包含性能良好模型的一组模型。 在这个框架中，模型空间由两部分组成：基本模型和基本模型上可能的突变。
 
-Define Base Model
+定义基本模型
 ^^^^^^^^^^^^^^^^^
 
-Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. Usually, you only need to replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` to use our wrapped PyTorch modules.
+定义基本模型与定义 PyTorch（或 TensorFlow）模型几乎相同， 只有两个小区别。 * 对于 PyTorch 模块（例如 ``nn.Conv2d``, ``nn.ReLU``），将代码 ``import torch.nn as nn`` 替换为 ``import nni.retiarii.nn.pytorch as nn`` 。
 
-Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
+下面是定义基本模型的一个简单的示例，它与定义 PyTorch 模型几乎相同。
 
 .. code-block:: python
 
@@ -46,7 +46,7 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return self.pool(self.conv(x))
 
-  @model_wrapper      # this decorator should be put on the out most PyTorch module
+  @model_wrapper      # 这个装饰器应该放在最外面的 PyTorch 模块上
   class Model(nn.Module):
     def __init__(self):
       super().__init__()
@@ -55,47 +55,47 @@ Below is a very simple example of defining a base model, it is almost the same a
     def forward(self, x):
       return F.relu(self.convpool(self.mymodule(x)))
 
-Define Model Mutations
+定义模型突变
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A base model is only one concrete model not a model space. We provide APIs and primitives for users to express how the base model can be mutated, i.e., a model space which includes many models.
+基本模型只是一个具体模型，而不是模型空间。 我们为用户提供 API 和原语，用于把基本模型变形成包含多个模型的模型空间。
 
-We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
+用户可以按以下方式实例化多个 Mutator，这些 Mutator 将依次依次应用于基本模型来对新模型进行采样。 API 可以像 PyTorch 模块一样使用。 这种方法也被称为内联突变。
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+* ``nn.LayerChoice``， 它允许用户放置多个候选操作（例如，PyTorch 模块），在每个探索的模型中选择其中一个。
 
   .. code-block:: python
 
     # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
+    # 在 `__init__` 中声明
     self.layer = nn.LayerChoice([
       ops.PoolBN('max', channels, 3, stride, 1),
       ops.SepConv(channels, channels, 3, stride, 1),
       nn.Identity()
     ]))
-    # invoked in `forward` method
+    # 在 `forward` 函数中调用
     out = self.layer(x)
 
-* ``nn.InputChoice``. It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
+* ``nn.InputChoice``， 它主要用于选择（或尝试）不同的连接。 它会从设置的几个张量中，选择 ``n_chosen`` 个张量。
 
   .. code-block:: python
 
     # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
+    # 在 `__init__` 中声明
     self.input_switch = nn.InputChoice(n_chosen=1)
-    # invoked in `forward` method, choose one from the three
+    # 在 `forward` 函数中调用，三者选一
     out = self.input_switch([tensor1, tensor2, tensor3])
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of basic units, that is, modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``.
+* ``nn.ValueChoice``， 它用于从一些候选值中选择一个值。 它只能作为基本单元的输入参数，即 ``nni.retiarii.nn.pytorch`` 中的模块和用 ``@basic_unit`` 装饰的用户定义的模块。
 
   .. code-block:: python
 
     # import nni.retiarii.nn.pytorch as nn
-    # used in `__init__` method
+    # 在 `__init__` 中声明
     self.conv = nn.Conv2d(XX, XX, kernel_size=nn.ValueChoice([1, 3, 5])
-    self.op = MyOp(nn.ValueChoice([0, 1]), nn.ValueChoice([-1, 1]))
+    self.op = MyOp(nn.ValueChoice([0, 1], nn.ValueChoice([-1, 1]))
 
-All the APIs have an optional argument called ``label``, mutations with the same label will share the same choice. A typical example is,
+所有的API都有一个可选的参数，叫做 ``label``，具有相同标签的突变将共享相同的选择。 一个典型示例：
 
   .. code-block:: python
 
@@ -104,36 +104,36 @@ All the APIs have an optional argument called ``label``, mutations with the same
         nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
     )
 
-Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutation APIs, to make it easier to express a new search space. Please refer to `here <./construct_space.rst>`__ for more tutorials about how to express complex model spaces.
+使用说明和 API 文档在 `这里 <./ApiReference>`__。 详细的 API 描述和使用说明在 `这里 <./ApiReference.rst>`__。 使用这些 API 的示例在 :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`。 我们正在积极丰富内联突变 API，使其更容易表达一个新的搜索空间。 参考 `这里 <./construct_space.rst>`__ 获取更多关于表达复杂模型空间的教程。
 
-Explore the Defined Model Space
+探索定义的模型空间
 -------------------------------
 
-There are basically two exploration approaches: (1) search by evaluating each sampled model independently and (2) one-shot weight-sharing based search. We demonstrate the first approach below in this tutorial. Users can refer to `here <./OneshotTrainer.rst>`__ for the second approach.
+基本上有两种探索方法：(1)通过独立评估每个采样模型进行搜索；(2)基于 One-Shot 的权重共享式搜索。 我们在本教程中演示了下面的第一种方法。 第二种方法可以参考 `这里 <./OneshotTrainer.rst>`__。
 
-Users can choose a proper exploration strategy to explore the model space, and use a chosen or user-defined model evaluator to evaluate the performance of each sampled model.
+用户可以选择合适的探索策略来探索模型空间，并选择或自定义模型评估器来评估每个采样模型的性能。
 
-Pick a search strategy
+选择搜索策略
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Retiarii supports many `exploration strategies <./ExplorationStrategies.rst>`__.
+Retiarii 支持许多 `探索策略（exploration strategies） <./ExplorationStrategies.rst>`__。
 
-Simply choosing (i.e., instantiate) an exploration strategy as below.
+简单地选择（即实例化）一个探索策略：
 
 .. code-block:: python
 
   import nni.retiarii.strategy as strategy
 
-  search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+  search_strategy = strategy.Random(dedup=True)  # dedup=False 如果不希望有重复数据删除
 
-Pick or write a model evaluator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+选择或编写模型评估器
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the NAS process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model. The obtained performance of a generated model is collected and sent to the exploration strategy for generating better models.
+在 NAS 过程中，探索策略反复生成新模型。 模型评估器用于训练和验证每个生成的模型。 生成的模型所获得的性能被收集起来，并送至探索策略以生成更好的模型。
 
-In the context of PyTorch, Retiarii has provided two built-in model evaluators, designed for simple use cases: classification and regression. These two evaluators are built upon the awesome library PyTorch-Lightning.
+在 PyTorch 的上下文中，Retiarii 提供了两个内置模型评估器，为简单用例而设计：分类和回归。 这两个评估器是建立在强大的库 PyTorch-Lightning 之上。
 
-An example here creates a simple evaluator that runs on MNIST dataset, trains for 10 epochs, and reports its validation accuracy.
+这里的一个例子创建了一个简单的评估器，它在 MNIST 数据集上运行，训练 10 个 Epoch，并报告其验证准确性。
 
 .. code-block:: python
 
@@ -148,22 +148,22 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
 
-As the model evaluator is running in another process (possibly in some remote machines), the defined evaluator, along with all its parameters, needs to be correctly serialized. For example, users should use the dataloader that has been already wrapped as a serializable class defined in ``nni.retiarii.evaluator.pytorch.lightning``. For the arguments used in dataloader, recursive serialization needs to be done, until the arguments are simple types like int, str, float.
+由于模型评估器是在另一个进程中运行的（可能是在一些远程机器中），定义的评估器以及它的所有参数都需要被正确序列化。 例如，用户应该使用已经被包装为在 ``nni.retiarii.evaluator.pytorch.lightning`` 中的可序列化类的 dataloader。 对于 dataloader 中使用的参数，需要进行递归序列化，直到参数为 int、str、float 等简单类型。
 
-Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
+模型评价器的详细描述和使用方法可以在 `这里 <./ApiReference.rst>`__ 找到。
 
-If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new model evaluator <./WriteTrainer.rst>`__ .
+如果内置的模型评估器不符合您的要求，或者您已经编写了训练代码只是想使用它，您可以参考 `编写新模型评估器的指南 <./WriteTrainer.rst>`__ 。
 
-.. note:: In case you want to run the model evaluator locally for debug purpose, you can directly run the evaluator via ``evaluator._execute(Net)`` (note that it has to be ``Net``, not ``Net()``). However, this API is currently internal and subject to change.
+.. note:: 如果您想在本地运行模型评估器以进行调试，您可以通过 ``evaluator._execute(Net)`` 直接运行评估器（注意它必须是 ``Net``，而不是 ``Net()``）。 但是，此 API 目前是内部的，可能会发生变化。
 
-.. warning:: Mutations on the parameters of model evaluator (known as hyper-parameter tuning) is currently not supported but will be supported in the future.
+.. warning:: 目前不支持模型评估器参数的突变（也就是超参数调整），但将未来会支持。
 
-.. warning:: To use PyTorch-lightning with Retiarii, currently you need to install PyTorch-lightning v1.1.x (v1.2 is not supported).
+.. warning:: 要在 Retiarii中 使用 PyTorch-lightning，目前你需要安装 PyTorch-lightning v1.1.x（不支持 v1.2）。
 
-Launch an Experiment
+发起 Experiment
 --------------------
 
-After all the above are prepared, it is time to start an experiment to do the model search. An example is shown below.
+上述内容准备就绪之后，就可以发起 Experiment 以进行模型搜索了。 样例如下：
 
 .. code-block:: python
 
