@@ -1,9 +1,9 @@
-Retiarii API Reference
+Retiarii API 参考
 ======================
 
 .. contents::
 
-Inline Mutation APIs
+内联 Mutation API
 --------------------
 
 ..  autoclass:: nni.retiarii.nn.pytorch.LayerChoice
@@ -24,7 +24,7 @@ Inline Mutation APIs
 ..  autoclass:: nni.retiarii.nn.pytorch.Cell
     :members:
 
-Graph Mutation APIs
+图 Mutation API
 -------------------
 
 ..  autoclass:: nni.retiarii.Mutator
@@ -75,7 +75,7 @@ Oneshot Trainers
 ..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
     :members:
 
-Exploration Strategies
+探索 Strategies
 ----------------------
 
 ..  autoclass:: nni.retiarii.strategy.Random
@@ -102,7 +102,7 @@ Retiarii Experiments
 ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:
 
-Utilities
+工具
 ---------
 
 ..  autofunction:: nni.retiarii.serialize
