@@ -189,7 +189,6 @@ class NNIManager implements Manager {
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
-
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -432,6 +431,11 @@ class NNIManager implements Manager {
         return (value === undefined ? Infinity : value);
     }
 
+    private get maxTrialDuration(): number {
+        const value = this.experimentProfile.params.maxTrialDuration;
+        return (value === undefined ? Infinity : toSeconds(value));
+    }
+
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
         let platform: string;
         if (Array.isArray(config.trainingService)) {
@@ -538,6 +542,19 @@ class NNIManager implements Manager {
         }
     }
 
+    private async stopTrialIfOverMaxDurationLimit(): Promise<void> {
+        for (const trialJobId of Array.from(this.trialJobs.keys())) {
+            const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if(undefined !== trialJobDetail && trialJobDetail.status === 'RUNNING' && trialJobDetail.startTime !== undefined){
+                var currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
+                if(currentTrialDuration>this.maxTrialDuration){
+                    await this.trainingService.cancelTrialJob(trialJobId);
+                    this.log.info(`Trial job ${trialJobDetail.id} has been canceled because it is over max trial duration.`);
+                }
+            }
+        }
+    }
+
     private async requestTrialJobsStatus(): Promise<number> {
         let finishedTrialJobNum: number = 0;
         if (this.dispatcher === undefined) {
@@ -602,6 +619,7 @@ class NNIManager implements Manager {
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
+            await this.stopTrialIfOverMaxDurationLimit();
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 

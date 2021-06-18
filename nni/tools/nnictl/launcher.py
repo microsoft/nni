@@ -250,6 +250,7 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
     request_data['maxExecDuration'] = experiment_config['maxExecDuration']
     request_data['maxExperimentDuration'] = str(experiment_config['maxExecDuration']) + 's'
     request_data['maxTrialNum'] = experiment_config['maxTrialNum']
+    request_data['maxTrialDuration'] = experiment_config['maxTrialDuration']
     request_data['maxTrialNumber'] = experiment_config['maxTrialNum']
     request_data['searchSpace'] = experiment_config.get('searchSpace')
     request_data['trainingServicePlatform'] = experiment_config.get('trainingServicePlatform')
