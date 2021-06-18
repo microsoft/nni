@@ -114,16 +114,16 @@ Web 界面
 模型压缩
 """""""""""""""""
 
-* Support speedup for mixed precision quantization model (Experimental) (#3488 #3512)
-* Support model export for quantization algorithm (#3458 #3473)
-* Support model export in model compression for TensorFlow (#3487)
-* Improve documentation (#3482)
+* 支持加速混合精度量化模型（实验性） (#3488 #3512)
+* 支持量化算法的模型导出 (#3458 #3473)
+* 在 TensorFlow 的模型压缩中支持模型导出 (#3487)
+* 完善文档 (#3482)
 
 nnictl & nni.experiment
 """""""""""""""""""""""
 
-* Add native support for experiment config V2 (#3466 #3540 #3552)
-* Add resume and view mode in Python API ``nni.experiment`` (#3490 #3524 #3545)
+* 增加对 Experiment 配置 V2 的原生支持 (#3466 #3540 #3552)
+* 在 Python API ``nni.experiment`` 中添加恢复和查看模式 (#3490 #3524 #3545)
 
 训练平台
 """"""""""""""""
