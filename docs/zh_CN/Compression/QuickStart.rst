@@ -109,7 +109,7 @@ Step2. 选择 Quantizer 来压缩模型
 Step3. 导出压缩结果
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-After training and calibration, you can export model weight to a file, and the generated calibration parameters to a file as well. Exporting onnx model is also supported.
+在训练和校准之后，你可以将模型权重导出到一个文件，并将生成的校准参数也导出到一个文件。 也支持导出 ONNX 模型。
 
 .. code-block:: python
 
