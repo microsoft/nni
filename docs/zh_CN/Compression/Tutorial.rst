@@ -17,13 +17,13 @@
 
 ``dict`` 中有不同的键值。 ``dict`` 中有不同的键值。 以下是所有压缩算法都支持的：
 
-* **op_types**：指定要压缩的操作类型。 'default' 表示使用算法的默认设置。 'default' 表示使用算法的默认设置。 All suported module types are defined in :githublink:`default_layers.py <nni/compression/pytorch/default_layers.py>` for pytorch.
+* **op_types**：指定要压缩的操作类型。 'default' 表示使用算法的默认设置。 'default' 表示使用算法的默认设置。 所有在 Pytorch 中支持的模块类型都定义在 :githublink:`default_layers.py <nni/compression/pytorch/default_layers.py>` 。
 * **op_names**：指定需要压缩的操作的名称。 如果没有设置此字段，操作符不会通过名称筛选。 如果没有设置此字段，操作符不会通过名称筛选。
 * **exclude**：默认为 False。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。 如果此字段为 True，表示要通过类型和名称，将一些操作从压缩中排除。
 
 其他一些键值通常是针对某个特定算法的，可参考 `剪枝算法 <./Pruner.rst>`__ 和 `量化算法 <./Quantizer.rst>`__，查看每个算法的键值。
 
-To prune all ``Conv2d`` layers with the sparsity of 0.6, the configuration can be written as:
+修剪所有 ``conv2d`` 层，稀疏性0.6为，配置可以写作：
 
 .. code-block:: python
 
@@ -32,7 +32,7 @@ To prune all ``Conv2d`` layers with the sparsity of 0.6, the configuration can b
     'op_types': ['Conv2d']
    ]
 
-To control the sparsity of specific layers, the configuration can be written as:
+为了控制特定层的稀疏度，配置可以写成：
 
 .. code-block:: python
 
