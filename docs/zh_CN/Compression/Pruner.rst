@@ -1,7 +1,7 @@
 NNI 支持的剪枝算法
 ===================================
 
-NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度剪枝** 通常会生成非结构化模型，这需要专门的硬件或软件来加速稀疏网络。 **滤波器剪枝** Some pruning algorithms use one-shot method that prune weights at once based on an importance metric (It is necessary to finetune the model to compensate for the loss of accuracy). Other pruning algorithms **iteratively** prune weights during optimization, which control the pruning schedule, including some automatic pruning algorithms.
+NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度剪枝** 通常会生成非结构化模型，这需要专门的硬件或软件来加速稀疏网络。 **滤波器剪枝** 一些剪枝算法使用 One-Shot 的方法，即根据重要性指标一次性剪枝权重（有必要对模型进行微调以补偿精度的损失）。 其他剪枝算法控制在优化过程中剪枝权重的 **剪枝调度**，包括一些自动剪枝算法。
 
 
 **细粒度剪枝**
