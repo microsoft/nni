@@ -92,21 +92,21 @@ QAT Quantizer 的用户配置
 LSQ Quantizer
 -------------
 
-In `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__\ , authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+在 `可训练的步长量化 <https://arxiv.org/pdf/1902.08153.pdf>`__\ 中，作者 Steven K. Esser 和 Jeffrey L. McKinstry 提供一种算法来训练带有梯度的尺度。
 
 ..
 
-   The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
+   作者介绍了一种新颖的方法来估计和缩放每个权重和激活层的量化器步长的任务损失梯度，使得它可以与其他网络参数结合使用。
 
 
 用法
 ^^^^^
-You can add codes below before your training codes. Three things must be done:
+您可以在训练代码之前添加下面的代码。 必须完成三件事：
 
 
-1. configure which layer to be quantized and which tensor (input/output/weight) of that layer to be quantized.
-2. construct the lsq quantizer
-3. call the `compress` API
+1. 配置哪一层要被量化，以及该层的哪个张量（输入/输出/权重）要被量化。
+2. 构建 lsq quantizer
+3. 调用 `compress` API
 
 
 PyTorch 代码
@@ -132,12 +132,12 @@ PyTorch 代码
     quantizer = LsqQuantizer(model, configure_list, optimizer)
     quantizer.compress()
 
-You can view example for more information. :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
+查看示例了解更多信息 :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
 
-User configuration for LSQ Quantizer
+LSQ Quantizer 的用户配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+压缩算法的公共配置可在 `config_list 说明 <./QuickStart.rst>`__ 中找到。
 
 此算法所需的配置：
 
@@ -188,10 +188,10 @@ BNN Quantizer
    引入了一种训练二进制神经网络（BNN）的方法 - 神经网络在运行时使用二进制权重。 在训练时，二进制权重和激活用于计算参数梯度。 在 forward 过程中，BNN 会大大减少内存大小和访问，并将大多数算术运算替换为按位计算，可显著提高能源效率。
 
 
-Usage
+用法
 ^^^^^
 
-PyTorch code
+PyTorch 代码
 
 .. code-block:: python
 
@@ -216,11 +216,11 @@ PyTorch code
 可以查看 :githublink:`示例 <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 了解更多信息。
 
 BNN Quantizer 的用户配置
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 压缩算法的公共配置可在 `config_list 说明 <./QuickStart.rst>`__ 中找到。
 
-configuration needed by this algorithm :
+此算法所需的配置：
 
 实验
 ^^^^^^^^^^
