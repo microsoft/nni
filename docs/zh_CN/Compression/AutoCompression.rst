@@ -1,22 +1,22 @@
-Auto Compression with NNI Experiment
-====================================
+使用 NNI Experiment 自动压缩
+================================================
 
-If you want to compress your model, but don't know what compression algorithm to choose, or don't know what sparsity is suitable for your model, or just want to try more possibilities, auto compression may help you.
-Users can choose different compression algorithms and define the algorithms' search space, then auto compression will launch an NNI experiment and try different compression algorithms with varying sparsity automatically. 
-Of course, in addition to the sparsity rate, users can also introduce other related parameters into the search space.
-If you don't know what is search space or how to write search space, `this <./Tutorial/SearchSpaceSpec.rst>`__ is for your reference.
-Auto compression using experience is similar to the NNI experiment in python.
-The main differences are as follows:
+如果你想压缩你的模型，但不知道该选择什么压缩算法，或者不知道什么稀疏度适合你的模型，或者只是想尝试更多的可能性，自动压缩可能会帮助你。
+用户可以选择不同的压缩算法，并定义算法的搜索空间，然后自动压缩将启动一个 NNI 实验，并自动尝试不同稀疏度的压缩算法。 
+当然，除了稀疏度之外，用户还可以在搜索空间中引入其他相关参数。
+如果你不知道什么是搜索空间或如何编写搜索空间，可以参考 `此教程 <./Tutorial/SearchSpaceSpec.rst>`__ 。
+在 Python 中使用自动压缩与 NNI Experiment 很相似。
+主要区别如下：
 
-* Use a generator to help generate search space object.
-* Need to provide the model to be compressed, and the model should have already been pre-trained.
-* No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressionExperiment`` input.
+* 使用生成器帮助生成搜索空间对象
+* 需要提供要压缩的模型，并且模型应该已经过预训练
+* 不需要设置 ``trial_command``，需要额外设置 ``auto_compress_module`` 作为 ``AutoCompressionExperiment`` 的输入。
 
-Generate search space
+生成搜索空间
 ---------------------
 
-Due to the extensive use of nested search space, we recommend a using generator to configure search space.
-The following is an example. Using ``add_config()`` add subconfig, then ``dumps()`` search space dict.
+由于大量使用嵌套搜索空间，我们建议使用生成器来配置搜索空间。
+示例如下： 使用 ``add_config()`` 增加子配置，然后 ``dumps()`` 搜索空间字典。
 
 .. code-block:: python
 
@@ -44,7 +44,7 @@ The following is an example. Using ``add_config()`` add subconfig, then ``dumps(
 
     search_space = generator.dumps()
 
-Now we support the following pruners and quantizers:
+目前我们支持以下 Pruner 和 Quantizer：
 
 .. code-block:: python
 
