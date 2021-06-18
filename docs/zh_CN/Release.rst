@@ -128,31 +128,31 @@ nnictl & nni.experiment
 训练平台
 """"""""""""""""
 
-* Support umount for shared storage in remote training service (#3456)
-* Support Windows as the remote training service in reuse mode (#3500)
-* Remove duplicated env folder in remote training service (#3472)
-* Add log information for GPU metric collector (#3506)
-* Enable optional Pod Spec for FrameworkController platform (#3379, thanks the external contributor @mbu93)
+* 支持远程训练平台中共享存储的umount (#3456)
+* 支持 Windows 作为重用模式下的远程训练平台 (#3500)
+* 移除远程训练平台中重复的env文件夹 (#3472)
+* 为 GPU 指标收集器添加日志信息 (#3506)
+*启用 FrameworkController 训练服务的 Pod Spec (#3379，感谢外部贡献者 @mbu93)
 
 Web 界面
-"""""
+""""""""""
 
-* Support launching TensorBoard on WebUI (#3454 #3361 #3531)
-* Upgrade echarts-for-react to v5 (#3457)
-* Add wrap for dispatcher/nnimanager log monaco editor (#3461)
+* 支持在 Web 界面上启动 TensorBoard (#3454 #3361 #3531)
+* 升级 echarts-for-react 到 v5 (#3457)
+* 为 dispatcher/nnimanager 日志 monaco 编辑器添加包装 (#3461)
 
 修复的 Bug
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix bug of FLOPs counter (#3497)
-* Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
-* Fix bug that monaco editor search text is not displayed completely (#3492)
-* Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
-* Fix typos in docs (#3448, thanks the external contributor @OliverShang)
-* Fix typo in NAS 1.0 (#3538, thanks the external contributor @ankitaggarwal23)
+* 修复 FLOPs counter 的 Bug (#3497)
+* 修复超参数添加/删除轴和表格添加/删除列按钮冲突的问题 (#3491)
+* 修复 monaco 编辑器搜索文本不能完全显示的问题 (#3492)
+* 修复 Cream NAS 的 Bug (#3498，感谢外部贡献者 @AliCloud-PAI)
+* 修复文档中的拼写错误 (#3448，感谢外部贡献者 @OliverShang)
+* 修复 NAS 1.0 中的拼写错误 (#3538，感谢外部贡献者 @ankitaggarwal23)
 
 
-Release 2.1 - 3/10/2021
+发布 2.1 - 3/10/2021
 -----------------------
 
 主要更新
@@ -161,60 +161,60 @@ Release 2.1 - 3/10/2021
 神经网络架构搜索
 """"""""""""""""""""""""""
 
-* Improve NAS 2.0 (Retiarii) Framework (Improved Experimental)
+* 改进 NAS 2.0 (Retiarii) 框架 (完善后的实验性)
 
-  * Improve the robustness of graph generation and code generation for PyTorch models (#3365)
-  * Support the inline mutation API ``ValueChoice`` (#3349 #3382)
-  * Improve the design and implementation of Model Evaluator (#3359 #3404)
-  * Support Random/Grid/Evolution exploration strategies (i.e., search algorithms) (#3377)
-  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+  * 提高 PyTorch 模型的图形生成和代码生成的稳健性 (#3365)
+  * 支持内联突变 API ``ValueChoice`` (#3349 #3382)
+  * 改进模型评估器的设计和实施 (#3359 #3404)
+  * 支持随机/网格/进化探索策略（即搜索算法） (#3377)
+  * 参考 `这里 <https://github.com/microsoft/nni/issues/3301>`__ 获取 Retiarii 功能路线图
 
 训练平台
 """"""""""""""""
 
-* Support shared storage for reuse mode (#3354)
-* Support Windows as the local training service in hybrid mode (#3353)
-* Remove PAIYarn training service (#3327)
-* Add "recently-idle" scheduling algorithm (#3375)
-* Deprecate ``preCommand`` and enable ``pythonPath`` for remote training service (#3284 #3410)
-* Refactor reuse mode temp folder (#3374)
+* 支持重用模式的共享存储 (#3354)
+* 支持 Windows 作为混合模式下的本地训练平台 (#3353)
+* 移除 PAIYarn 训练平台 (#3327)
+* 增加 "recently-idle" 调度算法 (#3375)
+* 移除 ``preCommand`` 并启用为远程训练平台 ``pythonPath`` (#3284 #3410)
+* 重构重用模式的临时文件夹 (#3374)
 
 nnictl & nni.experiment
 """""""""""""""""""""""
 
-* Migrate ``nnicli`` to new Python API ``nni.experiment`` (#3334)
-* Refactor the way of specifying tuner in experiment Python API (\ ``nni.experiment``\ ), more aligned with ``nnictl`` (#3419)
+* 迁移 ``nnicli`` 到新的 Python API ``nni.experiment`` (#3334)
+* 重构 Python API (\ ``nni.experiment``\ ) 中指定 Tuner 的方式，与 ``nnictl`` 对齐 (#3419)
 
-WebUI
-"""""
+Web 界面
+"""""""""""""""
 
-* Support showing the assigned training service of each trial in hybrid mode on WebUI (#3261 #3391)
-* Support multiple selection for filter status in experiments management page (#3351)
-* Improve overview page (#3316 #3317 #3352)
-* Support copy trial id in the table (#3378)
+* 支持在 Web 界面上显示混合模式下每个 Trial 的指定训练平台 (#3261 #3391)
+* 支持在实验管理页面中对过滤状态进行多重选择 (#3351)
+* 改进概览页面 (#3316 #3317 #3352)
+* 支持表中的复制 Trial ID (#3378)
 
 文档
 ^^^^^^^^^^^^^
 
-* Improve model compression examples and documentation (#3326 #3371)
-* Add Python API examples and documentation (#3396)
-* Add SECURITY doc (#3358)
-* Add 'What's NEW!' section in README (#3395) 
-* Update English contributing doc (#3398, thanks external contributor @Yongxuanzhang)
+* 改进模型压缩示例和文档 (#3326 #3371)
+* 增加 Python API 示例和文档 (#3396)
+* 增加安全文档 (#3358)
+* 在 README 中增加 "新功能" 部分 (#3395) 
+* 改进贡献文档 (#3398，感谢外部贡献者 @Yongxuanzhang)
 
 修复的 Bug
 ^^^^^^^^^^^^^^^^^^
 
-* Fix AML outputs path and python process not killed (#3321)
-* Fix bug that an experiment launched from Python cannot be resumed by nnictl (#3309)
-* Fix import path of network morphism example (#3333)
-* Fix bug in the tuple unpack (#3340)
-* Fix bug of security for arbitrary code execution (#3311, thanks external contributor @huntr-helper)
-* Fix ``NoneType`` error on jupyter notebook (#3337, thanks external contributor @tczhangzhi)
-* Fix bugs in Retiarii (#3339 #3341 #3357, thanks external contributor @tczhangzhi)
-* Fix bug in AdaptDL mode example (#3381, thanks external contributor @ZeyaWang)
-* Fix the spelling mistake of assessor (#3416, thanks external contributor @ByronCHAO)
-* Fix bug in ruamel import (#3430, thanks external contributor @rushtehrani)
+* 修复 AML 输出路径和 Python 进程没有被杀死的问题 (#3321)
+* 修复 nnictl 无法恢复从 Python 启动 Experiment 的 Bug (#3309)
+* 修复网络态射示例的导入路径 (#3333)
+* 修复元组解包中的 Bug (#3340)
+* 修复任意代码执行的安全性 Bug (#3311，感谢外部贡献者 @huntr-helper)
+* 修复 Jupyter 笔记本中 ``NoneType`` 的问题 (#3337，感谢外部贡献者 @tczhangzhi)
+* 修复 Retiarii 中的 Bug (#3339 #3341 #3357，感谢外部贡献者 @tczhangzhi)
+* 修复 AdaptDL 模式中的 Bug (#3381，感谢外部贡献者 @ZeyaWang)
+* 修复 Assessor 拼写错误 (#3416，感谢外部贡献者 @ByronCHAO)
+* 修复 ruamel 导入的 Bug (#3430，感谢外部贡献者 @rushtehrani)
 
 
 发布 2.0 - 1/14/2021
@@ -224,7 +224,7 @@ WebUI
 ^^^^^^^^^^^^^
 
 神经网络架构搜索
-""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 * 支持全新的 NAS 框架：Retiarii（实验性）
 
@@ -364,11 +364,11 @@ UT & IT
 发布 1.8 - 8/27/2020
 -----------------------
 
-Major updates
+主要更新
 ^^^^^^^^^^^^^
 
 训练平台
-""""""""""""""""
+""""""""""""""""""""""""""""""""
 
 
 * 在 Web 界面直接访问 Trial 日志 (仅支持本地模式) (#2718)
@@ -379,7 +379,7 @@ Major updates
 * 为在 OpenPAI 模式复制数据增加更多日志信息 (#2702)
 
 Web 界面，nnictl 和 nnicli
-""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 
 * 改进超参数并行坐标图的绘制 (#2691) (#2759)
@@ -391,15 +391,15 @@ Web 界面，nnictl 和 nnicli
 * 增加了依据最高/最低指标列出 Trial 的 `命令 <https://github.com/microsoft/nni/blob/v1.8/docs/zh_CN/Tutorial/Nnictl.rst#nnictl-trial>`__ (#2747)
 * 提升了 `nnicli <https://github.com/microsoft/nni/blob/v1.8/docs/zh_CN/nnicli_ref.rst>`__ 的用户体验，并附上 `示例 <https://github.com/microsoft/nni/blob/v1.8/examples/notebooks/retrieve_nni_info_with_python.ipynb>`__ (#2713)
 
-Neural architecture search
-""""""""""""""""""""""""""
+神经网络架构搜索
+""""""""""""""""""""""""""""""""""""
 
 
 * `搜索空间集合：ENAS 和 DARTS <https://github.com/microsoft/nni/blob/v1.8/docs/zh_CN/NAS/SearchSpaceZoo.rst>`__ (#2589)
 * 用于在 NAS 基准测试中查询中间结果的 API (#2728)
 
 模型压缩
-"""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
 
 * 支持 TorchModuleGraph 的 List/Tuple Construct/Unpack 操作 (#2609)
@@ -436,12 +436,12 @@ Neural architecture search
 * 修复几处文档中的输入错误和语法错误 (#2637 #2638, 感谢 @tomzx)
 * 改进 AzureML 训练平台的文档 (#2631)
 * 改进中文翻译的 CI 流程 (#2654)
-* Improve OpenPAI training service documentation (#2685)
+* 改进 OpenPAI 训练平台的文档 (#2685)
 * 改进社区分享的文档 (#2640)
 * 增加对 Colab 进行支持的教程 (#2700)
 * 改进模型压缩的文档结构 (#2676)
 
-Bug fixes
+Bug 修复
 ^^^^^^^^^^^^^^^^^^
 
 
@@ -464,7 +464,7 @@ Bug fixes
 ^^^^^^^^^^^^^^
 
 训练平台
-""""""""""""""""
+""""""""""""""""""""""""""""""""
 
 
 * 支持 AML (Azure Machine Learning) 作为训练平台。
@@ -482,7 +482,7 @@ Bug fixes
   `在 TensorFlow 2.X 支持 Classic NAS（即非权重共享模式） <https://github.com/microsoft/nni/blob/v1.7/docs/zh_CN/NAS/ClassicNas.md>`__。
 
 模型压缩
-"""""""""""""""""
+""""""""""""""""""""""""""""""""""
 
 
 * 改进模型加速：跟踪层之间的更多依赖关系，自动解决掩码冲突，支持剪枝 ResNet 的加速
@@ -506,8 +506,8 @@ Bug fixes
 
 * `允许自定义 Tuner、Assessor、Advisor 被安装为内置算法 <https://github.com/microsoft/nni/blob/v1.7/docs/zh_CN/Tutorial/InstallCustomizedAlgos.md>`__.
 
-WebUI
-"""""
+Web 界面
+""""""""""""""""""""""""""""""""""
 
 
 * 支持更友好的嵌套搜索空间可视化。
@@ -532,7 +532,7 @@ WebUI
 * 主页迁移到 readthedoc。
 
 修复的 Bug
-^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复模型图中含有共享的 nn.Module 时的问题
@@ -617,14 +617,14 @@ NAS 更新
 * 全新 Tuner： `Population Based Training (PBT) <https://github.com/microsoft/nni/blob/v1.5/docs/zh_CN/Tuner/PBTTuner.md>`__
 * Trial 现在可以返回无穷大和 NaN 结果
 
-Neural Architecture Search
-^^^^^^^^^^^^^^^^^^^^^^^^^^
+神经网络架构搜索
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 全新 NAS 算法：`TextNAS <https://github.com/microsoft/nni/blob/v1.5/docs/zh_CN/NAS/TextNAS.md>`__
 * 在 Web 界面 支持 ENAS 和 DARTS的 `可视化 <https://github.com/microsoft/nni/blob/v1.5/docs/zh_CN/NAS/Visualization.md>`__ 
 
-Model Compression
+模型压缩
 ^^^^^^^^^^^^^^^^^
 
 
@@ -666,7 +666,7 @@ Model Compression
 主要功能
 ^^^^^^^^^^^^^^
 
-Neural Architecture Search
+神经网络架构搜索
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -674,7 +674,7 @@ Neural Architecture Search
 * 初步支持 `ProxylessNAS <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/Proxylessnas.md>`__ 并增加 `示例 <https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas>`__
 * 为 NAS 框架增加单元测试
 
-Model Compression
+模型压缩
 ^^^^^^^^^^^^^^^^^
 
 
@@ -689,7 +689,7 @@ Model Compression
 * 为新的 OpenPAI 模式（又称，paiK8S）增加示例配置 YAML 文件
 * 支持删除远程模式下使用 sshkey 的 Experiment （感谢外部贡献者 @tyusr）
 
-WebUI
+Web 界面
 ^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -713,8 +713,8 @@ WebUI
 * 为 `NAS <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/NAS/QuickStart.md>`__ 和 `模型压缩 <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/Compressor/QuickStart.md>`__ 增加快速入门指南
 * 改进 `EfficientNet 的文档 <https://github.com/microsoft/nni/blob/v1.4/docs/zh_CN/TrialExample/EfficientNet.md>`__
 
-Bug Fixes
-^^^^^^^^^
+Bug 修复
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复在指标数据和 JSON 格式中对 NaN 的支持
@@ -883,7 +883,7 @@ Bug 修复
   * 为 hyperband 支持多阶段    -PR #1257
 
 * 
-  Training Service
+  训练平台
 
 
   * 支持私有 Docker Registry -PR #755
@@ -1026,7 +1026,7 @@ Bug 修复和其它更新
   * 使用 ComponentUpdate 来避免不必要的刷新
 
 Bug 修复和其它更新
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 * 修复 ``nnictl update`` 不一致的命令行风格
@@ -1153,7 +1153,7 @@ Bug 修复和其它更新
 * 支持 `不同级别的日志 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__，使其更易于调试。
 * 支持 `不同级别的日志 <https://github.com/microsoft/nni/blob/v0.5.1/docs/ExperimentConfig.md>`__，使其更易于调试。
 
-Documentation
+文档
 ^^^^^^^^^^^^^
 
 
