@@ -8,92 +8,92 @@
 发布 2.3 - 6/15/2021
 -----------------------
 
-Major Updates
+主要更新
 ^^^^^^^^^^^^^
 
 神经网络架构搜索
 """"""""""""""""""""""""""
 
-* Retiarii Framework (NNI NAS 2.0) Beta Release with new features:
+* Retiarii Framework (NNI NAS 2.0) Beta 版，具有新功能：
 
-  * Support new high-level APIs: ``Repeat`` and ``Cell`` (#3481)
-  * Support pure-python execution engine (#3605)
-  * Support policy-based RL strategy (#3650)
-  * Support nested ModuleList (#3652)
-  * Improve documentation (#3785)
+  * 支持新的高级 API：``Repeat`` 和 ``Cell`` (#3481)
+  * 支持纯 Python 执行引擎(#3605)
+  * 支持基于 policy 的 RL 策略 (#3650)
+  * 支持嵌套的 ModuleList (#3652)
+  * 完善文档 (#3785)
 
-  **Note**: there are more exciting features of Retiarii planned in the future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/discussions/3744>`__  for more information.
+  **注意**：在未来的版本中，Retiarii 计划有更多令人兴奋的功能，请参考 `Retiarii 功能路线图 <https://github.com/microsoft/nni/discussions/3744>`__  了解详情。
 
-* Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
+* 增加全新 NAS 算法：Blockwise DNAS FBNet (#3532，感谢外部贡献者 @alibaba-yiwuyao) 
 
 模型压缩
 """""""""""""""""
 
-* Support Auto Compression Framework (#3631)
-* Support slim pruner in Tensorflow (#3614)
-* Support LSQ quantizer (#3503, thanks the external contributor @chenbohua3)
-* Improve APIs for iterative pruners (#3507 #3688)
+* 支持自动压缩框架 (#3631)
+* 在 TensorFlow 中支持 slim Pruner (#3614)
+* 支持 LSQ Quantizer (#3503，感谢外部贡献者 @chenbohua3)
+* 完善迭代式 Pruner 的 API (#3507 #3688)
 
-Training service & Rest
+训练平台 & Rest
 """""""""""""""""""""""
 
-* Support 3rd-party training service (#3662 #3726)
-* Support setting prefix URL (#3625 #3674 #3672 #3643)
-* Improve NNI manager logging (#3624)
-* Remove outdated TensorBoard code on nnictl (#3613)
+* 支持第三方训练平台 (#3662 #3726)
+* 支持设置前缀 URL (#3625 #3674 #3672 #3643)
+* 改进 NNI 管理器日志 (#3624)
+* 移除 nnictl 上过时的 TensorBoard 代码 (#3613)
 
-Hyper-Parameter Optimization
+超参优化
 """"""""""""""""""""""""""""
 
-* Add new tuner: DNGO (#3479 #3707)
-* Add benchmark for tuners (#3644 #3720 #3689)
+* 增加全新 Tuner：DNGO (#3479 #3707)
+* 为 Tuner 增加基准测试 (#3644 #3720 #3689)
 
 Web 界面
 """"""""""""""""""""""""""""""""""""""""""""""""
 
-* Improve search parameters on trial detail page (#3651 #3723 #3715)
-* Make selected trials consistent after auto-refresh in detail table (#3597)
-* Add trial stdout button on local mode (#3653 #3690)
+* 改进在 Trial 详情页面的搜索框 (#3651 #3723 #3715)
+* 改进在 Trial 详情页面的自动刷新设置 (#3597)
+* 在本地模式下增加 Trial 输出按钮 (#3653 #3690)
 
-Examples & Documentation
-""""""""""""""""""""""""""""
+示例 & 文档
+""""""""""""""""""""""""
 
-* Convert all trial examples' from config v1 to config v2 (#3721 #3733 #3711 #3600)
-* Add new jupyter notebook examples (#3599 #3700)
+* 将所有的 Trial 示例从配置v1转换为配置v2 (#3721 #3733 #3711 #3600)
+* 增加全新 Jupyter 笔记本示例 (#3599 #3700)
 
-Dev Excellent
+开发工作
 """""""""""""
 
-* Upgrade dependencies in Dockerfile (#3713 #3722)
-* Substitute PyYAML for ``ruamel.yaml`` (#3702)
-* Add pipelines for AML and hybrid training service and experiment config V2 (#3477 #3648)
-* Add pipeline badge in README (#3589)
-* Update issue bug report template (#3501)
+* 升级 Dockerfile 中的依赖 (#3713 #3722)
+* 用 PyYAML 替代 ``ruamel.yaml`` (#3702)
+* 为 AML、混合训练平台和实验配置V2添加 pipeline (#3477 #3648)
+* 在 README 中添加 pipeline 徽章 (#3589)
+* 更新问题报告模板 (#3501)
 
 
 * 用户体验改善及缺陷修复
-^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Fix syntax error on Windows (#3634)
-* Fix a logging related bug (#3705)
-* Fix a bug in GPU indices (#3721)
-* Fix a bug in FrameworkController (#3730)
-* Fix a bug in ``export_data_url format`` (#3665)
-* Report version check failure as a warning (#3654)
-* Fix bugs and lints in nnictl (#3712)
-* Fix bug of ``optimize_mode`` on WebUI (#3731)
-* Fix bug of ``useActiveGpu`` in AML v2 config (#3655)
-* Fix bug of ``experiment_working_directory`` in Retiarii config (#3607)
-* Fix a bug in mask conflict (#3629, thanks the external contributor @Davidxswang) 
-* Fix a bug in model speedup shape inference (#3588, thanks the external contributor @Davidxswang)
-* Fix a bug in multithread on Windows (#3604, thanks the external contributor @Ivanfangsc)
-* Delete redundant code in training service (#3526, thanks the external contributor @maxsuren)
-* Fix typo in DoReFa compression doc (#3693, thanks the external contributor @Erfandarzi)
-* Update docstring in model compression (#3647, thanks the external contributor @ichejun)
-* Fix a bug when using Kubernetes container (#3719, thanks the external contributor @rmfan)
+* 修复 Windows 上的语法错误 (#3634)
+* 修复一个与日志有关的 Bug (#3705)
+* 修复 GPU 索引中的一个 Bug (#3721)
+* 修复 FrameworkController 中的一个 Bug (#3730)
+* 修复 ``export_data_url format`` 中的一个 Bug (#3665)
+* 以警告形式报告版本检查失败 (#3654)
+* 修复 nnictl 中的 Bug 和 lint (#3712)
+* 修复 Web 界面 ``optimize_mode`` 中的 Bug (#3731)
+* 修复在 AML v2 配置中的 ``useActiveGpu`` Bug (#3655)
+* 修复 Retiarii 配置中的 ``experiment_working_directory`` Bug (#3607)
+* 修复掩码冲突的 Bug (#3629，感谢外部贡献者 @Davidxswang) 
+* 修复模型加速形状推理中的一个 Bug (#3588，感谢外部贡献者 @Davidxswang)
+* 修复 Windows 上多线程的一个 Bug (#3604，感谢外部贡献者 @Ivanfangsc)
+* 删除训练平台中冗余的代码 (#3526，感谢外部贡献者 @maxsuren)
+* 修复 DoReFa 压缩文档中的拼写错误 (#3693，感谢外部贡献者 @Erfandarzi)
+* 更新模型压缩中的注释串 (#3647，感谢外部贡献者 @ichejun)
+* 修复 Kubernetes 容器中的 Bug (#3719，感谢外部贡献者 @rmfan)
 
 
-Release 2.2 - 4/26/2021
+发布 2.2 - 4/26/2021
 -----------------------
 
 主要更新
@@ -102,14 +102,14 @@ Release 2.2 - 4/26/2021
 神经网络架构搜索
 """"""""""""""""""""""""""
 
-* Improve NAS 2.0 (Retiarii) Framework (Alpha Release)
+* 改进 NAS 2.0 (Retiarii) 框架 (Alpha 发布)
 
-  * Support local debug mode (#3476)
-  * Support nesting ``ValueChoice`` in ``LayerChoice`` (#3508)
-  * Support dict/list type in ``ValueChoice`` (#3508)
-  * Improve the format of export architectures (#3464)
-  * Refactor of NAS examples (#3513)
-  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+  * 支持本地调试模式 (#3476)
+  * 支持在 ``LayerChoice`` 中嵌套 ``ValueChoice`` (#3508)
+  * 在 ``ValueChoice`` 中支持 字典\列表类型 (#3508)
+  * 完善导出架构的格式 (#3464)
+  * 重构 NAS 示例 (#3513)
+  * 参考 `这里 <https://github.com/microsoft/nni/issues/3301>`__ 获取 Retiarii 功能路线图
 
 模型压缩
 """""""""""""""""
@@ -298,11 +298,11 @@ Web 界面和 nnictl
 发布 1.9 - 10/22/2020
 ------------------------
 
-Major updates
+主要更新
 ^^^^^^^^^^^^^
 
 神经网络架构搜索
-""""""""""""""""""""""""""
+""""""""""""""""""""""""""""""""""""""""""""""""""""
 
 
 * 在 NAS 中增加 regularized evolution 算法 (#2802)
