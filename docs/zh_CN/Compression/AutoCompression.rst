@@ -66,10 +66,10 @@
         'bnn': BNNQuantizer
     }
 
-Provide user model for compression
-----------------------------------
+提供用户模型进行压缩
+----------------------------------------------
 
-Users need to inherit ``AbstractAutoCompressionModule`` and override the abstract class function.
+用户需要继承 ``AbstractAutoCompressionModule`` 并重写抽象类的函数。
 
 .. code-block:: python
 
@@ -86,18 +86,18 @@ Users need to inherit ``AbstractAutoCompressionModule`` and override the abstrac
             ...
             return _evaluator
 
-Users need to implement at least ``model()`` and ``evaluator()``.
-If you use iterative pruner, you need to additional implement ``optimizer_factory()``, ``criterion()`` and ``sparsifying_trainer()``.
-If you want to finetune the model after compression, you need to implement ``optimizer_factory()``, ``criterion()``, ``post_compress_finetuning_trainer()`` and ``post_compress_finetuning_epochs()``.
-The ``optimizer_factory()`` should return a factory function, the input is an iterable variable, i.e. your ``model.parameters()``, and the output is an optimizer instance.
-The two kinds of ``trainer()`` should return a trainer with input ``model, optimizer, criterion, current_epoch``.
-The full abstract interface refers to :githublink:`interface.py <nni/algorithms/compression/pytorch/auto_compress/interface.py>`.
-An example of ``AutoCompressionModule`` implementation refers to :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`.
+用户至少需要实现 ``model()`` 和 ``evaluator()``。
+如果使用迭代 Pruner，则需要额外实现 ``optimizer_factory()``, ``criterion()`` 和 ``sparsifying_trainer()``。
+如果要在压缩后对模型进行微调，则需要实现 ``optimizer_factory()``, ``criterion()``, ``post_compress_finetuning_trainer()`` 和 ``post_compress_finetuning_epochs()``。
+``optimizer_factory()`` 应该返回一个工厂函数，输入是一个可迭代变量，即， 你的 ``model.parameters()``，输出是 optimizer 实例。
+这两种 ``trainer()`` 应该返回一个输出为 ``model, optimizer, criterion, current_epoch`` 的 Trainer。
+完整的抽象接口在 :githublink:`interface.py <nni/algorithms/compression/pytorch/auto_compress/interface.py>`。
+``AutoCompressionModule`` 实施的例子参考 :githublink:`auto_compress_module.py <examples/model_compress/auto_compress/torch/auto_compress_module.py>`。
 
-Launch NNI experiment
+发起 NNI Experiment
 ---------------------
 
-Similar to launch from python, the difference is no need to set ``trial_command`` and put the user-provided ``AutoCompressionModule`` as ``AutoCompressionExperiment`` input.
+类似于从 python 启动，区别是不需要设置 ``trial_command`` 并把用户提供的 ``AutoCompressionModule`` 作为 ``AutoCompressionExperiment`` 的输入。
 
 .. code-block:: python
 
