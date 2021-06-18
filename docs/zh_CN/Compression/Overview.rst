@@ -15,17 +15,17 @@ NNI 的模型压缩工具包，提供了最先进的模型压缩算法和策略�
 * 提供简洁的接口，帮助用户实现自己的压缩算法。
 
 
-Compression Pipeline
+压缩流水线
 --------------------
 
 .. image:: ../../img/compression_flow.jpg
    :target: ../../img/compression_flow.jpg
    :alt: 
 
-The overall compression pipeline in NNI. For compressing a pretrained model, pruning and quantization can be used alone or in combination. 
+NNI的模型压缩流水线。 对于压缩预训练的模型，剪枝和量化可以单独使用或结合使用。 
 
 .. note::
-  Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency. To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__. * 注意，PyTorch 和 TensorFlow 有统一的 API 接口，当前仅支持 PyTorch 版本，未来会提供 TensorFlow 的支持。
+  NNI 压缩算法并不意味着压缩模型，NNI 的加速工具才可以真正压缩模型并减少延迟。 要获得真正压缩后的模型，用户应该进行 `模型加速 <./ModelSpeedup.rst>`__。 * 注意，PyTorch 和 TensorFlow 有统一的 API 接口，当前仅支持 PyTorch 版本，未来会提供 TensorFlow 的支持。
 
 支持的算法
 --------------------
@@ -97,13 +97,13 @@ The overall compression pipeline in NNI. For compressing a pretrained model, pru
    * - `BNN Quantizer <../Compression/Quantizer.rst#bnn-quantizer>`__
      - 二进制神经网络：使用权重和激活限制为 +1 或 -1 的深度神经网络。 `参考论文 <https://arxiv.org/abs/1602.02830>`__
    * - `LSQ Quantizer <../Compression/Quantizer.rst#lsq-quantizer>`__
-     - Learned step size quantization. `Reference Paper <https://arxiv.org/pdf/1902.08153.pdf>`__
+     - 可学习的步长量化。 `参考论文 <https://arxiv.org/pdf/1902.08153.pdf>`__
 
 
 模型加速
 -------------
 
-模型压缩的目的是减少推理延迟和模型大小。 但现有的模型压缩算法主要通过模拟的方法来检查压缩模型性能（如精度）。例如，剪枝算法中使用掩码，而量化算法中量化值仍然是以 32 位浮点数来存储。 只要给出这些算法产生的掩码和量化位，NNI 可真正的加速模型。 The detailed tutorial of Masked Model Speedup can be found `here <./ModelSpeedup.rst>`__, The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <./QuantizationSpeedup.rst>`__.
+模型压缩的目的是减少推理延迟和模型大小。 但现有的模型压缩算法主要通过模拟的方法来检查压缩模型性能（如精度）。例如，剪枝算法中使用掩码，而量化算法中量化值仍然是以 32 位浮点数来存储。 只要给出这些算法产生的掩码和量化位，NNI 可真正的加速模型。 基于掩码的模型加速详细教程可以在 `这里 <./ModelSpeedup.rst>`__ 找到。混合精度量化的详细教程可以在 `这里 <./QuantizationSpeedup.rst>`__ 找到。
 
 
 压缩工具
