@@ -1,9 +1,9 @@
-Customize Exploration Strategy
-==============================
+自定义探索 Strategy
+======================================
 
-If users want to innovate a new exploration strategy, they can easily customize a new one following the interface provided by NNI. Specifically, users should inherit the base strategy class ``BaseStrategy``, then implement the member function ``run``. This member function takes ``base_model`` and ``applied_mutators`` as its input arguments. It can simply apply the user specified mutators in ``applied_mutators`` onto ``base_model`` to generate a new model. When a mutator is applied, it should be bound with a sampler (e.g., ``RandomSampler``). Every sampler implements the ``choice`` function which chooses value(s) from candidate values. The ``choice`` functions invoked in mutators are executed with the sampler.
+如果用户想研究一个新的探索策略，他们可以按照 NNI 提供的接口轻松定制一个新的策略。 要编写新策略，应该继承基本策略类 ``BaseStrategy``，然后实现成员函数 ``run``。 此成员函数将 ``base_model`` 和 ``applied_mutators`` 作为输入参数， 并将用户在 ``applied_mutators`` 中指定的 Mutator 应用到 ``base_model`` 中生成新模型。 当应用一个 Mutator 时，应该与一个 sampler 绑定（例如，``RandomSampler``）。 每个 sampler 都实现了从候选值中选择值的 ``choice`` 函数。 在 Mutator 中调用 ``choice`` 函数是用 sampler 执行的。
 
-Below is a very simple random strategy, which makes the choices completely random.
+下面是一个非常简单的随机策略，它使选择完全随机。
 
 .. code-block:: python
 
@@ -28,11 +28,11 @@ Below is a very simple random strategy, which makes the choices completely rando
                     for mutator in applied_mutators:
                         mutator.bind_sampler(self.random_sampler)
                         model = mutator.apply(model)
-                    # run models
+                    # 运行模型
                     submit_models(model)
                 else:
                     time.sleep(2)
 
-You can find that this strategy does not know the search space beforehand, it passively makes decisions every time ``choice`` is invoked from mutators. If a strategy wants to know the whole search space before making any decision (e.g., TPE, SMAC), it can use ``dry_run`` function provided by ``Mutator`` to obtain the space. An example strategy can be found :githublink:`here <nni/retiarii/strategy/tpe_strategy.py>`.
+您会发现此策略事先并不知道搜索空间，每次从 Mutator 调用 ``choice`` 时都会被动地做出决定。 如果一个策略想在做出任何决策（如 TPE、SMAC）之前知道整个搜索空间，它可以使用 ``Mutator`` 提供的 ``dry_run`` 函数来获取搜索空间。 可以在 :githublink:`这里 <nni/retiarii/strategy/tpe_strategy.py>` 找到一个示例策略。
 
-After generating a new model, the strategy can use our provided APIs (e.g., ``submit_models``, ``is_stopped_exec``) to submit the model and get its reported results. More APIs can be found in `API References <./ApiReference.rst>`__.
+生成新模型后，该策略可以使用 NNI 提供的API（例如 ``submit_models``, ``is_stopped_exec``）提交模型并获取其报告的结果。 更多的 API 在 `API 参考 <./ApiReference.rst>`__ 中。
