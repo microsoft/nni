@@ -1,8 +1,8 @@
-Speed up Mixed Precision Quantization Model (experimental)
+加速混合精度量化模型（实验性）
 ==========================================================
 
 
-Introduction
+介绍
 ------------
 
 Deep learning network has been computational intensive and memory intensive 
