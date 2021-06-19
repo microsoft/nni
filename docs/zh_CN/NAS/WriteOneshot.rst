@@ -1,11 +1,11 @@
-Customize a New One-shot Trainer
-================================
+自定义 One-shot Trainer
+=========================================
 
-One-shot trainers should inherit ``nni.retiarii.oneshot.BaseOneShotTrainer``, and need to implement ``fit()`` (used to conduct the fitting and searching process) and ``export()`` method (used to return the searched best architecture).
+One-shot Trainer 应继承 ``nni.retiarii.oneshot.BaseOneShotTrainer``，并需要实现``fit()`` 函数（用于进行拟合和搜索过程）和 ``export()`` 方法（用于返回搜索到的最佳架构）。
 
-Writing a one-shot trainer is very different to single-arch evaluator. First of all, there are no more restrictions on init method arguments, any Python arguments are acceptable. Secondly, the model fed into one-shot trainers might be a model with Retiarii-specific modules, such as LayerChoice and InputChoice. Such model cannot directly forward-propagate and trainers need to decide how to handle those modules.
+编写一个 One-Shot Trainer 与单个结构的 evaluator 有很大不同。 首先，init 方法参数没有限制，可以接收任何 Python 参数。 其次，输入到 One-Shot Trainer 中的模型可能带有 Retiarii 特定的模块（例如 LayerChoice 和 InputChoice）的模型。 这种模型不能直接向前传播，Trainer 需要决定如何处理这些模块。
 
-A typical example is DartsTrainer, where learnable-parameters are used to combine multiple choices in LayerChoice. Retiarii provides ease-to-use utility functions for module-replace purposes, namely ``replace_layer_choice``, ``replace_input_choice``. A simplified example is as follows: 
+一个典型的示例是 DartsTrainer，其中可学习参数用于在 LayerChoice 中组合多个 Choice。 Retiarii为模块替换提供了易于使用的函数，即 ``replace_layer_choice``, ``replace_input_choice``。 示例如下。 
 
 .. code-block:: python
 
@@ -37,7 +37,7 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
             self.nas_modules = []
             replace_layer_choice(self.model, DartsLayerChoice, self.nas_modules)
 
-            ... # init dataloaders and optimizers
+            ... # 初始化 dataloaders 和 optimizers
 
         def fit(self):
             for i in range(self.num_epochs):
@@ -53,4 +53,4 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
                     result[name] = select_best_of_module(module)
             return result
 
-The full code of DartsTrainer is available to Retiarii source code. Please have a check at :githublink:`DartsTrainer <nni/retiarii/oneshot/pytorch/darts.py>`.
+Retsarii 源代码提供了 DartsTrainer 的完整代码。 请参考 :githublink:`DartsTrainer <nni/retiarii/oneshot/pytorch/darts.py>`。
