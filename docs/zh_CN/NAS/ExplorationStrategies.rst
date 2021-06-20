@@ -30,6 +30,6 @@ NNI 提供了以下 multi-trial NAS 的探索策略。 用户还可以 `自定�
    * - `正则进化 <./ApiReference.rst#nni.retiarii.strategy.RegularizedEvolution>`__
      - 使用 `正则进化算法 <https://arxiv.org/abs/1802.01548>`__ 从生成的模型中生成新模型 (``nni.retiarii.strategy.RegularizedEvolution``)
    * - `TPE 策略 <./ApiReference.rst#nni.retiarii.strategy.TPEStrategy>`__
-     - Sampling new model(s) from user defined model space using `TPE algorithm <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ . (``nni.retiarii.strategy.TPEStrategy``)
-   * - `RL Strategy <./ApiReference.rst#nni.retiarii.strategy.PolicyBasedRL>`__
-     - It uses `PPO algorithm <https://arxiv.org/abs/1707.06347>`__ to sample new model(s) from user defined model space. (``nni.retiarii.strategy.PolicyBasedRL``)
+     - 使用 `TPE 算法 <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ 从用户定义的模型空间中生成新模型 (``nni.retiarii.strategy.TPEStrategy``)
+   * - `RL 策略 <./ApiReference.rst#nni.retiarii.strategy.PolicyBasedRL>`__
+     - 使用 `PPO 算法 <https://arxiv.org/abs/1707.06347>`__ 从用户定义的模型空间中生成新模型 (``nni.retiarii.strategy.PolicyBasedRL``)
