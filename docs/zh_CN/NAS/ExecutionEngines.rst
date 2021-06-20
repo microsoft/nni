@@ -1,26 +1,26 @@
-Execution Engines
+执行引擎
 =================
 
-Execution engine is for running Retiarii Experiment. NNI supports three execution engines, users can choose a speicific engine according to the type of their model mutation definition and their requirements for cross-model optimizations. 
+执行引擎（Execution engine）用于运行 Retiarii 实验。 NNI 支持三种执行引擎，用户可以根据自己的模型 mutation 定义类型和跨模型优化的需求选择特定的引擎。 
 
-* **Pure-python execution engine** is the default engine, it supports the model space expressed by `inline mutation API <./MutationPrimitives.rst>`__. 
+* **纯 Python 执行引擎（Pure-python execution engine）** 是默认引擎，它支持 `内联 mutation API <./MutationPrimitives.rst>`__ 表示的模型空间。 
 
-* **Graph-based execution engine** supports the use of `inline mutation APIs <./MutationPrimitives.rst>`__ and model spaces represented by `mutators <./Mutators.rst>`__. It requires the user's model to be parsed by `TorchScript <https://pytorch.org/docs/stable/jit.html>`__.
+* **基于图的执行引擎（Graph-based execution engine）** 支持使用 `内联 mutation APIs <./MutationPrimitives.rst>`__ 和由 `mutators <./Mutators.rst>`__ 表示的模型空间。 它要求用户的模型由 `TorchScript <https://pytorch.org/docs/stable/jit.html>`__ 解析。
 
-* **CGO execution engine** has the same requirements and capabilities as the **Graph-based execution engine**. But further enables cross-model optimizations, which makes model space exploration faster.
+* **CGO执行引擎（CGO execution engine）** 具有与 **基于图形的执行引擎** 相同的要求和能力。 但未来将支持跨模型的优化，这使得模型空间的探索变得更快。
 
-Pure-python Execution Engine
+纯 Python 执行引擎
 ----------------------------
 
-Pure-python Execution Engine is the default engine, we recommend users to keep using this execution engine, if they are new to NNI NAS. Pure-python execution engine plays magic within the scope of inline mutation APIs, while does not touch the rest of user model. Thus, it has minimal requirement on user model. 
+纯 Python 执行引擎是默认引擎，如果用户是 NNI NAS 的新手，我们建议使用这个执行引擎。 纯 Python 执行引擎在内联突变 API 的范围内发挥了神奇作用，而不会触及用户模型的其余部分。 因此，它对用户模型的要求最低。 
 
-One steps are needed to use this engine now.
+现在需要一个步骤来使用这个引擎。
 
-1. Add ``@nni.retiarii.model_wrapper`` decorator outside the whole PyTorch model.
+1. 在整个 PyTorch 模型之外添加 ``@nni.retiarii.model_wrapper`` 装饰器。
 
-.. note:: You should always use ``super().__init__()`` instead of ``super(MyNetwork, self).__init__()`` in the PyTorch model, because the latter one has issues with model wrapper.
+.. note:: 在 PyTorch 模型中，您应该始终使用 ``super().__init__()`` 而不是 ``super(MyNetwork, self).__init__()`` ，因为后者在模型装饰器上存在问题。
 
-Graph-based Execution Engine
+基于图的执行引擎
 ----------------------------
 
 For graph-based execution engine, it converts user-defined model to a graph representation (called graph IR) using `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, each instantiated module in the model is converted to a subgraph. Then mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed on the user specified training service.
