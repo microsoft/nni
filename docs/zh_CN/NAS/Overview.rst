@@ -1,7 +1,7 @@
-神经网络结构搜索在 NNI 上的应用
+Retiarii 用于神经网络架构搜索
 =======================================
 
-.. Note:: NNI 最新的 NAS 支持都是基于 Retiarii 框架的，仍在使用早期版本 `NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ 的用户应尽快将你的工作迁移到 Retiarii 框架。
+.. Note:: NNI 最新的 NAS 支持都是基于 Retiarii 框架的，仍在使用早期版本 `NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ 的用户应尽快将工作迁移到 Retiarii 框架。
 
 .. contents::
 
@@ -37,29 +37,29 @@ Multi-trial NAS 意味着每个来自模型空间的抽样模型都是独立训�
      - 算法简介
    * - 随机策略
      - 从搜索空间中随机选择模型 (``nni.retiarii.strategy.Random``)
-   * - Name
-     - Sampling new model(s) from user defined model space using grid search algorithm. (``nni.retiarii.strategy.GridSearch``)
-   * - Regularized Evolution
-     - Generating new model(s) from generated models using `regularized evolution algorithm <https://arxiv.org/abs/1802.01548>`__ . (``nni.retiarii.strategy.RegularizedEvolution``)
-   * - TPE Strategy
-     - Sampling new model(s) from user defined model space using `TPE algorithm <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ . (``nni.retiarii.strategy.TPEStrategy``)
-   * - RL Strategy
-     - It uses `PPO algorithm <https://arxiv.org/abs/1707.06347>`__ to sample new model(s) from user defined model space. (``nni.retiarii.strategy.PolicyBasedRL``)
+   * - 网格搜索
+     - 使用网格搜索算法从用户定义的模型空间中采样新模型。 (``nni.retiarii.strategy.GridSearch``)
+   * - 正则进化
+     - 使用 `正则进化算法 <https://arxiv.org/abs/1802.01548>`__ 从生成的模型中生成新模型 (``nni.retiarii.strategy.RegularizedEvolution``)
+   * - TPE 策略
+     - 使用 `TPE 算法 <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ 从用户定义的模型空间中生成新模型 (``nni.retiarii.strategy.TPEStrategy``)
+   * - RL 策略
+     - 使用 `PPO 算法 <https://arxiv.org/abs/1707.06347>`__ 从用户定义的模型空间中生成新模型 (``nni.retiarii.strategy.PolicyBasedRL``)
 
 
-Please refer to `here <./multi_trial_nas.rst>`__ for detailed usage of multi-trial NAS.
+参考 `这里 <./multi_trial_nas.rst>`__ 获取 multi-trial NAS 详细用法。
 
-支持的 One-shot NAS 算法
+One-shot NAS
 ---------------------------------
 
-One-shot NAS means building model space into a super-model, training the super-model with weight sharing, and then sampling models from the super-model to find the best one. 参考  `这里 <NasGuide.rst>`__，了解如何使用 one-shot NAS 算法。
-NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多算法。 用户可以重现算法或在自己的数据集上使用它。 鼓励用户使用 `NNI API <#use-nni-api>`__， 实现其它算法，以使更多人受益。 More one-shot NAS will be supported soon.
+One-Shot NAS意味着将模型空间构建成一个超级模型，用权重共享的方式训练超级模型，然后从超级模型中不断采样，找到最佳模型。 `DARTS <https://arxiv.org/abs/1806.09055>`__ 是一个典型的 One-Shot NAS。
+以下是已经支持的 One-Shot NAS 算法。 未来将支持更多 One-Shot NAS 算法。
 
 .. list-table::
    :header-rows: 1
    :widths: auto
 
-   * - One-shot Algorithm Name
+   * - One-shot 算法名称
      - 算法简介
    * - `ENAS <ENAS.rst>`__
      - `Efficient Neural Architecture Search via Parameter Sharing <https://arxiv.org/abs/1802.03268>`__. 在 ENAS 中，Contoller 学习在大的计算图中搜索最有子图的方式来发现神经网络。 它通过在子模型间共享参数来实现加速和出色的性能指标。
@@ -75,8 +75,8 @@ NNI 目前支持下面列出的 One-Shot NAS 算法，并且正在添加更多�
 参考和反馈
 ----------------------
 
-* `Quick Start <./QuickStart.rst>`__ ;
-* `Construct Your Model Space <./construct_space.rst>`__ ;
-* `Retiarii: A Deep Learning Exploratory-Training Framework <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ ;
-* 在Github 中 `提交此功能的 Bug <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__；
+* `快速入门 <./QuickStart.rst>`__ ;
+* `构建模型空间 <./construct_space.rst>`__ ;
+* `Retiarii: 一个探索性的深度学习框架 <https://www.usenix.org/system/files/osdi20-zhang_quanlu.pdf>`__ ;
+* 在 Github 中 `提交 Bug 报告 <https://github.com/microsoft/nni/issues/new?template=bug-report.rst>`__；
 * 在Github 中 `提交新功能或请求改进 <https://github.com/microsoft/nni/issues/new?template=enhancement.rst>`__。
