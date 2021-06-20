@@ -1,35 +1,35 @@
-Exploration Strategies for Multi-trial NAS
-==========================================
+Multi-trial NAS 的探索策略
+=====================================================
 
-Usage of Exploration Strategy
+探索策略的用法
 -----------------------------
 
-To use an exploration strategy, users simply instantiate an exploration strategy and pass the instantiated object to ``RetiariiExperiment``. Below is a simple example.
+要使用探索策略，用户只需将探索策略实例化，并将实例化的对象传递给 ``RetiariiExperiment``。 示例如下：
 
 .. code-block:: python
 
   import nni.retiarii.strategy as strategy
 
-  exploration_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
+  exploration_strategy = strategy.Random(dedup=True)  # dedup=False 如果不希望有重复数据删除
 
-Supported Exploration Strategies
+支持的探索策略
 --------------------------------
 
-NNI provides the following exploration strategies for multi-trial NAS. Users could also `customize new exploration strategies <./WriteStrategy.rst>`__.
+NNI 提供了以下 multi-trial NAS 的探索策略。 用户还可以 `自定义新的探索策略 <./WriteStrategy.rst>`__。
 
 .. list-table::
    :header-rows: 1
    :widths: auto
 
-   * - Name
-     - Brief Introduction of Algorithm
-   * - `Random Strategy <./ApiReference.rst#nni.retiarii.strategy.Random>`__
-     - Randomly sampling new model(s) from user defined model space. (``nni.retiarii.strategy.Random``)
-   * - `Grid Search <./ApiReference.rst#nni.retiarii.strategy.GridSearch>`__
-     - Sampling new model(s) from user defined model space using grid search algorithm. (``nni.retiarii.strategy.GridSearch``)
-   * - `Regularized Evolution <./ApiReference.rst#nni.retiarii.strategy.RegularizedEvolution>`__
-     - Generating new model(s) from generated models using `regularized evolution algorithm <https://arxiv.org/abs/1802.01548>`__ . (``nni.retiarii.strategy.RegularizedEvolution``)
-   * - `TPE Strategy <./ApiReference.rst#nni.retiarii.strategy.TPEStrategy>`__
+   * - 名字
+     - 算法简介
+   * - `随机策略 <./ApiReference.rst#nni.retiarii.strategy.Random>`__
+     - 从搜索空间中随机选择模型 (``nni.retiarii.strategy.Random``)
+   * - `网格搜索 <./ApiReference.rst#nni.retiarii.strategy.GridSearch>`__
+     - 使用网格搜索算法从用户定义的模型空间中采样新模型。 (``nni.retiarii.strategy.GridSearch``)
+   * - `正则进化 <./ApiReference.rst#nni.retiarii.strategy.RegularizedEvolution>`__
+     - 使用 `正则进化算法 <https://arxiv.org/abs/1802.01548>`__ 从生成的模型中生成新模型 (``nni.retiarii.strategy.RegularizedEvolution``)
+   * - `TPE 策略 <./ApiReference.rst#nni.retiarii.strategy.TPEStrategy>`__
      - Sampling new model(s) from user defined model space using `TPE algorithm <https://papers.nips.cc/paper/2011/file/86e8f7ab32cfd12577bc2619bc635690-Paper.pdf>`__ . (``nni.retiarii.strategy.TPEStrategy``)
    * - `RL Strategy <./ApiReference.rst#nni.retiarii.strategy.PolicyBasedRL>`__
      - It uses `PPO algorithm <https://arxiv.org/abs/1707.06347>`__ to sample new model(s) from user defined model space. (``nni.retiarii.strategy.PolicyBasedRL``)
