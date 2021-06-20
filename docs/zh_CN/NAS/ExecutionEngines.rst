@@ -23,15 +23,15 @@
 基于图的执行引擎
 ----------------------------
 
-For graph-based execution engine, it converts user-defined model to a graph representation (called graph IR) using `TorchScript <https://pytorch.org/docs/stable/jit.html>`__, each instantiated module in the model is converted to a subgraph. Then mutations are applied to the graph to generate new graphs. Each new graph is then converted back to PyTorch code and executed on the user specified training service.
+对于基于图形的执行引擎，它使用 `TorchScript <https://pytorch.org/docs/stable/jit.html>`__ 将用户定义的模型转换为图形表示（称为图形 IR），其中的每个实例化模块模型转换为子图。 然后将突变应用到图上，生成新的图。 每个新图被转换回 PyTorch 代码并在用户指定的训练服务上执行。
 
-Users may find ``@basic_unit`` helpful in some cases. ``@basic_unit`` here means the module will not be converted to a subgraph, instead, it is converted to a single graph node as a basic unit.
+在某些情况下，用户可能会发现 ``@basic_unit`` 非常有帮助。 ``@basic_unit`` 这里意味着模块将不会被转换为子图，而是将其转换为单个图形节点作为基本单元。
 
-``@basic_unit`` is usually used in the following cases:
+``@basic_unit`` 通常在以下情况下使用：
 
-* When users want to tune initialization parameters of a module using ``ValueChoice``, then decorate the module with ``@basic_unit``. For example, ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))``, here ``MyConv`` should be decorated.
+* 当用户想要调整模块的初始化参数时使用 ``valueChoice``，然后用 ``@ basic_unit`` 装饰模块。 例如，在 ``self.conv = MyConv(kernel_size=nn.ValueChoice([1, 3, 5]))`` 中，``MyConv`` 应该被修饰。
 
-* When a module cannot be successfully parsed to a subgraph, decorate the module with ``@basic_unit``. The parse failure could be due to complex control flow. Currently Retiarii does not support adhoc loop, if there is adhoc loop in a module's forward, this class should be decorated as serializable module. For example, the following ``MyModule`` should be decorated.
+* 当模块无法被成功解析为子图，用 ``@basic_unit`` 装饰模块。 解析失败可能是由于复杂的控制流造成的。 目前 Retiarii 不支持 adhoc 循环，如果在一个模块的前向有 adhoc 循环，这个类应该被装饰成可序列化的模块。 例如，下面的 ``MyModule`` 应该被装饰起来。
 
   .. code-block:: python
 
@@ -43,13 +43,13 @@ Users may find ``@basic_unit`` helpful in some cases. ``@basic_unit`` here means
         for i in range(10): # <- adhoc loop
           ...
 
-* Some inline mutation APIs require their handled module to be decorated with ``@basic_unit``. For example, user-defined module that is provided to ``LayerChoice`` as a candidate op should be decorated.
+* 一些内联突变 API 要求其处理的模块用 ``@basic_unit`` 来装饰。 例如，提供给 ``LayerChoice`` 的用户自定义的模块作为候选操作应该被装饰。
 
-Three steps are need to use graph-based execution engine.
+使用基于图的执行引擎需要三个步骤：
 
-1. Remove ``@nni.retiarii.model_wrapper`` if there is any in your model.
-2. Add ``config.execution_engine = 'base'`` to ``RetiariiExeConfig``. The default value of ``execution_engine`` is 'py', which means pure-python execution engine.
-3. Add ``@basic_unit`` when necessary following the above guidelines.
+1. 如果你的模型中有 ``@nni.retiarii.model_wrapper``，请移除。
+2. 将 ``config.execution_engine = 'base'`` 添加到 ``RetiariiExeConfig``。 ``execution_engine`` 的默认值是 'py'，即纯 Python 执行引擎。
+3. 必要时按照上述准则添加 ``@basic_unit``。
 
 For exporting top models, graph-based execution engine supports exporting source code for top models by running ``exp.export_top_models(formatter='code')``.
 
