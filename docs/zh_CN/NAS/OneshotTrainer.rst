@@ -3,19 +3,19 @@ One-shot NAS
 
 在阅读本教程之前，我们强烈建议您先阅读有关如何 `定义一个模型空间 <./QuickStart.rst#define-your-model-space>`__ 的教程。
 
-Model Search with One-shot Trainer
-----------------------------------
+使用 One-shot Trainer 进行模型搜素
+--------------------------------------------------------------------
 
-With a defined model space, users can explore the space in two ways. One is using strategy and single-arch evaluator as demonstrated `here <./QuickStart.rst#explore-the-defined-model-space>`__. The other is using one-shot trainer, which consumes much less computational resource compared to the first one. In this tutorial we focus on this one-shot approach. The principle of one-shot approach is combining all the models in a model space into one big model (usually called super-model or super-graph). It takes charge of both search, training and testing, by training and evaluating this big model.
+对于定义的模型空间，用户可以通过两种方式来探索。 一个是使用探索策略和单架构评估器，正如 `在这里 <./QuickStart.rst#explore-the-defined-model-space>`__ 所演示的那样。 另一种是使用 one-shot trainer，与第一种相比，它消耗的计算资源要少得多。 在本教程中，我们专注于 One-Shot 方法。 One-Shot 方法的原理是将模型空间中的所有模型合并成一个大模型（通常称为超级模型或超级图）。 通过训练和评估整个超级模型，来实现搜索、训练和测试的任务。
 
-We list the supported one-shot trainers here:
+我们在此列出已支持的 One-Shot Trainer：
 
 * DARTS trainer
 * ENAS trainer
 * ProxylessNAS trainer
 * Single-path (random) trainer
 
-See `API reference <./ApiReference.rst>`__ for detailed usages. Here, we show an example to use DARTS trainer manually.
+参见 `API 参考 <./ApiReference.rst>`__ 获得详细用法。 在这里，我们展示了一个例子来手动使用 DARTS Trainer。
 
 .. code-block:: python
 
@@ -34,4 +34,4 @@ See `API reference <./ApiReference.rst>`__ for detailed usages. Here, we show an
   trainer.fit()
   final_architecture = trainer.export()
 
-**Format of the exported architecture.** TBD.
+**导出架构的格式**：未来将会支持。
