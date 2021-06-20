@@ -1,11 +1,11 @@
-Express Mutations with Mutators
+用 Mutators 表示 Mutations
 ===============================
 
-Besides the inline mutation APIs demonstrated `here <./MutationPrimitives.rst>`__, NNI provides a more general approach to express a model space, i.e., *Mutator*, to cover more complex model spaces. Those inline mutation APIs are also implemented with mutator in the underlying system, which can be seen as a special case of model mutation.
+除了在 `这里 <./MutationPrimitives.rst>`__ 演示的内联突变 API，NNI 还提供了一种更通用的方法来表达模型空间，即 *突变器（Mutator）*，以涵盖更复杂的模型空间。 那些内联突变 API在底层系统中也是用突变器实现的，这可以看作是模型突变的一个特殊情况。
 
-.. note:: Mutator and inline mutation APIs cannot be used together.
+.. note:: Mutator 和内联突变 API 不能一起使用。
 
-A mutator is a piece of logic to express how to mutate a given model. Users are free to write their own mutators. Then a model space is expressed with a base model and a list of mutators. A model in the model space is sampled by applying the mutators on the base model one after another. An example is shown below.
+突变器是一段逻辑，用来表达如何突变一个给定的模型。 用户可以自由地编写自己的突变器。 然后用一个基础模型和一个突变器列表来表达一个模型空间。 通过在基础模型上接连应用突变器，来对模型空间中的一个模型进行采样。 示例如下：
 
 .. code-block:: python
 
@@ -13,12 +13,12 @@ A mutator is a piece of logic to express how to mutate a given model. Users are 
   applied_mutators.append(BlockMutator('mutable_0'))
   applied_mutators.append(BlockMutator('mutable_1'))
 
-``BlockMutator`` is defined by users to express how to mutate the base model. 
+``BlockMutator`` 由用户定义，表示如何对基本模型进行突变。 
 
-Write a mutator
+编写 mutator
 ---------------
 
-User-defined mutator should inherit ``Mutator`` class, and implement mutation logic in the member function ``mutate``.
+用户定义的 Mutator 应该继承 ``Mutator`` 类，并在成员函数 ``mutate`` 中实现突变逻辑。
 
 .. code-block:: python
 
@@ -35,9 +35,9 @@ User-defined mutator should inherit ``Mutator`` class, and implement mutation lo
         chosen_op = self.choice(self.candidate_op_list)
         node.update_operation(chosen_op.type, chosen_op.params)
 
-The input of ``mutate`` is graph IR (Intermediate Representation) of the base model (please refer to `here <./ApiReference.rst>`__ for the format and APIs of the IR), users can mutate the graph using the graph's member functions (e.g., ``get_nodes_by_label``, ``update_operation``). The mutation operations can be combined with the API ``self.choice``, in order to express a set of possible mutations. In the above example, the node's operation can be changed to any operation from ``candidate_op_list``.
+``mutate`` 的输入是基本模型的 graph IR（请参考 `这里 <./ApiReference.rst>`__ 获取 IR 的格式和 API），用户可以使用其成员函数（例如， ``get_nodes_by_label``，``update_operation``）对图进行变异。 变异操作可以与 API ``self.choice`` 相结合，以表示一组可能的突变。 在上面的示例中，节点的操作可以更改为 ``candidate_op_list`` 中的任何操作。
 
-Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutate a subgraph or node of your model, you can define a placeholder in this model to represent the subgraph or node. Then, use mutator to mutate this placeholder to make it real modules.
+使用占位符使突变更容易：``nn.Placeholder``。 如果要更改模型的子图或节点，可以在此模型中定义一个占位符来表示子图或节点。 然后，使用 Mutator 对这个占位符进行变异，使其成为真正的模块。
 
 .. code-block:: python
 
@@ -49,9 +49,9 @@ Use placehoder to make mutation easier: ``nn.Placeholder``. If you want to mutat
     stride=stride
   )
 
-``label`` is used by mutator to identify this placeholder. The other parameters are the information that is required by mutator. They can be accessed from ``node.operation.parameters`` as a dict, it could include any information that users want to put to pass it to user defined mutator. The complete example code can be found in :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>`.
+``label`` 被 Mutator 所使用，来识别此占位符。 其他参数是突变器需要的信息。 它们可以从 ``node.operations.parameters`` 作为一个 dict 被访问，包括任何用户想传递给自定义突变器的信息。 完整的示例代码可以在 :githublink:`Mnasnet base model <examples/nas/multi-trial/mnasnet/base_mnasnet.py>` 找到。
 
-Starting an experiment is almost the same as using inline mutation APIs. The only difference is that the applied mutators should be passed to ``RetiariiExperiment``. Below is a simple example.
+开始一个实验与使用内联突变 API 几乎是一样的。 唯一的区别是，应用的突变器应该被传递给 ``RetiariiExperiment``。 示例如下：
 
 .. code-block:: python
 
