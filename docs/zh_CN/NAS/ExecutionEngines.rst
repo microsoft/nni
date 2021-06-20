@@ -51,9 +51,9 @@
 2. 将 ``config.execution_engine = 'base'`` 添加到 ``RetiariiExeConfig``。 ``execution_engine`` 的默认值是 'py'，即纯 Python 执行引擎。
 3. 必要时按照上述准则添加 ``@basic_unit``。
 
-For exporting top models, graph-based execution engine supports exporting source code for top models by running ``exp.export_top_models(formatter='code')``.
+对于导出最佳模型，基于图的执行引擎支持通过运行 ``exp.export_top_models(formatter='code')`` 来导出最佳模型的源代码。
 
-CGO Execution Engine
+CGO 执行引擎
 --------------------
 
-CGO execution engine does cross-model optimizations based on the graph-based execution engine. This execution engine will be `released in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
+CGO 执行引擎在基于图的执行引擎基础上进行跨模型的优化。 这个执行引擎将在 `v2.4 发布 <https://github.com/microsoft/nni/issues/3813>`__。
