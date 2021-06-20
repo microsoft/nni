@@ -1,22 +1,22 @@
-Model Evaluators
+模型 Evaluator
 ================
 
-A model evaluator is for training and validating each generated model.
+模型评估器（model evaluator）用于训练和验证每个生成的模型。
 
-Usage of Model Evaluator
-------------------------
+模型评估器的用法
+------------------------------------
 
-In multi-trial NAS, a sampled model should be able to be executed on a remote machine or a training platform (e.g., AzureML, OpenPAI). Thus, both the model and its model evaluator should be correctly serialized. To make NNI correctly serialize model evaluator, users should apply ``serialize`` on some of their functions and objects.
+在 multi-NAS 中，采样模型应该能够在远程机器或训练平台（例如 AzureML、OpenPAI）上执行。 因此，模型及其模型评估器都应该正确序列化。 为了使 NNI 正确地序列化模型评估器，用户应该在他们的一些函数和对象上应用 ``serialize`` 。
 
 .. _serializer:
 
-`serialize <./ApiReference.rst#utilities>`__ enables re-instantiation of model evaluator in another process or machine. It is implemented by recording the initialization parameters of user instantiated evaluator.
+`serialize <./ApiReference.rst#utilities>`__ 允许在另一个进程或机器中重新实例化模型评估器。 它是通过记录用户实例化的评估器的初始化参数来实现的。
 
-The evaluator related APIs provided by Retiarii have already supported serialization, for example ``pl.Classification``, ``pl.DataLoader``, no need to apply ``serialize`` on them. In the following case users should use ``serialize`` API manually.
+Retiarii 提供的评估器相关 API 已经支持序列化，例如 ``pl.Classification``, ``pl.DataLoader``，无需对其应用 ``serialize``。 在以下情况下，用户应该手动使用 ``serialize`` API。
 
-If the initialization parameters of the evaluator APIs (e.g., ``pl.Classification``, ``pl.DataLoader``) are not primitive types (e.g., ``int``, ``string``), they should be applied with  ``serialize``. If those parameters' initialization parameters are not primitive types, ``serialize`` should also be applied. In a word, ``serialize`` should be applied recursively if necessary.
+如果评估器 API 的初始化参数（例如 ``pl.Classification``、``pl.DataLoader``）不是原始类型（例如 ``int``, ``string``），它们应该是与 ``serialize`` 一起应用。 如果这些参数的初始化参数不是原始类型，``serialize`` 也应该被应用。 总而言之，如果有必要，``serialize`` 应该被递归应用。
 
-Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNIST`` are serialized manually using ``serialize``. ``serialize`` takes a class ``cls`` as its first argument, its following arguments are the arguments for initializing this class. ``pl.Classification`` is not applied ``serialize`` because it is already serializable as an API provided by NNI.
+以下是一个示例，``transforms.Compose``, ``transforms.Normalize`` 和 ``MNIST`` 应该通过 ``serialize`` 手动序列化。 ``serialize`` 以一个类 ``cls`` 作为它的第一个参数，它后面的参数是初始化这个类的参数。 ``pl.Classification`` 没有应用 ``serialize`` 因为它已经被 NNI 提供的 API 序列化。
 
 .. code-block:: python
 
@@ -31,10 +31,10 @@ Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNI
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
 
-Supported Model Evaluators
---------------------------
+支持的模型评估器
+----------------------------------------
 
-NNI provides some commonly used model evaluators for users' convenience. If these model evaluators do not meet users' requirement, they can customize new model evaluators following the tutorial `here <./WriteTrainer.rst>`__.
+NNI 提供了一些常用的模型评估器以方便用户使用。 如果这些模型评估器不满足用户的要求，您可以按照 `教程 <./WriteTrainer.rst>`__ 自定义新的模型评估器。
 
 ..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
     :noindex:
