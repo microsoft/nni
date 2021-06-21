@@ -1,15 +1,15 @@
 FBNet
 ======
 
-.. note:: This one-shot NAS is still implemented under NNI NAS 1.0, and will `be migrated to Retiarii framework in v2.4 <https://github.com/microsoft/nni/issues/3814>`__.
+.. note:: 这个 One-Shot NAS 仍然在 NNI NAS 1.0 下实现，将在 v2.4 中迁移到 `Retiarii 框架 <https://github.com/microsoft/nni/issues/3814>`__。
 
-For the mobile application of facial landmark, based on the basic architecture of PFLD model, we have applied the FBNet (Block-wise DNAS) to design an concise model with the trade-off between latency and accuracy. References are listed as below:
+对于人脸关键点的移动应用，基于 PFLD 模型的基本架构，我们应用 FBNet（Block-wise DNAS）设计了一个在延迟和准确率之间权衡的简洁模型。 参考资料如下：
 
 
 * `FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural Architecture Search <https://arxiv.org/abs/1812.03443>`__
 * `PFLD: A Practical Facial Landmark Detector <https://arxiv.org/abs/1902.10859>`__
 
-FBNet is a block-wise differentiable NAS method (Block-wise DNAS), where the best candidate building blocks can be chosen by using Gumbel Softmax random sampling and differentiable training. At each layer (or stage) to be searched, the diverse candidate blocks are side by side planned (just like the effectiveness of structural re-parameterization), leading to sufficient pre-training of the supernet. The pre-trained supernet is further sampled for finetuning of the subnet, to achieve better performance.
+FBNet 是一种分块可微分 NAS 方法（Block-wise DNAS），通过使用 Gumbel Softmax 随机采样和可微分训练来选择最佳候选构建块。 在要搜索的每一层（或阶段），并排规划不同的候选块（就像结构重新参数化的有效性一样），从而对超网络进行充分的预训练。 对预训练的超网进一步采样来对子网进行微调，以实现更好的性能。
 
 .. image:: ../../img/fbnet.png
    :target: ../../img/fbnet.png
