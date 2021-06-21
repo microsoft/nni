@@ -1,12 +1,12 @@
 自定义模型 Evaluator
 ===============================
 
-模型评估器对于评估新探索的模型的性能是必要的。 A model evaluator usually includes training, validating and testing of a single model. We provide two ways for users to write a new model evaluator, which will be demonstrated below respectively.
+模型评估器（Evaluator）对于评估新探索的模型的性能是必要的。 一个模型评估器通常包括训练、验证和测试一个单一的模型。 我们为用户提供了两种方法来编写新的模型评估器，下面将分别演示。
 
-With FunctionalEvaluator
+使用 FunctionalEvaluator
 ------------------------
 
-The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters. In this way, users get everything under their control, but expose less information to the framework and thus fewer opportunities for possible optimization. An example is as belows:
+定制一个新的评估器的最简单的方法是使用功能性的 API，当训练代码已经可用时，这就非常容易。 用户只需要编写一个 fit 函数来包装所有内容。 此函数接收一个位置参数（``model_cls``）和可能的关键字参数。 关键字参数（除 ``model_cls`` 外）作为 FunctionEvaluator 的初始化参数被输入。 通过这种方式，用户可以控制一切，但向框架公开的信息较少，因此进行优化的机会也较少。 示例如下。
 
 .. code-block:: python
 
