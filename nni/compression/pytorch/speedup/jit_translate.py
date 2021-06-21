@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import re
 import logging
 from functools import partial
 import torch
@@ -40,6 +41,32 @@ def translate_list(list_node, speedup=None):
             values.append(_i.toIValue())
     return values
 
+def parse_constant(cvalue, speedup):
+    """
+    Parse the constant values from this Node
+    Parameters
+    ----------
+    cvalue: Torch.C.Value
+        The cpp node of the target constant value.
+    speedup: ModelSpeedup
+        The Model speedup module.
+    Returns
+    -------
+    value: int/float/tensor
+        The constant values parsed from the node.
+    """
+    logger.debug('Try to parse the constant value: %s', cvalue.debugName())
+    if cvalue.toIValue() is not None:
+        return cvalue.toIValue()
+    if cvalue.debugName() in speedup.internal_result:
+        return speedup.internal_result[cvalue.debugName()]
+    # Get the operator node of the this value
+    op_node = cvalue.node()
+    # import pdb; pdb.set_trace()
+    inputs = op_node.inputs()
+    input_values = [parse_constant(_i, speedup) for _i in inputs]
+    func = trans_from_jit_to_python[op_node.kind()](op_node, speedup)
+    return func(*input_values)
 
 def dropout_python(node, speedup):
     return torch.dropout
@@ -61,6 +88,9 @@ def relu_inplace_python(node, speedup):
 def relu_python(node, speedup):
     return torch.relu
 
+def sigmoid_python(node, speedup):
+    return torch.sigmoid
+
 
 def mean_python(node, speedup):
     c_node = node.key_node
@@ -81,8 +111,13 @@ def add_python(node, speedup):
         if debug_name not in speedup.internal_result:
             # this input is a constant value
             # TODO: what if this input is a constant tensor
-            constant = input_i.toIValue()
-            break
+            if input_i.toIValue() is None:
+                import pdb; pdb.set_trace()
+            if input_i.toIValue() is not None:
+                constant = parse_constant(input_i, speedup)
+                break
+    if node.name == 'module_list.82.yolo_82.aten::add.292':
+        import pdb; pdb.set_trace()
     if constant is None:
         return torch.add
     else:
@@ -90,26 +125,69 @@ def add_python(node, speedup):
         return new_add
 
 
+def floor_div_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    divisor = inputs[1]
+    constant = None
+    if divisor.debugName() not in speedup.internal_result:
+        # divisor is a constant value/tensor
+        constant = parse_constant(divisor, speedup)
+    import pdb; pdb.set_trace()
+    if constant is None:
+        return torch.floor_divide
+    else:
+        new_op = partial(torch.floor_divide, other=constant)
+        return new_op
+
+
+def mul_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    constant = None
+    for i in range(2):
+        input_i = inputs[i]
+        debug_name = input_i.debugName()
+        if debug_name not in speedup.internal_result:
+            if input_i.toIValue() is None:
+                import pdb; pdb.set_trace()
+            if input_i.toIValue() is not None:
+                constant = input_i.toIValue()
+                break
+    if constant is None:
+        return torch.mul
+    else:
+        new_mul = partial(torch.mul, constant)
+        return new_mul
+
 def slice_python(node, speedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
             super(SliceMoudle, self).__init__()
             self.sliceobj = sliceobj
 
-        def forward(self, x):
+        def forward(self, x, *args):
+            # args is for the slice dimension and indexes, however,
+            # we already get them from the cpp nodes. Note, though, we
+            # don't need the slice indexes any more, we cannot remove this
+            # parameter here, because, there may be multiple inputs passed from
+            # previous nodes such as aten::size
+            logger.info('Model has Slice operation, and the operand size=%s, Slice object:%s', str(x.size()), str(self.sliceobj))
             return x[self.sliceobj]
 
+    import pdb; pdb.set_trace()
     c_node = node.key_node
     inputs = list(c_node.inputs())
 
-    slice_dim = inputs[1].toIValue()
-    slice_start = inputs[2].toIValue()
-    slice_end = inputs[3].toIValue()
-    slice_step = inputs[4].toIValue()
+    slice_dim = parse_constant(inputs[1], speedup)
+    slice_start = parse_constant(inputs[2], speedup)
+    slice_end = parse_constant(inputs[3], speedup)
+    slice_step = parse_constant(inputs[4], speedup)
     slice_obj = slice(slice_start, slice_end, slice_step)
     slice_list = []
-    for _ in range(slice_dim-1):
+    for _ in range(slice_dim):
         slice_list.append(slice(None, None))
+    logger.info('Slice dim:%s, Slice obj:%s', str(slice_dim), str(slice_obj))
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))
 
@@ -331,18 +409,53 @@ def upsample_bilinear2d_python(node, speedup):
                            size=size_list, scale_factor=scale_list)
     return new_upsample
 
+def num2tensor_python(node, speedup):
+    return torch.nn.Identity()
+
+def exp_python(node, speedup):
+    return torch.exp
+
+def getattr_python(node, speedup):
+    """
+    Note: Ops started with Prim:: is not taken as the key node,
+    so we directly pass the Cpp node into this funciton.
+    Parameters
+    ----------
+    node: torch._C.Node
+        The cpp node of prim::Getattr
+    speedup: ModelSpeedup
+        The corresponding speedup object.
+    """
+    class GetModule():
+        def __init__(self, key):
+            self.key = key
+
+        def forward(self, obj):
+            return getattr(obj, self.key)
+    # get the name of the attribute, for example
+    # prim::GetAttr[name="module_list"](%self.1)
+    assert node.kind() == 'prim::GetAttr'
+    pattern = '\[name=\"(.*?)\"\]'
+    key_words = re.findall(pattern, str(node))
+    assert len(key_words) == 1
+    return GetModule(key_words[0])
+
 
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
+    'aten::mul': mul_python,
+    'aten::mul_': mul_python,
     'aten::relu': relu_python,
+    'aten::relu_': relu_inplace_python,
+    'aten::sigmoid': sigmoid_python,
+    'aten::sigmoid_': sigmoid_python,
     # tanh behaives like relu
     'aten::tanh': relu_python,
     'aten::tanh_': relu_python,
     'aten::flatten': flatten_python,
     'aten::mean': mean_python,
     'aten::dropout': dropout_python,
-    'aten::relu_': relu_inplace_python,
     'aten::slice': slice_python,
     'aten::select': select_python,
     'aten::size': size_python,
@@ -354,6 +467,7 @@ trans_from_jit_to_python = {
     'aten::permute': permute_python,
     'aten::matmul': matmul_python,
     'aten::div': div_python,
+    'aten::floor_divide': floor_div_python,
     'aten::softmax': softmax_python,
     'aten::contiguous': contiguous_python,
     'aten::gelu': gelu_python,
@@ -364,8 +478,11 @@ trans_from_jit_to_python = {
     'aten::to': to_python,
     'aten::type_as': typeas_python,
     'aten::upsample_bilinear2d': upsample_bilinear2d_python,
+    'aten::exp': exp_python,
     'prim::TupleUnpack': tupleunpack_python,
-    'prim::ListUnpack': tupleunpack_python
+    'prim::ListUnpack': tupleunpack_python,
+    'prim::NumToTensor': num2tensor_python,
+    'prim::GetAttr': getattr_python
 
 }
 

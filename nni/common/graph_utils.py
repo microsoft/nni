@@ -71,7 +71,11 @@ class TorchGraph:
     def _trace(self, model, dummy_input):
         training = model.training
         model.eval()
-        self.trace = torch.jit.trace(model, dummy_input)
+        kw_args = {}
+        if torch.__version__ >= '1.6.0':
+            # only pytorch with version greater than 1.6.0 has the strict option
+            kw_args['strict'] = False
+        self.trace = torch.jit.trace(model, dummy_input, **kw_args)
         torch._C._jit_pass_inline(self.trace.graph)
         model.train(training)
 
