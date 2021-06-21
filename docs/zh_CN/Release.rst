@@ -70,8 +70,7 @@ Web 界面
 * 在 README 中添加 pipeline 徽章 (#3589)
 * 更新问题报告模板 (#3501)
 
-
-* 用户体验改善及缺陷修复
+Bug 修复 & 微小更新
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * 修复 Windows 上的语法错误 (#3634)
@@ -132,7 +131,7 @@ nnictl & nni.experiment
 * 支持 Windows 作为重用模式下的远程训练平台 (#3500)
 * 移除远程训练平台中重复的env文件夹 (#3472)
 * 为 GPU 指标收集器添加日志信息 (#3506)
-*启用 FrameworkController 训练服务的 Pod Spec (#3379，感谢外部贡献者 @mbu93)
+* 启用 FrameworkController 训练服务的 Pod Spec (#3379，感谢外部贡献者 @mbu93)
 
 Web 界面
 """"""""""
@@ -251,7 +250,7 @@ Web 界面
 
 
 Web 界面和 nnictl 
-""""""""""
+""""""""""""""""""""
 
 * 增加实验管理 Web 界面 (#3081 #3127)
 * 改进概览页布局 (#3046 #3123)
@@ -877,7 +876,7 @@ Bug 修复
 
     * 提供自动特征接口
     * 基于 Beam 搜索的 Tuner
-    * `增加 Pakdd 示例<https://github.com/microsoft/nni/tree/v1.0/examples/trials/auto-feature-engineering>`__
+    * `增加 Pakdd 示例 <https://github.com/microsoft/nni/tree/v1.0/examples/trials/auto-feature-engineering>`__
 
   * 添加并行算法提高 TPE 在高并发下的性能。  -PR #1052
   * 为 hyperband 支持多阶段    -PR #1257

@@ -47,7 +47,7 @@ NNI的模型压缩流水线。 对于压缩预训练的模型，剪枝和量化�
      - 根据权重的绝对值，来按比例修剪权重。
    * - `AGP Pruner <../Compression/Pruner.rst#agp-pruner>`__
      - 自动的逐步剪枝（是否剪枝的判断：基于对模型剪枝的效果）`参考论文 <https://arxiv.org/abs/1710.01878>`__
-   * - `Lottery Ticket Pruner <../Compression/Pruner.rst#lottery-ticket-hypothesis>`__
+   * - `Lottery Ticket Pruner <../Compression/Pruner.rst#lottery-ticket>`__
      - "The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks" 提出的剪枝过程。 它会反复修剪模型。 `参考论文 <https://arxiv.org/abs/1803.03635>`__
    * - `FPGM Pruner <../Compression/Pruner.rst#fpgm-pruner>`__
      - Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration `参考论文 <https://arxiv.org/pdf/1811.00250.pdf>`__

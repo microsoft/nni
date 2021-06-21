@@ -53,7 +53,7 @@ Step2. 选择 Pruner 来压缩模型
         train(args, model, device, train_loader, optimizer_finetune, epoch)
         test(model, device, test_loader)
 
-更多关于微调的 API 在 `这里 <./Tutorial.rst#apis-to-control-the-fine-tuning>`__。 
+更多关于微调的 API 在 `这里 <./Tutorial.rst#api>`__。 
 
 
 Step3. 导出压缩结果

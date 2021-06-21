@@ -43,7 +43,7 @@
      - Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 `参考论文 <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__\ , `Github 仓库 <https://github.com/fmfn/BayesianOptimization>`__
    * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner 是一种简单的异步优化算法，在固定的计算资源下，它能有效的联合优化一组模型及其超参来最大化性能。 `参考论文 <https://arxiv.org/abs/1711.09846v1>`__
-   PPO Tuner
+   * - `DNGO Tuner <#DNGOTuner>`__
      - 使用神经网络作为 GP 的替代方法，对贝叶斯优化中的函数分布进行建模。
 
 用法

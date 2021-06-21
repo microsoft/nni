@@ -4,13 +4,13 @@ Experiment 配置
 
 创建 Experiment 所需要的配置文件。 本文介绍了配置文件的内容，并提供了一些示例。
 
-.. 注意
+.. Note::
 
     1. 此文档的字段使用 ``camelCase`` 法命名。 对于 Python 库 ``nni.experiment``，需要转换成 ``snake_case`` 形式。
 
     2. 在此文档中，字段类型被格式化为 `Python 类型提示 <https://docs.python.org/3.10/library/typing.html>`__。 因此，JSON 对象被称为 `dict`，数组被称为 `list`。
 
-    .. _路径: 
+    .. _path: 
 
     3. 一些字段采用文件或目录的路径， 除特别说明，均支持绝对路径和相对路径，``~`` 将扩展到 home 目录。
 
@@ -103,7 +103,7 @@ Experiment 配置
 =========
 
 Experiment（实验）配置参考
-^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 experimentName
 --------------
@@ -116,7 +116,7 @@ Experiment 的助记名称， 这将显示在 WebUI 和 nnictl 中。
 searchSpaceFile
 ---------------
 
-包含搜索空间 JSON 文件的\ 路径_ 。
+包含搜索空间 JSON 文件的路径（path_）。
 
 类型：``Optional[str]``
 
@@ -154,7 +154,7 @@ trialCommand
 trialCodeDirectory
 ------------------
 
-到 Trial 源文件的目录的 路径_。
+到 Trial 源文件的目录的路径（path_）。
 
 类型：``str``
 
@@ -371,7 +371,7 @@ className
 codeDirectory
 -------------
 
-到自定义算法类的目录的 路径_。
+到自定义算法类的目录的路径（path_）。
 
 类型：对于内置和注册算法使用 ``str``，其他自定义算法使用 ``None``
 
@@ -393,11 +393,11 @@ TrainingServiceConfig
 
 - `LocalConfig`_
 - `RemoteConfig`_
-- `OpenpaiConfig <openpai-class>`_
+- :ref:`OpenpaiConfig <openpai-class>`
 - `AmlConfig`_
------------------
+- `HybridConfig`_
 
-对于其他训练平台，目前 NNI 建议使用 `v1 配置模式 <../Tutorial/ExperimentConfig.rst>`_ 。
+对于 `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, 和 `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ 训练平台，目前 NNI 建议使用 `v1 配置模式 <../Tutorial/ExperimentConfig.rst>`_ 。
 
 
 LocalConfig
@@ -485,7 +485,7 @@ RemoteMachineConfig
 """""""""""""""""""
 
 host
--------------------
+****
 
 机器的 IP 或主机名（域名）。
 
@@ -493,7 +493,7 @@ host
 
 
 port
-=====
+****
 
 SSH 服务端口。
 
@@ -503,7 +503,7 @@ SSH 服务端口。
 
 
 user
-----------
+****
 
 登录用户名。
 
@@ -511,7 +511,7 @@ user
 
 
 password
----------------------------
+********
 
 登录密码。
 
@@ -521,9 +521,9 @@ password
 
 
 sshKeyFile
-----------
+**********
 
-到 sshKeyFile的 路径_ 。
+到 sshKeyFile的路径（path_）。
 
 类型：``Optional[str]``
 
@@ -531,7 +531,7 @@ sshKeyFile
 
 
 sshPassphrase
-----------
+*************
 
 SSH 标识文件的密码。
 
@@ -539,7 +539,7 @@ SSH 标识文件的密码。
 
 
 useActiveGpu
-^^^^^^^^^
+************
 
 指定 NNI 是否应向被其他任务占用的 GPU 提交 Trial。
 
@@ -562,7 +562,7 @@ useActiveGpu
 
 
 maxTrialNumberPerGpu
-^^^^^^^^^^^^
+********************
 
 指定可以共享一个 GPU 的 Trial 数目。
 
@@ -572,7 +572,7 @@ maxTrialNumberPerGpu
 
 
 gpuIndices
-^^^^^^^^^^^^^
+**********
 
 设定对 Trial 进程可见的 GPU。
 
@@ -583,8 +583,8 @@ gpuIndices
 这用作环境变量 ``CUDA_VISIBLE_DEVICES``。
 
 
-- 在 Python 代码中赋值时，相对路径是相对于当前工作目录的路径。
---------------------
+pythonPath
+**********
 
 指定 Python 环境。
 
@@ -645,7 +645,7 @@ OpenPAI 用户令牌。
 这可以在 OpenPAI 用户设置页面中找到。
 
 
-trialPrepareCommand
+trialCpuNumber
 """"""""""""""
 
 指定每个 Trial 在 OpenPAI 容器中使用的 CPU 数。
@@ -665,7 +665,7 @@ trialMemorySize
 示例：``"8gb"``, ``"8192mb"``
 
 
-nniManagerStorageMountPoint
+storageConfigName
 """""""""""""""""
 
 设置 OpenPAI 中使用的存储名称。
@@ -722,7 +722,7 @@ openpaiConfig
 openpaiConfigFile
 """""""""""""""""
 
-到 OpenPAI 配置文件的 `路径`_
+到 OpenPAI 配置文件的路径（path_）
 
 类型：``Optional[list[int] | str]``
 

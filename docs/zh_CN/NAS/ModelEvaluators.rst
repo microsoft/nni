@@ -10,7 +10,7 @@
 
 .. _serializer:
 
-`serialize <./ApiReference.rst#utilities>`__ 允许在另一个进程或机器中重新实例化模型评估器。 它是通过记录用户实例化的评估器的初始化参数来实现的。
+`serialize <./ApiReference.rst#id7>`__ 允许在另一个进程或机器中重新实例化模型评估器。 它是通过记录用户实例化的评估器的初始化参数来实现的。
 
 Retiarii 提供的评估器相关 API 已经支持序列化，例如 ``pl.Classification``, ``pl.DataLoader``，无需对其应用 ``serialize``。 在以下情况下，用户应该手动使用 ``serialize`` API。
 

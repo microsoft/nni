@@ -25,9 +25,9 @@ Retiarii 的探索性训练允许用户以高度灵活的方式表达 *神经网
     :maxdepth: 2
 
     概述 <NAS/Overview>
-    自定义 NAS 算法 <NAS/Advanced>
-    编写搜索空间 <NAS/WriteSearchSpace>
-    NAS 可视化 <NAS/Visualization>
+    快速入门 <NAS/QuickStart>
+    构建模型空间 <NAS/construct_space>
+    Multi-trial NAS <NAS/multi_trial_nas>
     One-Shot NAS <NAS/one_shot_nas>
     NAS 基准测试 <NAS/Benchmarks>
-    API 参考 <NAS/NasReference>
+    NAS API 参考 <NAS/ApiReference>

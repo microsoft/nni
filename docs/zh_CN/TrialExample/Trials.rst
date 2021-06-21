@@ -159,10 +159,10 @@ NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 
 
 .. code-block:: python
 
-   ＃注意：请为 Trial 代码中的超参分配默认值
+   # 注意：请为 Trial 代码中的超参分配默认值
    nni.get_next_parameter # 返回 {}
-   nni.report_final_result ＃已在 stdout 上打印日志，但不报告
-   nni.report_intermediate_result # ＃已在 stdout 上打印日志，但不报告
+   nni.report_final_result # 已在 stdout 上打印日志，但不报告
+   nni.report_intermediate_result # 已在 stdout 上打印日志，但不报告
    nni.get_experiment_id # 返回 "STANDALONE"
    nni.get_trial_id # 返回 "STANDALONE"
    nni.get_sequence_id # 返回 0

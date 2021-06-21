@@ -28,5 +28,5 @@ NNI 中也内置了一些流程的模型压缩算法。
     剪枝 <Compression/pruning>
     量化 <Compression/quantization>
     工具 <Compression/CompressionUtils>
-    API 参考 <Compression/CompressionReference>
+    高级用法 <Compression/advanced>
     API 参考 <Compression/CompressionReference>
