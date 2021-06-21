@@ -103,9 +103,9 @@ def parse_args():
     # Additional training settings 
     parser.add_argument('--batch_size', type=int, default=1,
                         help='input batch size for training (default: 1)')
-    parser.add_argument('--n_epochs', type=int, default=10,
+    parser.add_argument('--n_epochs', type=int, default=100,
                         help='number of epochs with the initial learning rate')
-    parser.add_argument('--n_epochs_decay', type=int, default=10,
+    parser.add_argument('--n_epochs_decay', type=int, default=100,
                         help='number of epochs to linearly decay learning rate to zero')
     
     args, _ = parser.parse_known_args()
