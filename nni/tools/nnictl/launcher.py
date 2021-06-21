@@ -310,6 +310,7 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
             print_error('Setting experiment error, error message is {0}'.format(response.text))
+            print_error(response.text)
         return None
 
 def set_experiment_v2(experiment_config, mode, port, config_file_name):
@@ -323,6 +324,7 @@ def set_experiment_v2(experiment_config, mode, port, config_file_name):
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
             print_error('Setting experiment error, error message is {0}'.format(response.text))
+            print_error(response.text)
         return None
 
 def set_platform_config(platform, experiment_config, port, config_file_name, rest_process):
