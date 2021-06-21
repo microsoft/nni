@@ -433,6 +433,14 @@ class ModelSpeedup:
                 debug_name = _output.debugName()
                 if debug_name not in self.debugname_to_value:
                     self.debugname_to_value[debug_name] = _output
+        # put the model itself into internel_result to perform the
+        # value inference for the 'prim::GetAttr', the first ClassType
+        # of the whole graph is the model class
+
+        for graph_input in traced_graph.inputs():
+            if graph_input.type().kind() == 'ClassType':
+                self.internal_result[graph_input.debugName()] = self.bound_model
+                break
 
     def speedup_model(self):
         """

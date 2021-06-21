@@ -151,8 +151,10 @@ def mul_python(node, speedup):
         if debug_name not in speedup.internal_result:
             if input_i.toIValue() is None:
                 import pdb; pdb.set_trace()
+            constant = parse_constant(input_i, speedup)
             if input_i.toIValue() is not None:
                 constant = input_i.toIValue()
+                # both two inputs cannot be constants at the same time
                 break
     if constant is None:
         return torch.mul
@@ -426,11 +428,13 @@ def getattr_python(node, speedup):
     speedup: ModelSpeedup
         The corresponding speedup object.
     """
-    class GetModule():
+    class GetModule(torch.nn.Module):
         def __init__(self, key):
+            super(GetModule, self).__init__()
             self.key = key
 
         def forward(self, obj):
+            logger.info('Get attribute: %s', self.key)
             return getattr(obj, self.key)
     # get the name of the attribute, for example
     # prim::GetAttr[name="module_list"](%self.1)
