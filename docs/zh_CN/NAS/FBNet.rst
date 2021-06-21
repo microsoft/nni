@@ -3,7 +3,7 @@ FBNet
 
 .. note:: 这个 One-Shot NAS 仍然在 NNI NAS 1.0 下实现，将在 v2.4 中迁移到 `Retiarii 框架 <https://github.com/microsoft/nni/issues/3814>`__。
 
-对于人脸关键点的移动应用，基于 PFLD 模型的基本架构，我们应用 FBNet（Block-wise DNAS）设计了一个在延迟和准确率之间权衡的简洁模型。 参考资料如下：
+对于 facial landmark 的移动应用，基于 PFLD 模型的基本架构，我们应用 FBNet（Block-wise DNAS）设计了一个在延迟和准确率之间权衡的简洁模型。 参考资料如下：
 
 
 * `FBNet: Hardware-Aware Efficient ConvNet Design via Differentiable Neural Architecture Search <https://arxiv.org/abs/1812.03443>`__
@@ -16,29 +16,29 @@ FBNet 是一种分块可微分 NAS 方法（Block-wise DNAS），通过使用 Gu
    :alt:
 
 
-PFLD is a lightweight facial landmark model for realtime application. The architecture of PLFD is firstly simplified for acceleration, by using the stem block of PeleeNet, average pooling with depthwise convolution and eSE module.
+PFLD 是一种用于实时应用的轻量级 facial landmark 模型。 通过使用 PeleeNet 的 stem 块、深度卷积的平均池化和 eSE 模块，PLFD 的结构首先被简化加速。
 
-To achieve better trade-off between latency and accuracy, the FBNet is further applied on the simplified PFLD for searching the best block at each specific layer. The search space is based on the FBNet space, and optimized for mobile deployment by using the average pooling with depthwise convolution and eSE module etc.
+为了在延迟和准确性之间取得更好的平衡，FBNet 被进一步应用于简化的 PFLD，以便在每个特定层搜索最佳块。 搜索空间以 FBNet 空间为基础，并通过使用深度卷积的平均池化和 eSE 模块等对移动部署进行优化。
 
 
-Experiments
+实验
 ------------
 
-To verify the effectiveness of FBNet applied on PFLD, we choose the open source dataset with 106 landmark points as the benchmark:
+为了验证 FBNet 应用于 PFLD 的有效性，我们选择具有 106 个 landmark 的开源数据集作为基准：
 
-* `Grand Challenge of 106-Point Facial Landmark Localization <https://arxiv.org/abs/1905.03469>`__
+* `106个点的 Facial Landmark Localization 大挑战 <https://arxiv.org/abs/1905.03469>`__
 
-The baseline model is denoted as MobileNet-V3 PFLD (`Reference baseline <https://github.com/Hsintao/pfld_106_face_landmarks>`__), and the searched model is denoted as Subnet. The experimental results are listed as below, where the latency is tested on Qualcomm 625 CPU (ARMv8):
+基线模型表示为 MobileNet-V3 PFLD（`参考基线 <https://github.com/Hsintao/pfld_106_face_landmarks>`__），搜索到的模型表示为 Subnet。 实验结果如下，其中延迟在高通625 CPU（ARMv8）上测试：
 
 
 .. list-table::
    :header-rows: 1
    :widths: auto
 
-   * - Model
-     - Size
-     - Latency
-     - Validation NME
+   * - 模型
+     - 大小
+     - 延迟
+     - 验证 NME
    * - MobileNet-V3 PFLD
      - 1.01MB
      - 10ms
@@ -49,14 +49,14 @@ The baseline model is denoted as MobileNet-V3 PFLD (`Reference baseline <https:/
      - 5.58%
 
 
-Example
+示例
 --------
 
-`Example code <https://github.com/microsoft/nni/tree/master/examples/nas/oneshot/pfld>`__
+`示例代码 <https://github.com/microsoft/nni/tree/master/examples/nas/oneshot/pfld>`__
 
-Please run the following scripts at the example directory.
+请在示例目录下运行下面的脚本。
 
-The Python dependencies used here are listed as below:
+此处使用的 Python 依赖如下所示：
 
 .. code-block:: bash
 
@@ -68,10 +68,10 @@ The Python dependencies used here are listed as below:
    onnx-simplifier==0.3.5
    onnxruntime==1.7.0
 
-Data Preparation
+数据准备
 -----------------
 
-Firstly, you should download the dataset `106points dataset <https://drive.google.com/file/d/1I7QdnLxAlyG2Tq3L66QYzGhiBEoVfzKo/view?usp=sharing>`__ to the path ``./data/106points`` . The dataset includes the train-set and test-set:
+首先，您应该将数据集 `106points dataset <https://drive.google.com/file/d/1I7QdnLxAlyG2Tq3L66QYzGhiBEoVfzKo/view?usp=sharing>`__ 下载到路径 ``./data/106points`` 。 数据集包括训练集和测试集：
 
 .. code-block:: bash
 
@@ -81,13 +81,13 @@ Firstly, you should download the dataset `106points dataset <https://drive.googl
    ./data/106points/test_data/list.txt
 
 
-Quik Start
+快速入门
 -----------
 
-1. Search
+1. 搜索
 ^^^^^^^^^^
 
-Based on the architecture of simplified PFLD, the setting of multi-stage search space and hyper-parameters for searching should be firstly configured to construct the supernet, as an example:
+基于简化的 PFLD 架构，以构建超网为例，首先应配置多阶段搜索空间和搜索的超参数。
 
 .. code-block:: bash
 
@@ -96,8 +96,8 @@ Based on the architecture of simplified PFLD, the setting of multi-stage search 
    from lib.supernet import PFLDInference, AuxiliaryNet
    from nni.algorithms.nas.pytorch.fbnet import LookUpTable, NASConfig,
 
-   # configuration of hyper-parameters
-   # search_space defines the multi-stage search space
+   # 超参数配置
+   # search_space 定义多阶段搜索空间
    nas_config = NASConfig(
           model_dir="./ckpt_save",
           nas_lr=0.01,
@@ -106,48 +106,48 @@ Based on the architecture of simplified PFLD, the setting of multi-stage search 
           beta=0.6,
           search_space=search_space,
       )
-   # lookup table to manage the information
+   # 管理信息的查询表
    lookup_table = LookUpTable(config=nas_config, primitives=PRIMITIVES)
-   # created supernet
+   # 创建超网
    pfld_backbone = PFLDInference(lookup_table)
 
 
-After creation of the supernet with the specification of search space and hyper-parameters, we can run below command to start searching and training of the supernet:
+在创建了搜索空间和超参数的超网后，我们可以运行以下命令开始搜索和训练超网。
 
 .. code-block:: bash
 
    python train.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points"
 
-The validation accuracy will be shown during training, and the model with best accuracy will be saved as ``./ckpt_save/supernet/checkpoint_best.pth``.
+训练过程中会显示验证准确率，准确率最高的模型会被保存为 ``./ckpt_save/supernet/checkpoint_best.pth``。
 
 
-2. Finetune
+2. 微调
 ^^^^^^^^^^^^
 
-After pre-training of the supernet, we can run below command to sample the subnet and conduct the finetuning:
+在对超网进行预训练后，我们可以运行以下命令对子网进行采样并进行微调：
 
 .. code-block:: bash
 
    python retrain.py --dev_id "0,1" --snapshot "./ckpt_save" --data_root "./data/106points" \
                      --supernet "./ckpt_save/supernet/checkpoint_best.pth"
 
-The validation accuracy will be shown during training, and the model with best accuracy will be saved as ``./ckpt_save/subnet/checkpoint_best.pth``.
+训练过程中会显示验证准确率，准确率最高的模型会被保存为 ``./ckpt_save/subnet/checkpoint_best.pth``。
 
 
-3. Export
+3. 导出
 ^^^^^^^^^^
 
-After the finetuning of subnet, we can run below command to export the ONNX model:
+在对子网进行微调后，我们可以运行以下命令来导出 ONNX 模型。
 
 .. code-block:: bash
 
    python export.py --supernet "./ckpt_save/supernet/checkpoint_best.pth" \
                     --resume "./ckpt_save/subnet/checkpoint_best.pth"
 
-ONNX model is saved as ``./output/subnet.onnx``, which can be further converted to the mobile inference engine by using `MNN <https://github.com/alibaba/MNN>`__ .
+ONNX 模型被保存为 ``./output/subnet.onnx``，可以通过使用 `MNN <https://github.com/alibaba/MNN>`__ 进一步转换为移动推理引擎。
 
-The checkpoints of pre-trained supernet and subnet are offered as below:
+我们提供了预训练超网和子网的 checkpoint：
 
-* `Supernet <https://drive.google.com/file/d/1TCuWKq8u4_BQ84BWbHSCZ45N3JGB9kFJ/view?usp=sharing>`__
-* `Subnet <https://drive.google.com/file/d/160rkuwB7y7qlBZNM3W_T53cb6MQIYHIE/view?usp=sharing>`__
-* `ONNX model <https://drive.google.com/file/d/1s-v-aOiMv0cqBspPVF3vSGujTbn_T_Uo/view?usp=sharing>`__
+* `超网 <https://drive.google.com/file/d/1TCuWKq8u4_BQ84BWbHSCZ45N3JGB9kFJ/view?usp=sharing>`__
+* `子网 <https://drive.google.com/file/d/160rkuwB7y7qlBZNM3W_T53cb6MQIYHIE/view?usp=sharing>`__
+* `ONNX 模型 <https://drive.google.com/file/d/1s-v-aOiMv0cqBspPVF3vSGujTbn_T_Uo/view?usp=sharing>`__
