@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, './pix2pixlib')
+
 import os
 import logging
 import argparse
@@ -7,8 +10,9 @@ from PIL import Image
 import numpy as np
 import torch
 from nni.utils import merge_parameter
-from data import AlignedDataset, CustomDatasetDataLoader
-from pix2pix_model import Pix2PixModel
+from pix2pixlib.data.aligned_dataset import AlignedDataset
+from pix2pixlib.data import CustomDatasetDataLoader
+from pix2pixlib.models.pix2pix_model import Pix2PixModel
 from base_params import get_base_params
 
 

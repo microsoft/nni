@@ -1,3 +1,6 @@
+import sys
+sys.path.insert(0, './pix2pixlib')
+
 import os
 import logging
 import time
@@ -5,14 +8,49 @@ import argparse
 from collections import namedtuple
 import numpy as np
 import torch
+import torch.utils.data as data
 import nni
 from nni.utils import merge_parameter
-from data import AlignedDataset, CustomDatasetDataLoader
-from pix2pix_model import Pix2PixModel
+from pix2pixlib.data.aligned_dataset import AlignedDataset
+#from pix2pixlib.data import CustomDatasetDataLoader
+from pix2pixlib.models.pix2pix_model import Pix2PixModel
 from base_params import get_base_params
 
 
 _logger = logging.getLogger('example_pix2pix')
+
+
+class CustomDatasetDataLoader():
+    """Wrapper class of Dataset class that performs multi-threaded data loading"""
+
+    def __init__(self, opt, ds):
+        """Initialize this class
+        Step 1: create a dataset instance given the name [dataset_mode]
+        Step 2: create a multi-threaded data loader.
+        """
+        self.opt = opt
+        self.dataset = ds
+        # dataset_class = find_dataset_using_name(opt.dataset_mode)
+        # self.dataset = dataset_class(opt)
+        # print("dataset [%s] was created" % type(self.dataset).__name__)
+        self.dataloader = data.DataLoader(self.dataset,
+                                          batch_size=opt.batch_size,
+                                          shuffle=not opt.serial_batches,
+                                          num_workers=int(opt.num_threads))
+
+    def load_data(self):
+        return self
+
+    def __len__(self):
+        """Return the number of data in the dataset"""
+        return min(len(self.dataset), self.opt.max_dataset_size)
+
+    def __iter__(self):
+        """Return a batch of data"""
+        for i, data in enumerate(self.dataloader):
+            if i * self.opt.batch_size >= self.opt.max_dataset_size:
+                break
+            yield data
 
 
 def download_dataset(dataset_name):
@@ -69,9 +107,9 @@ def parse_args():
     # Additional training settings 
     parser.add_argument('--batch_size', type=int, default=1,
                         help='input batch size for training (default: 1)')
-    parser.add_argument('--n_epochs', type=int, default=100,
+    parser.add_argument('--n_epochs', type=int, default=10,
                         help='number of epochs with the initial learning rate')
-    parser.add_argument('--n_epochs_decay', type=int, default=100,
+    parser.add_argument('--n_epochs_decay', type=int, default=10,
                         help='number of epochs to linearly decay learning rate to zero')
     
     args, _ = parser.parse_known_args()
@@ -98,6 +136,7 @@ def main(dataset_name, train_params, test_params):
     test_config = namedtuple('Struct', test_params.keys())(*test_params.values())
     
     train_dataset, test_dataset = AlignedDataset(train_config), AlignedDataset(test_config)
+    print(train_dataset, train_config)
     train_dataset = CustomDatasetDataLoader(train_config, train_dataset)
     test_dataset = CustomDatasetDataLoader(test_config, test_dataset)
     _logger.info('Number of training images = {}'.format(len(train_dataset)))
