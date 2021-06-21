@@ -182,13 +182,30 @@ stages:
     - script: |
         set -e
         cd test
-        python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+        python -m pytest ut \
+          --doctest-modules --junitxml=junit/test-results.xml --cov=../nni --cov-report=xml --cov-report=html
+          --ignore=ut/sdk/test_pruners.py \
           --ignore=ut/sdk/test_compressor_tf.py \
           --ignore=ut/sdk/test_compressor_torch.py
-        python -m pytest ut/sdk/test_pruners.py
-        python -m pytest ut/sdk/test_compressor_tf.py
-        python -m pytest ut/sdk/test_compressor_torch.py
+        python -m pytest ut/sdk/test_pruners.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov=../nni --cov-report=xml --cov-report=html --cov-append
+        python -m pytest ut/sdk/test_compressor_tf.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov=../nni --cov-report=xml --cov-report=html --cov-append
+        python -m pytest ut/sdk/test_compressor_torch.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov=../nni --cov-report=xml --cov-report=html --cov-append
       displayName: Python unit test
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: '$(CodeDirectory)/**/test-*.xml'
+        testRunTitle: 'Publish test results for Python $(python.version)'
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(CodeDirectory)/**/coverage.xml'
+        reportDirectory: '$(CodeDirectory)/**/htmlcov'
 
     - script: |
         set -e
