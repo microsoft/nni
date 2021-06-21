@@ -39,6 +39,7 @@ After getting mixed precision engine, users can do inference with input data.
 Note
 
 
+* Recommend using "cpu"(host) as data device(for both inference data and calibration data) since data should be on host initially and it will be transposed to device before inference. If data type is not "cpu"(host), this tool will transpose it to "cpu" which may increases unnecessary overhead.
 * User can also do post-training quantization leveraging TensorRT directly(need to provide calibration dataset).
 * Not all op types are supported right now. At present, NNI supports Conv, Linear, Relu and MaxPool. More op types will be supported in the following release.
 
