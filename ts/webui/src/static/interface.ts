@@ -150,9 +150,9 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
-interface ClusterItem {
-    command?: string;
-}
+//interface ClusterItem {
+//    command?: string;
+//}
 
 interface ExperimentProfile {
     params: ExperimentConfig;
