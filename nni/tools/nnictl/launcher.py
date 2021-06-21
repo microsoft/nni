@@ -115,7 +115,7 @@ def set_trial_config(experiment_config, port, config_file_name):
     if check_response(response):
         return True
     else:
-        print('Error message is {0}'.format(response.text))
+        print('Error message is {}'.format(response.text))
         _, stderr_full_path = get_log_path(config_file_name)
         if response:
             with open(stderr_full_path, 'a+') as fout:
@@ -302,6 +302,7 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
         request_data['clusterMetaData'].append(
             {'key': 'trial_config', 'value': experiment_config['trial']})
     response = rest_post(experiment_url(port), json.dumps(request_data), REST_TIME_OUT, show_error=True)
+    print_normal(json.dumps(request_data))
     if check_response(response):
         return response
     else:
@@ -309,8 +310,9 @@ def set_experiment_v1(experiment_config, mode, port, config_file_name):
         if response is not None:
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-            print_error('Setting experiment error, error message is {0}'.format(response.text))
+            print_error('Setting experiment error, error message is {}'.format(response.text))
             print_error(response.text)
+            print_error(response.status_code)
         return None
 
 def set_experiment_v2(experiment_config, mode, port, config_file_name):
@@ -323,8 +325,7 @@ def set_experiment_v2(experiment_config, mode, port, config_file_name):
         if response is not None:
             with open(stderr_full_path, 'a+') as fout:
                 fout.write(json.dumps(json.loads(response.text), indent=4, sort_keys=True, separators=(',', ':')))
-            print_error('Setting experiment error, error message is {0}'.format(response.text))
-            print_error(response.text)
+            print_error('Setting experiment error, error message is {}'.format(response.text))
         return None
 
 def set_platform_config(platform, experiment_config, port, config_file_name, rest_process):
@@ -345,7 +346,7 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
     if config_result:
         print_normal('Successfully set {0} config!'.format(platform))
     else:
-        print_error('Failed! Error is: {0}'.format(err_msg))
+        print_error('Failed! Error is: {}'.format(err_msg))
         try:
             kill_command(rest_process.pid)
         except Exception:
