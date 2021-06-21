@@ -13,6 +13,7 @@ from nni.utils import merge_parameter
 from pix2pixlib.data.aligned_dataset import AlignedDataset
 from pix2pixlib.data import CustomDatasetDataLoader
 from pix2pixlib.models.pix2pix_model import Pix2PixModel
+from pix2pixlib.util.util import tensor2im
 from base_params import get_base_params
 
 
@@ -85,29 +86,6 @@ def parse_args():
     
     args, _ = parser.parse_known_args()
     return args
-
-
-
-def tensor2im(input_image, imtype=np.uint8):
-    """ 
-    Code adapted from https://github.com/junyanz/pytorch-CycleGAN-and-pix2pix 
-    Converts a Tensor array into a numpy image array.
-    Parameters:
-        input_image (tensor) --  the input image tensor array
-        imtype (type)        --  the desired type of the converted numpy array
-    """
-    if not isinstance(input_image, np.ndarray):
-        if isinstance(input_image, torch.Tensor):  # get the data from a variable
-            image_tensor = input_image.data
-        else:
-            return input_image
-        image_numpy = image_tensor[0].cpu().float().numpy()  # convert it into a numpy array
-        if image_numpy.shape[0] == 1:  # grayscale to RGB
-            image_numpy = np.tile(image_numpy, (3, 1, 1))
-        image_numpy = (np.transpose(image_numpy, (1, 2, 0)) + 1) / 2.0 * 255.0  # post-processing: tranpose and scaling
-    else:  # if it is a numpy array, do nothing
-        image_numpy = input_image
-    return image_numpy.astype(imtype)
 
 
 def main(test_params):

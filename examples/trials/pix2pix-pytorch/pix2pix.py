@@ -12,7 +12,6 @@ import torch.utils.data as data
 import nni
 from nni.utils import merge_parameter
 from pix2pixlib.data.aligned_dataset import AlignedDataset
-#from pix2pixlib.data import CustomDatasetDataLoader
 from pix2pixlib.models.pix2pix_model import Pix2PixModel
 from base_params import get_base_params
 
@@ -30,9 +29,6 @@ class CustomDatasetDataLoader():
         """
         self.opt = opt
         self.dataset = ds
-        # dataset_class = find_dataset_using_name(opt.dataset_mode)
-        # self.dataset = dataset_class(opt)
-        # print("dataset [%s] was created" % type(self.dataset).__name__)
         self.dataloader = data.DataLoader(self.dataset,
                                           batch_size=opt.batch_size,
                                           shuffle=not opt.serial_batches,
