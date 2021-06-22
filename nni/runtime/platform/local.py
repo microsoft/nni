@@ -7,8 +7,8 @@ import json
 import time
 import subprocess
 
-from ..env_vars import trial_env_vars
 from nni.utils import to_json
+from ..env_vars import trial_env_vars
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):

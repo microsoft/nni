@@ -76,13 +76,16 @@ def check_experiment_id(args, update=True):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                                      experiments_dict[key].get('experimentName', 'N/A'),
-                                                                      experiments_dict[key]['status'],
-                                                                      experiments_dict[key].get('port', 'N/A'),
-                                                                      experiments_dict[key].get('platform'),
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+                    key,
+                    experiments_dict[key].get('experimentName', 'N/A'),
+                    experiments_dict[key]['status'],
+                    experiments_dict[key].get('port', 'N/A'),
+                    experiments_dict[key].get('platform'),
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -136,13 +139,16 @@ def parse_ids(args):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                                      experiments_dict[key].get('experimentName', 'N/A'),
-                                                                      experiments_dict[key]['status'],
-                                                                      experiments_dict[key].get('port', 'N/A'),
-                                                                      experiments_dict[key].get('platform'),
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+                    key,
+                    experiments_dict[key].get('experimentName', 'N/A'),
+                    experiments_dict[key]['status'],
+                    experiments_dict[key].get('port', 'N/A'),
+                    experiments_dict[key].get('platform'),
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -615,13 +621,16 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
-        experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                              experiments_dict[key].get('experimentName', 'N/A'),
-                                                              experiments_dict[key]['status'],
-                                                              experiments_dict[key].get('port', 'N/A'),
-                                                              experiments_dict[key].get('platform'),
-                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+        experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+            key,
+            experiments_dict[key].get('experimentName', 'N/A'),
+            experiments_dict[key]['status'],
+            experiments_dict[key].get('port', 'N/A'),
+            experiments_dict[key].get('platform'),
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
     return experiment_id_list
 
@@ -656,9 +665,12 @@ def show_experiment_info():
         print_warning('There is no experiment running...')
         return
     for key in experiment_id_list:
-        print(EXPERIMENT_MONITOR_INFO % (key, experiments_dict[key]['status'], experiments_dict[key]['port'], \
-              experiments_dict[key].get('platform'), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'], \
-              get_time_interval(experiments_dict[key]['startTime'], experiments_dict[key]['endTime'])))
+        print(EXPERIMENT_MONITOR_INFO % (
+            key, experiments_dict[key]['status'], experiments_dict[key]['port'],
+            experiments_dict[key].get('platform'),
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+            get_time_interval(experiments_dict[key]['startTime'], experiments_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiments_dict[key]['port'])
         if running:
