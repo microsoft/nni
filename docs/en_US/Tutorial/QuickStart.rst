@@ -26,10 +26,6 @@ Windows
 
 .. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
 
-Enable NNI Command-line Auto-Completion (Optional)
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-After the installation, you may want to enable the auto-completion feature for **nnictl** commands. Please refer to this `tutorial <../CommunitySharings/AutoCompletion.rst>`__.
 
 "Hello World" example on MNIST
 ------------------------------
