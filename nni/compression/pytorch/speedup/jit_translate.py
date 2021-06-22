@@ -62,7 +62,7 @@ def parse_constant(cvalue, speedup):
         return speedup.internal_result[cvalue.debugName()]
     # Get the operator node of the this value
     op_node = cvalue.node()
-    # import pdb; pdb.set_trace()
+
     inputs = op_node.inputs()
     input_values = [parse_constant(_i, speedup) for _i in inputs]
     func = trans_from_jit_to_python[op_node.kind()](op_node, speedup)
@@ -111,8 +111,7 @@ def add_python(node, speedup):
         if debug_name not in speedup.internal_result:
             # this input is a constant value
             # TODO: what if this input is a constant tensor
-            # if input_i.toIValue() is None:
-            #     import pdb; pdb.set_trace()
+
             if input_i.toIValue() is not None:
                 constant = parse_constant(input_i, speedup)
                 break
@@ -131,7 +130,6 @@ def floor_div_python(node, speedup):
     if divisor.debugName() not in speedup.internal_result:
         # divisor is a constant value/tensor
         constant = parse_constant(divisor, speedup)
-    # import pdb; pdb.set_trace()
     if constant is None:
         return torch.floor_divide
     else:
@@ -147,8 +145,7 @@ def mul_python(node, speedup):
         input_i = inputs[i]
         debug_name = input_i.debugName()
         if debug_name not in speedup.internal_result:
-            # if input_i.toIValue() is None:
-            #     import pdb; pdb.set_trace()
+
             constant = parse_constant(input_i, speedup)
             if input_i.toIValue() is not None:
                 constant = input_i.toIValue()
@@ -175,7 +172,7 @@ def slice_python(node, speedup):
             logger.info('Model has Slice operation, and the operand size=%s, Slice object:%s', str(x.size()), str(self.sliceobj))
             return x[self.sliceobj]
 
-    # import pdb; pdb.set_trace()
+
     c_node = node.key_node
     inputs = list(c_node.inputs())
 
