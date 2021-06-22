@@ -198,15 +198,15 @@ stages:
     - task: PublishTestResults@2
       condition: succeededOrFailed()
       inputs:
-        testResultsFiles: '**/test-*.xml'
+        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
         testRunTitle: 'Publish test results for Python $(python.version)'
       displayName: Publish test results
 
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: '**/coverage.xml'
-        reportDirectory: '**/htmlcov'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
+        reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
       displayName: Publish code coverage results
 
     - script: |
