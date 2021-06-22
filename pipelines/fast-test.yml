@@ -193,6 +193,7 @@ stages:
           --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html --cov-append
         python -m pytest ut/sdk/test_compressor_torch.py \
           --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html --cov-append
+        ls -al .
       displayName: Python unit test
 
     - task: PublishTestResults@2
