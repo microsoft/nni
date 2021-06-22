@@ -181,17 +181,18 @@ stages:
 
     - script: |
         set -e
-        python -m pytest test/ut \
-          --doctest-modules --junitxml=junit/test-results.xml --cov-config=test/.coveragerc --cov-report=xml --cov-report=html
-          --ignore=test/ut/sdk/test_pruners.py \
-          --ignore=test/ut/sdk/test_compressor_tf.py \
-          --ignore=test/ut/sdk/test_compressor_torch.py
-        python -m pytest test/ut/sdk/test_pruners.py \
-            --doctest-modules --junitxml=junit/test-results.xml --cov-config=test/.coveragerc --cov-report=xml --cov-report=html --cov-append
-        python -m pytest test/ut/sdk/test_compressor_tf.py \
-            --doctest-modules --junitxml=junit/test-results.xml --cov-config=test/.coveragerc --cov-report=xml --cov-report=html --cov-append
-        python -m pytest test/ut/sdk/test_compressor_torch.py \
-            --doctest-modules --junitxml=junit/test-results.xml --cov-config=test/.coveragerc --cov-report=xml --cov-report=html --cov-append
+        cd test
+        python -m pytest ut \
+          --doctest-modules --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html
+          --ignore=ut/sdk/test_pruners.py \
+          --ignore=ut/sdk/test_compressor_tf.py \
+          --ignore=ut/sdk/test_compressor_torch.py
+        python -m pytest ut/sdk/test_pruners.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html --cov-append
+        python -m pytest ut/sdk/test_compressor_tf.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html --cov-append
+        python -m pytest ut/sdk/test_compressor_torch.py \
+            --doctest-modules --junitxml=junit/test-results.xml --cov-config=.coveragerc --cov-report=xml --cov-report=html --cov-append
       displayName: Python unit test
 
     - task: PublishTestResults@2

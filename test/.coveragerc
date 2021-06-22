@@ -1,8 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-parallel = True
-data_file = ${COVERAGE_DATA_FILE}
 source = nni
 
 concurrency = multiprocessing
@@ -26,6 +24,3 @@ exclude_lines =
     if __name__ == .__main__.:
 
 ignore_errors = True
-
-[html]
-directory = ${COVERAGE_HTML_DIR}
