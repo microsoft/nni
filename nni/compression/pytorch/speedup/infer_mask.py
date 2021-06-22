@@ -77,7 +77,7 @@ class AutoMaskInference:
         # TODO support the other batch dimension in the future
         self.batch_dim = batch_dim
 
-    def random_init(self, start=0.1, end=10):
+    def random_init(self, start=0.1, end=8.0):
         """
         Random initialize the weights of the module. The value of
         the tensor will not affect the mask auto inference.
