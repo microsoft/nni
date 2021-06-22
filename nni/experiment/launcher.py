@@ -12,7 +12,7 @@ from typing import Optional, Tuple
 
 import colorama
 
-import nni_node  # pylint: disable=wrong-import-order
+import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
