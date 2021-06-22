@@ -76,12 +76,14 @@ NNI is born to help users tune jobs, whose working process is presented below:
    6:          Stop the experiment
    7: return hyperparameter value with best final result
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, there are two approaches:
+.. note::
 
-1. Write a config file and start the experiment from the command line.
-2. Config and launch the experiment directly from a Python file
+   If you want to use NNI to automatically train your model and find the optimal hyper-parameters, there are two approaches:
 
-In the this part, we will focus on the first approach. For the second approach, please refer to `this tutorial <HowToLaunchFromPython.rst>`__\ .
+   1. Write a config file and start the experiment from the command line.
+   2. Config and launch the experiment directly from a Python file
+
+   In the this part, we will focus on the first approach. For the second approach, please refer to `this tutorial <HowToLaunchFromPython.rst>`__\ .
 
 
 Step 1: Define the Seach Space
@@ -151,14 +153,14 @@ Config the experiment in the YAML file which declares the ``path`` to the search
    trialConcurrency: 2                 # Run 2 trials concurrently
    maxTrialNumber: 10                  # Generate at most 10 trials
    maxExperimentDuration: 1h           # Stop generating trials after 1 hour
-   tuner:                              # Configure the tuning alogrithm
+   tuner:                              # Configure the tuning algorithm
       name: TPE
       classArgs:                       # Algorithm specific arguments
          optimize_mode: maximize
    trainingService:                    # Configure the training platform
       platform: local
 
-More detailed usage could be found `here <../reference/experiment_config.rst>`__\ .
+Experiment config reference could be found `here <../reference/experiment_config.rst>`__\ .
 
 .. _nniignore:
 
