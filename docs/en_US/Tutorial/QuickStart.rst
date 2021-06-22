@@ -4,7 +4,7 @@ QuickStart
 Installation
 ------------
 
-We currently support Linux, macOS, and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following ``pip install`` in an environment that has ``python >= 3.6``.
+Currently, NNI supports running on Linux, Mac and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following ``pip install`` in an environment that has ``python >= 3.6``.
 
 Linux and macOS
 ^^^^^^^^^^^^^^^
@@ -20,17 +20,17 @@ Windows
 
    python -m pip install --upgrade nni
 
-.. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory; this does not require any special privileges.
+.. Note:: For Linux and macOS, ``--user`` can be added if you want to install NNI in your home directory, which does not require any special privileges.
 
 .. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
 
-.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`.
+.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker.rst>`.
 
 
 "Hello World" example on MNIST
 ------------------------------
 
-NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters for a MNIST model.
+NNI is a toolkit to help users run automated machine learning experiments. It can automatically do the cyclic process of getting hyperparameters, running trials, testing results, and tuning hyperparameters. Here, we'll show how to use NNI to help you find the optimal hyperparameters on the MNIST dataset.
 
 Here is an example script to train a CNN on the MNIST dataset **without NNI**:
 
@@ -59,9 +59,9 @@ Here is an example script to train a CNN on the MNIST dataset **without NNI**:
         }
         main(params)
 
-The above code can only try one set of parameters at a time; if we want to tune learning rate, we need to manually modify the hyperparameter and start the trial again and again.
+The above code can only try one set of parameters at a time. If you want to tune the learning rate, you need to manually modify the hyperparameter and start the trial again and again.
 
-NNI is born to help the user do tuning jobs; the NNI working process is presented below:
+NNI is born to help users tune jobs, whose working process is presented below:
 
 .. code-block:: text
 
@@ -76,12 +76,18 @@ NNI is born to help the user do tuning jobs; the NNI working process is presente
    6:          Stop the experiment
    7: return hyperparameter value with best final result
 
-If you want to use NNI to automatically train your model and find the optimal hyper-parameters, you need to do three changes based on your code:
+If you want to use NNI to automatically train your model and find the optimal hyper-parameters, there are two approaches:
 
-Three steps to start an experiment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1. Write a config file and start the experiment from the command line.
+2. Config and launch the experiment directly from a Python file
 
-**Step 1**: Write a ``Search Space`` file in JSON, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you need to search.
+In the this part, we will focus on the first approach. For the second approach, please refer to `this tutorial <HowToLaunchFromPython.rst>`__\ .
+
+
+Step 1: Define the Seach Space
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Define a ``Search Space`` in the JSON file, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you want to search.
 
 .. code-block:: diff
 
@@ -95,7 +101,13 @@ Three steps to start an experiment
 
 *Example:* :githublink:`search_space.json <examples/trials/mnist-pytorch/search_space.json>`
 
-**Step 2**\ : Modify your ``Trial`` file to get the hyperparameter set from NNI and report the final result to NNI.
+For a more detailed tutorial on writing the search space, please see `here <SearchSpaceSpec.rst>`__. Besides, you can define your search space in the configuration file and skip this step, refer `here <eference/experiment_config.rst#local-mode-inline-search-space>`__\ .
+
+
+Step 2: Modify the ``Trial`` Code
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Modify your ``Trial`` file to get the hyperparameter set from NNI and report the final results to NNI.
 
 .. code-block:: diff
 
@@ -124,27 +136,29 @@ Three steps to start an experiment
 
 *Example:* :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>`
 
-**Step 3**\ : Define a ``config`` file in YAML which declares the ``path`` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
+
+Step 3: Config the Experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Config the experiment in the YAML file which declares the ``path`` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_mnist
-   trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 10
-   trainingServicePlatform: local
-   # The path to Search Space
-   searchSpacePath: search_space.json
-   useAnnotation: false
-   tuner:
-     builtinTunerName: TPE
-   # The path and the running command of trial
-   trial:
-     command: python3 mnist.py
-     codeDir: .
-     gpuNum: 0
+   experimentName: MNIST               # An optional name to distinguish the experiments
+   searchSpaceFile: search_space.json  # The path to the search space file
+   trialCommand: python3 mnist.py      # NOTE: change "python3" to "python" if you are using Windows
+   trialCodeDirectory: .               # The path to the trial code
+   trialConcurrency: 2                 # Run 2 trials concurrently
+   maxTrialNumber: 10                  # Generate at most 10 trials
+   maxExperimentDuration: 1h           # Stop generating trials after 1 hour
+   tuner:                              # Configure the tuning alogrithm
+      name: TPE
+      classArgs:                       # Algorithm specific arguments
+         optimize_mode: maximize
+   trainingService:                    # Configure the training platform
+      platform: local
 
+More detailed usage could be found `here <../reference/experiment_config.rst>`__\ .
 
 .. _nniignore:
 
@@ -154,19 +168,23 @@ Three steps to start an experiment
 
 All the code above is already prepared and stored in :githublink:`examples/trials/mnist-pytorch/ <examples/trials/mnist-pytorch>`.
 
-Linux and macOS
-^^^^^^^^^^^^^^^
 
-Run the **config.yml** file from your command line to start an MNIST experiment.
+Step 4: Launch the Experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Linux and macOS
+***************
+
+Run the **config.yml** file from your command line to start the experiment.
 
 .. code-block:: bash
 
    nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
 
 Windows
-^^^^^^^
+*******
 
-Run the **config_windows.yml** file from your command line to start an MNIST experiment.
+Run the **config_windows.yml** file from your command line to start the experiment.
 
 .. code-block:: bash
 
@@ -204,24 +222,25 @@ Wait for the message ``INFO: Successfully started experiment!`` in the command l
    8. nnictl --help                 get help information about nnictl
    -----------------------------------------------------------------------
 
-If you prepared ``trial``\ , ``search space``\ , and ``config`` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the requirements you set. You can clearly see its progress through the NNI WebUI.
+If you prepared ``trial``\ , ``search space``\ , and ``config`` according to the above steps and successfully created an NNI job, NNI will automatically tune the optimal hyper-parameters and run different hyper-parameter sets for each trial according to the defined search space. You can see its progress through the WebUI clearly.
 
-WebUI
------
 
-After you start your experiment in NNI successfully, you can find a message in the command-line interface that tells you the ``Web UI url`` like this:
+Step 5: View the Experiment
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+After starting the experiment successfully, you can find a message in the command-line interface that tells you the ``Web UI url`` like this:
 
 .. code-block:: text
 
    The Web UI urls are: [Your IP]:8080
 
-Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser; you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ.rst>`__.
-
-View overview page
-^^^^^^^^^^^^^^^^^^
+Open the ``Web UI url`` (Here it's: ``[Your IP]:8080``\ ) in your browser, you can view detailed information about the experiment and all the submitted trial jobs as shown below. If you cannot open the WebUI link in your terminal, please refer to the `FAQ <FAQ.rst#could-not-open-webui-link>`__.
 
 
-Information about this experiment will be shown in the WebUI, including the experiment trial profile and search space message. NNI also supports downloading this information and the parameters through the **Experiment summary** button.
+View Overview Page
+******************
+
+Information about this experiment will be shown in the WebUI, including the experiment profile and search space message. NNI also supports downloading this information and the parameters through the **Experiment summary** button.
 
 
 .. image:: ../../img/webui-img/full-oview.png
@@ -229,11 +248,10 @@ Information about this experiment will be shown in the WebUI, including the expe
    :alt: overview
 
 
+View Trials Detail Page
+***********************
 
-View trials detail page
-^^^^^^^^^^^^^^^^^^^^^^^
-
-We could see best trial metrics and hyper-parameter graph in this page. And the table content includes more columns when you click the button ``Add/Remove columns``.
+You could see the best trial metrics and hyper-parameter graph in this page. And the table content includes more columns when you click the button ``Add/Remove columns``.
 
 
 .. image:: ../../img/webui-img/full-detail.png
@@ -241,9 +259,8 @@ We could see best trial metrics and hyper-parameter graph in this page. And the 
    :alt: detail
 
 
-
-View experiments management page
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+View Experiments Management Page
+********************************
 
 On the ``All experiments`` page, you can see all the experiments on your machine. 
 
@@ -251,22 +268,18 @@ On the ``All experiments`` page, you can see all the experiments on your machine
    :target: ../../img/webui-img/managerExperimentList/expList.png
    :alt: Experiments list
 
+For more detailed usage of WebUI, please refer to `this doc <./WebUI.rst>`__.
 
-
-More detail please refer `the doc <./WebUI.rst>`__.
 
 Related Topic
 -------------
 
+* `How to debug? <HowToDebug.rst>`__
+* `How to write a trial? <../TrialExample/Trials.rst>`__
+* `How to try different Tuners? <../Tuner/BuiltinTuner.rst>`__
+* `How to try different Assessors? <../Assessor/BuiltinAssessor.rst>`__
+* `How to run an experiment on the different training platforms? <../training_services.rst>`__
+* `How to use Annotation? <AnnotationSpec.rst>`__
+* `How to use the command line tool nnictl? <Nnictl.rst>`__
+* `How to launch Tensorboard on WebUI? <Tensorboard.rst>`__
 
-* `Launch Tensorboard on WebUI <Tensorboard.rst>`__
-* `Try different Tuners <../Tuner/BuiltinTuner.rst>`__
-* `Try different Assessors <../Assessor/BuiltinAssessor.rst>`__
-* `How to use command line tool nnictl <Nnictl.rst>`__
-* `How to write a trial <../TrialExample/Trials.rst>`__
-* `How to run an experiment on local (with multiple GPUs)? <../TrainingService/LocalMode.rst>`__
-* `How to run an experiment on multiple machines? <../TrainingService/RemoteMachineMode.rst>`__
-* `How to run an experiment on OpenPAI? <../TrainingService/PaiMode.rst>`__
-* `How to run an experiment on Kubernetes through Kubeflow? <../TrainingService/KubeflowMode.rst>`__
-* `How to run an experiment on Kubernetes through FrameworkController? <../TrainingService/FrameworkControllerMode.rst>`__
-* `How to run an experiment on Kubernetes through AdaptDL? <../TrainingService/AdaptDLMode.rst>`__
