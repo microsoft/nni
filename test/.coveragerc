@@ -1,7 +1,6 @@
 # .coveragerc to control coverage.py
 [run]
 branch = True
-source = nni
 
 concurrency = multiprocessing
 
@@ -24,6 +23,3 @@ exclude_lines =
     if __name__ == .__main__.:
 
 ignore_errors = True
-
-[tool:pytest]
-addopts = --cov=nni --junitxml=junit/test-results.xml --cov-report=xml --cov-report=html
