@@ -24,7 +24,7 @@ Windows
 
 .. Note:: If there is an error like ``Segmentation fault``, please refer to the :doc:`FAQ <FAQ>`.
 
-.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker.rst>`.
+.. Note:: For the system requirements of NNI, please refer to :doc:`Install NNI on Linux & Mac <InstallationLinux>` or :doc:`Windows <InstallationWin>`. If you want to use docker, refer to :doc:`HowToUseDocker <HowToUseDocker>`.
 
 
 "Hello World" example on MNIST
@@ -85,7 +85,7 @@ In the this part, we will focus on the first approach. For the second approach, 
 
 
 Step 1: Define the Seach Space
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Define a ``Search Space`` in the JSON file, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you want to search.
 
