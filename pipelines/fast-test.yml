@@ -209,8 +209,8 @@ stages:
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.xml'
-        reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+        # reportDirectory: '$(System.DefaultWorkingDirectory)/**/htmlcov'
       displayName: Publish code coverage results
 
     - script: |
