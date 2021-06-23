@@ -5,7 +5,7 @@ NNI:
   version: 'stable'
   project: https://github.com/microsoft/nni
 
-# type in ['TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'GPTuner', 'MetisTuner', 'Hyperband', 'BOHB']
+# type in ['TPE', 'Random', 'Anneal', 'Evolution', 'SMAC', 'GPTuner', 'MetisTuner', 'DNGOTuner', 'Hyperband', 'BOHB']
 # arch_type in ['random_forest']
 # limit_type in ['time', 'ntrials']
 # limit must be an integer
@@ -62,6 +62,14 @@ MetisTuner:
   extends: NNI 
   params:
     tuner_type: 'MetisTuner'
+    arch_type: 'random_forest'
+    limit_type: 'ntrials'
+    trial_limit: 10
+
+DNGOTuner:
+  extends: NNI 
+  params:
+    tuner_type: 'DNGOTuner'
     arch_type: 'random_forest'
     limit_type: 'ntrials'
     trial_limit: 10

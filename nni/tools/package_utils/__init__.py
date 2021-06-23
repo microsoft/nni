@@ -6,7 +6,7 @@ import importlib
 import os
 from pathlib import Path
 import sys
-import ruamel.yaml as yaml
+import yaml
 from nni.runtime.config import get_config_file
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
@@ -187,7 +187,7 @@ def create_customized_class_instance(class_params):
         Returns customized class instance.
     """
 
-    code_dir = class_params.get('classDirectory')
+    code_dir = class_params.get('codeDirectory')
     qualified_class_name = class_params.get('className')
     class_args = class_params.get('classArgs')
 
@@ -215,7 +215,7 @@ def read_registerd_algo_meta():
     config_file = get_registered_algo_config_path()
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
+            config = yaml.safe_load(f)
     else:
         config = defaultdict(list)
     for t in ALGO_TYPES:
@@ -226,4 +226,4 @@ def read_registerd_algo_meta():
 def write_registered_algo_meta(config):
     config_file = get_registered_algo_config_path()
     with open(config_file, 'w') as f:
-        f.write(yaml.dump(dict(config), default_flow_style=False))
+        f.write(yaml.safe_dump(dict(config), default_flow_style=False))

@@ -29,7 +29,7 @@ export type GpuScheduleResult = {
 export class GpuScheduler {
 
     // private readonly machineExecutorMap: Set<TrialDetail>;
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('GpuScheduler');
     private readonly policyName: SCHEDULE_POLICY_NAME = 'recently-idle';
     private defaultSetting: GpuSchedulerSetting;
     private roundRobinIndex: number = 0;

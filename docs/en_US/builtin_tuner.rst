@@ -20,5 +20,4 @@ Tuner receives metrics from `Trial` to evaluate the performance of a specific pa
     Network Morphism <Tuner/NetworkmorphismTuner>
     Hyperband <Tuner/HyperbandAdvisor>
     BOHB <Tuner/BohbAdvisor>
-    PPO Tuner <Tuner/PPOTuner>
     PBT Tuner <Tuner/PBTTuner>

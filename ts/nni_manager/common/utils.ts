@@ -19,14 +19,13 @@ import * as util from 'util';
 import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo()
-        .getLogDir();
+    return getExperimentStartupInfo().logDir;
 }
 
 function getLogDir(): string {
@@ -34,8 +33,7 @@ function getLogDir(): string {
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo()
-        .getLogLevel();
+    return getExperimentStartupInfo().logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
@@ -58,7 +56,7 @@ function mkDirP(dirPath: string): Promise<void> {
         } else {
             const parent: string = path.dirname(dirPath);
             mkDirP(parent).then(() => {
-                fs.mkdir(dirPath, (err: Error) => {
+                fs.mkdir(dirPath, (err: Error | null) => {
                     if (err) {
                         deferred.reject(err);
                     } else {
@@ -186,7 +184,6 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
  * Must be paired with `cleanupUnitTest()`.
  */
 function prepareUnitTest(): void {
-    Container.snapshot(ExperimentStartupInfo);
     Container.snapshot(Database);
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
@@ -215,8 +212,9 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    Container.restore(ExperimentStartupInfo);
     Container.restore(ExperimentManager);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedipv4Address: string = '';
@@ -285,40 +283,6 @@ function countFilesRecursively(directory: string): Promise<number> {
     return Promise.race([deferred.promise, delayTimeout]).finally(() => {
         clearTimeout(timeoutId);
     });
-}
-
-export function validateFileName(fileName: string): boolean {
-    const pattern: string = '^[a-z0-9A-Z._-]+$';
-    const validateResult = fileName.match(pattern);
-    if (validateResult) {
-        return true;
-    }
-    return false;
-}
-
-async function validateFileNameRecursively(directory: string): Promise<boolean> {
-    if (!fs.existsSync(directory)) {
-        throw Error(`Direcotory ${directory} doesn't exist`);
-    }
-
-    const fileNameArray: string[] = fs.readdirSync(directory);
-    let result = true;
-    for (const name of fileNameArray) {
-        const fullFilePath: string = path.join(directory, name);
-        try {
-            // validate file names and directory names
-            result = validateFileName(name);
-            if (fs.lstatSync(fullFilePath).isDirectory()) {
-                result = result && await validateFileNameRecursively(fullFilePath);
-            }
-            if (!result) {
-                return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
-            }
-        } catch (error) {
-            return Promise.reject(error);
-        }
-    }
-    return Promise.resolve(result);
 }
 
 /**
@@ -481,8 +445,13 @@ async function getFreePort(host: string, start: number, end: number): Promise<nu
     }
 }
 
+export function importModule(modulePath: string): any {
+    module.paths.unshift(path.dirname(modulePath));
+    return require(path.basename(modulePath));
+}
+
 export {
-    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
+    countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
     getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

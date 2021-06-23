@@ -34,6 +34,9 @@ class AutoCompressPruner(Pruner):
         Function used for the first subproblem of ADMM Pruner.
         Users should write this function as a normal function to train the Pytorch model
         and include `model, optimizer, criterion, epoch` as function arguments.
+    criterion: function
+        Function used to calculate the loss between the target and the output. By default, we use CrossEntropyLoss.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     evaluator : function
         function to evaluate the pruned model.
         This function should include `model` as the only parameter, and returns a scalar value.
@@ -80,7 +83,7 @@ class AutoCompressPruner(Pruner):
         PATH to store temporary experiment data.
     """
 
-    def __init__(self, model, config_list, trainer, criterion, evaluator, dummy_input,
+    def __init__(self, model, config_list, trainer, evaluator, dummy_input, criterion=torch.nn.CrossEntropyLoss(),
                  num_iterations=3, optimize_mode='maximize', base_algo='l1',
                  # SimulatedAnnealing related
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35,

@@ -1,7 +1,6 @@
 'use strict';
 
 const fs = require('fs');
-const isWsl = require('is-wsl');
 const path = require('path');
 const webpack = require('webpack');
 const resolve = require('resolve');
@@ -11,9 +10,9 @@ const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const InlineChunkHtmlPlugin = require('react-dev-utils/InlineChunkHtmlPlugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const OptimizeCSSAssetsPlugin = require('optimize-css-assets-webpack-plugin');
-const safePostCssParser = require('postcss-safe-parser');
-const ManifestPlugin = require('webpack-manifest-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+//const safePostCssParser = require('postcss-safe-parser');
+const { WebpackManifestPlugin } = require('webpack-manifest-plugin');
 const InterpolateHtmlPlugin = require('react-dev-utils/InterpolateHtmlPlugin');
 const WorkboxWebpackPlugin = require('workbox-webpack-plugin');
 const WatchMissingNodeModulesPlugin = require('react-dev-utils/WatchMissingNodeModulesPlugin');
@@ -94,20 +93,22 @@ module.exports = function(webpackEnv) {
         options: {
           // Necessary for external CSS imports to work
           // https://github.com/facebook/create-react-app/issues/2677
-          ident: 'postcss',
-          plugins: () => [
-            require('postcss-flexbugs-fixes'),
-            require('postcss-preset-env')({
-              autoprefixer: {
-                flexbox: 'no-2009',
-              },
-              stage: 3,
-            }),
-            // Adds PostCSS Normalize as the reset css with default options,
-            // so that it honors browserslist config in package.json
-            // which in turn let's users customize the target behavior as per their needs.
-            postcssNormalize(),
-          ],
+          //ident: 'postcss',
+          postcssOptions: {
+            plugins: () => [
+              require('postcss-flexbugs-fixes'),
+              require('postcss-preset-env')({
+                autoprefixer: {
+                  flexbox: 'no-2009',
+                },
+                stage: 3,
+              }),
+              // Adds PostCSS Normalize as the reset css with default options,
+              // so that it honors browserslist config in package.json
+              // which in turn let's users customize the target behavior as per their needs.
+              postcssNormalize(),
+            ],
+          },
           sourceMap: isEnvProduction && shouldUseSourceMap,
         },
       },
@@ -163,8 +164,6 @@ module.exports = function(webpackEnv) {
       filename: isEnvProduction
         ? 'static/js/[name].[contenthash:8].js'
         : isEnvDevelopment && 'static/js/bundle.js',
-      // TODO: remove this when upgrading to webpack 5
-      futureEmitAssets: true,
       // There are also additional JS chunk files if you use code splitting.
       chunkFilename: isEnvProduction
         ? 'static/js/[name].[contenthash:8].chunk.js'
@@ -220,29 +219,23 @@ module.exports = function(webpackEnv) {
               ascii_only: true,
             },
           },
-          // Use multi-process parallel running to improve the build speed
-          // Default number of concurrent runs: os.cpus().length - 1
-          // Disabled on WSL (Windows Subsystem for Linux) due to an issue with Terser
-          // https://github.com/webpack-contrib/terser-webpack-plugin/issues/21
-          parallel: !isWsl,
-          // Enable file caching
-          cache: true,
-          sourceMap: shouldUseSourceMap,
         }),
         // This is only used in production mode
-        new OptimizeCSSAssetsPlugin({
-          cssProcessorOptions: {
-            parser: safePostCssParser,
-            map: shouldUseSourceMap
-              ? {
-                  // `inline: false` forces the sourcemap to be output into a
-                  // separate file
-                  inline: false,
-                  // `annotation: true` appends the sourceMappingURL to the end of
-                  // the css file, helping the browser find the sourcemap
-                  annotation: true,
-                }
-              : false,
+        new CssMinimizerPlugin({
+          minimizerOptions: {
+            processorOptions: {
+              //parser: safePostCssParser,
+              map: shouldUseSourceMap
+                ? {
+                    // `inline: false` forces the sourcemap to be output into a
+                    // separate file
+                    inline: false,
+                    // `annotation: true` appends the sourceMappingURL to the end of
+                    // the css file, helping the browser find the sourcemap
+                    annotation: true,
+                  }
+                : false,
+            },
           },
         }),
       ],
@@ -552,7 +545,7 @@ module.exports = function(webpackEnv) {
       // Generate a manifest file which contains a mapping of all asset filenames
       // to their corresponding output file so that tools can pick it up without
       // having to parse `index.html`.
-      new ManifestPlugin({
+      new WebpackManifestPlugin({
         fileName: 'asset-manifest.json',
         publicPath: publicPath,
         generate: (seed, files) => {
@@ -578,9 +571,9 @@ module.exports = function(webpackEnv) {
         new WorkboxWebpackPlugin.GenerateSW({
           clientsClaim: true,
           exclude: [/\.map$/, /asset-manifest\.json$/],
-          importWorkboxFrom: 'cdn',
+          //importWorkboxFrom: 'cdn',
           navigateFallback: publicUrl + '/index.html',
-          navigateFallbackBlacklist: [
+          navigateFallbackDenylist: [
             // Exclude URLs starting with /_, as they're likely an API call
             new RegExp('^/_'),
             // Exclude URLs containing a dot, as they're likely a resource in
@@ -614,16 +607,16 @@ module.exports = function(webpackEnv) {
     ].filter(Boolean),
     // Some libraries import Node modules but don't use them in the browser.
     // Tell Webpack to provide empty mocks for them so importing them works.
-    node: {
-      module: 'empty',
-      dgram: 'empty',
-      dns: 'mock',
-      fs: 'empty',
-      http2: 'empty',
-      net: 'empty',
-      tls: 'empty',
-      child_process: 'empty',
-    },
+    //node: {
+    //  module: 'empty',
+    //  dgram: 'empty',
+    //  dns: 'mock',
+    //  fs: 'empty',
+    //  http2: 'empty',
+    //  net: 'empty',
+    //  tls: 'empty',
+    //  child_process: 'empty',
+    //},
     // Turn off performance processing because we utilize
     // our own hints via the FileSizeReporter
     performance: false,

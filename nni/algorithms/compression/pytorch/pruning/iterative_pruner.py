@@ -40,6 +40,7 @@ class IterativePruner(DependencyAwarePruner):
             and include `model, optimizer, criterion, epoch` as function arguments.
         criterion: function
             Function used to calculate the loss between the target and the output.
+            For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
         num_iterations: int
             Total number of iterations in pruning process. We will calculate mask at the end of an iteration.
         epochs_per_iteration: Union[int, list]
@@ -59,7 +60,10 @@ class IterativePruner(DependencyAwarePruner):
             assert len(epochs_per_iteration) == num_iterations, 'num_iterations should equal to the length of epochs_per_iteration'
             self.epochs_per_iteration = epochs_per_iteration
         else:
+            assert num_iterations > 0, 'num_iterations should >= 1'
             self.epochs_per_iteration = [epochs_per_iteration] * num_iterations
+
+        self._validate_iteration_params()
 
         self._trainer = trainer
         self._criterion = criterion
@@ -68,6 +72,9 @@ class IterativePruner(DependencyAwarePruner):
         for wrapper in self.get_modules_wrapper():
             wrapper.if_calculated = False
 
+    def _validate_iteration_params(self):
+        assert all(num >= 0 for num in self.epochs_per_iteration), 'all epoch number need >= 0'
+
     def compress(self):
         training = self.bound_model.training
         self.bound_model.train()
@@ -75,6 +82,10 @@ class IterativePruner(DependencyAwarePruner):
             self._fresh_calculated()
             for epoch in range(epochs_num):
                 self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
+            # NOTE: workaround for statistics_batch_num bigger than max batch number in one epoch, need refactor
+            if hasattr(self.masker, 'statistics_batch_num') and hasattr(self, 'iterations'):
+                if self.iterations < self.masker.statistics_batch_num:
+                    self.iterations = self.masker.statistics_batch_num
             self.update_mask()
         self.bound_model.train(training)
 
@@ -97,6 +108,7 @@ class AGPPruner(IterativePruner):
         Function to train the model
     criterion: function
         Function used to calculate the loss between the target and the output.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     num_iterations: int
         Total number of iterations in pruning process. We will calculate mask at the end of an iteration.
     epochs_per_iteration: int
@@ -245,6 +257,7 @@ class ADMMPruner(IterativePruner):
         and include `model, optimizer, criterion, epoch` as function arguments.
     criterion: function
         Function used to calculate the loss between the target and the output. By default, we use CrossEntropyLoss in ADMMPruner.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     num_iterations: int
         Total number of iterations in pruning process. We will calculate mask after we finish all iterations in ADMMPruner.
     epochs_per_iteration: int
@@ -254,7 +267,6 @@ class ADMMPruner(IterativePruner):
     base_algo : str
         Base pruning algorithm. `level`, `l1`, `l2` or `fpgm`, by default `l1`. Given the sparsity distribution among
         the ops, the assigned `base_algo` is used to decide which filters/channels/weights to prune.
-
     """
 
     def __init__(self, model, config_list, trainer, criterion=torch.nn.CrossEntropyLoss(),
@@ -396,7 +408,8 @@ class SlimPruner(IterativePruner):
         and include `model, optimizer, criterion, epoch` as function arguments.
     criterion : function
         Function used to calculate the loss between the target and the output.
-    sparsity_training_epochs: int
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
+    sparsifying_training_epochs: int
         The number of channel sparsity regularization training epochs before pruning.
     scale : float
         Penalty parameters for sparsification.
@@ -413,10 +426,10 @@ class SlimPruner(IterativePruner):
         should on the same device with the model.
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsity_training_epochs=10, scale=0.0001,
+    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_epochs=10, scale=0.0001,
                  dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='slim', trainer=trainer, criterion=criterion,
-                         num_iterations=1, epochs_per_iteration=sparsity_training_epochs, dependency_aware=dependency_aware,
+                         num_iterations=1, epochs_per_iteration=sparsifying_training_epochs, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
         self.scale = scale
         self.patch_optimizer_before(self._callback)
@@ -459,8 +472,9 @@ class TaylorFOWeightFilterPruner(IterativePruner):
         and include `model, optimizer, criterion, epoch` as function arguments.
     criterion : function
         Function used to calculate the loss between the target and the output.
-    sparsity_training_epochs: int
-        The number of epochs to collect the contributions.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
+    sparsifying_training_batches: int
+        The number of batches to collect the contributions. Note that the number need to be less than the maximum batch number in one epoch.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -472,14 +486,14 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     dummy_input : torch.Tensor
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
-
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsity_training_epochs=1, dependency_aware=False,
-                 dummy_input=None):
+    def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1,
+                 dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
-                         criterion=criterion, num_iterations=1, epochs_per_iteration=sparsity_training_epochs,
-                         dependency_aware=dependency_aware, dummy_input=dummy_input)
+                         criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
+                         epochs_per_iteration=1, dependency_aware=dependency_aware,
+                         dummy_input=dummy_input)
 
     def _supported_dependency_aware(self):
         return True
@@ -503,10 +517,11 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
         and include `model, optimizer, criterion, epoch` as function arguments.
     criterion : function
         Function used to calculate the loss between the target and the output.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     activation: str
         The activation type.
-    sparsity_training_epochs: int
-        The number of epochs to statistic the activation.
+    sparsifying_training_batches: int
+        The number of batches to collect the contributions. Note that the number need to be less than the maximum batch number in one epoch.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -522,10 +537,12 @@ class ActivationAPoZRankFilterPruner(IterativePruner):
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, activation='relu',
-                 sparsity_training_epochs=1, dependency_aware=False, dummy_input=None):
+                 sparsifying_training_batches=1, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='apoz', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+                         activation=activation, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
+                         epochs_per_iteration=1)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True
@@ -549,10 +566,11 @@ class ActivationMeanRankFilterPruner(IterativePruner):
             and include `model, optimizer, criterion, epoch` as function arguments.
     criterion : function
         Function used to calculate the loss between the target and the output.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     activation: str
         The activation type.
-    sparsity_training_epochs: int
-        The number of batches to statistic the activation.
+    sparsifying_training_batches: int
+        The number of batches to collect the contributions. Note that the number need to be less than the maximum batch number in one epoch.
     dependency_aware: bool
         If prune the model in a dependency-aware way. If it is `True`, this pruner will
         prune the model according to the l2-norm of weights and the channel-dependency or
@@ -567,10 +585,12 @@ class ActivationMeanRankFilterPruner(IterativePruner):
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, activation='relu',
-                 sparsity_training_epochs=1, dependency_aware=False, dummy_input=None):
+                 sparsifying_training_batches=1, dependency_aware=False, dummy_input=None):
         super().__init__(model, config_list, pruning_algorithm='mean_activation', optimizer=optimizer, trainer=trainer,
                          criterion=criterion, dependency_aware=dependency_aware, dummy_input=dummy_input,
-                         activation=activation, num_iterations=1, epochs_per_iteration=sparsity_training_epochs)
+                         activation=activation, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
+                         epochs_per_iteration=1)
+        self.patch_optimizer(self.update_mask)
 
     def _supported_dependency_aware(self):
         return True

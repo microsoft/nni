@@ -15,7 +15,7 @@ const DETAILTABS = (
 
 const NNILOGO = (
     <NavLink to='/oview'>
-        <img src={require('../../static/img/logo.png')} alt='NNI logo' style={{ height: 40 }} />
+        <img src='/logo.png' alt='NNI logo' style={{ height: 40 }} />
     </NavLink>
 );
 

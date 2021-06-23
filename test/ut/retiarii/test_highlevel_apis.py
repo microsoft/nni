@@ -93,6 +93,24 @@ class GraphIR(unittest.TestCase):
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).size(),
                          torch.Size([1, 5, 3, 3]))
 
+    def test_layer_choice_multiple(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.module = nn.LayerChoice([nn.Conv2d(3, i, kernel_size=1) for i in range(1, 11)])
+
+            def forward(self, x):
+                return self.module(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1)
+        mutator = mutators[0].bind_sampler(EnumerateSampler())
+        for i in range(1, 11):
+            model_new = mutator.apply(model)
+            self.assertEqual(self._get_converted_pytorch_model(model_new)(torch.randn(1, 3, 3, 3)).size(),
+                             torch.Size([1, i, 3, 3]))
+
     def test_input_choice(self):
         @self.get_serializer()
         class Net(nn.Module):

@@ -6,10 +6,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
-import { getExperimentRootDir } from '../../../common/utils';
 import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
@@ -26,15 +25,15 @@ interface FlattenAmlConfig extends ExperimentConfig, AmlConfig { }
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('AMLEnvironmentService');
     private experimentId: string;
     private experimentRootDir: string;
     private config: FlattenAmlConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = getExperimentId();
-        this.experimentRootDir = getExperimentRootDir();
+        this.experimentId = info.experimentId;
+        this.experimentRootDir = info.logDir;
         this.config = flattenConfig(config, 'aml');
         validateCodeDir(this.config.trialCodeDirectory);
     }

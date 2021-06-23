@@ -24,7 +24,7 @@ import { TrialConfig } from '../common/trialConfig';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
-import { EnvironmentServiceFactory } from './environments/environmentServiceFactory';
+import { createEnvironmentService } from './environments/environmentServiceFactory';
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -39,20 +39,20 @@ import { TrialDetail } from './trial';
 **/
 @component.Singleton
 class TrialDispatcher implements TrainingService {
-    private readonly log: Logger;
-    private readonly isDeveloping: boolean = false;
+    private log: Logger;
+    private isDeveloping: boolean = false;
     private stopping: boolean = false;
 
-    private readonly metricsEmitter: EventEmitter;
-    private readonly experimentId: string;
-    private readonly experimentRootDir: string;
+    private metricsEmitter: EventEmitter;
+    private experimentId: string;
+    private experimentRootDir: string;
 
     private enableVersionCheck: boolean = true;
 
     private trialConfig: TrialConfig | undefined;
 
-    private readonly trials: Map<string, TrialDetail>;
-    private readonly environments: Map<string, EnvironmentInformation>;
+    private trials: Map<string, TrialDetail>;
+    private environments: Map<string, EnvironmentInformation>;
     // make public for ut
     public environmentServiceList: EnvironmentService[] = [];
     public commandChannelSet: Set<CommandChannel>;
@@ -82,8 +82,14 @@ class TrialDispatcher implements TrainingService {
 
     private config: ExperimentConfig;
 
-    constructor(config: ExperimentConfig) {
-        this.log = getLogger();
+    public static async construct(config: ExperimentConfig): Promise<TrialDispatcher> {
+        const instance = new TrialDispatcher(config);
+        await instance.asyncConstructor(config);
+        return instance;
+    }
+
+    private constructor(config: ExperimentConfig) {
+        this.log = getLogger('TrialDispatcher');
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();
         this.metricsEmitter = new EventEmitter();
@@ -109,18 +115,14 @@ class TrialDispatcher implements TrainingService {
         if (this.enableGpuScheduler) {
             this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
         }
+    }
 
-        validateCodeDir(config.trialCodeDirectory);
+    private async asyncConstructor(config: ExperimentConfig): Promise<void> {
+        await validateCodeDir(config.trialCodeDirectory);
 
-        if (Array.isArray(config.trainingService)) {
-            config.trainingService.forEach(trainingService => {
-                const env = EnvironmentServiceFactory.createEnvironmentService(trainingService.platform, config);
-                this.environmentServiceList.push(env);
-            });
-        } else {
-            const env = EnvironmentServiceFactory.createEnvironmentService(config.trainingService.platform, config);
-            this.environmentServiceList.push(env);
-        }
+        const serviceConfigs = Array.isArray(config.trainingService) ? config.trainingService : [ config.trainingService ];
+        const servicePromises = serviceConfigs.map(serviceConfig => createEnvironmentService(serviceConfig.platform, config));
+        this.environmentServiceList = await Promise.all(servicePromises);
 
         this.environmentMaintenceLoopInterval = Math.max(
             ...this.environmentServiceList.map((env) => env.environmentMaintenceLoopInterval)
@@ -132,7 +134,7 @@ class TrialDispatcher implements TrainingService {
         }
 
         if (this.config.sharedStorage !== undefined) {
-            this.initializeSharedStorage(this.config.sharedStorage);
+            await this.initializeSharedStorage(this.config.sharedStorage);
         }
     }
 

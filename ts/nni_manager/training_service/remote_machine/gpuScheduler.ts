@@ -18,7 +18,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
 export class GPUScheduler {
 
     private readonly machineExecutorMap: Map<RemoteMachineConfig, ExecutorManager>;
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('GPUScheduler');
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
     private configuredRMs: RemoteMachineMeta[] = [];

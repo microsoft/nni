@@ -8,15 +8,30 @@ import {Client1_10, config} from 'kubernetes-client';
 import {getLogger, Logger} from '../../common/log';
 
 /**
+ * This function uses the environment variable
+ * 'KUBERNETES_SERVICE_HOST' to determine whether
+ * the code is running from within a kubernetes container.
+ * If it is, it returns the in-cluster config
+ * instead of the kubeconfig.
+ */
+function getKubernetesConfig(): any {
+    if ('KUBERNETES_SERVICE_HOST' in process.env) {
+        return config.getInCluster();
+    } else {
+        return config.fromKubeconfig();
+    }
+}
+
+/**
  * Generic Kubernetes client, target version >= 1.9
  */
 class GeneralK8sClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('GeneralK8sClient');
     protected namespace: string = 'default';
 
     constructor() {
-        this.client = new Client1_10({config: config.fromKubeconfig(), version: '1.9'});
+        this.client = new Client1_10({config: getKubernetesConfig(), version: '1.9'});
         this.client.loadSpec();
     }
 
@@ -135,11 +150,11 @@ class GeneralK8sClient {
  */
 abstract class KubernetesCRDClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('KubernetesCRDClient');
     protected crdSchema: any;
 
     constructor() {
-        this.client = new Client1_10({config: config.fromKubeconfig()});
+        this.client = new Client1_10({config: getKubernetesConfig()});
         this.client.loadSpec();
     }
 

@@ -8,12 +8,13 @@ import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface'
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
     let newPathName = pathName;
-
-    if (pathName.endsWith('/oview') || pathName.endsWith('/detail') || pathName.endsWith('/experiment')) {
-        newPathName = pathName.replace('/oview' || '/detail' || '/experiment', '');
-    }
-
-    return newPathName === '' ? undefined : newPathName;
+    const pathArr: string[] = ['/oview', '/detail', '/experiment'];
+    pathArr.forEach(item => {
+        if (pathName.endsWith(item)) {
+            newPathName = pathName.replace(item, '');
+        }
+    });
+    return newPathName === '' || newPathName === '/' ? undefined : newPathName;
 }
 
 async function requestAxios(url: string): Promise<any> {
@@ -132,6 +133,7 @@ const getFinal = (final?: MetricDataRecord[]): FinalType | undefined => {
         } else if (isArrayType(showDefault)) {
             // not support final type
             return undefined;
+            // eslint-disable-next-line no-prototype-builtins
         } else if (typeof showDefault === 'object' && showDefault.hasOwnProperty('default')) {
             return showDefault;
         }
@@ -231,7 +233,7 @@ const downFile = (content: string, fileName: string): void => {
     }
     if (navigator.userAgent.indexOf('Firefox') > -1) {
         const downTag = document.createElement('a');
-        downTag.addEventListener('click', function() {
+        downTag.addEventListener('click', function () {
             downTag.download = fileName;
             downTag.href = URL.createObjectURL(file);
         });
@@ -269,10 +271,7 @@ function metricAccuracy(metric: MetricDataRecord): number {
 
 function formatAccuracy(accuracy: number): string {
     // TODO: how to format NaN?
-    return accuracy
-        .toFixed(6)
-        .replace(/0+$/, '')
-        .replace(/\.$/, '');
+    return accuracy.toFixed(6).replace(/0+$/, '').replace(/\.$/, '');
 }
 
 function formatComplexTypeValue(value: any): string | number {
@@ -296,7 +295,7 @@ function caclMonacoEditorHeight(height): number {
 
 function copyAndSort<T>(items: T[], columnKey: string, isSortedDescending?: boolean): any {
     const key = columnKey as keyof T;
-    return items.slice(0).sort(function(a: T, b: T): any {
+    return items.slice(0).sort(function (a: T, b: T): any {
         if (
             a[key] === undefined ||
             Object.is(a[key], NaN) ||

@@ -1,6 +1,18 @@
 {
-    "num_leaves":{"_type":"randint","_value":[20, 31]},
-    "learning_rate":{"_type":"choice","_value":[0.01, 0.05, 0.1, 0.2]},
-    "bagging_fraction":{"_type":"uniform","_value":[0.7, 1.0]},
-    "bagging_freq":{"_type":"choice","_value":[1, 2, 4, 8, 10]}
+    "num_leaves": {
+        "_type": "randint",
+        "_value": [20, 31]
+    },
+    "learning_rate": {
+        "_type": "choice",
+        "_value": [0.01, 0.05, 0.1, 0.2]
+    },
+    "bagging_fraction": {
+        "_type": "uniform",
+        "_value": [0.7, 1.0]
+    },
+    "bagging_freq": {
+        "_type": "choice",
+        "_value": [1, 2, 4, 8, 10]
+    }
 }
