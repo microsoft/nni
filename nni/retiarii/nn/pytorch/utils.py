@@ -15,3 +15,11 @@ def get_fixed_value(label: str):
         return ret[generate_new_label(label)]
     except KeyError:
         raise KeyError(f'Fixed context with {label} not found. Existing values are: {ret}')
+
+
+def get_fixed_dict(label_prefix: str):
+    ret = get_current_context('fixed')
+    try:
+        return {k: v for k, v in ret.items() if k.startswith(label_prefix)}
+    except KeyError:
+        raise KeyError(f'Fixed context with prefix {label_prefix} not found. Existing values are: {ret}')

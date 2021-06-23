@@ -26,6 +26,8 @@ class LayerChoice(nn.Module):
     ----------
     candidates : list of nn.Module or OrderedDict
         A module list to be selected from.
+    prior : list of float
+        Prior distribution used in random sampling.
     label : str
         Identifier of the layer choice.
 
@@ -55,7 +57,8 @@ class LayerChoice(nn.Module):
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
-    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: Optional[str] = None, **kwargs):
+    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
+                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         try:
             chosen = get_fixed_value(label)
             if isinstance(candidates, list):
@@ -65,7 +68,8 @@ class LayerChoice(nn.Module):
         except AssertionError:
             return super().__new__(cls)
 
-    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: Optional[str] = None, **kwargs):
+    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
+                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         super(LayerChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -75,6 +79,8 @@ class LayerChoice(nn.Module):
         if 'reduction' in kwargs:
             warnings.warn(f'"reduction" is deprecated. Ignoring...')
         self.candidates = candidates
+        self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
+        assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
 
         self.names = []
@@ -173,13 +179,15 @@ class InputChoice(nn.Module):
         Identifier of the input choice.
     """
 
-    def __new__(cls, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: Optional[str] = None, **kwargs):
+    def __new__(cls, n_candidates: int, n_chosen: Optional[int] = 1,
+                reduction: str = 'sum', label: Optional[str] = None, **kwargs):
         try:
             return ChosenInputs(get_fixed_value(label), reduction=reduction)
         except AssertionError:
             return super().__new__(cls)
 
-    def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: Optional[str] = None, **kwargs):
+    def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
+                 reduction: str = 'sum', label: Optional[str] = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -277,19 +285,23 @@ class ValueChoice(Translatable, nn.Module):
     ----------
     candidates : list
         List of values to choose from.
+    prior : list of float
+        Prior distribution to sample from.
     label : str
         Identifier of the value choice.
     """
 
-    def __new__(cls, candidates: List[Any], label: Optional[str] = None):
+    def __new__(cls, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
         try:
             return get_fixed_value(label)
         except AssertionError:
             return super().__new__(cls)
 
-    def __init__(self, candidates: List[Any], label: Optional[str] = None):
+    def __init__(self, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()
         self.candidates = candidates
+        self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
+        assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
         self._label = generate_new_label(label)
         self._accessor = []
 
