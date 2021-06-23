@@ -41,7 +41,7 @@ RUN ln -s python3 /usr/bin/python
 #
 # update pip
 #
-RUN python3 -m pip install --upgrade pip==21.1.2 setuptools==51.1.0.post20201221
+RUN python3 -m pip install --upgrade pip==20.2.4 setuptools==50.3.2
 
 # numpy 1.19.5  scipy 1.5.4
 RUN python3 -m pip --no-cache-dir install numpy==1.19.5 scipy==1.5.4
