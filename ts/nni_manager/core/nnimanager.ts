@@ -548,7 +548,7 @@ class NNIManager implements Manager {
             if(undefined !== trialJobDetail && 
                 trialJobDetail.status === 'RUNNING' && 
                 trialJobDetail.startTime !== undefined){
-                var currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
+                const currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
                 if(currentTrialDuration>this.maxTrialDuration){
                     const isEarlyStopped = true;
                     await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
