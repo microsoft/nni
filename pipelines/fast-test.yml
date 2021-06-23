@@ -195,8 +195,6 @@ stages:
         set -e
         cd ts/nni_manager
         yarn test
-        ls -al .
-        ls -al htmlcov
         cd ../nasui
         CI=true yarn test
       displayName: TypeScript unit test
