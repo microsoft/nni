@@ -128,3 +128,5 @@ def validate_all_content(experiment_config, config_path):
 
     if 'maxExecDuration' in experiment_config:
         experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
+    if 'maxTrialDuration' in experiment_config:
+        experiment_config['maxTrialDuration'] = parse_time(experiment_config['maxTrialDuration'])

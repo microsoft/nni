@@ -214,6 +214,20 @@ type: ``Optional[int]``
 When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
 
 
+maxTrialDuration
+---------------------
+
+Limit the duration of trial job if specified.
+
+type: ``Optional[str]``
+
+format: ``number + s|m|h|d``
+
+examples: ``"10m"``, ``"0.5h"``
+
+When time runs out, the current trial job will stop.
+
+
 nniManagerIp
 ------------
 

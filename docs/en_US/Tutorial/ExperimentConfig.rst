@@ -20,6 +20,7 @@ This document describes the rules to write the config file, and provides some ex
     * `versionCheck <#versioncheck>`__
     * `debug <#debug>`__
     * `maxTrialNum <#maxtrialnum>`__
+    * `maxTrialDuration <#maxtrialduration>`__
     * `trainingServicePlatform <#trainingserviceplatform>`__
     * `searchSpacePath <#searchspacepath>`__
     * `useAnnotation <#useannotation>`__
@@ -254,7 +255,7 @@ maxExecDuration
 
 Optional. String. Default: 999d.
 
-**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**\ **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
+**maxExecDuration** specifies the max duration time of an experiment. The unit of the time is {**s**\ , **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
 
 Note: The maxExecDuration spec set the time of an experiment, not a trial job. If the experiment reach the max duration time, the experiment will not stop, but could not submit new trial jobs any more.
 
@@ -278,6 +279,15 @@ maxTrialNum
 Optional. Integer between 1 and 99999. Default: 99999.
 
 Specifies the max number of trial jobs created by NNI, including succeeded and failed jobs.
+
+maxTrialDuration
+^^^^^^^^^^^^^^^^
+
+Optional. String. Default: 999d.
+
+**maxTrialDuration** specifies the max duration time of each trial job. The unit of the time is {**s**\ , **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
+
+Note: The maxTrialDuration spec set the time of each trial job. If current trial job reach the max duration time, this trial job will stop.
 
 trainingServicePlatform
 ^^^^^^^^^^^^^^^^^^^^^^^
