@@ -139,6 +139,7 @@ _canonical_rules = {
     'search_space_file': util.canonical_path,
     'trial_code_directory': util.canonical_path,
     'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
+    'max_trial_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
     'experiment_working_directory': util.canonical_path,
     'tuner_gpu_indices': util.canonical_gpu_indices,
     'tuner': lambda config: None if config is None or config.name == '_none_' else config.canonical(),
