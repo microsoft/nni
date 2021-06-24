@@ -7,6 +7,7 @@ from nni.retiarii import model_wrapper, serialize, serialize_cls
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.nn.pytorch import NasBench101Cell
 from nni.retiarii.strategy import Random
+from pytorch_lightning.callbacks import LearningRateMonitor
 from timm.optim import RMSpropTF
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision import transforms
@@ -106,8 +107,6 @@ class NasBench101TrainingModule(pl.LightningModule):
         y_hat = self(x)
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
         self.log('val_accuracy', self.accuracy(y_hat, y), prog_bar=True)
-        for name, metric in self.metrics.items():
-            self.log('val_' + name, metric(y_hat, y), prog_bar=True)
 
     def configure_optimizers(self):
         optimizer = RMSpropTF(self.parameters(), lr=self.hparams.learning_rate,
@@ -128,8 +127,9 @@ class NasBench101TrainingModule(pl.LightningModule):
 
 @click.command()
 @click.option('--epochs', default=108, help='Training length.')
+@click.option('--batch_size', default=256, help='Batch size.')
 @click.option('--port', default=8081, help='On which port the experiment is run.')
-def _multi_trial_test(epochs, port):
+def _multi_trial_test(epochs, batch_size, port):
     # initalize dataset. Note that 50k+10k is used. It's a little different from paper
     transf = [
         transforms.RandomCrop(32, padding=4),
@@ -144,12 +144,13 @@ def _multi_trial_test(epochs, port):
 
     # specify training hyper-parameters
     training_module = NasBench101TrainingModule(max_epochs=epochs)
-    trainer = pl.Trainer(max_epochs=epochs, gpus=1)
+    lr_monitor = serialize(LearningRateMonitor, logging_interval='step')
+    trainer = pl.Trainer(max_epochs=epochs, gpus=1, callbacks=[lr_monitor])
     lightning = pl.Lightning(
         lightning_module=training_module,
         trainer=trainer,
-        train_dataloader=pl.DataLoader(train_dataset, batch_size=256, shuffle=True),
-        val_dataloaders=pl.DataLoader(test_dataset, batch_size=256),
+        train_dataloader=pl.DataLoader(train_dataset, batch_size=batch_size, shuffle=True),
+        val_dataloaders=pl.DataLoader(test_dataset, batch_size=batch_size),
     )
 
     strategy = Random()

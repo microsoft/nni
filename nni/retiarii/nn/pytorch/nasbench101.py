@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from .api import InputChoice, ValueChoice, LayerChoice
 from .utils import generate_new_label, get_fixed_dict
-from ...mutator import Mutator
+from ...mutator import InvalidMutation, Mutator
 from ...utils import NoContextError
 
 _logger = logging.getLogger(__name__)
@@ -89,6 +89,44 @@ def compute_vertex_channels(input_channels, output_channels, matrix):
     return vertex_channels
 
 
+def prune(matrix, ops):
+    """
+    Prune the extraneous parts of the graph.
+
+    General procedure:
+
+    1. Remove parts of graph not connected to input.
+    2. Remove parts of graph not connected to output.
+    3. Reorder the vertices so that they are consecutive after steps 1 and 2.
+
+    These 3 steps can be combined by deleting the rows and columns of the
+    vertices that are not reachable from both the input and output (in reverse).
+    """
+    num_vertices = np.shape(matrix)[0]
+
+    # calculate the connection matrix within V number of steps.
+    connections = np.linalg.matrix_power(matrix + np.eye(num_vertices), num_vertices)
+
+    print('All', connections)
+
+    visited_from_input = set([i for i in range(num_vertices) if connections[0, i]])
+    visited_from_output = set([i for i in range(num_vertices) if connections[i, -1]])
+
+    # Any vertex that isn't connected to both input and output is extraneous to the computation graph.
+    extraneous = set(range(num_vertices)).difference(
+        visited_from_input.intersection(visited_from_output))
+
+    if len(extraneous) > num_vertices - 2:
+        raise InvalidMutation('Non-extraneous graph is less than 2 vertices, '
+                              'the input is not connected to the output and the spec is invalid.')
+
+    matrix = np.delete(matrix, list(extraneous), axis=0)
+    matrix = np.delete(matrix, list(extraneous), axis=1)
+    for index in sorted(extraneous, reverse=True):
+        del ops[index]
+    return matrix, ops
+
+
 def truncate(inputs, channels):
     input_channels = inputs.size(1)
     if input_channels < channels:
@@ -115,25 +153,34 @@ class _NasBench101CellFixed(nn.Module):
         super().__init__()
 
         assert num_nodes == len(operations) + 2 == len(adjacency_list) + 1
+        adjacency_list = [[]] + adjacency_list  # add adjacency for first node
 
-        self.num_nodes = num_nodes
-        self.in_features = in_features
-        self.out_features = out_features
-        self.connection_matrix = self._build_connection_matrix(adjacency_list)
+        self.operations = ['IN'] + operations + ['OUT']  # add psuedo nodes
+        self.connection_matrix = self._build_connection_matrix(adjacency_list, num_nodes)
+        del num_nodes  # raw number of nodes is no longer used
+
+        self.connection_matrix, self.operations = prune(self.connection_matrix, self.operations)
+
         self.hidden_features = compute_vertex_channels(in_features, out_features, self.connection_matrix)
 
+        self.num_nodes = len(self.connection_matrix)
+        self.in_features = in_features
+        self.out_features = out_features
+        _logger.info('Prund number of nodes: %d', self.num_nodes)
+        _logger.info('Pruned connection matrix: %s', str(self.connection_matrix))
+
         self.projections = nn.ModuleList([nn.Identity()])
-        self.op = nn.ModuleList([nn.Identity()])
+        self.ops = nn.ModuleList([nn.Identity()])
         self.inputs = nn.ModuleList([nn.Identity()])
-        for i in range(1, num_nodes):
+        for i in range(1, self.num_nodes):
             self.projections.append(projection(in_features, self.hidden_features[i]))
 
-        for i in range(1, num_nodes - 1):
-            self.op.append(operations[i - 1](self.hidden_features[i]))
+        for i in range(1, self.num_nodes - 1):
+            self.ops.append(operations[i - 1](self.hidden_features[i]))
 
-    def _build_connection_matrix(self, adjacency_list):
-        connections = np.zeros((self.num_nodes, self.num_nodes), dtype='int')
-        for i, lst in enumerate(adjacency_list, start=1):
+    def _build_connection_matrix(self, adjacency_list, num_nodes):
+        connections = np.zeros((num_nodes, num_nodes), dtype='int')
+        for i, lst in enumerate(adjacency_list):
             assert all([0 <= k < i for k in lst])
             for k in lst:
                 connections[k, i] = 1
@@ -232,7 +279,8 @@ class NasBench101Cell(nn.Module):
             op_candidates = cls._make_dict(op_candidates)
             num_nodes = selected[f'{label}/num_nodes']
             adjacency_list = [make_list(selected[f'{label}/input_{i}']) for i in range(1, num_nodes)]
-            assert sum([len(e) for e in adjacency_list]) <= max_num_edges, f'Expected {max_num_edges} edges, found: {adjacency_list}'
+            if sum([len(e) for e in adjacency_list]) > max_num_edges:
+                raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
             return _NasBench101CellFixed(
                 [op_candidates[selected[f'{label}/op_{i}']] for i in range(1, num_nodes - 1)],
                 adjacency_list, in_features, out_features, num_nodes, projection)
