@@ -9,6 +9,7 @@ import torch.nn as nn
 from .api import InputChoice, ValueChoice, LayerChoice
 from .utils import generate_new_label, get_fixed_dict
 from ...mutator import InvalidMutation, Mutator
+from ...graph import Model
 from ...utils import NoContextError
 
 _logger = logging.getLogger(__name__)
@@ -107,8 +108,6 @@ def prune(matrix, ops):
     # calculate the connection matrix within V number of steps.
     connections = np.linalg.matrix_power(matrix + np.eye(num_vertices), num_vertices)
 
-    print('All', connections)
-
     visited_from_input = set([i for i in range(num_vertices) if connections[0, i]])
     visited_from_output = set([i for i in range(num_vertices) if connections[i, -1]])
 
@@ -153,10 +152,9 @@ class _NasBench101CellFixed(nn.Module):
         super().__init__()
 
         assert num_nodes == len(operations) + 2 == len(adjacency_list) + 1
-        adjacency_list = [[]] + adjacency_list  # add adjacency for first node
 
         self.operations = ['IN'] + operations + ['OUT']  # add psuedo nodes
-        self.connection_matrix = self._build_connection_matrix(adjacency_list, num_nodes)
+        self.connection_matrix = self.build_connection_matrix(adjacency_list, num_nodes)
         del num_nodes  # raw number of nodes is no longer used
 
         self.connection_matrix, self.operations = prune(self.connection_matrix, self.operations)
@@ -178,13 +176,14 @@ class _NasBench101CellFixed(nn.Module):
         for i in range(1, self.num_nodes - 1):
             self.ops.append(operations[i - 1](self.hidden_features[i]))
 
-    def _build_connection_matrix(self, adjacency_list, num_nodes):
+    @staticmethod
+    def build_connection_matrix(adjacency_list, num_nodes):
+        adjacency_list = [[]] + adjacency_list  # add adjacency for first node
         connections = np.zeros((num_nodes, num_nodes), dtype='int')
         for i, lst in enumerate(adjacency_list):
             assert all([0 <= k < i for k in lst])
             for k in lst:
                 connections[k, i] = 1
-        assert len(adjacency_list[-1]) >= 1, 'Last node must have inputs.'
         return connections
 
     def forward(self, inputs):
@@ -336,4 +335,35 @@ class NasBench101Cell(nn.Module):
 
 class NasBench101Mutator(Mutator):
     # for validation purposes
-    pass
+    # for python execution engine
+
+    def __init__(self, label: Optional[str]):
+        super().__init__(label=label)
+
+    @staticmethod
+    def candidates(node):
+        if 'n_candidates' in node.operation.parameters:
+            return list(range(node.operation.parameters['n_candidates']))
+        else:
+            return node.operation.parameters['candidates']
+
+    @staticmethod
+    def number_of_chosen(node):
+        if 'n_chosen' in node.operation.parameters:
+            return node.operation.parameters['n_chosen']
+        return 1
+
+    def mutate(self, model: Model):
+        for node in model.get_nodes_by_label(self.label):
+            max_num_edges = node.operation.parameters['max_num_edges']
+            break
+        mutation_dict = {mut.mutator.label: mut.samples for mut in model.history}
+        num_nodes = mutation_dict[f'{self.label}/num_nodes'][0]
+        adjacency_list = [mutation_dict[f'{self.label}/input_{i}'] for i in range(1, num_nodes)]
+        if sum([len(e) for e in adjacency_list]) > max_num_edges:
+            raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
+        matrix = _NasBench101CellFixed.build_connection_matrix(adjacency_list, num_nodes)
+        prune(matrix, [None] * len(matrix))  # dummy ops
+
+    def dry_run(self, model):
+        return [], model

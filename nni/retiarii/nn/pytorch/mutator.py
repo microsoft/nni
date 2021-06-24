@@ -9,7 +9,7 @@ import torch.nn as nn
 from ...mutator import Mutator
 from ...graph import Cell, Graph, Model, ModelStatus, Node
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
-from .component import Repeat
+from .component import Repeat, NasBench101Cell, NasBench101Mutator
 from ...utils import uid
 
 
@@ -253,6 +253,11 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
                 'candidates': list(range(module.min_depth, module.max_depth + 1))
             })
             node.label = module.label
+        if isinstance(module, NasBench101Cell):
+            node = graph.add_node(name, 'NasBench101Cell', {
+                'max_num_edges': module.max_num_edges
+            })
+            node.label = module.label
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
 
@@ -261,13 +266,17 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         return model, None
 
     mutators = []
+    mutators_final = []
     for nodes in _group_by_label_and_type(graph.hidden_nodes):
         assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
             f'Node with label "{nodes[0].label}" does not all have the same type.'
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
             f'Node with label "{nodes[0].label}" does not agree on parameters.'
-        mutators.append(ManyChooseManyMutator(nodes[0].label))
-    return model, mutators
+        if nodes[0].operation.type == 'NasBench101Cell':
+            mutators_final.append(NasBench101Mutator(nodes[0].label))
+        else:
+            mutators.append(ManyChooseManyMutator(nodes[0].label))
+    return model, mutators + mutators_final
 
 
 # utility functions

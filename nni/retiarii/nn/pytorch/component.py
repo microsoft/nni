@@ -7,12 +7,12 @@ import torch.nn as nn
 from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
-from .nasbench101 import NasBench101Cell
+from .nasbench101 import NasBench101Cell, NasBench101Mutator
 from .utils import generate_new_label, get_fixed_value
 from ...utils import NoContextError
 
 
-__all__ = ['Repeat', 'Cell', 'NasBench101Cell']
+__all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator']
 
 
 class Repeat(nn.Module):

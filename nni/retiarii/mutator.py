@@ -6,7 +6,7 @@ from typing import (Any, Iterable, List, Optional)
 from .graph import Model, Mutation, ModelStatus
 
 
-__all__ = ['Sampler', 'Mutator']
+__all__ = ['Sampler', 'Mutator', 'InvalidMutation']
 
 
 Choice = Any

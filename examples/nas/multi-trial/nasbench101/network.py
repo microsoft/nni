@@ -144,8 +144,9 @@ def _multi_trial_test(epochs, batch_size, port):
 
     # specify training hyper-parameters
     training_module = NasBench101TrainingModule(max_epochs=epochs)
-    lr_monitor = serialize(LearningRateMonitor, logging_interval='step')
-    trainer = pl.Trainer(max_epochs=epochs, gpus=1, callbacks=[lr_monitor])
+    # FIXME: need to fix a bug in serializer for this to work
+    # lr_monitor = serialize(LearningRateMonitor, logging_interval='step')
+    trainer = pl.Trainer(max_epochs=epochs, gpus=1)
     lightning = pl.Lightning(
         lightning_module=training_module,
         trainer=trainer,
