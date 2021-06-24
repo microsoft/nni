@@ -139,7 +139,7 @@ Following the previous steps, we ran the example for 40 trials using the TPE tun
        "lambda_L1": 500
     }
 
-Meanwhile, we compare the results with the model training using the following default rule-of-thumb hyperparameters:
+Meanwhile, we compare the results with the model training using the following default empirical hyperparameter settings:
 
 .. code-block:: json
 		
@@ -157,4 +157,4 @@ Meanwhile, we compare the results with the model training using the following de
        "lambda_L1": 100
     }
 
-We found that the parameters searched by in terms of L1 loss and the visual qualities of the images. While the search hyperparameter has a L1 loss of 0.3317 on the test set of facades, the rule-of-thumb hyperparameters can only achieve a L1 loss of 0.4148. 
+We can observe that for learning rate (0.0002), the generator architecture (U-Net), and gan objective (LSGAN), the two results agree with each other. This is also consistent with the widely accepted practice on this dataset. Meanwhile, the hyperparameters "beta1", "lambda_L1", "ngf", and "ndf" are slightly changed in the NNI's found solution to fit the target dataset. We found that the parameters searched by NNI outperforms the empirical parameters on the facades dataset both in terms of L1 loss and the visual qualities of the images. While the search hyperparameter has a L1 loss of 0.3317 on the test set of facades, the empirical hyperparameters can only achieve a L1 loss of 0.4148. 
