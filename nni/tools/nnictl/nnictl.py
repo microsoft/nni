@@ -168,8 +168,8 @@ def parse_args():
                                    loaded experiment, this path contains file name. Default in $codeDir/search_space.json')
     parser_load_experiment.set_defaults(func=load_experiment)
     #view an NNI experiment
-    parser_view_experiment = parser_experiment_subparsers.add_parser('view', help='load an experiment from a folder')
-    parser_view_experiment.add_argument('--experiment_dir', '-e', required=True, help='the path of nni experiment folder')
+    parser_view_experiment = parser_experiment_subparsers.add_parser('view', help='view an experiment from external folder')
+    parser_view_experiment.add_argument('--experiment_dir', '-e', required=True, help='the full path of nni experiment folder')
     parser_view_experiment.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
     parser_view_experiment.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of experiment')
     parser_view_experiment.set_defaults(func=view_external_experiment)
