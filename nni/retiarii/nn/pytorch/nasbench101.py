@@ -1,8 +1,8 @@
-import numpy as np
 import logging
 from collections import OrderedDict
 from typing import Callable, List, Optional, OrderedDict, Union, Dict
 
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -225,7 +225,7 @@ class NasBench101Cell(nn.Module):
 
     The space of this cell architecture consists of all possible directed acyclic graphs on no more than ``max_num_nodes`` nodes,
     where each possible node (other than IN and OUT) has one of ``op_candidates``, representing the corresponding operation.
-    Edges connecting the nodes can be no more than ``max_num_edges``. 
+    Edges connecting the nodes can be no more than ``max_num_edges``.
     To align with the paper settings, two vertices specially labeled as operation IN and OUT, are also counted into
     ``max_num_nodes`` in our implementaion, the default value of ``max_num_nodes`` is 7 and ``max_num_edges`` is 9.
 

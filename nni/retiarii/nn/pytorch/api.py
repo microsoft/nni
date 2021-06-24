@@ -3,7 +3,6 @@
 
 import copy
 import warnings
-from collections import OrderedDict
 from typing import Any, List, Union, Dict, Optional
 
 import torch
