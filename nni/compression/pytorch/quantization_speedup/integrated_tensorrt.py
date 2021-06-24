@@ -120,22 +120,22 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
         An ICudaEngine for executing inference on a built network
     """
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
-        trt.OnnxParser(network, TRT_LOGGER) as parser:
+        trt.OnnxParser(network, TRT_LOGGER) as parser, builder.create_builder_config() as trt_config:
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
         builder.max_batch_size = 1
-        builder.max_workspace_size = common.GiB(4)
+        trt_config.max_workspace_size = common.GiB(4)
 
         if extra_layer_bit == 32 and config is None:
             pass
         elif extra_layer_bit == 16 and config is None:
-            builder.fp16_mode = True
+            trt_config.set_flag(trt.BuilderFlag.FP16)
         elif extra_layer_bit == 8 and config is None:
             # entire model in 8bit mode
-            builder.int8_mode = True
+            trt_config.set_flag(trt.BuilderFlag.INT8)
         else:
-            builder.int8_mode = True
-            builder.fp16_mode = True
-            builder.strict_type_constraints = strict_datatype
+            trt_config.set_flag(trt.BuilderFlag.INT8)
+            trt_config.set_flag(trt.BuilderFlag.FP16)
+            trt_config.set_flag(trt.BuilderFlag.STRICT_TYPES)
 
         valid_config(config)
 
@@ -148,7 +148,7 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
                 return None
 
         if calib is not None:
-            builder.int8_calibrator = calib
+            trt_config.int8_calibrator = calib
             # This design may not be correct if output more than one
             for i in range(network.num_layers):
                 if config is None:
@@ -196,7 +196,7 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
                     out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
 
         # Build engine and do int8 calibration.
-        engine = builder.build_cuda_engine(network)
+        engine = builder.build_engine(network, trt_config)
         return engine
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):
