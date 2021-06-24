@@ -28,6 +28,8 @@ def to_v2(v1) -> ExperimentConfig:
         v2.max_experiment_duration = str(v2.max_experiment_duration) + 's'
     _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
     _move_field(v1, v2, 'maxTrialDuration', 'max_trial_duration')
+    if isinstance(v2.max_trial_duration, (int, float)):
+        v2.max_trial_duration = str(v2.max_trial_duration) + 's'
     _move_field(v1, v2, 'searchSpacePath', 'search_space_file')
     assert not v1.pop('multiPhase', None), 'Multi-phase is no longer supported'
     _deprecate(v1, v2, 'multiThread')
