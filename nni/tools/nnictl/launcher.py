@@ -419,6 +419,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             experiment_config['searchSpace'] = search_space
         else:
             experiment_config['searchSpace'] = ''
+
     # check rest server
     running, _ = check_rest_server(args.port)
     if running:
@@ -435,6 +436,7 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         # set platform configuration
         set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
                             experiment_id, rest_process)
+
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
