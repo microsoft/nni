@@ -1,8 +1,21 @@
+import click
+import nni
+import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn as nn
+import torchmetrics
+from nni.retiarii import model_wrapper, serialize, serialize_cls
+from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.retiarii.nn.pytorch import NasBench101Cell
+from nni.retiarii.strategy import Random
+from timm.optim import RMSpropTF
+from torch.optim.lr_scheduler import CosineAnnealingLR
+from torchvision import transforms
+from torchvision.datasets import CIFAR10
 
-from .base_ops import Conv3x3BnRelu, Conv1x1BnRelu, ConvBnRelu
+from base_ops import Conv3x3BnRelu, Conv1x1BnRelu, Projection
 
 
+@model_wrapper
 class NasBench101(nn.Module):
     def __init__(self,
                  stem_out_channels: int = 128,
@@ -15,6 +28,12 @@ class NasBench101(nn.Module):
                  bn_momentum: float = 0.003):
         super().__init__()
 
+        op_candidates = [
+            lambda num_features: Conv3x3BnRelu(num_features, num_features),
+            lambda num_features: Conv1x1BnRelu(num_features, num_features),
+            lambda num_features: nn.MaxPool2d(3, 1, 1)
+        ]
+
         # initial stem convolution
         self.stem_conv = Conv3x3BnRelu(3, stem_out_channels)
 
@@ -26,7 +45,9 @@ class NasBench101(nn.Module):
                 layers.append(downsample)
                 out_channels *= 2
             for _ in range(num_modules_per_stack):
-                cell = Cell(max_num_vertices, max_num_edges, in_channels, out_channels)
+                cell = NasBench101Cell(op_candidates, in_channels, out_channels,
+                                       lambda cin, cout: Projection(cin, cout),
+                                       max_num_vertices, max_num_edges, label='cell')
                 layers.append(cell)
                 in_channels = out_channels
 
@@ -54,5 +75,96 @@ class NasBench101(nn.Module):
                 module.eps = self.config.bn_eps
                 module.momentum = self.config.bn_momentum
 
-    def validate(self) -> bool:
-        return self.features[0].validate()
+
+class AccuracyWithLogits(torchmetrics.Accuracy):
+    def update(self, pred, target):
+        return super().update(nn.functional.softmax(pred), target)
+
+
+@serialize_cls
+class NasBench101TrainingModule(pl.LightningModule):
+    def __init__(self, max_epochs=108, learning_rate=0.1, weight_decay=1e-4):
+        super().__init__()
+        self.save_hyperparameters('learning_rate', 'weight_decay')
+        self.criterion = nn.CrossEntropyLoss()
+        self.accuracy = AccuracyWithLogits()
+
+    def forward(self, x):
+        y_hat = self.model(x)
+        return y_hat
+
+    def training_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        loss = self.criterion(y_hat, y)
+        self.log('train_loss', loss, prog_bar=True)
+        self.log('train_accuracy', self.accuracy(y_hat, y), prog_bar=True)
+        return loss
+
+    def validation_step(self, batch, batch_idx):
+        x, y = batch
+        y_hat = self(x)
+        self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)
+        self.log('val_accuracy', self.accuracy(y_hat, y), prog_bar=True)
+        for name, metric in self.metrics.items():
+            self.log('val_' + name, metric(y_hat, y), prog_bar=True)
+
+    def configure_optimizers(self):
+        optimizer = RMSpropTF(learning_rate=self.haprams.learning_rate, weight_decay=self.hparams.weight_decay,
+                              momentum=0.9, alpha=0.9, eps=1.0)
+        return {
+            'optimizer': optimizer,
+            'scheduler': CosineAnnealingLR(optimizer, self.hparams.max_epochs)
+        }
+
+    def on_validation_epoch_end(self):
+        nni.report_intermediate_result(self.trainer.callback_metrics['val_accuracy'].item())
+
+    def teardown(self, stage):
+        if stage == 'fit':
+            nni.report_final_result(self.trainer.callback_metrics['val_accuracy'].item())
+
+
+@click.command()
+@click.option('--epochs', default=108, help='Training length.')
+@click.option('--port', default=8081, help='On which port the experiment is run.')
+def _multi_trial_test(epochs, port):
+    # initalize dataset. Note that 50k+10k is used. It's a little different from paper
+    transf = [
+        transforms.RandomCrop(32, padding=4),
+        transforms.RandomHorizontalFlip()
+    ]
+    normalize = [
+        transforms.ToTensor(),
+        transforms.Normalize([0.49139968, 0.48215827, 0.44653124], [0.24703233, 0.24348505, 0.26158768])
+    ]
+    train_dataset = serialize(CIFAR10, 'data', train=True, download=True, transform=transforms.Compose(transf + normalize))
+    test_dataset = serialize(CIFAR10, 'data', train=False, transform=transforms.Compose(normalize))
+
+    # specify training hyper-parameters
+    training_module = NasBench101TrainingModule(max_epochs=epochs)
+    trainer = pl.Trainer(max_epochs=epochs, gpus=1)
+    lightning = pl.Lightning(
+        lightning_module=training_module,
+        trainer=trainer,
+        train_dataloader=pl.DataLoader(train_dataset, batch_size=256, shuffle=True),
+        val_dataloaders=pl.DataLoader(test_dataset, batch_size=256),
+    )
+
+    strategy = Random()
+
+    model = NasBench101()
+
+    exp = RetiariiExperiment(model, lightning, [], strategy)
+
+    exp_config = RetiariiExeConfig('local')
+    exp_config.trial_concurrency = 2
+    exp_config.max_trial_number = 20
+    exp_config.trial_gpu_number = 1
+    exp_config.training_service.use_active_gpu = False
+
+    exp.run(exp_config, port)
+
+
+if __name__ == '__main__':
+    _multi_trial_test()

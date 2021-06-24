@@ -3,20 +3,6 @@ import math
 import torch.nn as nn
 
 
-def truncate(inputs, channels):
-    input_channels = inputs.size(1)
-    if input_channels < channels:
-        raise ValueError('input channel < output channels for truncate')
-    elif input_channels == channels:
-        return inputs   # No truncation necessary
-    else:
-        # Truncation should only be necessary when channel division leads to
-        # vertices with +1 channels. The input vertex should always be projected to
-        # the minimum channel count.
-        assert input_channels - channels == 1
-        return inputs[:, :channels, :, :]
-
-
 def truncated_normal_(tensor, mean=0, std=1):
     # https://discuss.pytorch.org/t/implementing-truncated-normal-initializer/4778/15
     size = tensor.shape
@@ -63,10 +49,8 @@ class Conv1x1BnRelu(ConvBnRelu):
 
 
 class MaxPool3x3(nn.Module):
-    def __init__(self, in_channels, out_channels):
+    def __init__(self):
         super(MaxPool3x3, self).__init__()
-        self.in_channels = in_channels
-        self.out_channels = out_channels
         self.maxpool = nn.MaxPool2d(3, 1, 1)
 
     def forward(self, x):

@@ -57,6 +57,8 @@ class LayerChoice(nn.Module):
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
+    # FIXME: prior is designed but not supported yet
+
     def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         try:
@@ -290,6 +292,8 @@ class ValueChoice(Translatable, nn.Module):
     label : str
         Identifier of the value choice.
     """
+
+    # FIXME: prior is designed but not supported yet
 
     def __new__(cls, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
         try:

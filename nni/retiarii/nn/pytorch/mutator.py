@@ -47,7 +47,12 @@ class InputChoiceMutator(Mutator):
         n_candidates = self.nodes[0].operation.parameters['n_candidates']
         n_chosen = self.nodes[0].operation.parameters['n_chosen']
         candidates = list(range(n_candidates))
-        chosen = [self.choice(candidates) for _ in range(n_chosen)]
+        if n_chosen is None:
+            chosen = [i for i in candidates if self.choice([False, True])]
+            # This is a hack to make choice align with the previous format
+            self._cur_samples = chosen
+        else:
+            chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
             target = model.get_node_by_name(node.name)
             target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
@@ -199,7 +204,12 @@ class ManyChooseManyMutator(Mutator):
     def mutate(self, model: Model):
         # this mutate does not have any effect, but it is recorded in the mutation history
         for node in model.get_nodes_by_label(self.label):
-            for _ in range(self.number_of_chosen(node)):
+            n_chosen = self.number_of_chosen(node)
+            if n_chosen is None:
+                candidates = [i for i in self.candidates(node) if self.choice([False, True])]
+                # This is a hack to make choice align with the previous format
+                self._cur_samples = candidates
+            for _ in range(n_chosen):
                 self.choice(self.candidates(node))
             break
 

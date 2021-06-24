@@ -7,6 +7,7 @@ import torch.nn as nn
 
 from .api import InputChoice, ValueChoice, LayerChoice
 from .utils import generate_new_label, get_fixed_dict
+from ...mutator import Mutator
 
 _logger = logging.getLogger(__name__)
 
@@ -213,16 +214,17 @@ class NasBench101Cell(nn.Module):
     """
 
     def __new__(cls, op_candidates: List[Callable[[int], nn.Module]],
-                 in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
-                 max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
+                in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
+                max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
         try:
             label = generate_new_label(label)
             selected = get_fixed_dict(label + '/')
             num_nodes = selected[f'{label}/num_nodes']
+            adjacency_list = [selected[f'{label}/input_{i}'] for i in range(1, num_nodes)]
+            assert sum([len(e) for e in adjacency_list]) <= max_num_edges, f'Expected {max_num_edges} edges, found: {adjacency_list}'
             return _NasBench101CellFixed(
                 [op_candidates[selected[f'{label}/op_{i}']] for i in range(1, num_nodes - 1)],
-                [selected[f'{label}/input_{i}'] for i in range(1, num_nodes)],
-                in_features, out_features, num_nodes, projection)
+                adjacency_list, in_features, out_features, num_nodes, projection)
         except AssertionError:
             return super().__new__(cls)
 
@@ -230,6 +232,7 @@ class NasBench101Cell(nn.Module):
                  in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                  max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
 
+        super().__init__()
         self._label = generate_new_label(label)
         num_vertices_prior = [2 ** i for i in range(2, max_num_nodes + 1)]
         num_vertices_prior = (np.array(num_vertices_prior) / sum(num_vertices_prior)).tolist()
@@ -250,7 +253,7 @@ class NasBench101Cell(nn.Module):
         for i in range(1, max_num_nodes):
             if i < max_num_nodes - 1:
                 self.ops.append(LayerChoice([op(self.hidden_features) for op in op_candidates],
-                                           label=f'{self._label}/op_{i}'))
+                                            label=f'{self._label}/op_{i}'))
             self.inputs.append(InputChoice(i, None, label=f'{self._label}/input_{i}'))
 
     @property
@@ -258,7 +261,7 @@ class NasBench101Cell(nn.Module):
         return self._label
 
     def forward(self, x):
-        # The forward is not used
+        # This is a dummy forward and actually not used
         tensors = [x]
         for i in range(1, self.max_num_nodes):
             node_input = self.inputs([self.projections[i](tensors[0])] + [t for t in tensors[1:]])
@@ -268,3 +271,8 @@ class NasBench101Cell(nn.Module):
                 node_output = node_input
             tensors.append(node_output)
         return tensors[-1]
+
+
+class NasBench101Mutator(Mutator):
+    # for validation purposes
+    pass
