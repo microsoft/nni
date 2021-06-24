@@ -1089,7 +1089,7 @@ Manage experiment information
      - Required
      - Default
      - Description
-   * - --experiment_dir, -d
+   * - --experiment_dir, -e
      - True
      - 
      - The folder path of nni experiment
