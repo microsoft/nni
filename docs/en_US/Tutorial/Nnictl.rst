@@ -1061,6 +1061,60 @@ Manage experiment information
 
      nnictl experiment load --path [path] --codeDir [codeDir]
 
+
+* 
+  **nnictl experiment view**
+
+
+  * 
+    Description
+
+    View an nni experiment from external folder.
+
+  * 
+    Usage
+
+    .. code-block:: bash
+
+       nnictl experiment view [OPTIONS]
+
+  * 
+    Options
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Name, shorthand
+     - Required
+     - Default
+     - Description
+   * - --experiment_dir, -d
+     - True
+     - 
+     - The folder path of nni experiment
+   * - --port, -p
+     - False
+     - 8080
+     - The port used to start an experiment.
+   * - --url_prefix, -u
+     - False
+     - 
+     - The prefix url of an experiment
+
+
+* 
+  Examples
+
+  ..
+
+     view an external expeirment
+
+
+  .. code-block:: bash
+
+     nnictl experiment view --experiment_dir [path]
+
 :raw-html:`<a name="platform"></a>`
 
 Manage platform information

@@ -7,7 +7,7 @@ import os
 import pkg_resources
 from colorama import init
 from .common_utils import print_error
-from .launcher import create_experiment, resume_experiment, view_experiment
+from .launcher import create_experiment, resume_experiment, view_experiment, view_external_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
@@ -167,6 +167,12 @@ def parse_args():
     parser_load_experiment.add_argument('--searchSpacePath', '-s', required=False, help='the path of search space file for \
                                    loaded experiment, this path contains file name. Default in $codeDir/search_space.json')
     parser_load_experiment.set_defaults(func=load_experiment)
+    #view an NNI experiment
+    parser_view_experiment = parser_experiment_subparsers.add_parser('view', help='load an experiment from a folder')
+    parser_view_experiment.add_argument('--experiment_dir', '-e', required=True, help='the path of nni experiment folder')
+    parser_view_experiment.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
+    parser_view_experiment.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of experiment')
+    parser_view_experiment.set_defaults(func=view_external_experiment)
 
     #parse platform command
     parser_platform = subparsers.add_parser('platform', help='get platform information')

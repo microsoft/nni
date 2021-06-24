@@ -419,7 +419,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
             experiment_config['searchSpace'] = search_space
         else:
             experiment_config['searchSpace'] = ''
-
     # check rest server
     running, _ = check_rest_server(args.port)
     if running:
@@ -436,7 +435,6 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         # set platform configuration
         set_platform_config(experiment_config['trainingServicePlatform'], experiment_config, args.port,\
                             experiment_id, rest_process)
-
     # start a new experiment
     print_normal('Starting experiment...')
     # set debug configuration
@@ -574,3 +572,28 @@ def view_experiment(args):
 def resume_experiment(args):
     '''resume an experiment'''
     manage_stopped_experiment(args, 'resume')
+
+def view_external_experiment(args):
+    '''view a experiment from external path'''
+    # validate arguments
+    if not os.path.exists(args.experiment_dir):
+        print_error('Folder %s does not exist!' % args.experiment_dir)
+        exit(1)
+    if not os.path.isdir(args.experiment_dir):
+        print_error('Path %s is not folder directory!' % args.experiment_dir)
+        exit(1)
+    experiment_id = os.path.basename(args.experiment_dir)
+    log_dir = os.path.dirname(args.experiment_dir)
+
+    experiment_config = Config(experiment_id, log_dir).get_config()
+    assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
+    try:
+        if 'trainingServicePlatform' in experiment_config:
+            experiment_config['logDir'] = log_dir
+            launch_experiment(args, experiment_config, 'view', experiment_id, 1)
+        else:
+            experiment_config['experimentWorkingDirectory'] = log_dir
+            launch_experiment(args, experiment_config, 'view', experiment_id, 2)
+    except Exception as exception:
+        print_error(exception)
+        exit(1)
