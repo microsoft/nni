@@ -50,7 +50,16 @@ class NaiveSparsityAllocator(SparsityAllocator):
 
 
 class NaiveSparsityGenerrator(SparsityGenerator):
-    def __init__(self, config_list: List[Dict], iteration_num: int, schedule_type: str = 'constant'):
+    def __init__(self, config_list: List[Dict], iteration_num: Optional[int], schedule_type: str = 'constant'):
+        iteration_num = iteration_num if iteration_num else 1
         assert isinstance(iteration_num, int) and iteration_num > 0, 'iteration_num need greater than 0'
-        self.sparsity_scheduler = NaiveSparsityScheduler(config_list, iteration_num, schedule_type)
-        self.sparsity_allocator = NaiveSparsityAllocator()
+        self._sparsity_scheduler = NaiveSparsityScheduler(config_list, iteration_num, schedule_type)
+        self._sparsity_allocator = NaiveSparsityAllocator()
+
+    @property
+    def sparsity_scheduler(self) -> SparsityScheduler:
+        return self._sparsity_scheduler
+
+    @property
+    def sparsity_allocator(self) -> SparsityAllocator:
+        return self._sparsity_allocator
