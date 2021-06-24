@@ -1092,7 +1092,7 @@ Manage experiment information
    * - --experiment_dir, -e
      - True
      - 
-     - The folder path of nni experiment
+     - The folder path of nni experiment. Note: please make sure the folder name is consistent with the experiment id.
    * - --port, -p
      - False
      - 8080
