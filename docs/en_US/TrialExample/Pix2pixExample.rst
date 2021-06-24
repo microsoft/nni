@@ -140,6 +140,7 @@ Following the previous steps, we ran the example for 40 trials using the TPE tun
     }
 
 Meanwhile, we compare the results with the model training using the following default rule-of-thumb hyperparameters:
+
 .. code-block:: json
 		
    {
