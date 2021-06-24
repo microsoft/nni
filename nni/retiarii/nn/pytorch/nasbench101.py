@@ -1,6 +1,7 @@
 import numpy as np
 import logging
-from typing import Callable, List, Optional
+from collections import OrderedDict
+from typing import Callable, List, Optional, OrderedDict, Union, Dict
 
 import torch
 import torch.nn as nn
@@ -8,6 +9,7 @@ import torch.nn as nn
 from .api import InputChoice, ValueChoice, LayerChoice
 from .utils import generate_new_label, get_fixed_dict
 from ...mutator import Mutator
+from ...utils import NoContextError
 
 _logger = logging.getLogger(__name__)
 
@@ -112,7 +114,7 @@ class _NasBench101CellFixed(nn.Module):
                  projection: Callable[[int, int], nn.Module]):
         super().__init__()
 
-        assert num_nodes == len(operations) + 2 == len(adjacency_list)
+        assert num_nodes == len(operations) + 2 == len(adjacency_list) + 1
 
         self.num_nodes = num_nodes
         self.in_features = in_features
@@ -131,7 +133,7 @@ class _NasBench101CellFixed(nn.Module):
 
     def _build_connection_matrix(self, adjacency_list):
         connections = np.zeros((self.num_nodes, self.num_nodes), dtype='int')
-        for i, lst in enumerate(adjacency_list):
+        for i, lst in enumerate(adjacency_list, start=1):
             assert all([0 <= k < i for k in lst])
             for k in lst:
                 connections[k, i] = 1
@@ -213,22 +215,31 @@ class NasBench101Cell(nn.Module):
         International Conference on Machine Learning. PMLR, 2019.
     """
 
-    def __new__(cls, op_candidates: List[Callable[[int], nn.Module]],
+    @staticmethod
+    def _make_dict(x):
+        if isinstance(x, list):
+            return OrderedDict([(str(i), t) for i, t in enumerate(x)])
+        return OrderedDict(x)
+
+    def __new__(cls, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                 in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                 max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
+        def make_list(x): return x if isinstance(x, list) else [x]
+
         try:
             label = generate_new_label(label)
             selected = get_fixed_dict(label + '/')
+            op_candidates = cls._make_dict(op_candidates)
             num_nodes = selected[f'{label}/num_nodes']
-            adjacency_list = [selected[f'{label}/input_{i}'] for i in range(1, num_nodes)]
+            adjacency_list = [make_list(selected[f'{label}/input_{i}']) for i in range(1, num_nodes)]
             assert sum([len(e) for e in adjacency_list]) <= max_num_edges, f'Expected {max_num_edges} edges, found: {adjacency_list}'
             return _NasBench101CellFixed(
                 [op_candidates[selected[f'{label}/op_{i}']] for i in range(1, num_nodes - 1)],
                 adjacency_list, in_features, out_features, num_nodes, projection)
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
-    def __init__(self, op_candidates: List[Callable[[int], nn.Module]],
+    def __init__(self, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
                  in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                  max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
 
@@ -242,6 +253,8 @@ class NasBench101Cell(nn.Module):
         self.max_num_nodes = max_num_nodes
         self.max_num_edges = max_num_edges
 
+        op_candidates = self._make_dict(op_candidates)
+
         # this is only for input validation and instantiating enough layer choice and input choice
         self.hidden_features = out_features
 
@@ -252,7 +265,7 @@ class NasBench101Cell(nn.Module):
             self.projections.append(projection(in_features, self.hidden_features))
         for i in range(1, max_num_nodes):
             if i < max_num_nodes - 1:
-                self.ops.append(LayerChoice([op(self.hidden_features) for op in op_candidates],
+                self.ops.append(LayerChoice(OrderedDict([(k, op(self.hidden_features)) for k, op in op_candidates.items()]),
                                             label=f'{self._label}/op_{i}'))
             self.inputs.append(InputChoice(i, None, label=f'{self._label}/input_{i}'))
 
@@ -264,7 +277,7 @@ class NasBench101Cell(nn.Module):
         # This is a dummy forward and actually not used
         tensors = [x]
         for i in range(1, self.max_num_nodes):
-            node_input = self.inputs([self.projections[i](tensors[0])] + [t for t in tensors[1:]])
+            node_input = self.inputs[i]([self.projections[i](tensors[0])] + [t for t in tensors[1:]])
             if i < self.max_num_nodes - 1:
                 node_output = self.ops[i](node_input)
             else:

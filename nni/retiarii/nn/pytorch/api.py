@@ -10,6 +10,7 @@ import torch
 import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
+from ...utils import NoContextError
 from .utils import generate_new_label, get_fixed_value
 
 
@@ -67,7 +68,7 @@ class LayerChoice(nn.Module):
                 return candidates[int(chosen)]
             else:
                 return candidates[chosen]
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
@@ -86,7 +87,7 @@ class LayerChoice(nn.Module):
         self._label = generate_new_label(label)
 
         self.names = []
-        if isinstance(candidates, OrderedDict):
+        if isinstance(candidates, dict):
             for name, module in candidates.items():
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
@@ -185,7 +186,7 @@ class InputChoice(nn.Module):
                 reduction: str = 'sum', label: Optional[str] = None, **kwargs):
         try:
             return ChosenInputs(get_fixed_value(label), reduction=reduction)
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
     def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
@@ -298,7 +299,7 @@ class ValueChoice(Translatable, nn.Module):
     def __new__(cls, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
         try:
             return get_fixed_value(label)
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
     def __init__(self, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):

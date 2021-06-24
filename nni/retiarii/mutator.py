@@ -115,3 +115,7 @@ class _RecorderSampler(Sampler):
     def choice(self, candidates: List[Choice], *args) -> Choice:
         self.recorded_candidates.append(candidates)
         return candidates[0]
+
+
+class InvalidMutation(Exception):
+    pass

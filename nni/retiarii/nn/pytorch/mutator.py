@@ -209,8 +209,10 @@ class ManyChooseManyMutator(Mutator):
                 candidates = [i for i in self.candidates(node) if self.choice([False, True])]
                 # This is a hack to make choice align with the previous format
                 self._cur_samples = candidates
-            for _ in range(n_chosen):
-                self.choice(self.candidates(node))
+            else:
+                for _ in range(n_chosen):
+                    self.choice(self.candidates(node))
+            print(self.candidates(node), self._cur_samples)
             break
 
 
@@ -266,6 +268,8 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
             f'Node with label "{nodes[0].label}" does not agree on parameters.'
         mutators.append(ManyChooseManyMutator(nodes[0].label))
+    import pprint
+    pprint.pprint(model._dump())
     return model, mutators
 
 

@@ -28,11 +28,11 @@ class NasBench101(nn.Module):
                  bn_momentum: float = 0.003):
         super().__init__()
 
-        op_candidates = [
-            lambda num_features: Conv3x3BnRelu(num_features, num_features),
-            lambda num_features: Conv1x1BnRelu(num_features, num_features),
-            lambda num_features: nn.MaxPool2d(3, 1, 1)
-        ]
+        op_candidates = {
+            'conv3x3': lambda num_features: Conv3x3BnRelu(num_features, num_features),
+            'conv1x1': lambda num_features: Conv1x1BnRelu(num_features, num_features),
+            'maxpool': lambda num_features: nn.MaxPool2d(3, 1, 1)
+        }
 
         # initial stem convolution
         self.stem_conv = Conv3x3BnRelu(3, stem_out_channels)
@@ -85,7 +85,7 @@ class AccuracyWithLogits(torchmetrics.Accuracy):
 class NasBench101TrainingModule(pl.LightningModule):
     def __init__(self, max_epochs=108, learning_rate=0.1, weight_decay=1e-4):
         super().__init__()
-        self.save_hyperparameters('learning_rate', 'weight_decay')
+        self.save_hyperparameters('learning_rate', 'weight_decay', 'max_epochs')
         self.criterion = nn.CrossEntropyLoss()
         self.accuracy = AccuracyWithLogits()
 
@@ -110,7 +110,8 @@ class NasBench101TrainingModule(pl.LightningModule):
             self.log('val_' + name, metric(y_hat, y), prog_bar=True)
 
     def configure_optimizers(self):
-        optimizer = RMSpropTF(learning_rate=self.haprams.learning_rate, weight_decay=self.hparams.weight_decay,
+        optimizer = RMSpropTF(self.parameters(), lr=self.hparams.learning_rate,
+                              weight_decay=self.hparams.weight_decay,
                               momentum=0.9, alpha=0.9, eps=1.0)
         return {
             'optimizer': optimizer,

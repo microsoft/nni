@@ -9,6 +9,7 @@ from .nn import ModuleList
 
 from .nasbench101 import NasBench101Cell
 from .utils import generate_new_label, get_fixed_value
+from ...utils import NoContextError
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell']
@@ -34,7 +35,7 @@ class Repeat(nn.Module):
         try:
             repeat = get_fixed_value(label)
             return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
     def __init__(self,
