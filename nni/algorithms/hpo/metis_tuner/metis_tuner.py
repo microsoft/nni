@@ -15,6 +15,7 @@ import numpy as np
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from . import lib_constraint_summation
 from . import lib_data
 from .Regression_GMM import CreateModel as gmm_create_model
@@ -152,6 +153,8 @@ class MetisTuner(Tuner):
         ----------
         search_space : dict
         """
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform'])
+
         self.x_bounds = [[] for i in range(len(search_space))]
         self.x_types = [NONE_TYPE for i in range(len(search_space))]
 

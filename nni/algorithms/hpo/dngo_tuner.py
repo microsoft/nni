@@ -4,6 +4,7 @@ import numpy as np
 import torch
 import nni.parameter_expressions as parameter_expressions
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 from pybnn import DNGO
 from torch.distributions import Normal
@@ -85,6 +86,7 @@ class DNGOTuner(Tuner):
             return new_x
 
     def update_search_space(self, search_space):
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform', 'loguniform', 'qloguniform'])
         self.searchspace_json = search_space
         self.random_state = np.random.RandomState()
 
