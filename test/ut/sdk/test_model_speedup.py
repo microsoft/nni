@@ -386,6 +386,8 @@ class SpeedupTestCase(TestCase):
                 cfgs = gen_cfg_func(net)
                 print("Testing {} with compression config \n {}".format(
                     model_name, cfgs))
+                if len(cfgs) == 0:
+                    continue
                 pruner = L1FilterPruner(net, cfgs)
                 pruner.compress()
                 pruner.export_model(MODEL_FILE, MASK_FILE)

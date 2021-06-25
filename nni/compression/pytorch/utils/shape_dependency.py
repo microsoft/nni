@@ -466,3 +466,110 @@ class GroupDependency(Dependency):
     @property
     def dependency_sets(self):
         return self.dependency
+
+
+
+class ReshapeDependency(Dependency):
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        """
+        Some model may have the view/reshape functions, such functions may have fixed parameters
+        and cannot be replaced at all. Therefore, these functions may have some constraints on
+        their input shapes. In this class, we find the direct input conv/linear layers of these
+        reshape functions. If you get the shape conflict when run the forward inference on the
+        speeduped model, please try remove these layers from the pruner config list and try again.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to be analyzed.
+        data : torch.Tensor
+            The example input data to trace the network architecture.
+        traced_model : torch._C.Graph
+            if we alreay has the traced graph of the target model, we donnot
+            need to trace the model again.
+        """
+        super(ReshapeDependency, self).__init__(
+            model, dummy_input, traced_model)
+
+    def _get_parent_layers(self, node):
+        """
+        Find the nearest father conv layers for the target node.
+
+        Parameters
+        ---------
+        node : torch._C.Node
+            target node.
+
+        Returns
+        -------
+        parent_layers: list
+            nearest father conv/linear layers for the target worknode.
+        """
+        parent_layers = []
+        queue = []
+        queue.append(node)
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear' or curnode.op_type == 'ConvTranspose2d':
+                # find the first met conv
+                parent_layers.append(curnode.name)
+                continue
+            parents = self.graph.find_predecessors(curnode.unique_name)
+            parents = [self.graph.name_to_node[name] for name in parents]
+            for parent in parents:
+                queue.append(parent)
+        return parent_layers
+
+    def build_dependency(self):
+        """
+        Build the channel dependency for the conv layers
+        in the model.
+        """
+        # unpack the tuple/list manually before analyze the
+        # channel dependency
+        self.graph.unpack_manually()
+        for node in self.graph.nodes_py.nodes_op:
+            parent_layers = []
+            # find the node that contains aten::add
+            # or aten::cat operations
+            if node.op_type in ['aten::view', 'aten::reshape']:
+                logger.info('Detect reshape-like functions: %s', node.op_type)
+                parent_layers = self._get_parent_layers(node)
+                print('Parent layers', parent_layers)
+                self.dependency[node.unique_name] = parent_layers
+
+    def export(self, filepath):
+        """
+        export the reshape dependencies as a csv file.
+
+        Output example:
+        Reshape OP, Dependent Layers
+        model.view.1,layer1.1.conv2,layer1.0.conv2,conv1
+        model.mean.1,layer1.0.conv1
+        model.reshape.1,layer1.1.conv1
+        """
+        header = ['Reshape OP', 'Dependent Layers']
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for reshape_op in self.dependency:
+                row = [reshape_op].extend(self.dependency[reshape_op])
+                csv_w.writerow(row)
+
+    @property
+    def dependency_sets(self):
+        """
+        Get the list of the dependency set.
+
+        Returns
+        -------
+        dependency_sets : list
+            list of the dependency sets. For example,
+            [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
+
+        """
+        d_sets = []
+        for reshape_node in self.dependency:
+            d_sets.extend(self.dependency[reshape_node])
+        d_sets = list(set(d_sets))
+        return d_sets

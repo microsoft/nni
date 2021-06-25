@@ -261,6 +261,7 @@ def replace_conv2d(conv, auto_infer):
     torch.nn.Conv2d
         The new conv2d module
     """
+
     assert isinstance(conv, nn.Conv2d)
     # the conv layer should only have one input tensor
     assert len(auto_infer.in_masks) == 1
@@ -374,6 +375,7 @@ def replace_conv2d(conv, auto_infer):
 
     new_conv.to(conv.weight.device)
     new_conv.weight.copy_(tmp_weight)
+
     # copy the bias data
     if conv.bias is not None:
         new_conv.bias.data.copy_(torch.index_select(

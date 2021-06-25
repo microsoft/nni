@@ -311,7 +311,8 @@ class AutoMaskInference:
             self.weight_mask[para_name][grad_zero] = 0
 
     def update_direct_sparsity(self):
-        # import pdb; pdb.set_trace()
+
+
         with torch.no_grad():
             out_sparsity, out_constant = self.clac_out_sparsity()
             if isinstance(out_sparsity, torch.Tensor):

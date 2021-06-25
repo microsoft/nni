@@ -145,12 +145,9 @@ def mul_python(node, speedup):
         input_i = inputs[i]
         debug_name = input_i.debugName()
         if debug_name not in speedup.internal_result:
-
             constant = parse_constant(input_i, speedup)
-            if input_i.toIValue() is not None:
-                constant = input_i.toIValue()
-                # both two inputs cannot be constants at the same time
-                break
+            # both two inputs cannot be constants at the same time
+            break
     if constant is None:
         return torch.mul
     else:
