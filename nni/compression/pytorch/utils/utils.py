@@ -1,6 +1,5 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-from nni.common.graph_utils import TorchModuleGraph
 import torch
 from .shape_dependency import ReshapeDependency
 
