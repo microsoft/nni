@@ -2,12 +2,13 @@ import logging
 
 import numpy as np
 import torch
+from pybnn import DNGO
+from torch.distributions import Normal
+
 import nni.parameter_expressions as parameter_expressions
 from nni import ClassArgsValidator
 from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
-from pybnn import DNGO
-from torch.distributions import Normal
 
 _logger = logging.getLogger(__name__)
 

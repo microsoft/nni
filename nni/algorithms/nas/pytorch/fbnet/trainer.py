@@ -128,7 +128,7 @@ class FBNetTrainer(BaseTrainer):
         layer_id = 0
         for i, stage_name in enumerate(stages):
             ops_names = [op for op in self.lookup_table.lut_ops[stage_name]]
-            for j in range(stage_lnum[i]):
+            for _ in range(stage_lnum[i]):
                 searched_op = ops_names[choice_ids[layer_id]]
                 choice_names.append(searched_op)
                 layer_id += 1

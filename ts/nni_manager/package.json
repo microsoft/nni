@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
