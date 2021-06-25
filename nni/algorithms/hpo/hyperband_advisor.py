@@ -265,8 +265,10 @@ class HyperbandClassArgsValidator(ClassArgsValidator):
         }).validate(kwargs)
 
 class Hyperband(MsgDispatcherBase):
-    """Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
-    This is an implementation that could fully leverage available resources or follow the algorithm process, i.e., high parallelism or serial.
+    """
+    Hyperband inherit from MsgDispatcherBase rather than Tuner, because it integrates both tuner's functions and assessor's functions.
+    This is an implementation that could fully leverage available resources or follow the algorithm process,
+    i.e., high parallelism or serial.
     A single execution of Hyperband takes a finite budget of (s_max + 1)B.
 
     Parameters
@@ -346,7 +348,8 @@ class Hyperband(MsgDispatcherBase):
                     self.curr_hb += 1
                 _logger.debug('create a new bracket, self.curr_hb=%d, self.curr_s=%d', self.curr_hb, self.curr_s)
                 self.curr_bracket_id = '{}-{}'.format(self.curr_hb, self.curr_s)
-                self.brackets[self.curr_bracket_id] = Bracket(self.curr_bracket_id, self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
+                self.brackets[self.curr_bracket_id] = Bracket(
+                    self.curr_bracket_id, self.curr_s, self.s_max, self.eta, self.R, self.optimize_mode)
                 next_n, next_r = self.brackets[self.curr_bracket_id].get_n_r()
                 _logger.debug('new bracket, next_n=%d, next_r=%d', next_n, next_r)
                 assert self.searchspace_json is not None and self.random_state is not None
