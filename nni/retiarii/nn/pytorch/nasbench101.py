@@ -1,6 +1,6 @@
 import logging
 from collections import OrderedDict
-from typing import Callable, List, Optional, OrderedDict, Union, Dict
+from typing import Callable, List, Optional, Union, Dict
 
 import numpy as np
 import torch
