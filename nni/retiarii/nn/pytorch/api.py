@@ -59,7 +59,7 @@ class LayerChoice(nn.Module):
 
     # FIXME: prior is designed but not supported yet
 
-    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
+    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         try:
             chosen = get_fixed_value(label)
@@ -70,7 +70,7 @@ class LayerChoice(nn.Module):
         except NoContextError:
             return super().__new__(cls)
 
-    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]],
+    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                  prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         super(LayerChoice, self).__init__()
         if 'key' in kwargs:
@@ -295,13 +295,13 @@ class ValueChoice(Translatable, nn.Module):
 
     # FIXME: prior is designed but not supported yet
 
-    def __new__(cls, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
+    def __new__(cls, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
         try:
             return get_fixed_value(label)
         except NoContextError:
             return super().__new__(cls)
 
-    def __init__(self, candidates: List[Any], prior: Optional[List[float]] = None, label: Optional[str] = None):
+    def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()
         self.candidates = candidates
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
@@ -339,7 +339,7 @@ class ValueChoice(Translatable, nn.Module):
         return self
 
     def __deepcopy__(self, memo):
-        new_item = ValueChoice(self.candidates, self.label)
+        new_item = ValueChoice(self.candidates, label=self.label)
         new_item._accessor = [*self._accessor]
         return new_item
 
