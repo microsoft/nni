@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import (Any, Iterable, List, Optional)
+from typing import (Any, Iterable, List, Optional, Tuple)
 
 from .graph import Model, Mutation, ModelStatus
 
@@ -77,7 +77,7 @@ class Mutator:
         self._cur_choice_idx = None
         return copy
 
-    def dry_run(self, model: Model) -> List[List[Choice]]:
+    def dry_run(self, model: Model) -> Tuple[List[List[Choice]], Model]:
         """
         Dry run mutator on a model to collect choice candidates.
         If you invoke this method multiple times on same or different models,

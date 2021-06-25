@@ -169,7 +169,6 @@ class _NasBench101CellFixed(nn.Module):
 
         self.projections = nn.ModuleList([nn.Identity()])
         self.ops = nn.ModuleList([nn.Identity()])
-        self.inputs = nn.ModuleList([nn.Identity()])
         for i in range(1, self.num_nodes):
             self.projections.append(projection(in_features, self.hidden_features[i]))
 
@@ -273,8 +272,7 @@ class NasBench101Cell(nn.Module):
         def make_list(x): return x if isinstance(x, list) else [x]
 
         try:
-            label = generate_new_label(label)
-            selected = get_fixed_dict(label + '/')
+            label, selected = get_fixed_dict(label)
             op_candidates = cls._make_dict(op_candidates)
             num_nodes = selected[f'{label}/num_nodes']
             adjacency_list = [make_list(selected[f'{label}/input_{i}']) for i in range(1, num_nodes)]
