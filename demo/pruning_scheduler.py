@@ -1,15 +1,16 @@
 from copy import deepcopy
 import functools
-from nni.algorithms.compression.pytorch import pruning
-import json_tricks
 import logging
 from pathlib import Path
 import time
 from typing import Callable, Dict, List, Optional
 
+import json_tricks
 from torch import Tensor
 from torch.nn import Module
+from nni.compression.pytorch import speedup
 
+from nni.compression.pytorch import apply_compression_results
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
@@ -34,9 +35,9 @@ class PruningScheduler:
     def set_pruner(self, pruner_cls: Callable[[Module, List[Dict]], Pruner], **pruner_kwargs):
         self.pruner_cls = functools.partial(pruner_cls, **pruner_kwargs)
 
-    def compress(self, finetuner: Callable = None, finetune_optimizer_gen: Callable = None, finetune_dataloader = None,
+    def compress(self, finetuner: Callable = None, finetune_optimizer_gen: Callable = None, finetune_dataloader=None,
                  finetune_epochs: int = None, speed_up: bool = False, dummy_input: Tensor = None,
-                 log_dir: str = './log', tag: str = 'default'):
+                 log_dir: str = './log', tag: str = 'default', consistent: bool = True):
         model = deepcopy(self.origin_model)
         config_list = self.sparsity_generator.generate_config_list(deepcopy(self.origin_model), deepcopy(self.origin_config_list))
         iteration_round = 0
@@ -47,10 +48,12 @@ class PruningScheduler:
             iteration_round += 1
             logger.info('###### Pruning Iteration %i ######', iteration_round)
             logger.info('config list in this iteration:\n%s', json_tricks.dumps(config_list, indent=4))
+
             log_path = Path(log_dir, str(iteration_round))
             log_path.mkdir(parents=True, exist_ok=True)
             model_path = Path(log_path, 'model.pth')
             mask_path = Path(log_path, 'mask.pth')
+            model = model if consistent else deepcopy(self.origin_model)
 
             # pruning
             pruner = self.pruner_cls(model, config_list)
@@ -78,6 +81,10 @@ class PruningScheduler:
             # else:
             #     real_config_list = self.compute_sparsity_mask(model, mask_path)
             # NOTE: del after compute_sparsity is ready
+
+            if not speedup:
+                pruner._unwrap_model()
+                apply_compression_results(model, mask_path)
             real_config_list = config_list
 
             config_list = self.sparsity_generator.generate_config_list(model, real_config_list)
@@ -89,8 +96,12 @@ class PruningScheduler:
         ms = ModelSpeedup(model, dummy_input, mask_path, map_location=device)
         ms.speedup_model()
 
-    def compute_sparsity_speed_up(self, model: Module, compact_model: Module):
-        return []
+    # Not implement
+    # def compute_sparsity_speed_up(self, model: Module, compact_model: Module):
+    #     return []
 
-    def compute_sparsity_mask(self, model: Module, mask: Tensor):
-        return []
+    # def compute_sparsity_mask(self, model: Module, mask: Tensor):
+    #     return []
+
+    def get_best_config_list(self):
+        return self.sparsity_generator.best_config_list

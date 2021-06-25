@@ -1,2 +1,3 @@
 from .sparsity_generator import SparsityScheduler, SparsityAllocator, SparsityGenerator
-from .naive_sparsity_genrator import NaiveSparsityGenerrator
+from .naive_sparsity_genrator import NaiveSparsityGenerrator, NaiveSparsityScheduler, NaiveSparsityAllocator
+from .simulated_annealing_sparsity_genrator import SimulatedAnnealingSparsityGenerator

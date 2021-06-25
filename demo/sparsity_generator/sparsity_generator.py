@@ -101,6 +101,11 @@ class SparsityGenerator:
     def sparsity_allocator(self) -> SparsityAllocator:
         raise NotImplementedError()
 
+    @property
+    @abstractmethod
+    def best_config_list(self) -> List[Dict]:
+        raise NotImplementedError()
+
     def generate_config_list(self, model: Module, real_sparsity_config_list: List[Dict]) -> Optional[List[Dict]]:
         """
         Parameters
