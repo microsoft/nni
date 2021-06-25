@@ -178,6 +178,8 @@ class LocalTrainingService implements TrainingService {
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'stdout');
         } else if (logType === 'TRIAL_ERROR') {
             logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
+        } else if (logType == 'MODEL.onnx') {
+            logPath = path.join(this.rootDir, 'trials', trialJobId, 'model.onnx');
         } else {
             throw new Error('unexpected log type');
         }

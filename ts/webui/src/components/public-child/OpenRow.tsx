@@ -60,6 +60,10 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
     };
 
+    openModelOnnx = (): void => {
+        window.open(`https://netron.app/?url=${MANAGER_IP}/trial-log/${this.props.trialId}/MODEL.onnx`);
+    };
+
     render(): React.ReactNode {
         const { isHidenInfo, typeInfo, info } = this.state;
         const trialId = this.props.trialId;
@@ -124,6 +128,11 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                                 <PrimaryButton
                                                     onClick={this.openTrialLog.bind(this, 'TRIAL_STDOUT')}
                                                     text='View trial stdout'
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openModelOnnx.bind(this)}
+                                                    text='Visualize model'
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />
                                             </div>

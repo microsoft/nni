@@ -302,6 +302,7 @@ class NNIRestHandler {
                 if (log === '') {
                     log = 'No logs available.'
                 }
+                res.header('Access-Control-Allow-Origin', 'https://netron.app');
                 res.send(log);
             }).catch((err: Error) => {
                 this.handleError(err, res);
