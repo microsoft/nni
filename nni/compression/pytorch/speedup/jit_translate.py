@@ -41,6 +41,7 @@ def translate_list(list_node, speedup=None):
             values.append(_i.toIValue())
     return values
 
+
 def parse_constant(cvalue, speedup):
     """
     Parse the constant values from this Node
@@ -68,6 +69,7 @@ def parse_constant(cvalue, speedup):
     func = trans_from_jit_to_python[op_node.kind()](op_node, speedup)
     return func(*input_values)
 
+
 def dropout_python(node, speedup):
     return torch.dropout
 
@@ -87,6 +89,7 @@ def relu_inplace_python(node, speedup):
 
 def relu_python(node, speedup):
     return torch.relu
+
 
 def sigmoid_python(node, speedup):
     return torch.sigmoid
@@ -154,6 +157,7 @@ def mul_python(node, speedup):
         new_mul = partial(torch.mul, constant)
         return new_mul
 
+
 def slice_python(node, speedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
@@ -166,9 +170,9 @@ def slice_python(node, speedup):
             # don't need the slice indexes any more, we cannot remove this
             # parameter here, because, there may be multiple inputs passed from
             # previous nodes such as aten::size
-            logger.info('Model has Slice operation, and the operand size=%s, Slice object:%s', str(x.size()), str(self.sliceobj))
+            logger.info('Model has Slice operation, and the operand size=%s, Slice object:%s', str(
+                x.size()), str(self.sliceobj))
             return x[self.sliceobj]
-
 
     c_node = node.key_node
     inputs = list(c_node.inputs())
@@ -185,12 +189,14 @@ def slice_python(node, speedup):
     slice_list.append(slice_obj)
     return SliceMoudle(tuple(slice_list))
 
+
 def select_python(node, speedup):
     class SelectModule(torch.nn.Module):
         def __init__(self, dim, index):
             super(SelectModule, self).__init__()
             self.dim = dim
             self.index = index
+
         def forward(self, x):
             return x.select(self.dim, self.index)
     c_node = node.key_node
@@ -384,30 +390,48 @@ def typeas_python(node, speedup):
     class TypeasModule(torch.nn.Module):
         def __init__(self, dtype=torch.float):
             self.example = torch.zeros(1, dtype=dtype)
+
         def forward(self, x):
             return x.type_as(self.example)
     return TypeasModule()
 
+
 def upsample_bilinear2d_python(node, speedup):
+    class UpsampleModule(torch.nn.Module):
+        def __init__(self, size_list, scale_list):
+            super(UpsampleModule, self).__init__()
+            self.size_list = size_list
+            self.scale_list = scale_list
+
+        def forward(self, *args):
+            """
+            The first input of args is the target tensor to upsample
+            , the following parameters is useless, because we already
+            get the size_list and the scale_list by parsing the cpp_nodes.
+            """
+            return torch.nn.functional.upsample_bilinear(args[0], \
+            size=self.size_list, scale_factor=self.scale_list)
     c_node = node.key_node
     inputs = list(c_node.inputs())
     size_list_node = inputs[1].node()
     scale_list_node = inputs[3].node()
     size_list = None
     scale_list = None
+
     if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1])
+        size_list = translate_list(inputs[1], speedup)
     if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[3])
-    new_upsample = partial(torch.nn.functional.upsample_bilinear,
-                           size=size_list, scale_factor=scale_list)
-    return new_upsample
+        scale_list = translate_list(inputs[3], speedup)
+    return UpsampleModule(size_list, scale_list)
+
 
 def num2tensor_python(node, speedup):
     return torch.nn.Identity()
 
+
 def exp_python(node, speedup):
     return torch.exp
+
 
 def getattr_python(node, speedup):
     """

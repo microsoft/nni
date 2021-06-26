@@ -33,6 +33,7 @@ replace_module = {
     'Tanh': lambda module, auto_infer: no_replace(module, auto_infer),
     'Softplus': lambda module, auto_infer: no_replace(module, auto_infer),
     'Softshrink': lambda module, auto_infer: no_replace(module, auto_infer),
+    'Softmax': lambda module, auto_infer: no_replace(module, auto_infer),
     'Tanhshrink': lambda module, auto_infer: no_replace(module, auto_infer),
     'Dropout': lambda module, auto_infer: no_replace(module, auto_infer),
     'Dropout2d': lambda module, auto_infer: no_replace(module, auto_infer),
