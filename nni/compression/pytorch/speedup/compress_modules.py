@@ -91,6 +91,12 @@ def no_replace(module, auto_infer):
 
 def replace_linear(linear, auto_infer):
     """
+    This function will replace the original linear according to
+    the infered masks. This function support the fine-grained and
+    coarse-grained sparsity. In the fine-grained scenario, this function
+    will remove the whole column/row that happen to be totally covered by
+    the masks.
+
     Parameters
     ----------
     linear : torch.nn.Linear
@@ -249,6 +255,11 @@ class BiasModule(nn.Module):
 
 def replace_conv2d(conv, auto_infer):
     """
+    Replace the original conv with a new one according to the infered
+    masks, the function support the fine-grained sparsity and coarse-grained
+    sparsity. In the fine-grained scenario, this replace function will replace
+    the filters that happen to be totally coverd by the fine-grained sparsity.
+
     Parameters
     ----------
     conv : torch.nn.Conv2d
@@ -273,19 +284,6 @@ def replace_conv2d(conv, auto_infer):
     weight_mask = auto_infer.weight_mask['weight']
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
-
-    # if pruned_in.size(0) == 0 and pruned_out.size(0) == 0:
-    #     # if this is not structurally pruned at all
-    #     ori_bias = conv.bias
-    #     if conv.bias is not None:
-    #         conv.bias = torch.zeros_like(ori_bias)
-    #     bias_constant = torch.index_select(
-    #         conv(in_constant)[0], 0, remained_out)
-    #     # print(bias_constant)
-    #     # exit(-1)
-    #     conv.bias=ori_bias
-    #     return BiasModule(conv, bias_constant)
-    #     # return conv
 
     n_remained_in = weight_mask.size(1) * conv.groups - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
