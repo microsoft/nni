@@ -542,7 +542,7 @@ class NNIManager implements Manager {
         }
     }
 
-    private async stopTrialJobIfOverMaxDurationTimer(trialJobId:string): Promise<void> {
+    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
         const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
         if(undefined !== trialJobDetail &&
             trialJobDetail.status === 'RUNNING' &&
