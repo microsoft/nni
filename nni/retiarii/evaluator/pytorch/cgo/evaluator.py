@@ -218,5 +218,5 @@ class Regression(Lightning):
                  **trainer_kwargs):
         module = _RegressionModule(criterion=criterion, learning_rate=learning_rate,
                                    weight_decay=weight_decay, optimizer=optimizer)
-        super().__init__(module, Trainer(**trainer_kwargs),
+        super().__init__(module, Trainer(use_cgo=True, **trainer_kwargs),
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
