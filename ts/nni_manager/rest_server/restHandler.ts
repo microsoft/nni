@@ -54,6 +54,7 @@ class NNIRestHandler {
         this.version(router);
         this.checkStatus(router);
         this.getExperimentProfile(router);
+        this.getExperimentMetadata(router);
         this.updateExperimentProfile(router);
         this.importData(router);
         this.getImportedData(router);
@@ -321,6 +322,24 @@ class NNIRestHandler {
         router.get('/export-data', (req: Request, res: Response) => {
             this.nniManager.exportData().then((exportedData: string) => {
                 res.send(exportedData);
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private getExperimentMetadata(router: Router): void {
+        router.get('/experiment-metadata', (req: Request, res: Response) => {
+            Promise.all([
+                this.nniManager.getExperimentProfile(),
+                this.experimentsManager.getExperimentsInfo()
+            ]).then(([profile, experimentInfo]) => {
+                for (const info of experimentInfo as any) {
+                    if (info.id === profile.id) {
+                        res.send(info);
+                        break;
+                    }
+                }
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });

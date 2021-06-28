@@ -134,11 +134,13 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                                     text='View trial stdout'
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />
-                                                <PrimaryButton
-                                                    onClick={this.openModelOnnx.bind(this)}
-                                                    text='Visualize model'
-                                                    styles={{ root: { marginLeft: 15 } }}
-                                                />
+                                                {EXPERIMENT.metadata.tag.includes('retiarii') ? (
+                                                    <PrimaryButton
+                                                        onClick={this.openModelOnnx.bind(this)}
+                                                        text='Visualize model'
+                                                        styles={{ root: { marginLeft: 15 } }}
+                                                    />
+                                                ) : null}
                                             </div>
                                         </div>
                                     </div>
