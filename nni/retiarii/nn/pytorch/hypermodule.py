@@ -226,9 +226,19 @@ class AutoActivation(nn.Module):
     """
     def __init__(self, unit_num = 1):
         super().__init__()
-        self.unary1 = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
-        self.unary2 = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
-        self.binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
+        self.unit_num = unit_num
+        self.unaries = nn.ModuleList()
+        self.binaries = nn.ModuleList()
+        self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+        for i in range(unit_num):
+            one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+            self.unaries.append(one_unary)
+        for i in range(unit_num):
+            one_binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
+            self.binaries.append(one_binary)
 
     def forward(self, x):
-        return self.binary(torch.stack([self.unary1(x), self.unary2(x)]))
+        out = self.first_unary(x)
+        for unary, binary in zip(self.unaries, self.binaries):
+            out = binary(torch.stack([out, unary(x)]))
+        return out
