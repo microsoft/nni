@@ -2,7 +2,6 @@ from copy import deepcopy
 import logging
 from typing import Callable, List, Dict, Tuple
 
-import json_tricks
 import numpy as np
 from torch.nn import Module
 
@@ -81,7 +80,6 @@ class SimulatedAnnealingAllocator(SparsityAllocator):
 
         # rescale the sparsities
         sparsities = np.asarray(sparsities) * scale
-
         return sparsities
 
     def _sparsities_to_config_list(self, sparsities: List, config: Dict) -> List[Dict]:
@@ -100,7 +98,7 @@ class SimulatedAnnealingAllocator(SparsityAllocator):
         for config, sparsities in zip(self._unfolded_config_list, self._current_sparsities_list):
             while True:
                 perturbation = np.random.uniform(-magnitude, magnitude, len(sparsities))
-                temp_sparsities = np.clip(0, sparsities + perturbation, None)
+                temp_sparsities = np.clip(0.01, sparsities + perturbation, None)
                 temp_sparsities = self._rescale_sparsities(temp_sparsities, config['sparsity'], config['op_names'])
                 if temp_sparsities is not None and temp_sparsities[0] >= 0 and temp_sparsities[-1] < 1:
                     self._temp_config_list.extend(self._sparsities_to_config_list(temp_sparsities, config))
@@ -114,9 +112,6 @@ class SimulatedAnnealingAllocator(SparsityAllocator):
         return config_list
 
     def get_allocated_config_list(self, model: Module, schedule_config_list: List[Dict]) -> List[Dict]:
-        if self._current_temperature < self._stop_temperature:
-            return None
-
         if self._temp_sparsities_list is None:
             self._init_sparsities_config_list()
         else:
@@ -135,9 +130,9 @@ class SimulatedAnnealingAllocator(SparsityAllocator):
                     self._current_score = score
                     self._current_sparsities_list = deepcopy(self._temp_sparsities_list)
                     self._current_temperature *= self._cool_down_rate
+            if self._current_temperature < self._stop_temperature:
+                return None
             self._update_with_perturbations()
-
-        logger.info('Generated Config List is:\n%s', json_tricks.dumps(self._temp_config_list, indent=4))
 
         return deepcopy(self._temp_config_list)
 

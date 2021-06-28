@@ -92,7 +92,7 @@ if __name__ == '__main__':
 
     # pre-training
     best_acc = 0
-    for i in range(1):
+    for i in range(3):
         finetuner(model, get_optimizer(model), train_loader, i)
         acc = evaluator(model, test_loader)
         if acc > best_acc:
@@ -105,4 +105,4 @@ if __name__ == '__main__':
     scheduler = SimulatedAnnealingPruningScheduler(model, config_list, _evaluator)
     scheduler.set_pruner(L1FilterPruner)
     scheduler.compress()
-    print(scheduler.get_best_config_list())
+    print('Best config: {}'.format(scheduler.get_best_config_list()))

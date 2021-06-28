@@ -1,6 +1,7 @@
 from copy import deepcopy
 from typing import Dict, List
 
+import torch
 from torch.nn import Module
 
 
@@ -52,6 +53,56 @@ def get_model_weight_numel(model: Module, config_list: List[Dict]) -> Dict:
                 continue
             model_weight[module_name] = module.weight.data.numel()
     return model_weight
+
+def compute_sparsity_with_compact_model(origin_model: Module, compact_model, config_list: List[Dict]) -> List[Dict]:
+    real_config_list = []
+    for config in config_list:
+        left_weight_num = 0
+        total_weight_num = 0
+        for module_name, module in origin_model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            total_weight_num += module.weight.data.numel()
+        for module_name, module in compact_model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            left_weight_num += module.weight.data.numel()
+        real_config_list.append(deepcopy(config_list))
+        real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
+    return real_config_list
+
+def compute_sparsity_with_mask(model: Module, masks_file: str, config_list: List[Dict], dim: int = 0):
+    masks = torch.load(masks_file)
+    real_config_list = []
+    for config in config_list:
+        left_weight_num = 0
+        total_weight_num = 0
+        for module_name, module in model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            weight_mask = masks[module_name]['weight']
+            mask_size = weight_mask.size()
+            if len(mask_size) == 1:
+                index = torch.nonzero(weight_mask.abs() != 0).tolist()
+            else:
+                sum_idx = list(range(len(mask_size)))
+                sum_idx.remove(dim)
+                index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0).tolist()
+            module_weight_num = module.weight.data.numel()
+            left_weight_num += module_weight_num * len(index) / weight_mask.size(dim)
+            total_weight_num += module_weight_num
+        real_config_list.append(deepcopy(config_list))
+        real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
+    return real_config_list
 
 
 if __name__ == '__main__':

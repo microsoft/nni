@@ -8,13 +8,13 @@ from typing import Callable, Dict, List, Optional
 import json_tricks
 from torch import Tensor
 from torch.nn import Module
-from nni.compression.pytorch import speedup
 
 from nni.compression.pytorch import apply_compression_results
 from nni.compression.pytorch.compressor import Pruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from sparsity_generator import SparsityGenerator, NaiveSparsityGenerrator
+from utils import compute_sparsity_with_compact_model, compute_sparsity_with_mask
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -76,16 +76,12 @@ class PruningScheduler:
                     finetuner(model, optimizer, finetune_dataloader, i)
 
             # compute real sparsity
-            # if speed_up:
-            #     real_config_list = self.compute_sparsity_speed_up(masked_model, model)
-            # else:
-            #     real_config_list = self.compute_sparsity_mask(model, mask_path)
-            # NOTE: del after compute_sparsity is ready
-
-            if not speedup:
+            if speed_up:
+                real_config_list = compute_sparsity_with_compact_model(masked_model, model, config_list)
+            else:
+                real_config_list = compute_sparsity_with_mask(model, mask_path, config_list)
                 pruner._unwrap_model()
                 apply_compression_results(model, mask_path)
-            real_config_list = config_list
 
             config_list = self.sparsity_generator.generate_config_list(model, real_config_list)
 
@@ -95,13 +91,6 @@ class PruningScheduler:
     def speed_up(self, model: Module, mask_path: str, dummy_input: Tensor, device: str = None):
         ms = ModelSpeedup(model, dummy_input, mask_path, map_location=device)
         ms.speedup_model()
-
-    # Not implement
-    # def compute_sparsity_speed_up(self, model: Module, compact_model: Module):
-    #     return []
-
-    # def compute_sparsity_mask(self, model: Module, mask: Tensor):
-    #     return []
 
     def get_best_config_list(self):
         return self.sparsity_generator.best_config_list

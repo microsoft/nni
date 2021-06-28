@@ -1,2 +1,3 @@
 from .pruning_scheduler import PruningScheduler
 from .agp_pruning_scheduler import AGPPruningScheduler
+from .simulated_annealing_pruning_scheduler import SimulatedAnnealingPruningScheduler
