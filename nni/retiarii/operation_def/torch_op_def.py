@@ -61,7 +61,7 @@ class PrimConstant(PyTorchOperation):
         # TODO: deal with all the types
         if self.parameters['type'] == 'None':
             return f'{output} = None'
-        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'):
+        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'): # 'Long()' ???
             return f'{output} = {self.parameters["value"]}'
         elif self.parameters['type'] == 'str':
             str_val = self.parameters["value"]
@@ -171,7 +171,7 @@ class AtenTensors(PyTorchOperation):
                       'aten::ones_like', 'aten::zeros_like', 'aten::rand',
                       'aten::randn', 'aten::scalar_tensor', 'aten::new_full',
                       'aten::new_empty', 'aten::new_zeros', 'aten::arange',
-                      'aten::tensor', 'aten::ones', 'aten::zeros']
+                      'aten::tensor', 'aten::ones', 'aten::zeros', 'aten::as_tensor']
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         schemas = torch._C._jit_get_schemas_for_operator(self.type)

@@ -6,10 +6,48 @@ import math
 import torch
 import torch.nn as nn
 
+from nni.retiarii.serializer import basic_unit
+
 from .api import LayerChoice
+from ...utils import version_larger_equal
 
 __all__ = ['AutoActivation']
 
+TorchVersion = '1.5.0'
+
+# ============== unary function modules ==============
+
+@basic_unit
+class UnaryIdentity(nn.Module):
+    def forward(self, x):
+        return x
+
+@basic_unit
+class UnaryNegative(nn.Module):
+    def forward(self, x):
+        return -x
+
+@basic_unit
+class UnaryAbs(nn.Module):
+    def forward(self, x):
+        return torch.abs(x)
+
+@basic_unit
+class UnarySquare(nn.Module):
+    def forward(self, x):
+        return torch.square(x)
+
+@basic_unit
+class UnaryPow(nn.Module):
+    def forward(self, x):
+        return torch.pow(x, 3)
+
+@basic_unit
+class UnarySqrt(nn.Module):
+    def forward(self, x):
+        return torch.sqrt(x)
+
+@basic_unit
 class UnaryMul(nn.Module):
     def __init__(self):
         super().__init__()
@@ -18,6 +56,7 @@ class UnaryMul(nn.Module):
     def forward(self, x):
         return x * self.beta
 
+@basic_unit
 class UnaryAdd(nn.Module):
     def __init__(self):
         super().__init__()
@@ -26,95 +65,170 @@ class UnaryAdd(nn.Module):
     def forward(self, x):
         return x + self.beta
 
+@basic_unit
+class UnaryLogAbs(nn.Module):
+    def forward(self, x):
+        return torch.log(torch.abs(x) + 1e-7)
+
+@basic_unit
+class UnaryExp(nn.Module):
+    def forward(self, x):
+        return torch.exp(x)
+
+@basic_unit
+class UnarySin(nn.Module):
+    def forward(self, x):
+        return torch.sin(x)
+
+@basic_unit
+class UnaryCos(nn.Module):
+    def forward(self, x):
+        return torch.cos(x)
+
+@basic_unit
+class UnarySinh(nn.Module):
+    def forward(self, x):
+        return torch.sinh(x)
+
+@basic_unit
+class UnaryCosh(nn.Module):
+    def forward(self, x):
+        return torch.cosh(x)
+
+@basic_unit
+class UnaryTanh(nn.Module):
+    def forward(self, x):
+        return torch.tanh(x)
+
+if not version_larger_equal(torch.__version__, TorchVersion):
+    @basic_unit
+    class UnaryAsinh(nn.Module):
+        def forward(self, x):
+            return torch.asinh(x)
+
+@basic_unit
+class UnaryAtan(nn.Module):
+    def forward(self, x):
+        return torch.atan(x)
+
+if not version_larger_equal(torch.__version__, TorchVersion):
+    @basic_unit
+    class UnarySinc(nn.Module):
+        def forward(self, x):
+            return torch.sinc(x)
+
+@basic_unit
+class UnaryMax(nn.Module):
+    def forward(self, x):
+        return torch.max(x, torch.zeros_like(x))
+
+@basic_unit
+class UnaryMin(nn.Module):
+    def forward(self, x):
+        return torch.min(x, torch.zeros_like(x))
+
+@basic_unit
+class UnarySigmoid(nn.Module):
+    def forward(self, x):
+        return torch.sigmoid(x)
+
+@basic_unit
+class UnaryLogExp(nn.Module):
+    def forward(self, x):
+        return torch.log(1 + torch.exp(x))
+
+@basic_unit
+class UnaryExpSquare(nn.Module):
+    def forward(self, x):
+        return torch.exp(-torch.square(x))
+
+@basic_unit
+class UnaryErf(nn.Module):
+    def forward(self, x):
+        return torch.erf(x)
+
+unary_modules = ['UnaryIdentity', 'UnaryNegative', 'UnaryAbs', 'UnarySquare', 'UnaryPow',
+    'UnarySqrt', 'UnaryMul', 'UnaryAdd', 'UnaryLogAbs', 'UnaryExp', 'UnarySin', 'UnaryCos',
+    'UnarySinh', 'UnaryCosh', 'UnaryTanh', 'UnaryAtan', 'UnaryMax',
+    'UnaryMin', 'UnarySigmoid', 'UnaryLogExp', 'UnaryExpSquare', 'UnaryErf']
+
+if not version_larger_equal(torch.__version__, TorchVersion):
+    unary_modules.append('UnaryAsinh')
+    unary_modules.append('UnarySinc')
+
+# ============== binary function modules ==============
+
+@basic_unit
+class BinaryAdd(nn.Module):
+    def forward(self, x):
+        return x[0] + x[1]
+
+@basic_unit
+class BinaryMul(nn.Module):
+    def forward(self, x):
+        return x[0] * x[1]
+
+@basic_unit
+class BinaryMinus(nn.Module):
+    def forward(self, x):
+        return x[0] - x[1]
+
+@basic_unit
+class BinaryDivide(nn.Module):
+    def forward(self, x):
+        return x[0] / (x[1] + 1e-7)
+
+@basic_unit
+class BinaryMax(nn.Module):
+    def forward(self, x):
+        return torch.max(x[0], x[1])
+
+@basic_unit
+class BinaryMin(nn.Module):
+    def forward(self, x):
+        return torch.min(x[0], x[1])
+
+@basic_unit
+class BinarySigmoid(nn.Module):
+    def forward(self, x):
+        return torch.sigmoid(x[0]) * x[1]
+
+@basic_unit
 class BinaryExpSquare(nn.Module):
     def __init__(self):
         super().__init__()
         self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
-    def forward(self, x, y):
-        return torch.exp(-self.beta * torch.square(x - y))
+    def forward(self, x):
+        return torch.exp(-self.beta * torch.square(x[0] - x[1]))
 
+@basic_unit
 class BinaryExpAbs(nn.Module):
     def __init__(self):
         super().__init__()
         self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
-    def forward(self, x, y):
-        return torch.exp(-self.beta * torch.abs(x - y))
+    def forward(self, x):
+        return torch.exp(-self.beta * torch.abs(x[0] - x[1]))
 
-class BinaryAdd(nn.Module):
+@basic_unit
+class BinaryParamAdd(nn.Module):
     def __init__(self):
         super().__init__()
         self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
-    def forward(self, x, y):
-        return self.beta * x + (1 - self.beta) * y
-
-autoact_unary_funcs = [
-    lambda x: x,
-    lambda x: -x,
-    lambda x: torch.abs(x),
-    lambda x: torch.square(x),
-    lambda x: torch.pow(x, 3),
-    lambda x: torch.pow(x, 0.5),
-    #UnaryMul(),
-    #UnaryAdd(),
-    lambda x: torch.log(torch.abs(x) + 1e-7),
-    lambda x: torch.exp(x),
-    lambda x: torch.sin(x),
-    lambda x: torch.cos(x),
-    lambda x: torch.sinh(x),
-    lambda x: torch.cosh(x),
-    lambda x: torch.tanh(x),
-    lambda x: torch.asinh(x),
-    lambda x: torch.atan(x),
-    lambda x: torch.sinc(x),
-    lambda x: torch.max(x, torch.zeros_like(x)),
-    lambda x: torch.min(x, torch.zeros_like(x)),
-    lambda x: torch.sigmoid(x),
-    lambda x: torch.log(1 + torch.exp(x)),
-    lambda x: torch.exp(-torch.square(x)),
-    lambda x: torch.erf(x)
-]
-
-autoact_binary_funcs = [
-    lambda x, y: x + y,
-    lambda x, y: x * y,
-    lambda x, y: x - y,
-    lambda x, y: x / (y + 1e-7),
-    lambda x, y: torch.max(x, y),
-    lambda x, y: torch.min(x, y),
-    lambda x, y: torch.sigmoid(x) * y,
-    #BinaryExpSquare(),
-    #BinaryExpAbs(),
-    #BinaryAdd()
-]
-
-class UnaryFunctionalModule(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
     def forward(self, x):
-        return self.fn(x)
+        return self.beta * x[0] + (1 - self.beta) * x[1]
 
-class BinaryFunctionalModule(nn.Module):
-    def __init__(self, fn):
-        super().__init__()
-        self.fn = fn
-    def forward(self, x, y):
-        return self.fn(x, y)
+binary_modules = ['BinaryAdd', 'BinaryMul', 'BinaryMinus', 'BinaryDivide', 'BinaryMax',
+    'BinaryMin', 'BinarySigmoid', 'BinaryExpSquare', 'BinaryExpAbs', 'BinaryParamAdd']
+
 
 class AutoActivation(nn.Module):
     """
     """
     def __init__(self, unit_num = 1):
         super().__init__()
-        unary1_cand = [UnaryFunctionalModule(fn) for fn in autoact_unary_funcs]
-        unary1_cand.extend([UnaryMul(), UnaryAdd()])
-        unary2_cand = [UnaryFunctionalModule(fn) for fn in autoact_unary_funcs]
-        unary2_cand.extend([UnaryMul(), UnaryAdd()])
-        binary_cand = [BinaryFunctionalModule(fn) for fn in autoact_binary_funcs]
-        binary_cand.extend([BinaryExpSquare(), BinaryExpAbs(), BinaryAdd()])
-        self.unary1 = LayerChoice(unary1_cand, label='one_unary')
-        self.unary2 = LayerChoice(unary2_cand, label='one_unary')
-        self.binary = LayerChoice(binary_cand)
+        self.unary1 = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+        self.unary2 = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+        self.binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
 
     def forward(self, x):
-        return self.binary(self.unary1(x), self.unary2(x))
+        return self.binary(torch.stack([self.unary1(x), self.unary2(x)]))
