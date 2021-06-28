@@ -130,6 +130,7 @@ class _SupervisedLearningModule(LightningModule):
 
         if export_onnx is None or export_onnx is True:
             self.export_onnx = Path(os.environ.get('NNI_OUTPUT_DIR', '.')) / 'model.onnx'
+            self.export_onnx.parent.mkdir(exist_ok=True)
         elif export_onnx:
             self.export_onnx = Path(export_onnx)
         else:
