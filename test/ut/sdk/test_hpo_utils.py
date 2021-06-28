@@ -18,6 +18,7 @@ good_partial = {
 }
 
 bad_type = 'x'
+bad_spec_type = { 'x': [1, 2, 3] }
 bad_fields = { 'x': { 'type': 'choice', 'value': ['a', 'b'] } }
 bad_type_name = { 'x': { '_type': 'choic', '_value': ['a'] } }
 bad_value = { 'x': { '_type': 'choice', '_value': 'ab' } }
@@ -32,6 +33,7 @@ bad_sigma = { 'x': { '_type': 'normal', '_value': [0, 0] } }
 def test_hpo_utils():
     assert validate_search_space(good, raise_exception=False)
     assert not validate_search_space(bad_type, raise_exception=False)
+    assert not validate_search_space(bad_spec_type, raise_exception=False)
     assert not validate_search_space(bad_fields, raise_exception=False)
     assert not validate_search_space(bad_type_name, raise_exception=False)
     assert not validate_search_space(bad_value, raise_exception=False)

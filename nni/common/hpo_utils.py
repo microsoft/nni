@@ -32,42 +32,44 @@ def validate_search_space(
         support_types = common_search_space_types
 
     if not isinstance(search_space, dict):
-        raise ValueError('search space is not a dict')
+        raise ValueError(f'search space is a {type(search_space).__name__}, expect a dict : {repr(search_space)}')
 
     for name, spec in search_space.items():
+        if not isinstance(spec, dict):
+            raise ValueError(f'search space "{name}" is a {type(spec).__name__}, expect a dict : {repr(spec)}')
         if '_type' not in spec or '_value' not in spec:
-            raise ValueError(f'search space "{name}" does not have "_type" or "_value"')
+            raise ValueError(f'search space "{name}" does not have "_type" or "_value" : {spec}')
         type_ = spec['_type']
         if type_ not in support_types:
-            raise ValueError(f'search space "{name}" has unsupported type {type_}')
+            raise ValueError(f'search space "{name}" has unsupported type "{type_}" : {spec}')
         args = spec['_value']
         if not isinstance(args, list):
-            raise ValueError(f'search space "{name}"\'s value is not a list')
+            raise ValueError(f'search space "{name}"\'s value is not a list : {spec}')
 
         if type_ == 'choice':
             continue
 
         if type_.startswith('q'):
             if len(args) != 3:
-                raise ValueError(f'search space "{name}" ({type_}) must have 3 values')
+                raise ValueError(f'search space "{name}" ({type_}) must have 3 values : {spec}')
         else:
             if len(args) != 2:
-                raise ValueError(f'search space "{name}" ({type_}) must have 2 values')
+                raise ValueError(f'search space "{name}" ({type_}) must have 2 values : {spec}')
 
         if type_ == 'randint':
             if not all(isinstance(arg, int) for arg in args):
-                raise ValueError(f'search space "{name}" ({type_}) must have int values')
+                raise ValueError(f'search space "{name}" ({type_}) must have int values : {spec}')
         else:
             if not all(isinstance(arg, (float, int)) for arg in args):
-                raise ValueError(f'search space "{name}" ({type_}) must have float values')
+                raise ValueError(f'search space "{name}" ({type_}) must have float values : {spec}')
 
         if 'normal' not in type_:
             if args[0] >= args[1]:
-                raise ValueError(f'search space "{name}" ({type_}) must have high > low')
+                raise ValueError(f'search space "{name}" ({type_}) must have high > low : {spec}')
             if 'log' in type_ and args[0] <= 0:
-                raise ValueError(f'search space "{name}" ({type_}) must have low > 0')
+                raise ValueError(f'search space "{name}" ({type_}) must have low > 0 : {spec}')
         else:
             if args[1] <= 0:
-                raise ValueError(f'search space "{name}" ({type_}) must have sigma > 0')
+                raise ValueError(f'search space "{name}" ({type_}) must have sigma > 0 : {spec}')
 
     return True
