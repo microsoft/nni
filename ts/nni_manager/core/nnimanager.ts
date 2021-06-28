@@ -542,20 +542,15 @@ class NNIManager implements Manager {
         }
     }
 
-    private async stopTrialJobIfOverMaxDuration(): Promise<void> {
-        for (const trialJobId of Array.from(this.trialJobs.keys())) {
-            const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-            if(undefined !== trialJobDetail && 
-                trialJobDetail.status === 'RUNNING' && 
-                trialJobDetail.startTime !== undefined){
-                const currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
-                if(currentTrialDuration>this.maxTrialDuration){
-                    const isEarlyStopped = true;
-                    await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
-                    this.log.info(`Trial job ${trialJobDetail.id} has stoped because it is over maxTrialDuration.`);
-                }
+    private async stopTrialJobIfOverMaxDurationTimer(trialJobId:string): Promise<void> {
+        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+        if(undefined !== trialJobDetail &&
+            trialJobDetail.status === 'RUNNING' &&
+            trialJobDetail.startTime !== undefined){
+                const isEarlyStopped = true;
+                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
             }
-        }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -622,8 +617,6 @@ class NNIManager implements Manager {
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
-            await this.stopTrialJobIfOverMaxDuration();
-
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 
@@ -683,6 +676,7 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
