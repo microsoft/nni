@@ -326,23 +326,6 @@ class AutoMaskInference:
             # also save the out_constant
             self.out_constant = out_constant
 
-    def unmask(self, t_unmask):
-        """
-        Unmask some values to resolve the conflict/interference between the masks.
-        Note: the t_unmask indicates the values that should be unmasked in the output
-        tensors. We work backwards to resolve the mask conflicts in the model. We can only
-        infer the values need to be unmasked in the input tensor/parameters from the unmasked
-        values in the output tensor.
-        Parameters
-        ---------
-        t_unmask: torch.Tensor
-            This tensor indicates the values that should be unmasked in the output tensor.
-        Returns
-        -------
-        input_unmask: list
-            The values in the input tensors that should be unmasked
-        """
-        pass  # unmask behavior is different when OPs is different
-        # you need to konw the calculation logic in the model to unmask
-        # the tensor
+    def get_masks(self):
+        return (self.in_masks, self.output_mask, self.weight_mask)
 

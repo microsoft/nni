@@ -8,42 +8,41 @@ import torch.nn as nn
 _logger = logging.getLogger(__name__)
 
 replace_module = {
-    'BatchNorm2d': lambda module, auto_infer: replace_batchnorm2d(module, auto_infer),
-    'BatchNorm1d': lambda module, auto_infer: replace_batchnorm1d(module, auto_infer),
-    'Conv2d': lambda module, auto_infer: replace_conv2d(module, auto_infer),
-    'Linear': lambda module, auto_infer: replace_linear(module, auto_infer),
-    'MaxPool2d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'AvgPool2d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'AdaptiveAvgPool2d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'ReLU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'ReLU6': lambda module, auto_infer: no_replace(module, auto_infer),
-    'LeakyReLU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'ELU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Hardtanh': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Hardsigmoid': lambda module, auto_infer: no_replace(module, auto_infer),
-    'LogSigmoid': lambda module, auto_infer: no_replace(module, auto_infer),
-    'PReLU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'RReLU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'SELU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'CELU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'GELU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Sigmoid': lambda module, auto_infer: no_replace(module, auto_infer),
-    'SiLU': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Mish': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Tanh': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Softplus': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Softshrink': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Softmax': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Tanhshrink': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Dropout': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Dropout2d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Dropout3d': lambda module, auto_infer: no_replace(module, auto_infer),
-    'Upsample': lambda module, auto_infer: no_replace(module, auto_infer),
-    'LayerNorm': lambda module, auto_infer: replace_layernorm(module, auto_infer),
-    'ConvTranspose2d': lambda module, auto_infer: replace_convtranspose2d(module, auto_infer)
+    'BatchNorm2d': lambda module, masks: replace_batchnorm2d(module, masks),
+    'BatchNorm1d': lambda module, masks: replace_batchnorm1d(module, masks),
+    'Conv2d': lambda module, masks: replace_conv2d(module, masks),
+    'Linear': lambda module, masks: replace_linear(module, masks),
+    'MaxPool2d': lambda module, masks: no_replace(module, masks),
+    'AvgPool2d': lambda module, masks: no_replace(module, masks),
+    'AdaptiveAvgPool2d': lambda module, masks: no_replace(module, masks),
+    'ReLU': lambda module, masks: no_replace(module, masks),
+    'ReLU6': lambda module, masks: no_replace(module, masks),
+    'LeakyReLU': lambda module, masks: no_replace(module, masks),
+    'ELU': lambda module, masks: no_replace(module, masks),
+    'Hardtanh': lambda module, masks: no_replace(module, masks),
+    'Hardsigmoid': lambda module, masks: no_replace(module, masks),
+    'LogSigmoid': lambda module, masks: no_replace(module, masks),
+    'PReLU': lambda module, masks: no_replace(module, masks),
+    'RReLU': lambda module, masks: no_replace(module, masks),
+    'SELU': lambda module, masks: no_replace(module, masks),
+    'CELU': lambda module, masks: no_replace(module, masks),
+    'GELU': lambda module, masks: no_replace(module, masks),
+    'Sigmoid': lambda module, masks: no_replace(module, masks),
+    'SiLU': lambda module, masks: no_replace(module, masks),
+    'Mish': lambda module, masks: no_replace(module, masks),
+    'Tanh': lambda module, masks: no_replace(module, masks),
+    'Softplus': lambda module, masks: no_replace(module, masks),
+    'Softshrink': lambda module, masks: no_replace(module, masks),
+    'Softmax': lambda module, masks: no_replace(module, masks),
+    'Tanhshrink': lambda module, masks: no_replace(module, masks),
+    'Dropout': lambda module, masks: no_replace(module, masks),
+    'Dropout2d': lambda module, masks: no_replace(module, masks),
+    'Dropout3d': lambda module, masks: no_replace(module, masks),
+    'Upsample': lambda module, masks: no_replace(module, masks),
+    'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
+    'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks)
 }
 
-# NEED_FOLD_BIAS = True
 
 
 def convert_to_coarse_mask(t_mask, dim):
@@ -81,7 +80,7 @@ def convert_to_coarse_mask(t_mask, dim):
     return indexes, remained_indexes
 
 
-def no_replace(module, auto_infer):
+def no_replace(module, masks):
     """
     No need to replace
     """
@@ -89,7 +88,7 @@ def no_replace(module, auto_infer):
     return module
 
 
-def replace_linear(linear, auto_infer):
+def replace_linear(linear, masks):
     """
     This function will replace the original linear according to
     the infered masks. This function support the fine-grained and
@@ -101,24 +100,23 @@ def replace_linear(linear, auto_infer):
     ----------
     linear : torch.nn.Linear
         The linear module to be replace
-    auto_infer : AutoMaskInference
-        The auto mask inference object that contains the input,
-        parameter and output masks.
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
 
     Returns
     -------
     torch.nn.Linear
         The new linear module
     """
-    NEED_FOLD_BIAS = auto_infer.fold_bias
+    in_masks, output_mask, weight_mask = masks
     assert isinstance(linear, nn.Linear)
-    assert len(auto_infer.in_masks) == 1
-    assert isinstance(auto_infer.output_mask, torch.Tensor)
-    in_mask = auto_infer.in_masks[0]
+    assert len(in_masks) == 1
+    assert isinstance(output_mask, torch.Tensor)
+    in_mask = in_masks[0]
     # only need the first batch of the constant
-    in_constant = auto_infer.in_constants[0][:1]
-    output_mask = auto_infer.output_mask
-    weight_mask = auto_infer.weight_mask['weight']
+
+    weight_mask = weight_mask['weight']
     # N C K
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
@@ -129,7 +127,7 @@ def replace_linear(linear, auto_infer):
     _logger.info("replace linear with new in_features: %d, out_features: %d",
                  n_remained_in, n_remained_out)
     need_bias = False
-    if linear.bias is not None or (NEED_FOLD_BIAS and torch.sum(in_constant > 0)):
+    if linear.bias is not None:
         need_bias = True
     new_linear = torch.nn.Linear(in_features=n_remained_in,
                                  out_features=n_remained_out,
@@ -146,37 +144,27 @@ def replace_linear(linear, auto_infer):
             new_linear.bias.data = torch.index_select(
                 linear.bias.data, 0, remained_out)
 
-    if NEED_FOLD_BIAS and torch.sum(in_constant) > 0:
-        # we need zero the bias in the original linear before we calculate the
-        # the folded bias constant
-        if linear.bias is not None:
-            linear.bias[:] = 0
-        out = linear(in_constant)
-        bias_constant = torch.index_select(out[0], 0, remained_out)
-        if new_linear.bias is not None:
-            new_linear.bias.data += bias_constant
-
     return new_linear
 
 
-def replace_batchnorm1d(norm, auto_infer):
+def replace_batchnorm1d(norm, masks):
     """
     Parameters
     ----------
     norm : torch.nn.BatchNorm1d
         The batchnorm module to be replace
-    auto_infer : AutoMaskInference
-        The auto mask inference object that contains the input,
-        parameter and output masks.
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
 
     Returns
     -------
     torch.nn.BatchNorm1d
         The new batchnorm module
     """
+    in_masks, output_mask, _ = masks
     assert isinstance(norm, nn.BatchNorm1d)
-    in_mask = auto_infer.in_masks[0]
-    output_mask = auto_infer.output_mask
+    in_mask = in_masks[0]
 
     # N, C, H, W
     _, remained_in = convert_to_coarse_mask(in_mask, 1)
@@ -201,24 +189,24 @@ def replace_batchnorm1d(norm, auto_infer):
     return new_norm
 
 
-def replace_batchnorm2d(norm, auto_infer):
+def replace_batchnorm2d(norm, masks):
     """
     Parameters
     ----------
     norm : torch.nn.BatchNorm2d
         The batchnorm module to be replace
-    auto_infer : AutoMaskInference
-        The auto mask inference object that contains the input,
-        parameter and output masks.
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
 
     Returns
     -------
     torch.nn.BatchNorm2d
         The new batchnorm module
     """
+    in_masks, output_mask, _ = masks
     assert isinstance(norm, nn.BatchNorm2d)
-    in_mask = auto_infer.in_masks[0]
-    output_mask = auto_infer.output_mask
+    in_mask = in_masks[0]
 
     # N, C, H, W
     _, remained_in = convert_to_coarse_mask(in_mask, 1)
@@ -243,17 +231,8 @@ def replace_batchnorm2d(norm, auto_infer):
     return new_norm
 
 
-class BiasModule(nn.Module):
-    def __init__(self, module, bias):
-        super(BiasModule, self).__init__()
-        self.ori_module = module
-        self.register_buffer('speedup_bias', bias)
 
-    def forward(self, x):
-        return self.ori_module(x)[:] + self.speedup_bias
-
-
-def replace_conv2d(conv, auto_infer):
+def replace_conv2d(conv, masks):
     """
     Replace the original conv with a new one according to the infered
     masks, the function support the fine-grained sparsity and coarse-grained
@@ -264,24 +243,23 @@ def replace_conv2d(conv, auto_infer):
     ----------
     conv : torch.nn.Conv2d
         The conv2d module to be replaced
-    auto_infer : AutoMaskInference
-        The auto mask inference object that contains the mask of the input
-        tensor, output tensor and parameters
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
 
     Returns
     -------
     torch.nn.Conv2d
         The new conv2d module
     """
-
+    in_masks, output_mask, weight_masks = masks
     assert isinstance(conv, nn.Conv2d)
     # the conv layer should only have one input tensor
-    assert len(auto_infer.in_masks) == 1
-    NEED_FOLD_BIAS = auto_infer.fold_bias
-    in_mask = auto_infer.in_masks[0]
-    in_constant = auto_infer.in_constants[0]
-    output_mask = auto_infer.output_mask
-    weight_mask = auto_infer.weight_mask['weight']
+    assert len(in_masks) == 1
+
+    in_mask = in_masks[0]
+
+    weight_mask = weight_masks['weight']
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
 
@@ -355,9 +333,7 @@ def replace_conv2d(conv, auto_infer):
 
     _logger.debug("replace conv2d with in_channels: %d, out_channels: %d",
                   n_remained_in, n_remained_out)
-    # in_constant only need to consider the first batch
-    in_constant = in_constant * (1-in_mask)
-    in_constant = in_constant[:1]
+
     # need_bias is a flag that indicates that if a conv layer need
     # bias, if the original conv doesn't have a bias and there is
     # no constant need to be folded into the bias, the need_bias is False.
@@ -380,23 +356,11 @@ def replace_conv2d(conv, auto_infer):
         new_conv.bias.data.copy_(torch.index_select(
             conv.bias.data, 0, remained_out))
 
-    if NEED_FOLD_BIAS and torch.sum(torch.abs(in_constant)) > 0:
-        # Fold the input constants into the new_conv bias
-        # For conv, we can only fold the input constant into
-        # bias when all the constant in the same channel are the
-        # same.
-        # set the bias to zero and calculate the folded bias for new conv
-        if conv.bias is not None:
-            conv.bias.data[:] = 0
-        bias_constant = torch.index_select(
-            conv(in_constant)[0], 0, remained_out)
 
-        return BiasModule(new_conv, bias_constant)
-    else:
-        return new_conv
+    return new_conv
 
 
-def replace_convtranspose2d(convtrans, auto_infer):
+def replace_convtranspose2d(convtrans, masks):
     """
     We need anothor replace function for
     convtranspose2d, because the layout of
@@ -406,18 +370,20 @@ def replace_convtranspose2d(convtrans, auto_infer):
     ----------
     convtrans : torch.nn.ConvTranspose2d
         The conv2d module to be replaced
-    mask : ModuleMasks
-        The masks of this module
+    masks : Tuple of the input masks, output masks and weight masks
+        Tuple of the masks, for example
+        ([input_m1, input_m2], [output_m], {'weight':weight_m})
     Returns
     -------
     torch.nn.ConvTranspose2d
         The new conv2d module
     """
+    in_masks, output_mask, weight_masks = masks
     assert isinstance(convtrans, torch.nn.ConvTranspose2d)
-    assert len(auto_infer.in_masks) == 1
-    in_mask = auto_infer.in_masks[0]
-    output_mask = auto_infer.output_mask
-    weight_mask = auto_infer.weight_mask['weight']
+    assert len(in_masks) == 1
+    in_mask = in_masks[0]
+
+    weight_mask = weight_masks['weight']
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
     # ConvTranspose2d has the weight shape of [N_in, N_out/groups, k1, k2]
@@ -484,8 +450,8 @@ def replace_convtranspose2d(convtrans, auto_infer):
             convtrans.weight[current_input_index], 1, torch.as_tensor(current_output_index, dtype=torch.long).to(convtrans.weight.device))
         new_groups += 1
 
-    _logger.debug('Replace convtranspose2d %s with in_channels:%d out_channels:%d',
-                  auto_infer.name, n_remained_in, n_remained_out)
+    _logger.debug('Replace convtranspose2d with in_channels:%d out_channels:%d',
+                  n_remained_in, n_remained_out)
     new_convtrans = torch.nn.ConvTranspose2d(in_channels=n_remained_in,
                                              out_channels=n_remained_out,
                                              kernel_size=convtrans.kernel_size,
@@ -498,7 +464,7 @@ def replace_convtranspose2d(convtrans, auto_infer):
     new_convtrans.to(convtrans.weight.device)
     new_convtrans.weight.copy_(tmp_weight)
     if convtrans.bias is not None:
-        if auto_infer.output_mask is not None:
+        if output_mask is not None:
             new_convtrans.bias.data[:] = torch.index_select(
                 convtrans.bias.data, 0, remained_out)
         else:
@@ -506,10 +472,11 @@ def replace_convtranspose2d(convtrans, auto_infer):
     return new_convtrans
 
 
-def replace_layernorm(layernorm, auto_infer):
+def replace_layernorm(layernorm, masks):
+    in_masks, output_mask, weight_masks = masks
     assert isinstance(layernorm, nn.LayerNorm)
-    assert len(auto_infer.in_masks) == 1
-    in_mask = auto_infer.in_masks[0]
+    assert len(in_masks) == 1
+    in_mask = in_masks[0]
     dim_n = len(in_mask.size())
     new_shape = []
     for i in range(1, dim_n):

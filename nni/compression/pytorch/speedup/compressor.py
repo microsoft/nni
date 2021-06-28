@@ -397,7 +397,7 @@ class ModelSpeedup:
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            compressed_module = replace_module[m_type](leaf_module, auto_infer)
+            compressed_module = replace_module[m_type](leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
             if reindex_dim is None:
                 setattr(super_module, g_node.name.split(
