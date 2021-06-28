@@ -310,7 +310,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                 }
             }
         }
-        return yaml.safeDump(nniJobConfig);
+        return yaml.dump(nniJobConfig);
     }
 
     protected formatPAIHost(host: string): string {

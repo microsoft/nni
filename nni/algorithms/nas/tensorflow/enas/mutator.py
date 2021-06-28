@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+
 import tensorflow as tf
 from tensorflow.keras.layers import Dense, Embedding, LSTMCell, RNN
 from tensorflow.keras.losses import SparseCategoricalCrossentropy, Reduction

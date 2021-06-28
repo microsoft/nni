@@ -313,12 +313,13 @@ class ModelProfiler:
 
         table.field_names = headers
         for i, result in enumerate(self.results):
+            flops_count = int(result['flops'].item()) if isinstance(result['flops'], torch.Tensor) else int(result['flops'])
             row_values = [
                 i,
                 result['name'],
                 result['module_type'],
                 str(result['weight_shape']),
-                result['flops'],
+                flops_count,
                 result['params'],
             ]
             name_counter[result['name']] += 1
