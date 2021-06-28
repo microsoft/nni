@@ -204,7 +204,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param _trialJobId ID of trial job
      * @param _logType 'TRIAL_LOG' | 'TRIAL_STDERR'
      */
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 

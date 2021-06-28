@@ -56,12 +56,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         }
     };
 
-    openTrialLog = (type: string): void => {
-        window.open(`${MANAGER_IP}/trial-log/${this.props.trialId}/${type}`);
+    openTrialLog = (filename: string): void => {
+        window.open(`${MANAGER_IP}/trial-file/${this.props.trialId}/${filename}`);
     };
 
     openModelOnnx = (): void => {
-        window.open(`https://netron.app/?url=${MANAGER_IP}/trial-log/${this.props.trialId}/MODEL.onnx`);
+        window.open(`https://netron.app/?url=${MANAGER_IP}/trial-file/${this.props.trialId}/model.onnx`);
     };
 
     render(): React.ReactNode {
@@ -117,16 +117,16 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         <div id='trialog'>
                                             <div className='copy' style={{ marginTop: 15 }}>
                                                 <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
+                                                    onClick={this.openTrialLog.bind(this, 'trial.log')}
                                                     text='View trial log'
                                                 />
                                                 <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_ERROR')}
+                                                    onClick={this.openTrialLog.bind(this, 'stderr')}
                                                     text='View trial error'
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />
                                                 <PrimaryButton
-                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_STDOUT')}
+                                                    onClick={this.openTrialLog.bind(this, 'stdout')}
                                                     text='View trial stdout'
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />

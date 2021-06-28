@@ -129,7 +129,7 @@ export class MockedNNIManager extends Manager {
     public getLatestMetricData(): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
-    public getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+    public getTrialFile(trialJobId: string, fileName: string): Promise<string> {
         throw new MethodNotImplementedError();
     }
     public getExperimentProfile(): Promise<ExperimentProfile> {

@@ -66,7 +66,7 @@ class NNIRestHandler {
         this.getMetricData(router);
         this.getMetricDataByRange(router);
         this.getLatestMetricData(router);
-        this.getTrialLog(router);
+        this.getTrialFile(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
         this.startTensorboardTask(router);
@@ -296,9 +296,14 @@ class NNIRestHandler {
         });
     }
 
-    private getTrialLog(router: Router): void {
-        router.get('/trial-log/:id/:type', async(req: Request, res: Response) => {
-            this.nniManager.getTrialLog(req.params.id, req.params.type as LogType).then((log: string) => {
+    private getTrialFile(router: Router): void {
+        router.get('/trial-file/:id/:filename', async(req: Request, res: Response) => {
+            let encoding: string | null = null;
+            const filename = req.params.filename;
+            if (!filename.includes('.') || filename.match('/.*\.(txt|log)/g')) {
+                encoding = 'utf8';
+            }
+            this.nniManager.getTrialFile(req.params.id, filename, encoding).then((log: Buffer | string) => {
                 if (log === '') {
                     log = 'No logs available.'
                 }

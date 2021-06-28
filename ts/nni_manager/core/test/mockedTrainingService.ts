@@ -63,7 +63,7 @@ class MockedTrainingService extends TrainingService {
         return deferred.promise;
     }
 
-    public getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
+    public getTrialFile(trialJobId: string, fileName: string): Promise<string> {
         throw new MethodNotImplementedError();
     }
 

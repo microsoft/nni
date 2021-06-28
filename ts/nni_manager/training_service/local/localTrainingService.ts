@@ -170,20 +170,16 @@ class LocalTrainingService implements TrainingService {
         return trialJob;
     }
 
-    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
-        let logPath: string;
-        if (logType === 'TRIAL_LOG') {
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
-        } else if (logType === 'TRIAL_STDOUT'){
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'stdout');
-        } else if (logType === 'TRIAL_ERROR') {
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
-        } else if (logType == 'MODEL.onnx') {
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'model.onnx');
-        } else {
-            throw new Error('unexpected log type');
+    public async getTrialFile(trialJobId: string, filename: string, encoding: string | null = 'utf8'): Promise<string | Buffer> {
+        // check filename here for security
+        if (!['trial.log', 'stderr', 'model.onnx', 'stdout'].includes(filename)) {
+            throw new Error(`File unaccessible: ${filename}`);
         }
-        return fs.promises.readFile(logPath, 'utf8');
+        const logPath = path.join(this.rootDir, 'trials', trialJobId, filename);
+        if (!fs.existsSync(logPath)) {
+            throw new Error(`File not found: ${logPath}`);
+        }
+        return fs.promises.readFile(logPath, {encoding: encoding as any});
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
