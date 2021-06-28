@@ -59,7 +59,7 @@ abstract class Manager {
     public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
     public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
 
-    public abstract getTrialFile(trialJobId: string, fileName: string, encoding?: string | null): Promise<Buffer | string>;
+    public abstract getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string>;
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;

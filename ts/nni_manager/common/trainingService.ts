@@ -81,7 +81,7 @@ abstract class TrainingService {
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
-    public abstract getTrialFile(trialJobId: string, fileName: string, encoding?: string | null): Promise<Buffer | string>;
+    public abstract getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract getTrialOutputLocalPath(trialJobId: string): Promise<string>;

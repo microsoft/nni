@@ -170,12 +170,16 @@ class LocalTrainingService implements TrainingService {
         return trialJob;
     }
 
-    public async getTrialFile(trialJobId: string, filename: string, encoding: string | null = 'utf8'): Promise<string | Buffer> {
+    public async getTrialFile(trialJobId: string, fileName: string): Promise<string | Buffer> {
         // check filename here for security
-        if (!['trial.log', 'stderr', 'model.onnx', 'stdout'].includes(filename)) {
-            throw new Error(`File unaccessible: ${filename}`);
+        if (!['trial.log', 'stderr', 'model.onnx', 'stdout'].includes(fileName)) {
+            throw new Error(`File unaccessible: ${fileName}`);
         }
-        const logPath = path.join(this.rootDir, 'trials', trialJobId, filename);
+        let encoding: string | null = null;
+        if (!fileName.includes('.') || fileName.match(/.*\.(txt|log)/g)) {
+            encoding = 'utf8';
+        }
+        const logPath = path.join(this.rootDir, 'trials', trialJobId, fileName);
         if (!fs.existsSync(logPath)) {
             throw new Error(`File not found: ${logPath}`);
         }

@@ -61,7 +61,11 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     };
 
     openModelOnnx = (): void => {
-        window.open(`https://netron.app/?url=${MANAGER_IP}/trial-file/${this.props.trialId}/model.onnx`);
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+        const prefix = `${protocol}//${hostname}:${port}${MANAGER_IP}`;
+        window.open(`https://netron.app/?url=${prefix}/trial-file/${this.props.trialId}/model.onnx`);
     };
 
     render(): React.ReactNode {

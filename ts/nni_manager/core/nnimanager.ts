@@ -402,8 +402,8 @@ class NNIManager implements Manager {
         // FIXME: unit test
     }
 
-    public async getTrialFile(trialJobId: string, fileName: string, encoding: string | null): Promise<Buffer | string> {
-        return this.trainingService.getTrialFile(trialJobId, fileName, encoding);
+    public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
+        return this.trainingService.getTrialFile(trialJobId, fileName);
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {

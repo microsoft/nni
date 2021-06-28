@@ -45,6 +45,7 @@ class NNIRestHandler {
             this.log.debug(`${req.method}: ${req.url}: body:`, req.body);
             res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
             res.header('Access-Control-Allow-Methods', 'PUT,POST,GET,DELETE,OPTIONS');
+            res.header('Access-Control-Allow-Origin', 'https://netron.app');
 
             res.setHeader('Content-Type', 'application/json');
             next();
@@ -300,15 +301,16 @@ class NNIRestHandler {
         router.get('/trial-file/:id/:filename', async(req: Request, res: Response) => {
             let encoding: string | null = null;
             const filename = req.params.filename;
-            if (!filename.includes('.') || filename.match('/.*\.(txt|log)/g')) {
+            if (!filename.includes('.') || filename.match(/.*\.(txt|log)/g)) {
                 encoding = 'utf8';
             }
-            this.nniManager.getTrialFile(req.params.id, filename, encoding).then((log: Buffer | string) => {
-                if (log === '') {
-                    log = 'No logs available.'
+            this.nniManager.getTrialFile(req.params.id, filename).then((content: Buffer | string) => {
+                if (content instanceof Buffer) {
+                    res.header('Content-Type', 'application/octet-stream');
+                } else if (content === '') {
+                    content = 'No logs available.'
                 }
-                res.header('Access-Control-Allow-Origin', 'https://netron.app');
-                res.send(log);
+                res.send(content);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
