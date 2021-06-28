@@ -223,10 +223,17 @@ binary_modules = ['BinaryAdd', 'BinaryMul', 'BinaryMinus', 'BinaryDivide', 'Bina
 
 class AutoActivation(nn.Module):
     """
+    This module is an implementation of the paper "Searching for Activation Functions"
+    (https://arxiv.org/abs/1710.05941).
+    NOTE: current `beta` is not per-channel parameter
+
+    Parameters
+    ----------
+    unit_num : int
+        the number of core units
     """
     def __init__(self, unit_num = 1):
         super().__init__()
-        self.unit_num = unit_num
         self.unaries = nn.ModuleList()
         self.binaries = nn.ModuleList()
         self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
