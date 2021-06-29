@@ -4,7 +4,7 @@ QuickStart
 Installation
 ------------
 
-Currently, NNI supports running on Linux, MacOS and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following ``pip install`` in an environment that has ``python >= 3.6``.
+Currently, NNI supports running on Linux, macOS and Windows. Ubuntu 16.04 or higher, macOS 10.14.1, and Windows 10.1809 are tested and supported. Simply run the following ``pip install`` in an environment that has ``python >= 3.6``.
 
 Linux and macOS
 ^^^^^^^^^^^^^^^
@@ -86,27 +86,7 @@ NNI is born to help users tune jobs, whose working process is presented below:
    In the this part, we will focus on the first approach. For the second approach, please refer to `this tutorial <HowToLaunchFromPython.rst>`__\ .
 
 
-Step 1: Define the Seach Space
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Define a ``Search Space`` in the JSON file, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you want to search.
-
-.. code-block:: diff
-
-    -   params = {'batch_size': 32, 'hidden_size': 128, 'lr': 0.001, 'momentum': 0.5}
-    +   {
-    +       "batch_size": {"_type":"choice", "_value": [16, 32, 64, 128]},
-    +       "hidden_size":{"_type":"choice","_value":[128, 256, 512, 1024]},
-    +       "lr":{"_type":"choice","_value":[0.0001, 0.001, 0.01, 0.1]},
-    +       "momentum":{"_type":"uniform","_value":[0, 1]}
-    +   }
-
-*Example:* :githublink:`search_space.json <examples/trials/mnist-pytorch/search_space.json>`
-
-For a more detailed tutorial on writing the search space, please see `here <SearchSpaceSpec.rst>`__. Besides, you can define your search space in the configuration file and skip this step, refer `here <eference/experiment_config.rst#local-mode-inline-search-space>`__\ .
-
-
-Step 2: Modify the ``Trial`` Code
+Step 1: Modify the ``Trial`` Code
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Modify your ``Trial`` file to get the hyperparameter set from NNI and report the final results to NNI.
@@ -139,17 +119,41 @@ Modify your ``Trial`` file to get the hyperparameter set from NNI and report the
 *Example:* :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>`
 
 
+Step 2: Define the Search Space
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Define a ``Search Space`` in a YAML file, including the ``name`` and the ``distribution`` (discrete-valued or continuous-valued) of all the hyperparameters you want to search.
+
+.. code-block:: yaml
+
+   searchSpace:
+      batch_size:
+         _type: choice
+         _value: [16, 32, 64, 128]
+      hidden_size:
+         _type: choice
+         _value: [128, 256, 512, 1024]
+      lr:
+         _type: choice
+         _value: [0.0001, 0.001, 0.01, 0.1]
+      momentum:
+         _type: uniform
+         _value: [0, 1]
+
+*Example:* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>`
+
+You can also write your search space in a JSON file and specify the file path in the configuration. For detailed tutorial on how to write the search space, please see `here <SearchSpaceSpec.rst>`__.
+
+
 Step 3: Config the Experiment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Config the experiment in the YAML file which declares the ``path`` to the search space and trial files. It also gives other information such as the tuning algorithm, max trial number, and max duration arguments.
+In addition to the search_space defined in the `step2 <step-2-define-the-search-space>`__, you need to config the experiment in the YAML file. It specifies the key information of the experiment, such as the trial files, tuning algorithm, max trial number, and max duration, etc.
 
 .. code-block:: yaml
 
    experimentName: MNIST               # An optional name to distinguish the experiments
-   searchSpaceFile: search_space.json  # The path to the search space file
    trialCommand: python3 mnist.py      # NOTE: change "python3" to "python" if you are using Windows
-   trialCodeDirectory: .               # The path to the trial code
    trialConcurrency: 2                 # Run 2 trials concurrently
    maxTrialNumber: 10                  # Generate at most 10 trials
    maxExperimentDuration: 1h           # Stop generating trials after 1 hour
@@ -160,15 +164,15 @@ Config the experiment in the YAML file which declares the ``path`` to the search
    trainingService:                    # Configure the training platform
       platform: local
 
-Experiment config reference could be found `here <../reference/experiment_config.rst>`__\ .
+Experiment config reference could be found `here <../reference/experiment_config.rst>`__.
 
 .. _nniignore:
 
-.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
+.. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, NNI limits the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 
-*Example:* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
+*Example:* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>` and :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 
-All the code above is already prepared and stored in :githublink:`examples/trials/mnist-pytorch/ <examples/trials/mnist-pytorch>`.
+All the code above is already prepared and stored in :githublink:`examples/trials/mnist-pytorch/<examples/trials/mnist-pytorch>`.
 
 
 Step 4: Launch the Experiment
@@ -177,22 +181,20 @@ Step 4: Launch the Experiment
 Linux and macOS
 ***************
 
-Run the **config.yml** file from your command line to start the experiment.
+Run the **config_detailed.yml** file from your command line to start the experiment.
 
 .. code-block:: bash
 
-   nnictl create --config nni/examples/trials/mnist-pytorch/config.yml
+   nnictl create --config nni/examples/trials/mnist-pytorch/config_detailed.yml
 
 Windows
 *******
 
-Run the **config_windows.yml** file from your command line to start the experiment.
+Change ``python3`` to ``python`` of the ``trialCommand`` field in the **config_detailed.yml** file, and run the **config_detailed.yml** file from your command line to start the experiment.
 
 .. code-block:: bash
 
-   nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
-
-.. Note:: If you're using NNI on Windows, you probably need to change ``python3`` to ``python`` in the config.yml file or use the config_windows.yml file to start the experiment.
+   nnictl create --config nni\examples\trials\mnist-pytorch\config_detailed.yml
 
 .. Note:: ``nnictl`` is a command line tool that can be used to control experiments, such as start/stop/resume an experiment, start/stop NNIBoard, etc. Click :doc:`here <Nnictl>` for more usage of ``nnictl``.
 
