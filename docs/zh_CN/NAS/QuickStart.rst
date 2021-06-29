@@ -12,7 +12,7 @@
 
 One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
-.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.6和1.7** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
+.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.6 和 1.7** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
 
 定义模型空间
 -----------------------
@@ -22,7 +22,7 @@ One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 定义基本模型
 ^^^^^^^^^^^^^^^^^
 
-定义基本模型与定义 PyTorch（或 TensorFlow）模型几乎相同， 只有两个小区别。 * 对于 PyTorch 模块（例如 ``nn.Conv2d``, ``nn.ReLU``），将代码 ``import torch.nn as nn`` 替换为 ``import nni.retiarii.nn.pytorch as nn`` 。
+定义基本模型与定义 PyTorch（或 TensorFlow）模型几乎相同， 只有两个小区别。 对于 PyTorch 模块（例如 ``nn.Conv2d``, ``nn.ReLU``），将代码 ``import torch.nn as nn`` 替换为 ``import nni.retiarii.nn.pytorch as nn`` 。
 
 下面是定义基本模型的一个简单的示例，它与定义 PyTorch 模型几乎相同。
 
@@ -180,7 +180,7 @@ Retiarii 支持许多 `探索策略（exploration strategies） <./ExplorationSt
 可视化 Experiment
 ------------------------
 
-用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../../Tutorial/WebUI.rst>`__ 了解更多细节。
+用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
 
 导出最佳模型
 -----------------
