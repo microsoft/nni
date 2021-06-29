@@ -13,7 +13,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
@@ -192,6 +192,14 @@ class LocalTrainingService implements TrainingService {
         this.eventEmitter.off('metric', listener);
     }
 
+    public addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+        this.eventEmitter.on('gpuStatusUpdate', listener);
+    }
+
+    public removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+        this.eventEmitter.off('gpuStatusUpdate', listener);
+    }
+
     public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobId: string = uniqueString(5);
         const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
@@ -297,6 +305,11 @@ class LocalTrainingService implements TrainingService {
                     } else {
                         this.occupiedGpuIndexNumMap.set(index, num - 1);
                     }
+                    this.eventEmitter.emit("gpuStatusUpdate", {
+                        nodeId: 0,
+                        gpuId: index,
+                        status: "free"
+                    })
                 }
             }
         }
@@ -379,6 +392,11 @@ class LocalTrainingService implements TrainingService {
                 } else {
                     this.occupiedGpuIndexNumMap.set(index, num + 1);
                 }
+                this.eventEmitter.emit('gpuStatusUpdate', {
+                    nodeId : 0,
+                    gpuId : index,
+                    status : "occupied"
+                })
             }
         }
     }

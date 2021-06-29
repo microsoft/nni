@@ -19,12 +19,13 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA,
+    UPDATE_GPU_STATUS
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 import { NNIRestServer } from '../rest_server/nniRestServer';
@@ -50,6 +51,7 @@ class NNIManager implements Manager {
     private config!: ExperimentConfig;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
+    private gpuStatusListener: (status: GPUStatus) => void;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -70,6 +72,11 @@ class NNIManager implements Manager {
         this.trialJobMetricListener = (metric: TrialJobMetric): void => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
+            });
+        };
+        this.gpuStatusListener = (status: GPUStatus): void => {
+            this.onGPUStatusUpdate(status).catch((err: Error) => {
+                this.criticalError(NNIError.FromError(err, 'GPU status update error: '));
             });
         };
 
@@ -311,6 +318,7 @@ class NNIManager implements Manager {
         }
 
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
+        this.trainingService.removeGPUStatusUpdateListener(this.gpuStatusListener);
         if (this.dispatcherPid > 0) {
             this.dispatcher.sendCommand(TERMINATE);
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -711,6 +719,7 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner or job maintainer have not been setup');
         }
         this.trainingService.addTrialJobMetricListener(this.trialJobMetricListener);
+        this.trainingService.addGPUStatusUpdateListener(this.gpuStatusListener);
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
@@ -762,6 +771,13 @@ class NNIManager implements Manager {
         } else {
             this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(jobNum));
         }
+    }
+
+    private async onGPUStatusUpdate(status: GPUStatus): Promise<void> {
+        if (this.dispatcher === undefined) {
+            throw new Error('Dispatcher error: tuner has not been setup');
+        }
+        this.dispatcher.sendCommand(UPDATE_GPU_STATUS, `${String(status.nodeId)},${String(status.gpuId)},${status.status}`)
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {

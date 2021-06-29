@@ -11,6 +11,7 @@ const ADD_CUSTOMIZED_TRIAL_JOB = 'AD';
 const TRIAL_END = 'EN';
 const TERMINATE = 'TE';
 const PING = 'PI';
+const UPDATE_GPU_STATUS = 'UG';
 
 const GPU_INFO = 'GI';
 const STDOUT = 'SO';
@@ -71,6 +72,7 @@ export {
     TRIAL_END,
     TERMINATE,
     PING,
+    UPDATE_GPU_STATUS,
     GPU_INFO,
     STDOUT,
     VERSION_CHECK,

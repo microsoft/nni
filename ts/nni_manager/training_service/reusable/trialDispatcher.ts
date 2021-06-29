@@ -13,7 +13,7 @@ import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType, GPUStatus} from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
 import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentConfig';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
@@ -296,6 +296,14 @@ class TrialDispatcher implements TrainingService {
 
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
+    }
+
+    public addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+        return
+    }
+
+    public removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+        return
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }

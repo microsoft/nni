@@ -53,6 +53,12 @@ interface TrialJobMetric {
     readonly data: string;
 }
 
+interface GPUStatus {
+    readonly nodeId: number;
+    readonly gpuId: number;
+    readonly status: string;
+}
+
 /**
  * define TrainingServiceError
  */
@@ -77,7 +83,9 @@ abstract class TrainingService {
     public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
     public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
+    public abstract addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void;
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
+    public abstract removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void;
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
@@ -103,5 +111,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig, LogType
+    NNIManagerIpConfig, LogType, GPUStatus
 };
