@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import math
-
 import torch
 import torch.nn as nn
 
@@ -52,7 +50,7 @@ class UnaryMul(nn.Module):
     def __init__(self):
         super().__init__()
         # element-wise for now, will change to per-channel trainable parameter
-        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
+        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32)) # pylint: disable=not-callable
     def forward(self, x):
         return x * self.beta
 
@@ -61,7 +59,7 @@ class UnaryAdd(nn.Module):
     def __init__(self):
         super().__init__()
         # element-wise for now, will change to per-channel trainable parameter
-        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
+        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32)) # pylint: disable=not-callable
     def forward(self, x):
         return x + self.beta
 
@@ -197,7 +195,7 @@ class BinarySigmoid(nn.Module):
 class BinaryExpSquare(nn.Module):
     def __init__(self):
         super().__init__()
-        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
+        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32)) # pylint: disable=not-callable
     def forward(self, x):
         return torch.exp(-self.beta * torch.square(x[0] - x[1]))
 
@@ -205,7 +203,7 @@ class BinaryExpSquare(nn.Module):
 class BinaryExpAbs(nn.Module):
     def __init__(self):
         super().__init__()
-        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
+        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32)) # pylint: disable=not-callable
     def forward(self, x):
         return torch.exp(-self.beta * torch.abs(x[0] - x[1]))
 
@@ -213,7 +211,7 @@ class BinaryExpAbs(nn.Module):
 class BinaryParamAdd(nn.Module):
     def __init__(self):
         super().__init__()
-        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32))
+        self.beta = torch.nn.Parameter(torch.tensor(1, dtype=torch.float32)) # pylint: disable=not-callable
     def forward(self, x):
         return self.beta * x[0] + (1 - self.beta) * x[1]
 
@@ -237,10 +235,10 @@ class AutoActivation(nn.Module):
         self.unaries = nn.ModuleList()
         self.binaries = nn.ModuleList()
         self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
-        for i in range(unit_num):
+        for _ in range(unit_num):
             one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
             self.unaries.append(one_unary)
-        for i in range(unit_num):
+        for _ in range(unit_num):
             one_binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
             self.binaries.append(one_binary)
 
