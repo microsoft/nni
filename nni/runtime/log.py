@@ -1,16 +1,14 @@
+import logging
+import sys
 from datetime import datetime
 from io import TextIOBase
-import logging
 from logging import FileHandler, Formatter, Handler, StreamHandler
 from pathlib import Path
-import sys
-import time
 from typing import Optional
 
 import colorama
 
 from .env_vars import dispatcher_env_vars, trial_env_vars
-
 
 handlers = {}
 
