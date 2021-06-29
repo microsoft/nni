@@ -473,7 +473,7 @@ def replace_convtranspose2d(convtrans, masks):
 
 
 def replace_layernorm(layernorm, masks):
-    in_masks, output_mask, weight_masks = masks
+    in_masks, _, _ = masks
     assert isinstance(layernorm, nn.LayerNorm)
     assert len(in_masks) == 1
     in_mask = in_masks[0]
