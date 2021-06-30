@@ -44,7 +44,8 @@ class Compressor:
             self.optimizer_param_groups = optimizer.state_dict()['param_groups']
             # don't save 'params' in a 'param_group' in 'param_groups'
             [group.pop('params') for group in self.optimizer_param_groups]
-        self.reconfig(model, config_list)
+        if model is not None and config_list is not None:
+            self.reconfig(model, config_list)
 
     def reconfig(self, model, config_list):
         """
@@ -56,7 +57,7 @@ class Compressor:
         self.bound_model = model
         self.config_list = config_list
 
-        if self.optimizer_cls is not None:
+        if hasattr(self, 'optimizer_cls') and self.optimizer_cls is not None:
             if self.optimizer_cls.__name__ == 'SGD':
                 self.optimizer = self.optimizer_cls(model.parameters(), lr=0.001)
             else:
@@ -75,7 +76,7 @@ class Compressor:
         self._fwd_hook_handles = {}
         self._fwd_hook_id = 0
 
-        self.reset()
+        self.reset_bound_model()
 
         if not self.modules_wrapper:
             _logger.warning('Nothing is configured to compress, please check your model and config_list')
@@ -86,7 +87,7 @@ class Compressor:
         """
         pass
 
-    def reset(self, checkpoint=None):
+    def reset_bound_model(self, checkpoint=None):
         """
         reset model state dict and model wrapper
         """
