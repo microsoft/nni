@@ -412,7 +412,7 @@ class SpeedupTestCase(TestCase):
                 speeded_sum = torch.sum(speeded_out).item()
                 print('Sum of the output of %s (before speedup):' %
                       model_name, ori_sum)
-                print('Sum of the output of %s (after speedup):' %
+                print('Sum of the output of %s (after  speedup):' %
                       model_name, speeded_sum)
                 assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                     (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)

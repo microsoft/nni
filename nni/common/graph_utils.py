@@ -393,12 +393,14 @@ class TorchModuleGraph(TorchGraph):
                                 visited.add(successor_node)
                         else:
                             outputs.append(output_name)
-                            break
                 else:
                     outputs.append(output_name)
+        unique_outputs = list(set(outputs))
+        # remove the dumplicated output names
+        unique_outputs.sort(key=outputs.index)
 
         nodepy = NodePyGroup(node_name, unique_name, module_type, op_type,
-                             node_group, inputs=list(inputs), outputs=list(outputs))
+                             node_group, inputs=list(inputs), outputs=unique_outputs)
         return nodepy
 
     def _extract_cat_info(self, node_group, cpp_node):
