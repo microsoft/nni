@@ -46,6 +46,7 @@ const TUNER_COMMANDS: Set<string> = new Set([
     ADD_CUSTOMIZED_TRIAL_JOB,
     TERMINATE,
     PING,
+    UPDATE_GPU_STATUS,
 
     INITIALIZED,
     NEW_TRIAL_JOB,

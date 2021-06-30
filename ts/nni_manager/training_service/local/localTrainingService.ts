@@ -192,11 +192,11 @@ class LocalTrainingService implements TrainingService {
         this.eventEmitter.off('metric', listener);
     }
 
-    public addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         this.eventEmitter.on('gpuStatusUpdate', listener);
     }
 
-    public removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         this.eventEmitter.off('gpuStatusUpdate', listener);
     }
 
@@ -296,6 +296,7 @@ class LocalTrainingService implements TrainingService {
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
+                var emitMsg : Array<any> = [];
                 for (const index of trialJob.gpuIndices) {
                     const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                     if (num === undefined) {
@@ -305,12 +306,13 @@ class LocalTrainingService implements TrainingService {
                     } else {
                         this.occupiedGpuIndexNumMap.set(index, num - 1);
                     }
-                    this.eventEmitter.emit("gpuStatusUpdate", {
+                    emitMsg.push({
                         nodeId: 0,
                         gpuId: index,
                         status: "free"
                     })
                 }
+                this.eventEmitter.emit("gpuStatusUpdate", emitMsg)
             }
         }
     }
@@ -385,6 +387,7 @@ class LocalTrainingService implements TrainingService {
 
     private occupyResource(resource: {gpuIndices: number[]}): void {
         if (this.gpuScheduler !== undefined) {
+            var emitMsg : Array<any> = []
             for (const index of resource.gpuIndices) {
                 const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                 if (num === undefined) {
@@ -392,12 +395,13 @@ class LocalTrainingService implements TrainingService {
                 } else {
                     this.occupiedGpuIndexNumMap.set(index, num + 1);
                 }
-                this.eventEmitter.emit('gpuStatusUpdate', {
+                emitMsg.push({
                     nodeId : 0,
                     gpuId : index,
                     status : "occupied"
                 })
             }
+            this.eventEmitter.emit('gpuStatusUpdate', emitMsg)
         }
     }
 

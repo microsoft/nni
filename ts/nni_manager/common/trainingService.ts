@@ -83,9 +83,9 @@ abstract class TrainingService {
     public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
     public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void;
+    public abstract addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void;
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void;
+    public abstract removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void;
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;

@@ -51,7 +51,7 @@ class NNIManager implements Manager {
     private config!: ExperimentConfig;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
-    private gpuStatusListener: (status: GPUStatus) => void;
+    private gpuStatusListener: (status: Array<GPUStatus>) => void;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -74,7 +74,7 @@ class NNIManager implements Manager {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
             });
         };
-        this.gpuStatusListener = (status: GPUStatus): void => {
+        this.gpuStatusListener = (status: Array<GPUStatus>): void => {
             this.onGPUStatusUpdate(status).catch((err: Error) => {
                 this.criticalError(NNIError.FromError(err, 'GPU status update error: '));
             });
@@ -773,11 +773,20 @@ class NNIManager implements Manager {
         }
     }
 
-    private async onGPUStatusUpdate(status: GPUStatus): Promise<void> {
+    private async onGPUStatusUpdate(status: Array<GPUStatus>): Promise<void> {
         if (this.dispatcher === undefined) {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
-        this.dispatcher.sendCommand(UPDATE_GPU_STATUS, `${String(status.nodeId)},${String(status.gpuId)},${status.status}`)
+        this.log.info(`onGPUStatusUpdate : ${status}`)
+        var msg : Array<any> = [];
+        status.forEach(element => msg.push({
+            nodeId: element.nodeId,
+            gpuId: element.gpuId,
+            status: element.status
+        }))
+        this.dispatcher.sendCommand(UPDATE_GPU_STATUS,
+            JSON.stringify(status)
+        )
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {

@@ -224,11 +224,11 @@ class RemoteMachineTrainingService implements TrainingService {
         this.metricsEmitter.off('metric', listener);
     }
 
-    public addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         return
     }
 
-    public removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         return
     }
 

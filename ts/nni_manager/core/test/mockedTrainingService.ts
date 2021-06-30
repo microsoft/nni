@@ -77,11 +77,11 @@ class MockedTrainingService extends TrainingService {
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
     }
 
-    public addGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         return
     }
 
-    public removeGPUStatusUpdateListener(listener: (status: GPUStatus) => void): void {
+    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
         return
     }
 

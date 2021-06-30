@@ -51,6 +51,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         advisor.trial_end_callback = self._trial_end_callback
         advisor.intermediate_metric_callback = self._intermediate_metric_callback
         advisor.final_metric_callback = self._final_metric_callback
+        advisor.update_gpu_status_callback = self._update_gpu_status_callback
 
         self._running_models: Dict[int, Model] = dict()
         self._history: List[Model] = []
@@ -100,6 +101,9 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         model.metric = metrics
         for listener in self._listeners:
             listener.on_metric(model, metrics)
+    
+    def _update_gpu_status_callback(self, status_list : List[Dict]) -> None:
+        print("update_gpu_status", status_list)
 
     def query_available_resource(self) -> int:
         return self.resources
