@@ -162,7 +162,7 @@ class AttentionHeadMasker(WeightMasker):
         threshold = torch.topk(importance_scores, num_prune, largest=False)[0].max()
 
         # get q_proj, k_proj, v_proj, output_proj from the same attention head
-        q_proj, k_proj, v_proj, output_proj = weight_group if weight_group is not None else \
+        q_proj, _, _, output_proj = weight_group if weight_group is not None else \
             self.pruner.masking_groups[wrapper.group_idx]
 
         n_heads = q_proj.module.weight.size()[0] // self.head_hidden_dim
