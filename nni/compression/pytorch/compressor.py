@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from copy import deepcopy
 import types
 import logging
 import torch
@@ -38,12 +39,34 @@ class Compressor:
         optimizer: pytorch optimizer
             optimizer used to train the model
         """
+        if optimizer is not None:
+            self.optimizer_cls = optimizer.__class__
+            self.optimizer_param_groups = optimizer.state_dict()['param_groups']
+            # don't save 'params' in a 'param_group' in 'param_groups'
+            [group.pop('params') for group in self.optimizer_param_groups]
+        self.reconfig(model, config_list)
+
+    def reconfig(self, model, config_list):
+        """
+        Re-config the compressor.
+        """
         assert isinstance(model, torch.nn.Module)
         self.validate_config(model, config_list)
 
         self.bound_model = model
         self.config_list = config_list
-        self.optimizer = optimizer
+
+        if self.optimizer_cls is not None:
+            if self.optimizer_cls.__name__ == 'SGD':
+                self.optimizer = self.optimizer_cls(model.parameters(), lr=0.001)
+            else:
+                self.optimizer = self.optimizer_cls(model.parameters())
+            groups = self.optimizer.param_groups
+            assert len(groups) == len(self.optimizer_param_groups)
+            for group, temp_group in zip(groups, self.optimizer_param_groups):
+                assert len(group) - 1 == len(temp_group)
+                for k, v in temp_group.items():
+                    group[k] = deepcopy(v)
 
         self.modules_to_compress = None
         self.modules_wrapper = []

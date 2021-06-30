@@ -54,8 +54,6 @@ class IterativePruner(DependencyAwarePruner):
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
-        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
-
         if isinstance(epochs_per_iteration, list):
             assert len(epochs_per_iteration) == num_iterations, 'num_iterations should equal to the length of epochs_per_iteration'
             self.epochs_per_iteration = epochs_per_iteration
@@ -67,6 +65,8 @@ class IterativePruner(DependencyAwarePruner):
 
         self._trainer = trainer
         self._criterion = criterion
+
+        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
 
     def _fresh_calculated(self):
         for wrapper in self.get_modules_wrapper():
@@ -120,13 +120,19 @@ class AGPPruner(IterativePruner):
 
     def __init__(self, model, config_list, optimizer, trainer, criterion,
                  num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
-        super().__init__(model, config_list, optimizer=optimizer, trainer=trainer, criterion=criterion,
-                         num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
-        self.masker = MASKER_DICT[pruning_algorithm](model, self)
-        self.now_epoch = 0
+
+        self.pruning_algorithm = pruning_algorithm
         self.freq = epochs_per_iteration
         self.end_epoch = epochs_per_iteration * num_iterations
+
+        super().__init__(model, config_list, optimizer=optimizer, trainer=trainer, criterion=criterion,
+                         num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
+        self.masker = MASKER_DICT[self.pruning_algorithm](model, self)
+        self.now_epoch = 0
         self.set_wrappers_attribute("if_calculated", False)
 
     def validate_config(self, model, config_list):
@@ -273,16 +279,18 @@ class ADMMPruner(IterativePruner):
     def __init__(self, model, config_list, trainer, criterion=torch.nn.CrossEntropyLoss(),
                  num_iterations=30, epochs_per_iteration=5, row=1e-4, base_algo='l1'):
         self._base_algo = base_algo
-
-        super().__init__(model, config_list)
-
         self._trainer = trainer
-        self.optimizer = torch.optim.Adam(
-            self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
         self._criterion = criterion
         self._num_iterations = num_iterations
         self._training_epochs = epochs_per_iteration
         self._row = row
+
+        super().__init__(model, config_list)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
+        self.optimizer = torch.optim.Adam(
+            self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
 
         self.set_wrappers_attribute("if_calculated", False)
         self.masker = MASKER_DICT[self._base_algo](self.bound_model, self)
@@ -429,10 +437,13 @@ class SlimPruner(IterativePruner):
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_epochs=10, scale=0.0001,
                  dependency_aware=False, dummy_input=None):
+        self.scale = scale
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='slim', trainer=trainer, criterion=criterion,
                          num_iterations=1, epochs_per_iteration=sparsifying_training_epochs, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
-        self.scale = scale
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
         self.patch_optimizer_before(self._callback)
 
     def validate_config(self, model, config_list):

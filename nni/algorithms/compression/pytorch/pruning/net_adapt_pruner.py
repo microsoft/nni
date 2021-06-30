@@ -84,12 +84,7 @@ class NetAdaptPruner(Pruner):
 
     def __init__(self, model, config_list, short_term_fine_tuner, evaluator,
                  optimize_mode='maximize', base_algo='l1', sparsity_per_iteration=0.05, experiment_data_dir='./'):
-        # models used for iterative pruning and evaluation
-        self._model_to_prune = copy.deepcopy(model)
         self._base_algo = base_algo
-
-        super().__init__(model, config_list)
-
         self._short_term_fine_tuner = short_term_fine_tuner
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
@@ -97,17 +92,25 @@ class NetAdaptPruner(Pruner):
         # hyper parameters for NetAdapt algorithm
         self._sparsity_per_iteration = sparsity_per_iteration
 
-        # overall pruning rate
-        self._sparsity = config_list[0]['sparsity']
-
-        # config_list
-        self._config_list_generated = []
-
         self._experiment_data_dir = experiment_data_dir
         if not os.path.exists(self._experiment_data_dir):
             os.makedirs(self._experiment_data_dir)
 
         self._tmp_model_path = os.path.join(self._experiment_data_dir, 'tmp_model.pth')
+
+        super().__init__(model, config_list)
+
+    def reconfig(self, model, config_list):
+        # models used for iterative pruning and evaluation
+        self._model_to_prune = copy.deepcopy(model)
+
+        super().reconfig(model, config_list)
+
+        # overall pruning rate
+        self._sparsity = config_list[0]['sparsity']
+
+        # config_list
+        self._config_list_generated = []
 
     def validate_config(self, model, config_list):
         """

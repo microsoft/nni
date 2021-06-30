@@ -28,10 +28,15 @@ class DependencyAwarePruner(Pruner):
 
     def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False,
                  dummy_input=None, **algo_kwargs):
-        super().__init__(model, config_list=config_list, optimizer=optimizer)
-
+        self.pruning_algorithm = pruning_algorithm
         self.dependency_aware = dependency_aware
         self.dummy_input = dummy_input
+        self.algo_kwargs = algo_kwargs
+
+        super().__init__(model, config_list=config_list, optimizer=optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
 
         if self.dependency_aware:
             if not self._supported_dependency_aware():
@@ -42,7 +47,7 @@ class DependencyAwarePruner(Pruner):
             # Get the TorchModuleGraph of the target model
             # to trace the model, we need to unwrap the wrappers
             self._unwrap_model()
-            self.graph = TorchModuleGraph(model, dummy_input)
+            self.graph = TorchModuleGraph(model, self.dummy_input)
             self._wrap_model()
             self.channel_depen = ChannelDependency(
                 traced_model=self.graph.trace)
@@ -52,10 +57,10 @@ class DependencyAwarePruner(Pruner):
                 name: sets for sets in self.channel_depen for name in sets}
             self.group_depen = self.group_depen.dependency_sets
 
-        self.masker = MASKER_DICT[pruning_algorithm](
-            model, self, **algo_kwargs)
+        self.masker = MASKER_DICT[self.pruning_algorithm](
+            model, self, **self.algo_kwargs)
         # set the dependency-aware switch for the masker
-        self.masker.dependency_aware = dependency_aware
+        self.masker.dependency_aware = self.dependency_aware
         self.set_wrappers_attribute("if_calculated", False)
 
     def calc_mask(self, wrapper, wrapper_idx=None):

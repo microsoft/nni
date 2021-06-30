@@ -89,18 +89,32 @@ class SensitivityPruner(Pruner):
     def __init__(self, model, config_list, evaluator,
                  finetuner=None, base_algo='l1', sparsity_proportion_calc=None,
                  sparsity_per_iter=0.1, acc_drop_threshold=0.05, checkpoint_dir=None):
-
         self.base_algo = base_algo
-        self.model = model
+        self.evaluator = evaluator
+        self.finetuner = finetuner
+
+        # function to generate the sparsity proportion between the conv layers
+        if sparsity_proportion_calc is None:
+            self.sparsity_proportion_calc = self._max_prune_ratio
+        else:
+            self.sparsity_proportion_calc = sparsity_proportion_calc
+
+        self.sparsity_per_iter = sparsity_per_iter
+        self.acc_drop_threshold = acc_drop_threshold
+        self.checkpoint_dir = checkpoint_dir
+
         super(SensitivityPruner, self).__init__(model, config_list)
+
+    def reconfig(self, model, config_list):
+        self.model = model
+        super().reconfig(model, config_list)
         # unwrap the model
         self._unwrap_model()
         _logger.debug(str(self.model))
-        self.evaluator = evaluator
-        self.finetuner = finetuner
+
         self.analyzer = SensitivityAnalysis(
-            self.model, self.evaluator, prune_type=base_algo, \
-            early_stop_mode='dropped', early_stop_value=acc_drop_threshold)
+            self.model, self.evaluator, prune_type=self.base_algo, \
+            early_stop_mode='dropped', early_stop_value=self.acc_drop_threshold)
         # Get the original accuracy of the pretrained model
         self.ori_acc = None
         # Copy the original weights before pruning
@@ -124,16 +138,9 @@ class SensitivityPruner(Pruner):
                 # if hasattr(submodule, 'weight'): # Count all the weights of the model
                 self.weight_count[name] = submodule.weight.data.numel()
                 self.weight_sum += self.weight_count[name]
-        # function to generate the sparsity proportion between the conv layers
-        if sparsity_proportion_calc is None:
-            self.sparsity_proportion_calc = self._max_prune_ratio
-        else:
-            self.sparsity_proportion_calc = sparsity_proportion_calc
+
         # The ratio of remained weights is 1.0 at the begining
-        self.remained_ratio = 1.0
-        self.sparsity_per_iter = sparsity_per_iter
-        self.acc_drop_threshold = acc_drop_threshold
-        self.checkpoint_dir = checkpoint_dir
+            self.remained_ratio = 1.0
 
     def validate_config(self, model, config_list):
         """

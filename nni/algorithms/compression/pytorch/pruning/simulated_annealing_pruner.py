@@ -72,24 +72,33 @@ class SimulatedAnnealingPruner(Pruner):
 
     def __init__(self, model, config_list, evaluator, optimize_mode='maximize', base_algo='l1',
                  start_temperature=100, stop_temperature=20, cool_down_rate=0.9, perturbation_magnitude=0.35, experiment_data_dir='./'):
-        # original model
-        self._model_to_prune = copy.deepcopy(model)
         self._base_algo = base_algo
-
-        super().__init__(model, config_list)
-
         self._evaluator = evaluator
         self._optimize_mode = OptimizeMode(optimize_mode)
 
         # hyper parameters for SA algorithm
         self._start_temperature = start_temperature
-        self._current_temperature = start_temperature
         self._stop_temperature = stop_temperature
         self._cool_down_rate = cool_down_rate
         self._perturbation_magnitude = perturbation_magnitude
 
+        self._experiment_data_dir = experiment_data_dir
+        if not os.path.exists(self._experiment_data_dir):
+            os.makedirs(self._experiment_data_dir)
+
+        super().__init__(model, config_list)
+
+    def reconfig(self, model, config_list):
+        # save original model
+        self._model_to_prune = copy.deepcopy(model)
+
+        super().reconfig(model, config_list)
+
+        self._current_temperature = self._start_temperature
+
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
+
         # pruning rates of the layers
         self._sparsities = None
 
@@ -99,10 +108,6 @@ class SimulatedAnnealingPruner(Pruner):
         self._best_config_list = []
 
         self._search_history = []
-
-        self._experiment_data_dir = experiment_data_dir
-        if not os.path.exists(self._experiment_data_dir):
-            os.makedirs(self._experiment_data_dir)
 
     def validate_config(self, model, config_list):
         """
