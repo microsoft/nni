@@ -21,6 +21,7 @@ from ConfigSpaceNNI import Configuration
 
 import nni
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -143,6 +144,7 @@ class SMACTuner(Tuner):
             The format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
         self.logger.info('update search space in SMAC.')
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform', 'loguniform'])
         if not self.update_ss_done:
             self.categorical_dict = generate_scenario(search_space)
             if self.categorical_dict is None:
