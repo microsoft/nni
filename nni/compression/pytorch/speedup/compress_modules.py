@@ -114,7 +114,6 @@ def replace_linear(linear, masks):
     assert len(in_masks) == 1
     assert isinstance(output_mask, torch.Tensor)
     in_mask = in_masks[0]
-    # only need the first batch of the constant
 
     weight_mask = weight_mask['weight']
     # N C K
