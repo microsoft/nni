@@ -19,6 +19,9 @@ class NaiveQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
@@ -146,6 +149,9 @@ class QAT_Quantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         device = next(model.parameters()).device
@@ -372,6 +378,9 @@ class DoReFaQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
         device = next(model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
@@ -478,6 +487,9 @@ class BNNQuantizer(Quantizer):
 
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
         device = next(model.parameters()).device
         self.quant_grad = ClipGrad.apply
         modules_to_compress = self.get_modules_to_compress()
@@ -595,6 +607,10 @@ class LsqQuantizer(Quantizer):
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
         super().__init__(model, config_list, optimizer)
+
+    def reconfig(self, model, config_list):
+        super().reconfig(model, config_list)
+
         device = next(model.parameters()).device
         self.quant_grad = QuantForward()
         modules_to_compress = self.get_modules_to_compress()
