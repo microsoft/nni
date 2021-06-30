@@ -38,12 +38,10 @@ class ModelSpeedup:
             The path of user provided mask file
         map_location : str
             the device on which masks are placed, same to map_location in ```torch.load```
-            confidence: the confidence coefficient of the sparsity inference. This value is
-            actually used as the batchsize of the dummy_input.
         batch_dim : int
             the index of batch dimension in the dummy_input
-        confidence: int
-            The number of examples used to infer the mask.
+        confidence: the confidence coefficient of the sparsity inference. This value is
+            actually used as the batchsize of the dummy_input.
         """
         assert confidence > 1
         from nni.common.graph_utils import build_module_graph
