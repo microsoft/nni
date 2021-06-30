@@ -70,7 +70,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 `TPE 文档 <./HyperoptTuner.rst>`__。
 
@@ -305,7 +305,7 @@ Hyperband
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, 可选, 默认为 60*)，分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
 * **eta** (*int，可选，默认为 3*)，``(eta-1)/eta`` 是丢弃 Trial 的比例。
 * **exec_mode** (*串行或并行，可选默认值是并行*\ )，如果是“并行”， Tuner 会尝试使用可用资源立即启动新的分组。 如果是“串行”， Tuner 只会在当前分组完成后启动新的分组。

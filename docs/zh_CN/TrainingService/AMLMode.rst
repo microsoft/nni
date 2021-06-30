@@ -8,7 +8,7 @@ NNI 支持在 `AML <https://azure.microsoft.com/zh-cn/services/machine-learning/
 
 步骤 1. 参考 `指南 <../Tutorial/QuickStart.rst>`__ 安装 NNI。   
 
-步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。 如果已有 Azure 账户/订阅，跳过此步骤。
+步骤 2. 通过此 `链接 <https://azure.microsoft.com/zh-cn/free/services/machine-learning/>`__ 创建 Azure 账户/订阅。 如果已有 Azure 账户/订阅，跳过此步骤。
 
 步骤 3. 在机器上安装 Azure CLI，参照 `此 <https://docs.microsoft.com/zh-cn/cli/azure/install-azure-cli?view=azure-cli-latest>`__ 安装指南。
 

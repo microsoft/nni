@@ -62,7 +62,7 @@ PyTorch
 
 Slim Pruner
 -----------
-这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\。 比例因子值较小的通道将被修剪。 更多细节，请参考 `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ 。
+这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\。 比例因子值较小的通道将被修剪。
 
 用法
 ^^^^^
@@ -86,7 +86,7 @@ Slim Pruner 的用户配置
 复现实验
 ^^^^^^^^^^^^^^^^^^^^^
 
-我们复现了 `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/pdf/1708.06519.pdf>`__ 中的一项实验。根据论文，对 CIFAR-10 上的 **VGGNet** 剪除了 ``70%`` 的通道，即约 ``88.5%`` 的参数。 我们的实验结果如下： 我们的实验结果如下：
+我们复现了 `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/pdf/1708.06519.pdf>`__ 中的一项实验。根据论文，对 CIFAR-10 上的 **VGGNet** 剪除了 ``70%`` 的通道，即约 ``88.5%`` 的参数。 我们的实验结果如下：
 
 .. list-table::
    :header-rows: 1
@@ -118,7 +118,7 @@ Slim Pruner 的用户配置
 FPGM Pruner
 -----------
 
-这是一个 One-Shot Pruner，用最小的几何中值修剪滤波器。 FPGM 选择最可替换的滤波器。 FPGM 选择最可替换的滤波器。
+这是一个 One-Shot Pruner，用最小的几何中值修剪滤波器。 FPGM 选择最可替换的滤波器。
 更多细节，请参考 `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__ 。
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
@@ -191,7 +191,7 @@ L1Filter Pruner 的用户配置
 复现实验
 ^^^^^^^^^^^^^^^^^^^^^
 
-我们通过 **L1FilterPruner** 实现了 `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 ``64%`` 的参数。 实验结果如下： 实验结果如下：
+我们通过 **L1FilterPruner** 实现了 `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__ 中的一项实验， 即论文中，在 CIFAR-10 数据集上修剪 **VGG-16** 的 **VGG-16-pruned-A**，其中大约剪除了 ``64%`` 的参数。 实验结果如下：
 
 .. list-table::
    :header-rows: 1
@@ -290,8 +290,7 @@ ActivationAPoZRankFilterPruner 的用户配置
 ActivationMeanRankFilter Pruner
 -------------------------------
 
-ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 
-``平均激活`` 来修剪滤波器，来达到预设的网络稀疏度。 ``平均激活`` 来修剪滤波器，来达到预设的网络稀疏度。 剪枝标准 ``平均激活``，在论文 `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__ 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。 本文中提到的其他修剪标准将在以后的版本中支持。
+ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 ``平均激活`` 来修剪滤波器，来达到预设的网络稀疏度。剪枝标准 ``平均激活``，在论文 `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__ 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
 
@@ -678,7 +677,7 @@ LotteryTicket Pruner 的用户配置
 复现实验
 ^^^^^^^^^^^^^^^^^^^^^
 
-在重现时，在 MNIST 使用了与论文相同的配置。 在重现时，在 MNIST 使用了与论文相同的配置。 实验代码在 :githublink:`这里 <examples/model_compress/pruning/lottery_torch_mnist_fc.py>`. 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
+在重现时，在 MNIST 使用了与论文相同的配置。 实验代码在 :githublink:`这里 <examples/model_compress/pruning/lottery_torch_mnist_fc.py>`. 在次实验中，修剪了10次，在每次修剪后，训练了 50 个 epoch。
 
 
 .. image:: ../../img/lottery_ticket_mnist_fc.png

@@ -179,7 +179,7 @@ Windows
        # Below is an example of specifying python environment.
        pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
 
-远程计算机支持以重用模式运行实验。 在这种模式下，NNI 将重用远程机器任务来运行尽可能多的 Trial. 这样可以节省创建新作业的时间。 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。  
+远程计算机支持以重用模式运行实验。 在这种模式下，NNI 将重用远程机器任务来运行尽可能多的 Trial。这样可以节省创建新作业的时间。用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。  
 按照以下设置启用重用模式：
 
 .. code-block:: yaml

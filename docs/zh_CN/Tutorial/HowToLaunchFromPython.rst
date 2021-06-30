@@ -9,10 +9,12 @@
 
 概述
 --------
-从 ``nni v2.0`` 起，我们提供了一种全新方式发起 Experiment 。 从 ``nni v2.0`` 起，我们提供了一种全新方式发起 Experiment 。 在此之前，您需要在 yaml 文件中配置实验，然后使用 ``nnictl`` 命令启动 Experiment 。 现在，您还可以直接在python文件中配置和运行 Experiment 。 如果您熟悉 Python 编程，那么无疑会为您带来很多便利。 现在，您还可以直接在python文件中配置和运行 Experiment 。 如果您熟悉 Python 编程，那么无疑会为您带来很多便利。
+
+从 ``nni v2.0`` 起，我们提供了一种全新方式发起 Experiment 。 在此之前，您需要在 yaml 文件中配置实验，然后使用 ``nnictl`` 命令启动 Experiment 。 现在，您还可以直接在python文件中配置和运行 Experiment 。 如果您熟悉 Python 编程，那么无疑会为您带来很多便利。
 
 运行一个新的 Experiment
 ------------------------------------------------------------------
+
 成功安装 ``nni`` 之后，您可以通过以下3个步骤使用 Python 脚本开始 Experiment 。
 
 ..
@@ -54,13 +56,13 @@
 
     experiment.run(port=8081)
 
-现在，您已经成功启动了 NNI Experiment。 您可以在浏览器中输入``localhost:8081`` 以实时观察实验。 您可以在浏览器中输入``localhost:8080`` 以实时观察实验。
+现在，您已经成功启动了 NNI Experiment。 您可以在浏览器中输入``localhost:8081`` 以实时观察实验。
 
-.. Note:: 实验将在前台运行，实验结束后自动退出。 如果要以交互方式运行 Experiment，请在步骤3中使用 ``start()``。 如果要以交互方式运行 Experiment，请在步骤2中使用 ``start()``。 
+.. Note:: 实验将在前台运行，实验结束后自动退出。 如果要以交互方式运行 Experiment，请在步骤3中使用 ``start()``。
 
 示例
 ^^^^^^^
-以下是这种新的启动方法的示例。 以下是这种新的启动方法的示例。 你可以在 :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>` 找到实验代码。
+以下是这种新的启动方法的示例。你可以在 :githublink:`mnist-tfv2/launch.py <examples/trials/mnist-tfv2/launch.py>` 找到实验代码。
 
 .. code-block:: python
 
@@ -96,7 +98,7 @@
 
 请参考 `示例用法 <./python_api_start.rst>`__ 和代码文件 :githublink:`python_api_start.ipynb <examples/trials/sklearn/classification/python_api_start.ipynb>`。
 
-.. Note:: ``run()`` 轮询实验状态，并在实验完成时自动调用 ``stop()``。 ``start()`` 仅仅启动了一个新的 Experiment，所以需要通过调用 ``stop()`` 手动停止。 Note:: 连接到现有 Experiment 时，可以使用 ``stop()`` 停止 Experiment。
+.. Note:: ``run()`` 轮询实验状态，并在实验完成时自动调用 ``stop()``。 ``start()`` 仅仅启动了一个新的 Experiment，所以需要通过调用 ``stop()`` 手动停止。
 
 连接并管理已存在的 Experiment
 ----------------------------------------

@@ -226,7 +226,7 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
         ]
     }
 
-可将模型视为 `有向无环图 <https://zh.wikipedia.org/wiki/Directed_acyclic_graph>`__。 每个模型的定义都是一个 JSON 对象： 每个模型的定义都是一个 JSON 对象：
+可将模型视为 `有向无环图 <https://zh.wikipedia.org/wiki/Directed_acyclic_graph>`__。 每个模型的定义都是一个 JSON 对象：
 
 
 * ``input_shape`` 是整数的列表，不包括批量维度。
@@ -259,7 +259,7 @@ Tuner 有大量的文件、函数和类。 这里简单介绍最重要的文件�
   * 
     对于其它层，后面的数字表示节点的输入 id（或 id 列表）以及节点的输出 id。
 
-5. TODO
+1. TODO
 -------
 
 下一步，会将 API 从固定网络生成器，改为有更多可用操作的网络生成器。 会使用 ONNX 格式来替代 JSON 作为中间表示结果。
