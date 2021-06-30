@@ -122,18 +122,15 @@ class AGPPruner(IterativePruner):
                  num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
 
-        self.pruning_algorithm = pruning_algorithm
         self.freq = epochs_per_iteration
         self.end_epoch = epochs_per_iteration * num_iterations
 
-        super().__init__(model, config_list, optimizer=optimizer, trainer=trainer, criterion=criterion,
+        super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm=pruning_algorithm, trainer=trainer, criterion=criterion,
                          num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
 
     def reconfig(self, model, config_list):
         super().reconfig(model, config_list)
-        self.masker = MASKER_DICT[self.pruning_algorithm](model, self)
         self.now_epoch = 0
-        self.set_wrappers_attribute("if_calculated", False)
 
     def validate_config(self, model, config_list):
         """
@@ -279,21 +276,16 @@ class ADMMPruner(IterativePruner):
     def __init__(self, model, config_list, trainer, criterion=torch.nn.CrossEntropyLoss(),
                  num_iterations=30, epochs_per_iteration=5, row=1e-4, base_algo='l1'):
         self._base_algo = base_algo
-        self._trainer = trainer
-        self._criterion = criterion
         self._num_iterations = num_iterations
         self._training_epochs = epochs_per_iteration
         self._row = row
 
-        super().__init__(model, config_list)
+        super().__init__(model, config_list, pruning_algorithm=self._base_algo, trainer=trainer, criterion=criterion)
 
     def reconfig(self, model, config_list):
         super().reconfig(model, config_list)
         self.optimizer = torch.optim.Adam(
             self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
-
-        self.set_wrappers_attribute("if_calculated", False)
-        self.masker = MASKER_DICT[self._base_algo](self.bound_model, self)
 
         self.patch_optimizer_before(self._callback)
 

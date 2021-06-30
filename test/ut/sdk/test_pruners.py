@@ -246,8 +246,6 @@ def pruners_test(pruner_names=['level', 'agp', 'slim', 'fpgm', 'l1', 'l2', 'tayl
         optimizer = torch.optim.SGD(model.parameters(), lr=0.01)
         config_list = prune_config[pruner_name]['config_list']
 
-        print(config_list)
-
         if pruner_name == 'netadapt':
             pruner = prune_config[pruner_name]['pruner_class'](model, config_list, short_term_fine_tuner=prune_config[pruner_name]['short_term_fine_tuner'], evaluator=prune_config[pruner_name]['evaluator'])
         elif pruner_name == 'simulatedannealing':
