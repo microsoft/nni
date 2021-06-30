@@ -167,7 +167,7 @@ Quantization Specific Keys
 模型加速
 ------------------
 
-掩码实际上并不能加速模型。 应该基于导出的掩码来对模型加速，因此，NNI 提供了 API 来加速模型。 在模型上调用 ``apply_compression_results`` 后，模型会变得更小，推理延迟也会减小。 应该基于导出的掩码来对模型加速，因此，NNI 提供了 API 来加速模型。
+掩码实际上并不能加速模型。 应该基于导出的掩码来对模型加速，因此，NNI 提供了 API 来加速模型。在模型上调用 ``apply_compression_results`` 后，模型会变得更小，推理延迟也会减小。
 
 .. code-block:: python
 

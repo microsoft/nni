@@ -127,7 +127,7 @@ Anneal（退火算法）
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 **配置示例：**
 

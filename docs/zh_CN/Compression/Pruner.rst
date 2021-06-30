@@ -62,7 +62,7 @@ PyTorch
 
 Slim Pruner
 -----------
-这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\。 比例因子值较小的通道将被修剪。
+这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__。
 
 用法
 ^^^^^

@@ -47,7 +47,7 @@ Median Stop Assessor
 **classArgs 要求：**
 
 
-* **optimize_mode** ( *maximize 或 minimize，可选默认值是maximize* )。如果为 'maximize'，Assessor 会在结果小于期望值时 **中止** Trial。如果为 'minimize'，Assessor 会在结果大于期望值时**终止** Trial。
+* **optimize_mode** ( *maximize 或 minimize，可选默认值是maximize* )。如果为 'maximize'，Assessor 会在结果小于期望值时 **中止** Trial。如果为 'minimize'，Assessor 会在结果大于期望值时 **终止** Trial。
 * **start_step** ( *int，可选，默认值为 0* )。只有收到 start_step 个中间结果后，才开始判断是否一个 Trial 应该被终止。
 
 **使用示例：**
