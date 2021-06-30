@@ -4,6 +4,8 @@
 import logging
 from schema import And, Optional
 
+from nni.common.graph_utils import TorchModuleGraph
+from nni.compression.pytorch.utils.shape_dependency import AttentionWeightDependency
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
 from . import L1WeightHeadMasker, L2WeightHeadMasker
@@ -42,13 +44,18 @@ class TransformerHeadPruner(Pruner):
             - 'l2_activation'
     """
 
-    def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylor', **algo_kwargs):
-        super().__init__(model, config_list)
-
-        self.ranking_criteria = ranking_criteria
+    def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylor', dummy_input=None,
+                 **algo_kwargs):
         self.attention_name_groups = attention_name_groups
+        self.ranking_criteria = ranking_criteria
+        self.dummy_input = dummy_input
         self.masker = MASKER_DICT[ranking_criteria](model, self, **algo_kwargs)
-        self.set_wrappers_attribute("mask_calculated", False)
+        self.masking_groups = []
+
+        super().__init__(model, config_list)      # reset() called here
+
+    def reset(self, checkpoint=None):
+        super().reset(checkpoint=checkpoint)
 
         # Group generation: one group per attention layer, four weights per group
         self.masking_groups = []
@@ -56,11 +63,19 @@ class TransformerHeadPruner(Pruner):
             logger.info("Note: weights for the same attention layer are grouped using the given attention_name_groups.")
             self.group_weights_by_name()
         else:
+            assert self.dummy_input is not None
             logger.info("Note: weights for the same attention layer are grouped using model graph.")
+            self._unwrap_model()
             self.group_weights_by_graph()
+            self._wrap_model()
 
         # Group sanity check
         self.validate_weight_groups()
+
+        # Remove any mistakenly captured ungrouped modules
+        self.remove_ungrouped_modules()
+
+        self.set_wrappers_attribute("mask_calculated", False)
 
     def group_weights_by_name(self):
         """
@@ -82,16 +97,45 @@ class TransformerHeadPruner(Pruner):
                 wrapper.group_idx = name2group[wrapper.name]
                 self.masking_groups[name2group[wrapper.name]].append(wrapper)
 
-    # TODO: graph-based group inference
     def group_weights_by_graph(self):
         """
         Populate self.masking_groups bu running inference on the module graph.
         """
-        pass
+        weight_names_grouped = []
+        stack = [(name, module) for name, module in self.bound_model.named_children()]
+        while stack:
+            cur_name, cur_module = stack.pop()
+            try:
+                module_graph = TorchModuleGraph(cur_module, self.dummy_input)
+                dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
+                weight_names_grouped.extend([[cur_name + '.' + x for x in group]
+                                             for group in dependency_tracer.dependency_sets])
+            except:
+                stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
 
-    # TODO: some sanity checks - weight shape agreement (including head_hidden_dim parameter)? sparsity agreement?
+        self.attention_name_groups = weight_names_grouped
+        self.group_weights_by_name()
+
+    # TODO: more sanity checks - include head_hidden_dim parameter? sparsity agreement?
     def validate_weight_groups(self):
-        pass
+        errmsg = 'Attention weight group sanity check not passed'
+        try:
+            for group in self.masking_groups:
+                assert len(group) == 4, errmsg + ': each group must have four weights'
+                assert group[0].module.weight.size() == group[1].module.weight.size() and \
+                    group[1].module.weight.size() == group[2].module.weight.size(), \
+                    errmsg + ': the dimensions of Q, K, V projection matrices must be the same '
+                assert group[0].module.weight.size()[0] == group[3].module.weight.size()[1], \
+                    errmsg + ': the dimension of attention results must match with input for output projection'
+        except:
+            raise RuntimeError(errmsg)
+
+    def remove_ungrouped_modules(self):
+        """
+        Remove non-attention weights that might be captured mistakenly by a simplified config_list.
+        """
+        care_of_modules = set([x for layer in self.masking_groups for x in layer])
+        self.modules_wrapper = [x for x in self.modules_wrapper if x in care_of_modules]
 
     def validate_config(self, model, config_list):
         """

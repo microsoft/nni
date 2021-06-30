@@ -475,8 +475,8 @@ def main():
 
     #########################################################################
     # Pruning
-    kwargs_final = {'num_iterations': 6, 'epochs_per_iteration': 1, 'head_hidden_dim': 64,
-                    'trainer': 1, 'optimizer': 2, 'criterion': 3}
+    # kwargs_final = {'num_iterations': 6, 'epochs_per_iteration': 1, 'head_hidden_dim': 64,
+    #                 'trainer': 1, 'optimizer': 2, 'criterion': 3}
 
     attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
@@ -484,8 +484,9 @@ def main():
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
     kwargs = {'ranking_criteria': 'l1_weight',
-              'attention_name_groups': attention_name_groups,
-              'head_hidden_dim': 64}
+              # 'attention_name_groups': attention_name_groups,
+              'head_hidden_dim': 64,
+              'dummy_input': [torch.rand([1, 64, 768]).cuda(), torch.ones([1, 64]).cuda()]}   # input and mask
 
     config_list = [{
         'sparsity': 0.25,

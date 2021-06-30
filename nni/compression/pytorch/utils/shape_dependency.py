@@ -5,7 +5,8 @@ import csv
 import logging
 
 __all__ = ['ChannelDependency', 'GroupDependency',
-           'CatPaddingDependency', 'InputChannelDependency']
+           'CatPaddingDependency', 'InputChannelDependency',
+           'AttentionWeightDependency']
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -501,3 +502,107 @@ class GroupDependency(Dependency):
     @property
     def dependency_sets(self):
         return self.dependency
+
+
+class AttentionWeightDependency(Dependency):
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        """
+        This model analyze the channel dependencies between the conv
+        layers in a model.
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to be analyzed.
+        data : torch.Tensor
+            The example input data to trace the network architecture.
+        traced_model : torch._C.Graph
+            if we alreay has the traced graph of the target model, we donnot
+            need to trace the model again.
+        """
+        super(AttentionWeightDependency, self).__init__(
+            model, dummy_input, traced_model)
+
+    def _get_parent_layers(self, node):
+        """
+        Find the nearest father conv layers for the target node.
+
+        Parameters
+        ---------
+        node : torch._C.Node
+            target node.
+
+        Returns
+        -------
+        parent_layers: list
+
+        """
+        parent_layers = []
+        stack = []
+        stack.append(node)
+        while stack:
+            curnode = stack.pop()
+            if curnode.op_type == 'LayerNorm':
+                continue
+            if curnode.op_type == 'Linear':
+                parent_layers.append(curnode.name)
+                if len(parent_layers) > 1:
+                    continue
+            parents = self.graph.find_predecessors(curnode.unique_name)
+            parents = [self.graph.name_to_node[name] for name in parents]
+            for parent in parents:
+                stack.append(parent)
+
+        return parent_layers
+
+    def build_dependency(self):
+        """
+        Build the channel dependency for the conv layers
+        in the model.
+        """
+        # unpack the tuple/list manually before analyze the
+        # channel dependency
+        self.graph.unpack_manually()
+        for node in self.graph.nodes_py.nodes_op:
+            parent_layers = []
+            if node.op_type in ['Linear']:
+                parent_layers = self._get_parent_layers(node)
+                # print(node.name, parent_layers)
+            dependency_set = set(parent_layers)
+            # merge the dependencies
+            # for parent in parent_layers:
+            #     if parent in self.dependency:
+            #         dependency_set.update(self.dependency[parent])
+            # save the dependencies
+            # for _node in dependency_set:
+            #     self.dependency[_node] = dependency_set
+            self.dependency[node.name] = dependency_set
+
+    @property
+    def dependency_sets(self):
+        """
+        Get the list of the dependency set.
+
+        Returns
+        -------
+        dependency_sets : list
+            list of the dependency sets.
+            Each dependency set is a 4-element list of module names, with the first three elements being the projection
+            matrices for Q, K, V (in any order), and the last element being the dense matrix.
+        """
+        d_sets = []
+        for node in self.graph.nodes_py.nodes_op:
+            if node.op_type != 'Linear' or node.name not in self.dependency or len(self.dependency[node.name]) < 4:
+                continue
+            tmp_set = set()
+            for other in self.dependency[node.name]:
+                tmp_set.add(other)
+            tmp_set.remove(node.name)
+            res_list = list(tmp_set)
+            res_list.append(node.name)
+            d_sets.append(res_list)
+
+        return d_sets
+
+    def export(self, filepath):
+        pass
