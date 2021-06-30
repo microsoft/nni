@@ -130,6 +130,10 @@ Detailed usage could be found `here <../reference/experiment_config.rst>`__.
 * `Experiment Config <#Experiment-Config>`_
 * `Algorithm Config <#Algorithm-Config>`_
 * `Training Service Config <#Training-Service-Config>`_
+  * `Local Config <#Local-Config>`_ 
+  * `Remote Config <#Remote-Config>`_
+  * `Openpai Config <#Openpai-Config>`_
+  * `AML Config <#AML-Config>`_
 * `Shared Storage Config <Shared-Storage-Config>`_
 
 
@@ -201,7 +205,118 @@ Algorithm Config
 Training Service Config
 ^^^^^^^^^^^^^^^^^^^^^^^
 
+Local Config
+************
+
+..  autoattribute:: nni.experiment.config.LocalConfig.platform
+
+..  autoattribute:: nni.experiment.config.LocalConfig.use_active_gpu
+
+..  autoattribute:: nni.experiment.config.LocalConfig.max_trial_number_per_gpu
+
+..  autoattribute:: nni.experiment.config.LocalConfig.gpu_indices
+
+Remote Config
+*************
+
+..  autoattribute:: nni.experiment.config.RemoteConfig.
+platform
+
+..  autoattribute:: nni.experiment.config.RemoteConfig.
+reuse_mode
+
+..  autoattribute:: nni.experiment.config.RemoteConfig.
+machine_list
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.host
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.port
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.user
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.password
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.ssh_key_file
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.ssh_passphrase
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.use_active_gpu
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.max_trial_number_per_gpu
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.gpu_indices
+
+..  autoattribute:: nni.experiment.config.RemoteMachineConfig.python_path
+
+
+Openpai Config
+**************
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.platform
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.host
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.username
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.token
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.trial_cpu_number
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.trial_memory_size
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.storage_config_name
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.docker_image
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.local_storage_mount_point
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.container_storage_mount_point
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.reuse_mode
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.openpai_config
+
+..  autoattribute:: nni.experiment.config.OpenpaiConfig.openpai_config_file
+
+AML Config
+**********
+
+..  autoattribute:: nni.experiment.config.AmlConfig.platform
+
+..  autoattribute:: nni.experiment.config.AmlConfig.subscription_id
+
+..  autoattribute:: nni.experiment.config.AmlConfig.resource_group
+
+..  autoattribute:: nni.experiment.config.AmlConfig.workspace_name
+
+..  autoattribute:: nni.experiment.config.AmlConfig.compute_target
+
+..  autoattribute:: nni.experiment.config.AmlConfig.docker_image
+
+..  autoattribute:: nni.experiment.config.AmlConfig.max_trial_number_per_gpu
+
 
 Shared Storage Config
 ^^^^^^^^^^^^^^^^^^^^^
 
+Nfs Config
+**********
+
+..  autoattribute:: nni.experiment.config.NfsConfig.storage_type
+
+..  autoattribute:: nni.experiment.config.NfsConfig.nfs_server
+
+..  autoattribute:: nni.experiment.config.NfsConfig.exported_directory
+
+Azure Blob Config
+*****************
+
+..  autoattribute:: nni.experiment.config.AzureBlobConfig.storage_type
+
+..  autoattribute:: nni.experiment.config.AzureBlobConfig.storage_account_name
+
+..  autoattribute:: nni.experiment.config.AzureBlobConfig.storage_account_key
+
+..  autoattribute:: nni.experiment.config.AzureBlobConfig.resource_group_name
+
+..  autoattribute:: nni.experiment.config.AzureBlobConfig.container_name
