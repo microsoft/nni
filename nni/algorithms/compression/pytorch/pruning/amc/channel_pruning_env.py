@@ -227,7 +227,7 @@ class ChannelPruningEnv:
 
     def reset(self):
         # restore env by loading the checkpoint
-        self.pruner.reset(self.checkpoint)
+        self.pruner.reset_bound_model(self.checkpoint)
         self.cur_ind = 0
         self.strategy = []  # pruning strategy
         self.d_prime_list = []
