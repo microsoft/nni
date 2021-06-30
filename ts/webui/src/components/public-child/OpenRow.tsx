@@ -134,19 +134,24 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                                     text='View trial stdout'
                                                     styles={{ root: { marginLeft: 15 } }}
                                                 />
-                                                {EXPERIMENT.metadata.tag.includes('retiarii') ? (
-                                                    <PrimaryButton
-                                                        onClick={this.openModelOnnx.bind(this)}
-                                                        text='Visualize model'
-                                                        styles={{ root: { marginLeft: 15 } }}
-                                                    />
-                                                ) : null}
                                             </div>
                                         </div>
                                     </div>
                                 )
                             }
                         </PivotItem>
+                        {EXPERIMENT.metadata.tag.includes('retiarii') ? (
+                            <PivotItem headerText='Visualization' key='3' itemIcon='FlowChart'>
+                                <div id='visualization'>
+                                    <div id='visualizationText'>Visualize models with 3rd-party tools.</div>
+                                    <PrimaryButton
+                                        onClick={this.openModelOnnx.bind(this)}
+                                        text='Netron'
+                                        styles={{ root: { marginLeft: 15 } }}
+                                    />
+                                </div>
+                            </PivotItem>
+                        ) : null}
                     </Pivot>
                 </Stack>
             </Stack>
