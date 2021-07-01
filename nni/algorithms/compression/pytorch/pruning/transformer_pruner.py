@@ -116,7 +116,7 @@ class TransformerHeadPruner(Pruner):
                 dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
                 weight_names_grouped.extend([[cur_name + '.' + x for x in group]
                                              for group in dependency_tracer.dependency_sets])
-            except Exception as e:
+            except:
                 stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
         self.attention_name_groups = weight_names_grouped
         self.group_weights_by_name()
