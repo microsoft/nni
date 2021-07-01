@@ -56,7 +56,7 @@ interface CompareProps {
 
 interface CompareState {
     intermediateKey: string; // default, dict other keys
-    intermediateAllKeysList: string[];
+    // intermediateAllKeysList: string[];
 }
 
 class Compare extends React.Component<CompareProps, CompareState> {
@@ -64,8 +64,8 @@ class Compare extends React.Component<CompareProps, CompareState> {
         super(props);
 
         this.state = {
-            intermediateKey: 'default',
-            intermediateAllKeysList: []
+            intermediateKey: 'default'
+            // intermediateAllKeysList: []
         };
     }
 
@@ -222,26 +222,27 @@ class Compare extends React.Component<CompareProps, CompareState> {
         }
     };
 
-    componentDidMount(): void {
-        const { trials } = this.props;
-        const a = trials[0].intermediates as any;
-        const parsedMetric = parseMetrics(a.data);
-        if (typeof parsedMetric === 'object') {
-            const allIntermediateKeys: string[] = [];
-            // just add type=number keys
-            // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
-            for (const key in parsedMetric) {
-                if (typeof parsedMetric[key] === 'number') {
-                    allIntermediateKeys.push(key);
-                }
-            }
-            this.setState(() => ({ intermediateAllKeysList: allIntermediateKeys }));
-        }
-    }
+    // componentDidMount(): void {
+    //     const { trials } = this.props;
+    //     const a = trials[0].intermediates as any;
+    //     const parsedMetric = parseMetrics(a[0].data);
+    //     if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+    //         const allIntermediateKeys: string[] = [];
+    //         // just add type=number keys
+    //         // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+    //         for (const key in parsedMetric) {
+    //             if (typeof parsedMetric[key] === 'number') {
+    //                 allIntermediateKeys.push(key);
+    //             }
+    //         }
+    //         this.setState(() => ({ intermediateAllKeysList: allIntermediateKeys }));
+    //     }
+    // }
 
     render(): React.ReactNode {
         const { trials, title, showDetails } = this.props;
-        const { intermediateKey, intermediateAllKeysList } = this.state;
+        const { intermediateKey } = this.state;
+        // const { intermediateKey, intermediateAllKeysList } = this.state;
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -254,6 +255,21 @@ class Compare extends React.Component<CompareProps, CompareState> {
             metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
             intermediates: _parseIntermediates(trial, intermediateKey)
         }));
+
+        let intermediateAllKeysList: string[] = [];
+        if (trials[0].intermediates !== undefined && trials[0].intermediates[0]) {
+            const parsedMetric = parseMetrics(trials[0].intermediates[0].data);
+            if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+                const allIntermediateKeys: string[] = [];
+                // just add type=number keys
+                for (const key in parsedMetric) {
+                    if (typeof parsedMetric[key] === 'number') {
+                        allIntermediateKeys.push(key);
+                    }
+                }
+                intermediateAllKeysList = allIntermediateKeys;
+            }
+        }
 
         return (
             <Modal
