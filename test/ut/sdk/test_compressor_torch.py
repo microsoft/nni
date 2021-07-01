@@ -104,7 +104,7 @@ class CompressorTestCase(TestCase):
         masks = pruner.calc_mask(model.conv2)
         assert all(torch.sum(masks['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 0., 0., 0., 0., 0., 0., 125., 125.]))
 
-       
+
     def test_torch_l1filter_pruner(self):
         """
         Filters with the minimum sum of the weights' L1 norm are pruned in this paper:
@@ -212,7 +212,7 @@ class CompressorTestCase(TestCase):
 
         model.conv1.module.weight.grad.data = torch.tensor(grad1).float()
         model.conv2.module.weight.grad.data = torch.tensor(grad2).float()
-        optimizer.step()
+        pruner.optimizer.step()
 
         mask1 = pruner.calc_mask(model.conv1)
         mask2 = pruner.calc_mask(model.conv2)

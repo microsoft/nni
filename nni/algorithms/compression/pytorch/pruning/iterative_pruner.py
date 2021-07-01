@@ -119,13 +119,12 @@ class AGPPruner(IterativePruner):
 
     def __init__(self, model, config_list, optimizer, trainer, criterion,
                  num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
-        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
-
         self.freq = epochs_per_iteration
         self.end_epoch = epochs_per_iteration * num_iterations
 
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm=pruning_algorithm, trainer=trainer, criterion=criterion,
                          num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
 
     def reconfig(self, model, config_list):
         super().reconfig(model, config_list)
