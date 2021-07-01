@@ -778,12 +778,6 @@ class NNIManager implements Manager {
             throw new Error('Dispatcher error: tuner has not been setup');
         }
         this.log.info(`onGPUStatusUpdate : ${status}`)
-        var msg : Array<any> = [];
-        status.forEach(element => msg.push({
-            nodeId: element.nodeId,
-            gpuId: element.gpuId,
-            status: element.status
-        }))
         this.dispatcher.sendCommand(UPDATE_GPU_STATUS,
             JSON.stringify(status)
         )

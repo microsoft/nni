@@ -1,4 +1,5 @@
 import json
+from nni.retiarii.execution.api import GPUDevice
 import os
 import sys
 import torch
@@ -44,5 +45,7 @@ if __name__ == '__main__':
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = True
     exp_config.training_service.gpu_indices = [1, 2]
+    exp_config.devices = [GPUDevice(0,1), GPUDevice(0,2), GPUDevice(0,3), GPUDevice(0,4)]
+    exp_config.execution_engine = 'py'
 
     exp.run(exp_config, 8081)

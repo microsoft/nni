@@ -28,7 +28,7 @@ from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
-from ..execution import list_models, set_execution_engine
+from ..execution import list_models, set_execution_engine, GPUDevice
 from ..execution.python import get_mutation_dict
 from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor
@@ -57,6 +57,7 @@ class RetiariiExeConfig(ConfigBase):
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
+    devices: Optional[List[GPUDevice]] = None
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -196,13 +197,14 @@ class RetiariiExperiment(Experiment):
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine()
+            print("TBD-0.5", self.config.devices)
+            engine = BaseExecutionEngine(devices = self.config.devices)
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
             engine = CGOExecutionEngine()
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine()
+            engine = PurePythonExecutionEngine(devices = self.config.devices)
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -253,6 +255,7 @@ class RetiariiExperiment(Experiment):
             self.trainer.fit()
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
+            print("TBD-1", config.devices)
             self.config = config
             self.start(port, debug)
 

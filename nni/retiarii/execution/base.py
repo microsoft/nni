@@ -29,14 +29,13 @@ class BaseGraphData:
     def load(data) -> 'BaseGraphData':
         return BaseGraphData(data['model_script'], data['evaluator'])
 
-
 class BaseExecutionEngine(AbstractExecutionEngine):
     """
     The execution engine with no optimization at all.
     Resource management is implemented in this class.
     """
 
-    def __init__(self) -> None:
+    def __init__(self, devices = None) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
@@ -57,6 +56,8 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         self._history: List[Model] = []
 
         self.resources = 0
+        self.devices = [] if devices == None else devices
+        print("TBD0", self.devices)
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
@@ -102,8 +103,18 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         for listener in self._listeners:
             listener.on_metric(model, metrics)
     
+    def _set_device_status(self, node_id, gpu_id, status):
+        for device in self.devices:
+            if device.node_id == node_id and device.gpu_id == gpu_id:
+                device.set_status(status)
+                return
+        print("TBD", self.devices)
+        raise ValueError("Node-%d GPU-%d not exists in execution engine" % (node_id, gpu_id))
+        
     def _update_gpu_status_callback(self, status_list : List[Dict]) -> None:
-        print("update_gpu_status", status_list)
+        for status in status_list:
+            self._set_device_status(status['nodeId'], status['gpuId'], status['status'])
+        print("TBD", status_list)
 
     def query_available_resource(self) -> int:
         return self.resources
