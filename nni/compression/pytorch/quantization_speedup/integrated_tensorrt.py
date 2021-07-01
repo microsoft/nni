@@ -23,7 +23,7 @@ class CalibrateType:
     MINMAX = trt.CalibrationAlgoType.MINMAX_CALIBRATION
 
 Precision_Dict = {
-    8: trt.float32,
+    8: trt.int8,
     16: trt.float16,
     32: trt.float32
 }
