@@ -39,6 +39,7 @@ class Compressor:
         optimizer: pytorch optimizer
             optimizer used to train the model
         """
+        self.optimizer = optimizer
         if optimizer is not None:
             self.optimizer_cls = optimizer.__class__
             self.optimizer_param_groups = optimizer.state_dict()['param_groups']
@@ -57,7 +58,7 @@ class Compressor:
         self.bound_model = model
         self.config_list = config_list
 
-        if hasattr(self, 'optimizer_cls') and self.optimizer_cls is not None:
+        if self.optimizer is not None:
             if self.optimizer_cls.__name__ == 'SGD':
                 self.optimizer = self.optimizer_cls(model.parameters(), lr=0.001)
             else:
