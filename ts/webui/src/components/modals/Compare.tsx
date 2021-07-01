@@ -8,9 +8,20 @@ import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import '../../static/style/compare.scss';
 
+/***
+ * Compare file is design for [each trial intermediate result and trials compare function]
+ * if trial has dict intermediate result, graph support shows all keys that type is number
+ */
+
 function _getWebUIWidth(): number {
     return window.innerWidth;
 }
+
+const dragOptions: IDragOptions = {
+    moveMenuItemText: 'Move',
+    closeMenuItemText: 'Close',
+    menu: ContextualMenu
+};
 
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
@@ -30,12 +41,6 @@ function _parseIntermediates(trial: TableObj, key: string): number[] {
     }
     return intermediates;
 }
-
-const dragOptions: IDragOptions = {
-    moveMenuItemText: 'Move',
-    closeMenuItemText: 'Close',
-    menu: ContextualMenu
-};
 
 interface Item {
     id: string;
@@ -280,12 +285,6 @@ class Compare extends React.Component<CompareProps, CompareState> {
                                     key: key,
                                     text: intermediateAllKeysList[item]
                                 }))}
-                                // options={intermediateAllKeysList.map((key, item) => {
-                                //     return {
-                                //         key: key,
-                                //         text: intermediateAllKeysList[item]
-                                //     };
-                                // })}
                                 onChange={this.selectOtherKeys}
                             />
                         </Stack>
