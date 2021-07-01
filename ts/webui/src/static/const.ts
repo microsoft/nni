@@ -6,8 +6,9 @@ const METRIC_GROUP_UPDATE_SIZE = 20;
 
 const prefix = getPrefix();
 const RESTAPI = '/api/v1/nni';
+
 const MANAGER_IP =
-    prefix === undefined ? `http://13.77.78.63:9880${RESTAPI}` : `http://13.77.78.63:9880${prefix}${RESTAPI}`;
+    prefix === undefined ? `http://13.77.78.63:8088${RESTAPI}` : `http://13.77.78.63:8088${prefix}${RESTAPI}`;
 const DOWNLOAD_IP = `/logs`;
 
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
