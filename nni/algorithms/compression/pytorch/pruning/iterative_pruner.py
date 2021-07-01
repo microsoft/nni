@@ -6,7 +6,6 @@ import copy
 import torch
 from schema import And, Optional
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
-from .constants import MASKER_DICT
 from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['AGPPruner', 'ADMMPruner', 'SlimPruner', 'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner',
