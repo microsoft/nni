@@ -5,7 +5,8 @@ import logging
 import torch
 from .weight_masker import WeightMasker
 
-__all__ = ['L1WeightHeadMasker', 'L2WeightHeadMasker']
+__all__ = ['L1WeightHeadMasker', 'L2WeightHeadMasker', 'L1ActivationHeadMasker', 'L2ActivationHeadMasker',
+           'TaylorFOHeadMasker']
 
 logger = logging.getLogger('torch transformer head pruners')
 
@@ -38,7 +39,7 @@ class AttentionHeadMasker(WeightMasker):
             The target sparsity of the wrapper. If we calculate the mask in
             the normal way, then sparsity is a float number. In contrast, if
             we calculate the mask in the dependency-aware way, sparsity is a
-            list of float numbers, each float number corressponds to a sparsity
+            list of float numbers, each float number corresponds to a sparsity
             of a layer.
         wrapper: PrunerModuleWrapper/list of PrunerModuleWrappers
             The wrapper of the target layer. If we calculate the mask in the normal
@@ -159,6 +160,9 @@ class AttentionHeadMasker(WeightMasker):
         device = weight.device
 
         importance_scores = self.get_head_importance_scores(wrapper, weight_group, wrapper_idx)
+        if importance_scores is None:
+            return None
+
         threshold = torch.topk(importance_scores, num_prune, largest=False)[0].max()
 
         # get q_proj, k_proj, v_proj, output_proj from the same attention head
@@ -250,3 +254,101 @@ class L2WeightHeadMasker(AttentionHeadMasker):
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
         return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+
+
+class L1ActivationHeadMasker(AttentionHeadMasker):
+    """
+    A structured pruning algorithm that prunes the heads with smallest final output value.
+    Note that this masker only relies on the output of the output layer of each attention layer.
+    The masker collects the L1 norm of the last weight (output projection) in each group on the entire train set, and
+    prunes the heads producing the smallest output.
+    """
+    def __init__(self, model, pruner, head_hidden_dim=None):
+        super().__init__(model, pruner, head_hidden_dim)
+        self.pruner.hook_id = self._add_activation_collector(self.pruner)
+
+    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+        _, _, _, output_proj = weight_group
+        activations = torch.stack(self.pruner.collected_activation[output_proj.group_idx], -1)
+        activations = torch.sum(activations, -1)
+        n_heads = activations.size()[0] // self.head_hidden_dim
+        scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
+
+        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
+            self.pruner.remove_activation_collector(self.pruner.hook_id)
+
+        return scores
+
+    def _add_activation_collector(self, pruner):
+        def collector(collected_activation):
+            def hook(module_, input_, output):
+                raw_activation = torch.abs(output.detach().cpu())               # L1-norm
+                raw_activation_reduced = torch.sum(raw_activation, [0, 1])
+                collected_activation.append(raw_activation_reduced)
+            return hook
+        pruner.collected_activation = {}
+        pruner._fwd_hook_id += 1
+        pruner._fwd_hook_handles[pruner._fwd_hook_id] = []
+
+        for _, _, _, output_proj in pruner.masking_groups:
+            pruner.collected_activation[output_proj.group_idx] = []
+            handle = output_proj.register_forward_hook(collector(pruner.collected_activation[output_proj.group_idx]))
+
+            pruner._fwd_hook_handles[pruner._fwd_hook_id].append(handle)
+
+        return pruner._fwd_hook_id
+
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
+        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+
+
+class L2ActivationHeadMasker(AttentionHeadMasker):
+    """
+    A structured pruning algorithm that prunes the heads with smallest final output value.
+    Note that this masker only relies on the output of the output layer of each attention layer.
+    The masker collects the L2 norm of the last weight (output projection) in each group on the entire train set, and
+    prunes the heads producing the smallest output.
+    """
+    def __init__(self, model, pruner, head_hidden_dim=None):
+        super().__init__(model, pruner, head_hidden_dim)
+        self.pruner.hook_id = self._add_activation_collector(self.pruner)
+
+    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+        _, _, _, output_proj = weight_group
+        activations = torch.stack(self.pruner.collected_activation[output_proj.group_idx], -1)
+        activations = torch.sum(activations, -1)
+        n_heads = activations.size()[0] // self.head_hidden_dim
+        scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
+
+        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
+            self.pruner.remove_activation_collector(self.pruner.hook_id)
+
+        return scores
+
+    def _add_activation_collector(self, pruner):
+        def collector(collected_activation):
+            def hook(module_, input_, output):
+                raw_activation = torch.abs(output.detach().cpu() ** 2)  # L2-norm
+                raw_activation_reduced = torch.sum(raw_activation, [0, 1])
+                collected_activation.append(raw_activation_reduced)
+
+            return hook
+
+        pruner.collected_activation = {}
+        pruner._fwd_hook_id += 1
+        pruner._fwd_hook_handles[pruner._fwd_hook_id] = []
+
+        for _, _, _, output_proj in pruner.masking_groups:
+            pruner.collected_activation[output_proj.group_idx] = []
+            handle = output_proj.register_forward_hook(collector(pruner.collected_activation[output_proj.group_idx]))
+
+            pruner._fwd_hook_handles[pruner._fwd_hook_id].append(handle)
+
+        return pruner._fwd_hook_id
+
+    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
+        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+
+
+class TaylorFOHeadMasker(AttentionHeadMasker):
+    pass

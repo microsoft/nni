@@ -13,7 +13,6 @@ from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 
 import transformers
-from accelerate import Accelerator
 from transformers import (
     AdamW,
     AutoConfig,
@@ -51,17 +50,8 @@ task_to_keys = {
 }
 
 
-############################
-# TODO: simplify this later
-############################
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a text classification task")
-    parser.add_argument(
-        "--n_heads_to_prune_per_layer",
-        type=int,
-        default=None,
-        help="The name of the glue task to train on."
-    )
     parser.add_argument(
         "--task_name",
         type=str,
@@ -279,20 +269,21 @@ def preprocess_dataset(args, tokenizer, model, raw_datasets, num_labels, is_regr
     return processed_datasets
 
 
-def train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric,
-                accelerator):
-    # Only show the progress bar once on each machine.
-    progress_bar = tqdm(range(args.max_train_steps), position=0, leave=True,
-                        disable=not accelerator.is_local_main_process)
+def train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device,
+                epoch_num=None):
+    progress_bar = tqdm(range(args.max_train_steps), position=0, leave=True)
     completed_steps = 0
 
-    for epoch in range(args.num_train_epochs):
+    train_epoch = args.num_train_epochs if epoch_num is None else 1
+    for epoch in range(train_epoch):
         model.train()
         for step, batch in enumerate(train_dataloader):
+            for field in batch.keys():
+                batch[field] = batch[field].to(device)
             outputs = model(**batch)
             loss = outputs.loss
             loss = loss / args.gradient_accumulation_steps
-            accelerator.backward(loss)
+            loss.backward()
             if step % args.gradient_accumulation_steps == 0 or step == len(train_dataloader) - 1:
                 optimizer.step()
                 lr_scheduler.step()
@@ -305,39 +296,59 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
 
         model.eval()
         for step, batch in enumerate(eval_dataloader):
+            for field in batch.keys():
+                batch[field] = batch[field].to(device)
             outputs = model(**batch)
             predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
             metric.add_batch(
-                predictions=accelerator.gather(predictions),
-                references=accelerator.gather(batch["labels"]),
+                predictions=predictions,
+                references=batch["labels"],
             )
 
         eval_metric = metric.compute()
         logger.info(f"epoch {epoch}: {eval_metric}")
 
 
-def final_eval_for_mnli(args, model, processed_datasets, metric, accelerator, data_collator):
+def dry_run_no_param_update(args, model, train_dataloader, optimizer, device, epoch_num=None):
+    # no param update performed, just do forward and backward on the entire train data (to collect output/gradient etc.)
+    progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
+    completed_steps = 0
+
+    train_epoch = args.num_train_epochs if epoch_num is None else 1
+    for epoch in range(train_epoch):
+        for step, batch in enumerate(train_dataloader):
+            for field in batch.keys():
+                batch[field] = batch[field].to(device)
+            outputs = model(**batch)
+            loss = outputs.loss
+            loss = loss / args.gradient_accumulation_steps
+            loss.backward()
+            optimizer.zero_grad()
+            progress_bar.update(1)
+            completed_steps += 1
+
+
+def final_eval_for_mnli(args, model, processed_datasets, metric, data_collator):
     # Final evaluation on mismatched validation set
     eval_dataset = processed_datasets["validation_mismatched"]
     eval_dataloader = DataLoader(
         eval_dataset, collate_fn=data_collator, batch_size=args.per_device_eval_batch_size
     )
-    eval_dataloader = accelerator.prepare(eval_dataloader)
 
     model.eval()
     for step, batch in enumerate(eval_dataloader):
         outputs = model(**batch)
         predictions = outputs.logits.argmax(dim=-1)
         metric.add_batch(
-            predictions=accelerator.gather(predictions),
-            references=accelerator.gather(batch["labels"]),
+            predictions=predictions,
+            references=batch["labels"],
         )
 
     eval_metric = metric.compute()
     logger.info(f"mnli-mm: {eval_metric}")
 
 
-def get_dataloader_and_optimizer(args, tokenizer, model, train_dataset, eval_dataset, accelerator):
+def get_dataloader_and_optimizer(args, tokenizer, model, train_dataset, eval_dataset):
     # DataLoaders creation:
     if args.pad_to_max_length:
         # If padding was already done ot max length, we use the default data collator that will just convert everything
@@ -347,7 +358,7 @@ def get_dataloader_and_optimizer(args, tokenizer, model, train_dataset, eval_dat
         # Otherwise, `DataCollatorWithPadding` will apply dynamic padding for us (by padding to the maximum length of
         # the samples passed). When using mixed precision, we add `pad_to_multiple_of=8` to pad all tensors to multiple
         # of 8s, which will enable the use of Tensor Cores on NVIDIA hardware with compute capability >= 7.5 (Volta).
-        data_collator = DataCollatorWithPadding(tokenizer, pad_to_multiple_of=(8 if accelerator.use_fp16 else None))
+        data_collator = DataCollatorWithPadding(tokenizer)
 
     train_dataloader = DataLoader(
         train_dataset, shuffle=True, collate_fn=data_collator, batch_size=args.per_device_train_batch_size
@@ -369,45 +380,32 @@ def get_dataloader_and_optimizer(args, tokenizer, model, train_dataset, eval_dat
     ]
     optimizer = AdamW(optimizer_grouped_parameters, lr=args.learning_rate)
 
-    return accelerator.prepare(model, optimizer, train_dataloader, eval_dataloader), data_collator
+    return model, optimizer, train_dataloader, eval_dataloader, data_collator
 
 
 def main():
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     args = parse_args()
 
     #########################################################################
     # Prepare model, tokenizer, dataset, optimizer, and the scheduler
 
-    # Initialize the accelerator. We will let the accelerator handle device placement for us in this example.
-    accelerator = Accelerator()
     # Make one log on every process with the configuration for debugging.
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
         datefmt="%m/%d/%Y %H:%M:%S",
         level=logging.INFO,
     )
-    logger.info(accelerator.state)
+    logger.setLevel(logging.INFO)
+    datasets.utils.logging.set_verbosity_warning()
+    transformers.utils.logging.set_verbosity_info()
 
-    # Setup logging, we only want one process per machine to log things on the screen.
-    # accelerator.is_local_main_process is only True for one process per machine.
-    logger.setLevel(logging.INFO if accelerator.is_local_main_process else logging.ERROR)
-    if accelerator.is_local_main_process:
-        datasets.utils.logging.set_verbosity_warning()
-        transformers.utils.logging.set_verbosity_info()
-    else:
-        datasets.utils.logging.set_verbosity_error()
-        transformers.utils.logging.set_verbosity_error()
-
-    # If passed along, set the training seed now.
     if args.seed is not None:
         set_seed(args.seed)
 
     raw_datasets, is_regression, label_list, num_labels = get_raw_dataset(args)
 
     # Load pretrained model and tokenizer
-    #
-    # In distributed training, the .from_pretrained methods guarantee that only one local process can concurrently
-    # download model & vocab.
     config = AutoConfig.from_pretrained(args.model_name_or_path, num_labels=num_labels, finetuning_task=args.task_name)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name_or_path, use_fast=not args.use_slow_tokenizer)
     model = AutoModelForSequenceClassification.from_pretrained(
@@ -415,6 +413,7 @@ def main():
         from_tf=bool(".ckpt" in args.model_name_or_path),
         config=config,
     )
+    model.to(device)
 
     processed_datasets = preprocess_dataset(args, tokenizer, model, raw_datasets, num_labels, is_regression, label_list)
     train_dataset = processed_datasets["train"]
@@ -423,11 +422,12 @@ def main():
     for index in random.sample(range(len(train_dataset)), 3):
         logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
 
-    (model, optimizer, train_dataloader, eval_dataloader), data_collator = get_dataloader_and_optimizer(args, tokenizer,
+    #########################################################################
+    # Finetune before pruning
+    model, optimizer, train_dataloader, eval_dataloader, data_collator = get_dataloader_and_optimizer(args, tokenizer,
                                                                                                         model,
                                                                                                         train_dataset,
-                                                                                                        eval_dataset,
-                                                                                                        accelerator)
+                                                                                                        eval_dataset)
 
     # Scheduler and math around the number of training steps.
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
@@ -449,44 +449,48 @@ def main():
     else:
         metric = load_metric("accuracy")
 
-    #########################################################################
-    # Finetune before pruning
-    """
-    total_batch_size = args.per_device_train_batch_size * accelerator.num_processes * args.gradient_accumulation_steps
-    logger.info("***** Finetuning before pruning *****")
-    logger.info(f"  Num examples = {len(train_dataset)}")
-    logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
-    logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    logger.info(f"  Total optimization steps = {args.max_train_steps}")
-    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric,
-                accelerator)
-
-    if args.output_dir is not None:
-        accelerator.wait_for_everyone()
-        torch.save(model, args.output_dir + '/entire_model_before_pruning.pt')
-        # unwrapped_model = accelerator.unwrap_model(model)
-        # unwrapped_model.save_pretrained(args.output_dir, save_function=accelerator.save)
-
-    if args.task_name == "mnli":
-        final_eval_for_mnli(args, model, processed_datasets, metric, accelerator, data_collator)
-    """
+    # total_batch_size = args.per_device_train_batch_size * args.gradient_accumulation_steps
+    # logger.info("***** Finetuning before pruning *****")
+    # logger.info(f"  Num examples = {len(train_dataset)}")
+    # logger.info(f"  Num Epochs = {args.num_train_epochs}")
+    # logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
+    # logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
+    # logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
+    # logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    # train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
+    #
+    # if args.output_dir is not None:
+    #     torch.save(model, args.output_dir + '/entire_model_before_pruning.pt')
+    #
+    # if args.task_name == "mnli":
+    #     final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
 
     #########################################################################
     # Pruning
     # kwargs_final = {'num_iterations': 6, 'epochs_per_iteration': 1, 'head_hidden_dim': 64,
     #                 'trainer': 1, 'optimizer': 2, 'criterion': 3}
+    model, optimizer, train_dataloader, eval_dataloader, data_collator = get_dataloader_and_optimizer(args, tokenizer,
+                                                                                                      model,
+                                                                                                      train_dataset,
+                                                                                                      eval_dataset)
+
+    def trainer(model, optimizer, criterion, epoch):
+        # here criterion is embedded in the model. Upper levels can just pass None to trainer
+        # no param update performed,
+        # just do forward and backward on the entire train data (to collect output/gradient etc.)
+        return dry_run_no_param_update(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
 
     attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
-    kwargs = {'ranking_criteria': 'l1_weight',
+    kwargs = {'ranking_criteria': 'l2_activation',
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
-              'dummy_input': [torch.rand([1, 64, 768]).cuda(), torch.ones([1, 64]).cuda()]}   # input and mask
+              'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask
+              'trainer': trainer,
+              'optimizer': optimizer}
 
     config_list = [{
         'sparsity': 0.25,
@@ -494,7 +498,7 @@ def main():
         'op_names': [x for layer in attention_name_groups for x in layer]
     }]
 
-    pruner = TransformerHeadPruner(model.bert, config_list, **kwargs)
+    pruner = TransformerHeadPruner(model, config_list, **kwargs)
     pruner.compress()
 
     exit()
@@ -502,8 +506,8 @@ def main():
     #########################################################################
     # After pruning, finetune again on the target task
     # re-initialize the optimizer and the scheduler
-    (model, optimizer, _, _), data_collator = get_dataloader_and_optimizer(args, tokenizer, model, train_dataset,
-                                                                           eval_dataset, accelerator)
+    model, optimizer, _, _, data_collator = get_dataloader_and_optimizer(args, tokenizer, model, train_dataset,
+                                                                         eval_dataset)
     lr_scheduler = get_scheduler(
         name=args.lr_scheduler_type,
         optimizer=optimizer,
@@ -512,17 +516,13 @@ def main():
     )
 
     logger.info("***** Finetuning after Pruning *****")
-    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric,
-                accelerator)
+    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
 
     if args.output_dir is not None:
-        accelerator.wait_for_everyone()
         torch.save(model, args.output_dir + '/entire_model_after_pruning.pt')
-        # unwrapped_model = accelerator.unwrap_model(model)
-        # unwrapped_model.save_pretrained(args.output_dir, save_function=accelerator.save)
 
     if args.task_name == "mnli":
-        final_eval_for_mnli(args, model, processed_datasets, metric, accelerator, data_collator)
+        final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
 
 
 if __name__ == "__main__":

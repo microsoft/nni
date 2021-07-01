@@ -8,13 +8,16 @@ from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils.shape_dependency import AttentionWeightDependency
 from nni.compression.pytorch.utils.config_validation import CompressorSchema
 from nni.compression.pytorch.compressor import Pruner
-from . import L1WeightHeadMasker, L2WeightHeadMasker
+from . import L1WeightHeadMasker, L2WeightHeadMasker, L1ActivationHeadMasker, L2ActivationHeadMasker, TaylorFOHeadMasker
 
 __all__ = ['TransformerHeadPruner']
 
 MASKER_DICT = {
     'l1_weight': L1WeightHeadMasker,
-    'l2_weight': L2WeightHeadMasker
+    'l2_weight': L2WeightHeadMasker,
+    'l1_activation': L1ActivationHeadMasker,
+    'l2_activation': L2ActivationHeadMasker,
+    'taylor': TaylorFOHeadMasker
 }
 
 logger = logging.getLogger(__name__)
@@ -45,17 +48,16 @@ class TransformerHeadPruner(Pruner):
     """
 
     def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylor', dummy_input=None,
+                 optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
+        super().__init__(model, config_list)
+
         self.attention_name_groups = attention_name_groups
         self.ranking_criteria = ranking_criteria
         self.dummy_input = dummy_input
-        self.masker = MASKER_DICT[ranking_criteria](model, self, **algo_kwargs)
-        self.masking_groups = []
-
-        super().__init__(model, config_list)      # reset() called here
-
-    def reset(self, checkpoint=None):
-        super().reset(checkpoint=checkpoint)
+        self._optimizer = optimizer
+        self._trainer = trainer
+        self._criterion = criterion
 
         # Group generation: one group per attention layer, four weights per group
         self.masking_groups = []
@@ -76,6 +78,7 @@ class TransformerHeadPruner(Pruner):
         self.remove_ungrouped_modules()
 
         self.set_wrappers_attribute("mask_calculated", False)
+        self.masker = MASKER_DICT[ranking_criteria](model, self, **algo_kwargs)
 
     def group_weights_by_name(self):
         """
@@ -97,12 +100,15 @@ class TransformerHeadPruner(Pruner):
                 wrapper.group_idx = name2group[wrapper.name]
                 self.masking_groups[name2group[wrapper.name]].append(wrapper)
 
+        print('grouping updated:', [[x.name for x in group] for group in self.masking_groups])
+
     def group_weights_by_graph(self):
         """
         Populate self.masking_groups bu running inference on the module graph.
         """
         weight_names_grouped = []
         stack = [(name, module) for name, module in self.bound_model.named_children()]
+
         while stack:
             cur_name, cur_module = stack.pop()
             try:
@@ -110,9 +116,8 @@ class TransformerHeadPruner(Pruner):
                 dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
                 weight_names_grouped.extend([[cur_name + '.' + x for x in group]
                                              for group in dependency_tracer.dependency_sets])
-            except:
+            except Exception as e:
                 stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
-
         self.attention_name_groups = weight_names_grouped
         self.group_weights_by_name()
 
@@ -154,6 +159,18 @@ class TransformerHeadPruner(Pruner):
 
         schema.validate(config_list)
 
+    def compress(self):
+        if self.ranking_criteria in ['l1_activation', 'l2_activation']:
+            training = self.bound_model.training
+            self.bound_model.eval()
+            self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
+            self.update_mask()
+            self.bound_model.train(training)
+        elif self.ranking_criteria == 'taylor':
+            pass
+        self.update_mask()
+        return self.bound_model
+
     def update_mask(self):
         for layer_weight_group in self.masking_groups:
             masks = self._calc_mask(layer_weight_group[0], layer_weight_group)
@@ -163,7 +180,7 @@ class TransformerHeadPruner(Pruner):
                         assert hasattr(layer_weight_group[i], mask_type), \
                             "there is no attribute '%s' in wrapper on %s" % (mask_type, layer_weight_group[i])
                         setattr(layer_weight_group[i], mask_type, mask[mask_type])
-                        print(f'updated {layer_weight_group[i].name} {mask_type}')
+                        print(f'mask updated {layer_weight_group[i].name} {mask_type}')
 
     def _calc_mask(self, wrapper, weight_group, wrapper_idx=None):
         if not wrapper.mask_calculated:
