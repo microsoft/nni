@@ -219,14 +219,11 @@ Local Config
 Remote Config
 *************
 
-..  autoattribute:: nni.experiment.config.RemoteConfig.
-platform
+..  autoattribute:: nni.experiment.config.RemoteConfig.platform
 
-..  autoattribute:: nni.experiment.config.RemoteConfig.
-reuse_mode
+..  autoattribute:: nni.experiment.config.RemoteConfig.reuse_mode
 
-..  autoattribute:: nni.experiment.config.RemoteConfig.
-machine_list
+..  autoattribute:: nni.experiment.config.RemoteConfig.machine_list
 
 ..  autoattribute:: nni.experiment.config.RemoteMachineConfig.host
 
