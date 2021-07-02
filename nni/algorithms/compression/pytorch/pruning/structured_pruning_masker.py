@@ -506,8 +506,10 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
             self._get_global_threshold()
         weight = wrapper.module.weight.data
         filters = weight.size(0)
-        w_abs = weight.abs()
-        num_prune = w_abs[w_abs < self.global_threshold].size()[0]
+        channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
+        num_prune = channel_contribution[channel_contribution < self.global_threshold].size()[0]
+        if num_prune == filters:
+            num_prune -= 1
         return num_prune
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
