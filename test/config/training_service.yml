@@ -87,6 +87,9 @@ remote:
     port:
     username:
   trainingServicePlatform: remote
+  sharedStorage:
+    storageAccountKey:
+    nfsServer:
 hybrid:
   maxExecDuration: 15m
   nniManagerIp:
