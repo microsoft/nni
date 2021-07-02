@@ -111,20 +111,7 @@ class TransformerHeadPruner(Pruner):
             dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
             self.attention_name_groups = dependency_tracer.dependency_sets
             self.group_weights_by_name()
-            '''
-            
-            stack = [(name, module) for name, module in self.bound_model.named_children()]
-    
-            while stack:
-                cur_name, cur_module = stack.pop()
-                try:
-                    module_graph = TorchModuleGraph(cur_module, self.dummy_input)
-                    dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
-                    weight_names_grouped.extend([[cur_name + '.' + x for x in group]
-                                                 for group in dependency_tracer.dependency_sets])
-                except:
-                    stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
-            '''
+
         except Exception as e:
             raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups. '
                                'Exception message: ' + str(e))
