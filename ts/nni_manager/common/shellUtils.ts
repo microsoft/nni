@@ -1,3 +1,8 @@
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT license.
+
+'use strict';
+
 // for readability
 const singleQuote = "'";
 const doubleQuote = '"';
@@ -8,7 +13,7 @@ const doubleBackslash = '\\\\';
 const newline = '\n';
 
 export function shellString(str: string): string {
-    return process.platform === 'win32' ? pwshString(str) : bashString(str);
+    return process.platform === 'win32' ? powershellString(str) : bashString(str);
 }
 
 export function bashString(str: string): string {
@@ -25,7 +30,7 @@ export function bashString(str: string): string {
     }
 }
 
-export function pwshString(str: string): string {
+export function powershellString(str: string): string {
     // for readability and robustness of generated script,
     // use double quotes for multi-line string,
     // use single quotes otherwise

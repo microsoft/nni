@@ -11,7 +11,7 @@ import * as tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { shellString } from '../../common/shellUtils';
+import { powershellString } from '../../common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
@@ -445,7 +445,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         } else {
-            runScriptContent.push(`$env:PATH=${shellString(process.env.path)}`)
+            runScriptContent.push(`$env:PATH=${powershellString(process.env.path!)}`)
         }
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
