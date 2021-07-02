@@ -12,10 +12,23 @@ const doubleBacktick = '``';
 const doubleBackslash = '\\\\';
 const newline = '\n';
 
+/**
+ *  Convert a string into quoted and escaped string for shell script.
+ *  This function supports multi-line strings as well.
+ *
+ *  Examples:
+ *      hello  -->  'hello'
+ *      C:\Program Files\$app  -->  'C:\Program Files\$app'
+ *      a'b"c$d\e  -->  $'a\'b"c$d\\e'  (bash)
+ *      a'b"c$d\e  -->  'a''b"c$d\e'  (powershell)
+ **/
 export function shellString(str: string): string {
     return process.platform === 'win32' ? powershellString(str) : bashString(str);
 }
 
+/**
+ *  Convert a string into quoted and escaped string for bash script. It supports multi-line strings.
+ **/
 export function bashString(str: string): string {
     // for readability of generated script,
     // use ansi-c quoting when `str` contains single quote or newline,
@@ -30,6 +43,9 @@ export function bashString(str: string): string {
     }
 }
 
+/**
+ *  Convert a string into quoted and escaped string for PowerShell script. It supports multi-line strings.
+ **/
 export function powershellString(str: string): string {
     // for readability and robustness of generated script,
     // use double quotes for multi-line string,
