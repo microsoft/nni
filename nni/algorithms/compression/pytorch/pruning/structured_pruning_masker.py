@@ -482,13 +482,12 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     http://jankautz.com/publications/Importance4NNPruning_CVPR19.pdf
     """
 
-    def __init__(self, model, pruner, statistics_batch_num=1, global_sort=False):
+    def __init__(self, model, pruner, statistics_batch_num=1):
         super().__init__(model, pruner)
         self.statistics_batch_num = statistics_batch_num
         self.pruner.iterations = 0
         self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
-        self.global_sort = global_sort
         self.global_threshold = None
 
     def _get_global_threshold(self):
@@ -504,7 +503,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
     
     def _get_global_num_prune(self, wrapper, wrapper_idx):
         if self.global_threshold is None:
-            _get_global_threshold()
+            self._get_global_threshold()
         weight = wrapper.module.weight.data
         filters = weight.size(0)
         w_abs = weight.abs()
