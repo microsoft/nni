@@ -19,8 +19,8 @@ const newline = '\n';
  *  Examples:
  *      hello  -->  'hello'
  *      C:\Program Files\$app  -->  'C:\Program Files\$app'
- *      a'b"c$d\e  -->  $'a\'b"c$d\\e'  (bash)
- *      a'b"c$d\e  -->  'a''b"c$d\e'  (powershell)
+ *      a'b"c$d<ENTER>e\f`g  -->  $'a\'b"c$d\ne\\f`g'  (Linux & macOS)
+ *      a'b"c$d<ENTER>e\f`g  -->  "a'b`"c`$d`ne\f``g"  (Windows)
  **/
 export function shellString(str: string): string {
     return process.platform === 'win32' ? powershellString(str) : bashString(str);
