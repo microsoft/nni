@@ -812,7 +812,6 @@ class NNIManager implements Manager {
                     },
                     placementConstraint: trialRequestContent.placement_constraint
                 };
-                this.log.info(form)
                 this.waitingTrials.push(form);
                 break; 
             }
