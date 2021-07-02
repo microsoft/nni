@@ -51,7 +51,7 @@ extensions = [
 ]
 
 # 添加示例模块
-autodoc_mock_imports = ['apex', 'nni_node']
+autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -201,4 +201,4 @@ extlinks = {
 
 # -- Extension configuration -------------------------------------------------
 def setup(app):
-    app.add_stylesheet('css/custom.css')
+    app.add_css_file('css/custom.css')

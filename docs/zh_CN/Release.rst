@@ -1156,7 +1156,7 @@ Bug 修复和其它更新
 ^^^^^^^^^^^^^
 
 
-* 重新组织文档，新的主页位置：https://nni.readthedocs.io/en/latest/
+* 重新组织文档，新的主页位置：https://nni.readthedocs.io/zh/latest/
 
 Bug 修复和其它更新
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

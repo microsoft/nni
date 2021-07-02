@@ -1,7 +1,7 @@
 Retiarii 用于神经网络架构搜索
 =======================================
 
-.. Note:: NNI 最新的 NAS 支持都是基于 Retiarii 框架的，仍在使用早期版本 `NNI NAS v1.0 <https://nni.readthedocs.io/en/v2.2/nas.html>`__ 的用户应尽快将工作迁移到 Retiarii 框架。
+.. Note:: NNI 最新的 NAS 支持都是基于 Retiarii 框架的，仍在使用早期版本 `NNI NAS v1.0 <https://nni.readthedocs.io/zh/v2.2/nas.html>`__ 的用户应尽快将工作迁移到 Retiarii 框架。
 
 .. contents::
 

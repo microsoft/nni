@@ -38,7 +38,7 @@ Tuner 基准测试
 
 默认情况下，该脚本针对指定的基准逐一运行指定的 Tuner。 为了在后台同时运行所有的实验，在 ``runbenchmark_nni.sh`` 中设置 "serialize" 标志为 false。 
 
-注意：SMAC Tuner 、DNGO Tuner 和 BOHB Advisor 必须在运行任何实验之前手动安装。 关于安装SMAC和BOHB的更多细节，请参考 `本页面 <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ 。
+注意：SMAC Tuner 、DNGO Tuner 和 BOHB Advisor 必须在运行任何实验之前手动安装。 关于安装SMAC和BOHB的更多细节，请参考 `本页面 <https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ 。
 
 在自定义 Tuner 上运行预定义的基准测试
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -48,10 +48,10 @@ Tuner 基准测试
 在自定义 Tuner 上运行基准测试
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-要使用自定义 Tuner，首先要确保 Tuner 继承自 ``nni.tuner.Tuner`` 并正确实现所需的API。 关于实现自定义调谐器的更多信息，请参考 `这里 <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_ 。 接下来，执行以下步骤：
+要使用自定义 Tuner，首先要确保 Tuner 继承自 ``nni.tuner.Tuner`` 并正确实现所需的API。 关于实现自定义调谐器的更多信息，请参考 `这里 <https://nni.readthedocs.io/zh/stable/Tuner/CustomizeTuner.html>`_ 。 接下来，执行以下步骤：
 
 
-#. 用 ``nnictl algo register`` 命令安装自定义 Tuner。 详情请查看 `本文档 <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ 。 
+#. 用 ``nnictl algo register`` 命令安装自定义 Tuner。 详情请查看 `本文档 <https://nni.readthedocs.io/zh/stable/Tutorial/Nnictl.html>`_ 。 
 #. 在 ``./nni/frameworks.yaml``\ 中，添加一个扩展基础框架 NNI 的新框架。 确保参数 ``tuner_type`` 对应于在步骤 1 中安装 Tuner 的 “builtinName”。
 #. 运行命令
 

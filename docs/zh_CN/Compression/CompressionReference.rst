@@ -19,7 +19,7 @@ Compressor
     :members:
 
 
-Module Wrapper
+Module 的包装
 ^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.compressor.PrunerModuleWrapper

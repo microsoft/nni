@@ -29,7 +29,7 @@ TensorRT 作为后端。 为了将 PyTorch 模型转换为 TensorRT 引擎，我
 
 
 量化感知训练结合了 NNI 量化算法 'QAT' 和 NNI 量化加速工具。
-用户应该设置配置，使用 QAT 算法训练量化模型（请参考 `NNI量化算法 <https://nni.readthedocs.io/en/stable/Compression/Quantizer.html>`__）。
+用户应该设置配置，使用 QAT 算法训练量化模型（请参考 `NNI量化算法 <https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html>`__）。
 经过量化感知训练，用户可以得到带有校准参数的新配置和带有量化权重的模型。 通过将新的配置和模型传递给量化加速工具，用户可以得到真正的混合精度加速引擎来进行推理。
 
 
@@ -84,7 +84,7 @@ TensorRT version >= 7.2
 完整的例子请参考 :githublink:`这里 <examples/model_compress/quantization/mixed_precision_speedup_mnist.py>`。
 
 
-关于 'TensorRTModelSpeedUp' 类的更多参数，你可以参考 `Model Compression API Reference <https://nni.readthedocs.io/en/stable/Compression/CompressionReference.html#quantization-speedup>`__ 。
+关于 'TensorRTModelSpeedUp' 类的更多参数，你可以参考 `Model Compression API Reference <https://nni.readthedocs.io/zh/stable/Compression/CompressionReference.html#quantization-speedup>`__ 。
 
 
 Mnist 测试
