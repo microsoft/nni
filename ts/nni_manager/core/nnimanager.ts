@@ -19,7 +19,8 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus, PlacementConstraint,
+    TrialCommandContent
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -802,15 +803,18 @@ class NNIManager implements Manager {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
                 }
+                let trialRequestContent : TrialCommandContent = JSON.parse(content);
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
                         value: content,
                         index: 0
-                    }
+                    },
+                    placementConstraint: trialRequestContent.placement_constraint
                 };
+                this.log.info(form)
                 this.waitingTrials.push(form);
-                break;
+                break; 
             }
             case SEND_TRIAL_JOB_PARAMETER: {
                 const tunerCommand: any = JSON.parse(content);

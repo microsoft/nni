@@ -57,7 +57,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
         self.resources = 0
         self.devices = [] if devices == None else devices
-        print("TBD0", self.devices)
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
@@ -108,13 +107,11 @@ class BaseExecutionEngine(AbstractExecutionEngine):
             if device.node_id == node_id and device.gpu_id == gpu_id:
                 device.set_status(status)
                 return
-        print("TBD", self.devices)
         raise ValueError("Node-%d GPU-%d not exists in execution engine" % (node_id, gpu_id))
         
     def _update_gpu_status_callback(self, status_list : List[Dict]) -> None:
         for status in status_list:
             self._set_device_status(status['nodeId'], status['gpuId'], status['status'])
-        print("TBD", status_list)
 
     def query_available_resource(self) -> int:
         return self.resources

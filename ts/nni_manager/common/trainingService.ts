@@ -20,12 +20,30 @@ interface HyperParameters {
     readonly index: number;
 }
 
+type PlacementConstraintType = 'None' | 'Topology' | 'Device'
+interface PlacementConstraint{
+    readonly type: PlacementConstraintType;
+    readonly gpus: Array<number|[number,number]>;
+    /**
+     * Topology constraint is in form of Array<number>, e.g., [2,2,2] means find three servers each with two GPUs
+     * Device constraint is in form of Array<[number,number]>, e.g., [(0,1),(1,0)] means it must be placed on 
+     *      Node-0's GPU-1 and Node-1's GPU-0
+     */
+}
 /**
  * define TrialJobApplicationForm
  */
 interface TrialJobApplicationForm {
     readonly sequenceId: number;
     readonly hyperParameters: HyperParameters;
+    readonly placementConstraint?: PlacementConstraint;
+}
+
+interface TrialCommandContent {
+    readonly parameter_id: string;
+    readonly parameters: string;
+    readonly parameter_source: string;
+    readonly placement_constraint: PlacementConstraint
 }
 
 /**
@@ -111,5 +129,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig, LogType, GPUStatus
+    NNIManagerIpConfig, LogType, GPUStatus, PlacementConstraint, TrialCommandContent
 };

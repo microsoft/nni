@@ -197,7 +197,6 @@ class RetiariiExperiment(Experiment):
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
-            print("TBD-0.5", self.config.devices)
             engine = BaseExecutionEngine(devices = self.config.devices)
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
@@ -255,7 +254,6 @@ class RetiariiExperiment(Experiment):
             self.trainer.fit()
         else:
             assert config is not None, 'You are using classic search mode, config cannot be None!'
-            print("TBD-1", config.devices)
             self.config = config
             self.start(port, debug)
 

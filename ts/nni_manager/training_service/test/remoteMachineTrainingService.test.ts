@@ -125,6 +125,10 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
             hyperParameters: {
                 value: 'mock hyperparameters',
                 index: 0
+            },
+            placementConstraint: {
+                type: "None",
+                gpus: []
             }
         };
         const jobDetail: TrialJobDetail = await remoteMachineTrainingService.submitTrialJob(form);
