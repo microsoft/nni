@@ -286,6 +286,11 @@ class RetiariiExperiment(Experiment):
         """
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
+
+        # stop strategy first
+        if self._dispatcher_thread is not None:
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
  
         if self.id is not None:
             nni.runtime.log.stop_experiment_log(self.id)
@@ -302,9 +307,6 @@ class RetiariiExperiment(Experiment):
 
         if self._pipe is not None:
             self._pipe.close()
-        if self._dispatcher_thread is not None:
-            self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
 
         self.id = None
         self.port = None
