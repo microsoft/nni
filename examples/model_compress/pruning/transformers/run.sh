@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Usage: ./run_local.sh script gpu_id task
+# Usage: ./run.sh script gpu_id task
 
 export CUDA_VISIBLE_DEVICES=$2
 SOURCE_CODE=$1

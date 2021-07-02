@@ -321,7 +321,6 @@ def dry_run_no_param_update(args, model, train_dataloader, optimizer, device, ep
                 batch[field] = batch[field].to(device)
             outputs = model(**batch)
             loss = outputs.loss
-            loss = loss / args.gradient_accumulation_steps
             loss.backward()
             optimizer.zero_grad()
             progress_bar.update(1)
@@ -467,8 +466,6 @@ def main():
 
     #########################################################################
     # Pruning
-    # kwargs_final = {'num_iterations': 6, 'epochs_per_iteration': 1, 'head_hidden_dim': 64,
-    #                 'trainer': 1, 'optimizer': 2, 'criterion': 3}
     model, optimizer, train_dataloader, eval_dataloader, data_collator = get_dataloader_and_optimizer(args, tokenizer,
                                                                                                       model,
                                                                                                       train_dataset,
@@ -488,14 +485,15 @@ def main():
     kwargs = {'ranking_criteria': 'l2_activation',
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
-              'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask
+              #'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask
+              'dummy_input': (next(iter(train_dataloader))['input_ids']).to(device),
               'trainer': trainer,
               'optimizer': optimizer}
 
     config_list = [{
         'sparsity': 0.25,
         'op_types': ["Linear"],
-        'op_names': [x for layer in attention_name_groups for x in layer]
+        # 'op_names': [x for layer in attention_name_groups for x in layer]
     }]
 
     pruner = TransformerHeadPruner(model, config_list, **kwargs)

@@ -106,20 +106,28 @@ class TransformerHeadPruner(Pruner):
         """
         Populate self.masking_groups bu running inference on the module graph.
         """
-        weight_names_grouped = []
-        stack = [(name, module) for name, module in self.bound_model.named_children()]
-
-        while stack:
-            cur_name, cur_module = stack.pop()
-            try:
-                module_graph = TorchModuleGraph(cur_module, self.dummy_input)
-                dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
-                weight_names_grouped.extend([[cur_name + '.' + x for x in group]
-                                             for group in dependency_tracer.dependency_sets])
-            except:
-                stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
-        self.attention_name_groups = weight_names_grouped
-        self.group_weights_by_name()
+        try:
+            module_graph = TorchModuleGraph(self.bound_model, self.dummy_input)
+            dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
+            self.attention_name_groups = dependency_tracer.dependency_sets
+            self.group_weights_by_name()
+            '''
+            
+            stack = [(name, module) for name, module in self.bound_model.named_children()]
+    
+            while stack:
+                cur_name, cur_module = stack.pop()
+                try:
+                    module_graph = TorchModuleGraph(cur_module, self.dummy_input)
+                    dependency_tracer = AttentionWeightDependency(traced_model=module_graph.trace)
+                    weight_names_grouped.extend([[cur_name + '.' + x for x in group]
+                                                 for group in dependency_tracer.dependency_sets])
+                except:
+                    stack.extend([(cur_name + '.' + name, module) for name, module in cur_module.named_children()])
+            '''
+        except Exception as e:
+            raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups. '
+                               'Exception message: ' + str(e))
 
     # TODO: more sanity checks - include head_hidden_dim parameter? sparsity agreement?
     def validate_weight_groups(self):
@@ -180,7 +188,7 @@ class TransformerHeadPruner(Pruner):
                         assert hasattr(layer_weight_group[i], mask_type), \
                             "there is no attribute '%s' in wrapper on %s" % (mask_type, layer_weight_group[i])
                         setattr(layer_weight_group[i], mask_type, mask[mask_type])
-                        print(f'mask updated {layer_weight_group[i].name} {mask_type}')
+                        print(f'mask updated: {layer_weight_group[i].name} {mask_type}')
 
     def _calc_mask(self, wrapper, weight_group, wrapper_idx=None):
         if not wrapper.mask_calculated:
