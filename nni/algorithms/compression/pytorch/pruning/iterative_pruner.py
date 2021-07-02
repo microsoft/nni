@@ -22,7 +22,7 @@ class IterativePruner(DependencyAwarePruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, pruning_algorithm='slim', trainer=None, criterion=None,
-                 num_iterations=20, epochs_per_iteration=5, dependency_aware=False, global_sort=False, dummy_input=None, **algo_kwargs):
+                 num_iterations=20, epochs_per_iteration=5, dependency_aware=False, dummy_input=None, global_sort=False, **algo_kwargs):
         """
         Parameters
         ----------
@@ -489,7 +489,7 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1,
-                 dependency_aware=False, global_sort=False, dummy_input=None):
+                 dependency_aware=False, dummy_input=None, global_sort=False):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
                          epochs_per_iteration=1, dependency_aware=dependency_aware,

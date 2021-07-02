@@ -27,7 +27,7 @@ class DependencyAwarePruner(Pruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False,
-                 global_sort=False, dummy_input=None, **algo_kwargs):
+                 dummy_input=None, global_sort=False, **algo_kwargs):
         super().__init__(model, config_list=config_list, optimizer=optimizer)
 
         self.dependency_aware = dependency_aware
