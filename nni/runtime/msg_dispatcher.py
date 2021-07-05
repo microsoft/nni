@@ -132,7 +132,6 @@ class MsgDispatcher(MsgDispatcherBase):
               - 'type': report type, support {'FINAL', 'PERIODICAL'}
         """
         # metrics value is dumped as json string in trial, so we need to decode it here
-        print(data)
         if 'value' in data:
             data['value'] = json_tricks.loads(data['value'])
         if data['type'] == MetricType.FINAL:
