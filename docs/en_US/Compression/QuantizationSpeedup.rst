@@ -48,7 +48,11 @@ Prerequisite
 ------------
 CUDA version >= 11.0
 
-TensorRT version >= 7.2
+TensorRT version >= 8.0
+
+Note
+
+* If you haven't installed TensorRT before or use the old version, please refer to `TensorRT Installation Guide <https://docs.nvidia.com/deeplearning/tensorrt/install-guide/index.html>`__\  
 
 Usage
 -----
