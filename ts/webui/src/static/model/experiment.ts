@@ -103,8 +103,9 @@ class Experiment {
                 updated ||= !compareProfiles(this.profileField, profile);
                 this.profileField = profile;
 
-                updated ||= JSON.stringify(this.metadataField) !== JSON.stringify(metadata);
-                this.metadataField = metadata;
+                if (JSON.stringify(this.metadataField) !== JSON.stringify(metadata)) {
+                    this.metadataField = metadata;
+                }
             })
             .catch(error => {
                 this.isexperimentError = true;
@@ -130,7 +131,7 @@ class Experiment {
         return this.profileField === undefined ? emptyProfile : this.profileField;
     }
 
-    get metadata(): any {
+    get metadata(): ExperimentMetadata {
         return this.metadataField === undefined ? emptyMetadata : this.metadataField;
     }
 
