@@ -186,7 +186,7 @@ class NNIManager implements Manager {
         this.config = config;
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
         await this.storeExperimentProfile();
-        
+
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             this.trainingService = await this.initTrainingService(config);
@@ -467,6 +467,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
+        } else if (platform == 'retiarii_local') {
+            const module_ = await import('../training_service/retiarii_local/localTrainingService');
+            return new module_.LocalTrainingService(config);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
@@ -744,7 +747,7 @@ class NNIManager implements Manager {
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
         this.log.debug('NNIManager received trial job metrics:', metric);
-        if (this.trialJobs.has(metric.id)){
+        if (this.trialJobs.has(metric.id)) {
             await this.dataStore.storeMetricData(metric.id, metric.data);
             if (this.dispatcher === undefined) {
                 throw new Error('Error: tuner has not been setup');
@@ -803,7 +806,7 @@ class NNIManager implements Manager {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
                 }
-                let trialRequestContent : TrialCommandContent = JSON.parse(content);
+                let trialRequestContent: TrialCommandContent = JSON.parse(content);
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
@@ -813,7 +816,7 @@ class NNIManager implements Manager {
                     placementConstraint: trialRequestContent.placement_constraint
                 };
                 this.waitingTrials.push(form);
-                break; 
+                break;
             }
             case SEND_TRIAL_JOB_PARAMETER: {
                 const tunerCommand: any = JSON.parse(content);
