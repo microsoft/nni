@@ -806,7 +806,7 @@ class NNIManager implements Manager {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
                 }
-                let trialRequestContent: TrialCommandContent = JSON.parse(content);
+                const trialRequestContent: TrialCommandContent = JSON.parse(content);
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {

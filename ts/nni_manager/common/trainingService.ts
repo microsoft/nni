@@ -43,7 +43,7 @@ interface TrialCommandContent {
     readonly parameter_id: string;
     readonly parameters: string;
     readonly parameter_source: string;
-    readonly placement_constraint: PlacementConstraint
+    readonly placement_constraint: PlacementConstraint;
 }
 
 /**

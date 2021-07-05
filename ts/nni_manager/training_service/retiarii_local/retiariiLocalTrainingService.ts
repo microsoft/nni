@@ -296,7 +296,7 @@ class RetiariiLocalTrainingService implements TrainingService {
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
-                var emitMsg: Array<any> = [];
+                const emitMsg: Array<any> = [];
                 for (const index of trialJob.gpuIndices) {
                     const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                     if (num === undefined) {
@@ -414,7 +414,7 @@ class RetiariiLocalTrainingService implements TrainingService {
 
     private occupyResource(resource: { gpuIndices: number[] }): void {
         if (this.gpuScheduler !== undefined) {
-            var emitMsg: Array<any> = []
+            const emitMsg: Array<any> = []
             for (const index of resource.gpuIndices) {
                 const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                 if (num === undefined) {
