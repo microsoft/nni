@@ -93,15 +93,15 @@ class LocalTrainingService implements TrainingService {
     private readonly jobStreamMap: Map<string, ts.Stream>;
 
     constructor(config: ExperimentConfig) {
-        this.config = flattenConfig<FlattenLocalConfig>(config, 'local');
+        this.config = flattenConfig<FlattenLocalConfig>(config, 'retiarii_local');
         this.eventEmitter = new EventEmitter();
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];
         this.stopping = false;
-        this.log = getLogger('LocalTrainingService');
+        this.log = getLogger('RetiariiLocalTrainingService');
         this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
-        this.log.info('Construct local machine training service.');
+        this.log.info('Construct retiarii local machine training service.');
         this.occupiedGpuIndexNumMap = new Map<number, number>();
 
         if (this.config.trialGpuNumber !== undefined && this.config.trialGpuNumber > 0) {
@@ -120,7 +120,7 @@ class LocalTrainingService implements TrainingService {
     }
 
     public async run(): Promise<void> {
-        this.log.info('Run local machine training service.');
+        this.log.info('Run retiarii local machine training service.');
         const longRunningTasks: Promise<void>[] = [this.runJobLoop()];
         if (this.gpuScheduler !== undefined) {
             longRunningTasks.push(this.gpuScheduler.run());
@@ -265,7 +265,7 @@ class LocalTrainingService implements TrainingService {
     public async getClusterMetadata(_key: string): Promise<string> { return ''; }
 
     public async cleanUp(): Promise<void> {
-        this.log.info('Stopping local machine training service...');
+        this.log.info('Stopping retiarii local machine training service...');
         this.stopping = true;
         for (const stream of this.jobStreamMap.values()) {
             stream.end(0);
@@ -322,7 +322,7 @@ class LocalTrainingService implements TrainingService {
         resource: { gpuIndices: number[] },
         gpuNum: number | undefined): { key: string; value: string }[] {
         const envVariables: { key: string; value: string }[] = [
-            { key: 'NNI_PLATFORM', value: 'local' },
+            { key: 'NNI_PLATFORM', value: 'retiarii_local' },
             { key: 'NNI_EXP_ID', value: this.experimentId },
             { key: 'NNI_SYS_DIR', value: trialJobDetail.workingDirectory },
             { key: 'NNI_TRIAL_JOB_ID', value: trialJobDetail.id },
@@ -358,7 +358,7 @@ class LocalTrainingService implements TrainingService {
                 const serverIdx: number = gpuTuple[0];
                 const gpuIdx: number = gpuTuple[1];
                 if (serverIdx !== 0) {
-                    throw new Error('Error: serverIdx must be 0 in local training service');
+                    throw new Error('Error: serverIdx must be 0 in retiarii local training service');
                 }
                 const num: number | undefined = this.occupiedGpuIndexNumMap.get(gpuIdx);
                 if (num === undefined || num < this.config.maxTrialNumberPerGpu) {
@@ -385,7 +385,7 @@ class LocalTrainingService implements TrainingService {
                 requiredGPUNum = this.config.trialGpuNumber;
             } else if (constraint.type === 'Topology') {
                 if (constraint.gpus.length !== 1) {
-                    throw new Error('Error: local training service only support single server constraint');
+                    throw new Error('Error: retiarii local training service only supports single server constraint');
                 }
                 requiredGPUNum = constraint.gpus[0];
             }

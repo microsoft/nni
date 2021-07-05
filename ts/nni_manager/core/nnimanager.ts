@@ -468,7 +468,7 @@ class NNIManager implements Manager {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
         } else if (platform == 'retiarii_local') {
-            const module_ = await import('../training_service/retiarii_local/localTrainingService');
+            const module_ = await import('../training_service/retiarii_local/retiariiLocalTrainingService');
             return new module_.LocalTrainingService(config);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');

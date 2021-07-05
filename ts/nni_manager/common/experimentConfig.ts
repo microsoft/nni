@@ -17,6 +17,13 @@ export interface LocalConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
 }
+/* Retiarii Local */
+export interface RetiariiLocalConfig extends TrainingServiceConfig {
+    platform: 'retiarii_local';
+    useActiveGpu?: boolean;
+    maxTrialNumberPerGpu: number;
+    gpuIndices?: number[];
+}
 
 /* Remote */
 
