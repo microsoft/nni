@@ -78,7 +78,7 @@ interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { }
 /**
  * Local machine training service
  */
-class LocalTrainingService implements TrainingService {
+class RetiariiLocalTrainingService implements TrainingService {
     private readonly config: FlattenLocalConfig;
     private readonly eventEmitter: EventEmitter;
     private readonly jobMap: Map<string, LocalTrialJobDetail>;
@@ -344,7 +344,7 @@ class LocalTrainingService implements TrainingService {
         trialJobDetail.gpuIndices = resource.gpuIndices;
     }
 
-    private tryGetAvailableResource(constraint: PlacementConstraint): [boolean, { gpuIndices: number[] }] {
+    public tryGetAvailableResource(constraint: PlacementConstraint): [boolean, { gpuIndices: number[] }] {
         const resource: { gpuIndices: number[] } = { gpuIndices: [] };
         if (this.gpuScheduler === undefined) {
             return [true, resource];
@@ -361,7 +361,7 @@ class LocalTrainingService implements TrainingService {
                     throw new Error('Error: serverIdx must be 0 in retiarii local training service');
                 }
                 const num: number | undefined = this.occupiedGpuIndexNumMap.get(gpuIdx);
-                if (num === undefined || num < this.config.maxTrialNumberPerGpu) {
+                if ((num === undefined || num < this.config.maxTrialNumberPerGpu) && gpuIdx in availableGpuIndices) {
                     selectedGPUIndices.push(gpuIdx);
                 } else {
                     return [false, resource]
@@ -558,4 +558,4 @@ class LocalTrainingService implements TrainingService {
     }
 }
 
-export { LocalTrainingService };
+export { RetiariiLocalTrainingService };

@@ -469,7 +469,7 @@ class NNIManager implements Manager {
             return new module_.AdlTrainingService();
         } else if (platform == 'retiarii_local') {
             const module_ = await import('../training_service/retiarii_local/retiariiLocalTrainingService');
-            return new module_.LocalTrainingService(config);
+            return new module_.RetiariiLocalTrainingService(config);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
