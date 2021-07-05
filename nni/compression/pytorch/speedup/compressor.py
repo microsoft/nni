@@ -24,7 +24,7 @@ class ModelSpeedup:
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
-                batch_dim=0, confidence=8, fold_bias=False):
+                 batch_dim=0, confidence=8):
         """
         Parameters
         ----------
@@ -69,10 +69,6 @@ class ModelSpeedup:
         self.constant = {}
         # self.internal_result save the internal output of the submodules
         self.internal_result = {}
-        # if we enable the compilation of the sparsity, then we will modify the network
-        # architecture to resolve the sparsity conflict.
-        self.fold_bias = fold_bias
-
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
         input_errmsg = 'Only support the tensor, list/tuple/dict of tensors as input'
@@ -116,14 +112,17 @@ class ModelSpeedup:
     def _prepare_dummy_input(self, node):
         """
         Prepare the dummy_input for the auto mask inference.
+
         Parameters
         ----------
         node: NodePyGroup
+
         Returns
         -------
         dummy_input: list
             List of tensors that will be used as input for the target node.
-
+        debugnames: list of strs
+            Debugnames of the dummy_inputs.
         """
         _logger.debug('Prepare auto mask inference for node: %s',
                       node.unique_name)
@@ -198,7 +197,6 @@ class ModelSpeedup:
                 state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
-        _auto_infer.fold_bias = self.fold_bias
 
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
@@ -207,7 +205,8 @@ class ModelSpeedup:
         # after manually unpack the tuple/list of tensors, the number of the outputs
         # of each node should always be one(Except for the TupleUnpack node at the end
         # of the whole model)
-        assert len(node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
+        assert len(
+            node.outputs) == 1, 'The number of the output should be one after the Tuple unpacked manually'
 
         out_debugname = node.outputs[0]
         # update the output mask into self.masks
@@ -330,8 +329,6 @@ class ModelSpeedup:
                 if out_degree[predecessor] == 0:
                     visit_queue.put(self.torch_graph.name_to_node[predecessor])
 
-
-
     def replace_compressed_modules(self):
         """
         Replace all the modules that have changed (weights/inputs/output) shape.
@@ -395,7 +392,8 @@ class ModelSpeedup:
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            compressed_module = replace_module[m_type](leaf_module, auto_infer.get_masks())
+            compressed_module = replace_module[m_type](
+                leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
             if reindex_dim is None:
                 setattr(super_module, g_node.name.split(
@@ -437,7 +435,8 @@ class ModelSpeedup:
 
         for graph_input in traced_graph.inputs():
             if graph_input.type().kind() == 'ClassType':
-                self.internal_result[graph_input.debugName()] = self.bound_model
+                self.internal_result[graph_input.debugName()
+                                     ] = self.bound_model
                 break
 
     def speedup_model(self):

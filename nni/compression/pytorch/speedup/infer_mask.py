@@ -14,6 +14,43 @@ STD_DELTA = 1e-6
 class AutoMaskInference:
     def __init__(self, module, dummy_input, in_masks=None, weight_mask=None, \
                 output_mask=None, name=None, in_constants=None, state_dict=None, batch_dim=0):
+        """
+        This class will infer the mask of the target module automatically.
+        This update_direct_sparsity will infer the output mask according
+        to the input masks, in constrast, update_indirect_sparsity will
+        infer the input masks according to given output masks. The newly
+        found sparsity will be incrementally updated to the original in_masks
+        and output_mask.
+
+        Parameters
+        ----------
+        module: torch.nn.Module/function
+            The target module to infer the mask. Need to be callable.
+        dummy_input: torch.Tensor/list of Tensor
+            The dummy_input of the target module.
+        in_masks:  list of torch.Tensor
+            The input masks of the target module, if in_masks is not None, then
+            update_direct_sparsity and update_indirect_sparsity will incrementally
+            update the given in_masks, else, AutoMaskInference will create a new
+            in_masks for the target module.
+        output_mask: torch.Tensor
+            The output mask of the target module. Similar to in_masks, if output_mask
+            is not None, then update_direct_sparsity and update_indirect_sparsity will
+            incrementally update the given output_mask, else AutoMaskInference will create
+            one output_mask for the target module.
+        weight_mask: dict of the weight masks
+            The weight masks of the target module, the key is the corresponding name of
+            the mask. For example: {'weight':torch.ones(1000, 1000), bias:torch.ones(1000)}
+        name: str
+            Name of the target module.
+        in_constants: list of torch.Tensor
+            The correponding constant values of the in_masks.
+        state_dict: dict of torch.Tensor
+            The original values of the weights.
+        batch_dim: int
+            The index of the batch dimension of the input tensors.
+        
+        """
         errmsg = '%s is not callable, should pass the nn.Module/function' % str(
             module)
         assert callable(module), errmsg
@@ -234,7 +271,6 @@ class AutoMaskInference:
         # so to get the right constant to eliminate the bias between model before and after sparsity
         # inference, we need to reload its state_dict and recalculate the constant
 
-        # TODO can be optimized here, move the randomization at the begining
         if len(self.weights) > 0 and self.state_dict is not None:
 
             self.module.load_state_dict(self.state_dict)
@@ -254,7 +290,7 @@ class AutoMaskInference:
                     constant.append(_tmp)
 
         return out_mask, constant
-        # return out_mask
+
 
     def update_indirect_sparsity(self):
         """
@@ -311,8 +347,6 @@ class AutoMaskInference:
             self.weight_mask[para_name][grad_zero] = 0
 
     def update_direct_sparsity(self):
-
-
         with torch.no_grad():
             out_sparsity, out_constant = self.clac_out_sparsity()
             if isinstance(out_sparsity, torch.Tensor):
