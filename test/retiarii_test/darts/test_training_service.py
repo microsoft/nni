@@ -1,4 +1,5 @@
 import json
+from nni.retiarii.execution.api import GPUDevice
 import os
 import sys
 import torch
@@ -37,12 +38,14 @@ if __name__ == '__main__':
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
-    exp_config = RetiariiExeConfig('local')
+    exp_config = RetiariiExeConfig('retiarii_local')
     exp_config.experiment_name = 'darts_search'
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 10
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = True
-    exp_config.training_service.gpu_indices = [1, 2]
+    exp_config.training_service.gpu_indices = [0, 1, 2]
+    exp_config.devices = [GPUDevice(0,0), GPUDevice(0,1), GPUDevice(0,2)]
+    exp_config.execution_engine = 'py'
 
     exp.run(exp_config, 8081)
