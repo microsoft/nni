@@ -40,10 +40,11 @@ class GPUDevice:
 
     def __hash__(self) -> int:
         return hash(self.node_id + '_' + self.gpu_id)
-    
+
     def set_status(self, status):
         self.status = status
-        
+
+
 def set_execution_engine(engine: AbstractExecutionEngine) -> None:
     global _execution_engine
     if _execution_engine is None:
