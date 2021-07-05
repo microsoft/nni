@@ -12,7 +12,7 @@ import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
 import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { LocalTrainingService } from '../retiarii_local/retiariiLocalTrainingService';
+import { LocalTrainingService } from '../local/localTrainingService';
 import { ExperimentConfig } from '../../common/experimentConfig';
 
 // TODO: copy mockedTrail.py to local folder
