@@ -48,14 +48,4 @@ class Conv1x1BnRelu(ConvBnRelu):
         super(Conv1x1BnRelu, self).__init__(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
 
 
-class MaxPool3x3(nn.Module):
-    def __init__(self):
-        super(MaxPool3x3, self).__init__()
-        self.maxpool = nn.MaxPool2d(3, 1, 1)
-
-    def forward(self, x):
-        out = self.maxpool(x)
-        return out
-
-
 Projection = Conv1x1BnRelu

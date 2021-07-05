@@ -208,6 +208,7 @@ class ManyChooseManyMutator(Mutator):
             if n_chosen is None:
                 candidates = [i for i in self.candidates(node) if self.choice([False, True])]
                 # This is a hack to make choice align with the previous format
+                # For example, it will convert [False, True, True] into [1, 2].
                 self._cur_samples = candidates
             else:
                 for _ in range(n_chosen):

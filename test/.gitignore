@@ -10,3 +10,4 @@ _generated_model
 data
 generated
 lightning_logs
+model.onnx

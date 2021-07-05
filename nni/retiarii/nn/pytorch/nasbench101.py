@@ -222,6 +222,11 @@ class NasBench101Cell(nn.Module):
     """
     Cell structure that is proposed in NAS-Bench-101 [nasbench101]_ .
 
+    This cell is usually used in evaluation of NAS algorithms because there is a ``comprehensive analysis'' of this search space
+    available, which includes a full architecture-dataset that ``maps 423k unique architectures to metrics
+    including run time and accuracy''. You can also use the space in your own space design, in which scenario it should be possible
+    to leverage results in the benchmark to narrow the huge space down to a few efficient architectures.
+
     The space of this cell architecture consists of all possible directed acyclic graphs on no more than ``max_num_nodes`` nodes,
     where each possible node (other than IN and OUT) has one of ``op_candidates``, representing the corresponding operation.
     Edges connecting the nodes can be no more than ``max_num_edges``.
