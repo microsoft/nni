@@ -137,7 +137,7 @@ def truncate(inputs, channels):
         # vertices with +1 channels. The input vertex should always be projected to
         # the minimum channel count.
         assert input_channels - channels == 1
-        return inputs[:, :channels, :, :]
+        return inputs[:, :channels]
 
 
 class _NasBench101CellFixed(nn.Module):
