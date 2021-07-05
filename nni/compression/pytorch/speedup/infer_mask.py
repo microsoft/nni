@@ -49,7 +49,7 @@ class AutoMaskInference:
             The original values of the weights.
         batch_dim: int
             The index of the batch dimension of the input tensors.
-        
+
         """
         errmsg = '%s is not callable, should pass the nn.Module/function' % str(
             module)
