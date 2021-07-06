@@ -6,7 +6,7 @@
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
 import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';

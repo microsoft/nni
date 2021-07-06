@@ -4,7 +4,7 @@
 'use strict';
 
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
-import { TrialJobStatus, LogType } from './trainingService';
+import { TrialJobStatus } from './trainingService';
 import { ExperimentConfig } from './experimentConfig';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';

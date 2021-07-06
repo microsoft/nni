@@ -19,7 +19,7 @@ import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
 import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
-import { LogType, TrialJobStatus } from '../common/trainingService';
+import { TrialJobStatus } from '../common/trainingService';
 
 const expressJoi = require('express-joi-validator');
 

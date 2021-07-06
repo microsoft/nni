@@ -13,7 +13,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
+    TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString

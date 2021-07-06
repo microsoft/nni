@@ -13,7 +13,7 @@ import {
     TrialJobStatistics, NNIManagerStatus
 } from '../../common/manager';
 import {
-    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus, LogType
+    TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
 } from '../../common/trainingService';
 
 export const testManagerProvider: Provider = {

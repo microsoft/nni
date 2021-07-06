@@ -8,8 +8,6 @@
  */
 type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 
-type LogType = 'TRIAL_LOG' | 'TRIAL_STDOUT' | 'TRIAL_ERROR' | 'MODEL.onnx';
-
 interface TrainingServiceMetadata {
     readonly key: string;
     readonly value: string;
@@ -103,5 +101,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig, LogType
+    NNIManagerIpConfig
 };

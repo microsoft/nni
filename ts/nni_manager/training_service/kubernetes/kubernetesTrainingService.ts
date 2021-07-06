@@ -14,7 +14,7 @@ import {getExperimentId} from '../../common/experimentStartupInfo';
 import {getLogger, Logger} from '../../common/log';
 import {MethodNotImplementedError} from '../../common/errors';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
 import {AzureStorageClientUtility} from './azureStorageClientUtils';

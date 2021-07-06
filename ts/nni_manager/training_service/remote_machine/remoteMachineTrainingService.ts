@@ -16,7 +16,7 @@ import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType
+    TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
