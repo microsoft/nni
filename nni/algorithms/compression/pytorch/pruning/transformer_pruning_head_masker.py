@@ -385,7 +385,7 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
             if type(out) is tuple:
                 out = out[0]
             n_heads_per_layer = out.size(-1) // self.head_hidden_dim
-            heads_output = out.view([out.size(0), out.size(1), n_heads_per_layer, -1])
+            heads_output = out.view([out.size(0), out.size(1), n_heads_per_layer, -1]).detach()
             md.forward_output_cached = heads_output
 
         self.pruner._fwd_hook_id += 1
@@ -404,7 +404,7 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
             n_heads_per_layer = grad_out.size(-1) // self.head_hidden_dim
             heads_grad = grad_out.view([grad_out.size(0), grad_out.size(1), n_heads_per_layer, -1])
             heads_scores = torch.abs(heads_grad * md.forward_output_cached)
-            heads_scores = torch.sum(heads_scores, [0, 1, 3]).detach().cpu().numpy()
+            heads_scores = torch.sum(heads_scores, [0, 1, 3]).detach().cpu()
             if hasattr(md, 'head_importance_scores'):
                 md.head_importance_scores += heads_scores
             else:
