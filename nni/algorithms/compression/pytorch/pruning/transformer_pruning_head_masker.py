@@ -90,7 +90,11 @@ class AttentionHeadMasker(WeightMasker):
             weight_mask_shape = group[0].module.weight.data.view([n_heads, -1]).size()
             bias_mask_shape = group[0].module.bias.data.view([n_heads, -1]).size()
 
-            head_level_mask = torch.tensor([i not in pruning_rules[group_idx] for i in range(n_heads)], device=device)
+            # a hack to avoid using torch.tensor, which has problems with pylint
+            head_level_mask = torch.ones(n_heads)
+            for i in pruning_rules[group_idx]:
+                head_level_mask[i] = 0
+
             mask_weight = head_level_mask.unsqueeze(-1).expand(weight_mask_shape).type_as(group[0].module.weight)
             mask_bias = head_level_mask.unsqueeze(-1).expand(bias_mask_shape).type_as(group[0].module.weight)
 
