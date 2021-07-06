@@ -5,6 +5,9 @@
 
 import * as assert from 'assert';
 
+import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
+import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
+
 export interface TrainingServiceConfig {
     platform: string;
 }
@@ -68,17 +71,23 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
-/* Kubeflow */
+export interface k8sTrialConfig {
+    replicas: number;
+    gpuNum: number;
+    cpuNum: number;
+    memoryMB: number;
+    image: string;
+}
 
-// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
-    storage: string;
+    maxTrialNumberPerGpu: number;
+    storage: KubernetesStorageKind;
     server?: string;
     path?: string;
     azureAccount?: string;
     azureShare?: string;
-    keyVault?: string;
-    keyVaultSecret?: string;
+    keyVaultName?: string;
+    keyVaultValueName?: string;
 }
 
 export interface KubeflowRoleConfig {
@@ -86,17 +95,21 @@ export interface KubeflowRoleConfig {
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: string;
+    memorySize: number;
     dockerImage: string;
+    privateRegistryAuthPath?: string;
 }
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
-    operator: string;
-    apiVersion: string;
-    storage: KubeflowStorageConfig;
-    worker: KubeflowRoleConfig;
-    parameterServer?: KubeflowRoleConfig;
+    ps?: KubeflowRoleConfig;
+    master?: KubeflowRoleConfig;
+    worker?: KubeflowRoleConfig;
+    maxTrialNumberPerGpu: number;
+    operator: KubeflowOperator;
+    apiVersion: OperatorApiVersion;
+    storageConfig: KubeflowStorageConfig;
+    reuseMode: boolean;
 }
 
 /* FrameworkController */

@@ -10,6 +10,7 @@ import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetri
 import { delay } from '../../common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
+import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
 import { TrialDispatcher } from './trialDispatcher';
 
 
@@ -29,6 +30,8 @@ class RouterTrainingService implements TrainingService {
             instance.internalTrainingService = new RemoteMachineTrainingService(config);
         } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
             instance.internalTrainingService = new PAITrainingService(config);
+        } else if (platform === 'kubeflow' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
+            instance.internalTrainingService = new KubeflowTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);
         }
