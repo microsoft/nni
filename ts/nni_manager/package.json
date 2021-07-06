@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "nyc mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
@@ -72,7 +72,9 @@
     "npm": ">=7.16.0",
     "y18n": ">=5.0.8",
     "yargs-parser": ">=20.2.7",
-    "joi": ">=17.4.0"
+    "joi": ">=17.4.0",
+    "node-forge": ">=0.10.0",
+    "glob-parent": ">=6.0.0"
   },
   "engines": {
     "node": "^16.3.0"

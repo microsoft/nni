@@ -84,7 +84,7 @@ class IterativePruner(DependencyAwarePruner):
                 self._trainer(self.bound_model, optimizer=self.optimizer, criterion=self._criterion, epoch=epoch)
             # NOTE: workaround for statistics_batch_num bigger than max batch number in one epoch, need refactor
             if hasattr(self.masker, 'statistics_batch_num') and hasattr(self, 'iterations'):
-                if self.iterations < self.masker.statistics_batch_num:
+                if self.iterations < self.masker.statistics_batch_num:  # pylint: disable=access-member-before-definition
                     self.iterations = self.masker.statistics_batch_num
             self.update_mask()
         self.bound_model.train(training)
@@ -118,7 +118,8 @@ class AGPPruner(IterativePruner):
         choose from `['level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation']`, by default `level`
     """
 
-    def __init__(self, model, config_list, optimizer, trainer, criterion, num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
+    def __init__(self, model, config_list, optimizer, trainer, criterion,
+                 num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
         super().__init__(model, config_list, optimizer=optimizer, trainer=trainer, criterion=criterion,
                          num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
         assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
