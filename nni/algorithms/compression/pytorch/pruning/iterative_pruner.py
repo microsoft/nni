@@ -51,6 +51,9 @@ class IterativePruner(DependencyAwarePruner):
         dummy_input: torch.Tensor
             The dummy input to analyze the topology constraints. Note that,
             the dummy_input should on the same device with the model.
+        global_sort: bool
+            If prune the model in a global-sort way.
+            Only support TaylorFOWeightFilterPruner currently.
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
@@ -486,6 +489,11 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     dummy_input : torch.Tensor
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+    global_sort: bool
+        Only support TaylorFOWeightFilterPruner currently.
+        If prune the model in a global-sort way. If it is `True`, this pruner will prune
+        the model according to the global contributions information which means channel contributions
+        will be sorted globally and whether specific channel will be pruned depends on global information.
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1,
