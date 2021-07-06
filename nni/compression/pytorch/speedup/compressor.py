@@ -7,6 +7,7 @@ import copy
 import torch
 import torch.nn as nn
 
+from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
 from .compress_modules import replace_module
@@ -44,7 +45,6 @@ class ModelSpeedup:
             actually used as the batchsize of the dummy_input.
         """
         assert confidence > 1
-        from nni.common.graph_utils import build_module_graph
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference
         self.ori_state_dict = copy.deepcopy(model.state_dict())
