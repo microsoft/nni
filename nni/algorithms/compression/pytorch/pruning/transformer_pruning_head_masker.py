@@ -207,7 +207,7 @@ class AttentionHeadMasker(WeightMasker):
         """
         device = weight.device
 
-        importance_scores = self.get_head_importance_scores(wrapper, weight_group, wrapper_idx)
+        importance_scores = self.get_head_importance_scores(weight_group)
         if importance_scores is None:
             return None
 
