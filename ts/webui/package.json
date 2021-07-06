@@ -115,7 +115,11 @@
     "yargs": ">=17.0.1",
     "acorn": ">=8.4.0",
     "y18n": ">=5.0.8",
-    "serialize-javascript": ">=5.0.1"
+    "serialize-javascript": ">=5.0.1",
+    "css-what": ">=5.0.1",
+    "browserslist": ">=4.16.6",
+    "trim-newlines": ">=4.0.2",
+    "glob-parent": ">=6.0.0"
   },
   "jest": {
     "verbose": true

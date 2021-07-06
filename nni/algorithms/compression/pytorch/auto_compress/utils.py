@@ -31,10 +31,11 @@ class AutoCompressionSearchSpaceGenerator:
         pruner_name
             Supported pruner name: 'level', 'slim', 'l1', 'l2', 'fpgm', 'taylorfo', 'apoz', 'mean_activation'.
         config_list
-            Except 'op_types' and 'op_names', other config value can be written as `{'_type': ..., '_value': ...}`.
+            Except 'op_types' and 'op_names', other config value can be written as ``{'_type': ..., '_value': ...}``.
         **algo_kwargs
             The additional pruner parameters except 'model', 'config_list', 'optimizer', 'trainer', 'criterion'.
-            i.e., you can set `statistics_batch_num={'_type': 'choice', '_value': [1, 2, 3]}` in TaylorFOWeightFilterPruner or just `statistics_batch_num=1`.
+            i.e., you can set ``statistics_batch_num={'_type': 'choice', '_value': [1, 2, 3]}``
+            in TaylorFOWeightFilterPruner or just ``statistics_batch_num=1``.
         """
         sub_search_space = {'_name': pruner_name}
         for config in config_list:
