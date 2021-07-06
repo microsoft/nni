@@ -12,6 +12,7 @@ import hyperopt as hp
 import numpy as np
 from schema import Optional, Schema
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 from nni.utils import NodeType, OptimizeMode, extract_scalar_reward, split_index
 
@@ -246,6 +247,7 @@ class HyperoptTuner(Tuner):
         ----------
         search_space : dict
         """
+        validate_search_space(search_space)
         self.json = search_space
 
         search_space_instance = json2space(self.json)

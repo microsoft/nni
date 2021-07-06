@@ -173,12 +173,13 @@ stages:
     - script: |
         set -e
         cd test
-        python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+        python -m pytest ut --cov-config=.coveragerc \
+          --ignore=ut/sdk/test_pruners.py \
           --ignore=ut/sdk/test_compressor_tf.py \
           --ignore=ut/sdk/test_compressor_torch.py
-        python -m pytest ut/sdk/test_pruners.py
-        python -m pytest ut/sdk/test_compressor_tf.py
-        python -m pytest ut/sdk/test_compressor_torch.py
+        python -m pytest ut/sdk/test_pruners.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/sdk/test_compressor_tf.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/sdk/test_compressor_torch.py --cov-config=.coveragerc --cov-append
       displayName: Python unit test
 
     - script: |
@@ -188,6 +189,19 @@ stages:
         cd ../nasui
         CI=true yarn test
       displayName: TypeScript unit test
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
+        testRunTitle: 'Publish test results for Python $(python.version)'
+      displayName: Publish test results
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+      displayName: Publish code coverage results
 
     - script: |
         cd test

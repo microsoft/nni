@@ -96,21 +96,21 @@ def create_new_layer(layer, n_dim):
         new_layer = StubDense(input_shape[0], input_shape[0])
 
     elif layer_class == get_dropout_class(n_dim):
-        new_layer = layer_class(Constant.DENSE_DROPOUT_RATE)
+        new_layer = layer_class(Constant.DENSE_DROPOUT_RATE)  # pylint: disable=not-callable
 
     elif layer_class == get_conv_class(n_dim):
-        new_layer = layer_class(
+        new_layer = layer_class(  # pylint: disable=not-callable
             input_shape[-1], input_shape[-1], sample((1, 3, 5), 1)[0], stride=1
         )
 
     elif layer_class == get_batch_norm_class(n_dim):
-        new_layer = layer_class(input_shape[-1])
+        new_layer = layer_class(input_shape[-1])  # pylint: disable=not-callable
 
     elif layer_class == get_pooling_class(n_dim):
-        new_layer = layer_class(sample((1, 3, 5), 1)[0])
+        new_layer = layer_class(sample((1, 3, 5), 1)[0])  # pylint: disable=not-callable
 
     else:
-        new_layer = layer_class()
+        new_layer = layer_class()  # pylint: disable=not-callable
 
     return new_layer
 

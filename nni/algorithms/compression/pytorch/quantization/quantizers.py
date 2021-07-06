@@ -245,7 +245,7 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
-        input = kwargs['input_tensor']
+        input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
@@ -304,7 +304,8 @@ class QAT_Quantizer(Quantizer):
                                                                        module.ema_decay)
             module.tracked_max_activation = update_ema(module.tracked_max_activation, current_max,
                                                                        module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_activation, module.tracked_max_activation)
+            module.scale, module.zero_point = update_quantization_param(
+                output_bits, module.tracked_min_activation, module.tracked_max_activation)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out

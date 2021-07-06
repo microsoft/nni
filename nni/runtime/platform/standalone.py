@@ -1,9 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import colorama
 import logging
 import warnings
+
+import colorama
 import json_tricks
 
 __all__ = [
