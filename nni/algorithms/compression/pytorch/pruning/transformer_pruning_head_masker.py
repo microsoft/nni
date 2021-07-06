@@ -8,7 +8,7 @@ from .weight_masker import WeightMasker
 __all__ = ['L1WeightHeadMasker', 'L2WeightHeadMasker', 'L1ActivationHeadMasker', 'L2ActivationHeadMasker',
            'TaylorFOHeadMasker']
 
-logger = logging.getLogger('torch transformer head pruners')
+logger = logging.getLogger('transformer head pruner')
 
 
 class AttentionHeadMasker(WeightMasker):
@@ -59,6 +59,54 @@ class AttentionHeadMasker(WeightMasker):
         if num_total < 2 or num_prune < 1:
             return mask
         return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx, **depen_kwargs)
+
+    def calc_mask_global(self, n_heads_to_prune):
+        # calculate scores as normal (this step does not require global information)
+        head_importance_scores = []
+        for group_idx, group in enumerate(self.pruner.masking_groups):
+            scores = self.get_head_importance_scores(group)
+            n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
+            for head_idx in range(n_heads):
+                head_importance_scores.append([group_idx, head_idx, scores[head_idx]])
+
+        # determine which head to prune for each layer
+        pruning_rules = {i: set() for i in range(len(self.pruner.masking_groups))}
+        n_selected = 0
+        for group_idx, head_idx, _ in sorted(head_importance_scores, key=(lambda x: x[-1])):
+            n_heads_original = self.pruner.masking_groups[group_idx][0].module.weight.size(0) // self.head_hidden_dim
+            n_heads_remaining = n_heads_original - len(pruning_rules[group_idx])
+            if n_heads_remaining > 1:
+                pruning_rules[group_idx].add(head_idx)
+                n_selected += 1
+            if n_selected >= n_heads_to_prune:
+                break
+
+        # generate masks
+        all_masks = []
+        for group_idx, group in enumerate(self.pruner.masking_groups):
+            device = group[0].module.weight.device
+
+            n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
+            weight_mask_shape = group[0].module.weight.data.view([n_heads, -1]).size()
+            bias_mask_shape = group[0].module.bias.data.view([n_heads, -1]).size()
+
+            head_level_mask = torch.tensor([i not in pruning_rules[group_idx] for i in range(n_heads)], device=device)
+            mask_weight = head_level_mask.unsqueeze(-1).expand(weight_mask_shape).type_as(group[0].module.weight)
+            mask_bias = head_level_mask.unsqueeze(-1).expand(bias_mask_shape).type_as(group[0].module.weight)
+
+            mask_weight_proj = mask_weight.view(group[0].module.weight.size()).detach().to(device)
+            mask_bias_proj = mask_bias.view(-1).detach().to(device)
+            masks_for_proj = {'weight_mask': mask_weight_proj.detach(), 'bias_mask': mask_bias_proj}
+
+            mask_weight_dense = mask_bias_proj.expand_as(group[-1].module.weight.data).detach().to(device)
+            mask_bias_dense = torch.ones_like(group[-1].module.bias.data).to(device)
+            masks_for_dense = {'weight_mask': mask_weight_dense.detach(), 'bias_mask': mask_bias_dense}
+
+            masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
+
+            all_masks.append(masks)
+
+        return all_masks
 
     def _get_current_state(self, sparsity, wrapper, wrapper_idx=None):
         """
@@ -188,7 +236,7 @@ class AttentionHeadMasker(WeightMasker):
         masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
         return masks
 
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+    def get_head_importance_scores(self, weight_group):
         """
         Calculate the importance score for each head.
         Parameters
@@ -213,8 +261,7 @@ class L1WeightHeadMasker(AttentionHeadMasker):
     and key projection matrices. L1 norm is used for magnitude calculation. Note that in this implementation, weight
     norms of q_proj, k_proj, v_proj from each head are summed as the final importance score for the head.
     """
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
-        print('calculating importance scores for wrapper', wrapper.name)
+    def get_head_importance_scores(self, weight_group):
         q_proj, k_proj, v_proj, _ = weight_group
 
         n_heads = q_proj.module.weight.size()[0] // self.head_hidden_dim
@@ -238,7 +285,7 @@ class L2WeightHeadMasker(AttentionHeadMasker):
     and key projection matrices. L2 norm is used for magnitude calculation. Note that in this implementation, weight
     norms of q_proj, k_proj, v_proj from each head are summed as the final importance score for the head.
     """
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+    def get_head_importance_scores(self, weight_group):
         q_proj, k_proj, v_proj, _ = weight_group
 
         n_heads = q_proj.module.weight.size()[0] // self.head_hidden_dim
@@ -267,7 +314,7 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
         super().__init__(model, pruner, head_hidden_dim)
         self.pruner.hook_id = self._add_activation_collector(self.pruner)
 
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+    def get_head_importance_scores(self, weight_group):
         _, _, _, output_proj = weight_group
         activations = torch.stack(self.pruner.collected_activation[output_proj.group_idx], -1)
         activations = torch.sum(activations, -1)
@@ -314,7 +361,7 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
         super().__init__(model, pruner, head_hidden_dim)
         self.pruner.hook_id = self._add_activation_collector(self.pruner)
 
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+    def get_head_importance_scores(self, weight_group):
         _, _, _, output_proj = weight_group
         activations = torch.stack(self.pruner.collected_activation[output_proj.group_idx], -1)
         activations = torch.sum(activations, -1)
@@ -367,7 +414,7 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
         self.backward_hooks = {}                                 # backward hooks for collecting gradient
         self._add_gradient_collector()
 
-    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+    def get_head_importance_scores(self, weight_group):
         _, _, _, output_proj = weight_group
         result = output_proj.head_importance_scores
 

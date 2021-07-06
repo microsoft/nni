@@ -484,6 +484,7 @@ def main():
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
     kwargs = {'ranking_criteria': 'taylorfo',
+              'global_sort': True,
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
               #'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask

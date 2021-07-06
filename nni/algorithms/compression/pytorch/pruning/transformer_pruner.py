@@ -47,14 +47,18 @@ class TransformerHeadPruner(Pruner):
             - 'l2_activation'
     """
 
-    def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylorfo', dummy_input=None,
-                 optimizer=None, trainer=None, criterion=None,
+    def __init__(self, model, config_list, attention_name_groups=None, dummy_input=None, ranking_criteria='taylorfo',
+                 global_sort=False, head_hidden_dim=None, optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
 
         self.attention_name_groups = attention_name_groups
-        self.ranking_criteria = ranking_criteria
         self.dummy_input = dummy_input
+        self.ranking_criteria = ranking_criteria
+        assert self.ranking_criteria in ['l1_weight', 'l2_weight', 'l1_activation', 'l2_activation', 'taylorfo'], \
+            "Unsupported ranking criteria."
+        self.global_sort = global_sort
+        self.head_hidden_dim = head_hidden_dim
         self._optimizer = optimizer
         self._trainer = trainer
         self._criterion = criterion
@@ -78,7 +82,7 @@ class TransformerHeadPruner(Pruner):
         self.remove_ungrouped_modules()
 
         self.set_wrappers_attribute("mask_calculated", False)
-        self.masker = MASKER_DICT[ranking_criteria](model, self, **algo_kwargs)
+        self.masker = MASKER_DICT[ranking_criteria](model, self, self.head_hidden_dim, **algo_kwargs)
 
     def group_weights_by_name(self):
         """
@@ -116,19 +120,35 @@ class TransformerHeadPruner(Pruner):
             raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups.\n'
                                'Exception message: ' + str(e))
 
-    # TODO: more sanity checks - include head_hidden_dim parameter? sparsity agreement?
     def validate_weight_groups(self):
+        """
+        Sanity checks:
+            - Q, K, V projection weights in each groups must have the same shape
+            - output projection weight shape must match total hidden dimension (inferred from Q, K, V projection)
+            - Four weights in a group must have the same sparsity in their config
+            - If global_sort is specified, all weights must have the same sparsity
+            - head_hidden_dim must be a divisor of the output dimension of the projection weights
+        """
         errmsg = 'Attention weight group sanity check not passed'
-        try:
-            for group in self.masking_groups:
-                assert len(group) == 4, errmsg + ': each group must have four weights'
-                assert group[0].module.weight.size() == group[1].module.weight.size() and \
-                    group[1].module.weight.size() == group[2].module.weight.size(), \
-                    errmsg + ': the dimensions of Q, K, V projection matrices must be the same '
-                assert group[0].module.weight.size()[0] == group[3].module.weight.size()[1], \
-                    errmsg + ': the dimension of attention results must match with input for output projection'
-        except:
-            raise RuntimeError(errmsg)
+        sparsity = None
+        for group in self.masking_groups:
+            assert len(group) == 4, errmsg + ': each group must have four weights'
+            assert group[0].module.weight.size() == group[1].module.weight.size() and \
+                group[1].module.weight.size() == group[2].module.weight.size(), \
+                errmsg + ': the dimensions of Q, K, V projection matrices must be the same '
+            assert group[0].module.weight.size()[0] == group[3].module.weight.size()[1], \
+                errmsg + ': the dimension of attention results must match with input for output projection'
+            assert group[0].config['sparsity'] == group[1].config['sparsity'] == \
+                   group[2].config['sparsity'] == group[3].config['sparsity'], \
+                errmsg + ': the sparsity of matrices in the same layer must be the same'
+            if sparsity is None:
+                sparsity = group[0].config['sparsity']
+            if self.global_sort:
+                assert sparsity == group[0].config['sparsity'], \
+                    errmsg + ': for global_sort=True, the sparsity for all modules must be the same'
+            t = group[0].module.weight.size(0) / self.head_hidden_dim
+            assert t % 1 == 0, errmsg + ': head_hidden_dim must be a divisor of the output dimension of the ' \
+                                        'projection weights'
 
     def remove_ungrouped_modules(self):
         """
@@ -161,12 +181,20 @@ class TransformerHeadPruner(Pruner):
             self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
             self.update_mask()
             self.bound_model.train(training)
-        self.update_mask()
+        else:
+            self.update_mask()
         return self.bound_model
 
     def update_mask(self):
-        for layer_weight_group in self.masking_groups:
-            masks = self._calc_mask(layer_weight_group[0], layer_weight_group)
+        masks_for_all = None
+        if self.global_sort:
+            masks_for_all = self._calc_mask_global()
+            assert len(masks_for_all) == len(self.masking_groups)
+        for group_idx, layer_weight_group in enumerate(self.masking_groups):
+            if self.global_sort:
+                masks = masks_for_all[group_idx]
+            else:
+                masks = self._calc_mask(layer_weight_group[0], layer_weight_group)
             if masks is not None:
                 for i, mask in enumerate(masks):
                     for mask_type in mask:
@@ -186,6 +214,16 @@ class TransformerHeadPruner(Pruner):
             return masks
         else:
             return None
+
+    def _calc_mask_global(self):
+        if len(self.get_modules_wrapper()) == 0:
+            return []
+        overall_sparsity = self.get_modules_wrapper()[0].config['sparsity']
+        n_heads_total = 0
+        for q_proj, _, _, _ in self.masking_groups:
+            n_heads_total += int(q_proj.module.weight.size()[0] / self.head_hidden_dim)
+        n_heads_to_prune = int(n_heads_total * overall_sparsity)
+        return self.masker.calc_mask_global(n_heads_to_prune)
 
     def calc_mask(self, wrapper, **kwargs):
         raise RuntimeError("Applications should directly call TransformerHeadPruner's update_mask() method.")
