@@ -17,7 +17,7 @@ MASKER_DICT = {
     'l2_weight': L2WeightHeadMasker,
     'l1_activation': L1ActivationHeadMasker,
     'l2_activation': L2ActivationHeadMasker,
-    'taylor': TaylorFOHeadMasker
+    'taylorfo': TaylorFOHeadMasker
 }
 
 logger = logging.getLogger(__name__)
@@ -40,14 +40,14 @@ class TransformerHeadPruner(Pruner):
             - op_names : Optional. Operation names to prune.
     ranking_criteria : str
         Supported criteria:
-            - 'taylor'
+            - 'taylorfo'
             - 'l1_weight'
             - 'l2_weight'
             - 'l1_activation'
             - 'l2_activation'
     """
 
-    def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylor', dummy_input=None,
+    def __init__(self, model, config_list, attention_name_groups=None, ranking_criteria='taylorfo', dummy_input=None,
                  optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
@@ -113,7 +113,7 @@ class TransformerHeadPruner(Pruner):
             self.group_weights_by_name()
 
         except Exception as e:
-            raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups. '
+            raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups.\n'
                                'Exception message: ' + str(e))
 
     # TODO: more sanity checks - include head_hidden_dim parameter? sparsity agreement?
@@ -155,14 +155,12 @@ class TransformerHeadPruner(Pruner):
         schema.validate(config_list)
 
     def compress(self):
-        if self.ranking_criteria in ['l1_activation', 'l2_activation']:
+        if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo']:
             training = self.bound_model.training
             self.bound_model.eval()
             self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
             self.update_mask()
             self.bound_model.train(training)
-        elif self.ranking_criteria == 'taylor':
-            pass
         self.update_mask()
         return self.bound_model
 

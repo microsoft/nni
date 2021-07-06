@@ -311,6 +311,7 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
 
 def dry_run_no_param_update(args, model, train_dataloader, optimizer, device, epoch_num=None):
     # no param update performed, just do forward and backward on the entire train data (to collect output/gradient etc.)
+    print("Running forward and backward on the entire dataset without updating parameters...")
     progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
     completed_steps = 0
 
@@ -482,7 +483,7 @@ def main():
                                      ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
-    kwargs = {'ranking_criteria': 'l2_activation',
+    kwargs = {'ranking_criteria': 'taylorfo',
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
               #'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask

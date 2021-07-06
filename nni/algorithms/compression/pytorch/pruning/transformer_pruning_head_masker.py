@@ -260,8 +260,8 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
     """
     A structured pruning algorithm that prunes the heads with smallest final output value.
     Note that this masker only relies on the output of the output layer of each attention layer.
-    The masker collects the L1 norm of the last weight (output projection) in each group on the entire train set, and
-    prunes the heads producing the smallest output.
+    The masker collects the L1 norm of the output of the last weight (output projection) in each group on the entire
+    train set, and prunes the heads producing the smallest output.
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)
@@ -274,6 +274,7 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
         n_heads = activations.size()[0] // self.head_hidden_dim
         scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
 
+        # clean up hooks
         if self.pruner.hook_id in self.pruner._fwd_hook_handles:
             self.pruner.remove_activation_collector(self.pruner.hook_id)
 
@@ -306,8 +307,8 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
     """
     A structured pruning algorithm that prunes the heads with smallest final output value.
     Note that this masker only relies on the output of the output layer of each attention layer.
-    The masker collects the L2 norm of the last weight (output projection) in each group on the entire train set, and
-    prunes the heads producing the smallest output.
+    The masker collects the L2 norm of the output of the last weight (output projection) in each group on the entire
+    train set, and prunes the heads producing the smallest output.
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)
@@ -320,6 +321,7 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
         n_heads = activations.size()[0] // self.head_hidden_dim
         scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
 
+        # clean up hooks
         if self.pruner.hook_id in self.pruner._fwd_hook_handles:
             self.pruner.remove_activation_collector(self.pruner.hook_id)
 
@@ -351,4 +353,63 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
 
 
 class TaylorFOHeadMasker(AttentionHeadMasker):
-    pass
+    """
+    A structured pruning algorithm that prunes the heads with smallest final output contribution.
+    Note that this masker only relies on the output of the output layer of each attention layer.
+    The masker collects the output the last weight (output projection) in each group and the corresponding gradient
+    on the entire train set, and prunes the heads producing the smallest contribution as used in the following papers:
+    "Are Sixteen Heads Really Better than One?" (Michel et.al, 2019)
+    "Pruning convolutional neural networks for resource efficient inference." (Molchanov et. al., 2017)
+    """
+    def __init__(self, model, pruner, head_hidden_dim=None):
+        super().__init__(model, pruner, head_hidden_dim)
+        self.pruner.hook_id = self._add_activation_collector()   # forward hooks for collecting activation
+        self.backward_hooks = {}                                 # backward hooks for collecting gradient
+        self._add_gradient_collector()
+
+    def get_head_importance_scores(self, wrapper, weight_group, wrapper_idx):
+        _, _, _, output_proj = weight_group
+        result = output_proj.head_importance_scores
+
+        # clean up hooks and cached data
+        if self.pruner.hook_id in self.pruner._fwd_hook_handles:
+            self.pruner.remove_activation_collector(self.pruner.hook_id)
+        self.backward_hooks[output_proj.group_idx].remove()
+        for attr in ['forward_output_cached', 'head_importance_scores']:
+            output_proj.__dict__.pop(attr, None)
+
+        return result
+
+    def _add_activation_collector(self):
+        def forward_hook(md, inp, out):
+            if type(out) is tuple:
+                out = out[0]
+            n_heads_per_layer = out.size(-1) // self.head_hidden_dim
+            heads_output = out.view([out.size(0), out.size(1), n_heads_per_layer, -1])
+            md.forward_output_cached = heads_output
+
+        self.pruner._fwd_hook_id += 1
+        self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id] = []
+
+        for _, _, _, output_proj in self.pruner.masking_groups:
+            handle = output_proj.register_forward_hook(forward_hook)
+            self.pruner._fwd_hook_handles[self.pruner._fwd_hook_id].append(handle)
+
+        return self.pruner._fwd_hook_id
+
+    def _add_gradient_collector(self):
+        def grad_hook(md, grad_in, grad_out):
+            if type(grad_out) is tuple:
+                grad_out = grad_out[0]
+            n_heads_per_layer = grad_out.size(-1) // self.head_hidden_dim
+            heads_grad = grad_out.view([grad_out.size(0), grad_out.size(1), n_heads_per_layer, -1])
+            heads_scores = torch.abs(heads_grad * md.forward_output_cached)
+            heads_scores = torch.sum(heads_scores, [0, 1, 3]).detach().cpu().numpy()
+            if hasattr(md, 'head_importance_scores'):
+                md.head_importance_scores += heads_scores
+            else:
+                md.head_importance_scores = heads_scores
+
+        for _, _, _, output_proj in self.pruner.masking_groups:
+            handle = output_proj.register_backward_hook(grad_hook)
+            self.backward_hooks[output_proj.group_idx] = handle
