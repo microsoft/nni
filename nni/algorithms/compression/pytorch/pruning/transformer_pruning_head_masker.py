@@ -230,7 +230,7 @@ class AttentionHeadMasker(WeightMasker):
         importance_scores = [[i, importance_scores[i]] for i in range(len(importance_scores))]
         head_mask_bool = torch.ones(len(importance_scores))
         n_selected = 0
-        for head_idx, score in sorted(importance_scores, key=(lambda x: x[-1])):
+        for head_idx, _ in sorted(importance_scores, key=(lambda x: x[-1])):
             head_mask_bool[head_idx] = 0
             if head_idx not in self.pruner.pruned_heads[weight_group[0].group_idx]:
                 n_selected += 1
