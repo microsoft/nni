@@ -46,22 +46,27 @@ class TransformerHeadPruner(Pruner):
             - 'l1_activation'
             - 'l2_activation'
     """
-
-    def __init__(self, model, config_list, attention_name_groups=None, dummy_input=None, ranking_criteria='taylorfo',
-                 global_sort=False, head_hidden_dim=None, optimizer=None, trainer=None, criterion=None,
+    def __init__(self, model, config_list, attention_name_groups=None, dummy_input=None, head_hidden_dim=None,
+                 ranking_criteria='taylorfo', global_sort=False, num_iterations=1, epochs_per_iteration=1,
+                 optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
 
         self.attention_name_groups = attention_name_groups
         self.dummy_input = dummy_input
+        self.head_hidden_dim = head_hidden_dim
         self.ranking_criteria = ranking_criteria
         assert self.ranking_criteria in ['l1_weight', 'l2_weight', 'l1_activation', 'l2_activation', 'taylorfo'], \
             "Unsupported ranking criteria."
         self.global_sort = global_sort
-        self.head_hidden_dim = head_hidden_dim
+        self.num_iterations = num_iterations
+        self.epochs_per_iteration = epochs_per_iteration
         self._optimizer = optimizer
         self._trainer = trainer
         self._criterion = criterion
+        if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo'] or num_iterations > 1:
+            assert self._trainer is not None
+            assert self._optimizer is not None
 
         # Group generation: one group per attention layer, four weights per group
         self.masking_groups = []
@@ -83,6 +88,7 @@ class TransformerHeadPruner(Pruner):
 
         self.set_wrappers_attribute("mask_calculated", False)
         self.masker = MASKER_DICT[ranking_criteria](model, self, self.head_hidden_dim, **algo_kwargs)
+        self.pruned_heads = {i: set() for i in range(len(self.masking_groups))}
 
     def group_weights_by_name(self):
         """
@@ -175,24 +181,37 @@ class TransformerHeadPruner(Pruner):
         schema.validate(config_list)
 
     def compress(self):
-        if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo']:
-            training = self.bound_model.training
-            self.bound_model.eval()
-            self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
-            self.update_mask()
-            self.bound_model.train(training)
-        else:
-            self.update_mask()
-        return self.bound_model
+        for pruning_iter in range(self.num_iterations):
+            self.set_wrappers_attribute("mask_calculated", False)
+            if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo']:
+                training = self.bound_model.training
+                self.bound_model.eval()
+                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
+                self.update_mask()
+                self.bound_model.train(training)
+            else:
+                self.update_mask()
+
+            # for iterative pruning
+            # finetune before next iteration
+            if self.num_iterations > 1:
+                for e in range(self.epochs_per_iteration):
+                    self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=e+1)
+
+            # if not the last iteration, reset the maskers (may create additional hooks)
+            if self.num_iterations > 1 and pruning_iter != self.num_iterations - 1:
+                self.masker.reset()
+
+            print('pruned heads after iteration', pruning_iter, self.pruned_heads)
 
     def update_mask(self):
-        masks_for_all = None
+        masks_for_all_groups = None
         if self.global_sort:
-            masks_for_all = self._calc_mask_global()
-            assert len(masks_for_all) == len(self.masking_groups)
+            masks_for_all_groups = self._calc_mask_global()
+            assert len(masks_for_all_groups) == len(self.masking_groups)
         for group_idx, layer_weight_group in enumerate(self.masking_groups):
             if self.global_sort:
-                masks = masks_for_all[group_idx]
+                masks = masks_for_all_groups[group_idx]
             else:
                 masks = self._calc_mask(layer_weight_group[0], layer_weight_group)
             if masks is not None:
@@ -205,8 +224,8 @@ class TransformerHeadPruner(Pruner):
 
     def _calc_mask(self, wrapper, weight_group, wrapper_idx=None):
         if not wrapper.mask_calculated:
-            sparsity = wrapper.config['sparsity']
-            masks = self.masker.calc_mask(sparsity=sparsity, wrapper=wrapper, weight_group=weight_group,
+            iter_sparsity = wrapper.config['sparsity'] / self.num_iterations
+            masks = self.masker.calc_mask(sparsity=iter_sparsity, wrapper=wrapper, weight_group=weight_group,
                                           wrapper_idx=wrapper_idx)
             # masker.calc_mask returns None means calc_mask is not calculated successfully; can try later
             if masks is not None:
@@ -218,7 +237,7 @@ class TransformerHeadPruner(Pruner):
     def _calc_mask_global(self):
         if len(self.get_modules_wrapper()) == 0:
             return []
-        overall_sparsity = self.get_modules_wrapper()[0].config['sparsity']
+        overall_sparsity = self.get_modules_wrapper()[0].config['sparsity'] / self.num_iterations
         n_heads_total = 0
         for q_proj, _, _, _ in self.masking_groups:
             n_heads_total += int(q_proj.module.weight.size()[0] / self.head_hidden_dim)

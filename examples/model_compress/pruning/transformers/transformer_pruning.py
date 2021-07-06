@@ -309,9 +309,12 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
         logger.info(f"epoch {epoch}: {eval_metric}")
 
 
-def dry_run_no_param_update(args, model, train_dataloader, optimizer, device, epoch_num=None):
+def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=None):
     # no param update performed, just do forward and backward on the entire train data (to collect output/gradient etc.)
-    print("Running forward and backward on the entire dataset without updating parameters...")
+    if epoch_num == 0:
+        print("Running forward and backward on the entire dataset without updating parameters...")
+    else:
+        print("Finetuning for 1 epoch")
     progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
     completed_steps = 0
 
@@ -323,6 +326,8 @@ def dry_run_no_param_update(args, model, train_dataloader, optimizer, device, ep
             outputs = model(**batch)
             loss = outputs.loss
             loss.backward()
+            if epoch_num != 0:
+                optimizer.step()
             optimizer.zero_grad()
             progress_bar.update(1)
             completed_steps += 1
@@ -476,15 +481,17 @@ def main():
         # here criterion is embedded in the model. Upper levels can just pass None to trainer
         # no param update performed,
         # just do forward and backward on the entire train data (to collect output/gradient etc.)
-        return dry_run_no_param_update(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
+        return dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
 
     attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
-    kwargs = {'ranking_criteria': 'taylorfo',
+    kwargs = {'ranking_criteria': 'l1_activation',
               'global_sort': True,
+              'num_iterations': 2,
+              'epochs_per_iteration': 1,
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
               #'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask
@@ -493,7 +500,7 @@ def main():
               'optimizer': optimizer}
 
     config_list = [{
-        'sparsity': 0.25,
+        'sparsity': 0.5,
         'op_types': ["Linear"],
         # 'op_names': [x for layer in attention_name_groups for x in layer]
     }]

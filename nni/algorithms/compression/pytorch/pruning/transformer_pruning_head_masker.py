@@ -29,6 +29,13 @@ class AttentionHeadMasker(WeightMasker):
         self.head_hidden_dim = head_hidden_dim
         assert self.head_hidden_dim is not None, "head_hidden_dim must be specified."
 
+    def reset(self):
+        """
+        Descendants can override this method to do preparations necessary for calculating importance scores.
+        This method is called during iterative pruning, before each iteration starts (except the first one).
+        """
+        pass
+
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
         """
         calculate the mask for `wrapper`.
@@ -70,13 +77,12 @@ class AttentionHeadMasker(WeightMasker):
                 head_importance_scores.append([group_idx, head_idx, scores[head_idx]])
 
         # determine which head to prune for each layer
-        pruning_rules = {i: set() for i in range(len(self.pruner.masking_groups))}
         n_selected = 0
         for group_idx, head_idx, _ in sorted(head_importance_scores, key=(lambda x: x[-1])):
             n_heads_original = self.pruner.masking_groups[group_idx][0].module.weight.size(0) // self.head_hidden_dim
-            n_heads_remaining = n_heads_original - len(pruning_rules[group_idx])
-            if n_heads_remaining > 1:
-                pruning_rules[group_idx].add(head_idx)
+            n_heads_remaining = n_heads_original - len(self.pruner.pruned_heads[group_idx])
+            if n_heads_remaining > 1 and head_idx not in self.pruner.pruned_heads[group_idx]:
+                self.pruner.pruned_heads[group_idx].add(head_idx)
                 n_selected += 1
             if n_selected >= n_heads_to_prune:
                 break
@@ -84,30 +90,10 @@ class AttentionHeadMasker(WeightMasker):
         # generate masks
         all_masks = []
         for group_idx, group in enumerate(self.pruner.masking_groups):
-            device = group[0].module.weight.device
-
             n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
-            weight_mask_shape = group[0].module.weight.data.view([n_heads, -1]).size()
-            bias_mask_shape = group[0].module.bias.data.view([n_heads, -1]).size()
-
-            # a hack to avoid using torch.tensor, which has problems with pylint
-            head_level_mask = torch.ones(n_heads)
-            for i in pruning_rules[group_idx]:
-                head_level_mask[i] = 0
-
-            mask_weight = head_level_mask.unsqueeze(-1).expand(weight_mask_shape).type_as(group[0].module.weight)
-            mask_bias = head_level_mask.unsqueeze(-1).expand(bias_mask_shape).type_as(group[0].module.weight)
-
-            mask_weight_proj = mask_weight.view(group[0].module.weight.size()).detach().to(device)
-            mask_bias_proj = mask_bias.view(-1).detach().to(device)
-            masks_for_proj = {'weight_mask': mask_weight_proj.detach(), 'bias_mask': mask_bias_proj}
-
-            mask_weight_dense = mask_bias_proj.expand_as(group[-1].module.weight.data).detach().to(device)
-            mask_bias_dense = torch.ones_like(group[-1].module.bias.data).to(device)
-            masks_for_dense = {'weight_mask': mask_weight_dense.detach(), 'bias_mask': mask_bias_dense}
-
-            masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
-
+            device = group[0].module.weight.device
+            head_level_mask = torch.tensor([i not in self.pruner.pruned_heads[group_idx] for i in range(n_heads)], device=device)  # pylint: disable=not-callable
+            masks = self._get_layer_masks_from_head_mask(group, head_level_mask, has_bias=True)
             all_masks.append(masks)
 
         return all_masks
@@ -159,6 +145,7 @@ class AttentionHeadMasker(WeightMasker):
 
         num_total = weight.size(0) // self.head_hidden_dim
         num_prune = int(num_total * sparsity)
+        num_prune = max(num_prune, 1)
 
         # weight*mask_weight: apply base mask for iterative pruning
         return mask, weight * mask_weight, num_prune
@@ -186,6 +173,30 @@ class AttentionHeadMasker(WeightMasker):
         """
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
+    def _get_layer_masks_from_head_mask(self, weight_group, head_mask_bool, has_bias=True, device=None):
+        q_proj, _, _, output_proj = weight_group
+        if device is None:
+            device = q_proj.module.weight.device
+
+        n_heads = q_proj.module.weight.size()[0] // self.head_hidden_dim
+        weight_mask_shape = q_proj.module.weight.data.view([n_heads, -1]).size()
+        bias_mask_shape = q_proj.module.bias.data.view([n_heads, -1]).size()
+
+        mask_weight = head_mask_bool.unsqueeze(-1).expand(weight_mask_shape).type_as(q_proj.module.weight)
+        mask_bias = head_mask_bool.unsqueeze(-1).expand(bias_mask_shape).type_as(q_proj.module.weight)
+
+        mask_weight_proj = mask_weight.view(q_proj.module.weight.size()).detach().to(device)
+        mask_bias_proj = mask_bias.view(-1).detach().to(device) if has_bias else None
+        masks_for_proj = {'weight_mask': mask_weight_proj.detach(), 'bias_mask': mask_bias_proj}
+
+        mask_weight_dense = mask_bias_proj.expand_as(output_proj.module.weight.data).detach().to(device)
+        mask_bias_dense = torch.ones_like(output_proj.module.bias.data).to(device)
+        masks_for_dense = {'weight_mask': mask_weight_dense.detach(), 'bias_mask': mask_bias_dense}
+
+        masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
+
+        return masks
+
     def get_mask_by_importance_ranking(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
         """
         Calculate the mask of given layer by pruning out heads with lowest importance scores.
@@ -209,36 +220,27 @@ class AttentionHeadMasker(WeightMasker):
         dict
             dictionary for storing masks
         """
-        device = weight.device
+        if weight_group is None:
+            weight_group = self.pruner.masking_groups[wrapper.group_idx]
 
         importance_scores = self.get_head_importance_scores(weight_group)
         if importance_scores is None:
             return None
 
-        threshold = torch.topk(importance_scores, num_prune, largest=False)[0].max()
+        importance_scores = [[i, importance_scores[i]] for i in range(len(importance_scores))]
+        head_mask_bool = torch.ones(len(importance_scores))
+        n_selected = 0
+        for head_idx, score in sorted(importance_scores, key=(lambda x: x[-1])):
+            head_mask_bool[head_idx] = 0
+            if head_idx not in self.pruner.pruned_heads[weight_group[0].group_idx]:
+                n_selected += 1
+                # update pruned_heads in pruner (mainly for iterative pruning)
+                self.pruner.pruned_heads[weight_group[0].group_idx].add(head_idx)
+            if n_selected == num_prune:
+                break
 
-        # get q_proj, k_proj, v_proj, output_proj from the same attention head
-        q_proj, _, _, output_proj = weight_group if weight_group is not None else \
-            self.pruner.masking_groups[wrapper.group_idx]
-
-        n_heads = q_proj.module.weight.size()[0] // self.head_hidden_dim
-        weight_mask_shape = q_proj.module.weight.data.view([n_heads, -1]).size()
-        bias_mask_shape = q_proj.module.bias.data.view([n_heads, -1]).size()
-
-        mask_weight = torch.gt(importance_scores, threshold).unsqueeze(-1).expand(weight_mask_shape).type_as(weight)
-        mask_bias = torch.gt(importance_scores, threshold).unsqueeze(-1).expand(bias_mask_shape).type_as(weight)
-
-        mask_weight_proj = mask_weight.view(weight.size()).detach().to(device)
-        mask_bias_proj = mask_bias.view(-1).detach().to(device) \
-            if base_mask['bias_mask'] is not None else None
-        masks_for_proj = {'weight_mask': mask_weight_proj.detach(), 'bias_mask': mask_bias_proj}
-
-        mask_weight_dense = mask_bias_proj.expand_as(output_proj.module.weight.data).detach().to(device)
-        mask_bias_dense = torch.ones_like(output_proj.module.bias.data).to(device)
-        masks_for_dense = {'weight_mask': mask_weight_dense.detach(), 'bias_mask': mask_bias_dense}
-
-        masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
-        return masks
+        return self._get_layer_masks_from_head_mask(weight_group, head_mask_bool,
+                                                    has_bias=True)
 
     def get_head_importance_scores(self, weight_group):
         """
@@ -316,6 +318,9 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)
+        self.reset()
+
+    def reset(self):
         self.pruner.hook_id = self._add_activation_collector(self.pruner)
 
     def get_head_importance_scores(self, weight_group):
@@ -363,6 +368,9 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)
+        self.reset()
+
+    def reset(self):
         self.pruner.hook_id = self._add_activation_collector(self.pruner)
 
     def get_head_importance_scores(self, weight_group):
@@ -414,8 +422,11 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)
-        self.pruner.hook_id = self._add_activation_collector()   # forward hooks for collecting activation
-        self.backward_hooks = {}                                 # backward hooks for collecting gradient
+        self.reset()
+
+    def reset(self):
+        self.pruner.hook_id = self._add_activation_collector()  # forward hooks for collecting activation
+        self.backward_hooks = {}  # backward hooks for collecting gradient
         self._add_gradient_collector()
 
     def get_head_importance_scores(self, weight_group):
