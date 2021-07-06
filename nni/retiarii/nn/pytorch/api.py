@@ -177,19 +177,23 @@ class InputChoice(nn.Module):
         Recommended inputs to choose. If None, mutator is instructed to select any.
     reduction : str
         ``mean``, ``concat``, ``sum`` or ``none``.
+    prior : list of float
+        Prior distribution used in random sampling.
     label : str
         Identifier of the input choice.
     """
 
     def __new__(cls, n_candidates: int, n_chosen: Optional[int] = 1,
-                reduction: str = 'sum', label: Optional[str] = None, **kwargs):
+                reduction: str = 'sum', *,
+                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         try:
             return ChosenInputs(get_fixed_value(label), reduction=reduction)
         except NoContextError:
             return super().__new__(cls)
 
     def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
-                 reduction: str = 'sum', label: Optional[str] = None, **kwargs):
+                 reduction: str = 'sum', *,
+                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -201,6 +205,7 @@ class InputChoice(nn.Module):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
+        self.prior = prior or [1 / n_candidates for _ in range(n_candidates)]
         assert self.reduction in ['mean', 'concat', 'sum', 'none']
         self._label = generate_new_label(label)
 
