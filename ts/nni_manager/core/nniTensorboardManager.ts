@@ -70,7 +70,7 @@ class NNITensorboardManager implements TensorboardManager {
             this.log.error(error);
             const alive: boolean = await isAlive(tensorboardProc.pid);
             if (alive) {
-                process.kill(-tensorboardProc.pid!);
+                process.kill(-tensorboardProc.pid);
             }
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
         });

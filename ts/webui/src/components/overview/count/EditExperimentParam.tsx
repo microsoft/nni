@@ -27,8 +27,9 @@ export const EditExperimentParam = (): any => {
     const hideSucceedInfo = useCallback(() => {
         setShowSucceedInfo(false);
     }, []);
-    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } =
-        useContext(EditExpeParamContext);
+    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
+        EditExpeParamContext
+    );
     const originMaxDurationStr = EXPERIMENT.profile.params.maxExperimentDuration;
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);
@@ -108,6 +109,7 @@ export const EditExperimentParam = (): any => {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
+                // eslint-disable-next-line @typescript-eslint/camelcase
                 params: { update_type: editType }
             });
             if (res.status === 200) {

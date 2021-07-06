@@ -17,9 +17,6 @@ import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardMa
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
-import { MetricType } from '../common/datastore';
-import { ProfileUpdateType } from '../common/manager';
-import { LogType, TrialJobStatus } from '../common/trainingService';
 
 const expressJoi = require('express-joi-validator');
 
@@ -142,7 +139,7 @@ class NNIRestHandler {
 
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', (req: Request, res: Response) => {
-            this.nniManager.updateExperimentProfile(req.body, req.query.update_type as ProfileUpdateType).then(() => {
+            this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -222,7 +219,7 @@ class NNIRestHandler {
 
     private listTrialJobs(router: Router): void {
         router.get('/trial-jobs', (req: Request, res: Response) => {
-            this.nniManager.listTrialJobs(req.query.status as TrialJobStatus).then((jobInfos: TrialJobInfo[]) => {
+            this.nniManager.listTrialJobs(req.query.status).then((jobInfos: TrialJobInfo[]) => {
                 jobInfos.forEach((trialJob: TrialJobInfo) => {
                     this.setErrorPathForFailedJob(trialJob);
                 });
@@ -266,7 +263,7 @@ class NNIRestHandler {
 
     private getMetricData(router: Router): void {
         router.get('/metric-data/:job_id*?', async (req: Request, res: Response) => {
-            this.nniManager.getMetricData(req.params.job_id, req.query.type as MetricType).then((metricsData: MetricDataRecord[]) => {
+            this.nniManager.getMetricData(req.params.job_id, req.query.type).then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -298,7 +295,7 @@ class NNIRestHandler {
 
     private getTrialLog(router: Router): void {
         router.get('/trial-log/:id/:type', async(req: Request, res: Response) => {
-            this.nniManager.getTrialLog(req.params.id, req.params.type as LogType).then((log: string) => {
+            this.nniManager.getTrialLog(req.params.id, req.params.type).then((log: string) => {
                 if (log === '') {
                     log = 'No logs available.'
                 }

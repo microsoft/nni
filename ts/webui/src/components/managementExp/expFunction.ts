@@ -32,7 +32,13 @@ const filterByStatusOrPlatform = (
 };
 
 function fillOptions(arr: string[]): any {
-    return arr.map(item => ({ key: item, text: item }));
+    const list: Array<object> = [];
+
+    arr.map(item => {
+        list.push({ key: item, text: item });
+    });
+
+    return list;
 }
 
 function getSortedSource(source: AllExperimentList[], sortInfo: SortInfo): AllExperimentList[] {
