@@ -207,7 +207,7 @@ class TransformerHeadPruner(Pruner):
             if self.num_iterations > 1 and pruning_iter != self.num_iterations - 1:
                 self.masker.reset()
 
-            logger.info('Pruned heads after iteration {}:'.format(pruning_iter))
+            logger.info('Pruned heads after iteration %i', pruning_iter)
             logger.info(self.pruned_heads)
 
     def update_mask(self):
