@@ -13,7 +13,7 @@ logger = logging.getLogger('transformer head pruner')
 
 class AttentionHeadMasker(WeightMasker):
     """
-    A structured pruning masker base class that prunes convolutional layer filters.
+    A structured pruning masker base class that prunes attention heads in attention layers.
 
     Parameters
     ----------
@@ -31,41 +31,41 @@ class AttentionHeadMasker(WeightMasker):
 
     def reset(self):
         """
-        Descendants can override this method to do preparations necessary for calculating importance scores.
+        Derived classes can override this method to do preparations necessary for calculating importance scores.
         This method is called during iterative pruning, before each iteration starts (except the first one).
         """
         pass
 
-    def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
+    def calc_mask(self, sparsity, wrapper=None, wrapper_idx=None, weight_group=None, **kwargs):
         """
-        calculate the mask for `wrapper`.
+        Calculate all the masks for a group of wrappers (specified in weight_group).
+        This function only utilizes local information for mask calculation. If global_sort is specified for the pruner,
+        the pruner should call calc_mask_global instead of this function.
 
         Parameters
         ----------
-        sparsity: float/list of float
-            The target sparsity of the wrapper. If we calculate the mask in
-            the normal way, then sparsity is a float number. In contrast, if
-            we calculate the mask in the dependency-aware way, sparsity is a
-            list of float numbers, each float number corresponds to a sparsity
-            of a layer.
+        weight_group
+        sparsity: float
+            The target (amount of increase of) sparsity of the wrapper list.
         wrapper: PrunerModuleWrapper/list of PrunerModuleWrappers
-            The wrapper of the target layer. If we calculate the mask in the normal
-            way, then `wrapper` is an instance of PrunerModuleWrapper, else `wrapper`
-            is a list of PrunerModuleWrapper.
+            Should be None. Not used in this masker, just for consistency with the upper level API.
         wrapper_idx: int/list of int
-            The index of the wrapper.
+            Should be None. Not used in this masker, just for consistency with the upper level API.
         Returns
         -------
-        dict
-            dictionary for storing masks, keys of the dict:
-            'weight_mask':  weight mask tensor
-            'bias_mask': bias mask tensor (optional)
+        masks : list
+            masks for each element in the group.
+            Each element in the list masks is a dictionary for storing masks, keys of the dict:
+                'weight_mask':  weight mask tensor
+                'bias_mask': bias mask tensor (optional)
         """
-        mask, weight, num_prune = self._get_current_state(sparsity, wrapper, wrapper_idx)
-        num_total = weight.size(0) // self.head_hidden_dim
-        if num_total < 2 or num_prune < 1:
-            return mask
-        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx, **depen_kwargs)
+        assert weight_group is not None
+        num_total = weight_group[0].module.weight.data.size(0) // self.head_hidden_dim
+        if num_total < 2:
+            return None
+        num_prune = max(int(num_total * sparsity), 1)
+
+        return self.get_mask(num_prune, weight_group, **kwargs)
 
     def calc_mask_global(self, n_heads_to_prune):
         # calculate scores as normal (this step does not require global information)
@@ -93,79 +93,22 @@ class AttentionHeadMasker(WeightMasker):
             n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
             device = group[0].module.weight.device
             head_level_mask = torch.tensor([i not in self.pruner.pruned_heads[group_idx] for i in range(n_heads)], device=device)  # pylint: disable=not-callable
-            masks = self._get_layer_masks_from_head_mask(group, head_level_mask, has_bias=True)
+            masks = self._get_layer_masks_from_head_mask(group, head_level_mask)
             all_masks.append(masks)
 
         return all_masks
 
-    def _get_current_state(self, sparsity, wrapper, wrapper_idx=None):
-        """
-        Some pruner may prune the layers in a iterative way. In each pruning iteration,
-        we may get the current state of this wrapper/layer, and continue to prune this layer
-        based on the current state. This function is to get the current pruning state of the
-        target wrapper/layer.
-        Parameters
-        ----------
-        sparsity: float
-            pruning ratio,  preserved weight ratio is `1 - sparsity`
-        wrapper: PrunerModuleWrapper
-            layer wrapper of this layer
-        wrapper_idx: int
-            index of this wrapper in pruner's all wrappers
-        Returns
-        -------
-        base_mask: dict
-            dict object that stores the mask of this wrapper in this iteration, if it is the
-            first iteration, then we create a new mask with all ones. If there is already a
-            mask in this wrapper, then we return the existing mask.
-        weight: tensor
-            the current weight of this layer
-        num_prune: int
-            how many heads we should prune
-        """
-        msg = 'module type {} is not supported!'.format(wrapper.type)
-        assert wrapper.type == 'Linear', msg
-        weight = wrapper.module.weight.data
-        bias = None
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            bias = wrapper.module.bias.data
-
-        if wrapper.weight_mask is None:
-            mask_weight = torch.ones(weight.size()).type_as(weight).detach()
-        else:
-            mask_weight = wrapper.weight_mask.clone()
-        if bias is not None:
-            if wrapper.bias_mask is None:
-                mask_bias = torch.ones(bias.size()).type_as(bias).detach()
-            else:
-                mask_bias = wrapper.bias_mask.clone()
-        else:
-            mask_bias = None
-        mask = {'weight_mask': mask_weight, 'bias_mask': mask_bias}
-
-        num_total = weight.size(0) // self.head_hidden_dim
-        num_prune = int(num_total * sparsity)
-        num_prune = max(num_prune, 1)
-
-        # weight*mask_weight: apply base mask for iterative pruning
-        return mask, weight * mask_weight, num_prune
-
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, **depen_kwargs):
+    def get_mask(self, num_prune, weight_group, **kwargs):
         """
         Calculate the mask of given layer.
 
         Parameters
         ----------
-        base_mask: dict
-            The basic mask with the same shape of weight, all item in the basic mask is 1.
-        weight: tensor
-            the module weight to be pruned
+        weight_group
         num_prune: int
             Num of heads to prune
         wrapper: PrunerModuleWrapper
             layer wrapper of this layer
-        wrapper_idx: int
-            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
@@ -173,7 +116,7 @@ class AttentionHeadMasker(WeightMasker):
         """
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
-    def _get_layer_masks_from_head_mask(self, weight_group, head_mask_bool, has_bias=True, device=None):
+    def _get_layer_masks_from_head_mask(self, weight_group, head_mask_bool, device=None):
         q_proj, _, _, output_proj = weight_group
         if device is None:
             device = q_proj.module.weight.device
@@ -186,18 +129,22 @@ class AttentionHeadMasker(WeightMasker):
         mask_bias = head_mask_bool.unsqueeze(-1).expand(bias_mask_shape).type_as(q_proj.module.weight)
 
         mask_weight_proj = mask_weight.view(q_proj.module.weight.size()).detach().to(device)
-        mask_bias_proj = mask_bias.view(-1).detach().to(device) if has_bias else None
-        masks_for_proj = {'weight_mask': mask_weight_proj.detach(), 'bias_mask': mask_bias_proj}
+        mask_bias_proj = mask_bias.view(-1).detach().to(device)
+        masks_for_proj = {'weight_mask': mask_weight_proj.detach()}
+        if hasattr(q_proj.module, 'bias') and q_proj.module.bias is not None:
+            masks_for_proj['bias_mask'] = mask_bias_proj
 
         mask_weight_dense = mask_bias_proj.expand_as(output_proj.module.weight.data).detach().to(device)
         mask_bias_dense = torch.ones_like(output_proj.module.bias.data).to(device)
-        masks_for_dense = {'weight_mask': mask_weight_dense.detach(), 'bias_mask': mask_bias_dense}
+        masks_for_dense = {'weight_mask': mask_weight_dense.detach()}
+        if hasattr(output_proj.module, 'bias') and output_proj.module.bias is not None:
+            masks_for_dense['bias_mask'] = mask_bias_dense
 
         masks = [masks_for_proj, masks_for_proj, masks_for_proj, masks_for_dense]
 
         return masks
 
-    def get_mask_by_importance_ranking(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
+    def get_mask_by_importance_ranking(self, num_prune, weight_group):
         """
         Calculate the mask of given layer by pruning out heads with lowest importance scores.
 
@@ -205,24 +152,15 @@ class AttentionHeadMasker(WeightMasker):
         ----------
         weight_group: list
             list of a group of weights for an attention layer
-        base_mask: dict
-            The basic mask with the same shape of weight, all item in the basic mask is 1.
-        weight: tensor
-            the module weight to be pruned
         num_prune: int
             Num of heads to prune
         wrapper: PrunerModuleWrapper
             layer wrapper of this layer
-        wrapper_idx: int
-            index of this wrapper in pruner's all wrappers
         Returns
         -------
         dict
             dictionary for storing masks
         """
-        if weight_group is None:
-            weight_group = self.pruner.masking_groups[wrapper.group_idx]
-
         importance_scores = self.get_head_importance_scores(weight_group)
         if importance_scores is None:
             return None
@@ -239,8 +177,7 @@ class AttentionHeadMasker(WeightMasker):
             if n_selected == num_prune:
                 break
 
-        return self._get_layer_masks_from_head_mask(weight_group, head_mask_bool,
-                                                    has_bias=True)
+        return self._get_layer_masks_from_head_mask(weight_group, head_mask_bool)
 
     def get_head_importance_scores(self, weight_group):
         """
@@ -281,8 +218,8 @@ class L1WeightHeadMasker(AttentionHeadMasker):
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
-        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+    def get_mask(self, num_prune, weight_group, **kwargs):
+        return self.get_mask_by_importance_ranking(num_prune, weight_group)
 
 
 class L2WeightHeadMasker(AttentionHeadMasker):
@@ -305,8 +242,8 @@ class L2WeightHeadMasker(AttentionHeadMasker):
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
-        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+    def get_mask(self, num_prune, weight_group, **kwargs):
+        return self.get_mask_by_importance_ranking(num_prune, weight_group)
 
 
 class L1ActivationHeadMasker(AttentionHeadMasker):
@@ -355,8 +292,8 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
 
         return pruner._fwd_hook_id
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
-        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+    def get_mask(self, num_prune, weight_group, **kwargs):
+        return self.get_mask_by_importance_ranking(num_prune, weight_group)
 
 
 class L2ActivationHeadMasker(AttentionHeadMasker):
@@ -407,8 +344,8 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
 
         return pruner._fwd_hook_id
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
-        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+    def get_mask(self, num_prune, weight_group, **kwargs):
+        return self.get_mask_by_importance_ranking(num_prune, weight_group)
 
 
 class TaylorFOHeadMasker(AttentionHeadMasker):
@@ -476,5 +413,5 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
             handle = output_proj.register_backward_hook(grad_hook)
             self.backward_hooks[output_proj.group_idx] = handle
 
-    def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group=None):
-        return self.get_mask_by_importance_ranking(base_mask, weight, num_prune, wrapper, wrapper_idx, weight_group)
+    def get_mask(self, num_prune, weight_group, **kwargs):
+        return self.get_mask_by_importance_ranking(num_prune, weight_group)

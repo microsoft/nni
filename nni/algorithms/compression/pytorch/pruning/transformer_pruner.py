@@ -38,13 +38,17 @@ class TransformerHeadPruner(Pruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Optional. Operation types to prune. (Should be 'Linear' for this pruner.)
             - op_names : Optional. Operation names to prune.
-    ranking_criteria : str
-        Supported criteria:
-            - 'taylorfo'
-            - 'l1_weight'
-            - 'l2_weight'
-            - 'l1_activation'
-            - 'l2_activation'
+    attention_name_groups : list (Optional)
+    dummy_input
+    head_hidden_dim
+    ranking_criteria
+    global_sort
+    num_iterations
+    epochs_per_iteration
+    optimizer
+    trainer
+    criterion
+    algo_kwargs
     """
     def __init__(self, model, config_list, attention_name_groups=None, dummy_input=None, head_hidden_dim=None,
                  ranking_criteria='taylorfo', global_sort=False, num_iterations=1, epochs_per_iteration=1,
@@ -77,7 +81,7 @@ class TransformerHeadPruner(Pruner):
             assert self.dummy_input is not None
             logger.info("Note: weights for the same attention layer are grouped using model graph.")
             self._unwrap_model()
-            self.group_weights_by_graph()
+            self.group_weight_names_by_graph()
             self._wrap_model()
 
         # Group sanity check
@@ -86,7 +90,6 @@ class TransformerHeadPruner(Pruner):
         # Remove any mistakenly captured ungrouped modules
         self.remove_ungrouped_modules()
 
-        self.set_wrappers_attribute("mask_calculated", False)
         self.masker = MASKER_DICT[ranking_criteria](model, self, self.head_hidden_dim, **algo_kwargs)
         self.pruned_heads = {i: set() for i in range(len(self.masking_groups))}
 
@@ -98,23 +101,27 @@ class TransformerHeadPruner(Pruner):
         # build up masking groups
         name2group = {}
         for layer_idx, layer in enumerate(self.attention_name_groups):
-            errmsg = 'each name group must contain 4 weights in the following order: query projection, key ' \
-                     'projection, value projection, and fully connected output layer'
+            errmsg = 'Each name group must contain 4 weights, with the first three corresponding to Q_proj, K_proj, ' \
+                     'V_proj (in any order) and the last one being output_proj.'
             assert len(layer) == 4, errmsg
             self.masking_groups.append([])
             for weight in layer:
                 name2group[weight] = layer_idx
-        # assign wrappers to these groups
+
+        # group wrappers
         for wrapper in self.get_modules_wrapper():
             if wrapper.name in name2group:
                 wrapper.group_idx = name2group[wrapper.name]
                 self.masking_groups[name2group[wrapper.name]].append(wrapper)
 
-        print('grouping updated:', [[x.name for x in group] for group in self.masking_groups])
+        logger.info('Grouping updated:')
+        logger.info([[x.name for x in group] for group in self.masking_groups])
 
-    def group_weights_by_graph(self):
+    def group_weight_names_by_graph(self):
         """
-        Populate self.masking_groups bu running inference on the module graph.
+        Populate self.attention_name_groups by running inference on the module graph.
+        Currently, the group inferred AttentionWeightDependency is limited to a set of four weights, with the first
+        three corresponding to Q_proj, K_proj, V_proj (in any order) and the last one being output_proj.
         """
         try:
             module_graph = TorchModuleGraph(self.bound_model, self.dummy_input)
@@ -158,7 +165,7 @@ class TransformerHeadPruner(Pruner):
 
     def remove_ungrouped_modules(self):
         """
-        Remove non-attention weights that might be captured mistakenly by a simplified config_list.
+        Remove non-attention weights that might be mistakenly captured by a simplified config_list.
         """
         care_of_modules = set([x for layer in self.masking_groups for x in layer])
         self.modules_wrapper = [x for x in self.modules_wrapper if x in care_of_modules]
@@ -182,7 +189,6 @@ class TransformerHeadPruner(Pruner):
 
     def compress(self):
         for pruning_iter in range(self.num_iterations):
-            self.set_wrappers_attribute("mask_calculated", False)
             if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo']:
                 training = self.bound_model.training
                 self.bound_model.eval()
@@ -192,8 +198,7 @@ class TransformerHeadPruner(Pruner):
             else:
                 self.update_mask()
 
-            # for iterative pruning
-            # finetune before next iteration
+            # for iterative pruning, finetune before next iteration
             if self.num_iterations > 1:
                 for e in range(self.epochs_per_iteration):
                     self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=e+1)
@@ -202,9 +207,14 @@ class TransformerHeadPruner(Pruner):
             if self.num_iterations > 1 and pruning_iter != self.num_iterations - 1:
                 self.masker.reset()
 
-            print('pruned heads after iteration', pruning_iter, self.pruned_heads)
+            logger.info('Pruned heads after iteration {}:'.format(pruning_iter))
+            logger.info(self.pruned_heads)
 
     def update_mask(self):
+        """
+        Calculate and update masks for each masking group. If global_sort is set, the masks for all groups are
+        calculated altogether, and then the groups are updated individually.
+        """
         masks_for_all_groups = None
         if self.global_sort:
             masks_for_all_groups = self._calc_mask_global()
@@ -213,35 +223,59 @@ class TransformerHeadPruner(Pruner):
             if self.global_sort:
                 masks = masks_for_all_groups[group_idx]
             else:
-                masks = self._calc_mask(layer_weight_group[0], layer_weight_group)
+                masks = self._calc_mask(layer_weight_group)
             if masks is not None:
                 for i, mask in enumerate(masks):
                     for mask_type in mask:
                         assert hasattr(layer_weight_group[i], mask_type), \
                             "there is no attribute '%s' in wrapper on %s" % (mask_type, layer_weight_group[i])
                         setattr(layer_weight_group[i], mask_type, mask[mask_type])
-                        print(f'mask updated: {layer_weight_group[i].name} {mask_type}')
+                        logger.info(f'mask updated: {layer_weight_group[i].name} {mask_type}')
 
-    def _calc_mask(self, wrapper, weight_group, wrapper_idx=None):
-        if not wrapper.mask_calculated:
-            iter_sparsity = wrapper.config['sparsity'] / self.num_iterations
-            masks = self.masker.calc_mask(sparsity=iter_sparsity, wrapper=wrapper, weight_group=weight_group,
-                                          wrapper_idx=wrapper_idx)
-            # masker.calc_mask returns None means calc_mask is not calculated successfully; can try later
-            if masks is not None:
-                wrapper.mask_calculated = True
-            return masks
-        else:
-            return None
+    def _calc_mask(self, weight_group):
+        """
+        Calculate mask for each group using only layer-local information.
+        When global_sort is set for the pruner, _calc_mask_global should be called instead of this function.
+
+        Parameters
+        ----------
+        weight_group : list
+            A list of four wrappers generated by self.group_weights_by_name().
+
+        Returns
+        -------
+        masks : list
+            A four element list corresponding to the masks for each element in the four-element weight group.
+            Each element in masks is a dict with keys "weight_mask" and "bias_mask" (optional).
+            masks can be None if the underlying masker returns None. This means that the mask calculation fails.
+            The calling function can try recalculate the mask at a later time. Note that the calling function might need
+            to call masker.reset() before attempting to recalculate the mask.
+        """
+        iter_sparsity = weight_group[0].config['sparsity'] / self.num_iterations
+        masks = self.masker.calc_mask(sparsity=iter_sparsity, weight_group=weight_group)
+
+        return masks
 
     def _calc_mask_global(self):
+        """
+        Calculate mask for all groups using global information.
+
+        Returns
+        -------
+        masks_list : list
+            A list corresponding to the masks for each weight group in self.masking_groups. Each element in the
+            returned mask_list is a four-element list corresponding to the masks for each element in a four-element
+            weight group.
+        """
         if len(self.get_modules_wrapper()) == 0:
             return []
+
         overall_sparsity = self.get_modules_wrapper()[0].config['sparsity'] / self.num_iterations
         n_heads_total = 0
         for q_proj, _, _, _ in self.masking_groups:
             n_heads_total += int(q_proj.module.weight.size()[0] / self.head_hidden_dim)
         n_heads_to_prune = int(n_heads_total * overall_sparsity)
+
         return self.masker.calc_mask_global(n_heads_to_prune)
 
     def calc_mask(self, wrapper, **kwargs):

@@ -477,10 +477,8 @@ def main():
                                                                                                       train_dataset,
                                                                                                       eval_dataset)
 
+    # here criterion is embedded in the model. Upper levels can just pass None to trainer
     def trainer(model, optimizer, criterion, epoch):
-        # here criterion is embedded in the model. Upper levels can just pass None to trainer
-        # no param update performed,
-        # just do forward and backward on the entire train data (to collect output/gradient etc.)
         return dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
 
     attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
@@ -488,13 +486,12 @@ def main():
                                      ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
-    kwargs = {'ranking_criteria': 'l1_activation',
+    kwargs = {'ranking_criteria': 'l1_weight',
               'global_sort': True,
               'num_iterations': 2,
               'epochs_per_iteration': 1,
               # 'attention_name_groups': attention_name_groups,
               'head_hidden_dim': 64,
-              #'dummy_input': [torch.rand([1, 64, 768]).to(device), torch.ones([1, 64]).to(device)],   # input and mask
               'dummy_input': (next(iter(train_dataloader))['input_ids']).to(device),
               'trainer': trainer,
               'optimizer': optimizer}
