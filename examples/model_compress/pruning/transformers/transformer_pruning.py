@@ -486,7 +486,7 @@ def main():
                                      ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
                                      ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
 
-    kwargs = {'ranking_criteria': 'l1_weight',
+    kwargs = {'ranking_criterion': 'taylorfo',
               'global_sort': True,
               'num_iterations': 2,
               'epochs_per_iteration': 1,

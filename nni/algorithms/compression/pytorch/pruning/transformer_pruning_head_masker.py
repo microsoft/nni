@@ -44,13 +44,14 @@ class AttentionHeadMasker(WeightMasker):
 
         Parameters
         ----------
-        weight_group
         sparsity: float
             The target (amount of increase of) sparsity of the wrapper list.
+        weight_group: list
+            A four-element list of module wrappers
         wrapper: PrunerModuleWrapper/list of PrunerModuleWrappers
-            Should be None. Not used in this masker, just for consistency with the upper level API.
+            Should be None. Not used in this masker, just for consistency with the parent API.
         wrapper_idx: int/list of int
-            Should be None. Not used in this masker, just for consistency with the upper level API.
+            Should be None. Not used in this masker, just for consistency with the parent API.
         Returns
         -------
         masks : list
@@ -68,6 +69,18 @@ class AttentionHeadMasker(WeightMasker):
         return self.get_mask(num_prune, weight_group, **kwargs)
 
     def calc_mask_global(self, n_heads_to_prune):
+        """
+        Calculate all the masks for all groups in the pruner.
+
+        Parameters
+        ----------
+        n_heads_to_prune : int
+            Total number of attention heads to prune.
+        Returns
+        -------
+        all_masks : list
+            A list of masks for all groups, where each element is a list of masks for each module in the group.
+        """
         # calculate scores as normal (this step does not require global information)
         head_importance_scores = []
         for group_idx, group in enumerate(self.pruner.masking_groups):
@@ -100,19 +113,21 @@ class AttentionHeadMasker(WeightMasker):
 
     def get_mask(self, num_prune, weight_group, **kwargs):
         """
-        Calculate the mask of given layer.
+        Calculate the mask of given layer (weight_group).
 
         Parameters
         ----------
-        weight_group
         num_prune: int
             Num of heads to prune
-        wrapper: PrunerModuleWrapper
-            layer wrapper of this layer
+        weight_group: list
+            A four-element list of module wrappers
         Returns
         -------
-        dict
-            dictionary for storing masks
+        masks : list
+            masks for each element in the group.
+            Each element in the list masks is a dictionary for storing masks, keys of the dict:
+                'weight_mask':  weight mask tensor
+                'bias_mask': bias mask tensor (optional)
         """
         raise NotImplementedError('{} get_mask is not implemented'.format(self.__class__.__name__))
 
@@ -150,16 +165,17 @@ class AttentionHeadMasker(WeightMasker):
 
         Parameters
         ----------
-        weight_group: list
-            list of a group of weights for an attention layer
         num_prune: int
             Num of heads to prune
-        wrapper: PrunerModuleWrapper
-            layer wrapper of this layer
+        weight_group: list
+            list of a group of weights for an attention layer
         Returns
         -------
-        dict
-            dictionary for storing masks
+        masks : list
+            masks for each element in the group.
+            Each element in the list masks is a dictionary for storing masks, keys of the dict:
+                'weight_mask':  weight mask tensor
+                'bias_mask': bias mask tensor (optional)
         """
         importance_scores = self.get_head_importance_scores(weight_group)
         if importance_scores is None:
@@ -186,13 +202,10 @@ class AttentionHeadMasker(WeightMasker):
         ----------
         weight_group: list
             list of a group of weights for an attention layer
-        wrapper: PrunerModuleWrapper
-            layer wrapper of this layer
-        wrapper_idx: int
-            index of this wrapper in pruner's all wrappers
+
         Returns
         -------
-        tensor
+        importance_scores: tensor
             Tensor that indicates the importance of each head
         """
         raise NotImplementedError('{} get_channel_sum is not implemented'.format(self.__class__.__name__))
@@ -354,8 +367,8 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
     Note that this masker only relies on the output of the output layer of each attention layer.
     The masker collects the output the last weight (output projection) in each group and the corresponding gradient
     on the entire train set, and prunes the heads producing the smallest contribution as used in the following papers:
-    "Are Sixteen Heads Really Better than One?" (Michel et.al, 2019)
-    "Pruning convolutional neural networks for resource efficient inference." (Molchanov et. al., 2017)
+        "Are Sixteen Heads Really Better than One?" (Michel et.al, 2019)
+        "Pruning convolutional neural networks for resource efficient inference." (Molchanov et. al., 2017)
     """
     def __init__(self, model, pruner, head_hidden_dim=None):
         super().__init__(model, pruner, head_hidden_dim)

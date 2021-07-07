@@ -38,37 +38,61 @@ class TransformerHeadPruner(Pruner):
             - sparsity : This is to specify the sparsity operations to be compressed to.
             - op_types : Optional. Operation types to prune. (Should be 'Linear' for this pruner.)
             - op_names : Optional. Operation names to prune.
+    head_hidden_dim : int
+        Dimension of hidden dimesion for each attention head. (e.g., 64 for BERT)
+        We assume that this head_hidden_dim is constant across the entire model.
     attention_name_groups : list (Optional)
-    dummy_input
-    head_hidden_dim
-    ranking_criteria
-    global_sort
-    num_iterations
-    epochs_per_iteration
-    optimizer
-    trainer
-    criterion
-    algo_kwargs
+        List of groups of names for weights of each attention layer. Each element should be a four-element list, with
+        the first three corresponding to Q_proj, K_proj, V_proj (in any order) and the last one being output_proj.
+    dummy_input : torch.Tensor (Optional)
+        Input to model's forward method, used to infer module grouping if attention_name_groups is not specified.
+        This tensor is used by the underlying torch.jit.trace to infer the module graph.
+    ranking_criterion : str
+        The criterion for ranking attention heads. Currently we support:
+            - l1_weight: l1 norm of Q_proj, K_proj, and V_proj
+            - l2_weight: l2 norm of Q_proj, K_proj, and V_proj
+            - l1_activation: l1 norm of the output of output projection
+            - l2_activation: l2 norm of the output of output projection
+            - taylorfo: l1 norm of the output of output projection * gradient for this output
+                        (check more details in the masker documentation)
+    global_sort : bool
+        Whether rank the heads globally or locally before deciding heads to prune.
+    num_iterations : int
+        Number of pruning iterations. Defaults to 1 (ont-shot pruning). If num_iterations > 1, the pruner will split
+        the sparsity specified in config_list uniformly and assign a fraction to each pruning iteration.
+    epochs_per_iteration : int
+        Number of finetuning epochs before the next pruning iteration. This only has effect when num_iterations > 1.
+        If num_iterations is 1, then no finetuning is performed by the pruner after pruning.
+    optimizer: torch.optim.Optimizer
+            Optimizer used to train model
+    trainer: function
+        Function used to train the model.
+        Users should write this function as a normal function to train the Pytorch model
+        and include `model, optimizer, criterion, epoch` as function arguments.
+    criterion: function
+        Function used to calculate the loss between the target and the output.
+        For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     """
-    def __init__(self, model, config_list, attention_name_groups=None, dummy_input=None, head_hidden_dim=None,
-                 ranking_criteria='taylorfo', global_sort=False, num_iterations=1, epochs_per_iteration=1,
+    def __init__(self, model, config_list,head_hidden_dim, attention_name_groups=None, dummy_input=None,
+                 ranking_criterion='taylorfo', global_sort=False, num_iterations=1, epochs_per_iteration=1,
                  optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
 
+        self.head_hidden_dim = int(head_hidden_dim)
         self.attention_name_groups = attention_name_groups
         self.dummy_input = dummy_input
-        self.head_hidden_dim = head_hidden_dim
-        self.ranking_criteria = ranking_criteria
-        assert self.ranking_criteria in ['l1_weight', 'l2_weight', 'l1_activation', 'l2_activation', 'taylorfo'], \
+        self.ranking_criterion = ranking_criterion
+        assert self.ranking_criterion in ['l1_weight', 'l2_weight', 'l1_activation', 'l2_activation', 'taylorfo'], \
             "Unsupported ranking criteria."
         self.global_sort = global_sort
-        self.num_iterations = num_iterations
-        self.epochs_per_iteration = epochs_per_iteration
+        self.num_iterations = int(num_iterations)
+        assert self.num_iterations >= 1, "num_iterations must be greater than or equal to 1"
+        self.epochs_per_iteration = int(epochs_per_iteration)
         self._optimizer = optimizer
         self._trainer = trainer
         self._criterion = criterion
-        if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo'] or num_iterations > 1:
+        if self.ranking_criterion in ['l1_activation', 'l2_activation', 'taylorfo'] or num_iterations > 1:
             assert self._trainer is not None
             assert self._optimizer is not None
 
@@ -90,7 +114,7 @@ class TransformerHeadPruner(Pruner):
         # Remove any mistakenly captured ungrouped modules
         self.remove_ungrouped_modules()
 
-        self.masker = MASKER_DICT[ranking_criteria](model, self, self.head_hidden_dim, **algo_kwargs)
+        self.masker = MASKER_DICT[ranking_criterion](model, self, self.head_hidden_dim, **algo_kwargs)
         self.pruned_heads = {i: set() for i in range(len(self.masking_groups))}
 
     def group_weights_by_name(self):
@@ -189,7 +213,7 @@ class TransformerHeadPruner(Pruner):
 
     def compress(self):
         for pruning_iter in range(self.num_iterations):
-            if self.ranking_criteria in ['l1_activation', 'l2_activation', 'taylorfo']:
+            if self.ranking_criterion in ['l1_activation', 'l2_activation', 'taylorfo']:
                 training = self.bound_model.training
                 self.bound_model.eval()
                 self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)

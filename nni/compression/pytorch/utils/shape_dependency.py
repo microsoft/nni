@@ -598,32 +598,6 @@ class AttentionWeightDependency(Dependency):
             self.dependency[node.name] = layers
 
     @property
-    def dependency_sets_backup(self):
-        """
-        Get the list of the dependency set.
-
-        Returns
-        -------
-        dependency_sets : list
-            list of the dependency sets.
-            Each dependency set is a 4-element list of module names, with the first three elements being the projection
-            matrices for Q, K, V (in any order), and the last element being the dense matrix.
-        """
-        d_sets = []
-        for node in self.graph.nodes_py.nodes_op:
-            if node.op_type != 'Linear' or node.name not in self.dependency or len(self.dependency[node.name]) < 4:
-                continue
-            tmp_set = set()
-            for other in self.dependency[node.name]:
-                tmp_set.add(other)
-            tmp_set.remove(node.name)
-            res_list = list(tmp_set)
-            res_list.append(node.name)
-            d_sets.append(res_list)
-
-        return d_sets
-
-    @property
     def dependency_sets(self):
         """
         Get the list of the dependency set.
@@ -644,4 +618,17 @@ class AttentionWeightDependency(Dependency):
         return d_sets
 
     def export(self, filepath):
-        pass
+        """
+        Export the group dependency to a csv file. Each line describes an attention layer.
+
+        output example:
+        Attention layer matmul op, Group
+        """
+        header = ['Attention layer matmul op', 'Group']
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for name in self.dependency:
+                group = self.dependency[name]
+                if len(group) > 0:
+                    csv_w.writerow([name, group])
