@@ -3,8 +3,8 @@ from typing import Dict, List, Union, Optional
 import torch
 from torch import Tensor
 
-from compression_v2.base.pruner import Pruner
-from compression_v2.base.common import SparsityAllocator
+from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
+from nni.algorithms.compression_v2.pytorch.base.common import SparsityAllocator
 
 
 class NormalSparsityAllocator(SparsityAllocator):

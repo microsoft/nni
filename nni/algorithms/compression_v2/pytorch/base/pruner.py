@@ -5,8 +5,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from compression_v2.base.compressor import Compressor, LayerInfo
-from compression_v2.base.common import DataCollector, MetricsCalculator, SparsityAllocator
+from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
+from nni.algorithms.compression_v2.pytorch.base.common import DataCollector, MetricsCalculator, SparsityAllocator
 
 logger = logging.getLogger(__name__)
 

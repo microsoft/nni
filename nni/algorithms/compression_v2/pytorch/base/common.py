@@ -2,7 +2,7 @@ from typing import Dict
 
 from torch import Tensor
 
-from compression_v2.base.compressor import Compressor
+from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor
 
 
 class DataCollector:

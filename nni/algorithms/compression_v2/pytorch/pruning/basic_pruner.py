@@ -2,10 +2,10 @@ from typing import List, Dict
 
 from torch.nn import Module
 
-from compression_v2.base.pruner import Pruner
-from compression_v2.common.data_collector import WeightDataCollector
-from compression_v2.common.metrics_calculator import NaiveMetricsCalculator, NormMetricsCalculator
-from compression_v2.common.sparsity_allocator import NormalSparsityAllocator
+from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
+from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector
+from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NaiveMetricsCalculator, NormMetricsCalculator
+from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import NormalSparsityAllocator
 
 
 class LevelPruner(Pruner):

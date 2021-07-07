@@ -2,7 +2,7 @@ from typing import Dict, List, Optional, Union
 
 from torch import Tensor
 
-from compression_v2.base.common import MetricsCalculator
+from nni.algorithms.compression_v2.pytorch.base.common import MetricsCalculator
 
 
 class NaiveMetricsCalculator(MetricsCalculator):

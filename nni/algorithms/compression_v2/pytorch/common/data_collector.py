@@ -6,8 +6,8 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from compression_v2.base.compressor import Compressor, LayerInfo
-from compression_v2.base.common import DataCollector
+from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
+from nni.algorithms.compression_v2.pytorch.base.common import DataCollector
 
 logger = logging.getLogger(__name__)
 
