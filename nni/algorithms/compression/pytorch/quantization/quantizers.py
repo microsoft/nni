@@ -126,7 +126,7 @@ class QAT_Quantizer(Quantizer):
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, model_inputs=None):
         """
         Parameters
         ----------
@@ -145,8 +145,11 @@ class QAT_Quantizer(Quantizer):
                     state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
+                - model_inputs : tuple of tensor
+                    inputs to the model, which are used to get the graph of the module
         """
-        super().__init__(model, config_list, optimizer)
+
+        super().__init__(model, config_list, optimizer, model_inputs)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         device = next(model.parameters()).device
@@ -169,8 +172,9 @@ class QAT_Quantizer(Quantizer):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
-        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation',
+                         'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bit',
+                         'activation_bit']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -344,9 +348,39 @@ class QAT_Quantizer(Quantizer):
 
         return calibration_config
 
-    def fold_bn(self, config, **kwargs):
-        # TODO simulate folded weight
-        pass
+    def fold_bn(self, *inputs, wrapper):
+        """
+        Simulate batch normalization folding in the training graph. Folded weight and bias are
+        returned for the following operations.
+
+        Parameters
+        ----------
+        inputs : tuple of torch.Tensor
+            inputs for the module
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
+
+        Returns
+        -------
+        Tuple of torch.Tensor
+        """
+        module = wrapper.module
+        bn_module = wrapper.bn_module
+        with torch.no_grad():
+            output = module(*inputs)
+            _ = bn_module(output)
+        running_mean = bn_module.running_mean
+        running_var = torch.sqrt(bn_module.running_var + 1e-10)
+        bn_weight = bn_module.weight
+        bn_bias = bn_module.bias
+        dimensions = len(module.weight.shape)
+        shape = [-1] + [1] * (dimensions - 1)
+        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
+        if hasattr(module, 'old_bias'):
+            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
+        else:
+            new_bias = bn_bias - running_mean / running_var * bn_weight
+        return new_weight, new_bias
 
     def step_with_optimizer(self):
         """
