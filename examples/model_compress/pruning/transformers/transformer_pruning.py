@@ -30,10 +30,10 @@ from transformers import (
 
 import nni
 from nni.compression.pytorch import ModelSpeedup
+from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.pytorch.pruning import (
     TransformerHeadPruner
 )
-
 
 logger = logging.getLogger('bert_pruning_example')
 
@@ -52,88 +52,67 @@ task_to_keys = {
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Finetune a transformers model on a text classification task")
-    parser.add_argument(
-        "--task_name",
-        type=str,
-        default=None,
-        help="The name of the glue task to train on.",
-        choices=list(task_to_keys.keys()),
-    )
-    parser.add_argument(
-        "--train_file", type=str, default=None, help="A csv or a json file containing the training data."
-    )
-    parser.add_argument(
-        "--validation_file", type=str, default=None, help="A csv or a json file containing the validation data."
-    )
-    parser.add_argument(
-        "--max_length",
-        type=int,
-        default=128,
-        help=(
-            "The maximum total input sequence length after tokenization. Sequences longer than this will be truncated,"
-            " sequences shorter will be padded if `--pad_to_max_lengh` is passed."
-        ),
-    )
-    parser.add_argument(
-        "--pad_to_max_length",
-        action="store_true",
-        help="If passed, pad all samples to `max_length`. Otherwise, dynamic padding is used.",
-    )
-    parser.add_argument(
-        "--model_name_or_path",
-        type=str,
-        help="Path to pretrained model or model identifier from huggingface.co/models.",
-        required=True,
-    )
-    parser.add_argument(
-        "--use_slow_tokenizer",
-        action="store_true",
-        help="If passed, will use a slow tokenizer (not backed by the 🤗 Tokenizers library).",
-    )
-    parser.add_argument(
-        "--per_device_train_batch_size",
-        type=int,
-        default=8,
-        help="Batch size (per device) for the training dataloader.",
-    )
-    parser.add_argument(
-        "--per_device_eval_batch_size",
-        type=int,
-        default=8,
-        help="Batch size (per device) for the evaluation dataloader.",
-    )
-    parser.add_argument(
-        "--learning_rate",
-        type=float,
-        default=5e-5,
-        help="Initial learning rate (after the potential warmup period) to use.",
-    )
-    parser.add_argument("--weight_decay", type=float, default=0.0, help="Weight decay to use.")
-    parser.add_argument("--num_train_epochs", type=int, default=3, help="Total number of training epochs to perform.")
-    parser.add_argument(
-        "--max_train_steps",
-        type=int,
-        default=None,
-        help="Total number of training steps to perform. If provided, overrides num_train_epochs.",
-    )
-    parser.add_argument(
-        "--gradient_accumulation_steps",
-        type=int,
-        default=1,
-        help="Number of updates steps to accumulate before performing a backward/update pass.",
-    )
-    parser.add_argument(
-        "--lr_scheduler_type",
-        type=SchedulerType,
-        default="linear",
-        help="The scheduler type to use.",
-        choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant", "constant_with_warmup"],
-    )
-    parser.add_argument(
-        "--num_warmup_steps", type=int, default=0, help="Number of steps for the warmup in the lr scheduler."
-    )
-    parser.add_argument("--output_dir", type=str, default=None, help="Where to store the final model.")
-    parser.add_argument("--seed", type=int, default=None, help="A seed for reproducible training.")
+
+    parser.add_argument("--model_name_or_path", type=str, required=True,
+                        help="Path to pretrained model or model identifier from huggingface.co/models.")
+    parser.add_argument("--task_name", type=str, default=None,
+                        help="The name of the glue task to train on.",
+                        choices=list(task_to_keys.keys()))
+    parser.add_argument("--output_dir", type=str, default=None,
+                        help="Where to store the final model.")
+    parser.add_argument('--usage', type=int, default=1,
+                        help='Select which config example to run')
+    parser.add_argument('--sparsity', type=float, required=True,
+                        help='Sparsity - proportion of heads to prune (should be between 0 and 1)')
+    parser.add_argument('--global_sort', action='store_true', default=False,
+                        help='Rank the heads globally and prune the heads with lowest scores. If set to False, the '
+                             'heads are only ranked within one layer')
+    parser.add_argument("--ranking_criterion", type=str, default='l1_weight',
+                        choices=["l1_weight", "l2_weight", "l1_activation", "l2_activation", "taylorfo"],
+                        help="Where to store the final model.")
+    parser.add_argument("--num_iterations", type=int, default=1,
+                        help="Number of pruning iterations (1 for one-shot pruning).")
+    parser.add_argument("--epochs_per_iteration", type=int, default=1,
+                        help="Epochs to finetune before the next pruning iteration "
+                             "(only effective if num_iterations > 1).")
+    parser.add_argument('--speed_up', action='store_true', default=False,
+                        help='Whether to speed-up the pruned model')
+
+    # parameters for model training; for running examples. no need to change them
+    parser.add_argument("--train_file", type=str, default=None,
+                        help="A csv or a json file containing the training data.")
+    parser.add_argument("--validation_file", type=str, default=None,
+                        help="A csv or a json file containing the validation data.")
+    parser.add_argument("--max_length", type=int, default=128,
+                        help=("The maximum total input sequence length after tokenization. Sequences longer than this "
+                              "will be truncated, sequences shorter will be padded if `--pad_to_max_lengh` is passed."))
+    parser.add_argument("--pad_to_max_length", action="store_true",
+                        help="If passed, pad all samples to `max_length`. Otherwise, dynamic padding is used.")
+    parser.add_argument("--use_slow_tokenizer", action="store_true",
+                        help="If passed, will use a slow tokenizer (not backed by the 🤗 Tokenizers library).",)
+    parser.add_argument("--per_device_train_batch_size", type=int, default=8,
+                        help="Batch size (per device) for the training dataloader.")
+    parser.add_argument("--per_device_eval_batch_size", type=int, default=8,
+                        help="Batch size (per device) for the evaluation dataloader.")
+    parser.add_argument("--learning_rate", type=float, default=5e-5,
+                        help="Initial learning rate (after the potential warmup period) to use.")
+    parser.add_argument("--weight_decay", type=float, default=0.0,
+                        help="Weight decay to use.")
+    parser.add_argument("--num_train_epochs", type=int, default=3,
+                        help="Total number of training epochs to perform.")
+    parser.add_argument("--max_train_steps", type=int, default=None,
+                        help="Total number of training steps to perform. If provided, overrides num_train_epochs.")
+    parser.add_argument("--gradient_accumulation_steps", type=int, default=1,
+                        help="Number of updates steps to accumulate before performing a backward/update pass.")
+    parser.add_argument("--lr_scheduler_type", type=SchedulerType, default="linear",
+                        help="The scheduler type to use.",
+                        choices=["linear", "cosine", "cosine_with_restarts", "polynomial", "constant",
+                                 "constant_with_warmup"])
+    parser.add_argument("--num_warmup_steps", type=int, default=0,
+                        help="Number of steps for the warmup in the lr scheduler.")
+    parser.add_argument("--seed", type=int, default=None,
+                        help="A seed for reproducible training.")
+
     args = parser.parse_args()
 
     # Sanity checks
@@ -310,7 +289,6 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
 
 
 def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=None):
-    # no param update performed, just do forward and backward on the entire train data (to collect output/gradient etc.)
     if epoch_num == 0:
         print("Running forward and backward on the entire dataset without updating parameters...")
     else:
@@ -394,7 +372,6 @@ def main():
 
     #########################################################################
     # Prepare model, tokenizer, dataset, optimizer, and the scheduler
-
     # Make one log on every process with the configuration for debugging.
     logging.basicConfig(
         format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s",
@@ -423,16 +400,13 @@ def main():
     processed_datasets = preprocess_dataset(args, tokenizer, model, raw_datasets, num_labels, is_regression, label_list)
     train_dataset = processed_datasets["train"]
     eval_dataset = processed_datasets["validation_matched" if args.task_name == "mnli" else "validation"]
-    # Log a few random samples from the training set:
-    for index in random.sample(range(len(train_dataset)), 3):
-        logger.info(f"Sample {index} of the training set: {train_dataset[index]}.")
 
     #########################################################################
     # Finetune before pruning
     model, optimizer, train_dataloader, eval_dataloader, data_collator = get_dataloader_and_optimizer(args, tokenizer,
-                                                                                                        model,
-                                                                                                        train_dataset,
-                                                                                                        eval_dataset)
+                                                                                                      model,
+                                                                                                      train_dataset,
+                                                                                                      eval_dataset)
 
     # Scheduler and math around the number of training steps.
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
@@ -465,7 +439,7 @@ def main():
     # train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
     #
     # if args.output_dir is not None:
-    #     torch.save(model, args.output_dir + '/entire_model_before_pruning.pt')
+    #     torch.save(model.state_dict(), args.output_dir + '/model_before_pruning.pt')
     #
     # if args.task_name == "mnli":
     #     final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
@@ -476,39 +450,119 @@ def main():
                                                                                                       model,
                                                                                                       train_dataset,
                                                                                                       eval_dataset)
+    dummy_input = next(iter(train_dataloader))['input_ids'].to(device)
+    flops, params, results = count_flops_params(model, dummy_input)
+    print(f'Initial model FLOPs {flops / 1e6:.2f} M, #Params: {params / 1e6:.2f}M')
 
     # here criterion is embedded in the model. Upper levels can just pass None to trainer
     def trainer(model, optimizer, criterion, epoch):
         return dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
 
-    attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
-                                     ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
-                                     ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
-                                     ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
+    # example 1: prune all layers with uniform sparsity
+    if args.usage == 1:
+        kwargs = {'ranking_criterion': args.ranking_criterion,
+                  'global_sort': args.global_sort,
+                  'num_iterations': args.num_iterations,
+                  'epochs_per_iteration': args.epochs_per_iteration,
+                  'head_hidden_dim': 64,
+                  'dummy_input': dummy_input,
+                  'trainer': trainer,
+                  'optimizer': optimizer}
 
-    kwargs = {'ranking_criterion': 'taylorfo',
-              'global_sort': True,
-              'num_iterations': 2,
-              'epochs_per_iteration': 1,
-              # 'attention_name_groups': attention_name_groups,
-              'head_hidden_dim': 64,
-              'dummy_input': (next(iter(train_dataloader))['input_ids']).to(device),
-              'trainer': trainer,
-              'optimizer': optimizer}
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ["Linear"],
+        }]
 
-    config_list = [{
-        'sparsity': 0.5,
-        'op_types': ["Linear"],
-        # 'op_names': [x for layer in attention_name_groups for x in layer]
-    }]
+    # example 2: prune different layers with uniform sparsity, but specify names group instead of dummy_input
+    elif args.usage == 2:
+        attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
+
+        kwargs = {'ranking_criterion': args.ranking_criterion,
+                  'global_sort': args.global_sort,
+                  'num_iterations': args.num_iterations,
+                  'epochs_per_iteration': args.epochs_per_iteration,
+                  'attention_name_groups': attention_name_groups,
+                  'head_hidden_dim': 64,
+                  'trainer': trainer,
+                  'optimizer': optimizer}
+
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ["Linear"],
+            'op_names': [x for layer in attention_name_groups for x in layer]
+        }
+        ]
+
+    # example 3: prune different layers with different sparsity
+    elif args.usage == 3:
+        attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
+                                         ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
+
+        kwargs = {'ranking_criterion': args.ranking_criterion,
+                  'global_sort': args.global_sort,
+                  'num_iterations': args.num_iterations,
+                  'epochs_per_iteration': args.epochs_per_iteration,
+                  'attention_name_groups': attention_name_groups,
+                  'head_hidden_dim': 64,
+                  'trainer': trainer,
+                  'optimizer': optimizer}
+
+        config_list = [{
+            'sparsity': args.sparsity,
+            'op_types': ["Linear"],
+            'op_names': [x for layer in attention_name_groups[:6] for x in layer]
+        },
+            {
+                'sparsity': args.sparsity / 2,
+                'op_types': ["Linear"],
+                'op_names': [x for layer in attention_name_groups[:6] for x in layer]
+            }
+        ]
+
+    else:
+        raise RuntimeError("Wrong usage number")
 
     pruner = TransformerHeadPruner(model, config_list, **kwargs)
     pruner.compress()
 
-    exit()
+    # uncomment the following part to export the pruned model masks
+    # model_path = os.path.join(args.output_dir, 'pruned_{}_{}.pth'.format(args.model_name_or_path, args.task_name))
+    # mask_path = os.path.join(args.output_dir, 'mask_{}_{}.pth'.format(args.model_name_or_path, args.task_name))
+    # pruner.export_model(model_path=model_path, mask_path=mask_path)
+
+    # Currently, speeding up the Transformers through NNI is not supported because of shape inference issues.
+    # However, if you are using the transformers library, you can use the following workaround:
+    if args.speed_up:
+        speedup_rules = {}
+        for group_idx, group in enumerate(pruner.attention_name_groups):
+            # get the layer index
+            layer_idx = None
+            for part in group[0].split('.'):
+                try:
+                    layer_idx = int(part)
+                    break
+                except:
+                    continue
+            if layer_idx is not None:
+                speedup_rules[layer_idx] = pruner.pruned_heads[group_idx]
+        pruner._unwrap_model()
+        model.bert._prune_heads(speedup_rules)
+        print(model)
 
     #########################################################################
     # After pruning, finetune again on the target task
+    # Get the metric function
+    if args.task_name is not None:
+        metric = load_metric("glue", args.task_name)
+    else:
+        metric = load_metric("accuracy")
+
     # re-initialize the optimizer and the scheduler
     model, optimizer, _, _, data_collator = get_dataloader_and_optimizer(args, tokenizer, model, train_dataset,
                                                                          eval_dataset)
@@ -523,10 +577,13 @@ def main():
     train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
 
     if args.output_dir is not None:
-        torch.save(model, args.output_dir + '/entire_model_after_pruning.pt')
+        torch.save(model.state_dict(), args.output_dir + '/model_after_pruning.pt')
 
     if args.task_name == "mnli":
         final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
+
+    flops, params, results = count_flops_params(model, dummy_input)
+    print(f'Final model FLOPs {flops / 1e6:.2f} M, #Params: {params / 1e6:.2f}M')
 
 
 if __name__ == "__main__":

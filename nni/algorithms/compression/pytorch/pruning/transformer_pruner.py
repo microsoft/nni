@@ -254,7 +254,7 @@ class TransformerHeadPruner(Pruner):
                         assert hasattr(layer_weight_group[i], mask_type), \
                             "there is no attribute '%s' in wrapper on %s" % (mask_type, layer_weight_group[i])
                         setattr(layer_weight_group[i], mask_type, mask[mask_type])
-                        logger.info(f'mask updated: {layer_weight_group[i].name} {mask_type}')
+                        logger.debug(f'mask updated: {layer_weight_group[i].name} {mask_type}')
 
     def _calc_mask(self, weight_group):
         """

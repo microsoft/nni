@@ -289,7 +289,9 @@ class L1ActivationHeadMasker(AttentionHeadMasker):
     def _add_activation_collector(self, pruner):
         def collector(collected_activation):
             def hook(module_, input_, output):
-                raw_activation = torch.abs(output.detach().cpu())               # L1-norm
+                if type(input_) is tuple:
+                    input_ = input_[0]
+                raw_activation = torch.abs(input_.detach().cpu())               # L1-norm
                 raw_activation_reduced = torch.sum(raw_activation, [0, 1])
                 collected_activation.append(raw_activation_reduced)
             return hook
@@ -339,7 +341,9 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
     def _add_activation_collector(self, pruner):
         def collector(collected_activation):
             def hook(module_, input_, output):
-                raw_activation = torch.abs(output.detach().cpu() ** 2)  # L2-norm
+                if type(input_) is tuple:
+                    input_ = input_[0]
+                raw_activation = torch.abs(input_.detach().cpu() ** 2)  # L2-norm
                 raw_activation_reduced = torch.sum(raw_activation, [0, 1])
                 collected_activation.append(raw_activation_reduced)
 
@@ -394,10 +398,10 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
 
     def _add_activation_collector(self):
         def forward_hook(md, inp, out):
-            if type(out) is tuple:
-                out = out[0]
-            n_heads_per_layer = out.size(-1) // self.head_hidden_dim
-            heads_output = out.view([out.size(0), out.size(1), n_heads_per_layer, -1]).detach()
+            if type(inp) is tuple:
+                inp = inp[0]
+            n_heads_per_layer = inp.size(-1) // self.head_hidden_dim
+            heads_output = inp.view([inp.size(0), inp.size(1), n_heads_per_layer, -1]).detach()
             md.forward_output_cached = heads_output
 
         self.pruner._fwd_hook_id += 1
@@ -411,10 +415,10 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
 
     def _add_gradient_collector(self):
         def grad_hook(md, grad_in, grad_out):
-            if type(grad_out) is tuple:
-                grad_out = grad_out[0]
-            n_heads_per_layer = grad_out.size(-1) // self.head_hidden_dim
-            heads_grad = grad_out.view([grad_out.size(0), grad_out.size(1), n_heads_per_layer, -1])
+            if type(grad_in) is tuple:
+                grad_in = grad_in[0]
+            n_heads_per_layer = grad_in.size(-1) // self.head_hidden_dim
+            heads_grad = grad_in.view([grad_in.size(0), grad_in.size(1), n_heads_per_layer, -1])
             heads_scores = torch.abs(heads_grad * md.forward_output_cached)
             heads_scores = torch.sum(heads_scores, [0, 1, 3]).detach().cpu()
             if hasattr(md, 'head_importance_scores'):
