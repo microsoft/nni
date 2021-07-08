@@ -3,8 +3,8 @@
 
 import logging
 import copy
-import torch
 from collections import defaultdict
+import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad, QuantType
@@ -179,9 +179,9 @@ class ObserverQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def record(self, wrapper, type, tensor):
+    def record(self, wrapper, quant_type, tensor):
         name = wrapper.name
-        observer = self.all_observers[name][type]
+        observer = self.all_observers[name][quant_type]
         if isinstance(tensor, tuple):
             # NB: This only works for single tensor
             tensor = (t.cpu() for t in tensor)
@@ -189,8 +189,8 @@ class ObserverQuantizer(Quantizer):
         else:
             observer(tensor.cpu())
 
-    def calculate_qparams(self, name, type):
-        observer = self.all_observers[name][type]
+    def calculate_qparams(self, name, quant_type):
+        observer = self.all_observers[name][quant_type]
         scale, zero_point = observer.calculate_qparams()
         return scale, zero_point
 
