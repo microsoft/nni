@@ -5,7 +5,7 @@
 
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from '../../common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
@@ -30,7 +30,7 @@ class RouterTrainingService implements TrainingService {
             instance.internalTrainingService = new RemoteMachineTrainingService(config);
         } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
             instance.internalTrainingService = new PAITrainingService(config);
-        } else if (platform === 'kubeflow' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
+        } else if (platform === 'kubeflow' && !(<KubeflowConfig>config.trainingService).reuseMode) {
             instance.internalTrainingService = new KubeflowTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);

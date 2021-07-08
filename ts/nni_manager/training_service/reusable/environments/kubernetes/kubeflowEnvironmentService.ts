@@ -39,16 +39,16 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
             this.config.operator, this.config.apiVersion);
         // Create storage
-        if (this.config.storageConfig.storage === 'azureStorage') {
-            if (this.config.storageConfig.azureShare === undefined ||
-                this.config.storageConfig.azureAccount === undefined ||
-                this.config.storageConfig.keyVaultName === undefined ||
-                this.config.storageConfig.keyVaultValueName === undefined) {
+        if (this.config.storage.storageType === 'azureStorage') {
+            if (this.config.storage.azureShare === undefined ||
+                this.config.storage.azureAccount === undefined ||
+                this.config.storage.keyVaultName === undefined ||
+                this.config.storage.keyVaultKey === undefined) {
                 throw new Error("Azure storage configuration error!");
             }
 
-            const azureStorage: AzureStorage = new AzureStorage(this.config.storageConfig.azureShare, this.config.storageConfig.azureAccount);
-            const keyValutConfig: KeyVaultConfig = new KeyVaultConfig(this.config.storageConfig.keyVaultName, this.config.storageConfig.keyVaultValueName);
+            const azureStorage: AzureStorage = new AzureStorage(this.config.storage.azureShare, this.config.storage.azureAccount);
+            const keyValutConfig: KeyVaultConfig = new KeyVaultConfig(this.config.storage.keyVaultName, this.config.storage.keyVaultKey);
             const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = new KubeflowClusterConfigAzure(
                 this.config.operator, this.config.apiVersion, keyValutConfig, azureStorage);
             this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
@@ -58,14 +58,14 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
                 azureKubeflowClusterConfig.keyVault.vaultName,
                 azureKubeflowClusterConfig.keyVault.name
             );
-        } else if (this.config.storageConfig.storage === 'nfs') {
-            if (this.config.storageConfig.server === undefined ||
-                this.config.storageConfig.path === undefined) {
+        } else if (this.config.storage.storageType === 'nfs') {
+            if (this.config.storage.server === undefined ||
+                this.config.storage.path === undefined) {
                     throw new Error("NFS storage configuration error!");
                 }
             this.createStoragePromise = this.createNFSStorage(
-                this.config.storageConfig.server,
-                this.config.storageConfig.path
+                this.config.storage.server,
+                this.config.storage.path
             );
         }
     }
@@ -75,7 +75,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
     }
 
     public get hasStorageService(): boolean {
-        return true;
+        return false;
     }
 
     public get getName(): string {
@@ -112,14 +112,14 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
      * upload local folder to nfs or azureStroage
      */
     private async uploadFolder(srcDirectory: string, destDirectory: string): Promise<string> {
-        if (this.config.storageConfig.storage === 'azureStorage') {
+        if (this.config.storage.storageType === 'azureStorage') {
             if (this.azureStorageClient === undefined) {
                 throw new Error('azureStorageClient is not initialized');
             }
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, 2);
         } else {
             // do not need to upload files to nfs server, temp folder already mounted to nfs
-            return `nfs://${this.config.storageConfig.server}:${destDirectory}`;
+            return `nfs://${this.config.storage.server}:${destDirectory}`;
         }
     }
 
@@ -237,7 +237,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         }
         // The config spec for volume field
         const volumeSpecMap: Map<string, object> = new Map<string, object>();
-        if (this.config.storageConfig.storage === 'azureStorage') {
+        if (this.config.storage.storageType === 'azureStorage') {
             volumeSpecMap.set('nniVolumes', [
             {
                     name: 'nni-vol',
@@ -252,8 +252,8 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
             {
                 name: 'nni-vol',
                 nfs: {
-                    server: `${this.config.storageConfig.server}`,
-                    path: `${this.config.storageConfig.path}`
+                    server: `${this.config.storage.server}`,
+                    path: `${this.config.storage.path}`
                 }
             }]);
         }

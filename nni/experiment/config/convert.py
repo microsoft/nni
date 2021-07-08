@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local', 'remote', 'openpai', 'aml']
+    assert platform in ['local', 'remote', 'openpai', 'aml', 'kubeflow']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')

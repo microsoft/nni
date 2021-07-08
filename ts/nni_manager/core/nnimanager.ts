@@ -178,12 +178,10 @@ class NNIManager implements Manager {
         this.config = config;
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
         await this.storeExperimentProfile();
-        
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             this.trainingService = await this.initTrainingService(config);
         }
-
         this.log.info('Setup tuner...');
         const dispatcherCommand: string = getMsgDispatcherCommand(config);
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
@@ -445,13 +443,9 @@ class NNIManager implements Manager {
         if (!platform) {
             throw new Error('Cannot detect training service platform');
         }
-
         if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
-        } else if (platform === 'kubeflow') {
-            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
-            return new module_.KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();

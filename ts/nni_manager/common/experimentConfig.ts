@@ -71,27 +71,20 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
-export interface k8sTrialConfig {
-    replicas: number;
-    gpuNum: number;
-    cpuNum: number;
-    memoryMB: number;
-    image: string;
-}
-
 export interface KubeflowStorageConfig {
-    maxTrialNumberPerGpu: number;
-    storage: KubernetesStorageKind;
+    storageType: string;
+    maxTrialNumberPerGpu?: number;
     server?: string;
     path?: string;
     azureAccount?: string;
     azureShare?: string;
     keyVaultName?: string;
-    keyVaultValueName?: string;
+    keyVaultKey?: string;
 }
 
 export interface KubeflowRoleConfig {
     replicas: number;
+    codeDirectory: string;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
@@ -108,7 +101,7 @@ export interface KubeflowConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
     operator: KubeflowOperator;
     apiVersion: OperatorApiVersion;
-    storageConfig: KubeflowStorageConfig;
+    storage: KubeflowStorageConfig;
     reuseMode: boolean;
 }
 
