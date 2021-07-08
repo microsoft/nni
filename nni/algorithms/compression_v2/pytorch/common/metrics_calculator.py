@@ -2,7 +2,6 @@ from typing import Dict, List, Optional, Union
 
 import torch
 from torch import Tensor
-from torch.nn import Linear
 
 from nni.algorithms.compression_v2.pytorch.base.common import MetricsCalculator
 

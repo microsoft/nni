@@ -8,7 +8,7 @@ from torch.nn import Module
 from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
 from nni.algorithms.compression_v2.pytorch.base.common import DataCollector, MetricsCalculator, SparsityAllocator
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class PrunerModuleWrapper(Module):
@@ -74,7 +74,7 @@ class Pruner(Compressor):
         config
             The configuration for generating the mask.
         """
-        logger.debug("Module detected to compress : %s.", layer.name)
+        _logger.debug("Module detected to compress : %s.", layer.name)
         wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
@@ -91,11 +91,15 @@ class Pruner(Compressor):
 
     def compress(self) -> Tuple[Module, Dict]:
         data = self.data_collector.collect()
+        _logger.debug('Collected Data:\n%s', data)
         metrics = self.metrics_calculator.calculate_metrics(data)
+        _logger.debug('Metrics Calculate:\n%s', metrics)
         masks = self.sparsity_allocator.generate_sparsity(metrics)
+        _logger.debug('Masks:\n%s', masks)
         self.load_masks(masks)
         return self.bound_model, masks
 
+    # NOTE: need refactor dim with supporting list
     def show_pruned_weights(self, dim=0):
         """
         Log the simulated prune sparsity.
@@ -114,4 +118,4 @@ class Pruner(Compressor):
                 sum_idx = list(range(len(mask_size)))
                 sum_idx.remove(dim)
                 index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=False).tolist()
-            logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
+            _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')

@@ -75,6 +75,7 @@ class Compressor:
         self._unwrap_model()
 
         self.modules_to_compress = None
+        self._config_based_group_info = None
         self.modules_wrapper = collections.OrderedDict()
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
@@ -89,16 +90,20 @@ class Compressor:
         """
         if self.modules_to_compress is None:
             self.modules_to_compress = []
+            self._config_based_group_info = {}
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
                     continue
                 layer = LayerInfo(name, module)
-                config = self._select_config(layer)
-                if config is not None:
+                result = self._select_config(layer)
+                if result is not None:
+                    idx, config = result
                     self.modules_to_compress.append((layer, config))
+                    self._config_based_group_info.setdefault(idx, [])
+                    self._config_based_group_info[idx].append(layer.name)
         return self.modules_to_compress
 
-    def _select_config(self, layer: LayerInfo) -> Optional[Dict]:
+    def _select_config(self, layer: LayerInfo) -> Optional[Tuple[int, Dict]]:
         """
         Find the configuration for `layer` by parsing `self.config_list`.
 
@@ -113,7 +118,7 @@ class Compressor:
             The retrieved configuration for this layer, if None, this layer should not be compressed.
         """
         ret = None
-        for config in self.config_list:
+        for idx, config in enumerate(self.config_list):
             config = config.copy()
             # expand config if key `default` is in config['op_types']
             if 'op_types' in config and 'default' in config['op_types']:
@@ -131,7 +136,7 @@ class Compressor:
             if 'op_names' in config and layer.name not in config['op_names']:
                 continue
 
-            ret = config
+            ret = (idx, config)
         if ret is None or 'exclude' in ret:
             return None
         return ret

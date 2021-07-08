@@ -19,7 +19,7 @@ class WeightDataCollector(DataCollector):
     def collect(self) -> Dict[str, Tensor]:
         data = {}
         for _, wrapper in self.compressor._get_modules_wrapper().items():
-            data[wrapper.name] = wrapper.module.weight.data.clone()
+            data[wrapper.name] = wrapper.module.weight.data.clone().detach()
         return data
 
 
