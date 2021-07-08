@@ -15,6 +15,7 @@ import numpy as np
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from nni.runtime.common import multi_phase_enabled
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
@@ -379,6 +380,7 @@ class Hyperband(MsgDispatcherBase):
     def handle_update_search_space(self, data):
         """data: JSON object, which is search space
         """
+        validate_search_space(data)
         self.searchspace_json = data
         self.random_state = np.random.RandomState()
 

@@ -46,6 +46,7 @@ class CustomAlgorithmConfig(_AlgorithmConfig):
 class TrainingServiceConfig(ConfigBase):
     platform: str
 
+@dataclass(init=False)
 class SharedStorageConfig(ConfigBase):
     storage_type: str
     local_mount_point: str

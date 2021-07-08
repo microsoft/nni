@@ -265,17 +265,6 @@ class QAT_Quantizer(Quantizer):
         module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
                                                                     module.ema_decay)
 
-        # if bias exists, quantize bias to uint32
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            bias = wrapper.module.bias.data
-            bias_bits = 32
-            rmin, rmax = torch.min(bias), torch.max(bias)
-            module.scale, module.zero_point = update_quantization_param(bias_bits, rmin, rmax)
-            bias = self._quantize(bias_bits, module, bias)
-            bias = self._dequantize(module, bias)
-            wrapper.module.bias.data = bias
-
-
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
         module.scale, module.zero_point = update_quantization_param(weight_bits, rmin, rmax)
