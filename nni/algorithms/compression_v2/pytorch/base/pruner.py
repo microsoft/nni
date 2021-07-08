@@ -91,11 +91,11 @@ class Pruner(Compressor):
 
     def compress(self) -> Tuple[Module, Dict]:
         data = self.data_collector.collect()
-        _logger.debug('Collected Data:\n%s', data)
+        _logger.info('Collected Data:\n%s', data)
         metrics = self.metrics_calculator.calculate_metrics(data)
-        _logger.debug('Metrics Calculate:\n%s', metrics)
+        _logger.info('Metrics Calculate:\n%s', metrics)
         masks = self.sparsity_allocator.generate_sparsity(metrics)
-        _logger.debug('Masks:\n%s', masks)
+        _logger.info('Masks:\n%s', masks)
         self.load_masks(masks)
         return self.bound_model, masks
 

@@ -47,12 +47,15 @@ class GlobalSparsityAllocator(SparsityAllocator):
         sub_thresholds = {}
         total_weight_num = 0
         for name, metric in group_metric_dict.items():
-            layer_weight_num = self.pruner._get_modules_wrapper()[name].weight.data.numel()
+            layer_weight_num = self.pruner._get_modules_wrapper()[name].module.weight.data.numel()
             stay_num = int(metric.numel() * self._max_sparsity_per_layer)
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.abs().view(-1), stay_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
-            metric_list.append(stay_metric.expand(stay_num, int(layer_weight_num / metric.numel())).view(-1))
+            expend_times = int(layer_weight_num / metric.numel())
+            if expend_times > 1:
+                stay_metric = stay_metric.expand(stay_num, int(layer_weight_num / metric.numel())).view(-1)
+            metric_list.append(stay_metric)
             total_weight_num += layer_weight_num
 
         sparsity = self.pruner._get_modules_wrapper()[name].config['sparsity']

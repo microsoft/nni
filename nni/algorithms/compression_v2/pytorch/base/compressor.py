@@ -141,7 +141,7 @@ class Compressor:
             return None
         return ret
 
-    def _get_modules_wrapper(self) -> OrderedDict:
+    def _get_modules_wrapper(self) -> OrderedDict[str, Module]:
         return self.modules_wrapper
 
     def _wrap_model(self):
