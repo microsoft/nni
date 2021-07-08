@@ -87,10 +87,6 @@ stages:
     variables:
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
     steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
     - task: Cache@2
       inputs:
         key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
@@ -126,11 +122,6 @@ stages:
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
 
     - script: |
         sudo apt-get install -y pandoc
@@ -224,16 +215,12 @@ stages:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
+    # This platform runs integration test first.
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.6
       displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
 
     - script: |
         sudo apt-get install -y pandoc
@@ -310,16 +297,13 @@ stages:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
+    # This platform runs TypeScript unit test first.
+
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
 
     - script: |
         brew install swig@3
@@ -391,16 +375,13 @@ stages:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
+    # This platform runs Python unit test first.
+
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
 
     - task: Cache@2
       inputs:

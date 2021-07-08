@@ -204,12 +204,10 @@ class SuccessTable extends React.Component<SuccessTableProps, SuccessTableState>
         }
         return (
             <Sticky stickyPosition={StickyPositionType.Header} isScrollSynced>
-                {
-                    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-                    defaultRender!({
-                        ...props
-                    })
-                }
+                {// eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                defaultRender!({
+                    ...props
+                })}
             </Sticky>
         );
     };

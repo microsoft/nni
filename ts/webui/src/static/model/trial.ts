@@ -115,7 +115,6 @@ class Trial implements TableObj {
                     return undefined;
                 } else if (
                     typeof parseMetrics(temp.data) === 'object' &&
-                    // eslint-disable-next-line no-prototype-builtins
                     parseMetrics(temp.data).hasOwnProperty('default')
                 ) {
                     return parseMetrics(temp.data).default;

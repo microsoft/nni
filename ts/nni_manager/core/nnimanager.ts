@@ -491,7 +491,7 @@ class NNIManager implements Manager {
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
-        this.dispatcherPid = tunerProc.pid!;
+        this.dispatcherPid = tunerProc.pid;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
         return;
