@@ -8,7 +8,6 @@ import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
-import * as dgram from 'dgram';
 import * as fs from 'fs';
 import * as net from 'net';
 import * as os from 'os';
@@ -218,24 +217,28 @@ function cleanupUnitTest(): void {
     setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
-let cachedIpv4Address: string | null = null;
-
+let cachedipv4Address: string = '';
 /**
- * Get IPv4 address of current machine.
+ * Get IPv4 address of current machine
  */
 function getIPV4Address(): string {
-    if (cachedIpv4Address !== null) {
-        return cachedIpv4Address;
+    if (cachedipv4Address && cachedipv4Address.length > 0) {
+        return cachedipv4Address;
     }
 
-    // creates "udp connection" to a non-exist target, and get local address of the connection.
-    // since udp is connectionless, this does not send actual packets.
-    const socket = dgram.createSocket('udp4');
-    socket.connect(1, '192.0.2.0');
-    cachedIpv4Address = socket.address().address;
-    socket.close();
+    const networkInterfaces = os.networkInterfaces();
+    if (networkInterfaces.eth0) {
+        for (const item of networkInterfaces.eth0) {
+            if (item.family === 'IPv4') {
+                cachedipv4Address = item.address;
+                return cachedipv4Address;
+            }
+        }
+    } else {
+        throw Error(`getIPV4Address() failed because os.networkInterfaces().eth0 is undefined. Please specify NNI manager IP in config.`);
+    }
 
-    return cachedIpv4Address;
+    throw Error('getIPV4Address() failed because no valid IPv4 address found.')
 }
 
 /**

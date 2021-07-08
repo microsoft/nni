@@ -5,6 +5,7 @@ import json
 import logging
 import os
 
+import netifaces
 from schema import And, Optional, Or, Regex, Schema, SchemaError
 from nni.tools.package_utils import (
     create_validator_instance,
@@ -492,6 +493,7 @@ class NNIConfigSchema:
         self.validate_tuner_adivosr_assessor(experiment_config)
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
+        self.validate_eth0_device(experiment_config)
         self.validate_hybrid_platforms(experiment_config)
         self.validate_frameworkcontroller_trial_config(experiment_config)
 
@@ -596,6 +598,13 @@ class NNIConfigSchema:
             if experiment_config.get('trial').get('outputDir'):
                 print_warning(warning_information.format('outputDir'))
             self.validate_pai_config_path(experiment_config)
+
+    def validate_eth0_device(self, experiment_config):
+        '''validate whether the machine has eth0 device'''
+        if experiment_config.get('trainingServicePlatform') not in ['local'] \
+                and not experiment_config.get('nniManagerIp') \
+                and 'eth0' not in netifaces.interfaces():
+            raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
 
     def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {
