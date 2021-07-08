@@ -213,7 +213,5 @@ class QuantizationSpeedupTestCase(TestCase):
         os.remove(export_path)
         os.remove(calibration_path)
     
-        
-
 if __name__ == '__main__':
     main()
