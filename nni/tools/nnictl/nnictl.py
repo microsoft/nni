@@ -7,7 +7,7 @@ import os
 import pkg_resources
 from colorama import init
 from .common_utils import print_error
-from .launcher import create_experiment, resume_experiment, view_experiment, view_external_experiment
+from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
 from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment, experiment_status,\
                           log_trial, experiment_clean, platform_clean, experiment_list, \
@@ -66,12 +66,14 @@ def parse_args():
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_resume.add_argument('--experiment_dir', '-e', help='resume experiment from external folder, specify the full path of experiment folder')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
     parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
     parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_view.add_argument('--experiment_dir', '-e', help='view experiment from external folder, specify the full path of experiment folder')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command
@@ -167,12 +169,6 @@ def parse_args():
     parser_load_experiment.add_argument('--searchSpacePath', '-s', required=False, help='the path of search space file for \
                                    loaded experiment, this path contains file name. Default in $codeDir/search_space.json')
     parser_load_experiment.set_defaults(func=load_experiment)
-    #view an NNI experiment
-    parser_view_experiment = parser_experiment_subparsers.add_parser('view', help='view an experiment from external folder')
-    parser_view_experiment.add_argument('--experiment_dir', '-e', required=True, help='the full path of nni experiment folder')
-    parser_view_experiment.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
-    parser_view_experiment.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', help='the port of experiment')
-    parser_view_experiment.set_defaults(func=view_external_experiment)
 
     #parse platform command
     parser_platform = subparsers.add_parser('platform', help='get platform information')

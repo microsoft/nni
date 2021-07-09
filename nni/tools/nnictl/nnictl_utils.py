@@ -518,7 +518,7 @@ def experiment_clean(args):
     for experiment_id in experiment_id_list:
         experiment_id = get_config_filename(args)
         experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
-        platform = experiment_config.get('trainingServicePlatform')
+        platform = experiment_config.get('trainingServicePlatform') or experiment_config.get('trainingService', {}).get('platform')
         if platform == 'remote':
             machine_list = experiment_config.get('machineList')
             remote_clean(machine_list, experiment_id)
