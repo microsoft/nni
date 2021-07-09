@@ -728,7 +728,8 @@ Transformer Head Pruner
 -----------------------
 
 Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__.
-Typically, in each attention layer in Transformer models
+Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normall, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Please refer to the original paper or this visualization [change here!!!!] for more details.
+Therefore, when an attention head is pruned, the same dimension
 
 
 .. code-block:: bash
@@ -760,4 +761,4 @@ User configuration for Transformer Head Pruner
 
 **PyTorch**
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.TransformerHeadPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.transformer_pruner.TransformerHeadPruner
