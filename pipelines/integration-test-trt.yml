@@ -39,16 +39,6 @@ jobs:
 
   - script: |
       set -e
-      docker login -u nnidev -p $(docker_hub_password)
-      echo '## Build docker image ##'
-      docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
-      echo '## Upload docker image ##'
-      docker push nnidev/nni-nightly
-    condition: eq(variables['build_docker_image'], 'true')
-    displayName: Build and upload docker image
-
-  - script: |
-      set -e
       cd test
       python3 nni_test/nnitest/test_quantize_model_speedup.py
     displayName: Quantize model speedup test
