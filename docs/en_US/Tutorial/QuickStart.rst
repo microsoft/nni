@@ -117,7 +117,7 @@ Three steps to start an experiment
               train(args, model, device, train_loader, optimizer, epoch)
               test_acc = test(args, model, device, test_loader)
     -         print(test_acc)
-    +         nni.report_intermeidate_result(test_acc)
+    +         nni.report_intermediate_result(test_acc)
     -     print('final accuracy:', test_acc)
     +     nni.report_final_result(test_acc)
            
@@ -148,6 +148,9 @@ Three steps to start an experiment
      command: python3 mnist.py
      codeDir: .
      gpuNum: 0
+
+
+.. _nniignore:
 
 .. Note:: If you are planning to use remote machines or clusters as your :doc:`training service <../TrainingService/Overview>`, to avoid too much pressure on network, we limit the number of files to 2000 and total size to 300MB. If your codeDir contains too many files, you can choose which files and subfolders should be excluded by adding a ``.nniignore`` file that works like a ``.gitignore`` file. For more details on how to write this file, see the `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__.
 

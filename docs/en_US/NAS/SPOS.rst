@@ -98,14 +98,8 @@ Reference
 PyTorch
 ^^^^^^^
 
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSEvolution
-    :members:
-
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainer
-    :members:
-
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainingMutator
-    :members:
+..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
+    :noindex:
 
 Known Limitations
 -----------------

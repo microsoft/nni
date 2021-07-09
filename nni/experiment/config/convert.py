@@ -249,13 +249,13 @@ def convert_algo(algo_type, v1, v2):
         v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
 
     else:
-        class_directory = util.canonical_path(v1_algo.pop('codeDir'))
+        code_directory = util.canonical_path(v1_algo.pop('codeDir'))
         class_file_name = v1_algo.pop('classFileName')
         assert class_file_name.endswith('.py')
         class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
         v2_algo = CustomAlgorithmConfig(
             class_name=class_name,
-            class_directory=class_directory,
+            code_directory=code_directory,
             class_args=class_args
         )
 

@@ -86,7 +86,7 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                     trigger: 'item',
                     enterable: true,
                     confine: true,
-                    formatter: function(data: TooltipForIntermediate): React.ReactNode {
+                    formatter: function (data: TooltipForIntermediate): React.ReactNode {
                         const trialId = data.seriesName;
                         let parameters = {};
                         let trialNum = 0;

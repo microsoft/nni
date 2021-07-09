@@ -22,7 +22,7 @@ import tarfile
 from zipfile import ZipFile
 
 
-node_version = 'v10.23.0'
+node_version = 'v16.3.0'
 yarn_version = 'v1.22.10'
 
 

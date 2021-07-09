@@ -1,0 +1,44 @@
+# This example shows more configurable fields comparing to the minimal "config.yml"
+# You can use "nnictl create --config config_detailed.yml" to launch this experiment.
+# If you see an error message saying "port 8080 is used", use "nnictl stop --all" to stop previous experiments.
+
+experimentName: MNIST           # An optional name to help you distinguish experiments.
+
+# Hyper-parameter search space can either be configured here or in a seperate file.
+# "config.yml" shows how to specify a seperate search space file.
+# The common schema of search space is documented here:
+#   https://nni.readthedocs.io/en/stable/Tutorial/SearchSpaceSpec.html
+searchSpace:
+  batch_size:
+    _type: choice
+    _value: [16, 32, 64, 128]
+  hidden_size:
+    _type: choice
+    _value: [128, 256, 512, 1024]
+  lr:
+    _type: choice
+    _value: [0.0001, 0.001, 0.01, 0.1]
+  momentum:
+    _type: uniform
+    _value: [0, 1]
+
+trialCommand: python3 mnist.py  # The command to launch a trial. NOTE: change "python3" to "python" if you are using Windows.
+trialCodeDirectory: .           # The path of trial code. By default it's ".", which means the same directory of this config file.
+trialGpuNumber: 1               # How many GPUs should each trial use. CUDA is required when it's greater than zero.
+
+trialConcurrency: 4             # Run 4 trials concurrently.
+maxTrialNumber: 10              # Generate at most 10 trials.
+maxExperimentDuration: 1h       # Stop generating trials after 1 hour.
+
+tuner:                          # Configure the tuning alogrithm.
+  name: TPE                     # Supported algorithms: TPE, Random, Anneal, Evolution, GridSearch, GPTuner, PBTTuner, etc.
+                                #   Full list:  https://nni.readthedocs.io/en/latest/Tuner/BuiltinTuner.html
+  classArgs:                    # Algorithm specific arguments. See the tuner's doc for details.
+    optimize_mode: maximize     #   "minimize" or "maximize"
+
+# Configure the training platform.
+# Supported platforms: local, remote, openpai, aml, kubeflow, kubernetes, adl.
+trainingService:
+  platform: local
+  useActiveGpu: false           # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+                                #   Reason and details:  https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu

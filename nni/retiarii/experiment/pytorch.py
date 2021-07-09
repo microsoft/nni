@@ -56,14 +56,14 @@ class RetiariiExeConfig(ConfigBase):
     experiment_working_directory: PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
-    execution_engine: str = 'base'
+    execution_engine: str = 'py'
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
             self.training_service = util.training_service_config_factory(platform = training_service_platform)
-        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry base'
+        self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
 
     def __setattr__(self, key, value):
         fixed_attrs = {'search_space': '',
@@ -314,7 +314,7 @@ class RetiariiExperiment(Experiment):
         self._dispatcher_thread = None
         _logger.info('Experiment stopped')
 
-    def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'code') -> Any:
+    def export_top_models(self, top_k: int = 1, optimize_mode: str = 'maximize', formatter: str = 'dict') -> Any:
         """
         Export several top performing models.
 

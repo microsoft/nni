@@ -124,7 +124,7 @@ class ConfigBase:
             type_name = str(field.type).replace('typing.', '')
             optional = any([
                 type_name.startswith('Optional['),
-                type_name.startswith('Union[') and 'NoneType' in type_name,
+                type_name.startswith('Union[') and 'None' in type_name,
                 type_name == 'Any'
             ])
             if value is None:

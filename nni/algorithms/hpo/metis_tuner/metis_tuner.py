@@ -15,6 +15,9 @@ import numpy as np
 from schema import Schema, Optional
 
 from nni import ClassArgsValidator
+from nni.tuner import Tuner
+from nni.common.hpo_utils import validate_search_space
+from nni.utils import OptimizeMode, extract_scalar_reward
 from . import lib_constraint_summation
 from . import lib_data
 from .Regression_GMM import CreateModel as gmm_create_model
@@ -23,8 +26,6 @@ from .Regression_GP import CreateModel as gp_create_model
 from .Regression_GP import OutlierDetection as gp_outlier_detection
 from .Regression_GP import Prediction as gp_prediction
 from .Regression_GP import Selection as gp_selection
-from nni.tuner import Tuner
-from nni.utils import OptimizeMode, extract_scalar_reward
 
 logger = logging.getLogger("Metis_Tuner_AutoML")
 
@@ -152,6 +153,8 @@ class MetisTuner(Tuner):
         ----------
         search_space : dict
         """
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform'])
+
         self.x_bounds = [[] for i in range(len(search_space))]
         self.x_types = [NONE_TYPE for i in range(len(search_space))]
 

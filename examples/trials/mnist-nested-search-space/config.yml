@@ -1,20 +1,14 @@
-authorName: default
-experimentName: mnist-nested-search-space
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
 trialConcurrency: 2
-maxExecDuration: 1h
-maxTrialNum: 100
-#choice: local, remote
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 100
+maxExperimentDuration: 1h
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 mnist.py
-  codeDir: .
-  gpuNum: 0
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local
+  useActiveGpu: false  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+                       # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu
