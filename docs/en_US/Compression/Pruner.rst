@@ -725,9 +725,11 @@ User configuration for Sensitivity Pruner
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.SensitivityPruner
 
 Transformer Head Pruner
-------------------
+-----------------------
 
-Test test test test.
+Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__.
+Typically, in each attention layer in Transformer models
+
 
 .. code-block:: bash
 
@@ -753,8 +755,8 @@ PyTorch code
    # eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
    pruner.compress(eval_args=[model], finetune_args=[model])
 
-User configuration for Sensitivity Pruner
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+User configuration for Transformer Head Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
 
