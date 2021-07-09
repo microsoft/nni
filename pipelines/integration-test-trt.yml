@@ -32,13 +32,6 @@ jobs:
 
   - script: |
       set -e
-      cd examples/tuners/customized_tuner
-      python3 setup.py develop --user
-      nnictl algo register --meta meta_file.yml
-    displayName: Install customized tuner
-
-  - script: |
-      set -e
       cd test
       python3 nni_test/nnitest/test_quantize_model_speedup.py
     displayName: Quantize model speedup test
