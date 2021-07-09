@@ -164,6 +164,19 @@ class NasBench201Cell(nn.Module):
     The space size of this cell would be :math:`|op|^{N(N-1)/2}`, where :math:`|op|` is the number of operation candidates,
     and :math:`N` is defined by ``num_tensors``.
 
+    Parameters
+    ----------
+    op_candidates : list of callable
+        Operation candidates. Each should be a function accepts input feature and output feature, returning nn.Module.
+    in_features : int
+        Input dimension of cell.
+    out_features : int
+        Output dimension of cell.
+    num_tensors : int
+        Number of tensors in the cell (input included). Default: 4
+    label : str
+        Identifier of the cell. Cell sharing the same label will semantically share the same choice.
+
     References
     ----------
     .. [nasbench201] Dong, X. and Yang, Y., 2020. Nas-bench-201: Extending the scope of reproducible neural architecture search.
