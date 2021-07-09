@@ -4,7 +4,7 @@
 import logging
 from schema import And, Optional
 
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner']
@@ -48,7 +48,7 @@ class OneshotPruner(DependencyAwarePruner):
         config_list : list
             List on pruning configs
         """
-        schema = CompressorSchema([{
+        schema = PrunerSchema([{
             Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             Optional('op_types'): [str],
             Optional('op_names'): [str],

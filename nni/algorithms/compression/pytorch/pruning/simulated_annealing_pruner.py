@@ -8,12 +8,12 @@ import copy
 import csv
 import json
 import numpy as np
-from schema import And, Optional, SchemaError
+from schema import And, Optional
 
 from nni.utils import OptimizeMode
 
 from nni.compression.pytorch.compressor import Pruner
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from .constants_pruner import PRUNER_DICT
 
 
@@ -115,14 +115,14 @@ class SimulatedAnnealingPruner(Pruner):
         """
 
         if self._base_algo == 'level':
-            schema = CompressorSchema([{
+            schema = PrunerSchema([{
                 Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
                 Optional('exclude'): bool
             }], model, _logger)
         elif self._base_algo in ['l1', 'l2', 'fpgm']:
-            schema = CompressorSchema([{
+            schema = PrunerSchema([{
                 Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
                 Optional('op_names'): [str],
@@ -130,9 +130,6 @@ class SimulatedAnnealingPruner(Pruner):
             }], model, _logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def _sparsities_2_config_list(self, sparsities):
         '''

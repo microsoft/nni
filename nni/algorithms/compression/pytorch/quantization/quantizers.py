@@ -4,8 +4,8 @@
 import logging
 import copy
 import torch
-from schema import Schema, And, Or, Optional, SchemaError
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from schema import Schema, And, Or, Optional
+from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
@@ -22,7 +22,7 @@ class NaiveQuantizer(Quantizer):
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): ['weight'],
             Optional('quant_bits'): Or(8, {'weight': 8}),
             Optional('op_types'): [str],
@@ -31,9 +31,6 @@ class NaiveQuantizer(Quantizer):
         }], model, logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'quant_types' not in config:
-                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -187,22 +184,19 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
-            Optional('quant_start_step'): And(int, lambda n: n >= 0),
+            'quant_start_step': And(int, lambda n: n >= 0),
             Optional('op_types'): [str],
             Optional('op_names'): [str],
             Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'quant_types' not in config:
-                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def _quantize(self, bits, op, real_val):
         """
@@ -404,7 +398,7 @@ class DoReFaQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32)
@@ -415,9 +409,6 @@ class DoReFaQuantizer(Quantizer):
         }], model, logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'quant_types' not in config:
-                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)
@@ -515,7 +506,7 @@ class BNNQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
@@ -527,9 +518,6 @@ class BNNQuantizer(Quantizer):
         }], model, logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'quant_types' not in config:
-                raise SchemaError('Either quant_types or exclude must be specified!')
 
     def quantize_weight(self, wrapper, **kwargs):
         weight = copy.deepcopy(wrapper.module.old_weight.data)

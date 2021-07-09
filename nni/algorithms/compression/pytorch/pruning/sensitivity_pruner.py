@@ -7,9 +7,9 @@ import json
 import logging
 import torch
 
-from schema import And, Optional, SchemaError
+from schema import And, Optional
 from nni.compression.pytorch.compressor import Pruner
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from .constants_pruner import PRUNER_DICT
 from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
 
@@ -145,14 +145,14 @@ class SensitivityPruner(Pruner):
         """
 
         if self.base_algo == 'level':
-            schema = CompressorSchema([{
+            schema = PrunerSchema([{
                 Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
                 Optional('exclude'): bool
             }], model, _logger)
         elif self.base_algo in ['l1', 'l2', 'fpgm']:
-            schema = CompressorSchema([{
+            schema = PrunerSchema([{
                 Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
                 Optional('op_names'): [str],
@@ -160,9 +160,6 @@ class SensitivityPruner(Pruner):
             }], model, _logger)
 
         schema.validate(config_list)
-        for config in config_list:
-            if 'exclude' not in config and 'sparsity' not in config:
-                raise SchemaError('Either sparisty or exclude must be specified!')
 
     def load_sensitivity(self, filepath):
         """
