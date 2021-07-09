@@ -27,7 +27,8 @@ class ShuffleNetBlock(nn.Module):
 
         self.branch_main = nn.Sequential(*self._decode_point_depth_conv(sequence))
 
-        # remove if for torchscript
+        # FIXME: restore before merging into master
+        # remove if stride == 2 for torchscript
         self.branch_proj = nn.Sequential(
             # dw
             nn.Conv2d(self.channels, self.channels, ksize, stride, self.pad,
