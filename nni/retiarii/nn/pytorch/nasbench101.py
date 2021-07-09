@@ -366,7 +366,7 @@ class NasBench101Mutator(Mutator):
         if sum([len(e) for e in adjacency_list]) > max_num_edges:
             raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
         matrix = _NasBench101CellFixed.build_connection_matrix(adjacency_list, num_nodes)
-        prune(matrix, [None] * len(matrix))  # dummy ops
+        prune(matrix, [None] * len(matrix))  # dummy ops, possible to raise InvalidMutation inside
 
     def dry_run(self, model):
         return [], model

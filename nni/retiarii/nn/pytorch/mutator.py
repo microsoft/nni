@@ -49,7 +49,7 @@ class InputChoiceMutator(Mutator):
         candidates = list(range(n_candidates))
         if n_chosen is None:
             chosen = [i for i in candidates if self.choice([False, True])]
-            # This is a hack to make choice align with the previous format
+            # FIXME This is a hack to make choice align with the previous format
             self._cur_samples = chosen
         else:
             chosen = [self.choice(candidates) for _ in range(n_chosen)]
@@ -207,7 +207,7 @@ class ManyChooseManyMutator(Mutator):
             n_chosen = self.number_of_chosen(node)
             if n_chosen is None:
                 candidates = [i for i in self.candidates(node) if self.choice([False, True])]
-                # This is a hack to make choice align with the previous format
+                # FIXME This is a hack to make choice align with the previous format
                 # For example, it will convert [False, True, True] into [1, 2].
                 self._cur_samples = candidates
             else:
