@@ -308,7 +308,7 @@ class NNIRestHandler {
                 if (content instanceof Buffer) {
                     res.header('Content-Type', 'application/octet-stream');
                 } else if (content === '') {
-                    content = 'No logs available.'
+                    content = `${filename} is empty.`;
                 }
                 res.send(content);
             }).catch((err: Error) => {
