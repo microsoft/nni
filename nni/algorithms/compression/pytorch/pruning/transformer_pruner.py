@@ -39,7 +39,7 @@ class TransformerHeadPruner(Pruner):
             - op_types : Optional. Operation types to prune. (Should be 'Linear' for this pruner.)
             - op_names : Optional. Operation names to prune.
     head_hidden_dim : int
-        Dimension of hidden dimesion for each attention head. (e.g., 64 for BERT)
+        Dimension of the hidden dimension of each attention head. (e.g., 64 for BERT)
         We assume that this head_hidden_dim is constant across the entire model.
     attention_name_groups : list (Optional)
         List of groups of names for weights of each attention layer. Each element should be a four-element list, with
@@ -51,9 +51,9 @@ class TransformerHeadPruner(Pruner):
         The criterion for ranking attention heads. Currently we support:
             - l1_weight: l1 norm of Q_proj, K_proj, and V_proj
             - l2_weight: l2 norm of Q_proj, K_proj, and V_proj
-            - l1_activation: l1 norm of the output of output projection
-            - l2_activation: l2 norm of the output of output projection
-            - taylorfo: l1 norm of the output of output projection * gradient for this output
+            - l1_activation: l1 norm of the output of attention computation
+            - l2_activation: l2 norm of the output of attention computation
+            - taylorfo: l1 norm of the output of attention computation * gradient for this output
                         (check more details in the masker documentation)
     global_sort : bool
         Whether rank the heads globally or locally before deciding heads to prune.
