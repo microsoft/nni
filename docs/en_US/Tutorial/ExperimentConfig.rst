@@ -285,9 +285,7 @@ maxTrialDuration
 
 Optional. String. Default: 999d.
 
-**maxTrialDuration** specifies the max duration time of each trial job. The unit of the time is {**s**\ , **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }.
-
-Note: The maxTrialDuration spec set the time of each trial job. If current trial job reach the max duration time, this trial job will stop.
+**maxTrialDuration** specifies the max duration time of each trial job. The unit of the time is {**s**\ , **m**\ , **h**\ , **d**\ }, which means {*seconds*\ , *minutes*\ , *hours*\ , *days*\ }. If current trial job reach the max duration time, this trial job will stop.
 
 trainingServicePlatform
 ^^^^^^^^^^^^^^^^^^^^^^^
