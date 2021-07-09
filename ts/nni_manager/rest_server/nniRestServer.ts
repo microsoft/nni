@@ -5,14 +5,13 @@
 
 import * as bodyParser from 'body-parser';
 import * as express from 'express';
+import * as httpProxy from 'http-proxy';
 import * as path from 'path';
 import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
 import { getAPIRootUrl } from '../common/experimentStartupInfo';
-
-const httpProxy = require('http-proxy');
 
 /**
  * NNI Main rest server, provides rest API to support
