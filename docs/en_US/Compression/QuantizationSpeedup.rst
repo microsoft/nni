@@ -48,7 +48,7 @@ Prerequisite
 ------------
 CUDA version >= 11.0
 
-TensorRT version >= 8.0
+TensorRT version >= 7.2
 
 Note
 
