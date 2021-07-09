@@ -728,7 +728,7 @@ Transformer Head Pruner
 -----------------------
 
 Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__.
-Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normall, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Please refer to the original paper or this visualization [change here!!!!] for more details.
+Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normall, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Please refer to the original paper for more details.
 
 Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned. Also, the weights in the output projection corresponding to the head's output are pruned. In our implementation, we calculate and apply masks to the four matrices together.
 
