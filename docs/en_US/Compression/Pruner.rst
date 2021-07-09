@@ -28,6 +28,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 **Others**
 
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
+* `Transformer Head Pruner<#transformerhead-pruner>`__
 
 Level Pruner
 ------------
@@ -722,3 +723,39 @@ User configuration for Sensitivity Pruner
 **PyTorch**
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.SensitivityPruner
+
+Transformer Head Pruner
+------------------
+
+Test test test test.
+
+.. code-block:: bash
+
+       1. Analyze the sensitivity of each layer in the current state of the model.
+       2. Prune each layer according to the sensitivity.
+
+
+For more details, please refer to `Learning both Weights and Connections for Efficient Neural Networks  <https://arxiv.org/abs/1506.02626>`__.
+
+Usage
+^^^^^
+
+PyTorch code
+
+.. code-block:: python
+
+   from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
+   config_list = [{
+           'sparsity': 0.5,
+           'op_types': ['Linear']
+       }]
+   pruner = TransformerHeadPruner(model, config_list, finetuner=fine_tuner, evaluator=evaluator)
+   # eval_args and finetune_args are the parameters passed to the evaluator and finetuner respectively
+   pruner.compress(eval_args=[model], finetune_args=[model])
+
+User configuration for Sensitivity Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.TransformerHeadPruner
