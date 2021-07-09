@@ -259,6 +259,24 @@ class NasBench101Cell(nn.Module):
         def projection_fn(in_features, out_features):
             return nn.Conv2d(in_features, out_features, 1)
 
+    Parameters
+    ----------
+    op_candidates : list of callable
+        Operation candidates. Each should be a function accepts number of feature, returning nn.Module.
+    in_features : int
+        Input dimension of cell.
+    out_features : int
+        Output dimension of cell.
+    projection : callable
+        Projection module that is used to preprocess the input tensor of the whole cell.
+        A callable that accept input feature and output feature, returning nn.Module.
+    max_num_nodes : int
+        Maximum number of nodes in the cell, input and output included. At least 2. Default: 7.
+    max_num_edges : int
+        Maximum number of edges in the cell. Default: 9.
+    label : str
+        Identifier of the cell. Cell sharing the same label will semantically share the same choice.
+
     References
     ----------
     .. [nasbench101] Ying, Chris, et al. "Nas-bench-101: Towards reproducible neural architecture search."
