@@ -1069,7 +1069,6 @@ Manage experiment information
 
      nnictl experiment load --path [path] --codeDir [codeDir]
 
-
 :raw-html:`<a name="platform"></a>`
 
 Manage platform information
