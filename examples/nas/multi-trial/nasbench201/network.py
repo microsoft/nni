@@ -11,7 +11,7 @@ from pytorch_lightning.callbacks import LearningRateMonitor
 from timm.optim import RMSpropTF
 from torch.optim.lr_scheduler import CosineAnnealingLR
 from torchvision import transforms
-from torchvision.datasets import CIFAR10
+from torchvision.datasets import CIFAR100
 
 from base_ops import ResNetBasicblock, PRIMITIVES, OPS_WITH_STRIDE
 
@@ -22,7 +22,7 @@ class NasBench201(nn.Module):
                  stem_out_channels: int = 16,
                  num_modules_per_stack: int = 5,
                  num_labels: int = 100):
-        super(NasBench201, self).__init__()
+        super().__init__()
         self.channels = C = stem_out_channels
         self.num_modules = N = num_modules_per_stack
         self.num_labels = num_labels
@@ -37,7 +37,7 @@ class NasBench201(nn.Module):
 
         C_prev = C
         self.cells = nn.ModuleList()
-        for i, (C_curr, reduction) in enumerate(zip(layer_channels, layer_reductions)):
+        for C_curr, reduction in zip(layer_channels, layer_reductions):
             if reduction:
                 cell = ResNetBasicblock(C_prev, C_curr, 2)
             else:
@@ -73,7 +73,7 @@ class AccuracyWithLogits(torchmetrics.Accuracy):
 
 @serialize_cls
 class NasBench201TrainingModule(pl.LightningModule):
-    def __init__(self, max_epochs=108, learning_rate=0.1, weight_decay=1e-4):
+    def __init__(self, max_epochs=200, learning_rate=0.1, weight_decay=5e-4):
         super().__init__()
         self.save_hyperparameters('learning_rate', 'weight_decay', 'max_epochs')
         self.criterion = nn.CrossEntropyLoss()
@@ -115,7 +115,7 @@ class NasBench201TrainingModule(pl.LightningModule):
 
 
 @click.command()
-@click.option('--epochs', default=108, help='Training length.')
+@click.option('--epochs', default=12, help='Training length.')
 @click.option('--batch_size', default=256, help='Batch size.')
 @click.option('--port', default=8081, help='On which port the experiment is run.')
 def _multi_trial_test(epochs, batch_size, port):
@@ -126,10 +126,10 @@ def _multi_trial_test(epochs, batch_size, port):
     ]
     normalize = [
         transforms.ToTensor(),
-        transforms.Normalize([0.49139968, 0.48215827, 0.44653124], [0.24703233, 0.24348505, 0.26158768])
+        transforms.Normalize([x / 255 for x in [129.3, 124.1, 112.4]], [x / 255 for x in [68.2, 65.4, 70.4]])
     ]
-    train_dataset = serialize(CIFAR10, 'data', train=True, download=True, transform=transforms.Compose(transf + normalize))
-    test_dataset = serialize(CIFAR10, 'data', train=False, transform=transforms.Compose(normalize))
+    train_dataset = serialize(CIFAR100, 'data', train=True, download=True, transform=transforms.Compose(transf + normalize))
+    test_dataset = serialize(CIFAR100, 'data', train=False, transform=transforms.Compose(normalize))
 
     # specify training hyper-parameters
     training_module = NasBench201TrainingModule(max_epochs=epochs)

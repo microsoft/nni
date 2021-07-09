@@ -1,4 +1,5 @@
 import copy
+from collections import OrderedDict
 from typing import Callable, List, Union, Tuple, Optional
 
 import torch
@@ -7,7 +8,6 @@ import torch.nn as nn
 from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
-from .nasbench201 import NasBench201Cell
 from .utils import generate_new_label, get_fixed_value
 
 
@@ -146,3 +146,64 @@ class Cell(nn.Module):
             current_state = torch.sum(torch.stack(current_state), 0)
             states.append(current_state)
         return torch.cat(states[self.num_predecessors:], 1)
+
+
+class NasBench201Cell(nn.Module):
+    """
+    Cell structure that is proposed in NAS-Bench-201 [nasbench201]_ .
+
+    This cell is a densely connected DAG with ``num_tensors`` nodes, where each node is tensor.
+    For every i < j, there is an edge from i-th node to j-th node.
+    Each edge in this DAG is associated with an operation transforming the hidden state from the source node
+    to the target node. All possible operations are selected from a predefined operation set, defined in ``op_candidates``.
+    Each of the ``op_candidates`` should be a callable that accepts input dimension and output dimension,
+    and returns a ``Module``.
+
+    Input of this cell should be of shape :math:`[N, C_{in}, *]`, while output should be :math:`[N, C_{out}, *]`. For example,
+
+    The space size of this cell would be :math:`|op|^{N(N-1)/2}`, where :math:`|op|` is the number of operation candidates,
+    and :math:`N` is defined by ``num_tensors``.
+
+    References
+    ----------
+    .. [nasbench201] Dong, X. and Yang, Y., 2020. Nas-bench-201: Extending the scope of reproducible neural architecture search.
+        arXiv preprint arXiv:2001.00326.
+    """
+
+    @staticmethod
+    def _make_dict(x):
+        if isinstance(x, list):
+            return OrderedDict([(str(i), t) for i, t in enumerate(x)])
+        return OrderedDict(x)
+
+    def __init__(self, op_candidates: List[Callable[[int, int], nn.Module]],
+                 in_features: int, out_features: int, num_tensors: int = 4,
+                 label: Optional[str] = None):
+        super().__init__()
+        self._label = generate_new_label(label)
+
+        self.layers = nn.ModuleList()
+        self.in_features = in_features
+        self.out_features = out_features
+        self.num_tensors = num_tensors
+
+        op_candidates = self._make_dict(op_candidates)
+
+        for tid in range(1, num_tensors):
+            node_ops = nn.ModuleList()
+            for j in range(tid):
+                inp = in_features if j == 0 else out_features
+                op_choices = OrderedDict([(key, cls(inp, out_features))
+                                          for key, cls in op_candidates.items()])
+                node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))
+            self.layers.append(node_ops)
+
+    def forward(self, inputs):
+        tensors = [inputs]
+        for layer in self.layers:
+            current_tensor = []
+            for i, op in enumerate(layer):
+                current_tensor.append(op(tensors[i]))
+            current_tensor = torch.sum(torch.stack(current_tensor), 0)
+            tensors.append(current_tensor)
+        return tensors[-1]

@@ -493,6 +493,28 @@ class GraphIR(unittest.TestCase):
                 model = mutator.bind_sampler(sampler).apply(model)
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
+    def test_nasbench201_cell(self):
+        # this is only supported in python engine for now.
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.NasBench201Cell([
+                    lambda x, y: nn.Linear(x, y),
+                    lambda x, y: nn.Linear(x, y, bias=False)
+                ], 10, 16)
+
+            def forward(self, x):
+                return self.cell(x)
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
+
 
 class Python(GraphIR):
     def _get_converted_pytorch_model(self, model_ir):
