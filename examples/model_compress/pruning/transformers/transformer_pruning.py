@@ -402,7 +402,7 @@ def main():
     eval_dataset = processed_datasets["validation_matched" if args.task_name == "mnli" else "validation"]
 
     #########################################################################
-    # Finetune before pruning
+    # Finetune on the target GLUE task before pruning
     model, optimizer, train_dataloader, eval_dataloader, data_collator = get_dataloader_and_optimizer(args, tokenizer,
                                                                                                       model,
                                                                                                       train_dataset,
@@ -428,21 +428,21 @@ def main():
     else:
         metric = load_metric("accuracy")
 
-    # total_batch_size = args.per_device_train_batch_size * args.gradient_accumulation_steps
-    # logger.info("***** Finetuning before pruning *****")
-    # logger.info(f"  Num examples = {len(train_dataset)}")
-    # logger.info(f"  Num Epochs = {args.num_train_epochs}")
-    # logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
-    # logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
-    # logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
-    # logger.info(f"  Total optimization steps = {args.max_train_steps}")
-    # train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
-    #
-    # if args.output_dir is not None:
-    #     torch.save(model.state_dict(), args.output_dir + '/model_before_pruning.pt')
-    #
-    # if args.task_name == "mnli":
-    #     final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
+    total_batch_size = args.per_device_train_batch_size * args.gradient_accumulation_steps
+    logger.info("***** Finetuning before pruning *****")
+    logger.info(f"  Num examples = {len(train_dataset)}")
+    logger.info(f"  Num Epochs = {args.num_train_epochs}")
+    logger.info(f"  Instantaneous batch size per device = {args.per_device_train_batch_size}")
+    logger.info(f"  Total train batch size (w. parallel, distributed & accumulation) = {total_batch_size}")
+    logger.info(f"  Gradient Accumulation steps = {args.gradient_accumulation_steps}")
+    logger.info(f"  Total optimization steps = {args.max_train_steps}")
+    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
+
+    if args.output_dir is not None:
+        torch.save(model.state_dict(), args.output_dir + '/model_before_pruning.pt')
+
+    if args.task_name == "mnli":
+        final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
 
     #########################################################################
     # Pruning
@@ -458,6 +458,7 @@ def main():
     def trainer(model, optimizer, criterion, epoch):
         return dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
 
+    # We provide three usages, set the "usage" parameter in the command line argument to run one of them.
     # example 1: prune all layers with uniform sparsity
     if args.usage == 1:
         kwargs = {'ranking_criterion': args.ranking_criterion,
@@ -531,13 +532,18 @@ def main():
     pruner = TransformerHeadPruner(model, config_list, **kwargs)
     pruner.compress()
 
+    #########################################################################
     # uncomment the following part to export the pruned model masks
     # model_path = os.path.join(args.output_dir, 'pruned_{}_{}.pth'.format(args.model_name_or_path, args.task_name))
     # mask_path = os.path.join(args.output_dir, 'mask_{}_{}.pth'.format(args.model_name_or_path, args.task_name))
     # pruner.export_model(model_path=model_path, mask_path=mask_path)
 
-    # Currently, speeding up the Transformers through NNI is not supported because of shape inference issues.
+    #########################################################################
+    # Speedup
+    # Currently, speeding up Transformers through NNI ModelSpeedup is not supported because of shape inference issues.
     # However, if you are using the transformers library, you can use the following workaround:
+    # The following code gets the head pruning decisions from the Pruner and calls the _prune_heads() function
+    # implemented in models from the transformers library to speed up the model.
     if args.speed_up:
         speedup_rules = {}
         for group_idx, group in enumerate(pruner.attention_name_groups):
