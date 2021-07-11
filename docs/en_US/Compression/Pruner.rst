@@ -28,7 +28,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 **Others**
 
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
-* `Transformer Head Pruner<#transformerhead-pruner>`__
+* `Transformer Head Pruner <#transformerhead-pruner>`__
 
 Level Pruner
 ------------
