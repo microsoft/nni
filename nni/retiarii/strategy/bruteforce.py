@@ -86,15 +86,28 @@ class Random(BaseStrategy):
         Do not try the same configuration twice. When variational is true, deduplication is not supported. Default: true.
     """
 
-    def __init__(self, variational=False, dedup=True):
+    def __init__(self, variational=False, dedup=True, model_filter=None):
         self.variational = variational
         self.dedup = dedup
         if variational and dedup:
             raise ValueError('Dedup is not supported in variational mode.')
         self.random_sampler = _RandomSampler()
         self._polling_interval = 2.
+        self.filter = model_filter
 
     def run(self, base_model, applied_mutators):
+        def filter_model(ir_model):
+            if self.filter is not None:
+                _logger.debug(f'Check if model satisfies constraints.')
+                if self.filter(ir_model):
+                    _logger.debug(f'Model satisfied. Submit the model.')
+                    return True
+                else:
+                    _logger.debug(f'Model unsatisfied. Discard the model.')
+                    return False
+            else:
+                return True
+
         if self.variational:
             _logger.info('Random search running in variational mode.')
             sampler = _RandomSampler()
@@ -107,7 +120,8 @@ class Random(BaseStrategy):
                     for mutator in applied_mutators:
                         model = mutator.apply(model)
                     _logger.debug('New model created. Applied mutators are: %s', str(applied_mutators))
-                    submit_models(model)
+                    if filter_model(model):
+                        submit_models(model)
                 elif budget_exhausted():
                     break
                 else:
@@ -121,4 +135,6 @@ class Random(BaseStrategy):
                     if budget_exhausted():
                         return
                     time.sleep(self._polling_interval)
-                submit_models(get_targeted_model(base_model, applied_mutators, sample))
+                model = get_targeted_model(base_model, applied_mutators, sample)
+                if filter_model(model):
+                    submit_models(model)
