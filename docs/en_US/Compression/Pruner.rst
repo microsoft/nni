@@ -736,26 +736,26 @@ The pruner implements the following algorithm:
 
 .. code-block:: bash
 
-    Repeat for each pruning iteration (only 1 for one-shot pruning):
-       1. Calculate importance scores for each head in each specified layer (with different criterion options)
-       2. Sort heads locally or globally, and prune out some heads with lowest scores. The number of pruned heads is determined according to the sparsity parameter.
+    Repeat for each pruning iteration (1 for one-shot pruning):
+       1. Calculate importance scores for each head in each specified layer using a specific criterion
+       2. Sort heads locally or globally, and prune out some heads with lowest scores. The number of pruned heads is determined according to the sparsity specified in the config.
        3. If the specified pruning iteration is larger than 1 (iterative pruning), finetune the model for a while before the next pruning iteration.
 
 Currently, the following head sorting criteria are supported:
 
-    * "l1_weight": rank heads by the L1-norm of their query, key, and value projection matrices.
-    * "l2_weight": rank heads by the L2-norm of their query, key, and value projection matrices.
+    * "l1_weight": rank heads by the L1-norm of weights of the query, key, and value projection matrices.
+    * "l2_weight": rank heads by the L2-norm of weights of the query, key, and value projection matrices.
     * "l1_activation": rank heads by the L1-norm of their attention computation output.
     * "l2_activation": rank heads by the L2-norm of their attention computation output.
     * "taylorfo": rank heads by l1 norm of the output of attention computation * gradient for this output. Check more details in `this paper <https://arxiv.org/abs/1905.10650>`__ and `this one <https://arxiv.org/abs/1611.06440>`__.
 
 We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list.
 
-In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a 2-d list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below).
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below).
 
-However, if you would like to assign different sparsity to each layer, currently you could only use the first option, i.e., passing names of the weights to the pruner (usage 3 below).
+However, if you would like to assign different sparsity to each layer, currently you could only use the first option, i.e., passing names of the weights to the pruner (usage 3 below). Also note that weights belong to the same layer must have the same sparsity.
 
-In addition to the following usage guide, we provide a more detailed example of pruning BERT and running it on tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
+In addition to the following usage guide, we provide a more detailed example of pruning BERT for tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
 
 Usage
 ^^^^^
@@ -768,7 +768,7 @@ Usage 1: one-shot pruning, same sparsity for all the layers (PyTorch code)
    kwargs = {'ranking_criterion': "l1_weight",
              'global_sort': False,
              'num_iterations': 1,
-             'epochs_per_iteration': 1,    # this is ignored when num_iterations = 1
+             'epochs_per_iteration': 1,        # this is ignored when num_iterations = 1
              'head_hidden_dim': 64,
              'dummy_input': dummy_input,
              'trainer': trainer,
@@ -781,7 +781,7 @@ Usage 1: one-shot pruning, same sparsity for all the layers (PyTorch code)
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
-Usage 2: one-shot pruning, passing names to the pruner instead of dummy input (PyTorch code)
+Usage 2: same effect as usage 1, the only change is passing names to the pruner instead of dummy input (PyTorch code)
 
 .. code-block:: python
 
@@ -806,7 +806,7 @@ Usage 2: one-shot pruning, passing names to the pruner instead of dummy input (P
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
-Usage 3: one-shot pruning, different sparsity for different layer (PyTorch code)
+Usage 3: one-shot pruning, setting different sparsity for different layers (PyTorch code)
 
 .. code-block:: python
 
