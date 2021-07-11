@@ -6,6 +6,7 @@ import torch
 from nni.retiarii import serialize
 from nni.retiarii.nn.pytorch import LayerChoice
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
+from nni.retiarii.strategy.filter import LatencyFilter
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -73,10 +74,10 @@ class ShuffleNetV2(nn.Module):
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
             choice_block = LayerChoice([
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
-                serialize(ShuffleXceptionBlock, inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
+                ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
             ])
             result.append(choice_block)
 
@@ -142,9 +143,12 @@ def _main(port):
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
                                 max_epochs=2, gpus=1)
 
-    simple_strategy = strategy.Random()
+    simple_strategy = strategy.Random(model_filter=LatencyFilter(100))
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
+    example_inputs = torch.randn(1, 3, 32, 32)
+
+    base_model.eval()
+    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy, True, example_inputs)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.trial_concurrency = 2
