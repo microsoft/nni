@@ -57,7 +57,7 @@ class IterativePruner(DependencyAwarePruner):
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
-        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
+        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, global_sort, **algo_kwargs)
 
         if isinstance(epochs_per_iteration, list):
             assert len(epochs_per_iteration) == num_iterations, 'num_iterations should equal to the length of epochs_per_iteration'
@@ -501,7 +501,7 @@ class TaylorFOWeightFilterPruner(IterativePruner):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
                          epochs_per_iteration=1, dependency_aware=dependency_aware,
-                         dummy_input=dummy_input)
+                         dummy_input=dummy_input, global_sort=global_sort)
 
     def _supported_dependency_aware(self):
         return True

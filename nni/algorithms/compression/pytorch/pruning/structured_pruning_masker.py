@@ -496,7 +496,7 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
             channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
             wrapper_size = wrapper.module.weight.size().numel()
             channel_size = wrapper.module.weight.size(0)
-            contribution_expand = channel_contribution.expand(wrapper_size / channel_size, channel_size).view(-1)
+            contribution_expand = channel_contribution.expand(int(wrapper_size / channel_size), channel_size).reshape(-1)
             channel_contribution_list.append(contribution_expand)
         all_channel_contributions = torch.cat(channel_contribution_list)
         k = int(all_channel_contributions.shape[0] * self.pruner.config_list[0]['sparsity'])
