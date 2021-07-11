@@ -11,6 +11,7 @@ import logging
 import numpy as np
 
 import nni
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 from nni.utils import convert_dict2tuple
 
@@ -144,6 +145,7 @@ class GridSearchTuner(Tuner):
         search_space : dict
             The format could be referred to search space spec (https://nni.readthedocs.io/en/latest/Tutorial/SearchSpaceSpec.html).
         """
+        validate_search_space(search_space, ['choice', 'randint', 'quniform'])
         self.expanded_search_space = self._json2parameter(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):

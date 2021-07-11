@@ -51,7 +51,7 @@ class Customize extends React.Component<CustomizeProps, CustomizeState> {
         // get user edited hyperParameter, ps: will change data type if you modify the input val
         const customized = JSON.parse(JSON.stringify(copyTrialParameter));
         // changeMap: user changed keys: values
-        changeMap.forEach(function(value, key) {
+        changeMap.forEach(function (value, key) {
             customized[key] = value;
         });
 

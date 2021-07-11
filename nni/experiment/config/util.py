@@ -92,3 +92,10 @@ def _parse_unit(string, target_unit, all_units):
             value = float(number) * factor
             return math.ceil(value / all_units[target_unit])
     raise ValueError(f'Unsupported unit in "{string}"')
+
+def canonical_gpu_indices(indices: Union[List[int], str, int, None]) -> Optional[List[int]]:
+    if isinstance(indices, str):
+        return [int(idx) for idx in indices.split(',')]
+    if isinstance(indices, int):
+        return [indices]
+    return indices

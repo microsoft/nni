@@ -14,7 +14,7 @@ from subprocess import Popen, check_call, CalledProcessError, PIPE, STDOUT
 from nni.experiment.config import ExperimentConfig, convert
 from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.tools.package_utils import get_builtin_module_class_name
-import nni_node  # pylint: disable=import-error
+import nni_node  # pylint: disable=import-error, wrong-import-order
 from .launcher_utils import validate_all_content
 from .rest_utils import rest_put, rest_post, check_rest_server, check_response
 from .url_utils import cluster_metadata_url, experiment_url, get_local_urls, set_prefix_url
@@ -403,9 +403,13 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         if not os.path.isdir(path):
             os.makedirs(path)
         path = tempfile.mkdtemp(dir=path)
-        nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
-        code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
-        experiment_config['trial']['codeDir'] = code_dir
+        if config_version == 1:
+            nas_mode = experiment_config['trial'].get('nasMode', 'classic_mode')
+            code_dir = expand_annotations(experiment_config['trial']['codeDir'], path, nas_mode=nas_mode)
+            experiment_config['trial']['codeDir'] = code_dir
+        else:
+            code_dir = expand_annotations(experiment_config['trialCodeDirectory'], path)
+            experiment_config['trialCodeDirectory'] = code_dir
         search_space = generate_search_space(code_dir)
         experiment_config['searchSpace'] = search_space
         assert search_space, ERROR_INFO % 'Generated search space is empty'

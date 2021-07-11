@@ -204,17 +204,18 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.log.info(`Resuming experiment: ${experimentId}`);
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
-        this.readonly = readonly;
-        if (readonly) {
-            this.setStatus('VIEWED');
-            return Promise.resolve();
-        }
 
         const config: ExperimentConfig = this.experimentProfile.params;
         this.config = config;
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             this.trainingService = await this.initTrainingService(config);
+        }
+
+        this.readonly = readonly;
+        if (readonly) {
+            this.setStatus('VIEWED');
+            return;
         }
 
         this.log.info('Setup tuner...');
@@ -490,7 +491,7 @@ class NNIManager implements Manager {
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
-        this.dispatcherPid = tunerProc.pid;
+        this.dispatcherPid = tunerProc.pid!;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
         return;

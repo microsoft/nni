@@ -290,6 +290,9 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
                 calib_data_set.append(data)
             calib_data = np.concatenate(calib_data_set)
         elif type(self.calib_data_loader) == torch.Tensor:
+            # trt need numpy as calibration data, only cpu data can convert to numpy directly
+            if self.calib_data_loader.device != torch.device("cpu"):
+                self.calib_data_loader = self.calib_data_loader.to("cpu")
             calib_data = self.calib_data_loader.numpy()
         else:
             raise ValueError("Not support calibration datatype")
@@ -326,6 +329,8 @@ class ModelSpeedupTensorRT(BaseModelSpeedup):
             Model input tensor
         """
         # convert pytorch tensor to numpy darray
+        if test_data.device != torch.device("cpu"):
+            test_data = test_data.to("cpu")
         test_data = test_data.numpy()
         # Numpy dtype should be float32
         assert test_data.dtype == np.float32

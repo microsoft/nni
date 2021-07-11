@@ -68,3 +68,13 @@ Step 2. **Submit the first trial.** To initiate a trial, usually (in non-reuse m
 .. Warning:: The working directory of trial command has exactly the same content as ``codeDir``, but can have different paths (even on different machines) Local mode is the only training service that shares one ``codeDir`` across all trials. Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
 
 Step 3. **Collect metrics.**  NNI then monitors the status of trial, updates the status (e.g., from ``WAITING`` to ``RUNNING``\ , ``RUNNING`` to ``SUCCEEDED``\ ) recorded, and also collects the metrics. Currently, most training services are implemented in an "active" way, i.e., training service will call the RESTful API on NNI manager to update the metrics. Note that this usually requires the machine that runs NNI manager to be at least accessible to the worker node.
+
+
+Training Service Under Reuse Mode
+---------------------------------
+
+When reuse mode is enabled, a cluster, such as a remote machine or a computer instance on AML, will launch a long-running environment, so that NNI will submit trials to these environments iteratively, which saves the time to create new jobs. For instance, using OpenPAI training platform under reuse mode can avoid the overhead of pulling docker images, creating containers, and downloading data repeatedly.
+
+In the reuse mode, user needs to make sure each trial can run independently in the same job (e.g., avoid loading checkpoints from previous trials).
+
+.. note:: Currently, only `Local <./LocalMode.rst>`__, `Remote <./RemoteMachineMode.rst>`__, `OpenPAI <./PaiMode.rst>`__ and `AML <./AMLMode.rst>`__ training services support resue mode. For Remote and OpenPAI training platforms, you can enable reuse mode according to `here <../reference/experiment_config.rst>`__ manually. AML is implemented under reuse mode, so the default mode is reuse mode, no need to manually enable.

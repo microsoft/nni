@@ -22,12 +22,12 @@ class RemoteMachineConfig(ConfigBase):
     ssh_passphrase: Optional[str] = None
     use_active_gpu: bool = False
     max_trial_number_per_gpu: int = 1
-    gpu_indices: Optional[Union[List[int], str]] = None
+    gpu_indices: Union[List[int], str, int, None] = None
     python_path: Optional[str] = None
 
     _canonical_rules = {
         'ssh_key_file': util.canonical_path,
-        'gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value,
+        'gpu_indices': util.canonical_gpu_indices
     }
 
     _validation_rules = {
