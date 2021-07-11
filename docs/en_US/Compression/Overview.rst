@@ -76,6 +76,7 @@ Pruning algorithms compress the original network by removing redundant weights o
    * - `Transformer Head Pruner <../Compression/Pruner.rst#transformerhead-pruner>`__
      - Pruning attention heads of transformer models by a range of ranking metrics.
 
+
 You can refer to this `benchmark <../CommunitySharings/ModelCompressionComparison.rst>`__ for the performance of these pruners on some benchmark problems.
 
 Quantization Algorithms
