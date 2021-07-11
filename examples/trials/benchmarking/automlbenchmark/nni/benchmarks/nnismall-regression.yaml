@@ -1,0 +1,30 @@
+---
+- name: __defaults__
+  folds: 2
+  cores: 2
+  max_runtime_seconds: 300
+  
+- name: cholesterol
+  openml_task_id: 2295
+
+- name: liver-disorders
+  openml_task_id: 52948
+
+- name: kin8nm
+  openml_task_id: 2280
+
+- name: cpu_small
+  openml_task_id: 4883
+  
+- name: titanic_2
+  openml_task_id: 211993
+ 
+- name: boston
+  openml_task_id: 4857
+ 
+- name: stock
+  openml_task_id: 2311
+ 
+- name: space_ga
+  openml_task_id: 4835
+ 
