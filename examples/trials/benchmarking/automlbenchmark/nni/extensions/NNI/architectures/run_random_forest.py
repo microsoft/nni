@@ -110,33 +110,34 @@ def run_random_forest(dataset, config, tuner, log):
     intermediate_best_scores = []           # should be monotonically increasing 
     
     while True:
-        try:
-            trial_count += 1
+        try:            
             param_idx, cur_params = tuner.generate_parameters()
-            train_params = cur_params.copy()
-            if 'TRIAL_BUDGET' in cur_params:
-                train_params.pop('TRIAL_BUDGET')
-            if cur_params['max_leaf_nodes'] == 0: 
-                train_params.pop('max_leaf_nodes')
-            if cur_params['max_depth'] == 0:
-                train_params.pop('max_depth')
-            log.info("Trial {}: \n{}\n".format(param_idx, cur_params))
+            if cur_params is not None and cur_params != {}:
+                trial_count += 1
+                train_params = cur_params.copy()
+                if 'TRIAL_BUDGET' in cur_params:
+                    train_params.pop('TRIAL_BUDGET')
+                if cur_params['max_leaf_nodes'] == 0: 
+                    train_params.pop('max_leaf_nodes')
+                if cur_params['max_depth'] == 0:
+                    train_params.pop('max_depth')
+                log.info("Trial {}: \n{}\n".format(param_idx, cur_params))
                 
-            cur_model = estimator(random_state=config.seed, **train_params)
+                cur_model = estimator(random_state=config.seed, **train_params)
             
-            # Here score is the output of score() from the estimator
-            cur_score = cross_val_score(cur_model, X_train, y_train)
-            cur_score = sum(cur_score) / float(len(cur_score))
-            if np.isnan(cur_score):
-                cur_score = 0
+                # Here score is the output of score() from the estimator
+                cur_score = cross_val_score(cur_model, X_train, y_train)
+                cur_score = sum(cur_score) / float(len(cur_score))
+                if np.isnan(cur_score):
+                    cur_score = 0
             
-            log.info("Score: {}\n".format(cur_score))
-            if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
-                best_score, best_params, best_model = cur_score, cur_params, cur_model    
+                log.info("Score: {}\n".format(cur_score))
+                if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
+                    best_score, best_params, best_model = cur_score, cur_params, cur_model    
             
-            intermediate_scores.append(cur_score)
-            intermediate_best_scores.append(best_score)
-            tuner.receive_trial_result(param_idx, cur_params, cur_score)
+                intermediate_scores.append(cur_score)
+                intermediate_best_scores.append(best_score)
+                tuner.receive_trial_result(param_idx, cur_params, cur_score)
 
             if limit_type == 'time':
                 current_time = time.time()
