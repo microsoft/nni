@@ -115,13 +115,14 @@ def run_random_forest(dataset, config, tuner, log):
             if cur_params is not None and cur_params != {}:
                 trial_count += 1
                 train_params = cur_params.copy()
+                train_params = {x: int(train_params[x]) for x in train_params.keys()}
                 if 'TRIAL_BUDGET' in cur_params:
                     train_params.pop('TRIAL_BUDGET')
                 if cur_params['max_leaf_nodes'] == 0: 
                     train_params.pop('max_leaf_nodes')
                 if cur_params['max_depth'] == 0:
                     train_params.pop('max_depth')
-                log.info("Trial {}: \n{}\n".format(param_idx, cur_params))
+                log.info("Trial {}: \n{}\n".format(param_idx, train_params))
                 
                 cur_model = estimator(random_state=config.seed, **train_params)
             
