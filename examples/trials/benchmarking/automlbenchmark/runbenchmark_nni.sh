@@ -4,7 +4,7 @@ time=$(date "+%Y%m%d%H%M%S")
 installation='automlbenchmark'
 outdir="results_$time"
 benchmark='nnivalid'      # 'nnismall'  
-serialize=$true           # if false, run all experiments together in background
+serialize=true           # if false, run all experiments together in background
 
 mkdir $outdir $outdir/scorelogs $outdir/reports 
 
@@ -14,7 +14,7 @@ else
     tuner_array=( "$@" )
 fi
 
-if [ $serialize ]; then
+if [ "$serialize" = true ]; then
     # run tuners serially 
     for tuner in ${tuner_array[*]}; do
 	echo "python $installation/runbenchmark.py $tuner $benchmark -o $outdir -u nni"
