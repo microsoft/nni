@@ -838,6 +838,7 @@ Usage 3: one-shot pruning, different sparsity for different layer (PyTorch code)
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
+
 User configuration for Transformer Head Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
