@@ -73,7 +73,7 @@ Pruning algorithms compress the original network by removing redundant weights o
      - Automatic pruning by iteratively call SimulatedAnnealing Pruner and ADMM Pruner `Reference Paper <https://arxiv.org/abs/1907.03141>`__
    * - `AMC Pruner <../Compression/Pruner.rst#amc-pruner>`__
      - AMC: AutoML for Model Compression and Acceleration on Mobile Devices `Reference Paper <https://arxiv.org/pdf/1802.03494.pdf>`__
-   * - `Transformer Head Pruner <./Pruner.rst#transformerhead-pruner>`__
+   * - `Transformer Head Pruner <../Compression/Pruner.rst#transformer-head-pruner>`__
      - Pruning attention heads of transformer models by a range of ranking metrics.
 
 

@@ -28,7 +28,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 **Others**
 
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
-* `Transformer Head Pruner <#transformerhead-pruner>`__
+* `Transformer Head Pruner <#transformer-head-pruner>`__
 
 Level Pruner
 ------------
@@ -728,7 +728,7 @@ Transformer Head Pruner
 -----------------------
 
 Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__.
-Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normall, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Please refer to the original paper for more details.
+Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normally, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Please refer to the original paper for more details.
 
 Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned. Also, the weights in the output projection corresponding to the head's output are pruned. In our implementation, we calculate and apply masks to the four matrices together.
 
@@ -749,13 +749,13 @@ Currently, the following head sorting criteria are supported:
     * "l2_activation": rank heads by the L2-norm of their attention computation output.
     * "taylorfo": rank heads by l1 norm of the output of attention computation * gradient for this output. Check more details in `this paper <https://arxiv.org/abs/1905.10650>`__ and `this one <https://arxiv.org/abs/1611.06440>`__.
 
-We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the `global_sort` parameter. Note that if `global_sort=True` is passed, all weights must have the same sparsity in the config list.
+We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list.
 
-In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a 2-d list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run `torch.jit.trace` to group the weights (usage 2 below).
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a 2-d list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below).
 
 However, if you would like to assign different sparsity to each layer, currently you could only use the first option, i.e., passing names of the weights to the pruner (usage 3 below).
 
-In addition to the following usage guide, we provide a more detailed example of pruning BERT and running it on tasks from the GLUE benchmark. Please find it in this :githublink:`example <examples/model_compress/pruning/transformers>`.
+In addition to the following usage guide, we provide a more detailed example of pruning BERT and running it on tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
 
 Usage
 ^^^^^
