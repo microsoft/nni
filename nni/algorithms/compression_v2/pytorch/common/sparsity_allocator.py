@@ -1,10 +1,13 @@
 from typing import Dict, List, Tuple, Union, Optional
 
+import numpy as np
 import torch
 from torch import Tensor
 
 from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression_v2.pytorch.base.common import SparsityAllocator
+
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 
 class NormalSparsityAllocator(SparsityAllocator):
@@ -34,7 +37,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
         masks = {}
         # {group_index: {layer_name: metric}}
         grouped_metrics = {idx: {name: metrics[name] for name in names}
-                           for idx, names in self.pruner._config_based_group_info.items()}
+                           for idx, names in self.pruner.config_based_group_info.items()}
         for _, group_metric_dict in grouped_metrics.items():
             threshold, sub_thresholds = self._calculate_threshold(group_metric_dict)
             for name, metric in group_metric_dict.items():
@@ -64,3 +67,63 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         threshold = torch.topk(torch.cat(metric_list).view(-1), total_prune_num, largest=False)[0].max().item()
         return threshold, sub_thresholds
+
+
+class Conv2dDependencyAwareAllocator(SparsityAllocator):
+    def __init__(self, pruner: Pruner, dim: int):
+        assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
+        super().__init__(pruner, dim=dim)
+
+    def _get_dependency(self):
+        assert self.pruner.graph is not None, 'compressor.graph is None, must set graph_needed as True to get the graph info.'
+
+        self.channel_depen = ChannelDependency(traced_model=self.pruner.graph.trace).dependency_sets
+        self.group_depen = GroupDependency(traced_model=self.pruner.graph.trace).dependency_sets
+
+    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        grouped_metrics = {idx: {name: metrics[name] for name in names}
+                           for idx, names in enumerate(self.channel_depen)}
+        for _, group_metric_dict in grouped_metrics.items():
+            group_metric = self._group_metric_calculate(group_metric_dict)
+
+            sparsities = {name: self.pruner._get_modules_wrapper()[name].config['sparsity'] for name in group_metric_dict.keys()}
+            min_sparsity = min(sparsities.values())
+
+            conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]
+            max_conv2d_group = np.lcm.reduce(conv2d_groups)
+
+            pruned_per_conv2d_group = int(group_metric.numel() / max_conv2d_group * min_sparsity)
+            conv2d_group_step = int(group_metric.numel() / max_conv2d_group)
+
+            group_mask = []
+            for gid in range(max_conv2d_group):
+                _start = gid * conv2d_group_step
+                _end = (gid + 1) * conv2d_group_step
+                if pruned_per_conv2d_group > 0:
+                    threshold = torch.topk(group_metric[_start: _end], pruned_per_conv2d_group, largest=False)[0].max()
+                    conv2d_group_mask = torch.gt(group_metric[_start:_end], threshold).type_as(group_metric)
+                else:
+                    conv2d_group_mask = torch.ones(conv2d_group_step, device=group_metric.device)
+                group_mask.append(conv2d_group_mask)
+            group_mask = torch.cat(group_mask, dim=0)
+
+            for name, metric in group_metric_dict.items():
+                metric = (metric - metric.min()) * group_mask
+                pruned_num = int(sparsities[name] * len(metric))
+                threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
+                mask = torch.gt(metric, threshold).type_as(metric)
+                masks[name] = self._expand_mask_with_dim(name, mask)
+        
+        return masks
+
+    def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
+        """
+        Add all metric value in the same position in one group.
+        """
+        group_metrics = list(group_metrics.values()) if isinstance(group_metrics, dict) else group_metrics
+        assert all(group_metrics[0].size() == group_metric.size() for group_metric in group_metrics), 'Metrics size do not match.'
+        group_sum_metric = torch.zeros(group_metrics[0].size(), device=group_metrics[0].device)
+        for group_metric in group_metrics:
+            group_sum_metric += group_metric
+        return group_sum_metric

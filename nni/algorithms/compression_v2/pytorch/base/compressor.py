@@ -5,7 +5,9 @@ from typing import List, Dict, Optional, OrderedDict, Tuple, Any
 
 import torch
 from torch.nn import Module
+from torch.tensor import Tensor
 
+from nni.common.graph_utils import TorchModuleGraph
 
 _logger = logging.getLogger(__name__)
 
@@ -33,7 +35,7 @@ weighted_modules = [
 
 
 class Compressor:
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool, **kwargs):
+    def __init__(self, model: Module, config_list: List[Dict], back_up: bool, graph_needed: bool = False, dummy_input: Optional[Tensor] = None, **kwargs):
         """
         Parameters
         ----------
@@ -47,6 +49,8 @@ class Compressor:
         assert isinstance(model, Module)
 
         self._back_up = back_up
+        self._graph_needed = graph_needed
+        self._dummy_input = dummy_input
         self.is_wrapped = False
 
         self._origin_model = None
@@ -74,23 +78,28 @@ class Compressor:
 
         self._unwrap_model()
 
-        self.modules_to_compress = None
-        self._config_based_group_info = None
+        self._modules_to_compress = None
+        self.config_based_group_info = None
         self.modules_wrapper = collections.OrderedDict()
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper[layer.name] = wrapper
 
+        self.graph = None
+        if self._graph_needed:
+            assert self._dummy_input is not None, 'dummy_input is needed for generate graph.'
+            self.graph = TorchModuleGraph(model=self.bound_model, dummy_input=self._dummy_input)
+
         self._wrap_model()
 
     def _detect_modules_to_compress(self) -> List[Tuple[LayerInfo, Dict]]:
         """
-        Detect all modules should be compressed, and save the result in `self.modules_to_compress`.
+        Detect all modules should be compressed, and save the result in `self._modules_to_compress`.
         The model will be instrumented and user should never edit it after calling this method.
         """
-        if self.modules_to_compress is None:
-            self.modules_to_compress = []
-            self._config_based_group_info = {}
+        if self._modules_to_compress is None:
+            self._modules_to_compress = []
+            self.config_based_group_info = {}
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
                     continue
@@ -98,10 +107,10 @@ class Compressor:
                 result = self._select_config(layer)
                 if result is not None:
                     idx, config = result
-                    self.modules_to_compress.append((layer, config))
-                    self._config_based_group_info.setdefault(idx, [])
-                    self._config_based_group_info[idx].append(layer.name)
-        return self.modules_to_compress
+                    self._modules_to_compress.append((layer, config))
+                    self.config_based_group_info.setdefault(idx, [])
+                    self.config_based_group_info[idx].append(layer.name)
+        return self._modules_to_compress
 
     def _select_config(self, layer: LayerInfo) -> Optional[Tuple[int, Dict]]:
         """
@@ -211,7 +220,7 @@ class Compressor:
         Compress the model with algorithm implemented by subclass.
 
         The model will be instrumented and user should never edit it after calling this method.
-        `self.modules_to_compress` records all the to-be-compressed layers.
+        `self._modules_to_compress` records all the to-be-compressed layers.
 
         Returns
         -------
