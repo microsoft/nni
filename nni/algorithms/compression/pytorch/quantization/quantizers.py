@@ -190,7 +190,7 @@ class QAT_Quantizer(Quantizer):
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
-            'quant_start_step': And(int, lambda n: n >= 0),
+            Optional('quant_start_step'): And(int, lambda n: n >= 0),
             Optional('op_types'): [str],
             Optional('op_names'): [str],
             Optional('exclude'): bool
