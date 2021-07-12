@@ -7,7 +7,7 @@ from multiprocessing.pool import ThreadPool
 import gym
 import numpy as np
 import torch
-import torch.nn as nn
+# import torch.nn as nn
 
 from gym import spaces
 from tianshou.data import to_torch
@@ -117,29 +117,29 @@ class ModelEvaluationEnv(gym.Env):
             return obs, 0., False, {}
 
 
-class Preprocessor(nn.Module):
+class Preprocessor(torch.nn.Module):
     def __init__(self, obs_space, hidden_dim=64, num_layers=1):
         super().__init__()
         self.action_dim = obs_space['action_history'].nvec[0]
         self.hidden_dim = hidden_dim
         # first token is [SOS]
-        self.embedding = nn.Embedding(self.action_dim + 1, hidden_dim)
-        self.rnn = nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
+        self.embedding = torch.nn.Embedding(self.action_dim + 1, hidden_dim)
+        self.rnn = torch.nn.LSTM(hidden_dim, hidden_dim, num_layers, batch_first=True)
 
     def forward(self, obs):
-        seq = nn.functional.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
+        seq = torch.nn.functional.pad(obs['action_history'] + 1, (1, 1))  # pad the start token and end token
         # end token is used to avoid out-of-range of v_s_. Will not actually affect BP.
         seq = self.embedding(seq.long())
         feature, _ = self.rnn(seq)
         return feature[torch.arange(len(feature), device=feature.device), obs['cur_step'].long() + 1]
 
 
-class Actor(nn.Module):
+class Actor(torch.nn.Module):
     def __init__(self, action_space, preprocess):
         super().__init__()
         self.preprocess = preprocess
         self.action_dim = action_space.n
-        self.linear = nn.Linear(self.preprocess.hidden_dim, self.action_dim)
+        self.linear = torch.nn.Linear(self.preprocess.hidden_dim, self.action_dim)
 
     def forward(self, obs, **kwargs):
         obs = to_torch(obs, device=self.linear.weight.device)
@@ -147,14 +147,14 @@ class Actor(nn.Module):
         # to take care of choices with different number of options
         mask = torch.arange(self.action_dim).expand(len(out), self.action_dim) >= obs['action_dim'].unsqueeze(1)
         out[mask.to(out.device)] = float('-inf')
-        return nn.functional.softmax(out, dim=-1), kwargs.get('state', None)
+        return torch.nn.functional.softmax(out, dim=-1), kwargs.get('state', None)
 
 
-class Critic(nn.Module):
+class Critic(torch.nn.Module):
     def __init__(self, preprocess):
         super().__init__()
         self.preprocess = preprocess
-        self.linear = nn.Linear(self.preprocess.hidden_dim, 1)
+        self.linear = torch.nn.Linear(self.preprocess.hidden_dim, 1)
 
     def forward(self, obs, **kwargs):
         obs = to_torch(obs, device=self.linear.weight.device)
