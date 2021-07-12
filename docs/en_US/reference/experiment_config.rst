@@ -833,7 +833,7 @@ If the path does not exist, it will be created automatically. Recommended to use
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+The path that the storage will be mounted in the remote machine.
 
 type: ``str``
 
@@ -890,7 +890,7 @@ If the path does not exist, it will be created automatically. Recommended to use
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+The path that the storage will be mounted in the remote machine.
 
 type: ``str``
 
