@@ -1,8 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
-import sklearn
+# import logging
+# import sklearn
 import time
 import numpy as np
 
@@ -146,14 +146,14 @@ def run_random_forest(dataset, config, tuner, log):
             elif limit_type == 'ntrials':
                 if trial_count >= trial_limit:
                     break
-        except:
+        except Exception as err:
+            log.info(err)
             break
 
     # This line is required to fully terminate some advisors
     tuner.handle_terminate()
         
     log.info("Tuning done, the best parameters are:\n{}\n".format(best_params))
-
     # retrain on the whole dataset 
     with Timer() as training:
         best_model.fit(X_train, y_train)     
