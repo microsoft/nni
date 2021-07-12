@@ -7,10 +7,12 @@ import torch.nn as nn
 from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
+from .nasbench101 import NasBench101Cell, NasBench101Mutator
 from .utils import generate_new_label, get_fixed_value
+from ...utils import NoContextError
 
 
-__all__ = ['Repeat', 'Cell']
+__all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator']
 
 
 class Repeat(nn.Module):
@@ -33,7 +35,7 @@ class Repeat(nn.Module):
         try:
             repeat = get_fixed_value(label)
             return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
-        except AssertionError:
+        except NoContextError:
             return super().__new__(cls)
 
     def __init__(self,
