@@ -6,7 +6,7 @@ import copy
 import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
+from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
 
@@ -126,7 +126,7 @@ class QAT_Quantizer(Quantizer):
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None, model_inputs=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
         """
         Parameters
         ----------
@@ -145,11 +145,11 @@ class QAT_Quantizer(Quantizer):
                     state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
-                - model_inputs : tuple of tensor
+                - dummy_input : tuple of tensor
                     inputs to the model, which are used to get the graph of the module
         """
 
-        super().__init__(model, config_list, optimizer, model_inputs)
+        super().__init__(model, config_list, optimizer, dummy_input)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         device = next(model.parameters()).device
@@ -174,7 +174,7 @@ class QAT_Quantizer(Quantizer):
         """
         del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation',
                          'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bit',
-                         'activation_bit']
+                         'activation_bit', 'BN_FOLD_TAG']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -338,6 +338,23 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['weight_bit'] = int(module.weight_bit)
                 calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
+
+                # Recover weight/bias for batch normalization folding
+                if hasattr(module, BN_FOLD_TAG):
+                    actual_weight = getattr(module, 'old_weight', None)
+                    if actual_weight is None:
+                        logger.warning("Can not recover weight for layer {}. "
+                                       "This may lead to a wrong accuracy performance on the backend.".format(name))
+                    delattr(module, 'weight')
+                    module.register_parameter('weight', actual_weight)
+
+                    actual_bias = getattr(module, 'old_bias', None)
+                    delattr(module, 'bias')
+                    if actual_bias is not None:
+                        module.register_parameter('bias', actual_bias)
+                    else:
+                        setattr(module, 'bias', None)
+
             if hasattr(module, 'activation_bit'):
                 calibration_config[name]['activation_bit'] = int(module.activation_bit)
                 calibration_config[name]['tracked_min_activation'] = float(module.tracked_min_activation)
@@ -370,7 +387,7 @@ class QAT_Quantizer(Quantizer):
             output = module(*inputs)
             _ = bn_module(output)
         running_mean = bn_module.running_mean
-        running_var = torch.sqrt(bn_module.running_var + 1e-10)
+        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
         bn_weight = bn_module.weight
         bn_bias = bn_module.bias
         dimensions = len(module.weight.shape)

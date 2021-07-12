@@ -514,7 +514,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                         init_tensor = torch.zeros_like(self.bn_module.weight)
                     delattr(self.module, 'bias')
                     self.module.register_buffer('bias', init_tensor)
-
+                    setattr(module, BN_FOLD_TAG, True)
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
@@ -528,6 +528,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 # simulate batch normalization folding
                 new_weight, new_bias = self.quantizer.fold_bn(*inputs, wrapper=self)
                 self.module.bias = new_bias
+                self.module.weight = new_weight
             else:
                 new_weight = self.module.old_weight
 
@@ -571,10 +572,10 @@ class Quantizer(Compressor):
     Base quantizer for pytorch quantizer
     """
 
-    def __init__(self, model, config_list, optimizer=None, model_inputs=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
         self.identity_wrappers = []
         self.conv_bn_patterns = {}
-        self.find_conv_bn_patterns(model, model_inputs)
+        self.find_conv_bn_patterns(model, dummy_input)
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
@@ -737,7 +738,7 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload export_model()')
 
-    def find_conv_bn_patterns(self, model, model_inputs):
+    def find_conv_bn_patterns(self, model, dummy_input):
         """
         Find all Conv-BN patterns, used for batch normalization folding
 
@@ -745,14 +746,14 @@ class Quantizer(Compressor):
         ----------
         model : torch.nn.Module
             model to be analyzed.
-        model_inputs : tupel of torch.tensor
+        dummy_input : tupel of torch.tensor
             inputs to the model, used for generating the torchscript
         """
-        if model_inputs is None:
+        if dummy_input is None:
             _logger.debug("Model inputs are not given, batch normalization folding is disabled")
             return
 
-        graph = build_module_graph(model, model_inputs)
+        graph = build_module_graph(model, dummy_input)
         for node_group in graph.nodes_py.nodes_op:
             if node_group.op_type in BN_FOLD_OP:
                 successors = graph.find_successors(node_group.unique_name)
@@ -779,6 +780,7 @@ QType_Dict = {
 }
 
 BN_FOLD_OP = ["Conv2d"]
+BN_FOLD_TAG = 'BN_FOLD_TAG'
 
 class QuantGrad(torch.autograd.Function):
     """
