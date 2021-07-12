@@ -78,23 +78,19 @@ class LayerChoice(nn.Module):
         self._label = generate_new_label(label)
 
         self.names = []
-        self.chosen = None
         if isinstance(candidates, OrderedDict):
             for name, module in candidates.items():
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
                 self.add_module(name, module)
                 self.names.append(name)
-                if not self.chosen:
-                    self.chosen = module
         elif isinstance(candidates, list):
             for i, module in enumerate(candidates):
                 self.add_module(str(i), module)
                 self.names.append(str(i))
-                if not self.chosen:
-                    self.chosen = module
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
+        self._first_module = self._modules[self.names[0]]
 
     @property
     def key(self):
@@ -148,7 +144,7 @@ class LayerChoice(nn.Module):
 
     def forward(self, x):
         warnings.warn('You should not run forward of this module directly.')
-        return self.chosen(x)
+        return self._first_module(x)
 
     def __repr__(self):
         return f'LayerChoice({self.candidates}, label={repr(self.label)})'

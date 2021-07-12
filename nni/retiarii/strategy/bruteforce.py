@@ -10,7 +10,7 @@ from typing import Any, Dict, List
 
 from .. import Sampler, submit_models, query_available_resources, budget_exhausted
 from .base import BaseStrategy
-from .utils import dry_run_for_search_space, get_targeted_model
+from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 
 _logger = logging.getLogger(__name__)
 
@@ -84,6 +84,8 @@ class Random(BaseStrategy):
         Do not dry run to get the full search space. Used when the search space has variational size or candidates. Default: false.
     dedup : bool
         Do not try the same configuration twice. When variational is true, deduplication is not supported. Default: true.
+    model_filter: Callable[[Model], bool]
+        Feed the model and return a bool. This will filter the models in search space and select which to submit.
     """
 
     def __init__(self, variational=False, dedup=True, model_filter=None):
@@ -96,18 +98,6 @@ class Random(BaseStrategy):
         self.filter = model_filter
 
     def run(self, base_model, applied_mutators):
-        def filter_model(ir_model):
-            if self.filter is not None:
-                _logger.debug(f'Check if model satisfies constraints.')
-                if self.filter(ir_model):
-                    _logger.debug(f'Model satisfied. Submit the model.')
-                    return True
-                else:
-                    _logger.debug(f'Model unsatisfied. Discard the model.')
-                    return False
-            else:
-                return True
-
         if self.variational:
             _logger.info('Random search running in variational mode.')
             sampler = _RandomSampler()
@@ -120,7 +110,7 @@ class Random(BaseStrategy):
                     for mutator in applied_mutators:
                         model = mutator.apply(model)
                     _logger.debug('New model created. Applied mutators are: %s', str(applied_mutators))
-                    if filter_model(model):
+                    if filter_model(self.filter, model):
                         submit_models(model)
                 elif budget_exhausted():
                     break
@@ -136,5 +126,5 @@ class Random(BaseStrategy):
                         return
                     time.sleep(self._polling_interval)
                 model = get_targeted_model(base_model, applied_mutators, sample)
-                if filter_model(model):
+                if filter_model(self.filter, model):
                     submit_models(model)

@@ -664,7 +664,7 @@ class GraphConverter:
             the input arguments of this module
         """
 
-        self._convert_module(script_module, module, module_name, ir_model)
+        return self._convert_module(script_module, module, module_name, ir_model)
 
 
 class GraphConverterWithShape(GraphConverter):
@@ -681,6 +681,8 @@ class GraphConverterWithShape(GraphConverter):
        This will result in incomplete shape info.
     """
     def convert_module(self, script_module, module, module_name, ir_model, example_inputs):
+        module.eval()
+
         ir_graph, attrs = self._convert_module(script_module, module, module_name, ir_model)
         self.remove_dummy_nodes(ir_model)
         self._initialize_parameters(ir_model)

@@ -6,7 +6,7 @@ import torch
 from nni.retiarii import serialize
 from nni.retiarii.nn.pytorch import LayerChoice
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
-from nni.retiarii.strategy.filter import LatencyFilter
+from nni.retiarii.strategy.utils import LatencyFilter
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -147,7 +147,6 @@ def _main(port):
 
     example_inputs = torch.randn(1, 3, 32, 32)
 
-    base_model.eval()
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy, True, example_inputs)
 
     exp_config = RetiariiExeConfig('local')
