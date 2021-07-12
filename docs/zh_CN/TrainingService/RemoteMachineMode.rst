@@ -141,10 +141,10 @@ Windows
 
    nnictl create --config examples/trials/mnist-annotation/config_remote.yml
 
-配置 python 环境
+配置 Python 环境
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-默认情况下，命令和脚本将在远程计算机的默认环境中执行。 如果远程机器上有多个 python 虚拟环境，并且想在特定环境中运行实验，请使用 **preCommand** 来指定远程计算机上的 python 环境。 
+默认情况下，命令和脚本将在远程计算机的默认环境中执行。 如果远程机器上有多个 python 虚拟环境，并且想在特定环境中运行实验，请使用 **pythonPath** 来指定远程计算机上的 Python 环境。 
 
 以 ``examples/trials/mnist-tfv2`` 为例。 示例文件 ``examples/trials/mnist-tfv2/config_remote.yml`` 的内容如下：
 
@@ -179,7 +179,7 @@ Windows
        # Below is an example of specifying python environment.
        pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
 
-远程计算机支持以重用模式运行实验。 在这种模式下，NNI 将重用远程机器任务来运行尽可能多的 Trial. 这样可以节省创建新作业的时间。 用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。  
+远程计算机支持以重用模式运行实验。 在这种模式下，NNI 将重用远程机器任务来运行尽可能多的 Trial。这样可以节省创建新作业的时间。用户需要确保同一作业中的每个 Trial 相互独立，例如，要避免从之前的 Trial 中读取检查点。  
 按照以下设置启用重用模式：
 
 .. code-block:: yaml

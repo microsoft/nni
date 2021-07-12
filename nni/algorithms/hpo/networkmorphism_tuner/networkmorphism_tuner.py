@@ -8,13 +8,13 @@ networkmorphsim_tuner.py
 import logging
 import os
 from schema import Optional, Schema
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 from .bayesian import BayesianOptimizer
 from .nn import CnnGenerator, MlpGenerator
 from .utils import Constant
 from .graph import graph_to_json, json_to_graph
-from nni import ClassArgsValidator
 
 logger = logging.getLogger("NetworkMorphism_AutoML")
 

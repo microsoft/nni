@@ -1,11 +1,10 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
-import torch
 import logging
-
 from copy import deepcopy
+
+import torch
 from nni.nas.pytorch.trainer import Trainer
 from nni.nas.pytorch.utils import AverageMeterGroup
 
@@ -209,8 +208,8 @@ class CreamSupernetTrainer(Trainer):
         return g * optimizer.param_groups[-1]['lr'] + w
 
     # split training images into several slices
-    def _get_minibatch_input(self, input):
-        slice = self.slices
+    def _get_minibatch_input(self, input):  # pylint: disable=redefined-builtin
+        slice = self.slices  # pylint: disable=redefined-builtin
         x = deepcopy(input[:slice].clone().detach())
         return x
 
@@ -259,8 +258,8 @@ class CreamSupernetTrainer(Trainer):
         return torch.mean(torch.sum(- soft_target * logsoftmax(pred), 1))
 
     # forward validation data
-    def _forward_validation(self, input, target):
-        slice = self.slices
+    def _forward_validation(self, input, target):  # pylint: disable=redefined-builtin
+        slice = self.slices  # pylint: disable=redefined-builtin
         x = input[slice:slice * 2].clone()
 
         self._replace_mutator_cand(self.current_student_arch)
@@ -281,7 +280,7 @@ class CreamSupernetTrainer(Trainer):
         self.mutator._cache = cand
 
     # update meta matching networks
-    def _run_update(self, input, target, batch_idx):
+    def _run_update(self, input, target, batch_idx):  # pylint: disable=redefined-builtin
         if self._isUpdateMeta(batch_idx):
             x = self._get_minibatch_input(input)
 
