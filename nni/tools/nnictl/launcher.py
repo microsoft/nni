@@ -598,7 +598,7 @@ def manage_external_experiment(args, mode):
         log_dir = args.experiment_dir
     else:
         print_normal('NNI can not detect experiment id in argument, will use last folder name as experiment id in experiment_dir argument.')
-        experiment_id = os.path.basename(args.experiment_dir)
+        experiment_id = Path(args.experiment_dir).name
         log_dir = os.path.dirname(args.experiment_dir)
         if not experiment_id:
             print_error("Please set experiment id argument, or add id as the last folder name in experiment_dir argument.")
