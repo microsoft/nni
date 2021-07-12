@@ -2,6 +2,7 @@ import sys
 sys.path.insert(0, './pix2pixlib')
 
 import os
+import pathlib
 import logging
 import argparse
 import json
@@ -28,13 +29,13 @@ def download_dataset(dataset_name):
     else:
         _logger.info("Downloading dataset " + dataset_name)
         if not os.path.exists('./data/'):
-            os.system('mkdir ./data')
-        os.system('mkdir ./data/' + dataset_name)
+            pathlib.Path('./data/').mkdir(parents=True, exist_ok=True)
+        pathlib.Path('./data/' + dataset_name).mkdir(parents=True, exist_ok=True)
         URL = 'http://efrosgans.eecs.berkeley.edu/pix2pix/datasets/{}.tar.gz'.format(dataset_name)
         TAR_FILE = './data/{}.tar.gz'.format(dataset_name)
         TARGET_DIR = './data/{}/'.format(dataset_name)
         os.system('wget -N {} -O {}'.format(URL, TAR_FILE))
-        os.system('mkdir -p {}'.format(TARGET_DIR))
+        pathlib.Path(TARGET_DIR).mkdir(parents=True, exist_ok=True)
         os.system('tar -zxvf {} -C ./data/'.format(TAR_FILE))
         os.system('rm ' + TAR_FILE)        
 
@@ -131,9 +132,9 @@ if __name__ == '__main__':
         params_from_nni = json.loads(f.readline().strip())['parameters']
     test_params = merge_parameter(test_params, params_from_nni)
 
-    os.system('mkdir -p {}/input'.format(params_from_cl['output_dir']))
-    os.system('mkdir -p {}/label'.format(params_from_cl['output_dir']))
-    os.system('mkdir -p {}/output'.format(params_from_cl['output_dir']))
+    pathlib.Path(params_from_cl['output_dir'] + '/input').mkdir(parents=True, exist_ok=True)
+    pathlib.Path(params_from_cl['output_dir'] + '/label').mkdir(parents=True, exist_ok=True)
+    pathlib.Path(params_from_cl['output_dir'] + '/output').mkdir(parents=True, exist_ok=True)
 
     main(test_params)
     
