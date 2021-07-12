@@ -50,12 +50,6 @@ testCases:
 
 - name: shared-storage-remote-nfs
   configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
-  config:
-    sharedStorage:
-      localMountPoint: /tmp/nnimount/testlocalrootpath
-      remoteMountPoint: /tmp/nnimount/testremoterootpath
-      nfsServer: $(NFS_IP)
-      exportedDirectory: /home/core/mnt/
   trainingService: remote
   validator:
     class: FileExistValidator
