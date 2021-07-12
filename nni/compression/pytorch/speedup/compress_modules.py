@@ -87,6 +87,31 @@ def no_replace(module, masks):
     _logger.debug("no need to replace")
     return module
 
+def replace_prelu(norm, mask):
+    """
+    Parameters
+    ----------
+    norm : torch.nn.BatchNorm2d
+        The prelu module to be replace
+    mask : ModuleMasks
+        The masks of this module
+
+    Returns
+    -------
+    torch.nn.PReLU
+        The new prelu module
+    """
+    assert isinstance(mask, ModuleMasks)
+    assert 'weight' in mask.param_masks
+    index = mask.param_masks['weight'].mask_index[0]
+    num_features = index.size()[0]
+    #  _logger.debug("replace prelu with num_features: %d", num_features)
+    if num_features == 0:
+        return torch.nn.Identity()
+    new_norm = torch.nn.PReLU(num_features)
+    # assign weights
+    new_norm.weight.data = torch.index_select(norm.weight.data, 0, index)
+    return new_norm
 
 def replace_linear(linear, masks):
     """

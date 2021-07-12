@@ -53,9 +53,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         } else {
             startLogging(logFileName);
         }
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        setLogLevel(logLevel);
     }
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    setLogLevel(logLevel);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -83,11 +83,6 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
-    console.log(`FATAL: unknown mode: ${mode}`);
-    usage();
-    process.exit(1);
-}
 
 const startMode: string = parseArg(['--start_mode', '-s']);
 if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {

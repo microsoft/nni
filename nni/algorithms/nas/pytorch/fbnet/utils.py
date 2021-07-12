@@ -3,7 +3,6 @@
 
 from __future__ import absolute_import, division, print_function
 
-import gc  # noqa: F401
 import os
 import timeit
 import torch
@@ -159,7 +158,7 @@ def supernet_sample(model, state_dict, sampled_arch=[], lookup_table=None):
         layer_id = 0
         for i, stage in enumerate(stages):
             ops_names = [op_name for op_name in lookup_table.lut_ops[stage]]
-            for j in range(stage_lnum[i]):
+            for _ in range(stage_lnum[i]):
                 searched_op = sampled_arch[layer_id]
                 op_i = ops_names.index(searched_op)
                 replace.append(

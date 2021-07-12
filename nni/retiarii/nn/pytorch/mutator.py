@@ -8,13 +8,14 @@ import torch.nn as nn
 
 from ...mutator import Mutator
 from ...graph import Cell, Graph, Model, ModelStatus, Node
-from ...utils import uid
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
+from .component import Repeat
+from ...utils import uid
 
 
 class LayerChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
 
     def mutate(self, model):
@@ -32,14 +33,14 @@ class LayerChoiceMutator(Mutator):
             model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
 
             # remove redundant nodes
-            for rm_node in target.hidden_nodes:
+            for rm_node in list(target.hidden_nodes):  # remove from a list on the fly will cause issues
                 if rm_node.name != chosen_node.name:
                     rm_node.remove()
 
 
 class InputChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
 
     def mutate(self, model):
@@ -55,7 +56,7 @@ class InputChoiceMutator(Mutator):
 
 class ValueChoiceMutator(Mutator):
     def __init__(self, nodes: List[Node], candidates: List[Any]):
-        super().__init__()
+        super().__init__(label=nodes[0].operation.parameters['label'])
         self.nodes = nodes
         self.candidates = candidates
 
@@ -68,7 +69,8 @@ class ValueChoiceMutator(Mutator):
 
 class ParameterChoiceMutator(Mutator):
     def __init__(self, nodes: List[Tuple[Node, str]], candidates: List[Any]):
-        super().__init__()
+        node, argname = nodes[0]
+        super().__init__(label=node.operation.parameters[argname].label)
         self.nodes = nodes
         self.candidates = candidates
 
@@ -78,6 +80,42 @@ class ParameterChoiceMutator(Mutator):
             chosen_value = node.operation.parameters[argname].access(chosen)
             target = model.get_node_by_name(node.name)
             target.update_operation(target.operation.type, {**target.operation.parameters, argname: chosen_value})
+
+
+class RepeatMutator(Mutator):
+    def __init__(self, nodes: List[Node]):
+        # nodes is a subgraph consisting of repeated blocks.
+        super().__init__(label=nodes[0].operation.parameters['label'])
+        self.nodes = nodes
+
+    def _retrieve_chain_from_graph(self, graph: Graph) -> List[Node]:
+        u = graph.input_node
+        chain = []
+        while u != graph.output_node:
+            if u != graph.input_node:
+                chain.append(u)
+            assert len(u.successors) == 1, f'This graph is an illegal chain. {u} has output {u.successor}.'
+            u = u.successors[0]
+        return chain
+
+    def mutate(self, model):
+        min_depth = self.nodes[0].operation.parameters['min_depth']
+        max_depth = self.nodes[0].operation.parameters['max_depth']
+        if min_depth < max_depth:
+            chosen_depth = self.choice(list(range(min_depth, max_depth + 1)))
+        for node in self.nodes:
+            # the logic here is similar to layer choice. We find cell attached to each node.
+            target: Graph = model.graphs[node.operation.cell_name]
+            chain = self._retrieve_chain_from_graph(target)
+            for edge in chain[chosen_depth - 1].outgoing_edges:
+                edge.remove()
+            target.add_edge((chain[chosen_depth - 1], None), (target.output_node, None))
+            for rm_node in chain[chosen_depth:]:
+                for edge in rm_node.outgoing_edges:
+                    edge.remove()
+                rm_node.remove()
+            # to delete the unused parameters.
+            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
 
 
 def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
@@ -118,6 +156,15 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         assert _is_all_equal(map(lambda node: len(node.operation.parameters['candidates']), node_list)), \
             'Layer choice with the same label must have the same number of candidates.'
         mutator = LayerChoiceMutator(node_list)
+        applied_mutators.append(mutator)
+
+    repeat_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'repeat',
+                                          model.get_nodes_by_type('_cell')))
+    for node_list in repeat_nodes:
+        assert _is_all_equal(map(lambda node: node.operation.parameters['max_depth'], node_list)) and \
+            _is_all_equal(map(lambda node: node.operation.parameters['min_depth'], node_list)), \
+            'Repeat with the same label must have the same number of candidates.'
+        mutator = RepeatMutator(node_list)
         applied_mutators.append(mutator)
 
     if applied_mutators:
@@ -189,6 +236,11 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
             node.label = module.label
         if isinstance(module, ValueChoice):
             node = graph.add_node(name, 'ValueChoice', {'candidates': module.candidates})
+            node.label = module.label
+        if isinstance(module, Repeat) and module.min_depth <= module.max_depth:
+            node = graph.add_node(name, 'Repeat', {
+                'candidates': list(range(module.min_depth, module.max_depth + 1))
+            })
             node.label = module.label
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')

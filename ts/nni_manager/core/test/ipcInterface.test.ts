@@ -30,7 +30,7 @@ function runProcess(): Promise<Error | null> {
         if (code !== 0) {
             deferred.resolve(new Error(`return code: ${code}`));
         } else {
-            let str = proc.stdout.read().toString();
+            let str = proc.stdout!.read().toString();
             if(str.search("\r\n")!=-1){
                 sentCommands = str.split("\r\n");
             }

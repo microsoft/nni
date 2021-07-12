@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as component from '../../common/component';
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
 import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
@@ -18,22 +17,26 @@ import { TrialDispatcher } from './trialDispatcher';
  * It's a intermedia implementation to support reusable training service.
  * The final goal is to support reusable training job in higher level than training service.
  */
-@component.Singleton
 class RouterTrainingService implements TrainingService {
-    protected readonly log: Logger;
-    private internalTrainingService: TrainingService;
+    private log!: Logger;
+    private internalTrainingService!: TrainingService;
 
-    constructor(config: ExperimentConfig) {
-        this.log = getLogger();
+    public static async construct(config: ExperimentConfig): Promise<RouterTrainingService> {
+        const instance = new RouterTrainingService();
+        instance.log = getLogger('RouterTrainingService');
         const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
         if (platform === 'remote' && !(<RemoteConfig>config.trainingService).reuseMode) {
-            this.internalTrainingService = new RemoteMachineTrainingService(config);
+            instance.internalTrainingService = new RemoteMachineTrainingService(config);
         } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
-            this.internalTrainingService = new PAITrainingService(config);
+            instance.internalTrainingService = new PAITrainingService(config);
         } else {
-            this.internalTrainingService = new TrialDispatcher(config);
+            instance.internalTrainingService = await TrialDispatcher.construct(config);
         }
+        return instance;
     }
+
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    private constructor() { }
 
     public async listTrialJobs(): Promise<TrialJobDetail[]> {
         if (this.internalTrainingService === undefined) {

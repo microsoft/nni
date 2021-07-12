@@ -642,6 +642,16 @@ class GraphConverter:
 
         ir_graph._register()
 
+        # add mutation signal for special modules
+        if original_type_name == OpTypeName.Repeat:
+            attrs = {
+                'mutation': 'repeat',
+                'label': module.label,
+                'min_depth': module.min_depth,
+                'max_depth': module.max_depth
+            }
+            return ir_graph, attrs
+
         return ir_graph, {}
 
 

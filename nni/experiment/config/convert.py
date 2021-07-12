@@ -27,6 +27,9 @@ def to_v2(v1) -> ExperimentConfig:
     if isinstance(v2.max_experiment_duration, (int, float)):
         v2.max_experiment_duration = str(v2.max_experiment_duration) + 's'
     _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
+    _move_field(v1, v2, 'maxTrialDuration', 'max_trial_duration')
+    if isinstance(v2.max_trial_duration, (int, float)):
+        v2.max_trial_duration = str(v2.max_trial_duration) + 's'
     _move_field(v1, v2, 'searchSpacePath', 'search_space_file')
     assert not v1.pop('multiPhase', None), 'Multi-phase is no longer supported'
     _deprecate(v1, v2, 'multiThread')
@@ -249,13 +252,13 @@ def convert_algo(algo_type, v1, v2):
         v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
 
     else:
-        class_directory = util.canonical_path(v1_algo.pop('codeDir'))
+        code_directory = util.canonical_path(v1_algo.pop('codeDir'))
         class_file_name = v1_algo.pop('classFileName')
         assert class_file_name.endswith('.py')
         class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
         v2_algo = CustomAlgorithmConfig(
             class_name=class_name,
-            class_directory=class_directory,
+            code_directory=code_directory,
             class_args=class_args
         )
 

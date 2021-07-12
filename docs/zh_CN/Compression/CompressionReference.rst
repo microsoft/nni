@@ -3,7 +3,7 @@
 
 .. contents::
 
-Compressor
+Compressors
 -----------
 
 Compressor
@@ -19,8 +19,8 @@ Compressor
     :members:
 
 
-module 的包装
-^^^^^^^^^^^^^^^^^^^
+Module 的包装
+^^^^^^^^^^^^^^
 
 ..  autoclass:: nni.compression.pytorch.compressor.PrunerModuleWrapper
     :members:
@@ -34,7 +34,7 @@ module 的包装
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.weight_masker.WeightMasker
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning.StructuredWeightMasker
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.structured_pruning_masker.StructuredWeightMasker
     :members:
 
 
@@ -43,40 +43,40 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.sensitivity_pruner.SensitivityPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.OneshotPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.OneshotPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.LevelPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.LevelPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.SlimPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.L1FilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L1FilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.L2FilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.L2FilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot_pruner.FPGMPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.FPGMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.IterativePruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.TaylorFOWeightFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.SlimPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationAPoZRankFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.TaylorFOWeightFilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.one_shot.ActivationMeanRankFilterPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ActivationAPoZRankFilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ActivationMeanRankFilterPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.agp.AGPPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.AGPPruner
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.pruning.admm_pruner.ADMMPruner
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.iterative_pruner.ADMMPruner
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.auto_compress_pruner.AutoCompressPruner
@@ -86,6 +86,9 @@ Pruners
     :members:
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.simulated_annealing_pruner.SimulatedAnnealingPruner
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
 
@@ -103,6 +106,20 @@ Quantizers
 ..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
     :members:
 
+模型加速
+-------------
+
+量化模型加速
+^^^^^^^^^^^^^^^^^^^^
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.backend.BaseModelSpeedup
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.integrated_tensorrt.ModelSpeedupTensorRT
+    :members:
+
+..  autoclass:: nni.compression.pytorch.quantization_speedup.calibrator.Calibrator
+    :members:
 
 
 压缩工具

@@ -8,10 +8,10 @@ from ..execution import query_available_resources
 try:
     has_tianshou = True
     import torch
-    from tianshou.data import AsyncCollector, Collector, VectorReplayBuffer
-    from tianshou.env import SubprocVectorEnv
+    from tianshou.data import Collector, VectorReplayBuffer
+    from tianshou.env import BaseVectorEnv
     from tianshou.policy import BasePolicy, PPOPolicy  # pylint: disable=unused-import
-    from ._rl_impl import ModelEvaluationEnv, Preprocessor, Actor, Critic
+    from ._rl_impl import ModelEvaluationEnv, MultiThreadEnvWorker, Preprocessor, Actor, Critic
 except ImportError:
     has_tianshou = False
 
@@ -25,8 +25,6 @@ class PolicyBasedRL(BaseStrategy):
     This is a wrapper of algorithms provided in tianshou (PPO by default),
     and can be easily customized with other algorithms that inherit ``BasePolicy`` (e.g., REINFORCE [1]_).
 
-    Note that RL algorithms are known to have issues on Windows and MacOS. They will be supported in future.
-
     Parameters
     ----------
     max_collect : int
@@ -36,12 +34,6 @@ class PolicyBasedRL(BaseStrategy):
         After each collect, trainer will sample batch from replay buffer and do the update. Default: 20.
     policy_fn : function
         Takes ``ModelEvaluationEnv`` as input and return a policy. See ``_default_policy_fn`` for an example.
-    asynchronous : bool
-        If true, in each step, collector won't wait for all the envs to complete.
-        This should generally not affect the result, but might affect the efficiency. Note that a slightly more trials
-        than expected might be collected if this is enabled.
-        If asynchronous is false, collector will wait for all parallel environments to complete in each step.
-        See ``tianshou.data.AsyncCollector`` for more details.
 
     References
     ----------
@@ -51,7 +43,7 @@ class PolicyBasedRL(BaseStrategy):
     """
 
     def __init__(self, max_collect: int = 100, trial_per_collect = 20,
-                 policy_fn: Optional[Callable[['ModelEvaluationEnv'], 'BasePolicy']] = None, asynchronous: bool = True):
+                 policy_fn: Optional[Callable[['ModelEvaluationEnv'], 'BasePolicy']] = None):
         if not has_tianshou:
             raise ImportError('`tianshou` is required to run RL-based strategy. '
                               'Please use "pip install tianshou" to install it beforehand.')
@@ -59,7 +51,6 @@ class PolicyBasedRL(BaseStrategy):
         self.policy_fn = policy_fn or self._default_policy_fn
         self.max_collect = max_collect
         self.trial_per_collect = trial_per_collect
-        self.asynchronous = asynchronous
 
     @staticmethod
     def _default_policy_fn(env):
@@ -77,13 +68,8 @@ class PolicyBasedRL(BaseStrategy):
         env_fn = lambda: ModelEvaluationEnv(base_model, applied_mutators, search_space)
         policy = self.policy_fn(env_fn())
 
-        if self.asynchronous:
-            # wait for half of the env complete in each step
-            env = SubprocVectorEnv([env_fn for _ in range(concurrency)], wait_num=int(concurrency * 0.5))
-            collector = AsyncCollector(policy, env, VectorReplayBuffer(20000, len(env)))
-        else:
-            env = SubprocVectorEnv([env_fn for _ in range(concurrency)])
-            collector = Collector(policy, env, VectorReplayBuffer(20000, len(env)))
+        env = BaseVectorEnv([env_fn for _ in range(concurrency)], MultiThreadEnvWorker)
+        collector = Collector(policy, env, VectorReplayBuffer(20000, len(env)))
 
         for cur_collect in range(1, self.max_collect + 1):
             _logger.info('Collect [%d] Running...', cur_collect)

@@ -28,7 +28,6 @@ nnictl 支持的命令：
 * `nnictl config <#config>`__
 * `nnictl log <#log>`__
 * `nnictl webui <#webui>`__
-* `nnictl tensorboard <#tensorboard>`__
 * `nnictl algo <#algo>`__
 * `nnictl ss_gen <#ss_gen>`__
 * `nnictl --version <#version>`__
@@ -1311,97 +1310,6 @@ Manage webui
      - Experiment ID
 
 
-:raw-html:`<a name="tensorboard"></a>`
-
-管理 tensorboard
-^^^^^^^^^^^^^^^^^^
-
-
-* 
-  **nnictl tensorboard start**
-
-
-  * 
-    说明
-
-    启动 tensorboard 进程。
-
-  * 
-    用法
-
-    .. code-block:: bash
-
-       nnictl tensorboard start
-
-  * 
-    选项
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - 参数及缩写
-     - 是否必需
-     - 默认值
-     - 说明
-   * - id
-     - False
-     - 
-     - 需要设置的 Experiment 的 id
-   * - --trial_id, -T
-     - False
-     - 
-     - Trial 的 id
-   * - --port
-     - False
-     - 6006
-     - tensorboard 进程的端口
-
-
-
-* 
-  详细说明
-
-
-  #. NNICTL 当前仅支持本机和远程平台的 tensorboard，其它平台暂不支持。
-  #. 如果要使用 tensorboard，需要将 tensorboard 日志输出到环境变量 [NNI_OUTPUT_DIR] 路径下。
-  #. 在 local 模式中，nnictl 会直接设置 --logdir=[NNI_OUTPUT_DIR] 并启动 tensorboard 进程。
-  #. 在 remote 模式中，nnictl 会创建一个 ssh 客户端来将日志数据从远程计算机复制到本机临时目录中，然后在本机开始 tensorboard 进程。 需要注意的是，nnictl 只在使用此命令时复制日志数据，如果要查看最新的 tensorboard 结果，需要再次执行 nnictl tensorboard 命令。
-  #. 如果只有一个 Trial 任务，不需要设置 Trial ID。 如果有多个运行的 Trial 作业，需要设置 Trial ID，或使用 [nnictl tensorboard start --trial_id all] 来将 --logdir 映射到所有 Trial 的路径。
-
-
-* 
-  **nnictl tensorboard stop**
-
-
-  * 
-    说明
-
-    停止所有 tensorboard 进程。
-
-  * 
-    用法
-
-    .. code-block:: bash
-
-       nnictl tensorboard stop
-
-  * 
-    选项
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - 参数及缩写
-     - 是否必需
-     - 默认值
-     - 说明
-   * - id
-     - False
-     - 
-     - 需要设置的 Experiment 的 id
-
 
 :raw-html:`<a name="algo"></a>`
 
@@ -1509,7 +1417,7 @@ Manage webui
   * 
     说明
 
-    注销一个已注册的自定义内置算法。 NNI 提供的内置算法不能被注销。
+    注销一个已注册的自定义内置算法。 NNI 提供的内置算法不能被注销。 NNI 提供的内置算法不能被注销。
 
   * 
     用法

@@ -162,7 +162,7 @@ PyTorch code
    config_list = [{ 
        'quant_types': ['weight'],
        'quant_bits': 8, 
-       'op_types': 'default' 
+       'op_types': ['default'] 
    }]
    quantizer = DoReFaQuantizer(model, config_list)
    quantizer.compress()

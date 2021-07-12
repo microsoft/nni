@@ -30,7 +30,7 @@ class NNIExperimentsManager implements ExperimentManager {
 
     constructor() {
         this.experimentsPath = getExperimentsInfoPath();
-        this.log = getLogger();
+        this.log = getLogger('NNIExperimentsManager');
         this.profileUpdateTimer = {};
     }
 

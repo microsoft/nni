@@ -50,7 +50,7 @@ export abstract class CommandChannel {
     private readonly commandPattern: RegExp = /(?<type>[\w]{2})(?<length>[\d]{14})(?<data>.*)\n?/gm;
 
     public constructor(commandEmitter: EventEmitter) {
-        this.log = getLogger();
+        this.log = getLogger('CommandChannel');
         this.commandEmitter = commandEmitter;
     }
 

@@ -98,32 +98,39 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                             )}
                         </PivotItem>
                         <PivotItem headerText='Log' key='2' itemIcon='M365InvoicingLogo'>
-                            {// FIXME: this should not be handled in web UI side
-                            EXPERIMENT.trainingServicePlatform !== 'local' ? (
-                                <PaiTrialLog
-                                    logStr={logPathRow}
-                                    id={trialId}
-                                    logCollection={EXPERIMENT.logCollectionEnabled}
-                                />
-                            ) : (
-                                <div>
-                                    <TrialLog logStr={logPathRow} id={trialId} />
-                                    {/* view each trial log in drawer*/}
-                                    <div id='trialog'>
-                                        <div className='copy' style={{ marginTop: 15 }}>
-                                            <PrimaryButton
-                                                onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
-                                                text='View trial log'
-                                            />
-                                            <PrimaryButton
-                                                onClick={this.openTrialLog.bind(this, 'TRIAL_ERROR')}
-                                                text='View trial error'
-                                                styles={{ root: { marginLeft: 15 } }}
-                                            />
+                            {
+                                // FIXME: this should not be handled in web UI side
+                                EXPERIMENT.trainingServicePlatform !== 'local' ? (
+                                    <PaiTrialLog
+                                        logStr={logPathRow}
+                                        id={trialId}
+                                        logCollection={EXPERIMENT.logCollectionEnabled}
+                                    />
+                                ) : (
+                                    <div>
+                                        <TrialLog logStr={logPathRow} id={trialId} />
+                                        {/* view each trial log in drawer*/}
+                                        <div id='trialog'>
+                                            <div className='copy' style={{ marginTop: 15 }}>
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_LOG')}
+                                                    text='View trial log'
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_ERROR')}
+                                                    text='View trial error'
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                                <PrimaryButton
+                                                    onClick={this.openTrialLog.bind(this, 'TRIAL_STDOUT')}
+                                                    text='View trial stdout'
+                                                    styles={{ root: { marginLeft: 15 } }}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            )}
+                                )
+                            }
                         </PivotItem>
                     </Pivot>
                 </Stack>

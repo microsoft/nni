@@ -30,7 +30,7 @@ class PythonGraphData:
 class PurePythonExecutionEngine(BaseExecutionEngine):
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
-        mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
+        mutation = get_mutation_dict(model)
         graph_data = PythonGraphData(get_importable_name(model.python_class, relocate_module=True),
                                      model.python_init_params, mutation, model.evaluator)
         return graph_data
@@ -51,3 +51,7 @@ def _unpack_if_only_one(ele: List[Any]):
     if len(ele) == 1:
         return ele[0]
     return ele
+
+
+def get_mutation_dict(model: Model):
+    return {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}

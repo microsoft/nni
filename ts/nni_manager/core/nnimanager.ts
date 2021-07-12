@@ -61,7 +61,7 @@ class NNIManager implements Manager {
         this.trialDataForTuner = '';
         this.readonly = false;
 
-        this.log = getLogger();
+        this.log = getLogger('NNIManager');
         this.dataStore = component.get(DataStore);
         this.status = {
             status: 'INITIALIZED',
@@ -189,7 +189,6 @@ class NNIManager implements Manager {
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
-
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -204,17 +203,18 @@ class NNIManager implements Manager {
         const experimentId: string = getExperimentId();
         this.log.info(`Resuming experiment: ${experimentId}`);
         this.experimentProfile = await this.dataStore.getExperimentProfile(experimentId);
-        this.readonly = readonly;
-        if (readonly) {
-            this.setStatus('VIEWED');
-            return Promise.resolve();
-        }
 
         const config: ExperimentConfig = this.experimentProfile.params;
         this.config = config;
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             this.trainingService = await this.initTrainingService(config);
+        }
+
+        this.readonly = readonly;
+        if (readonly) {
+            this.setStatus('VIEWED');
+            return;
         }
 
         this.log.info('Setup tuner...');
@@ -432,6 +432,11 @@ class NNIManager implements Manager {
         return (value === undefined ? Infinity : value);
     }
 
+    private get maxTrialDuration(): number {
+        const value = this.experimentProfile.params.maxTrialDuration;
+        return (value === undefined ? Infinity : toSeconds(value));
+    }
+
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
         let platform: string;
         if (Array.isArray(config.trainingService)) {
@@ -445,10 +450,7 @@ class NNIManager implements Manager {
             throw new Error('Cannot detect training service platform');
         }
 
-        if (['remote', 'pai', 'aml', 'hybrid'].includes(platform)) {
-            const module_ = await import('../training_service/reusable/routerTrainingService');
-            return new module_.RouterTrainingService(config);
-        } else if (platform === 'local') {
+        if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
         } else if (platform === 'kubeflow') {
@@ -460,6 +462,9 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
+        } else {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return await module_.RouterTrainingService.construct(config);
         }
 
         throw new Error(`Unsupported training service platform "${platform}"`);
@@ -490,7 +495,7 @@ class NNIManager implements Manager {
         };
         const newEnv = Object.assign({}, process.env, nniEnv);
         const tunerProc: ChildProcess = getTunerProc(command, stdio, newCwd, newEnv);
-        this.dispatcherPid = tunerProc.pid;
+        this.dispatcherPid = tunerProc.pid!;
         this.dispatcher = createDispatcherInterface(tunerProc);
 
         return;
@@ -536,6 +541,17 @@ class NNIManager implements Manager {
             this.dispatcher.sendCommand(PING);
             await delay(1000 * 5);
         }
+    }
+
+    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
+        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+        if(undefined !== trialJobDetail &&
+            trialJobDetail.status === 'RUNNING' &&
+            trialJobDetail.startTime !== undefined){
+                const isEarlyStopped = true;
+                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+            }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -659,8 +675,9 @@ class NNIManager implements Manager {
                     }
                     const form = this.waitingTrials.shift() as TrialJobApplicationForm;
                     this.currSubmittedTrialNum++;
-                    this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
+                    this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
@@ -732,7 +749,7 @@ class NNIManager implements Manager {
     }
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
-        this.log.debug(`NNIManager received trial job metrics: ${JSON.stringify(metric)}`);
+        this.log.debug('NNIManager received trial job metrics:', metric);
         if (this.trialJobs.has(metric.id)){
             await this.dataStore.storeMetricData(metric.id, metric.data);
             if (this.dispatcher === undefined) {
@@ -740,7 +757,7 @@ class NNIManager implements Manager {
             }
             this.dispatcher.sendCommand(REPORT_METRIC_DATA, metric.data);
         } else {
-            this.log.warning(`NNIManager received non-existent trial job metrics: ${metric}`);
+            this.log.warning('NNIManager received non-existent trial job metrics:', metric);
         }
     }
 
@@ -804,7 +821,7 @@ class NNIManager implements Manager {
                         index: tunerCommand.parameter_index
                     }
                 };
-                this.log.info(`updateTrialJob: job id: ${tunerCommand.trial_job_id}, form: ${JSON.stringify(trialJobForm)}`);
+                this.log.info('updateTrialJob: job id:', tunerCommand.trial_job_id, 'form:', trialJobForm);
                 await this.trainingService.updateTrialJob(tunerCommand.trial_job_id, trialJobForm);
                 if (tunerCommand['parameters'] !== null) {
                     // parameters field is set as empty string if no more hyper parameter can be generated by tuner.
@@ -820,7 +837,7 @@ class NNIManager implements Manager {
                 break;
             }
             case KILL_TRIAL_JOB: {
-                this.log.info(`cancelTrialJob: ${JSON.parse(content)}`);
+                this.log.info('cancelTrialJob:', content);
                 await this.trainingService.cancelTrialJob(JSON.parse(content), true);
                 break;
             }

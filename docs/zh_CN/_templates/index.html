@@ -5,7 +5,7 @@
 {% block document %}
 
 <div>
-  <div class="chinese"><a href="https://nni.readthedocs.io/en/latest/">English</a></div>
+  <div class="chinese"><a href="https://nni.readthedocs.io/zh/stable/">English</a></div>
   <b>NNI (Neural Network Intelligence)</b> 是一个轻量但强大的工具包，帮助用户<b>自动</b>的进行
   <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程</a>，<a href="{{ pathto('NAS/Overview') }}">神经网络架构搜索</a>， <a href="{{ pathto('Tuner/BuiltinTuner') }}">超参调优</a>以及<a href="{{ pathto('Compression/Overview') }}">模型压缩</a>。
 </div>
@@ -99,13 +99,14 @@
           <ul class="circle">
             <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-pytorch">MNIST-pytorch</li>
             </a>
-            <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv1">MNIST-tensorflow</li>
+            <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-tfv2">MNIST-tensorflow</li>
             </a>
             <li><a href="https://github.com/microsoft/nni/tree/master/examples/trials/mnist-keras">MNIST-keras</li></a>
             <li><a href="{{ pathto('TrialExample/GbdtExample') }}">Auto-gbdt</a></li>
             <li><a href="{{ pathto('TrialExample/Cifar10Examples') }}">Cifar10-pytorch</li></a>
             <li><a href="{{ pathto('TrialExample/SklearnExamples') }}">Scikit-learn</a></li>
             <li><a href="{{ pathto('TrialExample/EfficientNet') }}">EfficientNet</a></li>
+            <li><a href="{{ pathto('TrialExample/OpEvoExamples') }}">GPU Kernel 调优</li></a>
             <a href="{{ pathto('SupportedFramework_Library') }}">更多...</a><br />
           </ul>
         </ul>
@@ -115,27 +116,25 @@
         <ul class="firstUl">
           <div><b>穷举搜索</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Random Search（随机搜索）</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Grid Search（遍历搜索）</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Batch（批处理）</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#Random">Random Search（随机搜索）</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#GridSearch">Grid Search（遍历搜索）</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#Batch">Batch（批处理）</a></li>
           </ul>
           <div><b>启发式搜索</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Naïve Evolution（朴素进化）</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Anneal（退火算法）</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Hyperband</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#Evolution">Naïve Evolution（朴素进化）</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#Anneal">Anneal（退火算法）</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#Hyperband">Hyperband</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#PBTTuner">P-DARTS</a></li>
           </ul>
           <div><b>贝叶斯优化</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">BOHB</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">TPE</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">SMAC</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">Metis Tuner</a></li>
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">GP Tuner</a> </li>
-          </ul>
-          <div><b>基于强化学习</b></div>
-          <ul class="circle">
-            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}">PPO Tuner</a> </li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#BOHB">BOHB</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#TPE">TPE</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#SMAC">SMAC</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#MetisTuner">Metis Tuner</a></li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#GPTuner">GP Tuner</a> </li>
+            <li><a href="{{ pathto('Tuner/BuiltinTuner') }}#DNGOTuner">PPO Tuner</a></li>
           </ul>
         </ul>
         <a href="{{ pathto('NAS/Overview') }}">神经网络架构搜索</a>
@@ -143,26 +142,32 @@
           <ul class="circle">
             <li><a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
             <li><a href="{{ pathto('NAS/DARTS') }}">DARTS</a></li>
-            <li><a href="{{ pathto('NAS/PDARTS') }}">P-DARTS</a></li>
-            <li><a href="{{ pathto('NAS/CDARTS') }}">CDARTS</a></li>
             <li><a href="{{ pathto('NAS/SPOS') }}">SPOS</a></li>
             <li><a href="{{ pathto('NAS/Proxylessnas') }}">ProxylessNAS</a></li>
-            <li><a href="{{ pathto('Tuner/NetworkmorphismTuner') }}">Network Morphism</a> </li>
-            <li><a href="{{ pathto('NAS/TextNAS') }}">TextNAS</a> </li>
+            <li><a href="{{ pathto('NAS/FBNet') }}">微信</a></li>
+            <li><a href="{{ pathto('NAS/ExplorationStrategies') }}">基于强化学习</a></li>
+            <li><a href="{{ pathto('NAS/ExplorationStrategies') }}">Network Morphism</a></li>
+            <li><a href="{{ pathto('NAS/Overview') }}">TextNAS</a></li>
           </ul>
         </ul>
         <a href="{{ pathto('Compression/Overview') }}">模型压缩</a>
         <ul class="firstUl">
           <div><b>剪枝</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compression/Pruner') }}">AGP Pruner</a></li>
-            <li><a href="{{ pathto('Compression/Pruner') }}">Slim Pruner</a></li>
-            <li><a href="{{ pathto('Compression/Pruner') }}">FPGM Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#agp-pruner">AGP Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#slim-pruner">Slim Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#fpgm-pruner">FPGM Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#netadapt-pruner">NetAdapt Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#admm-pruner">ADMM Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Pruner') }}#autocompress-pruner">AutoCompress Pruner</a></li>
+            <li><a href="{{ pathto('Compression/Overview') }}">更多...</a></li>
           </ul>
           <div><b>量化</b></div>
           <ul class="circle">
-            <li><a href="{{ pathto('Compression/Quantizer') }}">QAT Quantizer</a></li>
-            <li><a href="{{ pathto('Compression/Quantizer') }}">DoReFa Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}#qat-quantize">QAT Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}#dorefa-quantizer">DoReFa Quantizer</a></li>
+            <li><a href="{{ pathto('Compression/Quantizer') }}#bnn-quantizer">BNN Quantizer</a></li>
           </ul>
         </ul>
         <a href="{{ pathto('FeatureEngineering/Overview') }}">特征工程（测试版）</a>
@@ -172,22 +177,23 @@
         </ul>
         <a href="{{ pathto('Assessor/BuiltinAssessor') }}">提前终止算法</a>
         <ul class="circle">
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Median Stop（中位数终止）</a></li>
-          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}">Curve Fitting（曲线拟合）</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}#MedianStop">Median Stop（中位数终止）</a></li>
+          <li><a href="{{ pathto('Assessor/BuiltinAssessor') }}#Curvefitting">Curve Fitting（曲线拟合）</a></li>
         </ul>
       </td>
       <td>
         <ul class="firstUl">
           <li><a href="{{ pathto('TrainingService/LocalMode') }}">本机</a></li>
           <li><a href="{{ pathto('TrainingService/RemoteMachineMode') }}">远程计算机</a></li>
+          <li><a href="{{ pathto('TrainingService/HybridMode') }}">混合模式</a></li>
+          <li><a href="{{ pathto('TrainingService/AMLMode') }}">AML(Azure Machine Learning)</a></li>
           <li><b>基于 Kubernetes 的平台</b></li>
-          <ul class="circle">
+          <ul>
             <li><a href="{{ pathto('TrainingService/PaiMode') }}">OpenPAI</a></li>
             <li><a href="{{ pathto('TrainingService/KubeflowMode') }}">Kubeflow</a></li>
-            <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController (如 AKS 等)</a>
-            </li>
+            <li><a href="{{ pathto('TrainingService/FrameworkControllerMode') }}">基于 K8S 的 FrameworkController (如 AKS 等)</a></li>
             <li><a href="{{ pathto('TrainingService/DLTSMode') }}">DLWorkspace (又称 DLTS)</a></li>
-            <li><a href="{{ pathto('TrainingService/AMLMode') }}">AML (Azure Machine Learning)</a></li>
+            <li><a href="{{ pathto('TrainingService/AdaptDLMode') }}">AML (Azure Machine Learning)</a></li>
           </ul>
         </ul>
       </td>
@@ -196,9 +202,9 @@
       <td class="verticalMiddle"><b>参考</b></td>
       <td>
         <ul class="firstUl">
-          <li><a href="https://nni.readthedocs.io/zh/latest/autotune_ref.html#trial">Python API</a></li>
+          <li><a href="{{ pathto('Tutorial/HowToLaunchFromPython') }}">Python API</a></li>
           <li><a href="{{ pathto('Tutorial/AnnotationSpec') }}">NNI Annotation</a></li>
-          <li><a href="https://nni.readthedocs.io/zh/latest/installation.html">支持的操作系统</a></li>
+          <li><a href="{{ pathto('installation') }}">支持的操作系统</a></li>
         </ul>
       </td>
       <td>
@@ -206,6 +212,8 @@
           <li><a href="{{ pathto('Tuner/CustomizeTuner') }}">自定义 Tuner</a></li>
           <li><a href="{{ pathto('Assessor/CustomizeAssessor') }}">自定义 Assessor</a></li>
           <li><a href="{{ pathto('Tutorial/InstallCustomizedAlgos') }}">安装自定义的 Tuner，Assessor，Advisor</a></li>
+          <li><a href="{{ pathto('NAS/QuickStart') }}">定义 NAS 模型空间</a></li>
+          <li><a href="{{ pathto('NAS/ApiReference') }}">NAS/Retiarii APIs</a></li>
         </ul>
       </td>
       <td>
@@ -224,7 +232,7 @@
   <div>
     <h2 class="second-title">安装</h2>
     <p>
-      NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 `python 64 位 >= 3.6` 的环境中，只需要运行 `pip install` 即可完成安装。
+      NNI 支持并在 Ubuntu >= 16.04, macOS >= 10.14.1, 和 Windows 10 >= 1809 通过了测试。 在 <code>python 64-bit >= 3.6</code> 的环境中，只需要运行 <code>pip install</code> 即可完成安装。
     </p>
     <div class="command-intro">Linux 或 macOS</div>
     <div class="command">python3 -m pip install --upgrade nni</div>
@@ -241,7 +249,7 @@
       <li>如果遇到任何权限问题，可添加 --user 在用户目录中安装 NNI。</li>
       <li>目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda <a href="{{ pathto('Tutorial/InstallationWin') }}">在 Windows 上安装 NNI</a>。</li>
       <li>如果遇到如 Segmentation fault 这样的任何错误请参考 <a
-          href="{{ pathto('installation') }}">常见问题</a>。 Windows 上的常见问题，参考在 <a href="{{ pathto('Tutorial/InstallationWin') }}">Windows 上使用 NNI</a>。</li>
+          href="{{ pathto('installation') }}">常见问题</a>。 Windows 上的常见问题，参考在 <a href="{{ pathto('Tutorial/InstallationWin') }}">Windows 上使用 NNI</a>。 Windows 上的常见问题，参考在 <a href="{{ pathto('Tutorial/InstallationWin') }}">Windows 上使用 NNI</a>。</li>
     </ul>
   </div>
   <div>
@@ -296,10 +304,7 @@ You can use these commands to get more information about the experiment
       </li>
       <li>
         在浏览器中打开 Web UI 地址，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看<a href="{{ pathto('Tutorial/WebUI') }}">这里的</a>更多页面示例。
-        <div class="ui-img">
-          <img src="_images/webui_overview_page.png">
-          <img src="_images/webui_trialdetail_page.png">
-        </div>
+        <img src="_static/img/webui.gif" width="100%"/>
   </div>
   </li>
   </ul>
@@ -360,8 +365,7 @@ You can use these commands to get more information about the experiment
     <h2>外部代码库</h2>
     <li>在 NNI 中运行 <a href="{{ pathto('NAS/ENAS') }}">ENAS</a></li>
     <li>
-      <a
-        href="https://github.com/microsoft/nni/blob/master/examples/feature_engineering/auto-feature-engineering/README_zh_CN.md">NNI 中的自动特征工程</a>
+      https://github.com/microsoft/nni/blob/master/examples/feature_engineering/auto-feature-engineering/README_zh_CN.md
     </li>
     <li>使用 NNI 的 <a
         href="https://github.com/microsoft/recommenders/blob/master/examples/04_model_select_and_optimize/nni_surprise_svd.ipynb">矩阵分解超参调优</a></li>

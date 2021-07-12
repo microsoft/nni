@@ -24,7 +24,7 @@ class GPUScheduler {
 
     constructor() {
         this.stopping = false;
-        this.log = getLogger();
+        this.log = getLogger('GPUScheduler');
         this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/${os.userInfo().username}/nni/script`;
     }
 
