@@ -16,7 +16,7 @@ import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType
+    TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
@@ -204,7 +204,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param _trialJobId ID of trial job
      * @param _logType 'TRIAL_LOG' | 'TRIAL_STDERR'
      */
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 

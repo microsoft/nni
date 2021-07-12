@@ -14,7 +14,7 @@ import {getExperimentId} from '../../common/experimentStartupInfo';
 import {getLogger, Logger} from '../../common/log';
 import {MethodNotImplementedError} from '../../common/errors';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
 import {AzureStorageClientUtility} from './azureStorageClientUtils';
@@ -99,7 +99,7 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(kubernetesTrialJob);
     }
 
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _filename: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 
