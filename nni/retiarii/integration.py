@@ -75,14 +75,10 @@ class RetiariiAdvisor(MsgDispatcherBase):
             raise ValueError('placement_constraint must have `type`')
         if not 'gpus' in placement_constraint:
             raise ValueError('placement_constraint must have `gpus`')
-        if placement_constraint['type'] not in ['None', 'Topology', 'Device']:
-            raise ValueError('placement_constraint.type must be in  [None, Topology, Device]')
+        if placement_constraint['type'] not in ['None', 'Device']:
+            raise ValueError('placement_constraint.type must be in  [None, Device]')
         if placement_constraint['type'] == 'None' and len(placement_constraint['gpus']) > 0:
             raise ValueError('placement_constraint.gpus must be an empty list when type == None')
-        if placement_constraint['type'] == 'Topology':
-            for e in placement_constraint['gpus']:
-                if not isinstance(e, int):
-                    raise ValueError('placement_constraint.gpus must be a list of int when type == Topology')
         if placement_constraint['type'] == 'Device':
             for e in placement_constraint['gpus']:
                 if not isinstance(e, tuple):
@@ -151,9 +147,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
         elif data['type'] == MetricType.FINAL:
             self.final_metric_callback(data['parameter_id'],  # pylint: disable=not-callable
                                        self._process_value(data['value']))
-
-    def handle_update_gpu_status(self, data):
-        self.update_gpu_status_callback(data)
 
     @staticmethod
     def _process_value(value) -> Any:  # hopefully a float

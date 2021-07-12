@@ -16,7 +16,7 @@ import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType, GPUStatus
+    TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
@@ -222,14 +222,6 @@ class RemoteMachineTrainingService implements TrainingService {
      */
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
-    }
-
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
     }
 
     /**

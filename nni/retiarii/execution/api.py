@@ -17,34 +17,6 @@ __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'set_execution_engine', 'is_stopped_exec', 'budget_exhausted', 'GPUDevice']
 
 
-@dataclass(init=False)
-class GPUDevice:
-    def __init__(self, node_id: int, gpu_id: int):
-        self.node_id = node_id
-        self.gpu_id = gpu_id
-        self.status = "free"
-
-    def __eq__(self, o) -> bool:
-        return self.node_id == o.node_id and self.gpu_id == o.gpu_id
-
-    def __lt__(self, o) -> bool:
-        if self.node_id < o.node_id:
-            return True
-        elif self.node_id > o.node_id:
-            return False
-        else:
-            return self.gpu_id < o.gpu_id
-
-    def __repr__(self) -> str:
-        return "{Server-%d, GPU-%d, Status: %s}" % (self.node_id, self.gpu_id, self.status)
-
-    def __hash__(self) -> int:
-        return hash(self.node_id + '_' + self.gpu_id)
-
-    def set_status(self, status):
-        self.status = status
-
-
 def set_execution_engine(engine: AbstractExecutionEngine) -> None:
     global _execution_engine
     if _execution_engine is None:

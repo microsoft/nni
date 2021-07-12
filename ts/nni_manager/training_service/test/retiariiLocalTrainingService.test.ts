@@ -142,33 +142,6 @@ describe('Unit Test for RetiariiLocalTrainingService', () => {
         localTrainingService.cleanUp();
     }).timeout(20000);
 
-    it('Submit job with topology placement constraint', async () => {
-        const localTrainingService = new RetiariiLocalTrainingService(config);
-        localTrainingService.run();
-
-        // submit job asking for 2-GPU in one server
-        const form: TrialJobApplicationForm = {
-            sequenceId: 0,
-            hyperParameters: {
-                value: 'mock hyperparameters',
-                index: 0
-            },
-            placementConstraint: {
-                type: "Topology",
-                gpus: [2]
-            }
-        };
-        const jobDetail: TrialJobDetail = await localTrainingService.submitTrialJob(form);
-        chai.expect(jobDetail.status).to.be.equals('WAITING');
-        // const [success, resource] = localTrainingService.tryGetAvailableResource(jobDetail.form.placementConstraint!);
-        // chai.expect(success).to.be.equals(true);
-        // chai.expect(resource).to.be.equals({gpuIndices:[1,2]});
-        await localTrainingService.cancelTrialJob(jobDetail.id);
-        chai.expect(jobDetail.status).to.be.equals('USER_CANCELED');
-
-        localTrainingService.cleanUp();
-    }).timeout(20000);
-
     it('Submit job with device placement constraint', async () => {
         const localTrainingService = new RetiariiLocalTrainingService(config);
         localTrainingService.run();

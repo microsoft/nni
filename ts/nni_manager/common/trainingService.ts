@@ -20,12 +20,11 @@ interface HyperParameters {
     readonly index: number;
 }
 
-type PlacementConstraintType = 'None' | 'Topology' | 'Device'
+type PlacementConstraintType = 'None' | 'Device'
 interface PlacementConstraint{
     readonly type: PlacementConstraintType;
-    readonly gpus: Array<number|[number,number]>;
+    readonly gpus: Array<[number,number]>;
     /**
-     * Topology constraint is in form of Array<number>, e.g., [2,2,2] means find three servers each with two GPUs
      * Device constraint is in form of Array<[number,number]>, e.g., [(0,1),(1,0)] means it must be placed on 
      *      Node-0's GPU-1 and Node-1's GPU-0
      */
@@ -43,7 +42,7 @@ interface TrialCommandContent {
     readonly parameter_id: string;
     readonly parameters: string;
     readonly parameter_source: string;
-    readonly placement_constraint: PlacementConstraint;
+    readonly placement_constraint?: PlacementConstraint;
 }
 
 /**
@@ -71,12 +70,6 @@ interface TrialJobMetric {
     readonly data: string;
 }
 
-interface GPUStatus {
-    readonly nodeId: number;
-    readonly gpuId: number;
-    readonly status: string;
-}
-
 /**
  * define TrainingServiceError
  */
@@ -101,9 +94,7 @@ abstract class TrainingService {
     public abstract listTrialJobs(): Promise<TrialJobDetail[]>;
     public abstract getTrialJob(trialJobId: string): Promise<TrialJobDetail>;
     public abstract addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void;
     public abstract removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void;
-    public abstract removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void;
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
@@ -129,5 +120,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig, LogType, GPUStatus, PlacementConstraint, TrialCommandContent
+    NNIManagerIpConfig, LogType, PlacementConstraint, TrialCommandContent
 };

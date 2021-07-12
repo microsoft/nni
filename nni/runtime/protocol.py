@@ -20,7 +20,6 @@ class CommandType(Enum):
     TrialEnd = b'EN'
     Terminate = b'TE'
     Ping = b'PI'
-    UpdateGPUStatus = b'UG'
 
     # out
     Initialized = b'ID'

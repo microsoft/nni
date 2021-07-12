@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus, PlacementConstraint,
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, PlacementConstraint,
     TrialCommandContent
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
@@ -52,7 +52,6 @@ class NNIManager implements Manager {
     private config!: ExperimentConfig;
 
     private trialJobMetricListener: (metric: TrialJobMetric) => void;
-    private gpuStatusListener: (status: Array<GPUStatus>) => void;
 
     constructor() {
         this.currSubmittedTrialNum = 0;
@@ -73,11 +72,6 @@ class NNIManager implements Manager {
         this.trialJobMetricListener = (metric: TrialJobMetric): void => {
             this.onTrialJobMetrics(metric).catch((err: Error) => {
                 this.criticalError(NNIError.FromError(err, 'Job metrics error: '));
-            });
-        };
-        this.gpuStatusListener = (status: Array<GPUStatus>): void => {
-            this.onGPUStatusUpdate(status).catch((err: Error) => {
-                this.criticalError(NNIError.FromError(err, 'GPU status update error: '));
             });
         };
 
@@ -319,7 +313,6 @@ class NNIManager implements Manager {
         }
 
         this.trainingService.removeTrialJobMetricListener(this.trialJobMetricListener);
-        this.trainingService.removeGPUStatusUpdateListener(this.gpuStatusListener);
         if (this.dispatcherPid > 0) {
             this.dispatcher.sendCommand(TERMINATE);
             // gracefully terminate tuner and assessor here, wait at most 30 seconds.
@@ -467,9 +460,6 @@ class NNIManager implements Manager {
         } else if (platform === 'adl') {
             const module_ = await import('../training_service/kubernetes/adl/adlTrainingService');
             return new module_.AdlTrainingService();
-        } else if (platform == 'retiarii_local') {
-            const module_ = await import('../training_service/retiarii_local/retiariiLocalTrainingService');
-            return new module_.RetiariiLocalTrainingService(config);
         } else {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
@@ -723,7 +713,6 @@ class NNIManager implements Manager {
             throw new Error('Error: tuner or job maintainer have not been setup');
         }
         this.trainingService.addTrialJobMetricListener(this.trialJobMetricListener);
-        this.trainingService.addGPUStatusUpdateListener(this.gpuStatusListener);
 
         this.dispatcher.onCommand((commandType: string, content: string) => {
             this.onTunerCommand(commandType, content).catch((err: Error) => {
@@ -775,16 +764,6 @@ class NNIManager implements Manager {
         } else {
             this.dispatcher.sendCommand(REQUEST_TRIAL_JOBS, String(jobNum));
         }
-    }
-
-    private async onGPUStatusUpdate(status: Array<GPUStatus>): Promise<void> {
-        if (this.dispatcher === undefined) {
-            throw new Error('Dispatcher error: tuner has not been setup');
-        }
-        this.log.info(`onGPUStatusUpdate : ${status}`)
-        this.dispatcher.sendCommand(UPDATE_GPU_STATUS,
-            JSON.stringify(status)
-        )
     }
 
     private async onTunerCommand(commandType: string, content: string): Promise<void> {

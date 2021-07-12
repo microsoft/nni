@@ -141,8 +141,6 @@ class MsgDispatcherBase(Recoverable):
 
             CommandType.TrialEnd: self.handle_trial_end,
             CommandType.Ping: self.handle_ping,
-
-            CommandType.UpdateGPUStatus: self.handle_update_gpu_status
         }
         if command not in command_handlers:
             raise AssertionError('Unsupported command: {}'.format(command))
@@ -245,17 +243,3 @@ class MsgDispatcherBase(Recoverable):
 
         """
         raise NotImplementedError('handle_trial_end not implemented')
-
-    def handle_update_gpu_status(self, data):
-        """Called when a GPU's status is changed
-
-        Parameters
-        ----------
-        data: dict
-            a dict with keys: nodeId, gpuId, status
-            nodeId: the index of machine
-            gpuId: the index of GPU on the machine
-            status: either `occupied` or `free`
-
-        """
-        raise NotImplementedError('handle_update_gpu_status not implemented')

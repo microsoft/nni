@@ -13,7 +13,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus, PlacementConstraint
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, PlacementConstraint
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
@@ -192,14 +192,6 @@ class RetiariiLocalTrainingService implements TrainingService {
         this.eventEmitter.off('metric', listener);
     }
 
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        this.eventEmitter.on('gpuStatusUpdate', listener);
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        this.eventEmitter.off('gpuStatusUpdate', listener);
-    }
-
     public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const trialJobId: string = uniqueString(5);
         const trialJobDetail: LocalTrialJobDetail = new LocalTrialJobDetail(
@@ -296,7 +288,6 @@ class RetiariiLocalTrainingService implements TrainingService {
         }
         if (trialJob.gpuIndices !== undefined && trialJob.gpuIndices.length > 0 && this.gpuScheduler !== undefined) {
             if (oldStatus === 'RUNNING' && trialJob.status !== 'RUNNING') {
-                const emitMsg: Array<any> = [];
                 for (const index of trialJob.gpuIndices) {
                     const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                     if (num === undefined) {
@@ -306,13 +297,7 @@ class RetiariiLocalTrainingService implements TrainingService {
                     } else {
                         this.occupiedGpuIndexNumMap.set(index, num - 1);
                     }
-                    emitMsg.push({
-                        nodeId: 0,
-                        gpuId: index,
-                        status: "free"
-                    })
                 }
-                this.eventEmitter.emit("gpuStatusUpdate", emitMsg)
             }
         }
     }
@@ -383,11 +368,8 @@ class RetiariiLocalTrainingService implements TrainingService {
             let requiredGPUNum: number | undefined | [number, number] = 0;
             if (constraint.type === 'None') {
                 requiredGPUNum = this.config.trialGpuNumber;
-            } else if (constraint.type === 'Topology') {
-                if (constraint.gpus.length !== 1) {
-                    throw new Error('Error: retiarii local training service only supports single server constraint');
-                }
-                requiredGPUNum = constraint.gpus[0];
+            } else {
+                throw new Error('constraint type must be either `None` or `Device`');
             }
             requiredGPUNum = requiredGPUNum as number
             if (selectedGPUIndices.length < requiredGPUNum) {
@@ -414,7 +396,6 @@ class RetiariiLocalTrainingService implements TrainingService {
 
     private occupyResource(resource: { gpuIndices: number[] }): void {
         if (this.gpuScheduler !== undefined) {
-            const emitMsg: Array<any> = []
             for (const index of resource.gpuIndices) {
                 const num: number | undefined = this.occupiedGpuIndexNumMap.get(index);
                 if (num === undefined) {
@@ -422,13 +403,7 @@ class RetiariiLocalTrainingService implements TrainingService {
                 } else {
                     this.occupiedGpuIndexNumMap.set(index, num + 1);
                 }
-                emitMsg.push({
-                    nodeId: 0,
-                    gpuId: index,
-                    status: "occupied"
-                })
             }
-            this.eventEmitter.emit('gpuStatusUpdate', emitMsg)
         }
     }
 

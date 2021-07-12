@@ -13,7 +13,7 @@ import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType, GPUStatus
+    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
@@ -251,14 +251,6 @@ class LocalTrainingService implements TrainingService {
         this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
-    }
-    
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }

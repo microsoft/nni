@@ -14,7 +14,7 @@ import {getExperimentId} from '../../common/experimentStartupInfo';
 import {getLogger, Logger} from '../../common/log';
 import {MethodNotImplementedError} from '../../common/errors';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType, GPUStatus
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
 import {AzureStorageClientUtility} from './azureStorageClientUtils';
@@ -109,14 +109,6 @@ abstract class KubernetesTrainingService {
 
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
-    }
-
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
     }
 
     public get isMultiPhaseJobSupported(): boolean {

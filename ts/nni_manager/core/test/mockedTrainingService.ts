@@ -7,7 +7,7 @@ import { Deferred } from 'ts-deferred';
 import { Provider } from 'typescript-ioc';
 
 import { MethodNotImplementedError } from '../../common/errors';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType, GPUStatus} from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType} from '../../common/trainingService';
 
 const testTrainingServiceProvider: Provider = {
     get: () => { return new MockedTrainingService(); }
@@ -75,14 +75,6 @@ class MockedTrainingService extends TrainingService {
     }
 
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
-    }
-
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
     }
 
     public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {

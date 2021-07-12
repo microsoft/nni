@@ -15,7 +15,7 @@ import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType, GPUStatus
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
 } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../common/experimentConfig';
@@ -147,14 +147,6 @@ class PAITrainingService implements TrainingService {
 
     public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
         this.metricsEmitter.off('metric', listener);
-    }
-    
-    public addGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
-    }
-
-    public removeGPUStatusUpdateListener(listener: (status: Array<GPUStatus>) => void): void {
-        return
     }
 
     public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {

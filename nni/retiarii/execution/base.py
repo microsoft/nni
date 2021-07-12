@@ -52,7 +52,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         advisor.trial_end_callback = self._trial_end_callback
         advisor.intermediate_metric_callback = self._intermediate_metric_callback
         advisor.final_metric_callback = self._final_metric_callback
-        advisor.update_gpu_status_callback = self._update_gpu_status_callback
 
         self._running_models: Dict[int, Model] = dict()
         self._history: List[Model] = []
@@ -103,17 +102,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         model.metric = metrics
         for listener in self._listeners:
             listener.on_metric(model, metrics)
-
-    def _set_device_status(self, node_id, gpu_id, status):
-        for device in self.devices:
-            if device.node_id == node_id and device.gpu_id == gpu_id:
-                device.set_status(status)
-                return
-        raise ValueError("Node-%d GPU-%d not exists in execution engine" % (node_id, gpu_id))
-
-    def _update_gpu_status_callback(self, status_list: List[Dict]) -> None:
-        for status in status_list:
-            self._set_device_status(status['nodeId'], status['gpuId'], status['status'])
 
     def query_available_resource(self) -> int:
         return self.resources
