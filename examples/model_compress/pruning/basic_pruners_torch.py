@@ -253,6 +253,9 @@ def main(args):
                 'sparsity': args.sparsity,
                 'op_types': ['Conv2d'],
                 'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+            }, {
+                'exclude': True,
+                'op_names': ['feature.27']
             }]
 
     pruner = pruner_cls(model, config_list, **kw_args)
