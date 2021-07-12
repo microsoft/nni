@@ -240,6 +240,7 @@ Infer output and weight shape of a module/function from its input shape
 infer_from_inshape = {
     'ReLU': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'ReLU6': lambda module_masks, mask: relu_inshape(module_masks, mask),
+    'PReLU': lambda module_masks, mask: prelu_inshape(module_masks, mask),
     'Sigmoid': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_inshape(module_masks, mask),
     'aten::tanh': lambda module_masks, mask: relu_inshape(module_masks, mask),
@@ -293,6 +294,7 @@ infer_from_outshape = {
     'AdaptiveAvgPool2d': lambda module_masks, mask: maxpool2d_outshape(module_masks, mask),
 
     'ReLU': lambda module_masks, mask: relu_outshape(module_masks, mask),
+    'PReLU': lambda module_masks, mask: prelu_outshape(module_masks, mask),
     'ReLU6': lambda module_masks, mask: relu_outshape(module_masks, mask),
     'aten::relu': lambda module_masks, mask: relu_outshape(module_masks, mask),
     'aten::tanh': lambda module_masks, mask: relu_outshape(module_masks, mask),
@@ -733,6 +735,62 @@ def maxpool2d_outshape(module_masks, mask):
 
     module_masks.set_input_mask(mask)
     module_masks.set_output_mask(mask)
+    return mask
+
+def prelu_inshape(module_masks, mask):
+    """
+    We assume only the second dimension has coarse grained mask
+
+    Parameters
+    ----------
+    module_masks : ModuleMasks
+        The ModuleMasks instance of the PReLU
+    mask : CoarseMask
+        The mask of its input tensor
+
+    Returns
+    -------
+    CoarseMask
+        The mask of its output tensor
+    """
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+    module_masks.set_input_mask(mask)
+    module_masks.set_output_mask(mask)
+    weight_cmask = CoarseMask(num_dim=1)
+    weight_cmask.add_index_mask(dim=0, index=mask.mask_index[1])
+    module_masks.set_param_masks('weight', weight_cmask)
+    return mask
+
+def prelu_outshape(module_masks, mask):
+    """
+    We assume only the second dimension has coarse grained mask
+
+    Parameters
+    ----------
+    module_masks : ModuleMasks
+        The ModuleMasks instance of the PReLU
+    mask : CoarseMask
+        The mask of its input tensor
+
+    Returns
+    -------
+    CoarseMask
+        The mask of its output tensor
+    """
+    assert isinstance(mask, CoarseMask)
+    assert mask.mask_index[1] is not None
+    assert mask.mask_index[0] is None
+    assert mask.mask_index[2] is None
+    assert mask.mask_index[3] is None
+
+    weight_cmask = CoarseMask(num_dim=4)
+    weight_cmask.add_index_mask(dim=0, index=mask.mask_index[1])
+    module_masks.set_param_masks('weight', weight_cmask)
+
     return mask
 
 

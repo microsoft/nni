@@ -1,7 +1,7 @@
-自定义 Strategy
-========================
+自定义探索 Strategy
+======================================
 
-要编写新策略，应该继承基本策略类 ``BaseStrategy``，然后实现成员函数 ``run``。 此成员函数将 ``base_model`` 和 ``applied_mutators`` 作为输入参数， 并将用户在 ``applied_mutators`` 中指定的 Mutator 应用到 ``base_model`` 中生成新模型。 当应用一个 Mutator 时，应该与一个 sampler 绑定（例如，``RandomSampler``）。 每个 sampler 都实现了从候选值中选择值的 ``choice`` 函数。 在 Mutator 中调用 ``choice`` 函数是用 sampler 执行的。
+如果用户想研究一个新的探索策略，他们可以按照 NNI 提供的接口轻松定制一个新的策略。 要编写新策略，应该继承基本策略类 ``BaseStrategy``，然后实现成员函数 ``run``。 此成员函数将 ``base_model`` 和 ``applied_mutators`` 作为输入参数， 并将用户在 ``applied_mutators`` 中指定的 Mutator 应用到 ``base_model`` 中生成新模型。 当应用一个 Mutator 时，应该与一个 sampler 绑定（例如，``RandomSampler``）。 每个 sampler 都实现了从候选值中选择值的 ``choice`` 函数。 在 Mutator 中调用 ``choice`` 函数是用 sampler 执行的。
 
 下面是一个非常简单的随机策略，它使选择完全随机。
 

@@ -95,11 +95,14 @@
 
 .. code-block:: bibtex
 
-   @article{gao2020opevo,
-     title={OpEvo: An Evolutionary Method for Tensor Operator Optimization},
-     author={Gao, Xiaotian and Wei, Cui and Zhang, Lintao and Yang, Mao},
-     journal={arXiv preprint arXiv:2006.05664},
-     year={2020}
+   @article{gao2020opevo, 
+        title={OpEvo: An Evolutionary Method for Tensor Operator Optimization}, 
+        volume={35},
+        url={https://ojs.aaai.org/index.php/AAAI/article/view/17462}, 
+        number={14}, 
+        journal={Proceedings of the AAAI Conference on Artificial Intelligence},
+        author={Gao, Xiaotian and Wei, Cui and Zhang, Lintao and Yang, Mao},
+        year={2021}, month={May}, pages={12320-12327}
    }
 
 评估和理解

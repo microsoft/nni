@@ -4,7 +4,7 @@ NNI 上的知识蒸馏
 知识蒸馏 (Knowledge Distillation)
 ---------------------------------------
 
-在 `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ 中提出了知识蒸馏（KD）的概念,  压缩后的模型被训练去模仿预训练的、较大的模型。  这种训练设置也称为"师生（teacher-student）"方式，其中大模型是教师，小模型是学生。 KD 通常用于微调剪枝后的模型。
+在 `Distilling the Knowledge in a Neural Network <https://arxiv.org/abs/1503.02531>`__\ 中提出了知识蒸馏（KD）的概念,  压缩后的模型被训练去模仿预训练的、较大的模型。这种训练设置也称为"师生（teacher-student）"方式，其中大模型是教师，小模型是学生。KD 通常用于微调剪枝后的模型。
 
 
 .. image:: ../../img/distill.png
