@@ -101,7 +101,7 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
         criterion = torch.nn.CrossEntropyLoss()
     return train_loader, test_loader, criterion
 
-def get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion):
+def get_model(args, device, train_loader, test_loader, criterion):
     if args.model == 'lenet':
         model = LeNet().to(device)
         if args.pretrained_model_dir is None:
@@ -125,6 +125,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
     if args.pretrained_model_dir is None:
         print('start pre-training...')
         best_acc = 0
+        state_dict = model.state_dict()
         for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
@@ -143,12 +144,8 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
         model.load_state_dict(torch.load(args.pretrained_model_dir))
         best_acc = test(args, model, device, criterion, test_loader)
 
-    # setup new opotimizer for pruning
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
-
     print('Pretrained model acc:', best_acc)
-    return model, optimizer, scheduler
+    return model
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
@@ -192,7 +189,9 @@ def main(args):
     # prepare model and data
     train_loader, test_loader, criterion = get_data(args.dataset, args.data_dir, args.batch_size, args.test_batch_size)
 
-    model, optimizer, _ = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
+    model = get_model(args, device, train_loader, test_loader, criterion)
+    # this optimizer is for pruning process
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 
     dummy_input = get_dummy_input(args, device)
     flops, params, _ = count_flops_params(model, dummy_input)
