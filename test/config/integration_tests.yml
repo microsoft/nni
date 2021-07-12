@@ -56,6 +56,7 @@ testCases:
       remoteMountPoint: /tmp/nnimount/testremoterootpath
       nfsServer: $(NFS_IP)
       exportedDirectory: /home/core/mnt/
+  trainingService: remote
   validator:
     class: FileExistValidator
     kwargs:
