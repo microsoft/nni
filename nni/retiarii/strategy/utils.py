@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+
 import collections
 import logging
 from typing import Dict, Any, List
+from nn_meter import get_default_config, load_latency_predictors  # pylint: disable=import-error
 from ..graph import Model
 from ..mutator import Mutator, Sampler
-
-from nn_meter import get_default_config, load_latency_predictors  # pylint: disable=import-error
 
 _logger = logging.getLogger(__name__)
 
@@ -66,10 +66,10 @@ class LatencyFilter:
         return latency < self.threshold
 
 
-def filter_model(filter, ir_model):
-    if filter is not None:
+def filter_model(model_filter, ir_model):
+    if model_filter is not None:
         _logger.debug(f'Check if model satisfies constraints.')
-        if filter(ir_model):
+        if model_filter(ir_model):
             _logger.debug(f'Model satisfied. Submit the model.')
             return True
         else:
