@@ -5,7 +5,7 @@ import copy
 import logging
 import torch
 from schema import And, Optional
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from nni.compression.pytorch.compressor import Pruner
 from .finegrained_pruning_masker import LevelPrunerMasker
 
@@ -56,11 +56,12 @@ class LotteryTicketPruner(Pruner):
                 - prune_iterations : The number of rounds for the iterative pruning.
                 - sparsity : The final sparsity when the compression is done.
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+        schema = PrunerSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             'prune_iterations': And(int, lambda n: n > 0),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
