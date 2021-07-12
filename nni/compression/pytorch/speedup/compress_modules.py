@@ -22,7 +22,7 @@ replace_module = {
     'Hardtanh': lambda module, masks: no_replace(module, masks),
     'Hardsigmoid': lambda module, masks: no_replace(module, masks),
     'LogSigmoid': lambda module, masks: no_replace(module, masks),
-    'PReLU': lambda module, masks: no_replace(module, masks),
+    'PReLU': lambda module, masks: replace_prelu(module, masks),
     'RReLU': lambda module, masks: no_replace(module, masks),
     'SELU': lambda module, masks: no_replace(module, masks),
     'CELU': lambda module, masks: no_replace(module, masks),
@@ -87,31 +87,37 @@ def no_replace(module, masks):
     _logger.debug("no need to replace")
     return module
 
-def replace_prelu(norm, mask):
+def replace_prelu(prelu, masks):
     """
     Parameters
     ----------
-    norm : torch.nn.BatchNorm2d
+    module : torch.nn.PReLU
         The prelu module to be replace
-    mask : ModuleMasks
-        The masks of this module
+    masks : tuple of masks
+        The input/output/weight masks of the target module
 
     Returns
     -------
     torch.nn.PReLU
         The new prelu module
     """
-    assert isinstance(mask, ModuleMasks)
-    assert 'weight' in mask.param_masks
-    index = mask.param_masks['weight'].mask_index[0]
-    num_features = index.size()[0]
-    #  _logger.debug("replace prelu with num_features: %d", num_features)
-    if num_features == 0:
+    in_masks, output_mask, weight_mask = masks
+    assert len(in_masks) == 1
+    assert isinstance(output_mask, torch.Tensor)
+    in_mask = in_masks[0]
+    weight_mask = weight_mask['weight']
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    n_remained_in = weight_mask.size(0) - pruned_in.size(0)
+    n_remained_out = weight_mask.size(0) - pruned_out.size(0)
+    remained_in, remained_out = remained_in.to(
+        prelu.weight.device), remained_out.to(prelu.weight.device)
+    assert n_remained_in == n_remained_out
+    if n_remained_in == 0:
         return torch.nn.Identity()
-    new_norm = torch.nn.PReLU(num_features)
-    # assign weights
-    new_norm.weight.data = torch.index_select(norm.weight.data, 0, index)
-    return new_norm
+    new_prelu = torch.nn.PReLU(n_remained_in)
+    new_prelu.weight.data = torch.index_select(prelu.weight.data, 0, remained_in)
+    return new_prelu
 
 def replace_linear(linear, masks):
     """
