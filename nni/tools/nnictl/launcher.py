@@ -539,7 +539,9 @@ def manage_stopped_experiment(args, mode):
     #find the latest stopped experiment
     if not args.id:
         print_error('Please set experiment id! \nYou could use \'nnictl {0} id\' to {0} a stopped experiment!\n' \
-        'You could use \'nnictl experiment list --all\' to show all experiments!'.format(mode))
+        'You could use \'nnictl experiment list --all\' to show all experiments!\n' \
+        'If your experiment is not started in current machine, you could specify experiment folder using ' \
+        '--experiment_dir argument'.format(mode))
         exit(1)
     else:
         if experiments_dict.get(args.id) is None:
@@ -570,8 +572,48 @@ def manage_stopped_experiment(args, mode):
 
 def view_experiment(args):
     '''view a stopped experiment'''
-    manage_stopped_experiment(args, 'view')
+    if args.experiment_dir:
+        manage_external_experiment(args, 'view')
+    else:
+        manage_stopped_experiment(args, 'view')
 
 def resume_experiment(args):
     '''resume an experiment'''
-    manage_stopped_experiment(args, 'resume')
+    '''view a stopped experiment'''
+    if args.experiment_dir:
+        manage_external_experiment(args, 'resume')
+    else:
+        manage_stopped_experiment(args, 'resume')
+
+def manage_external_experiment(args, mode):
+    '''view a experiment from external path'''
+    # validate arguments
+    if not os.path.exists(args.experiment_dir):
+        print_error('Folder %s does not exist!' % args.experiment_dir)
+        exit(1)
+    if not os.path.isdir(args.experiment_dir):
+        print_error('Path %s is not folder directory!' % args.experiment_dir)
+        exit(1)
+    if args.id:
+        experiment_id = args.id
+        log_dir = args.experiment_dir
+    else:
+        print_normal('NNI can not detect experiment id in argument, will use last folder name as experiment id in experiment_dir argument.')
+        experiment_id = Path(args.experiment_dir).name
+        log_dir = os.path.dirname(args.experiment_dir)
+        if not experiment_id:
+            print_error("Please set experiment id argument, or add id as the last folder name in experiment_dir argument.")
+            exit(1)
+    args.url_prefix = None
+    experiment_config = Config(experiment_id, log_dir).get_config()
+    assert 'trainingService' in experiment_config or 'trainingServicePlatform' in experiment_config
+    try:
+        if 'trainingServicePlatform' in experiment_config:
+            experiment_config['logDir'] = log_dir
+            launch_experiment(args, experiment_config, mode, experiment_id, 1)
+        else:
+            experiment_config['experimentWorkingDirectory'] = log_dir
+            launch_experiment(args, experiment_config, mode, experiment_id, 2)
+    except Exception as exception:
+        print_error(exception)
+        exit(1)
