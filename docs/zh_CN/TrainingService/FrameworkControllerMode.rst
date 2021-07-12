@@ -28,6 +28,16 @@ Azure 部署的 Kubernetes 的准备工作
 #. 参考此 `指南 <https://docs.microsoft.com/zh-cn/azure/storage/common/storage-quickstart-create-account?tabs=portal>`__ 来创建 Azure 文件存储账户。 NNI 需要 Azure Storage Service 来存取代码和输出文件。
 #. NNI 需要访问密钥来连接 Azure 存储服务，NNI 使用 `Azure Key Vault <https://azure.microsoft.com/zh-cn/services/key-vault/>`__ 服务来保护私钥。 设置 Azure Key Vault 服务，并添加密钥到 Key Vault 中来存取 Azure 存储账户。 参考 `指南 <https://docs.microsoft.com/zh-cn/azure/key-vault/quick-create-cli>`__ 来存储访问密钥。
 
+
+部署 PVC 存储模式的准备工作
+-----------------------------------------
+为了使用 PVC（persistent volume claims）而不是 NFS 或 Azure 存储，相关存储必须
+在你的 Trial 以后要运行的命名空间中手动创建。 这一限制是由于
+PVC 很难被回收，因此会迅速扰乱一个集群的
+存储管理， PVC 可以通过 kubectl 被创建。 请参考
+`Kubernetes 官方文档 <https://kubernetes.io/docs/concepts/storage/persistent-volumes/#persistentvolumeclaims>`__ 获取更多信息。
+
+
 安装 FrameworkController
 -------------------------
 
@@ -115,6 +125,37 @@ frameworkcontroller 模式中的 Trial 配置使用以下主键：
   * memoryMB: 容器的内存限制。
   * image: 用来创建 pod，并运行程序的 Docker 映像。
   * frameworkAttemptCompletionPolicy: 运行框架的策略，参考 `用户手册 <https://github.com/Microsoft/frameworkcontroller/blob/master/doc/user-manual.md#frameworkattemptcompletionpolicy>`__ 了解更多信息。 这些策略可以用来控制 pod，例如，如果 worker 任务停止了，但 ps 还在运行，要通过完成策略来停止 ps。
+
+NNI还提供了一个定制 FrameworkController 模板的可能性，类似于
+前面提到的 TensorFlow 示例。 一个有效的配置大致如下：
+
+.. code-block:: yaml
+
+    experimentName: example_mnist_pytorch
+    trialConcurrency: 1
+    maxExecDuration: 1h
+    maxTrialNum: 2
+    logLevel: trace
+    trainingServicePlatform: frameworkcontroller
+    searchSpacePath: search_space.json
+    tuner:
+      builtinTunerName: TPE
+      classArgs:
+        optimize_mode: maximize
+    assessor:
+      builtinAssessorName: Medianstop
+      classArgs:
+        optimize_mode: maximize
+    trial:
+      codeDir: .
+    frameworkcontrollerConfig:
+      configPath: fc_template.yml
+      storage: pvc
+      namespace: twin-pipelines
+      pvc:
+        path: /mnt/data
+
+请注意，在这个例子中，已经使用了 PVC 存储，其必须事先在指定的命名空间中手动创建。 点击 mnist-pytorch 示例 (:githublink: `<examples/trials/mnist-pytorch>`__) 获取更加详细的配置 (:githublink: `<examples/trials/mnist-pytorch/config_frameworkcontroller_custom.yml>`__) 和 FrameworkController 模板 (:githublink: `<examples/trials/fc_template.yml>`__)。
 
 如何运行示例
 ------------------

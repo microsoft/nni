@@ -189,7 +189,6 @@ class NNIManager implements Manager {
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
-
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -433,6 +432,11 @@ class NNIManager implements Manager {
         return (value === undefined ? Infinity : value);
     }
 
+    private get maxTrialDuration(): number {
+        const value = this.experimentProfile.params.maxTrialDuration;
+        return (value === undefined ? Infinity : toSeconds(value));
+    }
+
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
         let platform: string;
         if (Array.isArray(config.trainingService)) {
@@ -537,6 +541,17 @@ class NNIManager implements Manager {
             this.dispatcher.sendCommand(PING);
             await delay(1000 * 5);
         }
+    }
+
+    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
+        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+        if(undefined !== trialJobDetail &&
+            trialJobDetail.status === 'RUNNING' &&
+            trialJobDetail.startTime !== undefined){
+                const isEarlyStopped = true;
+                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+            }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -662,6 +677,7 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);

@@ -7,11 +7,11 @@ Experiment 生成的所有信息都将存储在共享存储的 ``/nni`` 文件�
 Trial 产生的所有输出将位于共享存储中的 ``/nni/{EXPERIMENT_ID}/trials/{TRIAL_ID}/nnioutput`` 文件夹下。
 这就避免了在不同地方寻找实验相关信息的麻烦。
 Trial 工作目录是 ``/nni/{EXPERIMENT_ID}/trials/{TRIAL_ID}``，因此如果您在共享存储中上载数据，您可以像在 Trial 代码中打开本地文件一样打开它，而不必下载它。
-未来我们将开发更多基于共享存储的实用功能。
+未来我们将开发更多基于共享存储的实用功能。 配置参考在 `这里 <../reference/experiment_config.html#sharedstorageconfig>`_。
 
 .. note::
-    共享存储目前处于实验阶段。 我们建议在 Ubuntu/CentOS/RHEL 下使用 AzureBlob，在 Ubuntu/CentOS/RHEL/Fedora/Debian 下使用 NFS 进行远程访问。
-    确保您的本地机器可以挂载 NFS 或 fuse AzureBlob，并在远程运行时具有 sudo 权限。 我们目前只支持使用重用模式的训练平台下的共享存储。
+    共享存储目前处于实验阶段。 共享存储目前处于实验阶段。 我们建议在 Ubuntu/CentOS/RHEL 下使用 AzureBlob，在 Ubuntu/CentOS/RHEL/Fedora/Debian 下使用 NFS 进行远程访问。
+    确保您的本地机器可以挂载 NFS 或 fuse AzureBlob，并在远程运行时具有 sudo 权限。 我们目前只支持使用重用模式的训练平台下的共享存储。 我们目前只支持使用重用模式的训练平台下的共享存储。
 
 示例
 -------
