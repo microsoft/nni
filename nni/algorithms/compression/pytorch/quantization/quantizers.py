@@ -343,8 +343,8 @@ class QAT_Quantizer(Quantizer):
                 if hasattr(module, BN_FOLD_TAG):
                     actual_weight = getattr(module, 'old_weight', None)
                     if actual_weight is None:
-                        logger.warning("Can not recover weight for layer {}. "
-                                       "This may lead to a wrong accuracy performance on the backend.".format(name))
+                        logger.warning("Can not recover weight for layer %s. "
+                                       "This may lead to a wrong accuracy performance on the backend.", name)
                     delattr(module, 'weight')
                     module.register_parameter('weight', actual_weight)
 
