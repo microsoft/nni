@@ -78,6 +78,10 @@ def update_training_service_config(args):
             config[args.ts]['sharedStorage']['storageAccountKey'] = args.azurestoragetoken
         if args.nfs_server is not None:
             config[args.ts]['sharedStorage']['nfsServer'] = args.nfs_server
+        if args.local_mount_point is not None:
+            config[args.ts]['sharedStorage']['localMountPoint'] = args.local_mount_point
+        if args.remote_mount_point is not None:
+            config[args.ts]['sharedStorage']['remoteMountPoint'] = args.remote_mount_point
     elif args.ts == 'adl':
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['image'] = args.nni_docker_image
@@ -122,8 +126,11 @@ if __name__ == '__main__':
     parser.add_argument("--config_version", type=str, choices=['v1', 'v2'], default='v1')
     parser.add_argument("--nni_docker_image", type=str)
     parser.add_argument("--nni_manager_ip", type=str)
+    # args for remote with shared storage
     parser.add_argument("--azurestoragetoken", type=str)
     parser.add_argument("--nfs_server", type=str)
+    parser.add_argument("--local_mount_point", type=str)
+    parser.add_argument("--remote_mount_point", type=str)
     # args for PAI
     parser.add_argument("--pai_user", type=str)
     parser.add_argument("--pai_pwd", type=str)
