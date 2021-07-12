@@ -6,4 +6,4 @@
 
     框架 <./Framework>
     自定义压缩算法 <./CustomizeCompressor>
-    自动模型压缩 <./AutoPruningUsingTuners>
+    自动模型压缩 (Beta) <./AutoCompression>

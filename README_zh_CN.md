@@ -4,13 +4,13 @@
 
 * * *
 
-[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&branchName=master) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=latest)](https://nni.readthedocs.io/zh/latest/?badge=latest)
+[![MIT 许可证](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE) [![生成状态](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&branchName=master) [![问题](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen) [![Bug](https://img.shields.io/github/issues/Microsoft/nni/bug.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen+label%3Abug) [![拉取请求](https://img.shields.io/github/issues-pr-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/pulls?q=is%3Apr+is%3Aopen) [![版本](https://img.shields.io/github/release/Microsoft/nni.svg)](https://github.com/Microsoft/nni/releases) [![进入 https://gitter.im/Microsoft/nni 聊天室提问](https://badges.gitter.im/Microsoft/nni.svg)](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![文档状态](https://readthedocs.org/projects/nni/badge/?version=stable)](https://nni.readthedocs.io/zh/stable/?badge=stable)
 
 [NNI 文档](https://nni.readthedocs.io/zh/stable/) | [English](README.md)
 
 **NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.rst)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.rst)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.rst)以及[模型压缩](docs/zh_CN/Compression/Overview.rst)。
 
-NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.rst)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.rst)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.rst)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.rst)，[基于 K8S 的 FrameworkController（如，AKS 等）](docs/zh_CN/TrainingService/FrameworkControllerMode.rst)， [DLWorkspace (又称 DLTS)](docs/zh_CN/TrainingService/DLTSMode.rst), [AML (Azure Machine Learning)](docs/zh_CN/TrainingService/AMLMode.rst), [AdaptDL（又称 ADL）](docs/zh_CN/TrainingService/AdaptDLMode.rst) ，和其他的云平台甚至 [混合模式](docs/zh_CN/TrainingService/HybridMode.rst) 。
+NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.rst)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.rst)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.rst)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.rst)，[基于 K8S 的 FrameworkController（如，AKS 等）](docs/zh_CN/TrainingService/FrameworkControllerMode.rst)， [DLWorkspace (又称 DLTS)](docs/zh_CN/TrainingService/DLTSMode.rst), [AML (Azure Machine Learning)](docs/zh_CN/TrainingService/AMLMode.rst), [AdaptDL（又称 ADL）](docs/zh_CN/TrainingService/AdaptDLMode.rst) ，和其他的云平台甚至 [混合模式](docs/zh_CN/TrainingService/HybridMode.rst) 。 DLTS)</a>，[AML (Azure Machine Learning)](https://nni.readthedocs.io/zh/stable/TrainingService/AMLMode.html)[AdaptDL（又称 ADL）](https://nni.readthedocs.io/zh/stable/TrainingService/AdaptDLMode.html) ，和其他的云平台甚至[混合模式](https://nni.readthedocs.io/zh/stable/TrainingService/HybridMode.html) 。
 
 ## **使用场景**
 
@@ -23,8 +23,8 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 * **最新版本**：[v2.0 已发布](https://github.com/microsoft/nni/releases) - *2021年1月14日*
 * **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年2月19日*
-
-* **最新案例分享**：[利用 AdaptDL 和 NNI 集成方案实现经济高效超参调优](https://medium.com/casl-project/cost-effective-hyper-parameter-tuning-using-adaptdl-with-nni-e55642888761) - *2021年2月23日发布*
+* **最新网络研讨会**: [介绍Retiarii：NNI 上的深度学习探索性训练框架](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - *2021年6月24日*
+* **最新互动渠道**: [Discussions](https://github.com/microsoft/nni/discussions)
 
 ## **NNI 功能一览**
 
@@ -67,7 +67,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
           <li>TensorFlow</li>
           <li>MXNet</li>
           <li>Caffe2</li>
-          <a href="docs/zh_CN/SupportedFramework_Library.rst">更多...</a><br/>
+          <a href="https://nni.readthedocs.io/zh/stable/SupportedFramework_Library.html">更多...</a><br/>
         </ul>
         </ul>
       <ul>
@@ -76,7 +76,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li>Scikit-learn</li>
            <li>XGBoost</li>
            <li>LightGBM</li>
-           <a href="docs/zh_CN/SupportedFramework_Library.rst">更多...</a><br/>
+           <a href="https://nni.readthedocs.io/zh/stable/SupportedFramework_Library.html">更多...</a><br/>
           </ul>
       </ul>
         <ul>
@@ -85,100 +85,96 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
            <li><a href="examples/trials/mnist-pytorch">MNIST-pytorch</li></a>
            <li><a href="examples/trials/mnist-tfv1">MNIST-tensorflow</li></a>
            <li><a href="examples/trials/mnist-keras">MNIST-keras</li></a>
-           <li><a href="docs/zh_CN/TrialExample/GbdtExample.rst">Auto-gbdt</a></li>
-           <li><a href="docs/zh_CN/TrialExample/Cifar10Examples.rst">Cifar10-pytorch</li></a>
-           <li><a href="docs/zh_CN/TrialExample/SklearnExamples.rst">Scikit-learn</a></li>
-           <li><a href="docs/zh_CN/TrialExample/EfficientNet.rst">EfficientNet</a></li>
-           <li><a href="docs/zh_CN/TrialExample/OpEvoExamples.rst">GPU Kernel 调优</li></a>
-              <a href="docs/zh_CN/SupportedFramework_Library.rst">更多...</a><br/>
+           <li><a href="https://nni.readthedocs.io/zh/stable/TrialExample/GbdtExample.html">Auto-gbdt</a></li>
+           <li><a href="https://nni.readthedocs.io/zh/stable/TrialExample/Cifar10Examples.html">Cifar10-pytorch</li></a>
+           <li><a href="https://nni.readthedocs.io/zh/stable/TrialExample/SklearnExamples.html">Scikit-learn</a></li>
+           <li><a href="https://nni.readthedocs.io/zh/stable/TrialExample/EfficientNet.html">EfficientNet</a></li>
+           <li><a href="https://nni.readthedocs.io/zh/stable/TrialExample/OpEvoExamples.html">GPU Kernel 调优</li></a>
+              <a href="https://nni.readthedocs.io/zh/stable/SupportedFramework_Library.html">更多...</a><br/>
           </ul>
         </ul>
       </td>
       <td align="left" >
-        <a href="docs/zh_CN/Tuner/BuiltinTuner.rst">超参调优</a>
+        <a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html">超参调优</a>
         <ul>
           <b>穷举搜索</b>
           <ul>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#Random">Random Search（随机搜索）</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#GridSearch">Grid Search（遍历搜索）</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#Batch">Batch（批处理）</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#Random">Random Search（随机搜索）</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#GridSearch">Grid Search（遍历搜索）</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#Batch">Batch（批处理）</a></li>
             </ul>
           <b>启发式搜索</b>
           <ul>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#Evolution">Naïve Evolution（朴素进化）</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#Anneal">Anneal（退火算法）</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#Hyperband">Hyperband</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#PBTTuner">PBT</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#Evolution">Naïve Evolution（朴素进化）</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#Anneal">Anneal（退火算法）</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#Hyperband">Hyperband</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#PBTTuner">PBT</a></li>
           </ul>
           <b>贝叶斯优化</b>
             <ul>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#BOHB">BOHB</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#TPE">TPE</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#SMAC">SMAC</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#MetisTuner">Metis Tuner</a></li>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#GPTuner">GP Tuner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#BOHB">BOHB</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#TPE">TPE</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#SMAC">SMAC</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#MetisTuner">Metis Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#GPTuner">GP Tuner</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/BuiltinTuner.html#DNGOTuner">PPO Tuner</a></li>
             </ul>
-          <b>基于强化学习</b>
-          <ul>
-            <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#PPOTuner">PPO Tuner</a> </li>
-          </ul>
         </ul>
-          <a href="docs/zh_CN/NAS/Overview.rst">神经网络架构搜索</a>
+          <a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">神经网络架构搜索</a>
           <ul>
-            <ul>
-              <li><a href="docs/zh_CN/NAS/ENAS.rst">ENAS</a></li>
-              <li><a href="docs/zh_CN/NAS/DARTS.rst">DARTS</a></li>
-              <li><a href="docs/zh_CN/NAS/PDARTS.rst">P-DARTS</a></li>
-              <li><a href="docs/zh_CN/NAS/CDARTS.rst">CDARTS</a></li>
-              <li><a href="docs/zh_CN/NAS/SPOS.rst">SPOS</a></li>
-              <li><a href="docs/zh_CN/NAS/Proxylessnas.rst">ProxylessNAS</a></li>
-              <li><a href="docs/zh_CN/Tuner/BuiltinTuner.rst#NetworkMorphism">Network Morphism</a></li>
-              <li><a href="docs/zh_CN/NAS/TextNAS.rst">TextNAS</a></li>
-              <li><a href="docs/zh_CN/NAS/Cream.rst">Cream</a></li>
-            </ul>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ENAS.html">ENAS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/DARTS.html">DARTS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/SPOS.html">SPOS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/FBNet.html">微信</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">基于强化学习</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">正则进化</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">更多...</a></li>
           </ul>
-          <a href="docs/zh_CN/Compression/Overview.rst">模型压缩</a>
+          <a href="https://nni.readthedocs.io/zh/stable/Compression/Overview.html">模型压缩</a>
           <ul>
             <b>剪枝</b>
             <ul>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#agp-pruner">AGP Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#slim-pruner">Slim Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#fpgm-pruner">FPGM Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#netadapt-pruner">NetAdapt Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#admm-pruner">ADMM Pruner</a></li>
-              <li><a href="docs/zh_CN/Compression/Pruner.rst#autocompress-pruner">AutoCompress Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#agp-pruner">AGP Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#slim-pruner">Slim Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#fpgm-pruner">FPGM Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#netadapt-pruner">NetAdapt Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#simulatedannealing-pruner">SimulatedAnnealing Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#admm-pruner">ADMM Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Pruner.html#autocompress-pruner">AutoCompress Pruner</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Overview.html">更多...</a></li>
             </ul>
             <b>量化</b>
             <ul>
-              <li><a href="docs/zh_CN/Compression/Quantizer.rst#qat-quantizer">QAT Quantizer</a></li>
-              <li><a href="docs/zh_CN/Compression/Quantizer.rst#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#qat-quantizer">QAT Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#dorefa-quantizer">DoReFa Quantizer</a></li>
+              <li><a href="https://nni.readthedocs.io/zh/stable/Compression/Quantizer.html#bnn-quantizer">BNN Quantizer</a></li>
             </ul>
           </ul>
-          <a href="docs/zh_CN/FeatureEngineering/Overview.rst">特征工程（测试版）</a>
+          <a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/Overview.html">特征工程（测试版）</a>
           <ul>
-          <li><a href="docs/zh_CN/FeatureEngineering/GradientFeatureSelector.rst">GradientFeatureSelector</a></li>
-          <li><a href="docs/zh_CN/FeatureEngineering/GBDTSelector.rst">GBDTSelector</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/GradientFeatureSelector.html">GradientFeatureSelector</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/FeatureEngineering/GBDTSelector.html">GBDTSelector</a></li>
           </ul>
-          <a href="docs/zh_CN/Assessor/BuiltinAssessor.rst">提前终止算法</a>
+          <a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html">提前终止算法</a>
           <ul>
-          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.rst#Medianstop">Median Stop（中位数终止）</a></li>
-          <li><a href="docs/zh_CN/Assessor/BuiltinAssessor.rst#Curvefitting">Curve Fitting（曲线拟合）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html#MedianStop">Median Stop（中位数终止）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/BuiltinAssessor.html#Curvefitting">Curve Fitting（曲线拟合）</a></li>
           </ul>
       </td>
       <td>
       <ul>
-        <li><a href="docs/zh_CN/TrainingService/LocalMode.rst">本机</a></li>
-        <li><a href="docs/zh_CN/TrainingService/RemoteMachineMode.rst">远程计算机</a></li>
-        <li><a href="docs/zh_CN/TrainingService/HybridMode.rst">混合模式</a></li>
-        <li><a href="docs/zh_CN/TrainingService/AMLMode.rst">AML(Azure Machine Learning)</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/LocalMode.html">本机</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/RemoteMachineMode.html">远程计算机</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/HybridMode.html">混合模式</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/AMLMode.html">AML(Azure Machine Learning)</a></li>
         <li><b>基于 Kubernetes 的平台</b></li>
         <ul>
-          <li><a href="docs/zh_CN/TrainingService/PaiMode.rst">OpenPAI</a></li>
-          <li><a href="docs/zh_CN/TrainingService/KubeflowMode.rst">Kubeflow</a></li>
-          <li><a href="docs/zh_CN/TrainingService/FrameworkControllerMode.rst">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
-          <li><a href="docs/zh_CN/TrainingService/DLTSMode.rst">DLWorkspace（又称  DLTS）</a></li>
-          <li><a href="docs/zh_CN/TrainingService/AdaptDLMode.rst">AdaptDL（又称 ADL）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/PaiMode.html">OpenPAI</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/KubeflowMode.html">Kubeflow</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/FrameworkControllerMode.html">基于 Kubernetes（AKS 等）的 FrameworkController</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/DLTSMode.html">DLWorkspace（又称  DLTS）</a></li>
+          <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/AdaptDLMode.html">AdaptDL（又称 ADL）</a></li>
         </ul>
       </ul>
       </td>
@@ -192,22 +188,24 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
       </td>
      <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="https://nni.readthedocs.io/zh/latest/autotune_ref.html#trial">Python API</a></li>
-        <li><a href="docs/zh_CN/Tutorial/AnnotationSpec.rst">NNI Annotation</a></li>
-         <li><a href="https://nni.readthedocs.io/zh/latest/installation.html">支持的操作系统</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/autotune_ref.html#trial">Python API</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tutorial/AnnotationSpec.html">NNI Annotation</a></li>
+         <li><a href="https://nni.readthedocs.io/zh/stable/installation.html">支持的操作系统</a></li>
       </ul>
       </td>
        <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/zh_CN/Tuner/CustomizeTuner.rst">自定义 Tuner</a></li>
-        <li><a href="docs/zh_CN/Assessor/CustomizeAssessor.rst">自定义 Assessor</a></li>
-        <li><a href="docs/zh_CN/Tutorial/InstallCustomizedAlgos.rst">安装自定义的 Tuner，Assessor，Advisor</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tuner/CustomizeTuner.html">自定义 Tuner</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/CustomizeAssessor.html">自定义 Assessor</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/Tutorial/InstallCustomizedAlgos.html">安装自定义的 Tuner，Assessor，Advisor</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/QuickStart.html#define-your-model-space">定义模型空间</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ApiReference.html">docs/zh_CN/NAS/ENAS.rst</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
       <ul>
-        <li><a href="docs/zh_CN/TrainingService/Overview.rst">支持训练平台</li>
-        <li><a href="docs/zh_CN/TrainingService/HowToImplementTrainingService.rst">实现训练平台</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/Overview.html">支持训练平台</li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/TrainingService/HowToImplementTrainingService.html">实现训练平台</a></li>
       </ul>
       </td>
     </tr>
@@ -239,8 +237,8 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 注意：
 
 * 如果遇到任何权限问题，可添加 `--user` 在用户目录中安装 NNI。
-* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda [在 Windows 上安装 NNI](docs/zh_CN/Tutorial/InstallationWin.rst)。
-* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.rst)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/InstallationWin.rst#faq)。
+* 目前，Windows 上的 NNI 支持本机，远程和 OpenPAI 模式。 强烈推荐使用 Anaconda 或 Miniconda [在 Windows 上安装 NNI](https://nni.readthedocs.io/zh/stable/Tutorial/InstallationWin.html)。
+* 如果遇到如 `Segmentation fault` 等错误参考[常见问题](docs/zh_CN/Tutorial/FAQ.rst)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](docs/zh_CN/Tutorial/InstallationWin.rst#faq)。 Windows 上的 FAQ 参考[在 Windows 上使用 NNI](https://nni.readthedocs.io/zh/stable/Tutorial/InstallationWin.html#faq)。
 
 ### **验证安装**
 
@@ -264,7 +262,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
     nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
     ```
 
-* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
+* 在命令行中等待输出 `INFO: Successfully started experiment!`。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。 此消息表明 Experiment 已成功启动。 通过命令行输出的 `Web UI url` 来访问 Experiment 的界面。
 
 ```text
 INFO: Starting restful server...
@@ -293,22 +291,19 @@ You can use these commands to get more information about the experiment
 -----------------------------------------------------------------------
 ```
 
-* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](docs/zh_CN/Tutorial/WebUI.rst)的更多页面。
+* 在浏览器中打开 `Web UI url`，可看到下图的 Experiment 详细信息，以及所有的 Trial 任务。 查看[这里](docs/zh_CN/Tutorial/WebUI.rst)的更多页面。 查看[这里](https://nni.readthedocs.io/zh/stable/Tutorial/WebUI.html)的更多页面。
 
-<table style="border: none">
-    <th><img src="./docs/img/webui-img/full-oview.png" alt="drawing" width="395" height="300"/></th>
-    <th><img src="./docs/img/webui-img/full-detail.png" alt="drawing" width="410" height="300"/></th>
-</table>
+<img src="docs/static/img/webui.gif" alt="webui" width="100%" />
 
 ## **发布和贡献**
 
 NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以通过 [创建 issue](https://github.com/microsoft/nni/issues/new/choose) 来报告。
 
-我们感谢所有的贡献。 如果您计划提供任何 Bug 修复，请放手去做，不需要任何顾虑。
+我们感谢所有的贡献。 我们感谢所有的贡献。 如果您计划提供任何 Bug 修复，请放手去做，不需要任何顾虑。
 
 如果您计划提供新的功能、新的 Tuner 和 新的训练平台等， 请先创建一个新的 issue 或重用现有 issue，并与我们讨论该功能。 我们会及时与您讨论这个问题，如有需要会安排电话会议。
 
-如果需要了解更多如何贡献的信息，请参考 [如何贡献页面](https://nni.readthedocs.io/zh/stable/contribution.html)。
+再次感谢所有的贡献者！
 
 再次感谢所有的贡献者！
 
@@ -317,24 +312,48 @@ NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以
 ## **反馈**
 
 * [在 GitHub 上提交问题](https://github.com/microsoft/nni/issues/new/choose)。
-* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。
+* 在 [Gitter](https://gitter.im/Microsoft/nni?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) 中参与讨论。 
+* NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以通过 [创建 issue](https://github.com/microsoft/nni/issues/new/choose) 来报告。
 
 加入聊天组： 
 
-| Gitter                                                                                                      |   | 微信                                                                      |
-| ----------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------- |
-| ![图片](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png) |
+| Gitter                                                                                                         |   | 微信                                                                      |
+| -------------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------- |
+| ![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png) |
 
 ## 相关项目
 
-以探索先进技术和开放为目标，[Microsoft Research (MSR)](https://www.microsoft.com/en-us/research/group/systems-and-networking-research-group-asia/) 还发布了一些相关的开源项目。
+### 必需
+
+|      类型      |                                                                                                                                        状态                                                                                                                                        |
+|:------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|  Fast test   |                                [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/fast%20test?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=54&branchName=master)                                |
+|  Full linux  | [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?repoName=microsoft%2Fnni&branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&repoName=microsoft%2Fnni&branchName=master) |
+| Full windows |                         [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20windows?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=63&branchName=master)                         |
+
+### 训练平台
+
+|            类型             |                                                                                                                                状态                                                                                                                                 |
+|:-------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+|  Remote - linux to linux  |  [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20remote%20-%20linux%20to%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=64&branchName=master)  |
+| Remote - linux to windows | [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20remote%20-%20linux%20to%20windows?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=67&branchName=master) |
+| Remote - windows to linux | [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20remote%20-%20windows%20to%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=68&branchName=master) |
+|          OpenPAI          |        [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20openpai%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=65&branchName=master)        |
+|    Frameworkcontroller    |        [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20frameworkcontroller?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=70&branchName=master)        |
+|         Kubeflow          |             [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20kubeflow?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=69&branchName=master)              |
+|          Hybrid           |              [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20hybrid?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=79&branchName=master)               |
+|          AzureML          |                [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/integration%20test%20-%20aml?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=78&branchName=master)                |
+
+## 相关项目
+
+我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
 
 * [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
-* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
+* [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
 * [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) 是用于大规模向量的最近邻搜索场景的开源库。
 
-我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
+代码库遵循 [MIT 许可协议](LICENSE)
 
 ## **许可协议**
 

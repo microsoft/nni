@@ -159,10 +159,10 @@ NNI 支持独立模式，使 Trial 代码无需启动 NNI 实验即可运行。 
 
 .. code-block:: python
 
-   ＃注意：请为 Trial 代码中的超参分配默认值
+   # 注意：请为 Trial 代码中的超参分配默认值
    nni.get_next_parameter # 返回 {}
-   nni.report_final_result ＃已在 stdout 上打印日志，但不报告
-   nni.report_intermediate_result # ＃已在 stdout 上打印日志，但不报告
+   nni.report_final_result # 已在 stdout 上打印日志，但不报告
+   nni.report_intermediate_result # 已在 stdout 上打印日志，但不报告
    nni.get_experiment_id # 返回 "STANDALONE"
    nni.get_trial_id # 返回 "STANDALONE"
    nni.get_sequence_id # 返回 0
@@ -208,6 +208,7 @@ Trial 存放在什么地方？
 -------------------
 
 
+* `将日志写入 TensorBoard 的 Trial 输出目录 <../Tutorial/Tensorboard.rst>`__
 * `MNIST 示例 <MnistExamples.rst>`__
 * `为 CIFAR 10 分类找到最佳的 optimizer <Cifar10Examples.rst>`__
 * `如何在 NNI 调优 SciKit-learn 的参数 <SklearnExamples.rst>`__
