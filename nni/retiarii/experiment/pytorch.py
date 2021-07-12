@@ -25,10 +25,11 @@ from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
+from nni.common.device import GPUDevice
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
-from ..execution import list_models, set_execution_engine, GPUDevice
+from ..execution import list_models, set_execution_engine
 from ..execution.python import get_mutation_dict
 from ..graph import Model, Evaluator
 from ..integration import RetiariiAdvisor

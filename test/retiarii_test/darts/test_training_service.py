@@ -1,5 +1,5 @@
 import json
-from nni.retiarii.execution.api import GPUDevice
+from nni.common.device import GPUDevice
 import os
 import sys
 import torch
@@ -36,9 +36,11 @@ if __name__ == '__main__':
 
     simple_strategy = strategy.Random()
 
+    os.environ['REUSE_MODE'] = "true"
+
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
-    exp_config = RetiariiExeConfig('retiarii_local')
+    exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'darts_search'
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 10
