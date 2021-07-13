@@ -494,7 +494,6 @@ class GraphIR(unittest.TestCase):
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
     def test_nasbench201_cell(self):
-        # this is only supported in python engine for now.
         @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
