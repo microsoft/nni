@@ -143,6 +143,7 @@ function Search(props): any {
         }
         // according [input val] to change searchFilter list
         const allFilterConditions = searchInputVal.trim().split(';');
+        console.info(allFilterConditions); // eslint-disable-line
         const newSearchFilter: any = [];
 
         // delete '' in filter list
@@ -154,75 +155,90 @@ function Search(props): any {
         }
 
         allFilterConditions.forEach(eachFilterConditionStr => {
-            let eachFilterConditionArr: string[] = [];
-
-            // EXPERIMENT.searchSpace[parameter]._type === 'choice'
-            if (eachFilterConditionStr.includes('>' || '<')) {
-                const operator = eachFilterConditionStr.includes('>') === true ? '>' : '<';
-                eachFilterConditionArr = eachFilterConditionStr.trim().split(operator);
-                newSearchFilter.push({
-                    name: eachFilterConditionArr[0],
-                    operator: operator,
-                    value1: eachFilterConditionArr[1],
-                    value2: '',
-                    choice: [],
-                    isChoice: false
-                });
-            } else if (eachFilterConditionStr.includes('≠')) {
-                // drop_rate≠6; status≠[x,xx,xxx]; conv_size≠[3,7]
-                eachFilterConditionArr = eachFilterConditionStr.trim().split('≠');
-                const filterName = eachFilterConditionArr[0] === 'Status' ? 'StatusNNI' : eachFilterConditionArr[0];
-                const isChoicesType = isChoiceType(filterName);
-                newSearchFilter.push({
-                    name: filterName,
-                    operator: '≠',
-                    value1: isChoicesType ? '' : JSON.parse(eachFilterConditionArr[1]),
-                    value2: '',
-                    choice: isChoicesType ? convertStringArrToList(eachFilterConditionArr[1]) : [],
-                    isChoice: isChoicesType ? true : false
-                });
+            // input content looks like that: `Trial id:`
+            if (
+                eachFilterConditionStr.endsWith(':') ||
+                eachFilterConditionStr.endsWith('<') ||
+                eachFilterConditionStr.endsWith('>') ||
+                eachFilterConditionStr.endsWith('≠')
+            ) {
+                return;
             } else {
-                // = : conv_size:[1,2,3,4]; Trial id:3; hidden_size:[1,2], status:[val1,val2,val3]
-                eachFilterConditionArr = eachFilterConditionStr.trim().split(':');
-                const filterName = eachFilterConditionArr[0] === 'Status' ? 'StatusNNI' : eachFilterConditionArr[0];
-                const isChoicesType = isChoiceType(filterName);
-                const isArray =
-                    eachFilterConditionArr.length > 1 && eachFilterConditionArr[1].includes('[' || ']') ? true : false;
-                if (isArray === true) {
-                    if (isChoicesType === true) {
-                        // status:[SUCCEEDED]
-                        newSearchFilter.push({
-                            name: filterName,
-                            operator: '=',
-                            value1: '',
-                            value2: '',
-                            choice: convertStringArrToList(eachFilterConditionArr[1]),
-                            isChoice: true
-                        });
-                    } else {
-                        // drop_rate:[1,10]
-                        newSearchFilter.push({
-                            name: eachFilterConditionArr[0],
-                            operator: 'between',
-                            value1: JSON.parse(eachFilterConditionArr[1])[0],
-                            value2: JSON.parse(eachFilterConditionArr[1])[1],
-                            choice: [],
-                            isChoice: false
-                        });
-                    }
-                } else {
+                let eachFilterConditionArr: string[] = [];
+
+                // EXPERIMENT.searchSpace[parameter]._type === 'choice'
+                if (eachFilterConditionStr.includes('>' || '<')) {
+                    const operator = eachFilterConditionStr.includes('>') === true ? '>' : '<';
+                    eachFilterConditionArr = eachFilterConditionStr.trim().split(operator);
                     newSearchFilter.push({
                         name: eachFilterConditionArr[0],
-                        operator: '=',
+                        operator: operator,
                         value1: eachFilterConditionArr[1],
                         value2: '',
                         choice: [],
                         isChoice: false
                     });
+                } else if (eachFilterConditionStr.includes('≠')) {
+                    // drop_rate≠6; status≠[x,xx,xxx]; conv_size≠[3,7]
+                    eachFilterConditionArr = eachFilterConditionStr.trim().split('≠');
+                    const filterName = eachFilterConditionArr[0] === 'Status' ? 'StatusNNI' : eachFilterConditionArr[0];
+                    const isChoicesType = isChoiceType(filterName);
+                    newSearchFilter.push({
+                        name: filterName,
+                        operator: '≠',
+                        value1: isChoicesType ? '' : JSON.parse(eachFilterConditionArr[1]),
+                        value2: '',
+                        choice: isChoicesType ? convertStringArrToList(eachFilterConditionArr[1]) : [],
+                        isChoice: isChoicesType ? true : false
+                    });
+                } else if (eachFilterConditionStr.includes(':')) {
+                    // = : conv_size:[1,2,3,4]; Trial id:3; hidden_size:[1,2], status:[val1,val2,val3]
+                    eachFilterConditionArr = eachFilterConditionStr.trim().split(':');
+                    const filterName = eachFilterConditionArr[0] === 'Status' ? 'StatusNNI' : eachFilterConditionArr[0];
+                    const isChoicesType = isChoiceType(filterName);
+                    const isArray =
+                        eachFilterConditionArr.length > 1 && eachFilterConditionArr[1].includes('[' || ']')
+                            ? true
+                            : false;
+                    if (isArray === true) {
+                        if (isChoicesType === true) {
+                            // status:[SUCCEEDED]
+                            newSearchFilter.push({
+                                name: filterName,
+                                operator: '=',
+                                value1: '',
+                                value2: '',
+                                choice: convertStringArrToList(eachFilterConditionArr[1]),
+                                isChoice: true
+                            });
+                        } else {
+                            // drop_rate:[1,10]
+                            newSearchFilter.push({
+                                name: eachFilterConditionArr[0],
+                                operator: 'between',
+                                value1: JSON.parse(eachFilterConditionArr[1])[0],
+                                value2: JSON.parse(eachFilterConditionArr[1])[1],
+                                choice: [],
+                                isChoice: false
+                            });
+                        }
+                    } else {
+                        newSearchFilter.push({
+                            name: eachFilterConditionArr[0],
+                            operator: '=',
+                            value1: eachFilterConditionArr[1],
+                            value2: '',
+                            choice: [],
+                            isChoice: false
+                        });
+                    }
+                } else {
+                    // user input: Trial id
+                    return;
                 }
             }
         });
-
+        console.info(newSearchFilter); // eslint-disable-line
         changeTableListPage(newSearchFilter);
     }
 
