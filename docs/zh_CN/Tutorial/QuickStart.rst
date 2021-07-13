@@ -149,6 +149,9 @@ NNI 用来帮助超参调优。它的流程如下：
      codeDir: .
      gpuNum: 0
 
+
+.. _nniignore:
+
 .. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__ ，了解更多如何编写此文件的详细信息 _。
 
 *示例:* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` 和 :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
@@ -234,7 +237,7 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 NNI �
 查看 Trial 详情页面
 ^^^^^^^^^^^^^^^^^^^^^^^
 
-可以在此页面中看到最佳的试用指标和超参数图。 当您单击按钮 ``Add/Remove columns`` 时，表格内容包括更多列。
+可以在此页面中看到最佳的试用指标和超参数图。 当您单击按钮 ``Add/Remove columns`` 时，表格内容包括更多列。 当您单击按钮 ``Add/Remove columns`` 时，表格内容包括更多列。
 
 
 .. image:: ../../img/webui-img/full-detail.png
@@ -260,11 +263,12 @@ Experiment 相关信息会显示在界面上，配置和搜索空间等。 NNI �
 -------------
 
 
+* `在 Web 界面中启动 TensorBoard <Tensorboard.rst>`__
 * `尝试不同的 Tuner <../Tuner/BuiltinTuner.rst>`__
 * `尝试不同的 Assessor <../Assessor/BuiltinAssessor.rst>`__
 * `如何使用命令行工具 nnictl <Nnictl.rst>`__
 * `如何实现 Trial 代码 <../TrialExample/Trials.rst>`__
-* `如何在本机运行 Experiment (支持多 GPU 卡)？ <../TrainingService/LocalMode.rst>`__
+* `如何在本机运行 Experiment (支持多 GPU 卡)？ <../TrainingService/LocalMode.rst>`__ <../TrainingService/LocalMode.rst>`__
 * `如何在多机上运行 Experiment？ <../TrainingService/RemoteMachineMode.rst>`__
 * `如何在 OpenPAI 上运行 Experiment？ <../TrainingService/PaiMode.rst>`__
 * `如何通过 Kubeflow 在 Kubernetes 上运行 Experiment？ <../TrainingService/KubeflowMode.rst>`__

@@ -1,0 +1,40 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 1
+trainingServicePlatform: remote
+searchSpacePath: config_sharedstorage_search_space.json
+#choice: true, false
+useAnnotation: false
+nniManagerIp: 127.0.0.1
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 config_sharedstorage_trial.py
+  codeDir: .
+  gpuNum: 0
+sharedStorage:
+  storageType: NFS
+  localMountPoint: ${your/local/mount/point}
+  remoteMountPoint: ${your/remote/mount/point}
+  nfsServer: ${nfs-server-ip}
+  exportedDirectory: ${nfs/exported/directory}
+  # usermount means you have already mount this storage on localMountPoint
+  # nnimount means nni will try to mount this storage on localMountPoint
+  # nomount means storage will not mount in local machine, will support partial storages in the future 
+  localMounted: nnimount
+#machineList can be empty if the platform is local
+machineList:
+  - ip: 10.1.1.1
+    username: bob
+    passwd: bob123
+    #port can be skip if using default ssh port 22
+    #port: 22
+remoteConfig:
+  reuse: true

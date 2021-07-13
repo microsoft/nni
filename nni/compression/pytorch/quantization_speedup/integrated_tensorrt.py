@@ -12,7 +12,8 @@ from . import calibrator as calibrator
 from . import trt_pycuda as common
 from .backend import BaseModelSpeedup
 
-# TRT_LOGGER = trt.Logger(trt.Logger.VERBOSE)
+TRT8 = 8
+TRT7 = 7
 TRT_LOGGER = trt.Logger()
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,7 @@ class CalibrateType:
     MINMAX = trt.CalibrationAlgoType.MINMAX_CALIBRATION
 
 Precision_Dict = {
-    8: trt.float32,
+    8: trt.int8,
     16: trt.float16,
     32: trt.float32
 }
@@ -120,22 +121,43 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
         An ICudaEngine for executing inference on a built network
     """
     with trt.Builder(TRT_LOGGER) as builder, builder.create_network(common.EXPLICIT_BATCH) as network, \
-        trt.OnnxParser(network, TRT_LOGGER) as parser:
+        trt.OnnxParser(network, TRT_LOGGER) as parser, builder.create_builder_config() as trt_config:
         # Attention that, builder should be set to 1 because of the implementation of allocate_buffer
+        trt_version = int(trt.__version__[0])
+        assert trt_version == TRT8 or trt_version == TRT7, "Version of TensorRT is too old, please \
+            update TensorRT to version >= 7.0"
+        if trt_version == TRT7:
+            logger.warning("TensorRT7 is deprecated and may be removed in the following release.")
+
         builder.max_batch_size = 1
-        builder.max_workspace_size = common.GiB(4)
+        if trt_version == TRT8:
+            trt_config.max_workspace_size = common.GiB(4)
+        else:
+            builder.max_workspace_size = common.GiB(4)
 
         if extra_layer_bit == 32 and config is None:
             pass
         elif extra_layer_bit == 16 and config is None:
-            builder.fp16_mode = True
+            if trt_version == TRT8:
+                trt_config.set_flag(trt.BuilderFlag.FP16)
+            else:
+                builder.fp16_mode = True
         elif extra_layer_bit == 8 and config is None:
             # entire model in 8bit mode
-            builder.int8_mode = True
+            if trt_version == TRT8:
+                trt_config.set_flag(trt.BuilderFlag.INT8)
+            else:
+                builder.int8_mode = True
         else:
-            builder.int8_mode = True
-            builder.fp16_mode = True
-            builder.strict_type_constraints = strict_datatype
+            if trt_version == TRT8:
+                trt_config.set_flag(trt.BuilderFlag.INT8)
+                trt_config.set_flag(trt.BuilderFlag.FP16)
+                if strict_datatype:
+                    trt_config.set_flag(trt.BuilderFlag.STRICT_TYPES)
+            else:
+                builder.int8_mode = True
+                builder.fp16_mode = True
+                builder.strict_type_constraints = strict_datatype
 
         valid_config(config)
 
@@ -148,7 +170,10 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
                 return None
 
         if calib is not None:
-            builder.int8_calibrator = calib
+            if trt_version == TRT8:
+                trt_config.int8_calibrator = calib
+            else:
+                builder.int8_calibrator = calib
             # This design may not be correct if output more than one
             for i in range(network.num_layers):
                 if config is None:
@@ -196,7 +221,10 @@ def build_engine(model_file, config=None, extra_layer_bit=32, strict_datatype=Fa
                     out_tensor.dynamic_range = (tracked_min_activation, tracked_max_activation)
 
         # Build engine and do int8 calibration.
-        engine = builder.build_cuda_engine(network)
+        if trt_version == TRT8:
+            engine = builder.build_engine(network, trt_config)
+        else:
+            engine.builder.build_cuda_engine(network)
         return engine
 
 class ModelSpeedupTensorRT(BaseModelSpeedup):

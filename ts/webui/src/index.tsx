@@ -17,7 +17,7 @@ ReactDOM.render(
         <Suspense
             fallback={
                 <div className='loading'>
-                    <img src='/loading.gif' />
+                    <img src={(path || '') + '/loading.gif'} />
                 </div>
             }
         >

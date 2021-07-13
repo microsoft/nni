@@ -165,6 +165,21 @@ interface ExperimentProfile {
     revision: number;
 }
 
+interface ExperimentMetadata {
+    id: string;
+    port: number;
+    startTime: number | string;
+    endTime: number | string;
+    status: string;
+    platform: string;
+    experimentName: string;
+    tag: any[];
+    pid: number;
+    webuiUrl: any[];
+    logDir: string;
+    prefixUrl: string | null;
+}
+
 interface NNIManagerStatus {
     status: string;
     errors: string[];
@@ -230,6 +245,7 @@ export {
     MetricDataRecord,
     TrialJobInfo,
     ExperimentProfile,
+    ExperimentMetadata,
     NNIManagerStatus,
     EventMap,
     SingleAxis,
