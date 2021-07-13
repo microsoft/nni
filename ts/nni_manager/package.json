@@ -5,7 +5,6 @@
   "scripts": {
     "build": "tsc",
     "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha -r ts-node/register -t 15000 --recursive test/**/*.test.ts --colors",
-    "test2": "mocha -r ts-node/register -t 15000 test/core/*.test.ts",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
