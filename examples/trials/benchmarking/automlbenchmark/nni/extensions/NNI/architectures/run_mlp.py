@@ -21,7 +21,13 @@ from amlb.results import save_predictions_to_file
 
 
 SEARCH_SPACE = {
-    "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]}
+    "hidden_layer_sizes": {"_type":"choice", "_value": [(100), (100, 100), (100, 100, 100)]},
+    "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+    "alpha": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]},
+    "momentum": {"_type":"uniform","_value":[0, 1]},
+    "beta_1": {"_type":"uniform","_value":[0, 1]},
+    "tol": {"_type":"choice", "_value": [0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+    "max_iter": {"_type":"randint", "_value": [2, 256]},
 }
 
 def preprocess_mlp(dataset, log):
