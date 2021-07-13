@@ -21,9 +21,9 @@ interface HyperParameters {
 type PlacementConstraintType = 'None' | 'Device'
 interface PlacementConstraint{
     readonly type: PlacementConstraintType;
-    readonly gpus: Array<[number,number]>;
+    readonly gpus: Array<[string,number]>;
     /**
-     * Device constraint is in form of Array<[number,number]>, e.g., [(0,1),(1,0)] means it must be placed on 
+     * Device constraint is in form of Array<[string,number]>, e.g., [('Node-0',1),('Node-0',0)] means it must be placed on 
      *      Node-0's GPU-1 and Node-1's GPU-0
      */
 }

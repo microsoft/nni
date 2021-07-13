@@ -451,6 +451,8 @@ class NNIManager implements Manager {
             throw new Error('Cannot detect training service platform');
         }
 
+        this.log.info("!!!Platform: " + platform);
+
         if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
