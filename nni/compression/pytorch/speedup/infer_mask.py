@@ -119,6 +119,10 @@ class AutoMaskInference:
         Random initialize the weights of the module. The value of
         the tensor will not affect the mask auto inference.
         """
+        # currently we set the random range to 0.1-8.0 because of the ReLU6,
+        # if we use a range that far larger than 6, it may infer a wrong mask
+        # when the confidence is low. In the future, we will add the mask inference
+        # rules for ReLU6 to break this range constraint.
         with torch.no_grad():
             for tensor in self.dummy_input:
                 if isinstance(tensor, torch.Tensor) and len(tensor.size()) > 0:
@@ -294,7 +298,15 @@ class AutoMaskInference:
 
     def update_indirect_sparsity(self):
         """
-        Find those hidden sparsity through gradient.
+        This function will update the indirect sparsity. To explain what's
+        indirect sparsity, for example, there is two tensors TA and TB, and
+        we perform the calculation: TC = TA x TB in which TC is also a tensor.
+        Once some values in TA are masked to zeros, then the corresponding
+        positions in TB are also potential sparsities, because these have no
+        effect of the final output(the gradient of these positions in TB equal
+        to 0 all the time). This function it to fine the potential sparsity caused
+        by other sparsity(we call it indirect sparsity here). Basically we can find
+        these potential sparsity through gradient.
         """
         # Each node only update the output mask when we backwards
         # update the output mask

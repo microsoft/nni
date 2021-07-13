@@ -51,7 +51,7 @@ class ModelSpeedup:
         self.bound_model = model
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
-        self._random_model_input(dummy_input, confidence, batch_dim)
+        self.dummy_input, self.device = self._random_model_input(dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
         self.auto_inferences = {}
@@ -71,19 +71,40 @@ class ModelSpeedup:
         self.internal_result = {}
 
     def _random_model_input(self, dummy_input, confidence, batch_dim):
+        """
+        Get the new random dummy input accordint to the original dummy_input
+        and confidence, batch_dim.
+
+        Parameters
+        ----------
+        dummy_input: Tensor or list/dict of Tensors
+            The dummy_input given by the user.
+        confidence: int
+            The new batch size of the generated dummy_input.
+        batch_dim: int
+            The index of the batch dimension.
+
+        Returns
+        ------
+        new_dummy_input: Tensor or list/dict of Tensors
+            The generated dummy_input for mask inference.
+        device: torch.device
+            The device of the generated dummy_inputs
+        """
         input_errmsg = 'Only support the tensor, list/tuple/dict of tensors as input'
         # Some model may use list of tensors as input, for example transformers
+        new_dummy_input, device = None, None
         if isinstance(dummy_input, torch.Tensor):
             input_shape = list(dummy_input.size())
             # set the batchsize to the confidence ratio
             input_shape[batch_dim] = confidence
-            self.dummy_input = rand_like_with_shape(input_shape, dummy_input)
-            self.device = dummy_input.device
+            new_dummy_input = rand_like_with_shape(input_shape, dummy_input)
+            device = dummy_input.device
         elif isinstance(dummy_input, (tuple, list)):
             # else if the dummy input is list/tuple
-            self.dummy_input = []
+            new_dummy_input = []
             old_batchsize = dummy_input[0].size(0)
-            self.device = dummy_input[0].device
+            device = dummy_input[0].device
             for _, t_input in enumerate(dummy_input):
                 assert isinstance(t_input, torch.Tensor), input_errmsg
                 assert t_input.size(0) == old_batchsize, 'The first dimension should be batchsize\
@@ -91,23 +112,24 @@ class ModelSpeedup:
                 input_shape = list(t_input.size())
                 input_shape[batch_dim] = confidence
                 # rand_func = torch.randint if t_input.dtype
-                self.dummy_input.append(
+                new_dummy_input.append(
                     rand_like_with_shape(input_shape, t_input))
         elif isinstance(dummy_input, dict):
-            self.dummy_input = {}
+            new_dummy_input = {}
             tmp_key = list(dummy_input.keys())[0]
             old_batchsize = dummy_input[tmp_key].size(0)
-            self.device = dummy_input[tmp_key].device
+            device = dummy_input[tmp_key].device
             for in_name, t_input in dummy_input.items():
                 assert isinstance(t_input, torch.Tensor), input_errmsg
                 assert old_batchsize == t_input.size(0), 'The first dimension should be batchsize\
                 and the batchsize of all inputs should be the same!'
                 input_shape = list(t_input.size())
                 input_shape[batch_dim] = confidence
-                self.dummy_input[in_name] = rand_like_with_shape(
+                new_dummy_input[in_name] = rand_like_with_shape(
                     input_shape, t_input)
         else:
             raise TypeError(input_errmsg)
+        return new_dummy_input, device
 
     def _prepare_dummy_input(self, node):
         """
@@ -150,8 +172,8 @@ class ModelSpeedup:
                 # the scope name of the correponding prim::GetAttr node of `weight` tensor
                 # is None.
                 continue
-            # TODO why detach??
-            # TODO what if a list/tuple of tensor
+            # The detach operation here is for the in-place operation. We cannot
+            # directly can the backward on the output tensor of an in-place operator.
             dummy_input.append(self.internal_result[_input].detach())
             debugnames.append(_input)
 
@@ -159,10 +181,10 @@ class ModelSpeedup:
 
     def update_direct_sparsity(self, node):
         """
-        Update the mask for the target node.
+        Update the direct sparsity for the target node. Here the direct sparsity
+        means that the sparsity in the output tensor that caused by the sparsity
+        in the input tensors/weight tensors.
         """
-        AutoMaskInferenceClass = AutoMaskInference
-
         # this name is consistent with the name returned by named_modules()
         module_name = node.name
         _logger.info('Update mask for %s', module_name)
@@ -185,14 +207,14 @@ class ModelSpeedup:
                 self.auto_inferences[unique_name] = None
                 return
             # function doesn't have weights
-            _auto_infer = AutoMaskInferenceClass(
+            _auto_infer = AutoMaskInference(
                 func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
-            _auto_infer = AutoMaskInferenceClass(
+            _auto_infer = AutoMaskInference(
                 module, dummy_input, in_masks, weight_mask, in_constants=in_constants,
                 state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
         self.auto_inferences[unique_name] = _auto_infer
@@ -221,7 +243,20 @@ class ModelSpeedup:
 
     def update_indirect_sparsity(self, node):
         """
-        update the indirect sparisty for the target node.
+        This function will update the indirect sparsity. To explain what's
+        indirect sparsity, for example, there is two tensors TA and TB, and
+        we perform the calculation: TC = TA x TB in which TC is also a tensor.
+        Once some values in TA are masked to zeros, then the corresponding
+        positions in TB are also potential sparsities, because these have no
+        effect of the final output(the gradient of these positions in TB equal
+        to 0 all the time). This function it to fine the potential sparsity caused
+        by other sparsity(we call it indirect sparsity here). Basically we can find
+        these potential sparsity through gradient.
+
+        Parameters
+        ---------
+        node: the NodePy
+            The target node to update the indirect sparsity
         """
         module_name = node.name
         _logger.info('Update indirect sparsity for %s', module_name)
@@ -244,6 +279,8 @@ class ModelSpeedup:
                     last_output.grad.data += tin.grad.data
                 else:
                     last_output.grad = tin.grad
+        else:
+            _logger.warning('Note: %s does not have corresponding mask inference object', node.name)
 
     def _vnode_to_value(self, c_node):
         """
@@ -255,10 +292,12 @@ class ModelSpeedup:
             shape = tuple(c_node.type().sizes())
             dtype = c_node.type().scalarType()
             # TODO should use a more general way to get the input
-            # TODO ugly code here
             if dtype.startswith('Float') or dtype.startswith('Double'):
                 return torch.rand(shape).to(self.device)
             else:
+                # This small range is due to the ·ReLU6·, we will add
+                # the manual specific mask inference rule for several
+                # ops in the future, so that we can remove the constraint.
                 return torch.randint(0, 10, shape, device=self.device)
         else:
             value = c_node.toIValue()
@@ -354,6 +393,14 @@ class ModelSpeedup:
             output of this submodule, we can pass the index by this parameter.
         """
         class ReindexModule(nn.Module):
+            """
+            ReindexModule is used to resolve the mask conflict when replace the submodule.
+            Basically, we can use two ways to resolve the mask conflict: (1) unmask some
+            values(will introduce more computation overhead) (2) reindex and padd the output
+            tensor of the target op(introduce more memory access overhad). Currently this
+            method is shutdown, in the future, we will merge these two methods into a graph
+            pass which is used to resolve the mask conflict.
+            """
             def __init__(self, ori_module, reindex_dim, reindex):
                 super(ReindexModule, self).__init__()
                 self.ori_module = ori_module
