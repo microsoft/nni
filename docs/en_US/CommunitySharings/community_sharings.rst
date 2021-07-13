@@ -15,7 +15,6 @@ Use Cases and Solutions
     Feature Engineering <feature_engineering>
     Performance measurement, comparison and analysis <perf_compare>
     Use NNI on Google Colab <NNI_colab_support>
-    Auto Completion for nnictl Commands <AutoCompletion>
 
 External Repositories and References
 ====================================
