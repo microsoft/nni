@@ -124,9 +124,8 @@ class QATGrad(QuantGrad):
 
 
 class ObserverQuantizer(Quantizer):
-    """
-    This quantizer uses observers to record weight/activation statistics to get quantization
-    information. The whole process can be divided into three steps:
+    """This quantizer uses observers to record weight/activation statistics to get quantization information.
+    The whole process can be divided into three steps:
         1. It will register observers to the place where quantization would happen (just like registering hooks).
         2. The observers would record tensors' statistics during calibration.
         3. Scale & zero point would be obtained after calibration.
