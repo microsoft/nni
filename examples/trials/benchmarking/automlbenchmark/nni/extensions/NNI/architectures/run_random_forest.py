@@ -21,38 +21,28 @@ from amlb.results import save_predictions_to_file
 
 
 SEARCH_SPACE = {
-    "n_estimators": {"_type":"randint", "_value": [4, 2048]},
-    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},     # 0 for None
+    "n_estimators": {"_type":"randint", "_value": [8, 512]},
+    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                      # 0 for None
+    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                    # 0 for None
 }
 
-# change SEARCH_SPACE to the following spaces to experiment on different search spaces
+SEARCH_SPACE_CHOICE = {
+    "n_estimators": {"_type":"choice", "_value": [8, 16, 32, 64, 128, 256, 512]},
+    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 0]},   # 0 for None
+    "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
+    "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
+    "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 0]}     # 0 for None
+}
 
-# SEARCH_SPACE_CHOICE = {
-#     "n_estimators": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]},
-#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
-#     "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
-#     "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
-#     "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 1024, 2048, 4096, 0]}   # 0 for None
-# }
-
-# SEARCH_SPACE_LOG = {
-#     "n_estimators": {"_type":"loguniform", "_value": [4, 2048]},
-#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None 
-#     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
-#     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-#     "max_leaf_nodes": {"_type":"loguniform", "_value": [4, 4096]}                 # 0 for None
-# }
-
-# SEARCH_SPACE_SIMPLE = {
-#     "n_estimators": {"_type":"choice", "_value": [10]},
-#     "max_depth": {"_type":"choice", "_value": [5]},
-#     "min_samples_leaf": {"_type":"choice", "_value": [8]},
-#     "min_samples_split": {"_type":"choice", "_value": [16]},
-#     "max_leaf_nodes": {"_type":"choice", "_value": [64]}
-# }
+SEARCH_SPACE_SIMPLE = {
+    "n_estimators": {"_type":"choice", "_value": [10]},
+    "max_depth": {"_type":"choice", "_value": [5]},
+    "min_samples_leaf": {"_type":"choice", "_value": [8]},
+    "min_samples_split": {"_type":"choice", "_value": [16]},
+    "max_leaf_nodes": {"_type":"choice", "_value": [64]}
+}
 
 
 def preprocess_random_forest(dataset, log):
