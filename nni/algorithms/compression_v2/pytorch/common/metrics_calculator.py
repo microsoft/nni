@@ -81,7 +81,8 @@ class APoZRankMetricsCalculator(MetricsCalculator):
                     if dim - 1 not in self.dim:
                         total_size *= dim_size
                 _apoz = torch.sum(_eq_zero, dim=across_dim, dtype=torch.float64) / total_size
-                metrics[name] = _apoz
+                # NOTE: the metric is (1 - apoz) because we assume the smaller metric value is more needed to be pruned.
+                metrics[name] = torch.ones_like(_apoz) - _apoz
         return metrics
 
 
