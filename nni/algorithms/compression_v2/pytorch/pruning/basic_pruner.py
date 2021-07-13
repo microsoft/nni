@@ -1,4 +1,4 @@
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Optional
 
 import torch
 from torch import Tensor
@@ -8,11 +8,12 @@ from torch.optim import Optimizer
 from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector
 from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NaiveMetricsCalculator, NormMetricsCalculator, DistMetricsCalculator
-from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import NormalSparsityAllocator, GlobalSparsityAllocator
+from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator, GRAPH_NEEDED_MODE
 
 
 class LevelPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True):
+        self.mode = 'normal'
         super().__init__(model, config_list, back_up)
 
     def _reset_tools(self):
@@ -23,12 +24,15 @@ class LevelPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NaiveMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode)
 
 
 class L1FilterPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True):
-        super().__init__(model, config_list, back_up)
+    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        self.mode = mode
+        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
+        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -38,12 +42,15 @@ class L1FilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator(p=1, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
 
 
 class L2FilterPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True):
-        super().__init__(model, config_list, back_up)
+    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        self.mode = mode
+        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
+        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -53,12 +60,15 @@ class L2FilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
 
 
 class FPGMPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True):
-        super().__init__(model, config_list, back_up)
+    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        self.mode = mode
+        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
+        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -68,13 +78,14 @@ class FPGMPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = DistMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
 
 
 class SlimPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, back_up: bool = True, max_sparsity_per_layer: float = 1):
+        self.mode = 'global'
         assert 0 < max_sparsity_per_layer <= 1, 'max_sparsity_per_layer must in range (0, 1].'
         self.max_sparsity_per_layer = max_sparsity_per_layer
         self.trainer = trainer
@@ -101,4 +112,4 @@ class SlimPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NaiveMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = GlobalSparsityAllocator(self, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer)

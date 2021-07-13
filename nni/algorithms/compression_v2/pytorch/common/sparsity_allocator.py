@@ -10,6 +10,19 @@ from nni.algorithms.compression_v2.pytorch.base.common import SparsityAllocator
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 
+GRAPH_NEEDED_MODE = ['dependency_aware']
+
+def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, list]] = None,
+                           max_sparsity_per_layer: Optional[float] = None):
+    if mode == 'normal':
+        return NormalSparsityAllocator(pruner=pruner, dim=dim)
+    elif mode == 'global':
+        assert max_sparsity_per_layer is not None, 'max_sparsity_per_layer is required in GlobalSparsityAllocator.'
+        return GlobalSparsityAllocator(pruner=pruner, dim=dim, max_sparsity_per_layer=max_sparsity_per_layer)
+    elif mode == 'dependency_aware':
+        return Conv2dDependencyAwareAllocator(pruner=pruner, dim=dim)
+
+
 class NormalSparsityAllocator(SparsityAllocator):
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
@@ -81,6 +94,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         self.group_depen = GroupDependency(traced_model=self.pruner.graph.trace).dependency_sets
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        self._get_dependency()
         masks = {}
         grouped_metrics = {idx: {name: metrics[name] for name in names}
                            for idx, names in enumerate(self.channel_depen)}
@@ -114,7 +128,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
                 threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
                 masks[name] = self._expand_mask_with_dim(name, mask)
-        
+
         return masks
 
     def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
