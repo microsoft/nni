@@ -236,65 +236,6 @@ class AutoMaskInference:
             constant[:, mask_pos] = mean[mask_pos]
         return out_mask, constant
 
-    def clac_out_sparsity(self):
-        """
-        Calculate the output sparsity.
-        """
-        # we don't need the gradient in the forward inference
-        out_mask = None
-        constant = None
-        with torch.no_grad():
-            # Note: we need randomly init the input one more time here!
-            # Because some operation have the in-place operation, such as relu_,
-            # the in-place operation may modify or write 0s into the dummy_input
-            self.random_init()
-            # apply the mask for the input tensor and the weight tensor
-            self.apply_mask()
-            # Note: due to the in-place operator, such as relu_,
-            # ori_out may be the same tensor with dummy_input,
-            # so we use clone and detach to create a new tensor with
-            # the same values.
-            out = self.module(*self.dummy_input)
-            if isinstance(out, torch.Tensor):
-                out_mask, constant = self.isconstants(out.clone().detach())
-            elif isinstance(out, tuple) or isinstance(out, list):
-                out_mask = []
-                constant = []
-                for tout in out:
-                    _mask, _constant = self.isconstants(tout.clone().detach())
-                    out_mask.append(_mask)
-                    constant.append(_constant)
-            else:
-                _logger.warning(
-                    'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
-
-        # We also need random the parameters of the module, because if the weight of the model has
-        # a unmasked 0, then our out sparsity inference may be wrong
-        # However, after radomizing the weight/parameters, the constant in the output tensors may
-        # be different from the constants that calculated from its original stata_dict. However,
-        # so to get the right constant to eliminate the bias between model before and after sparsity
-        # inference, we need to reload its state_dict and recalculate the constant
-
-        if len(self.weights) > 0 and self.state_dict is not None:
-
-            self.module.load_state_dict(self.state_dict)
-            # apply weight mask
-            self.__apply_weight_mask()
-            out = self.module(*self.dummy_input).clone().detach()
-            if isinstance(out, torch.Tensor):
-                constant = torch.zeros_like(out)
-                constant_pos = out_mask == 0
-                constant[constant_pos] = out[constant_pos]
-            elif isinstance(out, (list, tuple)):
-                constant = []
-                for i, tout in enumerate(out):
-                    _tmp = torch.zeros_like(tout)
-                    sparsity_pos = out_mask[i] == 0
-                    _tmp[sparsity_pos] = tout[sparsity_pos]
-                    constant.append(_tmp)
-
-        return out_mask, constant
-
 
     def update_indirect_sparsity(self):
         """
@@ -309,7 +250,15 @@ class AutoMaskInference:
         these potential sparsity through gradient.
         """
         # Each node only update the output mask when we backwards
-        # update the output mask
+        # update the output mask, this is because that some op may
+        # have the broadcast operation, for example, OP A's output
+        # tensor may be taken by two OPs(B, C) as inputs. So we cannot
+        # directly update the input mask at the OP B or C. We can only
+        # update the mask of C's output tensor only when B and C are
+        # already updated(gradient are already calculated and added to
+        # C's output tensor).
+        # Besides, updating the mask of C's output tensor equals to updating
+        # the input mask of OP B and C.
         if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
             # if output have gradient which means this node has successor
             # nodes and the successor nodes have already update their indirect
@@ -359,18 +308,70 @@ class AutoMaskInference:
             self.weight_mask[para_name][grad_zero] = 0
 
     def update_direct_sparsity(self):
+        # we don't need the gradient in the forward inference
+        out_mask = None
+        constant = None
         with torch.no_grad():
-            out_sparsity, out_constant = self.clac_out_sparsity()
-            if isinstance(out_sparsity, torch.Tensor):
+            # Note: we need randomly init the input one more time here!
+            # Because some operation have the in-place operation, such as relu_,
+            # the in-place operation may modify or write 0s into the dummy_input
+            self.random_init()
+            # apply the mask for the input tensor and the weight tensor
+            self.apply_mask()
+            # Note: due to the in-place operator, such as relu_,
+            # ori_out may be the same tensor with dummy_input,
+            # so we use clone and detach to create a new tensor with
+            # the same values.
+            out = self.module(*self.dummy_input)
+            if isinstance(out, torch.Tensor):
+                out_mask, constant = self.isconstants(out.clone().detach())
+            elif isinstance(out, tuple) or isinstance(out, list):
+                out_mask = []
+                constant = []
+                for tout in out:
+                    _mask, _constant = self.isconstants(tout.clone().detach())
+                    out_mask.append(_mask)
+                    constant.append(_constant)
+            else:
+                _logger.warning(
+                    'Only support the OP whose output is tensor/tuple of tensor/list of tensor')
+
+            # We also need random the parameters of the module, because if the weight of the model has
+            # a unmasked 0, then our out sparsity inference may be wrong
+            # However, after radomizing the weight/parameters, the constant in the output tensors may
+            # be different from the constants that calculated from its original stata_dict. However,
+            # so to get the right constant to eliminate the bias between model before and after sparsity
+            # inference, we need to reload its state_dict and recalculate the constant
+            # Currently we also get the constant values at the same time when infering the mask, in
+            # the future, we will separate the constant inference into a single graph pass.
+            if len(self.weights) > 0 and self.state_dict is not None:
+
+                self.module.load_state_dict(self.state_dict)
+                # apply weight mask
+                self.__apply_weight_mask()
+                out = self.module(*self.dummy_input).clone().detach()
+                if isinstance(out, torch.Tensor):
+                    constant = torch.zeros_like(out)
+                    constant_pos = out_mask == 0
+                    constant[constant_pos] = out[constant_pos]
+                elif isinstance(out, (list, tuple)):
+                    constant = []
+                    for i, tout in enumerate(out):
+                        _tmp = torch.zeros_like(tout)
+                        sparsity_pos = out_mask[i] == 0
+                        _tmp[sparsity_pos] = tout[sparsity_pos]
+                        constant.append(_tmp)
+
+            if isinstance(out_mask, torch.Tensor):
                 assert isinstance(self.output_mask, torch.Tensor)
-                self.output_mask *= out_sparsity
-            elif isinstance(out_sparsity, list):
-                for i, _ in enumerate(out_sparsity):
-                    self.output_mask[i] *= out_sparsity[i]
+                self.output_mask *= out_mask
+            elif isinstance(out_mask, list):
+                for i, _ in enumerate(out_mask):
+                    self.output_mask[i] *= out_mask[i]
             else:
                 _logger.warning('There is no output sparsity')
             # also save the out_constant
-            self.out_constant = out_constant
+            self.out_constant = constant
 
     def get_masks(self):
         return (self.in_masks, self.output_mask, self.weight_mask)
