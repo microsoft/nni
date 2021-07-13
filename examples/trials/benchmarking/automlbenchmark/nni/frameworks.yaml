@@ -14,7 +14,7 @@ TPE:
   extends: NNI
   params:
     tuner_type: 'TPE'
-    arch_type: 'random_forest'
+    arch_type: 'mlp'
     limit_type: 'ntrials'
     trial_limit: 10
 
