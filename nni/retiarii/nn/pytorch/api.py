@@ -90,7 +90,7 @@ class LayerChoice(nn.Module):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
-        self._first_module = self._modules[self.names[0]]
+        self._first_module = self._modules[self.names[0]]  # to make the dummy forward meaningful
 
     @property
     def key(self):
