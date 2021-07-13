@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { getLogger, Logger } from "../../../common/log";
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
-import { MountedStorageService } from "../storages/mountedStorageService";
+import { MountedStorageService } from "../../../training_service/reusable/storages/mountedStorageService";
 import chaiAsPromised = require("chai-as-promised");
 
 

@@ -10,8 +10,8 @@ import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { AdlTrainingService } from '../kubernetes/adl/adlTrainingService';
+import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
+import { AdlTrainingService } from '../../training_service/kubernetes/adl/adlTrainingService';
 
 const localCodeDir: string = tmp.dirSync().name
 

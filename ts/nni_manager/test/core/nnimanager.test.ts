@@ -14,11 +14,11 @@ import { Manager, ExperimentProfile} from '../../common/manager';
 import { ExperimentManager } from '../../common/experimentManager';
 import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { NNIExperimentsManager } from '../nniExperimentsManager';
-import { NNIManager } from '../nnimanager';
-import { SqlDB } from '../sqlDatabase';
-import { MockedTrainingService } from './mockedTrainingService';
-import { MockedDataStore } from './mockedDatastore';
+import { NNIExperimentsManager } from '../../core/nniExperimentsManager';
+import { NNIManager } from '../../core/nnimanager';
+import { SqlDB } from '../../core/sqlDatabase';
+import { MockedTrainingService } from '../mock/trainingService';
+import { MockedDataStore } from '../mock/datastore';
 import { TensorboardManager } from '../../common/tensorboardManager';
 import { NNITensorboardManager } from '../../core/nniTensorboardManager';
 import * as path from 'path';
@@ -134,7 +134,8 @@ describe('Unit test for nnimanager', function () {
     })
 
     after(async () => {
-        await setTimeout(() => {nniManager.stopExperiment()},15000);
+        // FIXME
+        await nniManager.stopExperimentTopHalf();
         cleanupUnitTest();
     })
 

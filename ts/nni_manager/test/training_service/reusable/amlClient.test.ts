@@ -4,7 +4,7 @@
 import * as chai from 'chai';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import chaiAsPromised = require("chai-as-promised");
-import { AMLClient } from '../aml/amlClient';
+import { AMLClient } from '../../../training_service/reusable/aml/amlClient';
 
 
 describe('Unit Test for amlClient', () => {

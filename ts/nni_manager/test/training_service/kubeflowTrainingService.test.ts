@@ -9,12 +9,12 @@ import * as fs from 'fs';
 import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
+import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
+import { KubeflowTrainingService } from '../../training_service/kubernetes/kubeflow/kubeflowTrainingService';
 
 // TODO: copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name
-const mockedTrialPath: string = './training_service/test/mockedTrial.py'
+const mockedTrialPath: string = './test/mock/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for KubeflowTrainingService', () => {
