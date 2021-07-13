@@ -57,7 +57,7 @@ corresponding to the three types of tasks in nnismall. These tasks are suitable 
 
 The following table summarizes the benchmarks we provide. For ``nnismall``, please check ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
 for a more detailed description for each task. Also, since all tasks are from the OpenML platform, you can find the descriptions
-of all datasets at `this page <https://www.openml.org/search?type=data>`_.
+of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
 
 .. list-table::
    :header-rows: 1
