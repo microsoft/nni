@@ -79,7 +79,7 @@ of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
      - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
      - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
    * - nnismall-multiclass
-     - An eight-task benchmark consisting of multiclass classification tasks only.
+     - An eight-task benchmark consisting of multi-class classification tasks only.
      - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
      - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
    * - nnismall
@@ -103,24 +103,45 @@ Run predefined benchmarks on existing tuners
 
    ./runbenchmark_nni.sh [tuner-names]
 
-This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``.
+This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a
+multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/.
+To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Note that currently,
+we only have one choice for the search space, defined in ``./nni/extensions/NNI/architectures/run_random_forest.py``. In
+the future, we will support more search spaces, and you can switch to different search spaces by changing the `arch_type`
+parameter in ``./nni/frameworks.yaml``.
 
-By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner", "Hyperband", "BOHB". It is also possible to run the benchmark on custom tuners. See the next sections for details. 
+The ``./nni/frameworks.yaml`` is the actual configuration file for the HPO Benchmark. The ``limit_type`` parameter specifies
+the limits for running the benchmark on one tuner. If ``limit_type`` is set to `ntrials`, then the tuner is called for
+`trial_limit` times and then stopped. If ``limit_type`` is set to `time`, then the tuner is continuously called until
+timeout for the benchmark is reached. The timeout for the benchmarks can be changed in the each benchmark file located
+in ``./nni/benchmarks``.
 
-By default, the script runs the specified tuners against the specified benchmark one by one. To run the experiment for all tuners simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``. 
+By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names],
+it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal",
+"Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner", "Hyperband", "BOHB". It is also possible to run the benchmark
+on custom tuners. See the next sections for details.
 
-Note: the SMAC tuner, DNGO tuner, and the BOHB advisor has to be manually installed before running benchmarks on them. Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details on installation.
+By default, the script runs the specified tuners against the specified benchmark one by one. To run the experiment for
+all tuners simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``.
+
+Note: the SMAC tuner, DNGO tuner, and the BOHB advisor has to be manually installed before running benchmarks on them.
+Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details
+on installation.
 
 Run customized benchmarks on existing tuners
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You can design your own benchmarks and evaluate the performance of NNI tuners on them. To run customized benchmarks, add a benchmark_name.yaml file in the folder ``./nni/benchmarks``\ , and change the ``benchmark`` variable in ``runbenchmark_nni.sh``. See ``./automlbenchmark/resources/benchmarks/`` for some examples of defining a custom benchmark.
+You can design your own benchmarks and evaluate the performance of NNI tuners on them. To run customized benchmarks,
+add a benchmark_name.yaml file in the folder ``./nni/benchmarks``, and change the ``benchmark`` variable in ``runbenchmark_nni.sh``.
+See ``./automlbenchmark/resources/benchmarks/`` for some examples of defining a custom benchmark.
 
 Run benchmarks on custom tuners
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-You may also use the benchmark to compare a custom tuner written by yourself with the NNI built-in tuners. To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_. Next, perform the following steps:
-
+You may also use the benchmark to compare a custom tuner written by yourself with the NNI built-in tuners. To use custom
+tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For
+more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_.
+Next, perform the following steps:
 
 #. Install the custom tuner via the command ``nnictl algo register``. Check `this document <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
 #. In ``./nni/frameworks.yaml``\ , add a new framework extending the base framework NNI. Make sure that the parameter ``tuner_type`` corresponds to the "builtinName" of tuner installed in step 1.

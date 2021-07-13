@@ -4,18 +4,25 @@ HPO Benchmark Example Statistics
 A Benchmark Example
 ^^^^^^^^^^^^^^^^^^^
 
-As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner". As some of the tasks contains a considerable amount of training data, it took about 2 days to run the whole benchmark on one tuner. For a more detailed description of the tasks, please check ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``. For binary and multi-class classification tasks, the metric "auc" and "logloss" were used for evaluation, while for regression, "r2" and "rmse" were used.
+As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE", "Random", "Anneal", "Evolution", "SMAC",
+"GPTuner", "MetisTuner", "DNGOTuner". As some of the tasks contains a considerable amount of training data, it took about
+2 days to run the whole benchmark on one tuner. For a more detailed description of the tasks, please check
+``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``.
+For binary and multi-class classification tasks, the metric "auc" and "logloss" were used for evaluation, while for
+regression, "r2" and "rmse" were used.
 
-After the script finishes, the final scores of each tuner are summarized in the file ``results[time]/reports/performances.txt``. Since the file is large, we only show the following screenshot and summarize other important statistics instead.
+After the script finishes, the final scores of each tuner are summarized in the file ``results[time]/reports/performances.txt``.
+Since the file is large, we only show the following screenshot and summarize other important statistics instead.
 
 .. image:: ../img/hpo_benchmark/performances.png
    :target: ../img/hpo_benchmark/performances.png
    :alt:
 
-When the results are parsed, the tuners are also ranked based on their final performance. The following three tables show the average ranking of the tuners for each metric (logloss, rmse, auc).
+When the results are parsed, the tuners are also ranked based on their final performance. The following three tables show
+the average ranking of the tuners for each metric (logloss, rmse, auc).
 
-
-Also, for every tuner, their performance for each type of metric is summarized (another view of the same data). We present this statistics in the fourth table. Note that this information can be found at ``results[time]/reports/rankings.txt``.
+Also, for every tuner, their performance for each type of metric is summarized (another view of the same data).
+We present this statistics in the fourth table. Note that this information can be found at ``results[time]/reports/rankings.txt``.
 
 Average rankings for metric rmse (for regression tasks). We found that Anneal performs the best among all NNI built-in tuners.
 
