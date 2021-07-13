@@ -143,7 +143,6 @@ function Search(props): any {
         }
         // according [input val] to change searchFilter list
         const allFilterConditions = searchInputVal.trim().split(';');
-        console.info(allFilterConditions); // eslint-disable-line
         const newSearchFilter: any = [];
 
         // delete '' in filter list
@@ -238,7 +237,6 @@ function Search(props): any {
                 }
             }
         });
-        console.info(newSearchFilter); // eslint-disable-line
         changeTableListPage(newSearchFilter);
     }
 
