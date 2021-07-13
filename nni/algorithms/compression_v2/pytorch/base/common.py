@@ -33,7 +33,12 @@ class DataCollector:
 
     def collect(self) -> Dict:
         """
-        Collect the compressor needed data, like module weight, the output of activation function.
+        Collect the compressor needed data, i.e., module weight, the output of activation function.
+
+        Returns
+        -------
+        Dict
+            Usually has format like {module_name: tensor_type_data}.
         """
         raise NotImplementedError()
 
@@ -217,6 +222,11 @@ class MetricsCalculator:
     """
     An abstract class for calculate a kind of metrics of the given data.
     """
+    def __init__(self, dim: Optional[Union[int, List[int]]] = None):
+        self.dim = dim if not isinstance(dim, int) else [dim]
+        if self.dim is not None:
+            assert all(i >= 0 for i in self.dim)
+            self.dim = sorted(self.dim)
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -224,11 +234,21 @@ class MetricsCalculator:
         ----------
         data
             A dict handle the data used to calculate metrics. Usually has format like {module_name: tensor_type_data}.
+
+        Returns
+        -------
+        Dict[str, Tensor]
+            The key is the layer_name, value is the metric.
+            Note that the metric has the same size with the `dim`
         """
         raise NotImplementedError()
 
 
 class SparsityAllocator:
+    """
+    An abstract class for allocate mask based on metrics.
+    """
+
     def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None):
         """
         Parameters
@@ -245,6 +265,12 @@ class SparsityAllocator:
             self.dim = sorted(self.dim)
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        """
+        Parameters
+        ----------
+        metrics
+            A metric dict. The key is the name of layer, the value is its metric.
+        """
         raise NotImplementedError()
 
     def _expand_mask_with_dim(self, name: str, mask: Tensor) -> Dict[str, Tensor]:
@@ -263,7 +289,8 @@ class SparsityAllocator:
             for i in idxs:
                 weight_mask = weight_mask.unsqueeze(i)
             expand_mask = {'weight_mask': weight_mask.expand(weight_size).clone()}
-            # NOTE: assume we only mask output
+            # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
+            # If we support more kind of masks, this place need refactor.
             if wrapper.bias_mask is not None and mask.size() == wrapper.bias_mask.size():
                 expand_mask['bias_mask'] = mask.clone()
         return expand_mask

@@ -13,14 +13,15 @@ from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, Gr
 GRAPH_NEEDED_MODE = ['dependency_aware']
 
 def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, list]] = None,
-                           max_sparsity_per_layer: Optional[float] = None):
+                           max_sparsity_per_layer: Optional[float] = None, dummy_input: Optional[Tensor] = None):
     if mode == 'normal':
         return NormalSparsityAllocator(pruner=pruner, dim=dim)
     elif mode == 'global':
         assert max_sparsity_per_layer is not None, 'max_sparsity_per_layer is required in GlobalSparsityAllocator.'
         return GlobalSparsityAllocator(pruner=pruner, dim=dim, max_sparsity_per_layer=max_sparsity_per_layer)
     elif mode == 'dependency_aware':
-        return Conv2dDependencyAwareAllocator(pruner=pruner, dim=dim)
+        assert dummy_input is not None, 'dummy_input is required in Conv2dDependencyAwareAllocator'
+        return Conv2dDependencyAwareAllocator(pruner=pruner, dim=dim, dummy_input=dummy_input)
 
 
 class NormalSparsityAllocator(SparsityAllocator):
@@ -50,7 +51,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
         masks = {}
         # {group_index: {layer_name: metric}}
         grouped_metrics = {idx: {name: metrics[name] for name in names}
-                           for idx, names in self.pruner.config_based_group_info.items()}
+                           for idx, names in self.pruner.generate_module_groups().items()}
         for _, group_metric_dict in grouped_metrics.items():
             threshold, sub_thresholds = self._calculate_threshold(group_metric_dict)
             for name, metric in group_metric_dict.items():
@@ -83,15 +84,15 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
 
 class Conv2dDependencyAwareAllocator(SparsityAllocator):
-    def __init__(self, pruner: Pruner, dim: int):
+    def __init__(self, pruner: Pruner, dim: int, dummy_input: Tensor):
         assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
         super().__init__(pruner, dim=dim)
+        self.dummy_input = dummy_input
 
     def _get_dependency(self):
-        assert self.pruner.graph is not None, 'compressor.graph is None, must set graph_needed as True to get the graph info.'
-
-        self.channel_depen = ChannelDependency(traced_model=self.pruner.graph.trace).dependency_sets
-        self.group_depen = GroupDependency(traced_model=self.pruner.graph.trace).dependency_sets
+        graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
+        self.channel_depen = ChannelDependency(traced_model=graph).dependency_sets
+        self.group_depen = GroupDependency(traced_model=graph).dependency_sets
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         self._get_dependency()

@@ -72,7 +72,6 @@ class Compressor:
         self._unwrap_model()
 
         self._modules_to_compress = None
-        self.config_based_group_info = None
         self.modules_wrapper = collections.OrderedDict()
         for layer, config in self._detect_modules_to_compress():
             wrapper = self._wrap_modules(layer, config)
@@ -197,6 +196,47 @@ class Compressor:
         graph = TorchModuleGraph(model=self.bound_model, dummy_input=dummy_input)
         self._wrap_model()
         return graph
+
+    def generate_module_groups(self) -> Dict[int, List[str]]:
+        """
+        Get all module names in each config in config_list.
+
+        Returns
+        -------
+        Dict[int, List[str]]
+            A dict. The key is the config idx in config_list, the value is the module name list. i.e., {1: ['layer.0', 'layer.2']}.
+        """
+        self._unwrap_model()
+
+        module_groups = {}
+        for name, module in self.bound_model.named_modules():
+            if module == self.bound_model:
+                continue
+            layer = LayerInfo(name, module)
+            ret = None
+            for idx, config in enumerate(self.config_list):
+                config = config.copy()
+                # expand config if key `default` is in config['op_types']
+                if 'op_types' in config and 'default' in config['op_types']:
+                    expanded_op_types = []
+                    for op_type in config['op_types']:
+                        if op_type == 'default':
+                            expanded_op_types.extend(weighted_modules)
+                        else:
+                            expanded_op_types.append(op_type)
+                    config['op_types'] = expanded_op_types
+                # check if condition is satisified
+                if 'op_types' in config and layer.type not in config['op_types']:
+                    continue
+                if 'op_names' in config and layer.name not in config['op_names']:
+                    continue
+                ret = (idx, config)
+            if ret is not None and 'exclude' not in ret[1]:
+                module_groups.setdefault(ret[0], [])
+                module_groups[ret[0]].append(name)
+
+        self._wrap_model()
+        return module_groups
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """

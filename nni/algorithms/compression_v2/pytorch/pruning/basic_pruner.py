@@ -9,14 +9,14 @@ from torch.optim import Optimizer
 from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression_v2.pytorch.base.common import HookCollectorInfo, MetricsCalculator
 from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, ActivationTrainerBasedDataCollector
-from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import AbsMetricsCalculator, NormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
+from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
 from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator, GRAPH_NEEDED_MODE
 
 
 class LevelPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True):
+    def __init__(self, model: Module, config_list: List[Dict]):
         self.mode = 'normal'
-        super().__init__(model, config_list, back_up)
+        super().__init__(model, config_list)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -24,17 +24,17 @@ class LevelPruner(Pruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = AbsMetricsCalculator()
+            self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode)
 
 
 class L1FilterPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+    def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
-        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
-        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
+        self.dummy_input = dummy_input
+        super().__init__(model, config_list)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -44,15 +44,15 @@ class L1FilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator(p=1, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
 
 
 class L2FilterPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+    def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
-        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
-        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
+        self.dummy_input = dummy_input
+        super().__init__(model, config_list)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -62,15 +62,15 @@ class L2FilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
 
 
 class FPGMPruner(Pruner):
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool = True,
+    def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
-        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
-        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
+        self.dummy_input = dummy_input
+        super().__init__(model, config_list)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -80,13 +80,13 @@ class FPGMPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = DistMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
 
 
 class SlimPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
-                 training_epochs: int, scale: float = 0.0001, back_up: bool = True, max_sparsity_per_layer: float = 1):
+                 training_epochs: int, scale: float = 0.0001, max_sparsity_per_layer: float = 1):
         self.mode = 'global'
         assert 0 < max_sparsity_per_layer <= 1, 'max_sparsity_per_layer must in range (0, 1].'
         self.max_sparsity_per_layer = max_sparsity_per_layer
@@ -95,7 +95,7 @@ class SlimPruner(Pruner):
         self.criterion = criterion
         self.training_epochs = training_epochs
         self._scale = scale
-        super().__init__(model, config_list, back_up)
+        super().__init__(model, config_list)
 
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
@@ -112,7 +112,7 @@ class SlimPruner(Pruner):
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
-            self.metrics_calculator = AbsMetricsCalculator()
+            self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer)
 
@@ -122,13 +122,13 @@ class ActivationFilterPruner(Pruner):
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  back_up: bool = True, mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
-        graph_needed = True if self.mode in GRAPH_NEEDED_MODE else False
+        self.dummy_input = dummy_input
         self.trainer = trainer
         self.optimizer = optimizer
         self.criterion = criterion
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
-        super().__init__(model, config_list, back_up, graph_needed=graph_needed, dummy_input=dummy_input)
+        super().__init__(model, config_list)
 
     def _choose_activation(self, activation: str = 'relu') -> Callable:
         if activation == 'relu':
@@ -154,7 +154,7 @@ class ActivationFilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = self._get_metrics_calculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0)
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
 
     def _get_metrics_calculator(self) -> MetricsCalculator:
         raise NotImplementedError()
@@ -162,9 +162,9 @@ class ActivationFilterPruner(Pruner):
 
 class ActivationAPoZRankFilterPruner(ActivationFilterPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
-        return APoZRankMetricsCalculator(dim=0)
+        return APoZRankMetricsCalculator(dim=1)
 
 
 class ActivationMeanRankFilterPruner(ActivationFilterPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
-        return MeanRankMetricsCalculator(dim=0)
+        return MeanRankMetricsCalculator(dim=1)

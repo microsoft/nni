@@ -32,5 +32,9 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
 
 class ActivationTrainerBasedDataCollector(TrainerBasedDataCollector):
     def collect(self) -> Dict:
-        self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
-        return self._hook_buffer
+        for _ in range(self.training_epochs):
+            self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+
+        data = {}
+        [data.update(buffer_dict) for _, buffer_dict in self._hook_buffer.items()]
+        return data
