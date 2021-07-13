@@ -158,6 +158,109 @@ def mul_python(node, speedup):
         return new_mul
 
 
+def transpose_python(node, speedup):
+    return torch.t
+
+
+def transpose2_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim_1 = inputs[1].toIValue()
+    dim_2 = inputs[2].toIValue()
+    new_transpose = partial(torch.transpose, dim0=dim_1, dim1=dim_2)
+    return new_transpose
+
+
+def matmul_python(node, speedup):
+    return torch.matmul
+
+
+def div_python(node, speedup):
+    # The second input parameter of torch.div can be a
+    # tensor or a constant, if it is a constant, we need
+    # to return
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    if inputs[1].debugName() in speedup.internal_result:
+        # the second input parameters is the output of the other
+        # nodes
+        return torch.div
+    else:
+        other = inputs[1].toIValue()
+        new_div = partial(torch.div, other=other)
+
+        return new_div
+
+
+def softmax_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim = inputs[1].toIValue()
+    new_softmax = partial(torch.softmax, dim=dim)
+    return new_softmax
+
+
+def contiguous_python(node, speedup):
+    class contiguousModule(torch.nn.Module):
+        def forward(self, x):
+            return x.contiguous()
+    return contiguousModule()
+
+
+def gelu_python(node, speedup):
+    return torch.nn.GELU()
+
+
+def avgpool2d_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    kernel_size = translate_list(inputs[1], speedup)
+    stride = translate_list(inputs[2], speedup)
+    padding = translate_list(inputs[3], speedup)
+    new_avgpool = partial(torch.nn.functional.avg_pool2d,
+                          kernel_size=kernel_size, stride=stride, padding=padding)
+    return new_avgpool
+
+
+def adaptive_avgpool_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    output_size = translate_list(inputs[1], speedup)
+    new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
+    return new_avgpool
+
+
+def tupleunpack_python(node, speedup):
+    # Note: tuple unpack should only exists at the
+    # the end of the model, and is no need to replace/propagate mask
+    return None
+
+
+def num2tensor_python(node, speedup):
+    return torch.nn.Identity()
+
+
+def exp_python(node, speedup):
+    return torch.exp
+
+
+def squeeze_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim = None
+    if len(inputs) > 1:
+        dim = parse_constant(inputs[1], speedup)
+    new_squeeze = partial(torch.squeeze, dim=dim)
+    return new_squeeze
+
+##########################################################
+# Split Line
+# Following module/functions cannot be translated into a
+# single function, so we use torch.nn.Module to wrap the
+# the core function, and return the torch.nn.Module instead
+##########################################################
+
+
 def slice_python(node, speedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
@@ -222,19 +325,6 @@ def size_python(node, speedup):
     return SizeMoudle(size_dim)
 
 
-def transpose_python(node, speedup):
-    return torch.t
-
-
-def transpose2_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim_1 = inputs[1].toIValue()
-    dim_2 = inputs[2].toIValue()
-    new_transpose = partial(torch.transpose, dim0=dim_1, dim1=dim_2)
-    return new_transpose
-
-
 def toint_python(node, speedup):
     class ToIntModule(torch.nn.Module):
         def forward(self, x):
@@ -286,162 +376,6 @@ def permute_python(node, speedup):
     return PermuteModule(dim_list)
 
 
-def matmul_python(node, speedup):
-    return torch.matmul
-
-
-def div_python(node, speedup):
-    # The second input parameter of torch.div can be a
-    # tensor or a constant, if it is a constant, we need
-    # to return
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    if inputs[1].debugName() in speedup.internal_result:
-        # the second input parameters is the output of the other
-        # nodes
-        return torch.div
-    else:
-        other = inputs[1].toIValue()
-        new_div = partial(torch.div, other=other)
-
-        return new_div
-
-
-def softmax_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    new_softmax = partial(torch.softmax, dim=dim)
-    return new_softmax
-
-
-def contiguous_python(node, speedup):
-    class contiguousModule(torch.nn.Module):
-        def forward(self, x):
-            return x.contiguous()
-    return contiguousModule()
-
-
-def gelu_python(node, speedup):
-    return torch.nn.GELU()
-
-
-def cat_python(node, speedup):
-    class CatModule(torch.nn.Module):
-        def __init__(self, cat_dim):
-            super(CatModule, self).__init__()
-            self.cat_dim = cat_dim
-
-        def forward(self, *args):
-            return torch.cat(args, dim=self.cat_dim)
-
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = inputs[1].toIValue()
-    return CatModule(dim)
-
-
-def avgpool2d_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    kernel_size = translate_list(inputs[1], speedup)
-    stride = translate_list(inputs[2], speedup)
-    padding = translate_list(inputs[3], speedup)
-    new_avgpool = partial(torch.nn.functional.avg_pool2d,
-                          kernel_size=kernel_size, stride=stride, padding=padding)
-    return new_avgpool
-
-
-def adaptive_avgpool_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    output_size = translate_list(inputs[1], speedup)
-    new_avgpool = torch.nn.AdaptiveAvgPool2d(output_size)
-    return new_avgpool
-
-
-def tupleunpack_python(node, speedup):
-    # Note: tuple unpack should only exists at the
-    # the end of the model, and is no need to replace/propagate mask
-    return None
-
-
-def to_python(node, speedup):
-    # for the time being, only device parameters are supported
-    class ToModule(torch.nn.Module):
-        def __init__(self, device):
-            super(ToModule, self).__init__()
-
-        def forward(self, x):
-            return x.to(device)
-
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    device = inputs[3].toIValue()
-    return ToModule(device)
-
-
-def typeas_python(node, speedup):
-    """
-    currently only support type_as float.
-    TODO: support more types in the type_as, need to figure out
-    how to get the scalar type from torch._C.TensorType.
-    """
-    class TypeasModule(torch.nn.Module):
-        def __init__(self, dtype=torch.float):
-            self.example = torch.zeros(1, dtype=dtype)
-
-        def forward(self, x):
-            return x.type_as(self.example)
-    return TypeasModule()
-
-
-def upsample_bilinear2d_python(node, speedup):
-    class UpsampleModule(torch.nn.Module):
-        def __init__(self, size_list, scale_list):
-            super(UpsampleModule, self).__init__()
-            self.size_list = size_list
-            self.scale_list = scale_list
-
-        def forward(self, *args):
-            """
-            The first input of args is the target tensor to upsample
-            , the following parameters is useless, because we already
-            get the size_list and the scale_list by parsing the cpp_nodes.
-            """
-            return torch.nn.functional.upsample_bilinear(args[0], \
-            size=self.size_list, scale_factor=self.scale_list)
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    size_list_node = inputs[1].node()
-    scale_list_node = inputs[3].node()
-    size_list = None
-    scale_list = None
-
-    if size_list_node.kind() == 'prim::ListConstruct':
-        size_list = translate_list(inputs[1], speedup)
-    if scale_list_node.kind() == 'prim::ListConstruct':
-        scale_list = translate_list(inputs[3], speedup)
-    return UpsampleModule(size_list, scale_list)
-
-
-def num2tensor_python(node, speedup):
-    return torch.nn.Identity()
-
-
-def exp_python(node, speedup):
-    return torch.exp
-
-def squeeze_python(node, speedup):
-    c_node = node.key_node
-    inputs = list(c_node.inputs())
-    dim = None
-    if len(inputs) > 1:
-        dim = parse_constant(inputs[1], speedup)
-    new_squeeze = partial(torch.squeeze, dim=dim)
-    return new_squeeze
-
-
 def getattr_python(node, speedup):
     """
     Note: Ops started with Prim:: is not taken as the key node,
@@ -468,6 +402,80 @@ def getattr_python(node, speedup):
     key_words = re.findall(pattern, str(node))
     assert len(key_words) == 1
     return GetModule(key_words[0])
+
+
+def upsample_bilinear2d_python(node, speedup):
+    class UpsampleModule(torch.nn.Module):
+        def __init__(self, size_list, scale_list):
+            super(UpsampleModule, self).__init__()
+            self.size_list = size_list
+            self.scale_list = scale_list
+
+        def forward(self, *args):
+            """
+            The first input of args is the target tensor to upsample
+            , the following parameters is useless, because we already
+            get the size_list and the scale_list by parsing the cpp_nodes.
+            """
+            return torch.nn.functional.upsample_bilinear(args[0],
+                                                         size=self.size_list, scale_factor=self.scale_list)
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    size_list_node = inputs[1].node()
+    scale_list_node = inputs[3].node()
+    size_list = None
+    scale_list = None
+
+    if size_list_node.kind() == 'prim::ListConstruct':
+        size_list = translate_list(inputs[1], speedup)
+    if scale_list_node.kind() == 'prim::ListConstruct':
+        scale_list = translate_list(inputs[3], speedup)
+    return UpsampleModule(size_list, scale_list)
+
+
+def typeas_python(node, speedup):
+    """
+    currently only support type_as float.
+    TODO: support more types in the type_as, need to figure out
+    how to get the scalar type from torch._C.TensorType.
+    """
+    class TypeasModule(torch.nn.Module):
+        def __init__(self, dtype=torch.float):
+            self.example = torch.zeros(1, dtype=dtype)
+
+        def forward(self, x):
+            return x.type_as(self.example)
+    return TypeasModule()
+
+
+def to_python(node, speedup):
+    # for the time being, only device parameters are supported
+    class ToModule(torch.nn.Module):
+        def __init__(self, device):
+            super(ToModule, self).__init__()
+
+        def forward(self, x):
+            return x.to(device)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    device = inputs[3].toIValue()
+    return ToModule(device)
+
+
+def cat_python(node, speedup):
+    class CatModule(torch.nn.Module):
+        def __init__(self, cat_dim):
+            super(CatModule, self).__init__()
+            self.cat_dim = cat_dim
+
+        def forward(self, *args):
+            return torch.cat(args, dim=self.cat_dim)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    dim = inputs[1].toIValue()
+    return CatModule(dim)
 
 
 trans_from_jit_to_python = {
