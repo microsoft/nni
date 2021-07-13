@@ -4,6 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
+import { PlacementConstraint } from 'common/trainingService';
 import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo, ScheduleResultType } from '../common/gpuData';
@@ -51,46 +52,104 @@ export class GpuScheduler {
 
     /**
      * Schedule a machine according to the constraints (requiredGPUNum)
-     * @param requiredGPUNum required GPU number
+     * @param defaultRequiredGPUNum the default required GPU number when constraint.type === 'None'
      */
-    public scheduleMachine(environments: EnvironmentInformation[], requiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
-        if (requiredGPUNum === undefined) {
-            requiredGPUNum = 0;
+    public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint, defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
+        for (let e of environments) {
+            this.log.info("!!!");
+            this.log.info(e.id);
+            this.log.info(e.envId);
+            this.log.info(e.name);
         }
-        assert(requiredGPUNum >= 0);
-        // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
-        const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
-            environment.defaultGpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && environment.defaultGpuSummary.gpuCount >= requiredGPUNum));
-        if (eligibleEnvironments.length === 0) {
-            // If the required gpu number exceeds the upper limit of all machine's GPU number
-            // Return REQUIRE_EXCEED_TOTAL directly
-            return ({
-                resultType: ScheduleResultType.REQUIRE_EXCEED_TOTAL,
+        if (constraint.type == 'None') {
+            let requiredGPUNum = defaultRequiredGPUNum;
+            if (requiredGPUNum === undefined) {
+                requiredGPUNum = 0;
+            }
+            assert(requiredGPUNum >= 0);
+            // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
+            const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
+                environment.defaultGpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && environment.defaultGpuSummary.gpuCount >= requiredGPUNum));
+            if (eligibleEnvironments.length === 0) {
+                // If the required gpu number exceeds the upper limit of all machine's GPU number
+                // Return REQUIRE_EXCEED_TOTAL directly
+                return ({
+                    resultType: ScheduleResultType.REQUIRE_EXCEED_TOTAL,
+                    gpuIndices: undefined,
+                    environment: undefined,
+                });
+            }
+
+            // Step 2: Allocate Host/GPU for specified trial job
+            // Currenty the requireGPUNum parameter for all trial jobs are identical.
+            if (requiredGPUNum > 0) {
+                // Trial job requires GPU
+                const result: GpuScheduleResult | undefined = this.scheduleGPUHost(environments, requiredGPUNum, trialDetail);
+                if (result !== undefined) {
+                    return result;
+                }
+            } else {
+                // Trail job does not need GPU
+                const allocatedRm: EnvironmentInformation = this.selectMachine(environments, environments);
+
+                return this.allocateHost(requiredGPUNum, allocatedRm, [], trialDetail);
+            }
+
+            return {
+                resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
                 gpuIndices: undefined,
                 environment: undefined,
-            });
-        }
-
-        // Step 2: Allocate Host/GPU for specified trial job
-        // Currenty the requireGPUNum parameter for all trial jobs are identical.
-        if (requiredGPUNum > 0) {
-            // Trial job requires GPU
-            const result: GpuScheduleResult | undefined = this.scheduleGPUHost(environments, requiredGPUNum, trialDetail);
-            if (result !== undefined) {
-                return result;
-            }
+            };
         } else {
-            // Trail job does not need GPU
-            const allocatedRm: EnvironmentInformation = this.selectMachine(environments, environments);
+            assert(constraint.type === 'Device')
+            var requiredEnvironments: EnvironmentInformation[];
+            if (constraint.gpus.length == 0) {
+                throw new Error("Device constraint is used but no device is specified.");
+            }
+            const selectedEnvId = constraint.gpus[0][0];
 
-            return this.allocateHost(requiredGPUNum, allocatedRm, [], trialDetail);
+            const gpusOfEnv: Array<[string, number]> = constraint.gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedEnvId);
+            if (gpusOfEnv.length > 1) {
+                throw new Error("Device constraint does not support using multiple environments")
+            }
+            const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
+                environment.id === selectedEnvId);
+            if (eligibleEnvironments.length === 0) {
+                throw new Error(`The the required environment (envId: ${selectedEnvId}) is not found.`);
+            }
+            let selectedEnvironment = eligibleEnvironments[0];
+            let availableResources = this.gpuResourceDetection([selectedEnvironment]);
+            var selectedGPUs: Array<GPUInfo> = [];
+
+            for (let gpuTuple of constraint.gpus) {
+                const gpuIdx: number = gpuTuple[1];
+
+                if (selectedEnvironment.defaultGpuSummary === undefined || selectedEnvironment.defaultGpuSummary.gpuCount >= gpuIdx) {
+                    throw new Error(`The gpuIdx of placement constraint ${gpuIdx} exceeds gpuCount of the environment ${selectedEnvId}`);
+                }
+
+                if (availableResources.has(selectedEnvironment)) {
+                    for (let gpuInfo of availableResources.get(selectedEnvironment)!) {
+                        if (gpuInfo.index === gpuIdx) {
+                            selectedGPUs.push(gpuInfo);
+                        }
+                    }
+                }
+            }
+            if (selectedGPUs.length === constraint.gpus.length) {
+                return {
+                    resultType: ScheduleResultType.SUCCEED,
+                    environment: selectedEnvironment,
+                    gpuIndices: selectedGPUs,
+                };
+            } else {
+                return {
+                    resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
+                    gpuIndices: undefined,
+                    environment: undefined,
+                };
+            }
         }
-
-        return {
-            resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
-            gpuIndices: undefined,
-            environment: undefined,
-        };
     }
 
     /**
@@ -101,7 +160,7 @@ export class GpuScheduler {
             trial.environment.defaultGpuSummary !== undefined &&
             trial.assignedGpus !== undefined &&
             trial.assignedGpus.length > 0) {
-            
+
             for (const gpuInfo of trial.assignedGpus) {
                 const defaultGpuSummary = trial.environment.defaultGpuSummary;
                 const num: number | undefined = defaultGpuSummary.assignedGpuIndexMap.get(gpuInfo.index);
@@ -197,7 +256,7 @@ export class GpuScheduler {
             throw new Error(`Unsupported schedule policy: ${this.policyName}`);
         }
     }
-    
+
     // Select the environment which is idle most recently. If all environments are not idle, use round robin to select an environment.
     private recentlyIdleSelect(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]): EnvironmentInformation {
         const now = Date.now();
