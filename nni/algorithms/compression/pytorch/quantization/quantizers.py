@@ -171,7 +171,7 @@ class ObserverQuantizer(Quantizer):
         self.bound_model.to(self.device)
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
             Optional('quant_bits'): Or(And(int, lambda n: n == 8), Schema({
                 Optional('weight'): And(int, lambda n: n == 8),
