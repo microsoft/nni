@@ -1,4 +1,3 @@
-from copy import deepcopy
 import logging
 import types
 from typing import List, Dict, Optional, Callable, Union
@@ -26,6 +25,17 @@ class DataCollector:
 class HookCollectorInfo:
     def __init__(self, layers: List[LayerInfo], hook_type: str,
                  collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+        """
+        Parameters
+        ----------
+        layers
+            List of LayerInfo, the layer under hooked.
+        hook_type
+            'forward' or 'backward'.
+        collector
+            A hook function generator, the input is a buffer (empty list), the output is a hook function.
+            The buffer is used to store the data wanted to hook.
+        """
         self.layers = layers
         self.hook_type = hook_type
         self.collector = collector

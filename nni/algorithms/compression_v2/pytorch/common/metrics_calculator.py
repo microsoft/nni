@@ -6,9 +6,9 @@ from torch import Tensor
 from nni.algorithms.compression_v2.pytorch.base.common import MetricsCalculator
 
 
-class NaiveMetricsCalculator(MetricsCalculator):
+class AbsMetricsCalculator(MetricsCalculator):
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
-        return data
+        return {name: layer_data.abs() for name, layer_data in data.items()}
 
 
 class NormMetricsCalculator(MetricsCalculator):
@@ -56,4 +56,49 @@ class DistMetricsCalculator(MetricsCalculator):
                 tmp_metric[idx[-1]] = dist_sum
 
             metrics[name] = metric
+        return metrics
+
+
+class APoZRankMetricsCalculator(MetricsCalculator):
+    def __init__(self, dim: Optional[Union[int, List[int]]]):
+        self.dim = dim if not isinstance(dim, int) else [dim]
+        assert all(i >= 0 for i in self.dim)
+        self.dim = sorted(self.dim)
+
+    def calculate_metrics(self, data: Dict[str, Dict[str, List[Tensor]]]) -> Dict[str, Tensor]:
+        metrics = {}
+        for _, data_dict in data.items():
+            for name, tensor_list in data_dict.items():
+                assert name not in metrics, 'Already calculate apoz for {}, something goes wrong.'.format(name)
+                # NOTE: dim=0 means the batch dim is 0
+                activations = torch.cat(tensor_list, dim=0)
+                _eq_zero = torch.eq(activations, torch.zeros_like(activations))
+                across_dim = list(range(len(_eq_zero.size())))
+                [across_dim.pop(i + 1) for i in reversed(self.dim)]
+                # The element number on each [self.dim + 1] in _eq_zero
+                total_size = 1
+                for dim, dim_size in enumerate(_eq_zero.size()):
+                    if dim - 1 not in self.dim:
+                        total_size *= dim_size
+                _apoz = torch.sum(_eq_zero, dim=across_dim, dtype=torch.float64) / total_size
+                metrics[name] = _apoz
+        return metrics
+
+
+class MeanRankMetricsCalculator(MetricsCalculator):
+    def __init__(self, dim: Optional[Union[int, List[int]]]):
+        self.dim = dim if not isinstance(dim, int) else [dim]
+        assert all(i >= 0 for i in self.dim)
+        self.dim = sorted(self.dim)
+
+    def calculate_metrics(self, data: Dict[str, Dict[str, List[Tensor]]]) -> Dict[str, Tensor]:
+        metrics = {}
+        for _, data_dict in data.items():
+            for name, tensor_list in data_dict.items():
+                assert name not in metrics, 'Already calculate mean for {}, something goes wrong.'.format(name)
+                # NOTE: dim=0 means the batch dim is 0
+                activations = torch.cat(tensor_list, dim=0)
+                across_dim = list(range(len(activations.size())))
+                [across_dim.pop(i + 1) for i in reversed(self.dim)]
+                metrics[name] = torch.mean(activations, across_dim)
         return metrics

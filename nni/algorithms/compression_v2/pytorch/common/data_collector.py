@@ -28,3 +28,9 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
         for _, wrapper in self.compressor._get_modules_wrapper().items():
             data[wrapper.name] = wrapper.module.weight.data.clone().detach()
         return data
+
+
+class ActivationTrainerBasedDataCollector(TrainerBasedDataCollector):
+    def collect(self) -> Dict:
+        self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
+        return self._hook_buffer
