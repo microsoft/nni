@@ -1,5 +1,4 @@
 import collections
-from copy import deepcopy
 import logging
 from typing import List, Dict, Optional, OrderedDict, Tuple, Any
 
@@ -10,6 +9,8 @@ from torch.tensor import Tensor
 from nni.common.graph_utils import TorchModuleGraph
 
 _logger = logging.getLogger(__name__)
+
+__all__ = ['LayerInfo', 'Compressor']
 
 
 class LayerInfo:
@@ -35,7 +36,11 @@ weighted_modules = [
 
 
 class Compressor:
-    def __init__(self, model: Module, config_list: List[Dict], back_up: bool, graph_needed: bool = False, dummy_input: Optional[Tensor] = None, **kwargs):
+    """
+    The abstract base pytorch compressor.
+    """
+
+    def __init__(self, model: Module, config_list: List[Dict]):
         """
         Parameters
         ----------
@@ -43,37 +48,25 @@ class Compressor:
             The model under compressed.
         config_list
             The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
-        back_up
-            Set True to save the original model and config_list for reset, set False to skip it.
         """
         assert isinstance(model, Module)
-
-        self._back_up = back_up
-        self._graph_needed = graph_needed
-        self._dummy_input = dummy_input
         self.is_wrapped = False
-
-        self._origin_model = None
-        self._origin_config_list = None
-
         self.reset(model=model, config_list=config_list)
 
-    def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
-        if not self._back_up:
-            assert model is not None and config_list is not None, 'Must set model and config_list to reset an un-backup compressor.'
-            self.bound_model = model
-            self.config_list = config_list
-        else:
-            if model is None:
-                self.bound_model = deepcopy(self._origin_model)
-            else:
-                self.bound_model = model
-                self._origin_model = deepcopy(model)
-            if config_list is None:
-                self.config_list = deepcopy(self._origin_config_list)
-            else:
-                self.config_list = config_list
-                self._origin_config_list = deepcopy(config_list)
+    def reset(self, model: Module, config_list: List[Dict]):
+        """
+        Reset the compressor with model and config_list.
+
+        Parameters
+        ----------
+        model
+            The model under compressed.
+        config_list
+            The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
+        """
+        assert isinstance(model, Module), 'Only support compressing pytorch Module, but the type of model is {}.'.format(type(model))
+        self.bound_model = model
+        self.config_list = config_list
         self.validate_config(model=model, config_list=config_list)
 
         self._unwrap_model()
@@ -85,11 +78,6 @@ class Compressor:
             wrapper = self._wrap_modules(layer, config)
             self.modules_wrapper[layer.name] = wrapper
 
-        self.graph = None
-        if self._graph_needed:
-            assert self._dummy_input is not None, 'dummy_input is needed for generate graph.'
-            self.graph = TorchModuleGraph(model=self.bound_model, dummy_input=self._dummy_input)
-
         self._wrap_model()
 
     def _detect_modules_to_compress(self) -> List[Tuple[LayerInfo, Dict]]:
@@ -99,20 +87,16 @@ class Compressor:
         """
         if self._modules_to_compress is None:
             self._modules_to_compress = []
-            self.config_based_group_info = {}
             for name, module in self.bound_model.named_modules():
                 if module == self.bound_model:
                     continue
                 layer = LayerInfo(name, module)
-                result = self._select_config(layer)
-                if result is not None:
-                    idx, config = result
+                config = self._select_config(layer)
+                if config is not None:
                     self._modules_to_compress.append((layer, config))
-                    self.config_based_group_info.setdefault(idx, [])
-                    self.config_based_group_info[idx].append(layer.name)
         return self._modules_to_compress
 
-    def _select_config(self, layer: LayerInfo) -> Optional[Tuple[int, Dict]]:
+    def _select_config(self, layer: LayerInfo) -> Optional[Dict]:
         """
         Find the configuration for `layer` by parsing `self.config_list`.
 
@@ -127,7 +111,7 @@ class Compressor:
             The retrieved configuration for this layer, if None, this layer should not be compressed.
         """
         ret = None
-        for idx, config in enumerate(self.config_list):
+        for config in self.config_list:
             config = config.copy()
             # expand config if key `default` is in config['op_types']
             if 'op_types' in config and 'default' in config['op_types']:
@@ -145,12 +129,18 @@ class Compressor:
             if 'op_names' in config and layer.name not in config['op_names']:
                 continue
 
-            ret = (idx, config)
+            ret = config
         if ret is None or 'exclude' in ret:
             return None
         return ret
 
     def _get_modules_wrapper(self) -> OrderedDict[str, Module]:
+        """
+        Returns
+        -------
+        OrderedDict[str, Module]
+            An ordered dict, key is the name of the module, value is the wrapper of the module.
+        """
         return self.modules_wrapper
 
     def _wrap_model(self):
@@ -178,16 +168,35 @@ class Compressor:
 
         Parameters
         ----------
-        name : str
-            name of the variable
-        value: any
-            value of the variable
+        name
+            Name of the variable.
+        value
+            Value of the variable.
         """
         for wrapper in self.get_modules_wrapper():
             if isinstance(value, torch.Tensor):
                 wrapper.register_buffer(name, value.clone())
             else:
                 setattr(wrapper, name, value)
+
+    def generate_graph(self, dummy_input: Tensor) -> TorchModuleGraph:
+        """
+        Generate a `TorchModuleGraph` instance of `self.bound_model` based on `jit.trace`.
+
+        Parameters
+        ----------
+        dummy_input
+            The dummy input for `jit.trace`, users should put it on right device before pass in.
+
+        Returns
+        -------
+        TorchModuleGraph
+            A `TorchModuleGraph` instance.
+        """
+        self._unwrap_model()
+        graph = TorchModuleGraph(model=self.bound_model, dummy_input=dummy_input)
+        self._wrap_model()
+        return graph
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """

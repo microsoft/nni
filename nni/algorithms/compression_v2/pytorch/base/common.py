@@ -12,13 +12,29 @@ _logger = logging.getLogger(__name__)
 
 
 class DataCollector:
+    """
+    An abstract class for collect the data needed by the compressor.
+    """
+
     def __init__(self, compressor: Compressor):
+        """
+        Parameters
+        ----------
+        compressor
+            The compressor binded with this DataCollector.
+        """
         self.compressor = compressor
 
     def reset(self):
+        """
+        Reset the `DataCollector`.
+        """
         raise NotImplementedError()
 
     def collect(self) -> Dict:
+        """
+        Collect the compressor needed data, like module weight, the output of activation function.
+        """
         raise NotImplementedError()
 
 
@@ -26,6 +42,8 @@ class HookCollectorInfo:
     def __init__(self, layers: List[LayerInfo], hook_type: str,
                  collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
         """
+        This class used to aggregate the information of what kind of hook is placed on which layers.
+
         Parameters
         ----------
         layers
@@ -42,10 +60,60 @@ class HookCollectorInfo:
 
 
 class TrainerBasedDataCollector(DataCollector):
+    """
+    This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
+    """
+
     def __init__(self, compressor: Compressor, trainer: Callable[[Module, Optimizer, Callable], None], optimizer: Optimizer,
                  criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
                  opt_before_tasks: List = [], opt_after_tasks: List = [],
                  collector_infos: List[HookCollectorInfo] = [], criterion_patch: Callable[[Callable], Callable] = None):
+        """
+        Parameters
+        ----------
+        compressor
+            The compressor binded with this DataCollector.
+        trainer
+            A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+
+            Example::
+
+                def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                    model.train()
+                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                    for batch_idx, (data, target) in enumerate(train_loader):
+                        data, target = data.to(device), target.to(device)
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        optimizer.step()
+        optimizer
+            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
+            so do not use this optimizer in other places.
+        criterion
+            The criterion function used in trainer. Take model output and target value as input, and return the loss.
+        training_epochs
+            The total number of calling trainer.
+        opt_before_tasks
+            A list of function that will be called one by one before origin `optimizer.step()`.
+            Note that these functions will be patched into `optimizer.step()`.
+        opt_after_tasks
+            A list of function that will be called one by one after origin `optimizer.step()`.
+            Note that these functions will be patched into `optimizer.step()`.
+        collector_infos
+            A list of `HookCollectorInfo` instance. And the hooks will be registered in `__init__`.
+        criterion_patch
+            A callable function used to patch the criterion. Take a criterion function as input and return a new one.
+
+            Example::
+
+                def criterion_patch(criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
+                    weight = ...
+                    def patched_criterion(output, target):
+                        return criterion(output, target) + torch.norm(weight)
+                    return patched_criterion
+        """
         super().__init__(compressor)
         self.trainer = trainer
         self.training_epochs = training_epochs
@@ -146,7 +214,17 @@ class TrainerBasedDataCollector(DataCollector):
 
 
 class MetricsCalculator:
+    """
+    An abstract class for calculate a kind of metrics of the given data.
+    """
+
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
+        """
+        Parameters
+        ----------
+        data
+            A dict handle the data used to calculate metrics. Usually has format like {module_name: tensor_type_data}.
+        """
         raise NotImplementedError()
 
 
@@ -156,7 +234,7 @@ class SparsityAllocator:
         Parameters
         ----------
         pruner
-            The pruner that wrapped the module.
+            The pruner that binded with this `SparsityAllocator`.
         dim
             The dimensions that corresponding to the metric, None means one-to-one correspondence.
         """
