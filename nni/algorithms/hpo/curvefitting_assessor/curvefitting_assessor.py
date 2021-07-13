@@ -71,7 +71,7 @@ class CurvefittingAssessor(Assessor):
             else:
                 self.set_best_performance = True
                 self.completed_best_performance = self.trial_history[-1]
-            logger.info('Updated complted best performance, trial job id: %s', trial_job_id)
+            logger.info('Updated completed best performance, trial job id: %s', trial_job_id)
         else:
             logger.info('No need to update, trial job id: %s', trial_job_id)
 

@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -402,8 +402,8 @@ class NNIManager implements Manager {
         // FIXME: unit test
     }
 
-    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
-        return this.trainingService.getTrialLog(trialJobId, logType);
+    public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
+        return this.trainingService.getTrialFile(trialJobId, fileName);
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {
