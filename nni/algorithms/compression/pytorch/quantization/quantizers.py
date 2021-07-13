@@ -125,7 +125,13 @@ class QATGrad(QuantGrad):
 
 class ObserverQuantizer(Quantizer):
     """
-
+    This quantizer uses observers to record weight/activation statistics to get quantization
+    information. The whole process can be divided into three steps:
+        1. It will register observers to the place where quantization would happen (just like registering hooks).
+        2. The observers would record tensors' statistics during calibration.
+        3. Scale & zero point would be obtained after calibration.
+    Note that the observer type, tensor dtype and quantization qscheme are hard coded for now. Their customization
+    are under development and will be ready soon.
     """
 
     def __init__(self, model, config_list, optimizer=None):
@@ -194,7 +200,7 @@ class ObserverQuantizer(Quantizer):
         scale, zero_point = observer.calculate_qparams()
         return scale, zero_point
 
-    def quantize(self, x, scale, zero_point, qmin, qmax):
+    def _quantize(self, x, scale, zero_point, qmin, qmax):
         x = x / scale + zero_point
         x = torch.clamp(x, qmin, qmax)
         x = torch.round(x)
@@ -204,7 +210,7 @@ class ObserverQuantizer(Quantizer):
     def quantize_input(self, *inputs, wrapper, **kwargs):
         if self.compressed:
             module = wrapper.module
-            new_input = self.quantize(inputs[0],
+            new_input = self._quantize(inputs[0],
                                       module.input_scale,
                                       module.input_zero_point,
                                       module.input_qmin,
@@ -220,7 +226,7 @@ class ObserverQuantizer(Quantizer):
         module = wrapper.module
         old_weight = module.weight
         if self.compressed:
-            new_weight = self.quantize(old_weight,
+            new_weight = self._quantize(old_weight,
                                        module.weight_scale,
                                        module.weight_zero_point,
                                        module.weight_qmin,
@@ -233,7 +239,7 @@ class ObserverQuantizer(Quantizer):
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
             module = wrapper.module
-            new_output = self.quantize(output,
+            new_output = self._quantize(output,
                                        module.output_scale,
                                        module.output_zero_point,
                                        module.output_qmin,
