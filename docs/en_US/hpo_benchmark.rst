@@ -8,19 +8,53 @@ HPO Benchmarks
 
 We provide a benchmarking tool to compare the performances of tuners provided by NNI (and users' custom tuners) on different
 types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark)>`_  to run different *benchmarks* on the NNI *tuners*.
-The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool and its usage.
+The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool, its usage, and currently available benchmarks.
 
-Terminology
-^^^^^^^^^^^
+Overview and Terminologies
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* **task**\ : a task can be thought of as a tuple (dataset, metric). It provides train and test datasets to the frameworks. Then, based on the returns predictions on the test set, the task evaluates the metric (e.g., mse for regression, f1 for classification) and reports the score. 
-* **benchmark**\ : a benchmark is a set of tasks, along with other external constraints such as time limits. 
-* **framework**\ : given a task, a framework solves the proposed regression or classification problem using train data and produces predictions on the test set. The automlbenchmark framework does not pose any restrictions on the hypothesis space of a framework. In our implementation, each framework is a tuple (tuner, architecture), where architecture provides the hypothesis space, and tuner optimizes the hyperparameters of the architecture. In our implementation, to solve a task, we let the tuner continuously tune the hyperparameters (by giving it cross-validation score on the train data as feedback) until the time or trial limit is reached. Then, the architecture is retrained on the entire train set using the best set of hyperparameters. 
-* **tuner**\ : a tuner or advisor defined in the hpo folder, or a custom tuner provided by the user. 
+Ideally, an *HPO Benchmark* provides a tuner with a search space, calls the tuner repeatedly, and evaluates how the tuner probes
+the search space and approaches to good solutions. In addition, inside the benchmark, an evaluator should be associated to
+each search space for evaluating the score of points in this search space to give feedbacks to the tuner. For instance,
+the search space could be the space of hyperparameters for a neural network. Then the evaluator should contain train data,
+test data, and a criterion. To evaluate a point in the search space, the evaluator will train the network on the train data
+and report the score of the model on the test data as the score for the point.
+
+However, a *benchmark* provided by the automlbenchmark repository only provides part of the functionality of the evaluator.
+More concretely, it assumes that it is evaluating a *framework*. Different from a tuner, given train data, a *framework*
+can directly solve a *task* and predict on the test set. The *benchmark* from the automlbenchmark repository directly provides
+train and test datasets to a *framework*, evaluates the prediction on the test set, and reports this score as the final score.
+Therefore, to implement *HPO Benchmark* using automlbenchmark, we pair up a tuner with a search space to form a *framework*,
+and handle the repeated trial-evaluate-feedback loop in the *framework* abstraction. In other words, each *HPO Benchmark*
+contains two main components: a *benchmark* from the automlbenchmark library, and an *architecture* which defines the search
+space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document
+
+* **tuner**\ : a `tuner or advisor provided by NNI <https://nni.readthedocs.io/en/stable/builtin_tuner.html>`_, or a custom tuner provided by the user.
+* **task**\ : an abstraction used by automlbenchmark. A task can be thought of as a tuple (dataset, metric). It provides train and test datasets to the frameworks. Then, based on the returns predictions on the test set, the task evaluates the metric (e.g., mse for regression, f1 for classification) and reports the score.
+* **benchmark**\ : an abstraction used by automlbenchmark. A benchmark is a set of tasks, along with other external constraints such as time limits.
+* **framework**\ : an abstraction used by automlbenchmark. Given a task, a framework solves the proposed regression or classification problem using train data and produces predictions on the test set. In our implementation, each framework is an architecture, which defines a search space. To evaluate a task given by the benchmark on a specific tuner, we let the tuner continuously tune the hyperparameters (by giving it cross-validation score on the train data as feedback) until the time or trial limit is reached. Then, the architecture is retrained on the entire train set using the best set of hyperparameters.
 * **architecture**\ : an architecture is a specific method for solving the tasks, along with a set of hyperparameters to optimize (i.e., the search space). See ``./nni/extensions/NNI/architectures`` for examples.
 
-Note: currently, the only architecture supported is random forest. The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/run_random_forest.py``. The tasks in benchmarks "nnivalid" and "nnismall" are suitable to solve with random forests. 
-  
+Supported HPO Benchmarks
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+From the previous discussion, we can see that to define an *HPO Benchmark*, we need to define a *benchmark* and an *architecture*.
+
+Currently, the only architecture supported is random forest. We use the
+`scikit-learn implementation <https://scikit-learn.org/stable/modules/classes.html#module-sklearn.ensemble>`_. Typically,
+there are a number of hyperparameters that may directly affect the performances of a random forest. We design the search
+space to include the hyperparameters ``n_estimators, max_depth, min_samples_leaf, min_samples_split, max_leaf_nodes``.
+In addition, we write the search space in different ways (e.g., using "choice" or "randint" or "loguniform").
+The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/run_random_forest.py``.
+You may replace the search space definition in this file to experiment different search spaces.
+
+For the automlbenchmarks, in addition to the built-in benchmarks provided by automl
+(defined in ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``), we design several
+additional benchmarks, defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``.
+One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and
+8 multi-class classification tasks. We also provide three separate 8-task benchmarks "nnismall-regression", "nnismall-binary", and "nnismall-multiclass"
+corresponding to the three types of tasks in nnismall. These tasks are suitable to solve with random forests.
+
 Setup
 ^^^^^
 
@@ -37,7 +71,7 @@ Run predefined benchmarks on existing tuners
 
    ./runbenchmark_nni.sh [tuner-names]
 
-This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Some benchmarks are defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``\ , and others are defined in ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``. One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and 8 multi-class classification tasks. We also provide three separate 8-task benchmarks "nnismall-regression", "nnismall-binary", and "nnismall-multiclass" corresponding to the three types of tasks in nnismall.
+This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``.
 
 By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner", "Hyperband", "BOHB". It is also possible to run the benchmark on custom tuners. See the next sections for details. 
 
