@@ -13,20 +13,20 @@ The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This do
 Overview and Terminologies
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Ideally, an *HPO Benchmark* provides a tuner with a search space, calls the tuner repeatedly, and evaluates how the tuner probes
+Ideally, an **HPO Benchmark** provides a tuner with a search space, calls the tuner repeatedly, and evaluates how the tuner probes
 the search space and approaches to good solutions. In addition, inside the benchmark, an evaluator should be associated to
 each search space for evaluating the score of points in this search space to give feedbacks to the tuner. For instance,
 the search space could be the space of hyperparameters for a neural network. Then the evaluator should contain train data,
 test data, and a criterion. To evaluate a point in the search space, the evaluator will train the network on the train data
 and report the score of the model on the test data as the score for the point.
 
-However, a *benchmark* provided by the automlbenchmark repository only provides part of the functionality of the evaluator.
-More concretely, it assumes that it is evaluating a *framework*. Different from a tuner, given train data, a *framework*
-can directly solve a *task* and predict on the test set. The *benchmark* from the automlbenchmark repository directly provides
-train and test datasets to a *framework*, evaluates the prediction on the test set, and reports this score as the final score.
-Therefore, to implement *HPO Benchmark* using automlbenchmark, we pair up a tuner with a search space to form a *framework*,
-and handle the repeated trial-evaluate-feedback loop in the *framework* abstraction. In other words, each *HPO Benchmark*
-contains two main components: a *benchmark* from the automlbenchmark library, and an *architecture* which defines the search
+However, a **benchmark** provided by the automlbenchmark repository only provides part of the functionality of the evaluator.
+More concretely, it assumes that it is evaluating a **framework**. Different from a tuner, given train data, a **framework**
+can directly solve a **task** and predict on the test set. The **benchmark** from the automlbenchmark repository directly provides
+train and test datasets to a **framework**, evaluates the prediction on the test set, and reports this score as the final score.
+Therefore, to implement **HPO Benchmark** using automlbenchmark, we pair up a tuner with a search space to form a **framework**,
+and handle the repeated trial-evaluate-feedback loop in the **framework** abstraction. In other words, each **HPO Benchmark**
+contains two main components: a **benchmark** from the automlbenchmark library, and an **architecture** which defines the search
 space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document
 
 * **tuner**\ : a `tuner or advisor provided by NNI <https://nni.readthedocs.io/en/stable/builtin_tuner.html>`_, or a custom tuner provided by the user.
@@ -38,7 +38,7 @@ space and the evaluator. To further clarify, we provide the definition for the t
 Supported HPO Benchmarks
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-From the previous discussion, we can see that to define an *HPO Benchmark*, we need to define a *benchmark* and an *architecture*.
+From the previous discussion, we can see that to define an **HPO Benchmark**, we need to specify a **benchmark** and an **architecture**.
 
 Currently, the only architecture supported is random forest. We use the
 `scikit-learn implementation <https://scikit-learn.org/stable/modules/classes.html#module-sklearn.ensemble>`_. Typically,
@@ -54,6 +54,38 @@ additional benchmarks, defined in ``/examples/trials/benchmarking/automlbenchmar
 One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and
 8 multi-class classification tasks. We also provide three separate 8-task benchmarks "nnismall-regression", "nnismall-binary", and "nnismall-multiclass"
 corresponding to the three types of tasks in nnismall. These tasks are suitable to solve with random forests.
+
+The following table summarizes the benchmarks we provide. For ``nnismall``, please check ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+for a more detailed description for each task. Also, since all tasks are from the OpenML platform, you can find the descriptions
+of all datasets at `this page <https://www.openml.org/search?type=data>`_.
+
+.. list-table::
+   :header-rows: 1
+
+   * - Benchmark name
+     - Description
+     - Location
+     - Task List
+   * - nnivalid
+     - A three-task benchmark to validate benchmark installation.
+     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``kc2, iris, cholesterol``
+   * - nnismall-regression
+     - An eight-task benchmark consisting of regression tasks only.
+     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga``
+   * - nnismall-binary
+     - An eight-task benchmark consisting of binary classification tasks only.
+     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
+   * - nnismall-multiclass
+     - An eight-task benchmark consisting of multiclass classification tasks only.
+     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
+   * - nnismall
+     - A 24-task benchmark that is the superset of nnismall-regression, nnismall-binary, and nnismall-multiclass.
+     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga, Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine, car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
 
 Setup
 ^^^^^
