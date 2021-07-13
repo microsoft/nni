@@ -234,9 +234,9 @@ class AutoActivation(nn.Module):
         super().__init__()
         self.unaries = nn.ModuleList()
         self.binaries = nn.ModuleList()
-        self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+        self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules])
         for _ in range(unit_num):
-            one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label='one_unary')
+            one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules])
             self.unaries.append(one_unary)
         for _ in range(unit_num):
             one_binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
