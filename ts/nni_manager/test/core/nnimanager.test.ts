@@ -34,7 +34,7 @@ async function initContainer(): Promise<void> {
 }
 
 describe('Unit test for nnimanager', function () {
-    this.timeout(10000);
+    this.timeout(15000);
 
     let nniManager: NNIManager;
 
