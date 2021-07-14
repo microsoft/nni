@@ -61,6 +61,7 @@ of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
 
 .. list-table::
    :header-rows: 1
+   :widths: 1 2 2 2
 
    * - Benchmark name
      - Description
@@ -68,23 +69,23 @@ of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
      - Task List
    * - nnivalid
      - A three-task benchmark to validate benchmark installation.
-     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``kc2, iris, cholesterol``
    * - nnismall-regression
      - An eight-task benchmark consisting of regression tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga``
    * - nnismall-binary
      - An eight-task benchmark consisting of binary classification tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
    * - nnismall-multiclass
      - An eight-task benchmark consisting of multi-class classification tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
    * - nnismall
      - A 24-task benchmark that is the superset of nnismall-regression, nnismall-binary, and nnismall-multiclass.
-     - ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga, Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine, car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
 
 Setup
