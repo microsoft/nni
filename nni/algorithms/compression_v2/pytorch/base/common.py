@@ -1,8 +1,8 @@
 import logging
 import types
-from typing import List, Dict, Optional, Callable, Union
+from typing import List, Dict, Optional, Callable, Tuple, Union
 
-from torch import Tensor
+from torch import Tensor, tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
@@ -44,22 +44,22 @@ class DataCollector:
 
 
 class HookCollectorInfo:
-    def __init__(self, layers: List[LayerInfo], hook_type: str,
-                 collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+    def __init__(self, targets: Union[Dict[str, Tensor], List[LayerInfo]], hook_type: str,
+                 collector: Union[Callable[[List, Tensor], Callable[[Tensor], None]], Callable[[List], Callable[[Module, Tensor, Tensor], None]]]):
         """
         This class used to aggregate the information of what kind of hook is placed on which layers.
 
         Parameters
         ----------
-        layers
-            List of LayerInfo, the layer under hooked.
+        targets
+            List of LayerInfo or Dict of {layer_name: weight_tensor}, the hook targets.
         hook_type
             'forward' or 'backward'.
         collector
-            A hook function generator, the input is a buffer (empty list), the output is a hook function.
+            A hook function generator, the input is a buffer (empty list) or a buffer (empty list) and tensor, the output is a hook function.
             The buffer is used to store the data wanted to hook.
         """
-        self.layers = layers
+        self.targets = targets
         self.hook_type = hook_type
         self.collector = collector
 
@@ -179,9 +179,11 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_buffer[self._hook_id] = {}
 
         if collector_info.hook_type == 'forward':
-            self._add_forward_hook(self._hook_id, collector_info.layers, collector_info.collector)
+            self._add_forward_hook(self._hook_id, collector_info.targets, collector_info.collector)
         elif collector_info.hook_type == 'backward':
-            self._add_backward_hook(self._hook_id, collector_info.layers, collector_info.collector)
+            self._add_backward_hook(self._hook_id, collector_info.targets, collector_info.collector)
+        elif collector_info.hook_type == 'tensor':
+            self._add_tensor_hook(self._hook_id, collector_info.targets, collector_info.collector)
         else:
             _logger.warning('Skip unsupported hook type: %s', collector_info.hook_type)
 
@@ -189,6 +191,7 @@ class TrainerBasedDataCollector(DataCollector):
 
     def _add_forward_hook(self, hook_id: int, layers: List[LayerInfo],
                           collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+        assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
         for layer in layers:
             self._hook_buffer[hook_id][layer.name] = []
             handle = layer.module.register_forward_hook(collector(self._hook_buffer[hook_id][layer.name]))
@@ -196,10 +199,19 @@ class TrainerBasedDataCollector(DataCollector):
 
     def _add_backward_hook(self, hook_id: int, layers: List[LayerInfo],
                            collector: Callable[[List], Callable[[Module, Tensor, Tensor], None]]):
+        assert all(isinstance(layer_info, LayerInfo) for layer_info in layers)
         for layer in layers:
             self._hook_buffer[hook_id][layer.name] = []
             handle = layer.module.register_backward_hook(collector(self._hook_buffer[hook_id][layer.name]))
             self._hook_handles[hook_id][layer.name] = handle
+
+    def _add_tensor_hook(self, hook_id: int, tensors: Dict[str, Tensor],
+                         collector: Callable[[List, Tensor], Callable[[Tensor], None]]):
+        assert all(isinstance(tensor, Tensor) for _, tensor in tensors.items())
+        for layer_name, tensor in tensors.items():
+            self._hook_buffer[hook_id][layer_name] = []
+            handle = tensor.register_hook(collector(self._hook_buffer[hook_id][layer_name], tensor))
+            self._hook_handles[hook_id][layer_name] = handle
 
     def _remove_hook(self, hook_id: int):
         if hook_id not in self._hook_handles:

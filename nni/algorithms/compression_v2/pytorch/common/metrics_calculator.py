@@ -24,6 +24,12 @@ class NormMetricsCalculator(MetricsCalculator):
         return metrics
 
 
+class MultiDataNormMetricsCalculator(NormMetricsCalculator):
+    def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
+        new_data = {name: sum(list_tensor) for name, list_tensor in data.items()}
+        return super().calculate_metrics(new_data)
+
+
 class DistMetricsCalculator(MetricsCalculator):
     def __init__(self, p: float, dim: Union[int, List[int]]):
         super().__init__(dim=dim)

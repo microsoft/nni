@@ -8,9 +8,9 @@ from torch.optim import Optimizer
 
 from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression_v2.pytorch.base.common import HookCollectorInfo, MetricsCalculator
-from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, ActivationTrainerBasedDataCollector
-from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
-from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator, GRAPH_NEEDED_MODE
+from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, SingleHookTrainerBasedDataCollector
+from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NormMetricsCalculator, MultiDataNormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
+from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator
 
 
 class LevelPruner(Pruner):
@@ -120,7 +120,7 @@ class SlimPruner(Pruner):
 class ActivationFilterPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
-                 back_up: bool = True, mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
@@ -147,7 +147,7 @@ class ActivationFilterPruner(Pruner):
     def _reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
         if self.data_collector is None:
-            self.data_collector = ActivationTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
             self.data_collector.reset()
@@ -168,3 +168,39 @@ class ActivationAPoZRankFilterPruner(ActivationFilterPruner):
 class ActivationMeanRankFilterPruner(ActivationFilterPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(dim=1)
+
+
+class TaylorFOWeightFilterPruner(Pruner):
+    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
+                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
+                 mode: str = 'normal', max_sparsity_per_layer: float = 1, dummy_input: Optional[Tensor] = None):
+        self.mode = mode
+        self.max_sparsity_per_layer = max_sparsity_per_layer
+        self.dummy_input = dummy_input
+        self.trainer = trainer
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.training_batches = training_batches
+        super().__init__(model, config_list)
+
+    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Module, Tensor, Tensor], None]:
+        def collect_taylor(grad: Tensor):
+            if len(buffer) < self.training_batches:
+                buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
+        return collect_taylor
+
+    def _calculate_taylor_expansion(self, weight_tensor: Tensor, grad: Tensor) -> Tensor:
+        return (weight_tensor * grad).data.pow(2)
+
+    def _reset_tools(self):
+        hook_targets = {layer_info.name: layer_info.module.weight for layer_info, _ in self._detect_modules_to_compress()}
+        collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
+        if self.data_collector is None:
+            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+                                                                      1, collector_infos=[collector_info])
+        else:
+            self.data_collector.reset()
+        if self.metrics_calculator is None:
+            self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, dim=0)
+        if self.sparsity_allocator is None:
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer, dummy_input=self.dummy_input)

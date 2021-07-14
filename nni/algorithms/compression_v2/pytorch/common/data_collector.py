@@ -30,7 +30,7 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
         return data
 
 
-class ActivationTrainerBasedDataCollector(TrainerBasedDataCollector):
+class SingleHookTrainerBasedDataCollector(TrainerBasedDataCollector):
     def collect(self) -> Dict:
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
