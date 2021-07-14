@@ -6,7 +6,7 @@ A Benchmark Example
 
 As an example, we ran the "nnismall" benchmark with the random forest search space on the following 8 tuners: "TPE",
 "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner". For convenience of reference, we also list
-the search space we experimented on here. Note that the way in which the search s[ace is written may significantly affect
+the search space we experimented on here. Note that the way in which the search space is written may significantly affect
 hyperparameter optimization performance, and we plan to conduct further experiments on how well NNI built-in tuners adapt
 to different search space formulations using this benchmarking tool.
 
