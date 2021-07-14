@@ -1,3 +1,5 @@
+# This file is to demo the usage of multi-trial NAS in the usage of SPOS search space.
+
 import click
 import nni.retiarii.evaluator.pytorch as pl
 import nni.retiarii.nn.pytorch as nn
@@ -6,7 +8,6 @@ import torch
 from nni.retiarii import serialize
 from nni.retiarii.nn.pytorch import LayerChoice
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
-from nni.retiarii.strategy.utils import LatencyFilter
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
@@ -176,9 +177,7 @@ def _main(port):
 
     simple_strategy = strategy.Random(model_filter=LatencyFilter(100))
 
-    example_inputs = torch.randn(1, 3, 32, 32)
-
-    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy, True, example_inputs)
+    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.trial_concurrency = 2
@@ -186,6 +185,7 @@ def _main(port):
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
+    exp_config.example_inputs = [1, 3, 32, 32]
 
     exp.run(exp_config, port)
 

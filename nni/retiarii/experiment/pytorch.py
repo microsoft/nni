@@ -59,6 +59,9 @@ class RetiariiExeConfig(ConfigBase):
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
 
+    # input used in GraphConverterWithShape. Currently support shape tuple only.
+    example_inputs: Optional[List[int]] = None
+
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
@@ -107,8 +110,7 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
-def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, 
-                     parse_shape=False, example_inputs=None):
+def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, example_inputs=None):
     # TODO: this logic might need to be refactored into execution engine
     if full_ir:
         try:
@@ -116,7 +118,9 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True,
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
-        if parse_shape:
+        if example_inputs is not None:
+            # FIXME: this is a workaround as full tensor is not supported in configs
+            example_inputs = torch.randn(*example_inputs)
             converter = GraphConverterWithShape()
             base_model_ir = convert_to_graph(script_module, base_model, converter, example_inputs=example_inputs)
         else:
@@ -160,8 +164,7 @@ def debug_mutated_model(base_model, trainer, applied_mutators):
 
 class RetiariiExperiment(Experiment):
     def __init__(self, base_model: nn.Module, trainer: Union[Evaluator, BaseOneShotTrainer],
-                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None,
-                 parse_shape: bool = False, example_inputs = None):
+                 applied_mutators: List[Mutator] = None, strategy: BaseStrategy = None):
         # TODO: The current design of init interface of Retiarii experiment needs to be reviewed.
         self.config: RetiariiExeConfig = None
         self.port: Optional[int] = None
@@ -170,8 +173,6 @@ class RetiariiExperiment(Experiment):
         self.trainer = trainer
         self.applied_mutators = applied_mutators
         self.strategy = strategy
-        self.parse_shape = parse_shape
-        self.example_inputs = example_inputs
 
         self._dispatcher = RetiariiAdvisor()
         self._dispatcher_thread: Optional[Thread] = None
@@ -181,7 +182,7 @@ class RetiariiExperiment(Experiment):
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py',
-            parse_shape=self.parse_shape, example_inputs=self.example_inputs)
+            example_inputs=self.config.example_inputs)
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
