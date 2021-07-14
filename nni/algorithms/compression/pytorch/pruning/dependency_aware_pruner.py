@@ -27,7 +27,7 @@ class DependencyAwarePruner(Pruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, pruning_algorithm='level', dependency_aware=False,
-                 dummy_input=None, global_sort=False, **algo_kwargs):
+                 dummy_input=None, **algo_kwargs):
         super().__init__(model, config_list=config_list, optimizer=optimizer)
 
         self.dependency_aware = dependency_aware
@@ -56,7 +56,6 @@ class DependencyAwarePruner(Pruner):
             model, self, **algo_kwargs)
         # set the dependency-aware switch for the masker
         self.masker.dependency_aware = dependency_aware
-        self.masker.global_sort = global_sort
         self.set_wrappers_attribute("if_calculated", False)
 
     def calc_mask(self, wrapper, wrapper_idx=None):

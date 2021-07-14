@@ -22,7 +22,7 @@ class IterativePruner(DependencyAwarePruner):
     """
 
     def __init__(self, model, config_list, optimizer=None, pruning_algorithm='slim', trainer=None, criterion=None,
-                 num_iterations=20, epochs_per_iteration=5, dependency_aware=False, dummy_input=None, global_sort=False, **algo_kwargs):
+                 num_iterations=20, epochs_per_iteration=5, dependency_aware=False, dummy_input=None, **algo_kwargs):
         """
         Parameters
         ----------
@@ -51,13 +51,10 @@ class IterativePruner(DependencyAwarePruner):
         dummy_input: torch.Tensor
             The dummy input to analyze the topology constraints. Note that,
             the dummy_input should on the same device with the model.
-        global_sort: bool
-            If prune the model in a global-sort way.
-            Only support TaylorFOWeightFilterPruner currently.
         algo_kwargs: dict
             Additional parameters passed to pruning algorithm masker class
         """
-        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, global_sort, **algo_kwargs)
+        super().__init__(model, config_list, optimizer, pruning_algorithm, dependency_aware, dummy_input, **algo_kwargs)
 
         if isinstance(epochs_per_iteration, list):
             assert len(epochs_per_iteration) == num_iterations, 'num_iterations should equal to the length of epochs_per_iteration'
@@ -501,7 +498,8 @@ class TaylorFOWeightFilterPruner(IterativePruner):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
                          epochs_per_iteration=1, dependency_aware=dependency_aware,
-                         dummy_input=dummy_input, global_sort=global_sort)
+                         dummy_input=dummy_input)
+        self.masker.global_sort = global_sort
 
     def _supported_dependency_aware(self):
         return True

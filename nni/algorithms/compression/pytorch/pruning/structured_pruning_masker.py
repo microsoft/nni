@@ -502,7 +502,6 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         k = int(all_channel_contributions.shape[0] * self.pruner.config_list[0]['sparsity'])
         self.global_threshold = torch.topk(
             all_channel_contributions.view(-1), k, largest=False)[0].max()
-        print(f'set global threshold to {self.global_threshold}')
     
     def _get_global_num_prune(self, wrapper, wrapper_idx):
         if self.global_threshold is None:
