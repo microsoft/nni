@@ -494,6 +494,7 @@ class GraphIR(unittest.TestCase):
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
     def test_autoactivation(self):
+        @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
                 super().__init__()
@@ -561,21 +562,3 @@ class Python(GraphIR):
             except InvalidMutation:
                 continue
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
-
-    def test_autoactivation(self):
-        @self.get_serializer()
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.act = nn.AutoActivation()
-
-            def forward(self, x):
-                return self.act(x)
-
-        raw_model, mutators = self._get_model_with_mutators(Net())
-        for _ in range(10):
-            sampler = EnumerateSampler()
-            model = raw_model
-            for mutator in mutators:
-                model = mutator.bind_sampler(sampler).apply(model)
-            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 10]))
