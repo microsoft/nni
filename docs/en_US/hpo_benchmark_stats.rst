@@ -4,12 +4,26 @@ HPO Benchmark Example Statistics
 A Benchmark Example
 ^^^^^^^^^^^^^^^^^^^
 
-As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE", "Random", "Anneal", "Evolution", "SMAC",
-"GPTuner", "MetisTuner", "DNGOTuner". As some of the tasks contains a considerable amount of training data, it took about
-2 days to run the whole benchmark on one tuner. For a more detailed description of the tasks, please check
-``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``.
-For binary and multi-class classification tasks, the metric "auc" and "logloss" were used for evaluation, while for
-regression, "r2" and "rmse" were used.
+As an example, we ran the "nnismall" benchmark with the random forest search space on the following 8 tuners: "TPE",
+"Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner". For convenience of reference, we also list
+the search space we experimented on here. Note that the way in which the search s[ace is written may significantly affect
+hyperparameter optimization performance, and we plan to conduct further experiments on how well NNI built-in tuners adapt
+to different search space formulations using this benchmarking tool.
+
+.. code-block:: json
+
+   {
+       "n_estimators": {"_type":"randint", "_value": [8, 512]},
+       "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
+       "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
+       "min_samples_split": {"_type":"randint", "_value": [2, 16]},
+       "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                    # 0 for None
+    }
+
+As some of the tasks contains a considerable amount of training data, it took about 2 days to run the whole benchmark on
+one tuner. For a more detailed description of the tasks, please check
+``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``. For binary and multi-class
+classification tasks, the metric "auc" and "logloss" were used for evaluation, while for regression, "r2" and "rmse" were used.
 
 After the script finishes, the final scores of each tuner are summarized in the file ``results[time]/reports/performances.txt``.
 Since the file is large, we only show the following screenshot and summarize other important statistics instead.
