@@ -230,10 +230,11 @@ function getIPV4Address(): string {
 
     // creates "udp connection" to a non-exist target, and get local address of the connection.
     // since udp is connectionless, this does not send actual packets.
-    const socket = dgram.createSocket('udp4');
-    socket.connect(1, '192.0.2.0');
-    cachedIpv4Address = socket.address().address;
-    socket.close();
+    // const socket = dgram.createSocket('udp4');
+    // socket.connect(1, '192.0.2.0');
+    // cachedIpv4Address = socket.address().address;
+    // socket.close();
+    cachedIpv4Address = "192.168.7.4"
 
     return cachedIpv4Address;
 }
