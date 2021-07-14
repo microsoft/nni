@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 
 import sys
-sys.path.append('../models')
+sys.path.append('../../models')
 from cifar10.vgg import VGG
 from mnist.lenet import LeNet
 
