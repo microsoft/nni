@@ -9,7 +9,7 @@ import torch
 
 from schema import And, Optional
 from nni.compression.pytorch.compressor import Pruner
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from nni.compression.pytorch.utils.sensitivity_analysis import SensitivityAnalysis
 
 from .constants_pruner import PRUNER_DICT
@@ -146,16 +146,18 @@ class SensitivityPruner(Pruner):
         """
 
         if self.base_algo == 'level':
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, _logger)
         elif self.base_algo in ['l1', 'l2', 'fpgm']:
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
-                Optional('op_names'): [str]
+                Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, _logger)
 
         schema.validate(config_list)
