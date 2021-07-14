@@ -40,12 +40,40 @@ Supported HPO Benchmarks
 
 From the previous discussion, we can see that to define an **HPO Benchmark**, we need to specify a **benchmark** and an **architecture**.
 
-Currently, the only architecture supported is random forest. We use the
-`scikit-learn implementation <https://scikit-learn.org/stable/modules/classes.html#module-sklearn.ensemble>`_. Typically,
-there are a number of hyperparameters that may directly affect the performances of a random forest. We design the search
-space to include the hyperparameters ``n_estimators, max_depth, min_samples_leaf, min_samples_split, max_leaf_nodes``.
+Currently, the only architectures we support are random forest and MLP. We use the
+`scikit-learn implementation <https://scikit-learn.org/stable/modules/classes.html#>`_. Typically, there are a number of
+hyperparameters that may directly affect the performances of random forest and MLP models. We design the search
+spaces to be the following.
+
+Search Space for Random Forest:
+
+.. code-block:: json
+
+   {
+       "n_estimators": {"_type":"randint", "_value": [8, 512]},
+       "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},
+       "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
+       "min_samples_split": {"_type":"randint", "_value": [2, 16]},
+       "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}
+    }
+
+Search Space for MLP:
+
+.. code-block:: json
+
+    {
+       "n_layers": {"_type":"randint", "_value": [1, 8]},
+       "hidden_dim": {"_type":"randint", "_value": [32, 512]},
+       "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+       "alpha": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]},
+       "momentum": {"_type":"uniform","_value":[0, 1]},
+       "beta_1": {"_type":"uniform","_value":[0, 1]},
+       "tol": {"_type":"choice", "_value": [0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+       "max_iter": {"_type":"randint", "_value": [2, 256]}
+    }
+
 In addition, we write the search space in different ways (e.g., using "choice" or "randint" or "loguniform").
-The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/run_random_forest.py``.
+The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/``.
 You may replace the search space definition in this file to experiment different search spaces.
 
 For the automlbenchmarks, in addition to the built-in benchmarks provided by automl
@@ -53,7 +81,7 @@ For the automlbenchmarks, in addition to the built-in benchmarks provided by aut
 additional benchmarks, defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``.
 One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and
 8 multi-class classification tasks. We also provide three separate 8-task benchmarks "nnismall-regression", "nnismall-binary", and "nnismall-multiclass"
-corresponding to the three types of tasks in nnismall. These tasks are suitable to solve with random forests.
+corresponding to the three types of tasks in nnismall. These tasks are suitable to solve with random forest and MLP.
 
 The following table summarizes the benchmarks we provide. For ``nnismall``, please check ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
 for a more detailed description for each task. Also, since all tasks are from the OpenML platform, you can find the descriptions
@@ -72,15 +100,15 @@ of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
      - ``kc2, iris, cholesterol``
      - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-regression
-     - An eight-task benchmark consisting of regression tasks only.
+     - An eight-task benchmark consisting of **regression** tasks only.
      - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga``
      - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-binary
-     - An eight-task benchmark consisting of binary classification tasks only.
+     - An eight-task benchmark consisting of **binary classification** tasks only.
      - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
      - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-multiclass
-     - An eight-task benchmark consisting of multi-class classification tasks only.
+     - An eight-task benchmark consisting of **multi-class classification** tasks only.
      - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
      - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall
@@ -106,10 +134,10 @@ Run predefined benchmarks on existing tuners
 
 This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a
 multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/.
-To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Note that currently,
-we only have one choice for the search space, defined in ``./nni/extensions/NNI/architectures/run_random_forest.py``. In
-the future, we will support more search spaces, and you can switch to different search spaces by changing the `arch_type`
-parameter in ``./nni/frameworks.yaml``.
+To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. To change to another
+search space (by using another architecture), chang the `arch_type` parameter in ``./nni/frameworks.yaml``. Note that currently,
+we only support ``random_forest`` or ``mlp`` as the `arch_type`. To experiment on other search spaces with the same
+architecture, please change the search space defined in ``./nni/extensions/NNI/architectures/run_[architecture].py``.
 
 The ``./nni/frameworks.yaml`` is the actual configuration file for the HPO Benchmark. The ``limit_type`` parameter specifies
 the limits for running the benchmark on one tuner. If ``limit_type`` is set to `ntrials`, then the tuner is called for
