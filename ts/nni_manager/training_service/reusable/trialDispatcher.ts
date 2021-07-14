@@ -216,7 +216,7 @@ class TrialDispatcher implements TrainingService {
         for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
-            runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? getIPV4Address() : this.config.nniManagerIp;
+            runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? await getIPV4Address() : this.config.nniManagerIp;
             runnerSettings.nniManagerPort = getBasePort() + 1;
             runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;

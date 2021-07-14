@@ -277,7 +277,7 @@ abstract class KubernetesTrainingService {
         if (gpuNum === 0) {
             nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : await getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const runScript: string = String.Format(
             kubernetesScriptFormat,
