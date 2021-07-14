@@ -364,6 +364,7 @@ class SpeedupTestCase(TestCase):
         # Note: hack trick, may be updated in the future
         if 'win' in sys.platform or 'Win'in sys.platform:
             print('Skip test_speedup_integration on windows due to memory limit!')
+            return
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
         # for model_name in ['vgg16', 'resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
