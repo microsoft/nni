@@ -52,7 +52,12 @@ class PrunerModuleWrapper(Module):
             self.module.bias.data = self.module.bias.data.mul_(self.bias_mask)
         return self.module(*inputs)
 
+
 class Pruner(Compressor):
+    """
+    The abstract class for pruning algorithm. Inherit this class and implement the `_reset_tools` to customize a pruner.
+    """
+
     def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
         super().reset(model=model, config_list=config_list)
         self.data_collector: Optional[DataCollector] = None
@@ -61,6 +66,11 @@ class Pruner(Compressor):
         self._reset_tools()
 
     def _reset_tools(self):
+        """
+        This function is used to reset `self.data_collector`, `self.metrics_calculator` and `self.sparsity_allocator`.
+        The subclass need implement this function to complete the pruning process.
+        See `compress()` to understand how NNI use these three part to generate mask for the bound model.
+        """
         raise NotImplementedError()
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
@@ -90,24 +100,34 @@ class Pruner(Compressor):
                 setattr(wrappers[name], mask_type, mask)
 
     def compress(self) -> Tuple[Module, Dict]:
+        """
+        Used to generate the mask. Pruning process is divided in three stages.
+        `self.data_collector` collect the data used to calculate the specify metric.
+        `self.metrics_calculator` calculate the metric and `self.sparsity_allocator` generate the mask depend on the metric.
+
+        Returns
+        -------
+        Tuple[Module, Dict]
+            Return the wrapped model and mask.
+        """
         data = self.data_collector.collect()
-        _logger.info('Collected Data:\n%s', data)
+        _logger.debug('Collected Data:\n%s', data)
         metrics = self.metrics_calculator.calculate_metrics(data)
-        _logger.info('Metrics Calculate:\n%s', metrics)
+        _logger.debug('Metrics Calculate:\n%s', metrics)
         masks = self.sparsity_allocator.generate_sparsity(metrics)
-        _logger.info('Masks:\n%s', masks)
+        _logger.debug('Masks:\n%s', masks)
         self.load_masks(masks)
         return self.bound_model, masks
 
     # NOTE: need refactor dim with supporting list
-    def show_pruned_weights(self, dim=0):
+    def show_pruned_weights(self, dim: int = 0):
         """
         Log the simulated prune sparsity.
 
         Parameters
         ----------
-        dim : int
-            the pruned dim.
+        dim
+            The pruned dim.
         """
         for _, wrapper in self._get_modules_wrapper().items():
             weight_mask = wrapper.weight_mask

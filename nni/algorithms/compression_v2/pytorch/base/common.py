@@ -223,6 +223,31 @@ class MetricsCalculator:
     An abstract class for calculate a kind of metrics of the given data.
     """
     def __init__(self, dim: Optional[Union[int, List[int]]] = None):
+        """
+        Parameters
+        ----------
+        dim
+            The dimensions that corresponding to the under pruning weight dimensions in collected data.
+            None means one-to-one correspondence between pruned dimensions and data, which equal to set `dim` as all data dimensions.
+            Only these `dim` will be kept and other dimensions of the data will be reduced.
+
+            Example:
+
+            If you want to prune the Conv2d weight in filter level, and the weight size is (32, 16, 3, 3) [out-channel, in-channel, kernal-size-1, kernal-size-2].
+            Then the under pruning dimensions is [0], which means you want to prune the filter or out-channel.
+
+                Case 1: Directly collect the conv module weight as data to calculate the metric.
+                Then the data has size (32, 16, 3, 3).
+                Mention that the dimension 0 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=0` will set in `__init__`.
+
+                Case 2: Use the output of the conv module as data to calculate the metric.
+                Then the data has size (batch_num, 32, feature_map_size_1, feature_map_size_2).
+                Mention that the dimension 1 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=1` will set in `__init__`.
+
+            In both of these two case, the metric of this module has size (32,).
+        """
         self.dim = dim if not isinstance(dim, int) else [dim]
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
@@ -239,7 +264,7 @@ class MetricsCalculator:
         -------
         Dict[str, Tensor]
             The key is the layer_name, value is the metric.
-            Note that the metric has the same size with the `dim`
+            Note that the metric has the same size with the data size on `dim`.
         """
         raise NotImplementedError()
 
@@ -256,7 +281,16 @@ class SparsityAllocator:
         pruner
             The pruner that binded with this `SparsityAllocator`.
         dim
-            The dimensions that corresponding to the metric, None means one-to-one correspondence.
+            The under pruning weight dimensions, which metric size should equal to the under pruning weight size on these dimensions.
+            None means one-to-one correspondence between pruned dimensions and metric, which equal to set `dim` as all under pruning weight dimensions.
+            The mask will expand to the weight size depend on `dim`.
+
+            Example:
+
+            The under pruning weight has size (2, 3, 4), and `dim=1` means the under pruning weight dimension is 1.
+            Then the metric should have a size (3,), i.e., `metric=[0.9, 0.1, 0.8]`.
+            Assuming by some kind of `SparsityAllocator` get the mask on weight dimension 1 `mask=[1, 0, 1]`,
+            then the dimension mask will expand to the final mask `[[[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]], [[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]]]`.
         """
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
@@ -274,6 +308,19 @@ class SparsityAllocator:
         raise NotImplementedError()
 
     def _expand_mask_with_dim(self, name: str, mask: Tensor) -> Dict[str, Tensor]:
+        """
+        Parameters
+        ----------
+        name
+            The masked module name.
+        mask
+            The dimension mask on `dim` of the weight.
+
+        Returns
+        -------
+        Dict[str, Tensor]
+            The key is `weight_mask` or `bias_mask`, value is the final mask.
+        """
         wrapper = self.pruner._get_modules_wrapper()[name]
         weight_size = wrapper.module.weight.data.size()
         if self.dim is None:
