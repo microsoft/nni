@@ -2,7 +2,7 @@
 
 -f https://download.pytorch.org/whl/torch_stable.html
 tensorflow
-keras
+keras == 2.4.3
 torch == 1.9.0+cpu ; sys_platform != "darwin"
 torch == 1.9.0 ; sys_platform == "darwin"
 torchvision == 0.10.0+cpu ; sys_platform != "darwin"
