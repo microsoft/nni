@@ -29,7 +29,7 @@ jobs:
   - script: |
       set -e
       sudo apt-get install swig -y
-      python3 -m pip install -r dependencies/recommended.txt
+      python3 -m pip install -r dependencies/recommended_gpu.txt
       python3 -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
     displayName: Install extra dependencies
 
