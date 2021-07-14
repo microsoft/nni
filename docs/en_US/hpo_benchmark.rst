@@ -65,28 +65,28 @@ of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
 
    * - Benchmark name
      - Description
-     - Location
      - Task List
+     - Location
    * - nnivalid
      - A three-task benchmark to validate benchmark installation.
-     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``kc2, iris, cholesterol``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-regression
      - An eight-task benchmark consisting of regression tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-binary
      - An eight-task benchmark consisting of binary classification tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall-multiclass
      - An eight-task benchmark consisting of multi-class classification tasks only.
-     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
    * - nnismall
      - A 24-task benchmark that is the superset of nnismall-regression, nnismall-binary, and nnismall-multiclass.
-     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
      - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga, Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine, car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
 
 Setup
 ^^^^^
