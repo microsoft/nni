@@ -585,9 +585,12 @@ class GraphConverter:
                 script_cand = script_module._modules[cand_name]
                 cand_name = build_cand_name(cand_name, module.label)
                 candidate_name_list.append(cand_name)
-                cand_type = '__torch__.' + get_importable_name(cand.__class__)
-                graph.add_node(cand_name, cand_type, get_init_parameters_or_fail(cand, silently=True))
-                self._convert_module(script_cand, cand, cand_name, ir_model)
+                subgraph, attrs = self._convert_module(script_cand, cand, cand_name, ir_model)
+                if subgraph is not None:
+                    graph.add_node(subgraph.name, Cell(cell_name=subgraph.name, parameters=attrs))
+                else:
+                    cand_type = '__torch__.' + get_importable_name(cand.__class__)
+                    graph.add_node(cand_name, cand_type, attrs)
             graph._register()
             return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': candidate_name_list}
         elif original_type_name == OpTypeName.InputChoice:
