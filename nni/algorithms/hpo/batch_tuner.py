@@ -9,6 +9,7 @@ batch_tuner.py including:
 import logging
 
 import nni
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 
 TYPE = '_type'
@@ -75,6 +76,7 @@ class BatchTuner(Tuner):
         ----------
         search_space : dict
         """
+        validate_search_space(search_space, ['choice'])
         self._values = self.is_valid(search_space)
 
     def generate_parameters(self, parameter_id, **kwargs):

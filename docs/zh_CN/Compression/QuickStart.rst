@@ -7,7 +7,7 @@
     教程 <Tutorial>
 
 
-模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供非常简单的 API。 遵循本指南，快速了解如何使用 NNI 压缩模型。 
+模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供非常简单的 API。 遵循本指南，快速了解如何使用 NNI 压缩模型。 NNI 主要关注于第二阶段，并为模型压缩提供非常简单的 API。 恭喜！ 您已经通过 NNI 压缩了您的第一个模型。 更深入地了解 NNI 中的模型压缩，请查看 `Tutorial <./Tutorial.rst>`__。 
 
 模型剪枝
 -------------
@@ -17,7 +17,7 @@
 Step1. 编写配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-编写配置来指定要剪枝的层。 以下配置表示剪枝所有的 ``default`` 操作，稀疏度设为 0.5，其它层保持不变。
+编写配置来指定要剪枝的层。以下配置表示剪枝所有的 ``default`` 操作，稀疏度设为 0.5，其它层保持不变。
 
 .. code-block:: python
 
@@ -26,7 +26,7 @@ Step1. 编写配置
        'op_types': ['default'],
    }]
 
-配置说明在 `这里 <./Tutorial.rst#specify-the-configuration>`__。 注意，不同的 Pruner 可能有自定义的配置字段，例如，AGP Pruner 有 ``start_epoch``。 详情参考每个 Pruner 的 `用法 <./Pruner.rst>`__，来调整相应的配置。
+配置说明在 `这里 <./Tutorial.rst#quantization-specific-keys>`__。 注意，不同的 Pruner 可能有自定义的配置字段，例如，AGP Pruner 有 ``start_epoch``。 详情参考每个 Pruner 的 `用法 <./Pruner.rst>`__，来调整相应的配置。
 
 Step2. 选择 Pruner 来压缩模型
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -37,7 +37,6 @@ Step2. 选择 Pruner 来压缩模型
 
    from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
-   optimizer_finetune = torch.optim.SGD(model.parameters(), lr=0.01)
    pruner = LevelPruner(model, config_list, optimizer_finetune)
    model = pruner.compress()
 
@@ -54,7 +53,7 @@ Step2. 选择 Pruner 来压缩模型
         train(args, model, device, train_loader, optimizer_finetune, epoch)
         test(model, device, test_loader)
 
-更多关于微调的 API 在 `这里 <./Tutorial.rst#apis-to-control-the-fine-tuning>`__。 
+更多关于微调的 API 在 `这里 <./Tutorial.rst#api>`__。 
 
 
 Step3. 导出压缩结果
@@ -110,12 +109,11 @@ Step2. 选择 Quantizer 来压缩模型
 Step3. 导出压缩结果
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-您可以使用 ``torch.save`` api 直接导出量化模型。量化后的模型可以通过 ``torch.load`` 加载，不需要做任何额外的修改。
+在训练和校准之后，你可以将模型权重导出到一个文件，并将生成的校准参数也导出到一个文件。 也支持导出 ONNX 模型。
 
 .. code-block:: python
 
-   # 保存使用 NNI QAT 算法生成的量化模型
-   torch.save(model.state_dict(), "quantized_model.pth")
+   calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
 
 参考 :githublink:`mnist example <examples/model_compress/quantization/QAT_torch_quantizer.py>` 获取示例代码。
 

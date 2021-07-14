@@ -16,6 +16,7 @@ from schema import Schema, Optional
 
 from nni import ClassArgsValidator
 from nni.tuner import Tuner
+from nni.common.hpo_utils import validate_search_space
 from nni.utils import OptimizeMode, extract_scalar_reward
 from . import lib_constraint_summation
 from . import lib_data
@@ -152,6 +153,8 @@ class MetisTuner(Tuner):
         ----------
         search_space : dict
         """
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform'])
+
         self.x_bounds = [[] for i in range(len(search_space))]
         self.x_types = [NONE_TYPE for i in range(len(search_space))]
 

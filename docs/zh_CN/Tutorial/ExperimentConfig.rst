@@ -1,5 +1,7 @@
-Experiment（实验）配置参考
-===========================
+Experiment 配置（遗产）
+====================================
+
+这是上一个版本（V1）的实验配置规范。 目前仍然支持，但我们建议用户使用 `新版实验配置（V2） <../reference/experiment_config.rst>`_。
 
 创建 Experiment 所需要的配置文件。 配置文件的路径会传入 ``nnictl`` 命令。
 配置文件的格式为 YAML。
@@ -295,7 +297,7 @@ trainingServicePlatform
   **pai**  提交到微软开源的 `OpenPAI <https://github.com/Microsoft/pai>`__ 上。 更多 OpenPAI 配置，参考 `PAI 模式指南 <../TrainingService/PaiMode.rst>`__。
 
 * 
-  **kubeflow** 提交任务到 `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持基于 kubernetes 的 kubeflow，以及 `azure kubernetes <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__。 详情参考 `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__。
+  **kubeflow** 提交任务到 `kubeflow <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持基于 kubernetes 的 kubeflow，以及 `azure kubernetes <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__。 详情参考 `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__。 详情参考 `Kubeflow Docs <../TrainingService/KubeflowMode.rst>`__。
 
 * 
   **adl** 提交任务到 `AdaptDL <https://www.kubeflow.org/docs/about/kubeflow/>`__\ , NNI 支持 Kubernetes 集群上的 AdaptDL。 详情参考 `AdaptDL Docs <../TrainingService/AdaptDLMode.rst>`__。
@@ -363,7 +365,7 @@ tuner
 
 必填。
 
-指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 另一种方法，是使用用户自定义的 Tuner，需要设置 **codeDirectory**\ , **classFileName**\ , **className** 和 **classArgs**。 *必须选择其中的一种方式。*
+指定了 Experiment 的 Tuner 算法。有两种方法可设置 Tuner。 一种方法是使用 NNI SDK 提供的内置 Tuner，在这种情况下，需要设置 **builtinTunerName** 和 **classArgs**。 如果使用定制 Tuner，则为必需。 相对于 **codeDir** 的文件路径。 *必须选择其中的一种方式。*
 
 builtinTunerName
 ^^^^^^^^^^^^^^^^
@@ -468,7 +470,7 @@ Advisor
 builtinAdvisorName
 ^^^^^^^^^^^^^^^^^^
 
-指定内置 Advisor 的名称。 NNI SDK 提供了 `BOHB <../Tuner/BohbAdvisor.rst>`__ 和 `Hyperband <../Tuner/HyperbandAdvisor.rst>`__ 。
+指定内置 Advisor 的名称。 指定内置 Advisor 的名称。 NNI SDK 提供了 `BOHB <../Tuner/BohbAdvisor.rst>`__ 和 `Hyperband <../Tuner/HyperbandAdvisor.rst>`__ 。
 
 codeDir
 ^^^^^^^
@@ -838,28 +840,28 @@ localMountPoint
 
 必填。 字符串。
 
-已经或将要在本地挂载存储的绝对路径。
+已经或将要在本地挂载存储的绝对路径。 如果路径不存在，则会自动创建。 建议使用绝对路径。 =========================== ``/tmp/nni-shared-storage``
 
 remoteMountPoint
 ^^^^^^^^^^^^^^^^
 
 必填。 字符串。
 
-远程挂载存储的绝对路径。
+远程挂载存储的绝对路径。 如果路径不存在，则会自动创建。 请注意，如果使用 AzureBlob，该目录必须为空。 建议使用相对路径。 即， ``./nni-shared-storage``
 
 localMounted
 ^^^^^^^^^^^^
 
 必填。 字符串。
 
-``usermount``、``nnimount`` 和 ``nomount`` 其中之一。 ``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 nni 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。
+``usermount``、``nnimount`` 和 ``nomount`` 其中之一。 ``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 nni 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。 ``usermount`` 表示已经在 localMountPoint 上挂载了此存储。 ``nnimount`` 表示 nni 将尝试在 localMountPoint 上挂载此存储。 ``nomount`` 表示存储不会挂载在本地机器上，将在未来支持部分存储。
 
 nfsServer
 ^^^^^^^^^
 
 可选。 字符串。
 
-如果使用 NFS 存储，则必需。 NFS 服务器的 host。
+如果使用 NFS 存储，则必需。 NFS 服务器的 host。 如果使用 NFS 存储，则必需。 NFS 服务器的导出目录。
 
 exportedDirectory
 ^^^^^^^^^^^^^^^^^
@@ -873,21 +875,21 @@ storageAccountName
 
 可选。 字符串。
 
-如果使用 AzureBlob 存储，则必需。 Azure 存储账户名。
+如果使用 AzureBlob 存储，则必需。 AzureBlob 容器名。 如果使用 AzureBlob 存储且 ``resourceGroupName`` 未设置，则必需。 Azure 存储账户密钥。
 
 storageAccountKey
 ^^^^^^^^^^^^^^^^^
 
 可选。 字符串。
 
-如果使用 AzureBlob 存储且 ``resourceGroupName`` 未设置，则必需。 Azure 存储账户密钥。
+如果使用 AzureBlob 存储且 ``storageAccountKey`` 未设置，则必需。 AzureBlob 容器所属的资源组。 Azure 存储账户密钥。
 
 resourceGroupName
 ^^^^^^^^^^^^^^^^^
 
 可选。 字符串。
 
-如果使用 AzureBlob 存储且 ``storageAccountKey`` 未设置，则必需。 AzureBlob 容器所属的资源组。
+如果使用 Azure 存储，则必需。 1 到 99999 之间的整数。 AzureBlob 容器所属的资源组。
 
 containerName
 ^^^^^^^^^^^^^
