@@ -1,0 +1,47 @@
+experimentName: example_pix2pix 
+searchSpace:
+  ngf:
+    _type: choice
+    _value: [16, 32, 64, 128]
+  ndf:
+    _type: choice
+    _value: [16, 32, 64, 128]
+  netG:
+    _type: choice
+    _value: ["unet_256", "resnet_9blocks"]
+  netD:
+    _type: choice
+    _value: ["basic", "pixel", "n_layers"]
+  norm:
+    _type: choice
+    _value: ["batch", "instance", "none"]
+  init_type:
+    _type: choice
+    _value: ["xavier", "normal", "kaiming", "orthogonal"]
+  lr:
+    _type: choice
+    _value: [0.0001, 0.0002, 0.0005, 0.001, 0.005, 0.01, 0.1]
+  beta1:
+    _type: uniform
+    _value: [0, 1]
+  lr_policy:
+    _type: choice
+    _value: ["linear", "step", "plateau", "cosine"]
+  gan_mode:
+    _type: choice
+    _value: ["vanilla", "lsgan", "wgangp"]
+  lambda_L1:
+    _type: choice
+    _value: [1, 5, 10, 100, 250, 500]
+trainingService:
+  platform: local
+  useActiveGpu: true
+  gpuIndices: '0'
+trialCodeDirectory: .
+trialCommand: python3 pix2pix.py
+trialConcurrency: 1
+trialGpuNumber: 1
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: minimize

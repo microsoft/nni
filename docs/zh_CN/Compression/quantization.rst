@@ -8,10 +8,11 @@
 可以使用8位整数表示， 更低的比特位数，例如4/2/1比特，
 是否能够表示权重也是目前非常活跃的研究方向。
 
-一个 Quantizer 是指一种 NNI 实现的量化算法，NNI 提供了多个 Quantizer，如下所示。 你也可以
+一个 Quantizer 是指一种 NNI 实现的量化算法，NNI 提供了多个 Quantizer，如下所示。你也可以
 使用 NNI 模型压缩的接口来创造你的 Quantizer。
 
 ..  toctree::
     :maxdepth: 2
 
     Quantizers <Quantizer>
+    量化加速 <QuantizationSpeedup>

@@ -24,6 +24,8 @@ The simplest way to customize a new evaluator is with functional APIs, which is 
 
 .. note:: Due to our current implementation limitation, the ``fit`` function should be put in another python file instead of putting it in the main file. This limitation will be fixed in future release.
 
+.. note:: When using customized evaluators, if you want to visualize models, you need to export your model and save it into ``$NNI_OUTPUT_DIR/model.onnx`` in your evaluator.
+
 With PyTorch-Lightning
 ----------------------
 

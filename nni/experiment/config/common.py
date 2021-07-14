@@ -65,6 +65,7 @@ class ExperimentConfig(ConfigBase):
     trial_gpu_number: Optional[int] = None  # TODO: in openpai cannot be None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
+    max_trial_duration: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     use_annotation: bool = False
     debug: bool = False
@@ -153,6 +154,7 @@ _validation_rules = {
     'trial_gpu_number': lambda value: value >= 0,
     'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
+    'max_trial_duration': lambda value: util.parse_time(value) > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'tuner_gpu_indices': lambda value: all(i >= 0 for i in value) and len(value) == len(set(value)),
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')

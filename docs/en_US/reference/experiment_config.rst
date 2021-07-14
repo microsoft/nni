@@ -214,6 +214,20 @@ type: ``Optional[int]``
 When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
 
 
+maxTrialDuration
+---------------------
+
+Limit the duration of trial job if specified.
+
+type: ``Optional[str]``
+
+format: ``number + s|m|h|d``
+
+examples: ``"10m"``, ``"0.5h"``
+
+When time runs out, the current trial job will stop.
+
+
 nniManagerIp
 ------------
 
@@ -819,7 +833,7 @@ If the path does not exist, it will be created automatically. Recommended to use
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+The path that the storage will be mounted in the remote machine.
 
 type: ``str``
 
@@ -876,7 +890,7 @@ If the path does not exist, it will be created automatically. Recommended to use
 remoteMountPoint
 """"""""""""""""
 
-The path that the storage will be mounted in the remote achine.
+The path that the storage will be mounted in the remote machine.
 
 type: ``str``
 
