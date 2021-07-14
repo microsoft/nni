@@ -21,7 +21,8 @@ from amlb.results import save_predictions_to_file
 
 
 SEARCH_SPACE = {
-    "hidden_layer_sizes": {"_type":"choice", "_value": [(100), (100, 100), (100, 100, 100)]},
+    "n_layers": {"_type":"randint", "_value": [1, 8]},
+    "hidden_dim": {"_type":"randint", "_value": [32, 512]},
     "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
     "alpha": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]},
     "momentum": {"_type":"uniform","_value":[0, 1]},
@@ -104,6 +105,11 @@ def run_mlp(dataset, config, tuner, log):
                 
                 if 'TRIAL_BUDGET' in cur_params:
                     train_params.pop('TRIAL_BUDGET')
+
+                # convert n_layers and hidden_dim into the hidden_layer_sizes for sklearn MLP
+                train_params.pop('n_layers')
+                train_params.pop('hidden_dim')
+                train_params['hidden_layer_sizes'] = tuple(cur_params['hidden_dim'] for _ in range(cur_params['n_layers']))                
                     
                 log.info("Trial {}: \n{}\n".format(param_idx, train_params))
                 
