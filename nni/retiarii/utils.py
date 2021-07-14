@@ -67,6 +67,10 @@ def get_importable_name(cls, relocate_module=False):
     return module_name + '.' + cls.__name__
 
 
+class NoContextError(Exception):
+    pass
+
+
 class ContextStack:
     """
     This is to maintain a globally-accessible context envinronment that is visible to everywhere.
@@ -98,7 +102,8 @@ class ContextStack:
 
     @classmethod
     def top(cls, key: str) -> Any:
-        assert cls._stack[key], 'Context is empty.'
+        if not cls._stack[key]:
+            raise NoContextError('Context is empty.')
         return cls._stack[key][-1]
 
 

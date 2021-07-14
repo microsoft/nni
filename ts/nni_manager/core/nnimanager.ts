@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -189,7 +189,6 @@ class NNIManager implements Manager {
         this.log.debug(`dispatcher command: ${dispatcherCommand}`);
         const checkpointDir: string = await this.createCheckpointDir();
         this.setupTuner(dispatcherCommand, undefined, 'start', checkpointDir);
-
         this.setStatus('RUNNING');
         await this.storeExperimentProfile();
         this.run().catch((err: Error) => {
@@ -403,8 +402,8 @@ class NNIManager implements Manager {
         // FIXME: unit test
     }
 
-    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
-        return this.trainingService.getTrialLog(trialJobId, logType);
+    public async getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string> {
+        return this.trainingService.getTrialFile(trialJobId, fileName);
     }
 
     public getExperimentProfile(): Promise<ExperimentProfile> {
@@ -431,6 +430,11 @@ class NNIManager implements Manager {
     private get maxTrialNum(): number {
         const value = this.experimentProfile.params.maxTrialNumber;
         return (value === undefined ? Infinity : value);
+    }
+
+    private get maxTrialDuration(): number {
+        const value = this.experimentProfile.params.maxTrialDuration;
+        return (value === undefined ? Infinity : toSeconds(value));
     }
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
@@ -537,6 +541,17 @@ class NNIManager implements Manager {
             this.dispatcher.sendCommand(PING);
             await delay(1000 * 5);
         }
+    }
+
+    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
+        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+        if(undefined !== trialJobDetail &&
+            trialJobDetail.status === 'RUNNING' &&
+            trialJobDetail.startTime !== undefined){
+                const isEarlyStopped = true;
+                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+            }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -662,6 +677,7 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
+                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);

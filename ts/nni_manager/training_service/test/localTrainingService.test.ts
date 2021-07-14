@@ -100,8 +100,8 @@ describe('Unit Test for LocalTrainingService', () => {
         fs.mkdirSync(jobDetail.workingDirectory)
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'trial.log'), 'trial log')
         fs.writeFileSync(path.join(jobDetail.workingDirectory, 'stderr'), 'trial stderr')
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_LOG')).to.be.equals('trial log');
-        chai.expect(await localTrainingService.getTrialLog(jobDetail.id, 'TRIAL_ERROR')).to.be.equals('trial stderr');
+        chai.expect(await localTrainingService.getTrialFile(jobDetail.id, 'trial.log')).to.be.equals('trial log');
+        chai.expect(await localTrainingService.getTrialFile(jobDetail.id, 'stderr')).to.be.equals('trial stderr');
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'trial.log'))
         fs.unlinkSync(path.join(jobDetail.workingDirectory, 'stderr'))
         fs.rmdirSync(jobDetail.workingDirectory)

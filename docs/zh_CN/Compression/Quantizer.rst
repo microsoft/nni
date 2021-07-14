@@ -8,6 +8,7 @@
 * `QAT Quantizer <#qat-quantizer>`__
 * `DoReFa Quantizer <#dorefa-quantizer>`__
 * `BNN Quantizer <#bnn-quantizer>`__
+* `LSQ Quantizer <#lsq-quantizer>`__
 
 Naive Quantizer
 ---------------
@@ -88,6 +89,61 @@ QAT Quantizer 的用户配置
 
 ----
 
+LSQ Quantizer
+-------------
+
+在 `可训练的步长量化 <https://arxiv.org/pdf/1902.08153.pdf>`__\ 中，作者 Steven K. Esser 和 Jeffrey L. McKinstry 提供一种算法来训练带有梯度的尺度。
+
+..
+
+   作者介绍了一种新颖的方法来估计和缩放每个权重和激活层的量化器步长的任务损失梯度，使得它可以与其他网络参数结合使用。
+
+
+用法
+^^^^^
+您可以在训练代码之前添加下面的代码。 必须完成三件事：
+
+
+1. 配置哪一层要被量化，以及该层的哪个张量（输入/输出/权重）要被量化。
+2. 构建 lsq quantizer
+3. 调用 `compress` API
+
+
+PyTorch 代码
+
+.. code-block:: python
+
+    from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+    model = Mnist()
+
+    configure_list = [{
+            'op_types': 'default'
+            'quant_bits': {
+                'weight': 8,
+                'input': 8,
+            },
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output': 8,},
+            'op_names': ['relu1']
+    }]
+
+    quantizer = LsqQuantizer(model, configure_list, optimizer)
+    quantizer.compress()
+
+查看示例了解更多信息 :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
+
+LSQ Quantizer 的用户配置
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+压缩算法的公共配置可在 `config_list 说明 <./QuickStart.rst>`__ 中找到。
+
+此算法所需的配置：
+
+
+----
+
 DoReFa Quantizer
 ----------------
 
@@ -106,7 +162,7 @@ PyTorch 代码
    config_list = [{ 
        'quant_types': ['weight'],
        'quant_bits': 8, 
-       'op_types': 'default' 
+       'op_types': ['default'] 
    }]
    quantizer = DoReFaQuantizer(model, config_list)
    quantizer.compress()
@@ -160,7 +216,7 @@ PyTorch 代码
 可以查看 :githublink:`示例 <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 了解更多信息。
 
 BNN Quantizer 的用户配置
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 压缩算法的公共配置可在 `config_list 说明 <./QuickStart.rst>`__ 中找到。
 
