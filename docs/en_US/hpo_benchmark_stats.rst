@@ -14,10 +14,10 @@ to different search space formulations using this benchmarking tool.
 
    {
        "n_estimators": {"_type":"randint", "_value": [8, 512]},
-       "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
+       "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},
        "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
        "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-       "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                    # 0 for None
+       "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}
     }
 
 As some of the tasks contains a considerable amount of training data, it took about 2 days to run the whole benchmark on
