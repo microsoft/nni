@@ -375,7 +375,7 @@ class TestPytorch(unittest.TestCase):
     # NOTE: torch script gets an incorrect graph...
     def test_optional_inputs_with_mixed_optionals(self):
         class MixedModel(nn.Module):
-            def forward(self, x: 'Tensor', y: 'Tensor', z: 'Tensor'):
+            def forward(self, x, y, z):
                 if y is not None:
                     return x + y
                 if z is not None:
