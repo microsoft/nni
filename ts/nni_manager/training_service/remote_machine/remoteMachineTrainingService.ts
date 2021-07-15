@@ -491,7 +491,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 cudaVisible = `CUDA_VISIBLE_DEVICES=" "`;
             }
         }
-        const nniManagerIp: string = this.config.nniManagerIp ? this.config.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.config.nniManagerIp ? this.config.nniManagerIp : await getIPV4Address();
         if (this.remoteRestServerPort === undefined) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;

@@ -1,0 +1,13 @@
+# Recommended because some non-commonly-used modules/examples depend on those packages.
+
+-f https://download.pytorch.org/whl/torch_stable.html
+tensorflow
+keras
+torch == 1.6.0
+torchvision == 0.7.0
+pytorch-lightning >= 1.1.1
+onnx
+peewee
+graphviz
+gym
+tianshou >= 0.4.1

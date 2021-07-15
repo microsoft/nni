@@ -9,3 +9,4 @@ Examples
     Cifar10<./TrialExample/Cifar10Examples>
     Scikit-learn<./TrialExample/SklearnExamples>
     GBDT<./TrialExample/GbdtExample>
+    Pix2pix<./TrialExample/Pix2pixExample>

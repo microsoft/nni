@@ -5,7 +5,7 @@ import logging
 import copy
 import torch
 from schema import And, Optional
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from .dependency_aware_pruner import DependencyAwarePruner
 
 __all__ = ['AGPPruner', 'ADMMPruner', 'SlimPruner', 'TaylorFOWeightFilterPruner', 'ActivationAPoZRankFilterPruner',
@@ -139,10 +139,11 @@ class AGPPruner(IterativePruner):
         config_list : list
             List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 <= n <= 1),
+        schema = PrunerSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 <= n <= 1),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -298,16 +299,18 @@ class ADMMPruner(IterativePruner):
         """
 
         if self._base_algo == 'level':
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
         elif self._base_algo in ['l1', 'l2', 'fpgm']:
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
-                Optional('op_names'): [str]
+                Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
 
         schema.validate(config_list)
@@ -437,10 +440,11 @@ class SlimPruner(IterativePruner):
         self.patch_optimizer_before(self._callback)
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+        schema = PrunerSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             'op_types': ['BatchNorm2d'],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)

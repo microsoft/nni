@@ -43,6 +43,7 @@ testCases:
       storageAccountName: nennistorage
       storageAccountKey: $(azureblob_token_test)
       containerName: sharedstorage
+  trainingService: remote
   validator:
     class: FileExistValidator
     kwargs:

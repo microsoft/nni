@@ -223,7 +223,7 @@ let cachedIpv4Address: string | null = null;
 /**
  * Get IPv4 address of current machine.
  */
-function getIPV4Address(): string {
+async function getIPV4Address(): Promise<string> {
     if (cachedIpv4Address !== null) {
         return cachedIpv4Address;
     }
@@ -232,10 +232,18 @@ function getIPV4Address(): string {
     // since udp is connectionless, this does not send actual packets.
     const socket = dgram.createSocket('udp4');
     socket.connect(1, '192.0.2.0');
-    cachedIpv4Address = socket.address().address;
+    for (let i = 0; i < 10; i++) {  // wait the system to initialize "connection"
+        await yield_();
+        try { cachedIpv4Address = socket.address().address; } catch (error) { /* retry */ }
+    }
+    cachedIpv4Address = socket.address().address;  // if it still fails, throw the error
     socket.close();
 
     return cachedIpv4Address;
+}
+
+async function yield_(): Promise<void> {
+    /* trigger the scheduler, do nothing */
 }
 
 /**
