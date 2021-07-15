@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import time
-from dataclasses import dataclass
 from typing import Iterable
 
 from ..graph import Model, ModelStatus

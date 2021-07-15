@@ -66,7 +66,7 @@ export class GpuScheduler {
                     requiredGPUNum = defaultRequiredGPUNum;
                 }
             } else if (constraint.type == 'GPUNumber') {
-                let gpus = constraint.gpus as Array<number>;
+                const gpus = constraint.gpus as Array<number>;
                 if (gpus.length != 1) {
                     throw new Error("Placement constraint of GPUNumber must have exactly one number.");
                 }
@@ -110,11 +110,10 @@ export class GpuScheduler {
             };
         } else {
             assert(constraint.type === 'Device')
-            var requiredEnvironments: EnvironmentInformation[];
             if (constraint.gpus.length == 0) {
                 throw new Error("Device constraint is used but no device is specified.");
             }
-            let gpus = constraint.gpus as Array<[string, number]>;
+            const gpus = constraint.gpus as Array<[string, number]>;
             const selectedHost = gpus[0][0];
 
             const hostsOfConstraint: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedHost);
@@ -135,9 +134,9 @@ export class GpuScheduler {
             if (eligibleEnvironments.length === 0) {
                 throw new Error(`The the required host (host: ${selectedHost}) is not found.`);
             }
-            let selectedEnvironment = eligibleEnvironments[0];
-            let availableResources = this.gpuResourceDetection([selectedEnvironment]);
-            var selectedGPUs: Array<GPUInfo> = [];
+            const selectedEnvironment = eligibleEnvironments[0];
+            const availableResources = this.gpuResourceDetection([selectedEnvironment]);
+            let selectedGPUs: Array<GPUInfo> = [];
 
             if (selectedEnvironment.defaultGpuSummary === undefined) {
                 //GPU summary may not be ready, retry until it is ready
@@ -147,14 +146,14 @@ export class GpuScheduler {
                     environment: undefined,
                 };
             }
-            for (let gpuTuple of gpus) {
+            for (const gpuTuple of gpus) {
                 const gpuIdx: number = gpuTuple[1];
                 if (gpuIdx >= selectedEnvironment.defaultGpuSummary.gpuCount) {
                     throw new Error(`The gpuIdx of placement constraint ${gpuIdx} exceeds gpuCount of the host ${selectedHost}`);
                 }
 
                 if (availableResources.has(selectedEnvironment)) {
-                    for (let gpuInfo of availableResources.get(selectedEnvironment)!) {
+                    for (const gpuInfo of availableResources.get(selectedEnvironment)!) {
                         if (gpuInfo.index === gpuIdx) {
                             selectedGPUs.push(gpuInfo);
                         }
@@ -162,7 +161,7 @@ export class GpuScheduler {
                 }
             }
             if (selectedGPUs.length === constraint.gpus.length) {
-                for (let gpuInfo of selectedGPUs) {
+                for (const gpuInfo of selectedGPUs) {
                     let num = selectedEnvironment.defaultGpuSummary?.assignedGpuIndexMap.get(gpuInfo.index);
                     if (num === undefined) {
                         num = 0;
