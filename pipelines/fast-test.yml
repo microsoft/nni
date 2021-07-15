@@ -173,12 +173,6 @@ stages:
         python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
-
     - script: |
         set -e
         cd test
@@ -368,12 +362,6 @@ stages:
         python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
-
     - script: |
         cd test
         python -m pytest ut
@@ -433,12 +421,6 @@ stages:
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         cd test
