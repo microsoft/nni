@@ -194,17 +194,19 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+        
+        devices = self._construct_devices()
 
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine(devices = self.config.devices)
+            engine = BaseExecutionEngine(devices = devices)
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
             engine = CGOExecutionEngine()
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine(devices = self.config.devices)
+            engine = PurePythonExecutionEngine(devices = devices)
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -242,6 +244,14 @@ class RetiariiExperiment(Experiment):
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
         exp_status_checker.join()
+    
+    def _construct_devices(self):
+        devices = []
+        if hasattr(self.config.training_service, "machine_list"):
+            for m in self.config.training_service.machine_list:
+                for gpu in m.gpu_indices:
+                    devices.append(GPUDevice(m.host, gpu))
+        return devices
 
     def _create_dispatcher(self):
         return self._dispatcher

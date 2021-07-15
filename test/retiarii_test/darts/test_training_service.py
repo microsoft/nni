@@ -59,9 +59,7 @@ if __name__ == '__main__':
     rm_conf.max_trial_number_per_gpu = 3
     
     exp_config.training_service.machine_list = [rm_conf]
-
-    exp_config.devices = [GPUDevice(0,0), GPUDevice(0,1), GPUDevice(0,2)] #TODO: str instead of instance
-    # TODO: build on reusable training service
+    
     exp_config.execution_engine = 'py'
 
     exp.run(exp_config, 8081)
