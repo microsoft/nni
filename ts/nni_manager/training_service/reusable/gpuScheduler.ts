@@ -55,7 +55,8 @@ export class GpuScheduler {
      * Schedule a machine according to the constraints (requiredGPUNum)
      * @param defaultRequiredGPUNum the default required GPU number when constraint.type === 'None'
      */
-    public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint, defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
+    public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint,
+        defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
         if (constraint.type == 'None' || constraint.type == 'GPUNumber') {
             let requiredGPUNum = 0;
             if (constraint.type == 'None') {
@@ -75,7 +76,8 @@ export class GpuScheduler {
             assert(requiredGPUNum >= 0);
             // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
             const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
-                environment.defaultGpuSummary === undefined || requiredGPUNum === 0 || (requiredGPUNum !== undefined && environment.defaultGpuSummary.gpuCount >= requiredGPUNum));
+                environment.defaultGpuSummary === undefined || requiredGPUNum === 0 ||
+                (requiredGPUNum !== undefined && environment.defaultGpuSummary.gpuCount >= requiredGPUNum));
             if (eligibleEnvironments.length === 0) {
                 // If the required gpu number exceeds the upper limit of all machine's GPU number
                 // Return REQUIRE_EXCEED_TOTAL directly
@@ -166,12 +168,12 @@ export class GpuScheduler {
                         num = 0;
                     }
                     selectedEnvironment.defaultGpuSummary?.assignedGpuIndexMap.set(gpuInfo.index, num + 1);
-                    return {
-                        resultType: ScheduleResultType.SUCCEED,
-                        environment: selectedEnvironment,
-                        gpuIndices: selectedGPUs,
-                    };
                 }
+                return {
+                    resultType: ScheduleResultType.SUCCEED,
+                    environment: selectedEnvironment,
+                    gpuIndices: selectedGPUs,
+                };
             } else {
                 return {
                     resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
