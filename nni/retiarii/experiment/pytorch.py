@@ -58,7 +58,6 @@ class RetiariiExeConfig(ConfigBase):
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
-    devices: Optional[List[GPUDevice]] = None
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -195,16 +194,17 @@ class RetiariiExperiment(Experiment):
         """
         atexit.register(self.stop)
 
+        devices = self._construct_devices()
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine(devices = self.config.devices)
+            engine = BaseExecutionEngine(devices = devices)
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
             engine = CGOExecutionEngine()
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine(devices = self.config.devices)
+            engine = PurePythonExecutionEngine(devices = devices)
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -243,6 +243,17 @@ class RetiariiExperiment(Experiment):
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
         exp_status_checker.join()
 
+    def _construct_devices(self):
+        devices = []
+        if hasattr(self.config.training_service, 'machine_list'):
+            for machine_idx, machine in enumerate(self.config.training_service.machine_list):
+                for gpu_idx in machine.gpu_indices:
+                    devices.append(GPUDevice(machine.host, gpu_idx))
+        else:
+            for gpu_idx in self.config.training_service.gpu_indices:
+                devices.append(GPUDevice('local', gpu_idx))
+        return devices
+    
     def _create_dispatcher(self):
         return self._dispatcher
 

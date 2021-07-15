@@ -732,6 +732,9 @@ class TrialDispatcher implements TrainingService {
      * @param trial 
      */
     private releaseEnvironment(trial: TrialDetail): void {
+        if (true === this.enableGpuScheduler) {
+            this.gpuScheduler.removeGpuReservation(trial);
+        }
         if (trial.environment !== undefined) {
             if (trial.environment.runningTrialCount <= 0) {
                 throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
@@ -739,9 +742,6 @@ class TrialDispatcher implements TrainingService {
             trial.environment.runningTrialCount--;
             trial.environment.latestTrialReleasedTime = Date.now();
             trial.environment = undefined;
-        }
-        if (true === this.enableGpuScheduler) {
-            this.gpuScheduler.removeGpuReservation(trial);
         }
     }
 

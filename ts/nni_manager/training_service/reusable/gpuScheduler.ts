@@ -9,6 +9,7 @@ import { getLogger, Logger } from '../../common/log';
 import { randomSelect } from '../../common/utils';
 import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { EnvironmentInformation } from './environment';
+import { RemoteMachineEnvironmentInformation } from './remote/remoteConfig';
 import { TrialDetail } from './trial';
 
 type SCHEDULE_POLICY_NAME = 'random' | 'round-robin' | 'recently-idle';
@@ -55,11 +56,22 @@ export class GpuScheduler {
      * @param defaultRequiredGPUNum the default required GPU number when constraint.type === 'None'
      */
     public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint, defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
-        if (constraint.type == 'None') {
-            let requiredGPUNum = defaultRequiredGPUNum;
-            if (requiredGPUNum === undefined) {
-                requiredGPUNum = 0;
+        if (constraint.type == 'None' || constraint.type == 'GPUNumber') {
+            let requiredGPUNum = 0;
+            if (constraint.type == 'None') {
+                if (defaultRequiredGPUNum === undefined) {
+                    requiredGPUNum = 0;
+                } else {
+                    requiredGPUNum = defaultRequiredGPUNum;
+                }
+            } else if (constraint.type == 'GPUNumber') {
+                let gpus = constraint.gpus as Array<number>;
+                if (gpus.length != 1) {
+                    throw new Error("Placement constraint of GPUNumber must have exactly one number.");
+                }
+                requiredGPUNum = gpus[0];
             }
+
             assert(requiredGPUNum >= 0);
             // Step 1: Check if required GPU number not exceeds the total GPU number in all machines
             const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
@@ -100,26 +112,43 @@ export class GpuScheduler {
             if (constraint.gpus.length == 0) {
                 throw new Error("Device constraint is used but no device is specified.");
             }
-            const selectedEnvId = constraint.gpus[0][0];
+            let gpus = constraint.gpus as Array<[string, number]>;
+            const selectedHost = gpus[0][0];
 
-            const gpusOfEnv: Array<[string, number]> = constraint.gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedEnvId);
-            if (gpusOfEnv.length > 1) {
-                throw new Error("Device constraint does not support using multiple environments")
+            const hostsOfConstraint: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedHost);
+            if (hostsOfConstraint.length > 1) {
+                throw new Error("Device constraint does not support using multiple hosts")
             }
-            const eligibleEnvironments: EnvironmentInformation[] = environments.filter((environment: EnvironmentInformation) =>
-                environment.id === selectedEnvId);
+            if (environments.length == 0) {
+                return {
+                    resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
+                    gpuIndices: undefined,
+                    environment: undefined,
+                };
+            }
+            const eligibleEnvironments: EnvironmentInformation[] = environments.filter(
+                (environment: EnvironmentInformation) =>
+                    (environment as RemoteMachineEnvironmentInformation).rmMachineMeta != undefined &&
+                    (environment as RemoteMachineEnvironmentInformation).rmMachineMeta?.host == selectedHost);
             if (eligibleEnvironments.length === 0) {
-                throw new Error(`The the required environment (envId: ${selectedEnvId}) is not found.`);
+                throw new Error(`The the required host (host: ${selectedHost}) is not found.`);
             }
             let selectedEnvironment = eligibleEnvironments[0];
             let availableResources = this.gpuResourceDetection([selectedEnvironment]);
             var selectedGPUs: Array<GPUInfo> = [];
 
-            for (let gpuTuple of constraint.gpus) {
+            if (selectedEnvironment.defaultGpuSummary === undefined) {
+                //GPU summary may not be ready, retry until it is ready
+                return {
+                    resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,
+                    gpuIndices: undefined,
+                    environment: undefined,
+                };
+            }
+            for (let gpuTuple of gpus) {
                 const gpuIdx: number = gpuTuple[1];
-
-                if (selectedEnvironment.defaultGpuSummary === undefined || selectedEnvironment.defaultGpuSummary.gpuCount >= gpuIdx) {
-                    throw new Error(`The gpuIdx of placement constraint ${gpuIdx} exceeds gpuCount of the environment ${selectedEnvId}`);
+                if (gpuIdx >= selectedEnvironment.defaultGpuSummary.gpuCount) {
+                    throw new Error(`The gpuIdx of placement constraint ${gpuIdx} exceeds gpuCount of the host ${selectedHost}`);
                 }
 
                 if (availableResources.has(selectedEnvironment)) {
@@ -131,11 +160,18 @@ export class GpuScheduler {
                 }
             }
             if (selectedGPUs.length === constraint.gpus.length) {
-                return {
-                    resultType: ScheduleResultType.SUCCEED,
-                    environment: selectedEnvironment,
-                    gpuIndices: selectedGPUs,
-                };
+                for (let gpuInfo of selectedGPUs) {
+                    let num = selectedEnvironment.defaultGpuSummary?.assignedGpuIndexMap.get(gpuInfo.index);
+                    if (num === undefined) {
+                        num = 0;
+                    }
+                    selectedEnvironment.defaultGpuSummary?.assignedGpuIndexMap.set(gpuInfo.index, num + 1);
+                    return {
+                        resultType: ScheduleResultType.SUCCEED,
+                        environment: selectedEnvironment,
+                        gpuIndices: selectedGPUs,
+                    };
+                }
             } else {
                 return {
                     resultType: ScheduleResultType.TMP_NO_AVAILABLE_GPU,

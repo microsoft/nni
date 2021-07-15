@@ -75,10 +75,12 @@ class RetiariiAdvisor(MsgDispatcherBase):
             raise ValueError('placement_constraint must have `type`')
         if not 'gpus' in placement_constraint:
             raise ValueError('placement_constraint must have `gpus`')
-        if placement_constraint['type'] not in ['None', 'Device']:
-            raise ValueError('placement_constraint.type must be either `None` or `Device`')
+        if placement_constraint['type'] not in ['None', 'GPUNumber', 'Device']:
+            raise ValueError('placement_constraint.type must be either `None`,. `GPUNumber` or `Device`')
         if placement_constraint['type'] == 'None' and len(placement_constraint['gpus']) > 0:
             raise ValueError('placement_constraint.gpus must be an empty list when type == None')
+        if placement_constraint['type'] == 'Device' and len(placement_constraint['gpus']) != 1:
+            raise ValueError('placement_constraint.gpus must be a list of number (currently only support one host)')
         if placement_constraint['type'] == 'Device':
             for e in placement_constraint['gpus']:
                 if not isinstance(e, tuple):
