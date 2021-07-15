@@ -8,11 +8,11 @@
 
 RocksDB 的性能表现非常依赖于调优操作。 但由于其底层技术较复杂，可配置参数非常多，很难获得较好的配置。 NNI 可帮助解决此问题。 NNI 支持多种调优算法来为 RocksDB 搜索最好的配置，并支持本机、远程服务器和云服务等多种环境。 
 
-本示例展示了如何使用 NNI，通过评测工具 ``db_bench`` 来找到 ``fillrandom`` 基准的最佳配置，此工具是 RocksDB 官方提供的评测工具。 在运行示例前，需要检查 NNI 已安装， `db_bench <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ 已经加入到了 ``PATH`` 中。 参考 `这里 <../Tutorial/QuickStart.rst>`__ ，了解如何安装并准备 NNI 环境，参考 `这里 <https://github.com/facebook/rocksdb/blob/master/INSTALL.md>`__ 来编译 RocksDB 以及 ``db_bench``。
+本示例展示了如何使用 NNI，通过评测工具 ``db_bench`` 来找到 ``fillrandom`` 基准的最佳配置，此工具是 RocksDB 官方提供的评测工具。 在运行示例前，需要检查 NNI 已安装， `db_bench <https://github.com/facebook/rocksdb/wiki/Benchmarking-tools>`__ 已经加入到了 ``PATH`` 中。 此简单脚本 :githublink:`db_bench_installation.sh <examples/trials/systems_auto_tuning/rocksdb-fillrandom/db_bench_installation.sh>` 可帮助编译并在 Ubuntu 上安装 ``db_bench`` 及其依赖包。 可遵循相同的过程在其它系统中安装 RocksDB。
 
-此简单脚本 :githublink:`db_bench_installation.sh <examples/trials/systems_auto_tuning/rocksdb-fillrandom/db_bench_installation.sh>` 可帮助编译并在 Ubuntu 上安装 ``db_bench`` 及其依赖包。 可遵循相同的过程在其它系统中安装 RocksDB。
+:githublink:`代码文件 <examples/trials/systems_auto_tuning/rocksdb-fillrandom>` 可遵循相同的过程在其它系统中安装 RocksDB。
 
-:githublink:`代码文件 <examples/trials/systems_auto_tuning/rocksdb-fillrandom>`
+:githublink:`代码文件 <examples/trials/systems_auto_tuning/rocksdb-fillrandom/main.py>`
 
 Experiment 设置
 ----------------
@@ -54,7 +54,7 @@ Experiment 设置
 * 使用 ``nni.get_next_parameter()`` 来获取下一个系统配置。
 * 使用 ``nni.report_final_result(metric)`` 来返回测试结果。
 
-:githublink:`代码文件 <examples/trials/systems_auto_tuning/rocksdb-fillrandom/main.py>`
+:githublink:`代码文件 <examples/trials/systems_auto_tuning/rocksdb-fillrandom/config_tpe.yml>`
 
 配置文件
 ^^^^^^^^^^^

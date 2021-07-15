@@ -1,15 +1,12 @@
 NNI 支持的剪枝算法
 ===================================
 
-NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度剪枝** 通常会生成非结构化模型，这需要专门的硬件或软件来加速稀疏网络。 **滤波器剪枝** 通过移除整个滤波器来实现加速。 一些剪枝算法使用 One-Shot 的方法，即根据重要性指标一次性剪枝权重。 其他剪枝算法控制在优化过程中剪枝权重的 **剪枝调度**，包括一些自动剪枝算法。
+NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算法。 **细粒度剪枝** 通常会生成非结构化模型，这需要专门的硬件或软件来加速稀疏网络。 **滤波器剪枝** 一些剪枝算法使用 One-Shot 的方法，即根据重要性指标一次性剪枝权重（有必要对模型进行微调以补偿精度的损失）。 其他剪枝算法控制在优化过程中剪枝权重的 **剪枝调度**，包括一些自动剪枝算法。
 
 
 **细粒度剪枝**
 
 * `Level Pruner <#level-pruner>`__
-
-**滤波器剪枝**
-
 * `Slim Pruner <#slim-pruner>`__
 * `FPGM Pruner <#fpgm-pruner>`__
 * `L1Filter Pruner <#l1filter-pruner>`__
@@ -26,10 +23,10 @@ NNI 提供了一些支持细粒度权重剪枝和结构化的滤波器剪枝算�
 * `AutoCompress Pruner <#autocompress-pruner>`__
 * `AMC Pruner <#amc-pruner>`__
 * `Sensitivity Pruner <#sensitivity-pruner>`__
+* `ADMM Pruner <#admm-pruner>`__
 
 **其它**
 
-* `ADMM Pruner <#admm-pruner>`__
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
 
 Level Pruner
@@ -65,7 +62,7 @@ PyTorch
 
 Slim Pruner
 -----------
-这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\。
+这是 One-Shot Pruner，它在训练过程中对 batch normalization（BN）层的比例因子进行稀疏正则化，以识别不重要的通道。 比例因子值较小的通道将被修剪。 更多细节，请参考论文 `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__。
 
 用法
 ^^^^^
@@ -274,7 +271,7 @@ PyTorch 代码
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1)
    pruner.compress()
 
 注意：ActivationAPoZRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 ``op_types`` 字段仅支持卷积层。
@@ -293,8 +290,7 @@ ActivationAPoZRankFilterPruner 的用户配置
 ActivationMeanRankFilter Pruner
 -------------------------------
 
-ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 
-``平均激活`` 来修剪滤波器，来达到预设的网络稀疏度。 剪枝标准 ``平均激活``，在论文 `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__ 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
+ActivationMeanRankFilterPruner 是从卷积层激活的输出，用最小的重要性标准 ``平均激活`` 来修剪滤波器，来达到预设的网络稀疏度。剪枝标准 ``平均激活``，在论文 `Pruning Convolutional Neural Networks for Resource Efficient Inference <https://arxiv.org/abs/1611.06440>`__ 的 2.2 节中进行了介绍。 本文中提到的其他修剪标准将在以后的版本中支持。
 
 我们还为这个 Pruner 提供了一个依赖感知模式，以更好地提高修剪的速度。 请参考 `dependency-aware <./DependencyAware.rst>`__ 获取更多信息。
 
@@ -310,7 +306,7 @@ PyTorch 代码
        'sparsity': 0.5,
        'op_types': ['Conv2d']
    }]
-   pruner = ActivationMeanRankFilterPruner(model, config_list, statistics_batch_num=1)
+   pruner = ActivationAPoZRankFilterPruner(model, config_list, statistics_batch_num=1)
    pruner.compress()
 
 注意：ActivationMeanRankFilterPruner 用于修剪深度神经网络中的卷积层，因此 ``op_types`` 字段仅支持卷积层。
@@ -383,11 +379,7 @@ PyTorch 代码
 
    from nni.algorithms.compression.pytorch.pruning import AGPPruner
    config_list = [{
-       'initial_sparsity': 0,
-       'final_sparsity': 0.8,
-       'start_epoch': 0,
-       'end_epoch': 10,
-       'frequency': 1,
+       'sparsity': 0.8,
        'op_types': ['default']
    }]
 
@@ -413,14 +405,6 @@ AGP Pruner 默认使用 ``LevelPruner`` 算法来修建权重，还可以设置 
 * ``taylorfo``\ : TaylorFOWeightFilterPruner
 * ``apoz``\ : ActivationAPoZRankFilterPruner
 * ``mean_activation``\ : ActivationMeanRankFilterPruner
-
-在训练代码中每完成一个 Epoch，需要更新一下 Epoch 的值。
-
-PyTorch 代码
-
-.. code-block:: python
-
-   pruner.update_epoch(epoch)
 
 
 AGP Pruner 的用户配置
