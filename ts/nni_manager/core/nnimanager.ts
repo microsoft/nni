@@ -24,8 +24,7 @@ import {
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
     INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
-    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA,
-    UPDATE_GPU_STATUS
+    REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 import { NNIRestServer } from '../rest_server/nniRestServer';
@@ -451,7 +450,7 @@ class NNIManager implements Manager {
             throw new Error('Cannot detect training service platform');
         }
         const reuseMode = Array.isArray(config.trainingService) || (config.trainingService as any).reuseMode;
-        
+
         if (reuseMode) {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
@@ -550,13 +549,13 @@ class NNIManager implements Manager {
 
     private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
         const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-        if(undefined !== trialJobDetail &&
+        if (undefined !== trialJobDetail &&
             trialJobDetail.status === 'RUNNING' &&
-            trialJobDetail.startTime !== undefined){
-                const isEarlyStopped = true;
-                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
-                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
-            }
+            trialJobDetail.startTime !== undefined) {
+            const isEarlyStopped = true;
+            await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+            this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+        }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -682,7 +681,7 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
+                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
