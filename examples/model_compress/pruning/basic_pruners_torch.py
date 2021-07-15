@@ -243,6 +243,7 @@ def main(args):
 
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+        # If you want to skip some layer, you can use 'exclude' like follow.
         if args.pruner == 'slim':
             config_list = [{
                 'sparsity': args.sparsity,
@@ -252,7 +253,10 @@ def main(args):
             config_list = [{
                 'sparsity': args.sparsity,
                 'op_types': ['Conv2d'],
-                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+                'op_names': ['feature.0', 'feature.10', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+            }, {
+                'exclude': True,
+                'op_names': ['feature.10']
             }]
 
     pruner = pruner_cls(model, config_list, **kw_args)
