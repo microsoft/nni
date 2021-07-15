@@ -18,11 +18,13 @@ interface HyperParameters {
     readonly index: number;
 }
 
-type PlacementConstraintType = 'None' | 'Device'
+type PlacementConstraintType = 'None' | 'GPUNumber' | 'Device'
 interface PlacementConstraint{
     readonly type: PlacementConstraintType;
-    readonly gpus: Array<[string,number]>;
+    readonly gpus: Array<number> | Array<[string,number]>;
     /**
+     * GPUNumber constraint is in form of Array<number>, e.g., [3] means it must be placed on a node of 3 GPUs
+     * 
      * Device constraint is in form of Array<[string,number]>, e.g., [('Node-0',1),('Node-0',0)] means it must be placed on 
      *      Node-0's GPU-1 and Node-1's GPU-0
      */
