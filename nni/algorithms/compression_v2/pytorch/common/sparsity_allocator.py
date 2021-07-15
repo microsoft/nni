@@ -10,8 +10,6 @@ from nni.algorithms.compression_v2.pytorch.base.pruner_tools import SparsityAllo
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 
-GRAPH_NEEDED_MODE = ['dependency_aware']
-
 def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, list]] = None,
                            max_sparsity_per_layer: Optional[float] = None, dummy_input: Optional[Tensor] = None):
     if mode == 'normal':
