@@ -242,14 +242,6 @@ class RetiariiExperiment(Experiment):
         # TODO: the experiment should be completed, when strategy exits and there is no running job
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
         exp_status_checker.join()
-    
-    def _construct_devices(self):
-        devices = []
-        if hasattr(self.config.training_service, "machine_list"):
-            for m in self.config.training_service.machine_list:
-                for gpu in m.gpu_indices:
-                    devices.append(GPUDevice(m.host, gpu))
-        return devices
 
     def _construct_devices(self):
         devices = []
