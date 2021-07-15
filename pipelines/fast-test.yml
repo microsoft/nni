@@ -161,7 +161,6 @@ stages:
         python -m pip install -U -r dependencies/setup.txt
         python -m pip install -r dependencies/develop.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-        python -m pip install -U tensorflow keras
       displayName: Install Python tools
 
     - script: |
