@@ -5,13 +5,17 @@ import re
 
 import torch
 
-from ..graph import Graph, Model, Node
-from ..nn.pytorch import InputChoice, Placeholder
+from ..graph import Graph, Model, Node, Edge
+from ..nn.pytorch import InputChoice, Placeholder, LayerChoice
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
 from ..utils import get_importable_name
 from .op_types import MODULE_EXCEPT_LIST, OpTypeName
-from .utils import _convert_name, build_full_name
+from .utils import (
+    _convert_name, build_full_name, _without_shape_info,
+    _extract_info_from_trace_node, get_full_name_by_scope_name,
+    is_layerchoice_node, match_node, build_cand_name
+)
 
 
 class GraphConverter:
@@ -305,9 +309,9 @@ class GraphConverter:
 
                     submodule_full_name = build_full_name(module_name, submodule_name)
                     submodule_obj = getattr(module, submodule_name)
-                    subgraph, sub_m_attrs = self.convert_module(script_module._modules[submodule_name],
-                                                                submodule_obj,
-                                                                submodule_full_name, ir_model)
+                    subgraph, sub_m_attrs = self._convert_module(script_module._modules[submodule_name],
+                                                                 submodule_obj,
+                                                                 submodule_full_name, ir_model)
                 else:
                     # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
                     # %10 : __torch__.darts_model.Cell = prim::GetAttr[name="0"](%8)
@@ -339,7 +343,7 @@ class GraphConverter:
                         for each_name in list(reversed(module_name_space)):
                             submodule_obj = getattr(submodule_obj, each_name)
                             script_submodule = script_submodule._modules[each_name]
-                        subgraph, sub_m_attrs = self.convert_module(script_submodule, submodule_obj, submodule_full_name, ir_model)
+                        subgraph, sub_m_attrs = self._convert_module(script_submodule, submodule_obj, submodule_full_name, ir_model)
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
@@ -566,29 +570,7 @@ class GraphConverter:
             'accessor': module._accessor
         }
 
-    def convert_module(self, script_module, module, module_name, ir_model):
-        """
-        Convert a module to its graph ir (i.e., Graph) along with its input arguments
-
-        Parameters
-        ----------
-        script_module : torch.jit.RecursiveScriptModule
-            the script module of ```module``` obtained with torch.jit.script
-        module : nn.Module
-            the targeted module instance
-        module_name : str
-            the constructed name space of ```module```
-        ir_model : Model
-            the whole graph ir
-
-        Returns
-        -------
-        Graph
-            the built graph ir from module, ```None``` means do not further parse the module
-        dict
-            the input arguments of this module
-        """
-
+    def _convert_module(self, script_module, module, module_name, ir_model):
         # NOTE: have not supported nested LayerChoice, i.e., a candidate module
         # also has LayerChoice or InputChoice or ValueChoice
         original_type_name = script_module.original_name
@@ -597,10 +579,18 @@ class GraphConverter:
             pass  # do nothing
         elif original_type_name == OpTypeName.LayerChoice:
             graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
-            candidate_name_list = [f'layerchoice_{module.label}_{cand_name}' for cand_name in module.names]
-            for cand_name, cand in zip(candidate_name_list, module):
-                cand_type = '__torch__.' + get_importable_name(cand.__class__)
-                graph.add_node(cand_name, cand_type, get_init_parameters_or_fail(cand))
+            candidate_name_list = []
+            for cand_name in module.names:
+                cand = module[cand_name]
+                script_cand = script_module._modules[cand_name]
+                cand_name = build_cand_name(cand_name, module.label)
+                candidate_name_list.append(cand_name)
+                subgraph, attrs = self._convert_module(script_cand, cand, cand_name, ir_model)
+                if subgraph is not None:
+                    graph.add_node(subgraph.name, Cell(cell_name=subgraph.name, parameters=attrs))
+                else:
+                    cand_type = '__torch__.' + get_importable_name(cand.__class__)
+                    graph.add_node(cand_name, cand_type, attrs)
             graph._register()
             return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': candidate_name_list}
         elif original_type_name == OpTypeName.InputChoice:
@@ -654,8 +644,214 @@ class GraphConverter:
 
         return ir_graph, {}
 
+    def convert_module(self, script_module, module, module_name, ir_model):
+        """
+        Convert a module to its graph ir (i.e., Graph) along with its input arguments
 
-def convert_to_graph(script_module, module):
+        Parameters
+        ----------
+        script_module : torch.jit.RecursiveScriptModule
+            the script module of ```module``` obtained with torch.jit.script
+        module : nn.Module
+            the targeted module instance
+        module_name : str
+            the constructed name space of ```module```
+        ir_model : Model
+            the whole graph ir
+
+        Returns
+        -------
+        Graph
+            the built graph ir from module, ```None``` means do not further parse the module
+        dict
+            the input arguments of this module
+        """
+
+        return self._convert_module(script_module, module, module_name, ir_model)
+
+
+class GraphConverterWithShape(GraphConverter):
+    """
+    Convert a pytorch model to nni ir along with input/output shape info.
+    Based ir acquired through `torch.jit.script`
+    and shape info acquired through `torch.jit.trace`.
+
+    Known issues
+    ------------
+    1. `InputChoice` and `ValueChoice` not supported yet.
+    2. Currently random inputs are feeded while tracing layerchoice.
+       If forward path of candidates depends on input data, then wrong path will be traced.
+       This will result in incomplete shape info.
+    """
+    def convert_module(self, script_module, module, module_name, ir_model, example_inputs):
+        module.eval()
+
+        ir_graph, attrs = self._convert_module(script_module, module, module_name, ir_model)
+        self.remove_dummy_nodes(ir_model)
+        self._initialize_parameters(ir_model)
+        self._trace_module(module, module_name, ir_model, example_inputs)
+        return ir_graph, attrs
+
+    def _initialize_parameters(self, ir_model: 'Model'):
+        for ir_node in ir_model.get_nodes():
+            if ir_node.operation.parameters is None:
+                ir_node.operation.parameters = {}
+            ir_node.operation.parameters.setdefault('input_shape', [])
+            ir_node.operation.parameters.setdefault('output_shape', [])
+
+    def _trace_module(self, module, module_name, ir_model: 'Model', example_inputs):
+        # First, trace the whole graph
+        tm_graph = self._trace(module, example_inputs)
+
+        for node in tm_graph.nodes():
+            parameters = _extract_info_from_trace_node(node)
+            # '__module.convpool/__module.convpool.1/__module.convpool.1.conv'
+            ir_node = match_node(ir_model, node, module_name)
+            if ir_node is not None:
+                ir_node.operation.parameters.update(parameters)
+
+        self.propagate_shape(ir_model)
+
+        # trace each layerchoice
+        for name, submodule in module.named_modules():
+            # TODO: support InputChoice and ValueChioce
+            if isinstance(submodule, LayerChoice):
+                full_name = get_full_name_by_scope_name(ir_model, name.split('.'), module_name)
+                lc_node = ir_model.get_node_by_name(full_name)
+
+                for cand_name in submodule.names:
+                    cand = submodule[cand_name]
+                    cand_name = build_cand_name(cand_name, submodule.label)
+                    # TODO: Feed the exact input tensor if user provides input,
+                    # in case the path changes according to input data.
+                    lc_inputs = [torch.randn(shape) for shape in lc_node.operation.parameters['input_shape']]
+                    self._trace_module(cand, cand_name, ir_model, lc_inputs)
+
+    def propagate_shape(self, ir_model: 'Model'):
+
+        def propagate_shape_for_graph(graph: 'Graph'):
+            if graph == ir_model.root_graph:
+                return
+
+            graph_node = ir_model.get_node_by_name(graph.name)
+            if not _without_shape_info(graph_node):
+                return
+
+            if is_layerchoice_node(graph_node):
+                cand_name = graph_node.operation.parameters['candidates'][0]
+                cand_node = ir_model.get_node_by_name(cand_name)
+                if _without_shape_info(cand_node):
+                    propagate_shape_for_graph(ir_model.graphs[cand_name])
+                graph_node.operation.parameters['input_shape'] = cand_node.operation.parameters['input_shape']
+                graph_node.operation.parameters['output_shape'] = cand_node.operation.parameters['output_shape']
+            else:
+                input_shape = [[]] * len(graph.input_node.operation.io_names or [])
+                output_shape = [[]] * len(graph.output_node.operation.io_names or [])
+                for edge in graph.input_node.outgoing_edges:
+                    node = edge.tail
+                    if _without_shape_info(node):
+                        if node.name in ir_model.graphs:
+                            propagate_shape_for_graph(ir_model.graphs[node.name])
+                    if node.operation.parameters['input_shape']:
+                        input_shape[edge.head_slot or 0] = node.operation.parameters['input_shape'][edge.tail_slot or 0]
+                graph_node.operation.parameters['input_shape'] = input_shape
+                for edge in graph.output_node.incoming_edges:
+                    node = edge.head
+                    if _without_shape_info(node):
+                        if node.name in ir_model.graphs:
+                            propagate_shape_for_graph(ir_model.graphs[node.name])
+                    if node.operation.parameters['output_shape']:
+                        output_shape[edge.tail_slot or 0] = node.operation.parameters['output_shape'][edge.head_slot or 0]
+                graph_node.operation.parameters['output_shape'] = output_shape
+
+            propagate_shape_for_graph(graph_node.graph)
+
+        # propagate from node to graph
+        for node in ir_model.get_nodes():
+            propagate_shape_for_graph(node.graph)
+
+    def flatten(self, ir_model: 'Model'):
+        """
+        Flatten the subgraph into root graph.
+        """
+        def _flatten(graph: 'Graph'):
+            """
+            flatten this graph
+            """
+            model = graph.model
+            node_to_remove = []
+
+            for node in graph.hidden_nodes:
+                node_graph = model.graphs.get(node.name)
+                if node_graph is not None:
+                    _flatten(node_graph)
+
+                    # flatten node graph into this graph
+                    id_to_new_node = {}
+                    for node_graph_node in node_graph.hidden_nodes:
+                        new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
+                        new_node.update_label(node_graph_node.label)
+                        new_node._register()
+                        id_to_new_node[new_node.id] = new_node
+
+                    # reconnect node edges
+                    for in_edge in node.incoming_edges:
+                        graph.del_edge(in_edge)
+                        for input_node_edge in node_graph.input_node.outgoing_edges:
+                            if input_node_edge.head_slot == in_edge.tail_slot:
+                                graph.add_edge(
+                                    head=(in_edge.head, in_edge.head_slot),
+                                    tail=(id_to_new_node[input_node_edge.tail.id], input_node_edge.tail_slot))
+
+                    for out_edge in node.outgoing_edges:
+                        graph.del_edge(out_edge)
+                        for output_node_edge in node_graph.output_node.incoming_edges:
+                            if output_node_edge.head_slot == out_edge.tail_slot:
+                                try:
+                                    graph.add_edge(
+                                        head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
+                                        tail=(out_edge.tail, out_edge.tail_slot))
+                                except:
+                                    import pdb; pdb.set_trace()
+
+                    for edge in node_graph.edges:
+                        if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
+                            continue
+                        new_head = id_to_new_node[edge.head.id]
+                        new_tail = id_to_new_node[edge.tail.id]
+                        Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
+
+                    node_to_remove.append(node)
+                    del model.graphs[node.name]
+
+            for node in node_to_remove:
+                node.remove()
+
+        _flatten(ir_model.root_graph)
+
+        # remove subgraphs
+        ir_model.graphs = {ir_model._root_graph_name: ir_model.root_graph}
+
+    def _trace(self, module, example_inputs):
+        traced_module = torch.jit.trace(module, example_inputs)
+        torch._C._jit_pass_inline(traced_module.graph)
+        return traced_module.graph
+
+    def remove_dummy_nodes(self, ir_model: 'Model'):
+        # remove identity nodes
+        for node in ir_model.get_nodes_by_type('noop_identity'):
+            graph = node.graph
+            for in_edge in node.incoming_edges:
+                for out_edge in node.outgoing_edges:
+                    if in_edge.tail_slot == out_edge.head_slot:
+                        graph.add_edge(head=(in_edge.head, in_edge.head_slot), tail=(out_edge.tail, out_edge.tail_slot))
+                        graph.del_edge(in_edge)
+                        graph.del_edge(out_edge)
+                    break
+            node.remove()
+
+
+def convert_to_graph(script_module, module, converter=None, **kwargs):
     """
     Convert module to our graph ir, i.e., build a ```Model``` type
 
@@ -665,6 +861,10 @@ def convert_to_graph(script_module, module):
         the script module obtained with torch.jit.script
     module : nn.Module
         the targeted module instance
+    converter : `TorchConverter`
+        default `GraphConverter` is used
+    kwargs:
+        will be passed to `converter.convert_module()`
 
     Returns
     -------
@@ -674,6 +874,8 @@ def convert_to_graph(script_module, module):
 
     model = Model(_internal=True)
     module_name = '_model'
-    GraphConverter().convert_module(script_module, module, module_name, model)
+    if converter is None:
+        converter = GraphConverter()
+    converter.convert_module(script_module, module, module_name, model, **kwargs)
 
     return model

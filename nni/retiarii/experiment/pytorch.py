@@ -28,6 +28,7 @@ from nni.tools.nnictl.command_utils import kill_command
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
+from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.python import get_mutation_dict
 from ..graph import Model, Evaluator
@@ -57,6 +58,9 @@ class RetiariiExeConfig(ConfigBase):
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
+
+    # input used in GraphConverterWithShape. Currently support shape tuple only.
+    example_inputs: Optional[List[int]] = None
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -106,7 +110,7 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
-def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
+def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, example_inputs=None):
     # TODO: this logic might need to be refactored into execution engine
     if full_ir:
         try:
@@ -114,7 +118,13 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
-        base_model_ir = convert_to_graph(script_module, base_model)
+        if example_inputs is not None:
+            # FIXME: this is a workaround as full tensor is not supported in configs
+            example_inputs = torch.randn(*example_inputs)
+            converter = GraphConverterWithShape()
+            base_model_ir = convert_to_graph(script_module, base_model, converter, example_inputs=example_inputs)
+        else:
+            base_model_ir = convert_to_graph(script_module, base_model)
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
     else:
@@ -171,7 +181,8 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py')
+            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py',
+            example_inputs=self.config.example_inputs)
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)

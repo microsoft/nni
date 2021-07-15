@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import torch
-import torch.nn as nn
+import nni.retiarii.nn.pytorch as nn
 
 
 class ShuffleNetBlock(nn.Module):
@@ -78,7 +78,6 @@ class ShuffleNetBlock(nn.Module):
 
     def _channel_shuffle(self, x):
         bs, num_channels, height, width = x.size()
-        assert (num_channels % 4 == 0)
         x = x.reshape(bs * num_channels // 2, 2, height * width)
         x = x.permute(1, 0, 2)
         x = x.reshape(2, -1, num_channels // 2, height, width)

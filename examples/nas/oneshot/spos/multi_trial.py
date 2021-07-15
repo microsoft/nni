@@ -1,3 +1,5 @@
+# This file is to demo the usage of multi-trial NAS in the usage of SPOS search space.
+
 import click
 import nni.retiarii.evaluator.pytorch as pl
 import nni.retiarii.nn.pytorch as nn
@@ -10,6 +12,8 @@ from torchvision import transforms
 from torchvision.datasets import CIFAR10
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
+
+from nn_meter import get_default_config, load_latency_predictors
 
 
 class ShuffleNetV2(nn.Module):
@@ -73,10 +77,10 @@ class ShuffleNetV2(nn.Module):
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
             choice_block = LayerChoice([
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
-                serialize(ShuffleNetBlock, inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
-                serialize(ShuffleXceptionBlock, inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
+                ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
+                ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
             ])
             result.append(choice_block)
 
@@ -123,6 +127,35 @@ class ShuffleNetV2(nn.Module):
                     torch.nn.init.constant_(m.bias, 0)
 
 
+class LatencyFilter:
+    def __init__(self, threshold, config=None, hardware='', reverse=False):
+        """
+        Filter the models according to predcted latency.
+
+        Parameters
+        ----------
+        threshold: `float`
+            the threshold of latency
+        config, hardware:
+            determine the targeted device
+        reverse: `bool`
+            if reverse is `False`, then the model returns `True` when `latency < threshold`,
+            else otherwisse
+        """
+        default_config, default_hardware = get_default_config()
+        if config is None:
+            config = default_config
+        if not hardware:
+            hardware = default_hardware
+
+        self.predictors = load_latency_predictors(config, hardware)
+        self.threshold = threshold
+
+    def __call__(self, ir_model):
+        latency = self.predictors.predict(ir_model, 'nni')
+        return latency < self.threshold
+
+
 @click.command()
 @click.option('--port', default=8081, help='On which port the experiment is run.')
 def _main(port):
@@ -142,7 +175,7 @@ def _main(port):
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
                                 max_epochs=2, gpus=1)
 
-    simple_strategy = strategy.Random()
+    simple_strategy = strategy.Random(model_filter=LatencyFilter(100))
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
@@ -152,6 +185,7 @@ def _main(port):
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
+    exp_config.example_inputs = [1, 3, 32, 32]
 
     exp.run(exp_config, port)
 
