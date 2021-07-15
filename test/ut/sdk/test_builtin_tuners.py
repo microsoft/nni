@@ -22,7 +22,7 @@ from nni.algorithms.hpo.pbt_tuner import PBTTuner
 from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionTuner
 from nni.runtime.msg_dispatcher import _pack_parameter, MsgDispatcher
 
-if sys.platform != 'win32':
+if sys.platform != 'win32' and sys.version_info < (3, 9):
     from nni.algorithms.hpo.smac_tuner import SMACTuner
 
 from nni.tuner import Tuner
