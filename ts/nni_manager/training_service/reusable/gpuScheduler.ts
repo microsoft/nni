@@ -55,12 +55,6 @@ export class GpuScheduler {
      * @param defaultRequiredGPUNum the default required GPU number when constraint.type === 'None'
      */
     public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint, defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
-        for (let e of environments) {
-            this.log.info("!!!");
-            this.log.info(e.id);
-            this.log.info(e.envId);
-            this.log.info(e.name);
-        }
         if (constraint.type == 'None') {
             let requiredGPUNum = defaultRequiredGPUNum;
             if (requiredGPUNum === undefined) {

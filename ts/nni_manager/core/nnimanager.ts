@@ -450,10 +450,12 @@ class NNIManager implements Manager {
         if (!platform) {
             throw new Error('Cannot detect training service platform');
         }
-
-        this.log.info("!!!Platform: " + platform);
-
-        if (platform === 'local') {
+        const reuseMode = Array.isArray(config.trainingService) || (config.trainingService as any).reuseMode;
+        
+        if (reuseMode) {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return await module_.RouterTrainingService.construct(config);
+        } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
         } else if (platform === 'kubeflow') {
