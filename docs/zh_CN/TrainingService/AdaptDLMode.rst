@@ -1,7 +1,7 @@
 在 AdaptDL 上运行 Experiment
 ============================
 
-NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 在开始使用 NNI 的 AdaptDL 模式前，需要有一个 Kubernetes 集群，可以是私有部署的，或者是 `Azure Kubernetes Service(AKS) <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__，并需要一台配置好 `kubeconfig <https://kubernetes.io/docs/concepts/configuration/organize-cluster-access-kubeconfig/>`__ 的 Ubuntu 计算机连接到此 Kubernetes 集群。 在 AdaptDL 模式下，每个 Trial 程序会在 AdaptDL 集群中作为一个 Kubeflow 作业来运行。
+NNI 支持在 `AdaptDL <https://github.com/petuum/adaptdl>`__ 上运行，称为 AdaptDL 模式。 采用 **Kubernetes 1.14** 或更高版本。 根据下面的指南设置 Kubernetes 环境： `on Azure <https://azure.microsoft.com/zh-cn/services/kubernetes-service/>`__\ ， `on-premise <https://kubernetes.io/docs/setup/>`__ ， `cephfs <https://kubernetes.io/docs/concepts/storage/storage-classes/#ceph-rbd>`__\ 和 `microk8s with storage add-on enabled <https://microk8s.io/docs/addons>`__。 在 AdaptDL 模式下，每个 Trial 程序会在 AdaptDL 集群中作为一个 Kubeflow 作业来运行。
 
 AdaptDL 旨在使动态资源环境（例如共享集群和云）中的分布式深度学习变得轻松高效。
 
@@ -133,7 +133,7 @@ NFS 存储
 简而言之，并没有限制 trial 如何读取或写入 NFS 存储，因此可以根据需要灵活使用它。
 
 通过日志流监控
----------------------------------------------
+----------------------------------------------
 
 遵循特定 trial 的日志流：
 
@@ -151,7 +151,7 @@ NFS 存储
 根据以下方法。
 
 通过 TensorBoard 进行监控
-----------------------------------------------
+---------------------------------------------
 
 在 NNI 的背景下，一个实验有多条 trial。
 为了在模型调整过程的各个 trial 之间轻松进行比较，

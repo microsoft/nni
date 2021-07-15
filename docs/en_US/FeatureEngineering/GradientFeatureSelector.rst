@@ -94,10 +94,10 @@ And you could reference the examples in ``/examples/feature_engineering/gradient
 
 
 * 
-  **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]
+  **X** (array-like, require) - The training input samples which shape = [n_samples, n_features]. `np.ndarry` recommended.
 
 * 
-  **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples].
+  **y** (array-like, require) - The target values (class labels in classification, real numbers in regression) which shape = [n_samples]. `np.ndarry` recommended.
 
 * 
   **groups** (array-like, optional, default = None) - Groups of columns that must be selected as a unit. e.g. [0, 0, 1, 2] specifies the first two columns are part of a group. Which shape is [n_features].

@@ -8,7 +8,7 @@ import random
 import time
 from typing import Any, Dict, List
 
-from .. import Sampler, submit_models, query_available_resources, budget_exhausted
+from .. import InvalidMutation, Sampler, submit_models, query_available_resources, budget_exhausted
 from .base import BaseStrategy
 from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 
@@ -125,6 +125,9 @@ class Random(BaseStrategy):
                     if budget_exhausted():
                         return
                     time.sleep(self._polling_interval)
-                model = get_targeted_model(base_model, applied_mutators, sample)
-                if filter_model(self.filter, model):
-                    submit_models(model)
+                try:
+                    model = get_targeted_model(base_model, applied_mutators, sample)
+                    if filter_model(self.filter, model):
+                        submit_models(model)
+                except InvalidMutation as e:
+                    _logger.warning(f'Invalid mutation: {e}. Skip.')

@@ -5,7 +5,6 @@
 
 就像 `dependency analysis utils <./CompressionUtils.md>`__ 显示，如果将两个卷积层（conv1，conv2）的输出通道相加，这两个卷积层之间将具有通道依赖关系（更多详细信息参见 `Compression Utils <./CompressionUtils.rst>`__\ )。 以下图为例。
 
-
 .. image:: ../../img/mask_conflict.jpg
    :target: ../../img/mask_conflict.jpg
    :alt: 
