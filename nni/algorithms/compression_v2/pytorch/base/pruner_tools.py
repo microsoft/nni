@@ -1,14 +1,16 @@
 import logging
 import types
-from typing import List, Dict, Optional, Callable, Tuple, Union
+from typing import List, Dict, Optional, Callable, Union
 
-from torch import Tensor, tensor
+from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
+from .compressor import Compressor, LayerInfo
 
 _logger = logging.getLogger(__name__)
+
+__all__ = ['DataCollector', 'TrainerBasedDataCollector', 'HookCollectorInfo', 'MetricsCalculator', 'SparsityAllocator']
 
 
 class DataCollector:

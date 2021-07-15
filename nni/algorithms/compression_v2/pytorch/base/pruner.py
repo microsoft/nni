@@ -5,10 +5,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
-from nni.algorithms.compression_v2.pytorch.base.common import DataCollector, MetricsCalculator, SparsityAllocator
+from .compressor import Compressor, LayerInfo
+from .pruner_tools import DataCollector, MetricsCalculator, SparsityAllocator
 
 _logger = logging.getLogger(__name__)
+
+__all__ = ['Pruner']
 
 
 class PrunerModuleWrapper(Module):
@@ -111,11 +113,11 @@ class Pruner(Compressor):
             Return the wrapped model and mask.
         """
         data = self.data_collector.collect()
-        _logger.debug('Collected Data:\n%s', data)
+        _logger.info('Collected Data:\n%s', data)
         metrics = self.metrics_calculator.calculate_metrics(data)
-        _logger.debug('Metrics Calculate:\n%s', metrics)
+        _logger.info('Metrics Calculate:\n%s', metrics)
         masks = self.sparsity_allocator.generate_sparsity(metrics)
-        _logger.debug('Masks:\n%s', masks)
+        _logger.info('Masks:\n%s', masks)
         self.load_masks(masks)
         return self.bound_model, masks
 
