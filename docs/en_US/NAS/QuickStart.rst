@@ -12,7 +12,7 @@ In this quick start tutorial, we use multi-trial NAS as an example to show how t
 
 One-shot NAS tutorial can be found `here <./OneshotTrainer.rst>`__.
 
-.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested with **PyTorch 1.6 and 1.7**. This documentation assumes PyTorch context but it should also apply to other frameworks, that is in our future plan.
+.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested with **PyTorch 1.6 to 1.9**. This documentation assumes PyTorch context but it should also apply to other frameworks, that is in our future plan.
 
 Define your Model Space
 -----------------------
