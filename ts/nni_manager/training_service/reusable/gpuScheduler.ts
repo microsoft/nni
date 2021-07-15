@@ -136,7 +136,7 @@ export class GpuScheduler {
             }
             const selectedEnvironment = eligibleEnvironments[0];
             const availableResources = this.gpuResourceDetection([selectedEnvironment]);
-            let selectedGPUs: Array<GPUInfo> = [];
+            const selectedGPUs: Array<GPUInfo> = [];
 
             if (selectedEnvironment.defaultGpuSummary === undefined) {
                 //GPU summary may not be ready, retry until it is ready
