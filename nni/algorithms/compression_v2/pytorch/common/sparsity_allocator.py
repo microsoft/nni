@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, List, Tuple, Union, Optional
 
 import numpy as np
@@ -5,12 +8,10 @@ import torch
 from torch import Tensor
 
 from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression_v2.pytorch.base.common import SparsityAllocator
+from nni.algorithms.compression_v2.pytorch.base.pruner_tools import SparsityAllocator
 
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
-
-GRAPH_NEEDED_MODE = ['dependency_aware']
 
 def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, list]] = None,
                            max_sparsity_per_layer: Optional[float] = None, dummy_input: Optional[Tensor] = None):
@@ -25,9 +26,12 @@ def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, l
 
 
 class NormalSparsityAllocator(SparsityAllocator):
+    """
+    This allocator simply pruned the weight with smaller metrics in layer level.
+    """
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
-        for name, wrapper in self.pruner._get_modules_wrapper().items():
+        for name, wrapper in self.pruner.get_modules_wrapper().items():
             sparsity_rate = wrapper.config['sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
@@ -42,6 +46,11 @@ class NormalSparsityAllocator(SparsityAllocator):
 
 
 class GlobalSparsityAllocator(SparsityAllocator):
+    """
+    This allocator pruned the weight with smaller metrics in group level.
+    This means all layers in a group will sort metrics uniformly.
+    The layers with the same config in config_list is a group.
+    """
     def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None, max_sparsity_per_layer: float = 1):
         assert 0 < max_sparsity_per_layer <= 1, 'max_sparsity_per_layer must in range (0, 1].'
         self._max_sparsity_per_layer = max_sparsity_per_layer
@@ -64,7 +73,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
         sub_thresholds = {}
         total_weight_num = 0
         for name, metric in group_metric_dict.items():
-            layer_weight_num = self.pruner._get_modules_wrapper()[name].module.weight.data.numel()
+            layer_weight_num = self.pruner.get_modules_wrapper()[name].module.weight.data.numel()
             stay_num = int(metric.numel() * self._max_sparsity_per_layer)
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.abs().view(-1), stay_num, largest=False)[0]
@@ -75,7 +84,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             metric_list.append(stay_metric)
             total_weight_num += layer_weight_num
 
-        sparsity = self.pruner._get_modules_wrapper()[name].config['sparsity']
+        sparsity = self.pruner.get_modules_wrapper()[name].config['sparsity']
         assert sparsity <= self._max_sparsity_per_layer, 'Sparsity ratio should less than max_sparsity_per_layer.'
         total_prune_num = int(sparsity * total_weight_num)
 
@@ -84,6 +93,10 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
 
 class Conv2dDependencyAwareAllocator(SparsityAllocator):
+    """
+    A specify allocator for Conv2d with dependency aware.
+    """
+
     def __init__(self, pruner: Pruner, dim: int, dummy_input: Tensor):
         assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
         super().__init__(pruner, dim=dim)
@@ -102,7 +115,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
-            sparsities = {name: self.pruner._get_modules_wrapper()[name].config['sparsity'] for name in group_metric_dict.keys()}
+            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['sparsity'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
             conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]

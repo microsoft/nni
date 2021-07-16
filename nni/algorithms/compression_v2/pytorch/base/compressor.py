@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import collections
 import logging
 from typing import List, Dict, Optional, OrderedDict, Tuple, Any
@@ -133,7 +136,7 @@ class Compressor:
             return None
         return ret
 
-    def _get_modules_wrapper(self) -> OrderedDict[str, Module]:
+    def get_modules_wrapper(self) -> OrderedDict[str, Module]:
         """
         Returns
         -------
@@ -146,7 +149,7 @@ class Compressor:
         """
         Wrap all modules that needed to be compressed.
         """
-        for _, wrapper in reversed(self._get_modules_wrapper().items()):
+        for _, wrapper in reversed(self.get_modules_wrapper().items()):
             _setattr(self.bound_model, wrapper.name, wrapper)
         self.is_wrapped = True
 
@@ -155,7 +158,7 @@ class Compressor:
         Unwrap all modules that needed to be compressed.
         """
         if self.is_wrapped:
-            for _, wrapper in self._get_modules_wrapper().items():
+            for _, wrapper in self.get_modules_wrapper().items():
                 _setattr(self.bound_model, wrapper.name, wrapper.module)
             self.is_wrapped = False
 

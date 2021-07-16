@@ -1,13 +1,50 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, List, Optional, Union
 
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression_v2.pytorch.base.common import MetricsCalculator
+from nni.algorithms.compression_v2.pytorch.base.pruner_tools import MetricsCalculator
+
+__all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetricsCalculator',
+           'APoZRankMetricsCalculator', 'MeanRankMetricsCalculator']
 
 
 class NormMetricsCalculator(MetricsCalculator):
+    """
+    Calculate the specify norm for each tensor in data.
+    """
+
     def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None):
+        """
+        Parameters
+        ----------
+        dim
+            The dimensions that corresponding to the under pruning weight dimensions in collected data.
+            None means one-to-one correspondence between pruned dimensions and data, which equal to set `dim` as all data dimensions.
+            Only these `dim` will be kept and other dimensions of the data will be reduced.
+
+            Example:
+
+            If you want to prune the Conv2d weight in filter level, and the weight size is (32, 16, 3, 3) [out-channel, in-channel, kernal-size-1, kernal-size-2].
+            Then the under pruning dimensions is [0], which means you want to prune the filter or out-channel.
+
+                Case 1: Directly collect the conv module weight as data to calculate the metric.
+                Then the data has size (32, 16, 3, 3).
+                Mention that the dimension 0 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=0` will set in `__init__`.
+
+                Case 2: Use the output of the conv module as data to calculate the metric.
+                Then the data has size (batch_num, 32, feature_map_size_1, feature_map_size_2).
+                Mention that the dimension 1 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=1` will set in `__init__`.
+
+            In both of these two case, the metric of this module has size (32,).
+        p
+            The order of norm. None means Frobenius norm.
+        """
         super().__init__(dim=dim)
         self.p = p if p is not None else 'fro'
 
@@ -25,13 +62,48 @@ class NormMetricsCalculator(MetricsCalculator):
 
 
 class MultiDataNormMetricsCalculator(NormMetricsCalculator):
+    """
+    Sum each list of tensor in data at first, then calculate the specify norm for each sumed tensor.
+    """
+
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         new_data = {name: sum(list_tensor) for name, list_tensor in data.items()}
         return super().calculate_metrics(new_data)
 
 
 class DistMetricsCalculator(MetricsCalculator):
+    """
+    Calculate the sum of specify distance for each element with all other elements in specify `dim` in each tensor in data.
+    """
+
     def __init__(self, p: float, dim: Union[int, List[int]]):
+        """
+        Parameters
+        ----------
+        dim
+            The dimensions that corresponding to the under pruning weight dimensions in collected data.
+            None means one-to-one correspondence between pruned dimensions and data, which equal to set `dim` as all data dimensions.
+            Only these `dim` will be kept and other dimensions of the data will be reduced.
+
+            Example:
+
+            If you want to prune the Conv2d weight in filter level, and the weight size is (32, 16, 3, 3) [out-channel, in-channel, kernal-size-1, kernal-size-2].
+            Then the under pruning dimensions is [0], which means you want to prune the filter or out-channel.
+
+                Case 1: Directly collect the conv module weight as data to calculate the metric.
+                Then the data has size (32, 16, 3, 3).
+                Mention that the dimension 0 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=0` will set in `__init__`.
+
+                Case 2: Use the output of the conv module as data to calculate the metric.
+                Then the data has size (batch_num, 32, feature_map_size_1, feature_map_size_2).
+                Mention that the dimension 1 of the data is corresponding to the under pruning weight dimension 0.
+                So in this case, `dim=1` will set in `__init__`.
+
+            In both of these two case, the metric of this module has size (32,).
+        p
+            The order of norm.
+        """
         super().__init__(dim=dim)
         self.p = p
 
@@ -66,6 +138,11 @@ class DistMetricsCalculator(MetricsCalculator):
 
 
 class APoZRankMetricsCalculator(MetricsCalculator):
+    """
+    This metric counts the zero number at the same position in the tensor list in data,
+    then sum the zero number on `dim` and calculate the non-zero rate.
+    Note that the metric we return is (1 - apoz), because we assume a higher metric value has higher importance.
+    """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
         for name, tensor_list in data.items():
@@ -87,6 +164,9 @@ class APoZRankMetricsCalculator(MetricsCalculator):
 
 
 class MeanRankMetricsCalculator(MetricsCalculator):
+    """
+    This metric simply concat the list of tensor on dim 0, and average on `dim`.
+    """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
         for name, tensor_list in data.items():

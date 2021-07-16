@@ -1,14 +1,19 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 import types
-from typing import List, Dict, Optional, Callable, Tuple, Union
+from typing import List, Dict, Optional, Callable, Union
 
-from torch import Tensor, tensor
+from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression_v2.pytorch.base.compressor import Compressor, LayerInfo
+from .compressor import Compressor, LayerInfo
 
 _logger = logging.getLogger(__name__)
+
+__all__ = ['DataCollector', 'TrainerBasedDataCollector', 'HookCollectorInfo', 'MetricsCalculator', 'SparsityAllocator']
 
 
 class DataCollector:
@@ -333,7 +338,7 @@ class SparsityAllocator:
         Dict[str, Tensor]
             The key is `weight_mask` or `bias_mask`, value is the final mask.
         """
-        wrapper = self.pruner._get_modules_wrapper()[name]
+        wrapper = self.pruner.get_modules_wrapper()[name]
         weight_size = wrapper.module.weight.data.size()
         if self.dim is None:
             assert len(mask.size()) == len(weight_size)
