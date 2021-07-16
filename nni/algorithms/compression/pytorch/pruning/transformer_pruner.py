@@ -112,7 +112,9 @@ class TransformerHeadPruner(Pruner):
         self.validate_weight_groups()
 
         # Remove any mistakenly captured ungrouped modules
+        self._unwrap_model()
         self.remove_ungrouped_modules()
+        self._wrap_model()
 
         self.masker = MASKER_DICT[ranking_criterion](model, self, self.head_hidden_dim, **algo_kwargs)
         self.pruned_heads = {i: set() for i in range(len(self.masking_groups))}
@@ -190,9 +192,18 @@ class TransformerHeadPruner(Pruner):
     def remove_ungrouped_modules(self):
         """
         Remove non-attention weights that might be mistakenly captured by a simplified config_list.
+        Also update the corresponding list of layer information (self.modules_to_compress)
         """
         care_of_modules = set([x for layer in self.masking_groups for x in layer])
-        self.modules_wrapper = [x for x in self.modules_wrapper if x in care_of_modules]
+
+        modules_wrapper_new, modules_to_compress_new = [], []
+        for wrapper, layer_info in zip(self.modules_wrapper, self.modules_to_compress):
+            if wrapper in care_of_modules:
+                modules_wrapper_new.append(wrapper)
+                modules_to_compress_new.append(layer_info)
+
+        self.modules_wrapper = modules_wrapper_new
+        self.modules_to_compress = modules_to_compress_new
 
     def validate_config(self, model, config_list):
         """
