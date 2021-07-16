@@ -64,7 +64,7 @@ class TransformerHeadPruner(Pruner):
         Number of finetuning epochs before the next pruning iteration. This only has effect when num_iterations > 1.
         If num_iterations is 1, then no finetuning is performed by the pruner after pruning.
     optimizer: torch.optim.Optimizer
-            Optimizer used to train model
+        Optimizer used to train model
     trainer: function
         Function used to train the model.
         Users should write this function as a normal function to train the Pytorch model
@@ -166,7 +166,8 @@ class TransformerHeadPruner(Pruner):
             - output projection weight shape must match total hidden dimension (inferred from Q, K, V projection)
             - Four weights in a group must have the same sparsity in their config
             - If global_sort is specified, all weights must have the same sparsity
-            - head_hidden_dim must be a divisor of the output dimension of the projection weights
+            - head_hidden_dim must be a divisor of the output dimension of the projection weights (i.e., the resulting
+              head number must be an integer)
         """
         errmsg = 'Attention weight group sanity check not passed'
         sparsity = None
@@ -233,13 +234,11 @@ class TransformerHeadPruner(Pruner):
             else:
                 self.update_mask()
 
-            # for iterative pruning, finetune before next iteration
-            if self.num_iterations > 1:
+            # for iterative pruning, if not the last iteration, finetune before next iteration
+            # Then, reset the maskers (may create additional hooks)
+            if self.num_iterations > 1 and pruning_iter != self.num_iterations - 1:
                 for e in range(self.epochs_per_iteration):
                     self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=e+1)
-
-            # if not the last iteration, reset the maskers (may create additional hooks)
-            if self.num_iterations > 1 and pruning_iter != self.num_iterations - 1:
                 self.masker.reset()
 
             logger.info('Pruned heads after iteration %i', pruning_iter)

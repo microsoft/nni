@@ -225,9 +225,9 @@ class L1WeightHeadMasker(AttentionHeadMasker):
         key_proj_weights = k_proj.module.weight.data.view([n_heads, -1])
         value_proj_weights = v_proj.module.weight.data.view([n_heads, -1])
 
-        query_norm_avg = torch.sum(torch.abs(query_proj_weights), -1)
-        key_norm_avg = torch.sum(torch.abs(key_proj_weights), -1)
-        value_norm_avg = torch.sum(torch.abs(value_proj_weights), -1)
+        query_norm_avg = torch.linalg.norm(query_proj_weights, 1, -1)
+        key_norm_avg = torch.linalg.norm(key_proj_weights, 1, -1)
+        value_norm_avg = torch.linalg.norm(value_proj_weights, 1, -1)
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
@@ -249,9 +249,9 @@ class L2WeightHeadMasker(AttentionHeadMasker):
         key_proj_weights = k_proj.module.weight.data.view([n_heads, -1])
         value_proj_weights = v_proj.module.weight.data.view([n_heads, -1])
 
-        query_norm_avg = torch.sum(query_proj_weights ** 2, -1)
-        key_norm_avg = torch.sum(key_proj_weights ** 2, -1)
-        value_norm_avg = torch.sum(value_proj_weights ** 2, -1)
+        query_norm_avg = torch.linalg.norm(query_proj_weights, 2, -1)
+        key_norm_avg = torch.linalg.norm(key_proj_weights, 2, -1)
+        value_norm_avg = torch.linalg.norm(value_proj_weights, 2, -1)
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
@@ -328,9 +328,9 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
     def get_head_importance_scores(self, weight_group):
         _, _, _, output_proj = weight_group
         activations = torch.stack(self.pruner.collected_activation[output_proj.group_idx], -1)
-        activations = torch.sum(activations, -1)
-        n_heads = activations.size()[0] // self.head_hidden_dim
-        scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
+        scores = torch.sum(activations, -1).detach().cpu()
+        # n_heads = activations.size()[0] // self.head_hidden_dim
+        # scores = torch.sum(activations.view([n_heads, -1]), -1).detach().cpu()
 
         # clean up hooks
         if self.pruner.hook_id in self.pruner._fwd_hook_handles:
@@ -339,12 +339,15 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
         return scores
 
     def _add_activation_collector(self, pruner):
-        def collector(collected_activation):
+        def collector(collected_activation, head_hidden_dim):
             def hook(module_, input_, output):
                 if type(input_) is tuple:
                     input_ = input_[0]
-                raw_activation = torch.abs(input_.detach().cpu() ** 2)  # L2-norm
-                raw_activation_reduced = torch.sum(raw_activation, [0, 1])
+                raw_activation = input_.detach().cpu() ** 2
+                n_heads = raw_activation.size(-1) // head_hidden_dim
+                raw_activation = raw_activation.view(raw_activation.size(0), raw_activation.size(1), n_heads, -1)
+                raw_activation = torch.linalg.norm(raw_activation, 2, -1)           # (B, S, n_heads)
+                raw_activation_reduced = torch.sum(raw_activation, [0, 1])          # (n_heads,)
                 collected_activation.append(raw_activation_reduced)
 
             return hook
@@ -355,7 +358,8 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
 
         for _, _, _, output_proj in pruner.masking_groups:
             pruner.collected_activation[output_proj.group_idx] = []
-            handle = output_proj.register_forward_hook(collector(pruner.collected_activation[output_proj.group_idx]))
+            handle = output_proj.register_forward_hook(collector(pruner.collected_activation[output_proj.group_idx],
+                                                                 head_hidden_dim=self.head_hidden_dim))
 
             pruner._fwd_hook_handles[pruner._fwd_hook_id].append(handle)
 
