@@ -8,6 +8,7 @@ import numpy as np
 
 __all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency', 'AttentionWeightDependency']
 
+
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
 MUL_TYPES = ['aten::mul', 'atem::mul_']
@@ -66,6 +67,7 @@ def reshape_break_channel_dependency(op_node):
     doesn't want to change the number of the channels, which means the channel
     dependency is not broken. In contrast, the original reshap operation wants
     to change the number of channels, so it breaks the channel dependency.
+
     Parameters
     ----------
     opnode: NodePyOP
@@ -453,7 +455,6 @@ class GroupDependency(Dependency):
         return self.dependency
 
 
-
 class ReshapeDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
@@ -462,6 +463,7 @@ class ReshapeDependency(Dependency):
         their input shapes. In this class, we find the direct input conv/linear layers of these
         reshape functions. If you get the shape conflict when run the forward inference on the
         speeduped model, please try remove these layers from the pruner config list and try again.
+
         Parameters
         ----------
         model : torch.nn.Module
@@ -478,10 +480,12 @@ class ReshapeDependency(Dependency):
     def _get_parent_layers(self, node):
         """
         Find the nearest father conv layers for the target node.
+
         Parameters
         ---------
         node : torch._C.Node
             target node.
+
         Returns
         -------
         parent_layers: list
@@ -523,6 +527,7 @@ class ReshapeDependency(Dependency):
     def export(self, filepath):
         """
         export the reshape dependencies as a csv file.
+
         Output example:
         Reshape OP, Dependent Layers
         model.view.1,layer1.1.conv2,layer1.0.conv2,conv1
@@ -541,11 +546,13 @@ class ReshapeDependency(Dependency):
     def dependency_sets(self):
         """
         Get the list of the dependency set.
+
         Returns
         -------
         dependency_sets : list
             list of the dependency sets. For example,
             [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
+
         """
         d_sets = []
         for reshape_node in self.dependency:
@@ -682,3 +689,4 @@ class AttentionWeightDependency(Dependency):
                 group = self.dependency[name]
                 if len(group) > 0:
                     csv_w.writerow([name, group])
+

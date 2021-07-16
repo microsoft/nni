@@ -8,8 +8,6 @@
  */
 type TrialJobStatus = 'UNKNOWN' | 'WAITING' | 'RUNNING' | 'SUCCEEDED' | 'FAILED' | 'USER_CANCELED' | 'SYS_CANCELED' | 'EARLY_STOPPED';
 
-type LogType = 'TRIAL_LOG' | 'TRIAL_STDOUT' | 'TRIAL_ERROR';
-
 interface TrainingServiceMetadata {
     readonly key: string;
     readonly value: string;
@@ -81,7 +79,7 @@ abstract class TrainingService {
     public abstract submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail>;
     public abstract cancelTrialJob(trialJobId: string, isEarlyStopped?: boolean): Promise<void>;
-    public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
+    public abstract getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string>;
     public abstract setClusterMetadata(key: string, value: string): Promise<void>;
     public abstract getClusterMetadata(key: string): Promise<string>;
     public abstract getTrialOutputLocalPath(trialJobId: string): Promise<string>;
@@ -103,5 +101,5 @@ class NNIManagerIpConfig {
 export {
     TrainingService, TrainingServiceError, TrialJobStatus, TrialJobApplicationForm,
     TrainingServiceMetadata, TrialJobDetail, TrialJobMetric, HyperParameters,
-    NNIManagerIpConfig, LogType
+    NNIManagerIpConfig
 };

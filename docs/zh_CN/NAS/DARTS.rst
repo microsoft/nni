@@ -59,9 +59,6 @@ PyTorch
 ..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsTrainer
     :members:
 
-..  autoclass:: nni.algorithms.nas.pytorch.darts.DartsMutator
-    :members:
-
 局限性
 -----------
 

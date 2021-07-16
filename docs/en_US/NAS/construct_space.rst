@@ -9,3 +9,4 @@ NNI provides powerful APIs for users to easily express model space (or search sp
 
     Mutation Primitives <MutationPrimitives>
     Customize Mutators <Mutators>
+    Hypermodule Lib <Hypermodules>
