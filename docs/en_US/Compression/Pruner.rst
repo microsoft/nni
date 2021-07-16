@@ -749,7 +749,7 @@ Currently, the following head sorting criteria are supported:
     * "l2_activation": rank heads by the L2-norm of their attention computation output.
     * "taylorfo": rank heads by l1 norm of the output of attention computation * gradient for this output. Check more details in `this paper <https://arxiv.org/abs/1905.10650>`__ and `this one <https://arxiv.org/abs/1611.06440>`__.
 
-We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list.
+We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort.
 
 In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below).
 
