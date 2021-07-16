@@ -7,7 +7,7 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 
 import sys
-sys.path.append('../../models')
+sys.path.append('../models')
 from cifar10.vgg import VGG
 from mnist.lenet import LeNet
 
@@ -45,7 +45,7 @@ def model_inference(config):
     masks_file = config['masks_file']
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
-        
+
     # device = torch.device(config['device'])
     if config['model_name'] == 'vgg16':
         model = VGG(depth=16)
