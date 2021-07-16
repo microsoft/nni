@@ -210,6 +210,7 @@ class ChannelDependency(Dependency):
     def dependency_sets(self):
         """
         Get the list of the dependency set.
+
         Returns
         -------
         dependency_sets : list
@@ -390,8 +391,9 @@ class GroupDependency(Dependency):
         conv2 takes the output features of conv1 as input.
         Then we have to the filters of conv1 can still be
         divided into 4 groups after filter pruning, because
-        the input channels of conv2 shoule be divided into
+        the input channels of conv2 should be divided into
         4 groups.
+
         Returns
         -------
         self.dependency : dict
