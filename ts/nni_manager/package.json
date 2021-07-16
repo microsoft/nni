@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha -r ts-node/register -t 15000 --recursive **/*.test.ts --exclude node_modules/**/**/*.test.ts --colors",
+    "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha -r ts-node/register -t 15000 --recursive test/**/*.test.ts --colors",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
@@ -58,7 +58,7 @@
     "chai-as-promised": "^7.1.1",
     "eslint": "^7.28.0",
     "glob": "^7.1.7",
-    "mocha": "^8.4.0",
+    "mocha": "^9.0.2",
     "npx": "^10.2.2",
     "nyc": "^15.1.0",
     "request": "^2.88.2",
