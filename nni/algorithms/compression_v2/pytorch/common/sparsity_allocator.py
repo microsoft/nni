@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from typing import Dict, List, Tuple, Union, Optional
 
 import numpy as np

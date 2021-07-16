@@ -1,3 +1,8 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+import logging
+from schema import And, Optional as SchemaOptional
 from typing import List, Dict, Callable, Optional
 
 import torch
@@ -11,6 +16,12 @@ from nni.algorithms.compression_v2.pytorch.base.pruner_tools import HookCollecto
 from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, SingleHookTrainerBasedDataCollector
 from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NormMetricsCalculator, MultiDataNormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
 from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator
+from nni.algorithms.compression_v2.pytorch.utils.config_validation import PrunerSchema
+
+_logger = logging.getLogger(__name__)
+
+__all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', 'SlimPruner', 'ActivationFilterPruner',
+           'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', 'TaylorFOWeightFilterPruner']
 
 
 class LevelPruner(Pruner):
@@ -28,6 +39,16 @@ class LevelPruner(Pruner):
         self.mode = 'normal'
         super().__init__(model, config_list)
 
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): [str],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
+
     def _reset_tools(self):
         if self.data_collector is None:
             self.data_collector = WeightDataCollector(self)
@@ -39,7 +60,60 @@ class LevelPruner(Pruner):
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode)
 
 
-class L1FilterPruner(Pruner):
+class NormFilterPruner(Pruner):
+    def __init__(self, model: Module, config_list: List[Dict], p: int,
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
+        """
+        Parameters
+        ----------
+        model
+            Model to be pruned
+        config_list
+            Supported keys:
+                - sparsity : This is to specify the sparsity operations to be compressed to.
+                - op_types : Only Conv2d is supported in NormFilterPruner.
+        p
+            The order of norm.
+        mode
+            'normal' or 'dependency_aware'.
+            If prune the model in a dependency-aware way, this pruner will
+            prune the model according to the l1-norm of weights and the channel-dependency or
+            group-dependency of the model. In this way, the pruner will force the conv layers
+            that have dependencies to prune the same channels, so the speedup module can better
+            harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
+            , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+            dependency between the conv layers.
+        dummy_input
+            The dummy input to analyze the topology constraints. Note that, the dummy_input
+            should on the same device with the model.
+        """
+        self.p = p
+        self.mode = mode
+        self.dummy_input = dummy_input
+        super().__init__(model, config_list)
+
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            'op_types': ['Conv2d'],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
+
+    def _reset_tools(self):
+        if self.data_collector is None:
+            self.data_collector = WeightDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if self.metrics_calculator is None:
+            self.metrics_calculator = NormMetricsCalculator(p=self.p, dim=0)
+        if self.sparsity_allocator is None:
+            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+
+
+class L1FilterPruner(NormFilterPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -64,22 +138,10 @@ class L1FilterPruner(Pruner):
             The dummy input to analyze the topology constraints. Note that, the dummy_input
             should on the same device with the model.
         """
-        self.mode = mode
-        self.dummy_input = dummy_input
-        super().__init__(model, config_list)
-
-    def _reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator(p=1, dim=0)
-        if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+        super().__init__(model, config_list, 1, mode, dummy_input)
 
 
-class L2FilterPruner(Pruner):
+class L2FilterPruner(NormFilterPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -104,19 +166,7 @@ class L2FilterPruner(Pruner):
             The dummy input to analyze the topology constraints. Note that, the dummy_input
             should on the same device with the model.
         """
-        self.mode = mode
-        self.dummy_input = dummy_input
-        super().__init__(model, config_list)
-
-    def _reset_tools(self):
-        if self.data_collector is None:
-            self.data_collector = WeightDataCollector(self)
-        else:
-            self.data_collector.reset()
-        if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator(p=2, dim=0)
-        if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+        super().__init__(model, config_list, 2, mode, dummy_input)
 
 
 class FPGMPruner(Pruner):
@@ -147,6 +197,16 @@ class FPGMPruner(Pruner):
         self.mode = mode
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
+
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            'op_types': ['Conv2d'],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
 
     def _reset_tools(self):
         if self.data_collector is None:
@@ -211,6 +271,16 @@ class SlimPruner(Pruner):
         self.training_epochs = training_epochs
         self._scale = scale
         super().__init__(model, config_list)
+
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            'op_types': ['BatchNorm2d'],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
 
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
@@ -288,6 +358,16 @@ class ActivationFilterPruner(Pruner):
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
         super().__init__(model, config_list)
+
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            'op_types': ['Conv2d'],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
 
     def _choose_activation(self, activation: str = 'relu') -> Callable:
         if activation == 'relu':
@@ -392,6 +472,16 @@ class TaylorFOWeightFilterPruner(Pruner):
         self.criterion = criterion
         self.training_batches = training_batches
         super().__init__(model, config_list)
+
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        schema = PrunerSchema([{
+            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            'op_types': ['Conv2d'],
+            SchemaOptional('op_names'): [str],
+            SchemaOptional('exclude'): bool
+        }], model, _logger)
+
+        schema.validate(config_list)
 
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Module, Tensor, Tensor], None]:
         def collect_taylor(grad: Tensor):

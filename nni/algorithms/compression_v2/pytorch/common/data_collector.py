@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import logging
 from typing import Dict, List
 
@@ -6,6 +9,8 @@ from torch import Tensor
 from nni.algorithms.compression_v2.pytorch.base.pruner_tools import DataCollector, TrainerBasedDataCollector
 
 _logger = logging.getLogger(__name__)
+
+__all__ = ['WeightDataCollector', 'WeightTrainerBasedDataCollector', 'SingleHookTrainerBasedDataCollector']
 
 
 class WeightDataCollector(DataCollector):
