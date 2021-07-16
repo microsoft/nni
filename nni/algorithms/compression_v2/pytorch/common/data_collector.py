@@ -18,7 +18,7 @@ class WeightDataCollector(DataCollector):
 
     def collect(self) -> Dict[str, Tensor]:
         data = {}
-        for _, wrapper in self.compressor._get_modules_wrapper().items():
+        for _, wrapper in self.compressor.get_modules_wrapper().items():
             data[wrapper.name] = wrapper.module.weight.data.clone().detach()
         return data
 
@@ -33,7 +33,7 @@ class WeightTrainerBasedDataCollector(TrainerBasedDataCollector):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
 
         data = {}
-        for _, wrapper in self.compressor._get_modules_wrapper().items():
+        for _, wrapper in self.compressor.get_modules_wrapper().items():
             data[wrapper.name] = wrapper.module.weight.data.clone().detach()
         return data
 

@@ -335,7 +335,7 @@ class SparsityAllocator:
         Dict[str, Tensor]
             The key is `weight_mask` or `bias_mask`, value is the final mask.
         """
-        wrapper = self.pruner._get_modules_wrapper()[name]
+        wrapper = self.pruner.get_modules_wrapper()[name]
         weight_size = wrapper.module.weight.data.size()
         if self.dim is None:
             assert len(mask.size()) == len(weight_size)

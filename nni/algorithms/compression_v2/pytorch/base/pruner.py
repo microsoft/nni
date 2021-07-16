@@ -94,7 +94,7 @@ class Pruner(Compressor):
         return wrapper
 
     def load_masks(self, masks: Dict[str, Dict[str, Tensor]]):
-        wrappers = self._get_modules_wrapper()
+        wrappers = self.get_modules_wrapper()
         for name, layer_mask in masks.items():
             assert name in wrappers, '{} is not in wrappers of this pruner, can not apply the mask.'.format(name)
             for mask_type, mask in layer_mask.items():
@@ -131,7 +131,7 @@ class Pruner(Compressor):
         dim
             The pruned dim.
         """
-        for _, wrapper in self._get_modules_wrapper().items():
+        for _, wrapper in self.get_modules_wrapper().items():
             weight_mask = wrapper.weight_mask
             mask_size = weight_mask.size()
             if len(mask_size) == 1:
@@ -141,3 +141,54 @@ class Pruner(Compressor):
                 sum_idx.remove(dim)
                 index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=False).tolist()
             _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
+
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model_path
+            Path to save pruned model state_dict.
+        mask_path
+            (optional) path to save mask dict.
+        onnx_path
+            (optional) path to save onnx model.
+        input_shape
+            Input shape to onnx model.
+        device
+            Device of the model, used to place the dummy input tensor for exporting onnx file.
+            The tensor is placed on cpu if ```device``` is None.
+        """
+        assert model_path is not None, 'model_path must be specified'
+        mask_dict = {}
+        self._unwrap_model()  # used for generating correct state_dict name without wrapper state
+
+        for name, wrapper in self.get_modules_wrapper().items():
+            weight_mask = wrapper.weight_mask
+            bias_mask = wrapper.bias_mask
+            if weight_mask is not None:
+                mask_sum = weight_mask.sum().item()
+                mask_num = weight_mask.numel()
+                _logger.debug('Layer: %s  Sparsity: %.4f', name, 1 - mask_sum / mask_num)
+                wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
+            if bias_mask is not None:
+                wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
+            # save mask to dict
+            mask_dict[name] = {"weight_mask": weight_mask, "bias_mask": bias_mask}
+
+        torch.save(self.bound_model.state_dict(), model_path)
+        _logger.info('Model state_dict saved to %s', model_path)
+        if mask_path is not None:
+            torch.save(mask_dict, mask_path)
+            _logger.info('Mask dict saved to %s', mask_path)
+        if onnx_path is not None:
+            assert input_shape is not None, 'input_shape must be specified to export onnx model'
+            # input info needed
+            if device is None:
+                device = torch.device('cpu')
+            input_data = torch.Tensor(*input_shape)
+            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
+            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+
+        self._wrap_model()
