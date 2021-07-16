@@ -8,7 +8,7 @@ import * as fs from 'fs';
 import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 
-import { ShellExecutor } from '../shellExecutor';
+import { ShellExecutor } from '../../../training_service/remote_machine/shellExecutor';
 import { prepareUnitTest, cleanupUnitTest } from '../../../common/utils';
 
 const LOCALFILE: string = 'localSshUTData';

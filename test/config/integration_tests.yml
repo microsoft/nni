@@ -49,19 +49,13 @@ testCases:
     kwargs:
       rootpath: /tmp/nnimount/testlocalrootpath
 
-# TODO: Enable this case after nfs server is ready
-#- name: shared-storage-remote-nfs
-#  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
-#  config:
-#    sharedStorage:
-#      localMountPoint: /tmp/nnimount/testlocalrootpath
-#      remoteMountPoint: /tmp/nnimount/testremoterootpath
-#      nfsServer: $(NFS_IP)
-#      exportedDirectory: /home/nni/mnt/
-#  validator:
-#    class: FileExistValidator
-#    kwargs:
-#      rootpath: /tmp/nnimount/testlocalrootpath
+- name: shared-storage-remote-nfs
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
+  trainingService: remote
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml

@@ -18,7 +18,6 @@ jobs:
 
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
-      echo "Build docker image: $(build_docker_image)"
 
       python3 -m pip install --upgrade pip setuptools
     displayName: Prepare

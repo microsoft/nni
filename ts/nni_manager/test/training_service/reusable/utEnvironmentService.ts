@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import { Channel, EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../environment";
+import { Channel, EnvironmentInformation, EnvironmentService, EnvironmentStatus } from "../../../training_service/reusable/environment";
 import { EventEmitter } from 'events';
 import { UtCommandChannel } from "./utCommandChannel";
 
