@@ -146,7 +146,9 @@ class QAT_Quantizer(Quantizer):
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
                 - dummy_input : tuple of tensor
-                    inputs to the model, which are used to get the graph of the module
+                    inputs to the model, which are used to get the graph of the module. The graph is used to find
+                    Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
+                    given, then batch normalization folding would be disabled.
         """
 
         super().__init__(model, config_list, optimizer, dummy_input)
