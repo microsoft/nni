@@ -1,16 +1,17 @@
 #!/bin/bash
 
-# Usage: ./run.sh gpu_id task
+# Usage: ./run.sh gpu_id glue_task
 
 export CUDA_VISIBLE_DEVICES=$1
-TASK_NAME=$2
-PRETRAINED_MODEL='bert-base-uncased'          # example: 'distilbert-base-uncased'  'roberta-base'   'bert-base-cased'   'bert-base-uncased'
+TASK_NAME=$2                                  # "cola", "sst2", "mrpc", "stsb", "qqp", "mnli", "qnli", "rte", "wnli"
+PRETRAINED_MODEL="bert-base-uncased"          # "distilbert-base-uncased", "roberta-base", "bert-base-cased", ...
 
 # parameters for pruning
-USAGE=2                       # change to different numbers to run examples with different configs
+# change USAGE to different numbers (1, 2, 3) to run examples with different configs
+USAGE=2                       
 SPARSITY=0.5
-RANKING_CRITERION=l1_weight
-NUM_ITERATIONS=1              # 1 for one-shot pruning
+RANKING_CRITERION=l1_weight                   # "l1_weight", "l2_weight", "l1_activation", "l2_activation", "taylorfo"
+NUM_ITERATIONS=1                              # 1 for one-shot pruning
 EPOCHS_PER_ITERATION=1
 
 # other training parameters, no need to change
@@ -18,12 +19,11 @@ MAX_LENGTH=128
 BATCH_SIZE=32
 LR=2e-5
 N_EPOCHS=3
-SEED=2021
 
 time=$(date "+%Y%m%d%H%M%S")
 OUTDIR="models_${PRETRAINED_MODEL}_${TASK_NAME}_$time/"
 
-TASK_LIST=('cola' 'sst2' 'mrpc' 'stsb' 'qqp' 'mnli' 'qnli' 'rte' 'wnli')
+TASK_LIST=("cola" "sst2" "mrpc" "stsb" "qqp" "mnli" "qnli" "rte" "wnli")
 if [[ ${TASK_LIST[*]} =~ (^|[[:space:]])$TASK_NAME($|[[:space:]]) ]]; then
     mkdir $OUTDIR
     python transformer_pruning.py \
@@ -32,11 +32,10 @@ if [[ ${TASK_LIST[*]} =~ (^|[[:space:]])$TASK_NAME($|[[:space:]]) ]]; then
 	   --num_iterations $NUM_ITERATIONS \
 	   --epochs_per_iteration $EPOCHS_PER_ITERATION \
 	   --speed_up \
-	   --seed $SEED \
-	   --model_name_or_path $PRETRAINED_MODEL \
+	   --model_name $PRETRAINED_MODEL \
 	   --task_name $TASK_NAME \
 	   --max_length $MAX_LENGTH \
-	   --per_device_train_batch_size $BATCH_SIZE \
+	   --batch_size $BATCH_SIZE \
 	   --learning_rate $LR \
 	   --num_train_epochs $N_EPOCHS \
 	   --output_dir $OUTDIR \
