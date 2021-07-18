@@ -482,7 +482,7 @@ class BNNQuantizer(Quantizer):
 
     def reset_status(self, checkpoint):
         super().reset_status(checkpoint=checkpoint)
-        device = next(model.parameters()).device
+        device = next(self.bound_model.parameters()).device
         self.quant_grad = ClipGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:

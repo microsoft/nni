@@ -440,7 +440,7 @@ class SlimPruner(IterativePruner):
     def reset_status(self, checkpoint):
         super().reset_status(checkpoint)
         self.patch_optimizer_before(self._callback)
-        
+
     def validate_config(self, model, config_list):
         schema = PrunerSchema([{
             Optional('sparsity'): And(float, lambda n: 0 < n < 1),
