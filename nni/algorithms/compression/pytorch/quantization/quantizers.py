@@ -148,7 +148,7 @@ class QAT_Quantizer(Quantizer):
                 - dummy_input : tuple of tensor
                     inputs to the model, which are used to get the graph of the module. The graph is used to find
                     Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
-                    given, then batch normalization folding would be disabled.
+                    given, the batch normalization folding would be disabled.
         """
 
         super().__init__(model, config_list, optimizer, dummy_input)
