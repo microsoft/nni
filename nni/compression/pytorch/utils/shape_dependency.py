@@ -567,9 +567,9 @@ class AttentionWeightDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
         Groups the linear layers belonging to the same attention layer in a model.
-        Currently, we only capture weights in attention layers with forward computations written 
-        as four Linear layers (projections for Q, K, V, and output) and two matmul operations. 
-        The method implemented here can work for Huggingface transformers but may not correctly 
+        Currently, we only capture weights in attention layers with forward computations written
+        as four Linear layers (projections for Q, K, V, and output) and two matmul operations.
+        The method implemented here can work for Huggingface transformers but may not correctly
         capture transformers written in other fashions (e.g., torch.nn.Transformer).
 
         Parameters
@@ -650,7 +650,7 @@ class AttentionWeightDependency(Dependency):
     def build_dependency(self):
         """
         For every matmul operation, find the immediate parent and children Linear operations.
-        If we get three parents and one children, add these four weights as a dependecy group. 
+        If we get three parents and one children, add these four weights as a dependecy group.
         """
         self.graph.unpack_manually()
         for node in self.graph.nodes_py.nodes_op:
