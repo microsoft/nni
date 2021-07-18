@@ -566,7 +566,11 @@ class ReshapeDependency(Dependency):
 class AttentionWeightDependency(Dependency):
     def __init__(self, model=None, dummy_input=None, traced_model=None):
         """
-        This model groups the linear layers belonging to the same attention layer in a model.
+        Groups the linear layers belonging to the same attention layer in a model.
+        Currently, we only capture weights in attention layers with forward computations written 
+        as four Linear layers (projections for Q, K, V, and output) and two matmul operations. 
+        The method implemented here can work for Huggingface transformers but may not correctly 
+        capture transformers written in other fashions (e.g., torch.nn.Transformer).
 
         Parameters
         ----------
@@ -575,7 +579,7 @@ class AttentionWeightDependency(Dependency):
         dummy_input : torch.Tensor
             The example input data to trace the network architecture.
         traced_model : torch._C.Graph
-            if we already has the traced graph of the target model, we do not
+            if we already have the traced graph of the target model, we do not
             need to trace the model again.
         """
         super(AttentionWeightDependency, self).__init__(
@@ -583,7 +587,7 @@ class AttentionWeightDependency(Dependency):
 
     def _get_parent_layers(self, node):
         """
-        Find the nearest father linear layers for the target node.
+        Find the nearest parent linear layers for the target node.
 
         Parameters
         ---------
@@ -593,7 +597,7 @@ class AttentionWeightDependency(Dependency):
         Returns
         -------
         parent_layers: list
-            nearest father linear layers for the target worknode.
+            nearest parent linear layers for the target worknode.
         """
         parent_layers = []
         queue = []
@@ -614,7 +618,7 @@ class AttentionWeightDependency(Dependency):
 
     def _get_children_layers(self, node):
         """
-        Find the nearest children linear layer for the target node.
+        Find the nearest children linear layers for the target node.
 
         Parameters
         ---------
@@ -623,8 +627,8 @@ class AttentionWeightDependency(Dependency):
 
         Returns
         -------
-        parent_layers: list
-            nearest father linear layers for the target worknode.
+        children_layers: list
+            nearest children linear layers for the target worknode.
         """
         children_layers = []
         queue = []
@@ -644,6 +648,10 @@ class AttentionWeightDependency(Dependency):
         return children_layers
 
     def build_dependency(self):
+        """
+        For every matmul operation, find the immediate parent and children Linear operations.
+        If we get three parents and one children, add these four weights as a dependecy group. 
+        """
         self.graph.unpack_manually()
         for node in self.graph.nodes_py.nodes_op:
             layers = []
@@ -680,7 +688,7 @@ class AttentionWeightDependency(Dependency):
         """
         Export the group dependency to a csv file. Each line describes an attention layer.
 
-        output example:
+        Output example:
         Attention layer matmul op, Group
         """
         header = ['Attention layer matmul op', 'Group']
