@@ -88,16 +88,18 @@ class SimulatedAnnealingPruner(Pruner):
 
         super().__init__(model, config_list)
 
-    def reconfig(self, model, config_list):
+    def _set_config(self, model, config_list):
         # save original model
         self._model_to_prune = copy.deepcopy(model)
+        super()._set_config(model, config_list)
 
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
 
         self._current_temperature = self._start_temperature
 
         # overall pruning rate
-        self._sparsity = config_list[0]['sparsity']
+        self._sparsity = self.config_list[0]['sparsity']
 
         # pruning rates of the layers
         self._sparsities = None

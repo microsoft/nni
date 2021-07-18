@@ -46,23 +46,37 @@ class Compressor:
             # don't save 'params' in a 'param_group' in 'param_groups'
             [group.pop('params') for group in self.optimizer_param_groups]
         if model is not None and config_list is not None:
-            self.reconfig(model, config_list)
+            self.reset_with_new_config(model, config_list)
 
-    def reconfig(self, model, config_list):
+    def reset_with_new_config(self, model, config_list):
         """
-        Re-config the compressor.
+        Reset the compressor with new config.
         """
+        self._set_config(model, config_list)
+
+        self.is_wrapped = False
+
+        self._fwd_hook_handles = {}
+        self._fwd_hook_id = 0
+
+        self.reset_status()
+
+    def _set_config(self, model, config_list):
         assert isinstance(model, torch.nn.Module)
         self.validate_config(model, config_list)
 
         self.bound_model = model
         self.config_list = config_list
 
+    def reset_status(self, checkpoint=None):
+        """
+        reset model state dict and model wrapper
+        """
         if self.optimizer is not None:
             if self.optimizer_cls.__name__ == 'SGD':
-                self.optimizer = self.optimizer_cls(model.parameters(), lr=0.001)
+                self.optimizer = self.optimizer_cls(self.bound_model.parameters(), lr=0.001)
             else:
-                self.optimizer = self.optimizer_cls(model.parameters())
+                self.optimizer = self.optimizer_cls(self.bound_model.parameters())
             groups = self.optimizer.param_groups
             assert len(groups) == len(self.optimizer_param_groups)
             for group, temp_group in zip(groups, self.optimizer_param_groups):
@@ -70,28 +84,6 @@ class Compressor:
                 for k, v in temp_group.items():
                     group[k] = deepcopy(v)
 
-        self.modules_to_compress = None
-        self.modules_wrapper = []
-        self.is_wrapped = False
-
-        self._fwd_hook_handles = {}
-        self._fwd_hook_id = 0
-
-        self.reset_bound_model()
-
-        if not self.modules_wrapper:
-            _logger.warning('Nothing is configured to compress, please check your model and config_list')
-
-    def validate_config(self, model, config_list):
-        """
-        subclass can optionally implement this method to check if config_list if valid
-        """
-        pass
-
-    def reset_bound_model(self, checkpoint=None):
-        """
-        reset model state dict and model wrapper
-        """
         self._unwrap_model()
         if checkpoint is not None:
             self.bound_model.load_state_dict(checkpoint)
@@ -104,6 +96,15 @@ class Compressor:
             self.modules_wrapper.append(wrapper)
 
         self._wrap_model()
+
+        if not self.modules_wrapper:
+            _logger.warning('Nothing is configured to compress, please check your model and config_list')
+
+    def validate_config(self, model, config_list):
+        """
+        subclass can optionally implement this method to check if config_list if valid
+        """
+        pass
 
     def _detect_modules_to_compress(self):
         """

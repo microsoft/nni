@@ -105,9 +105,9 @@ class SensitivityPruner(Pruner):
 
         super(SensitivityPruner, self).__init__(model, config_list)
 
-    def reconfig(self, model, config_list):
+    def reset_with_new_config(self, model, config_list):
         self.model = model
-        super().reconfig(model, config_list)
+        super().reset_with_new_config(model, config_list)
         # unwrap the model
         self._unwrap_model()
         _logger.debug(str(self.model))

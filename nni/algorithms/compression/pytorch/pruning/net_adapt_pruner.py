@@ -100,17 +100,17 @@ class NetAdaptPruner(Pruner):
 
         super().__init__(model, config_list)
 
-    def reconfig(self, model, config_list):
+    def _set_config(self, model, config_list):
         # models used for iterative pruning and evaluation
         self._model_to_prune = copy.deepcopy(model)
-
-        super().reconfig(model, config_list)
 
         # overall pruning rate
         self._sparsity = config_list[0]['sparsity']
 
         # config_list
         self._config_list_generated = []
+
+        super()._set_config(model, config_list)
 
     def validate_config(self, model, config_list):
         """

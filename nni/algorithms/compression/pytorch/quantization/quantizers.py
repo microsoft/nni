@@ -20,8 +20,8 @@ class NaiveQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
@@ -150,11 +150,11 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(model, config_list, optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
-        device = next(model.parameters()).device
+        device = next(self.bound_model.parameters()).device
         self.bound_model.register_buffer("steps", torch.Tensor([1]))
         for layer, config in modules_to_compress:
             layer.module.register_buffer("zero_point", torch.Tensor([0.0]))
@@ -379,9 +379,9 @@ class DoReFaQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
-        device = next(model.parameters()).device
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
+        device = next(self.bound_model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
         for layer, config in modules_to_compress:
             if "weight" in config.get("quant_types", []):
@@ -488,8 +488,8 @@ class BNNQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
         device = next(model.parameters()).device
         self.quant_grad = ClipGrad.apply
         modules_to_compress = self.get_modules_to_compress()
@@ -608,10 +608,10 @@ class LsqQuantizer(Quantizer):
         """
         super().__init__(model, config_list, optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
 
-        device = next(model.parameters()).device
+        device = next(self.bound_model.parameters()).device
         self.quant_grad = QuantForward()
         modules_to_compress = self.get_modules_to_compress()
         self.bound_model.register_buffer("steps", torch.Tensor([1]))

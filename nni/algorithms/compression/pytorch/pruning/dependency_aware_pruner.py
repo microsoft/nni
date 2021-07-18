@@ -35,8 +35,8 @@ class DependencyAwarePruner(Pruner):
 
         super().__init__(model, config_list=config_list, optimizer=optimizer)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint=checkpoint)
 
         if self.dependency_aware:
             if not self._supported_dependency_aware():
@@ -47,7 +47,7 @@ class DependencyAwarePruner(Pruner):
             # Get the TorchModuleGraph of the target model
             # to trace the model, we need to unwrap the wrappers
             self._unwrap_model()
-            self.graph = TorchModuleGraph(model, self.dummy_input)
+            self.graph = TorchModuleGraph(self.bound_model, self.dummy_input)
             self._wrap_model()
             self.channel_depen = ChannelDependency(
                 traced_model=self.graph.trace)
@@ -58,7 +58,7 @@ class DependencyAwarePruner(Pruner):
             self.group_depen = self.group_depen.dependency_sets
 
         self.masker = MASKER_DICT[self.pruning_algorithm](
-            model, self, **self.algo_kwargs)
+            self.bound_model, self, **self.algo_kwargs)
         # set the dependency-aware switch for the masker
         self.masker.dependency_aware = self.dependency_aware
         self.set_wrappers_attribute("if_calculated", False)

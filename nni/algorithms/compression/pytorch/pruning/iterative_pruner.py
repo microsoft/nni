@@ -121,13 +121,13 @@ class AGPPruner(IterativePruner):
                  num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level'):
         self.freq = epochs_per_iteration
         self.end_epoch = epochs_per_iteration * num_iterations
+        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
 
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm=pruning_algorithm, trainer=trainer, criterion=criterion,
                          num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
-        assert isinstance(optimizer, torch.optim.Optimizer), "AGP pruner is an iterative pruner, please pass optimizer of the model to it"
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint)
         self.now_epoch = 0
 
     def validate_config(self, model, config_list):
@@ -280,11 +280,13 @@ class ADMMPruner(IterativePruner):
 
         super().__init__(model, config_list, pruning_algorithm=self._base_algo, trainer=trainer, criterion=criterion)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        self.optimizer = None
+
+        super().reset_status(checkpoint)
+
         self.optimizer = torch.optim.Adam(
             self.bound_model.parameters(), lr=1e-3, weight_decay=5e-5)
-
         self.patch_optimizer_before(self._callback)
 
     def validate_config(self, model, config_list):
@@ -432,10 +434,10 @@ class SlimPruner(IterativePruner):
                          num_iterations=1, epochs_per_iteration=sparsifying_training_epochs, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
 
-    def reconfig(self, model, config_list):
-        super().reconfig(model, config_list)
+    def reset_status(self, checkpoint):
+        super().reset_status(checkpoint)
         self.patch_optimizer_before(self._callback)
-
+        
     def validate_config(self, model, config_list):
         schema = CompressorSchema([{
             'sparsity': And(float, lambda n: 0 < n < 1),
