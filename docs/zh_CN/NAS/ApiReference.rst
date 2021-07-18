@@ -4,7 +4,7 @@ Retiarii API 参考
 .. contents::
 
 内联 Mutation API
-----------------------------------------
+--------------------
 
 ..  autoclass:: nni.retiarii.nn.pytorch.LayerChoice
     :members:
@@ -18,8 +18,14 @@ Retiarii API 参考
 ..  autoclass:: nni.retiarii.nn.pytorch.ChosenInputs
     :members:
 
+..  autoclass:: nni.retiarii.nn.pytorch.Repeat
+    :members:
+
+..  autoclass:: nni.retiarii.nn.pytorch.Cell
+    :members:
+
 图 Mutation API
---------------------------------------
+-------------------
 
 ..  autoclass:: nni.retiarii.Mutator
     :members:
@@ -39,38 +45,38 @@ Retiarii API 参考
 ..  autoclass:: nni.retiarii.Operation
     :members:
 
-Trainers
---------
+Evaluators
+----------
 
-..  autoclass:: nni.retiarii.trainer.FunctionalTrainer
+..  autoclass:: nni.retiarii.evaluator.FunctionalEvaluator
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.LightningModule
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.LightningModule
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Classification
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Classification
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.lightning.Regression
+..  autoclass:: nni.retiarii.evaluator.pytorch.lightning.Regression
     :members:
 
 Oneshot Trainers
 ----------------
 
-..  autoclass:: nni.retiarii.trainer.pytorch.DartsTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.DartsTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.EnasTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.EnasTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.ProxylessTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.ProxylessTrainer
     :members:
 
-..  autoclass:: nni.retiarii.trainer.pytorch.SinglePathTrainer
+..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
     :members:
 
-Strategies
-----------
+探索 Strategies
+----------------------
 
 ..  autoclass:: nni.retiarii.strategy.Random
     :members:
@@ -84,6 +90,9 @@ Strategies
 ..  autoclass:: nni.retiarii.strategy.TPEStrategy
     :members:
 
+..  autoclass:: nni.retiarii.strategy.PolicyBasedRL
+    :members:
+
 Retiarii Experiments
 --------------------
 
@@ -92,3 +101,8 @@ Retiarii Experiments
 
 ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:
+
+工具
+---------
+
+..  autofunction:: nni.retiarii.serialize

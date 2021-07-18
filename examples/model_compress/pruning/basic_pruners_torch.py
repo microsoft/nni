@@ -101,7 +101,7 @@ def get_data(dataset, data_dir, batch_size, test_batch_size):
         criterion = torch.nn.CrossEntropyLoss()
     return train_loader, test_loader, criterion
 
-def get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion):
+def get_model(args, device, train_loader, test_loader, criterion):
     if args.model == 'lenet':
         model = LeNet().to(device)
         if args.pretrained_model_dir is None:
@@ -125,6 +125,7 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
     if args.pretrained_model_dir is None:
         print('start pre-training...')
         best_acc = 0
+        state_dict = model.state_dict()
         for epoch in range(args.pretrain_epochs):
             train(args, model, device, train_loader, criterion, optimizer, epoch)
             scheduler.step()
@@ -143,12 +144,8 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
         model.load_state_dict(torch.load(args.pretrained_model_dir))
         best_acc = test(args, model, device, criterion, test_loader)
 
-    # setup new opotimizer for fine-tuning
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
-
     print('Pretrained model acc:', best_acc)
-    return model, optimizer, scheduler
+    return model
 
 def train(args, model, device, train_loader, criterion, optimizer, epoch):
     model.train()
@@ -192,10 +189,12 @@ def main(args):
     # prepare model and data
     train_loader, test_loader, criterion = get_data(args.dataset, args.data_dir, args.batch_size, args.test_batch_size)
 
-    model, optimizer, scheduler = get_model_optimizer_scheduler(args, device, train_loader, test_loader, criterion)
+    model = get_model(args, device, train_loader, test_loader, criterion)
+    # this optimizer is for pruning process
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
 
     dummy_input = get_dummy_input(args, device)
-    flops, params, results = count_flops_params(model, dummy_input)
+    flops, params, _ = count_flops_params(model, dummy_input)
     print(f"FLOPs: {flops}, params: {params}")
 
     print(f'start {args.pruner} pruning...')
@@ -243,6 +242,7 @@ def main(args):
 
         # Reproduced result in paper 'PRUNING FILTERS FOR EFFICIENT CONVNETS',
         # Conv_1, Conv_8, Conv_9, Conv_10, Conv_11, Conv_12 are pruned with 50% sparsity, as 'VGG-16-pruned-A'
+        # If you want to skip some layer, you can use 'exclude' like follow.
         if args.pruner == 'slim':
             config_list = [{
                 'sparsity': args.sparsity,
@@ -252,7 +252,10 @@ def main(args):
             config_list = [{
                 'sparsity': args.sparsity,
                 'op_types': ['Conv2d'],
-                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+                'op_names': ['feature.0', 'feature.10', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
+            }, {
+                'exclude': True,
+                'op_names': ['feature.10']
             }]
 
     pruner = pruner_cls(model, config_list, **kw_args)
@@ -273,11 +276,16 @@ def main(args):
 
     if args.speed_up:
         # Unwrap all modules to normal state
-        pruner._unwrap_model() 
+        pruner._unwrap_model()
         m_speedup = ModelSpeedup(model, dummy_input, mask_path, device)
         m_speedup.speedup_model()
 
     print('start finetuning...')
+
+    # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+
     best_top1 = 0
     save_path = os.path.join(args.experiment_data_dir, f'finetuned.pth')
     for epoch in range(args.fine_tune_epochs):

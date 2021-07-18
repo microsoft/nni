@@ -33,7 +33,7 @@ trialConcurrency: 4             # Run 4 trials concurrently.
 maxTrialNumber: 10              # Generate at most 10 trials.
 maxExperimentDuration: 1h       # Stop generating trials after 1 hour.
 
-tuner:                          # Configure the tuning alogrithm.
+tuner:                          # Configure the tuning algorithm.
   name: TPE                     # Supported algorithms: TPE, Random, Anneal, Evolution, GridSearch, GPTuner, PBTTuner, etc.
                                 #   Full list:  https://nni.readthedocs.io/en/latest/Tuner/BuiltinTuner.html
   classArgs:                    # Algorithm specific arguments. See the tuner's doc for details.
