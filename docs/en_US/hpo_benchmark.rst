@@ -27,7 +27,7 @@ train and test datasets to a **framework**, evaluates the prediction on the test
 Therefore, to implement **HPO Benchmark** using automlbenchmark, we pair up a tuner with a search space to form a **framework**,
 and handle the repeated trial-evaluate-feedback loop in the **framework** abstraction. In other words, each **HPO Benchmark**
 contains two main components: a **benchmark** from the automlbenchmark library, and an **architecture** which defines the search
-space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document
+space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document.
 
 * **tuner**\ : a `tuner or advisor provided by NNI <https://nni.readthedocs.io/en/stable/builtin_tuner.html>`_, or a custom tuner provided by the user.
 * **task**\ : an abstraction used by automlbenchmark. A task can be thought of as a tuple (dataset, metric). It provides train and test datasets to the frameworks. Then, based on the returns predictions on the test set, the task evaluates the metric (e.g., mse for regression, f1 for classification) and reports the score.
