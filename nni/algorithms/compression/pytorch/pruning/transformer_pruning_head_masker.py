@@ -143,8 +143,8 @@ class AttentionHeadMasker(WeightMasker):
         mask_weight = head_mask_bool.unsqueeze(-1).expand(weight_mask_shape).type_as(q_proj.module.weight)
         mask_bias = head_mask_bool.unsqueeze(-1).expand(bias_mask_shape).type_as(q_proj.module.weight)
 
-        mask_weight_proj = mask_weight.view(q_proj.module.weight.size()).detach().to(device)
-        mask_bias_proj = mask_bias.view(-1).detach().to(device)
+        mask_weight_proj = mask_weight.contiguous().view(q_proj.module.weight.size()).detach().to(device)
+        mask_bias_proj = mask_bias.contiguous().view(-1).detach().to(device)
         masks_for_proj = {'weight_mask': mask_weight_proj.detach()}
         if hasattr(q_proj.module, 'bias') and q_proj.module.bias is not None:
             masks_for_proj['bias_mask'] = mask_bias_proj
