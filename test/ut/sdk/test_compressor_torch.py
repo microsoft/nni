@@ -354,7 +354,7 @@ class CompressorTestCase(TestCase):
                 try:
                     kwargs = {}
                     if pruner_class in (torch_pruner.SlimPruner, torch_pruner.AGPPruner, torch_pruner.ActivationMeanRankFilterPruner, torch_pruner.ActivationAPoZRankFilterPruner):
-                        kwargs = {'optimizer': None, 'trainer': None, 'criterion': None}
+                        kwargs = {'optimizer': optimizer, 'trainer': None, 'criterion': None}
 
                     print('kwargs', kwargs)
                     pruner_class(model, config_list, **kwargs)      
