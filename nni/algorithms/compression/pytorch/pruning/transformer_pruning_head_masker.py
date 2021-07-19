@@ -225,9 +225,9 @@ class L1WeightHeadMasker(AttentionHeadMasker):
         key_proj_weights = k_proj.module.weight.data.view([n_heads, -1])
         value_proj_weights = v_proj.module.weight.data.view([n_heads, -1])
 
-        query_norm_avg = torch.linalg.norm(query_proj_weights, 1, -1)
-        key_norm_avg = torch.linalg.norm(key_proj_weights, 1, -1)
-        value_norm_avg = torch.linalg.norm(value_proj_weights, 1, -1)
+        query_norm_avg = torch.norm(query_proj_weights, 1, -1)
+        key_norm_avg = torch.norm(key_proj_weights, 1, -1)
+        value_norm_avg = torch.norm(value_proj_weights, 1, -1)
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
@@ -249,9 +249,9 @@ class L2WeightHeadMasker(AttentionHeadMasker):
         key_proj_weights = k_proj.module.weight.data.view([n_heads, -1])
         value_proj_weights = v_proj.module.weight.data.view([n_heads, -1])
 
-        query_norm_avg = torch.linalg.norm(query_proj_weights, 2, -1)
-        key_norm_avg = torch.linalg.norm(key_proj_weights, 2, -1)
-        value_norm_avg = torch.linalg.norm(value_proj_weights, 2, -1)
+        query_norm_avg = torch.norm(query_proj_weights, 2, -1)
+        key_norm_avg = torch.norm(key_proj_weights, 2, -1)
+        value_norm_avg = torch.norm(value_proj_weights, 2, -1)
 
         return ((query_norm_avg + key_norm_avg + value_norm_avg) / 3).detach()
 
@@ -346,7 +346,7 @@ class L2ActivationHeadMasker(AttentionHeadMasker):
                 raw_activation = input_.detach().cpu() ** 2
                 n_heads = raw_activation.size(-1) // head_hidden_dim
                 raw_activation = raw_activation.view(raw_activation.size(0), raw_activation.size(1), n_heads, -1)
-                raw_activation = torch.linalg.norm(raw_activation, 2, -1)           # (B, S, n_heads)
+                raw_activation = torch.norm(raw_activation, 2, -1)           # (B, S, n_heads)
                 raw_activation_reduced = torch.sum(raw_activation, [0, 1])          # (n_heads,)
                 collected_activation.append(raw_activation_reduced)
 
