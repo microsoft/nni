@@ -50,7 +50,7 @@ Search Space for Random Forest:
 .. code-block:: json
 
    {
-       "n_estimators": {"_type":"randint", "_value": [8, 512]},
+       "n_estimators": {"_type":"randint", "_value": [4, 2048]},
        "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},
        "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
        "min_samples_split": {"_type":"randint", "_value": [2, 16]},
