@@ -55,6 +55,7 @@ class Compressor:
         self._set_config(model, config_list)
 
         self.is_wrapped = False
+        self.modules_wrapper = []
 
         self._fwd_hook_handles = {}
         self._fwd_hook_id = 0
