@@ -13,10 +13,8 @@ from unittest import TestCase, main
 
 from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
 
-from models.pytorch_models.transformer import TransformerEncoder
-
 sys.path.append(os.path.dirname(__file__))
-
+from models.pytorch_models.transformer import TransformerEncoder
 
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
