@@ -100,7 +100,7 @@ the quantizer, like:
 
 The quantizer will automatically detect Conv-BN patterns and simulate batch normalization folding process in the training
 graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
-`quantizer.export`.
+`quantizer.export_model`.
 
 ----
 
