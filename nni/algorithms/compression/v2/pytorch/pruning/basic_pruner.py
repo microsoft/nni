@@ -11,12 +11,12 @@ import torch.nn as nn
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression_v2.pytorch.base.pruner_tools import HookCollectorInfo, MetricsCalculator
-from nni.algorithms.compression_v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, SingleHookTrainerBasedDataCollector
-from nni.algorithms.compression_v2.pytorch.common.metrics_calculator import NormMetricsCalculator, MultiDataNormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
-from nni.algorithms.compression_v2.pytorch.common.sparsity_allocator import get_sparsity_allocator
-from nni.algorithms.compression_v2.pytorch.utils.config_validation import PrunerSchema
+from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
+from nni.algorithms.compression.v2.pytorch.base.pruner_tools import HookCollectorInfo, MetricsCalculator
+from nni.algorithms.compression.v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, SingleHookTrainerBasedDataCollector
+from nni.algorithms.compression.v2.pytorch.common.metrics_calculator import NormMetricsCalculator, MultiDataNormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
+from nni.algorithms.compression.v2.pytorch.common.sparsity_allocator import get_sparsity_allocator
+from nni.algorithms.compression.v2.pytorch.utils.config_validation import PrunerSchema
 
 _logger = logging.getLogger(__name__)
 
