@@ -6,6 +6,7 @@ import logging
 import os
 import pkg_resources
 from colorama import init
+import nni.tools.jupyter_extension.management as jupyter_management
 from .common_utils import print_error
 from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
@@ -17,7 +18,6 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
 from .import ts_management
-import nni.tools.jupyter_extension.management as jupyter_management
 
 init(autoreset=True)
 
@@ -283,7 +283,7 @@ def parse_args():
     jupyter_parser = subparsers.add_parser('jupyter-extension', help='install or uninstall JupyterLab extension (internal preview)')
     jupyter_subparsers = jupyter_parser.add_subparsers()
     jupyter_install_parser = jupyter_subparsers.add_parser('install', help='install JupyterLab extension')
-    jupyter_install_parser.set_defaults(func=lambda _args: jupyter_management.install())
+    jupyter_install_parser.set_defaults(func=lambda _args: jupyter_management.install())  # TODO: prompt message
     jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', help='uninstall JupyterLab extension')
     jupyter_uninstall_parser.set_defaults(func=lambda _args: jupyter_management.uninstall())
 
