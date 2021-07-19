@@ -6,7 +6,7 @@ from typing import Dict, List
 
 from torch import Tensor
 
-from nni.algorithms.compression_v2.pytorch.base.pruner_tools import DataCollector, TrainerBasedDataCollector
+from nni.algorithms.compression.v2.pytorch.base.pruner_tools import DataCollector, TrainerBasedDataCollector
 
 _logger = logging.getLogger(__name__)
 

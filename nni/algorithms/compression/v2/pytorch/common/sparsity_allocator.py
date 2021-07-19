@@ -7,8 +7,8 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression_v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression_v2.pytorch.base.pruner_tools import SparsityAllocator
+from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
+from nni.algorithms.compression.v2.pytorch.base.pruner_tools import SparsityAllocator
 
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
