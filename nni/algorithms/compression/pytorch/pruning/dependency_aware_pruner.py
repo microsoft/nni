@@ -35,7 +35,7 @@ class DependencyAwarePruner(Pruner):
 
         super().__init__(model, config_list=config_list, optimizer=optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
 
         if self.dependency_aware:

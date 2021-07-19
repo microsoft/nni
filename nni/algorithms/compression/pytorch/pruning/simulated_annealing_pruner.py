@@ -93,7 +93,7 @@ class SimulatedAnnealingPruner(Pruner):
         self._model_to_prune = copy.deepcopy(model)
         super()._set_config(model, config_list)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
 
         self._current_temperature = self._start_temperature

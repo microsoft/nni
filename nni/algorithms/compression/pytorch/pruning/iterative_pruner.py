@@ -126,7 +126,7 @@ class AGPPruner(IterativePruner):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm=pruning_algorithm, trainer=trainer, criterion=criterion,
                          num_iterations=num_iterations, epochs_per_iteration=epochs_per_iteration)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint)
         self.now_epoch = 0
 
@@ -281,7 +281,7 @@ class ADMMPruner(IterativePruner):
 
         super().__init__(model, config_list, pruning_algorithm=self._base_algo, trainer=trainer, criterion=criterion)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         self.optimizer = None
 
         super().reset_status(checkpoint)
@@ -437,7 +437,7 @@ class SlimPruner(IterativePruner):
                          num_iterations=1, epochs_per_iteration=sparsifying_training_epochs, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint)
         self.patch_optimizer_before(self._callback)
 

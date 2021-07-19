@@ -20,7 +20,7 @@ class NaiveQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
         self.layer_scale = {}
 
@@ -151,7 +151,7 @@ class QAT_Quantizer(Quantizer):
         """
         super().__init__(model, config_list, optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
@@ -370,7 +370,7 @@ class DoReFaQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
         device = next(self.bound_model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
@@ -480,7 +480,7 @@ class BNNQuantizer(Quantizer):
     def __init__(self, model, config_list, optimizer=None):
         super().__init__(model, config_list, optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
         device = next(self.bound_model.parameters()).device
         self.quant_grad = ClipGrad.apply
@@ -601,7 +601,7 @@ class LsqQuantizer(Quantizer):
         """
         super().__init__(model, config_list, optimizer)
 
-    def reset_status(self, checkpoint):
+    def reset_status(self, checkpoint=None):
         super().reset_status(checkpoint=checkpoint)
 
         device = next(self.bound_model.parameters()).device
