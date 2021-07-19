@@ -67,6 +67,11 @@ RUN python3 -m pip --no-cache-dir install torch==1.7.1 torchvision==0.8.2 pytorc
 RUN python3 -m pip --no-cache-dir install scikit-learn==0.24.1
 
 #
+#tensorly
+#
+RUN python3 -m pip --no-cache-dir install -U tensorly
+
+#
 # pandas==0.23.4 lightgbm==2.2.2
 #
 RUN python3 -m pip --no-cache-dir install pandas==1.1 lightgbm==2.2.2
