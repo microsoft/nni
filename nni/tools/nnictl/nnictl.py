@@ -17,6 +17,7 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
 from .import ts_management
+import nni.tools.jupyter_extension.management as jupyter_management
 
 init(autoreset=True)
 
@@ -277,6 +278,14 @@ def parse_args():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
+
+    # jupyter-extension command
+    jupyter_parser = subparsers.add_parser('jupyter-extension', help='install or uninstall JupyterLab extension (internal preview)')
+    jupyter_subparsers = jupyter_parser.add_subparsers()
+    jupyter_install_parser = jupyter_subparsers.add_parser('install', help='install JupyterLab extension')
+    jupyter_install_parser.set_defaults(func=lambda _args: jupyter_management.install())
+    jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', help='uninstall JupyterLab extension')
+    jupyter_uninstall_parser.set_defaults(func=lambda _args: jupyter_management.uninstall())
 
     args = parser.parse_args()
     args.func(args)
