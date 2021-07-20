@@ -12,8 +12,8 @@ import { setExperimentStartupInfo } from '../../common/experimentStartupInfo';
 import { ExperimentProfile, TrialJobStatistics } from '../../common/manager';
 import { TrialJobStatus } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
-import { NNIDataStore } from '../nniDataStore';
-import { SqlDB } from '../sqlDatabase';
+import { NNIDataStore } from '../../core/nniDataStore';
+import { SqlDB } from '../../core/sqlDatabase';
 
 describe('Unit test for dataStore', () => {
     let ds: DataStore;

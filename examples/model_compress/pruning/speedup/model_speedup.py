@@ -45,7 +45,7 @@ def model_inference(config):
     masks_file = config['masks_file']
     device = torch.device(
         'cuda') if torch.cuda.is_available() else torch.device('cpu')
-        
+
     # device = torch.device(config['device'])
     if config['model_name'] == 'vgg16':
         model = VGG(depth=16)

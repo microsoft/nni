@@ -2,8 +2,8 @@
 // Licensed under the MIT license.
 
 import { encodeCommand } from "../../../core/ipcInterface";
-import { Command, CommandChannel, RunnerConnection } from "../commandChannel";
-import { Channel, EnvironmentInformation } from "../environment";
+import { Command, CommandChannel, RunnerConnection } from "../../../training_service/reusable/commandChannel";
+import { Channel, EnvironmentInformation } from "../../../training_service/reusable/environment";
 
 class UtRunnerConnection extends RunnerConnection {
 

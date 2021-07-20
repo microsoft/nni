@@ -494,14 +494,20 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     dummy_input : torch.Tensor
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+    global_sort: bool
+        Only support TaylorFOWeightFilterPruner currently.
+        If prune the model in a global-sort way. If it is `True`, this pruner will prune
+        the model according to the global contributions information which means channel contributions
+        will be sorted globally and whether specific channel will be pruned depends on global information.
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1,
-                 dependency_aware=False, dummy_input=None):
+                 dependency_aware=False, dummy_input=None, global_sort=False):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
                          epochs_per_iteration=1, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
+        self.masker.global_sort = global_sort
 
     def _supported_dependency_aware(self):
         return True

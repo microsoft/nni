@@ -7,7 +7,7 @@ import * as chai from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
-import { LinuxCommands } from '../extends/linuxCommands';
+import { LinuxCommands } from '../../../training_service/remote_machine/extends/linuxCommands';
 
 
 describe('Unit Test for linuxCommands', () => {
