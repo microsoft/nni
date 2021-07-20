@@ -1,15 +1,16 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from copy import deepcopy
-from io import SEEK_CUR
 import logging
 from pathlib import Path
-from typing import List, Dict, Optional, Callable
-from numpy import real
+from typing import List, Dict, Optional, Callable, Tuple
 
-import torch
 from torch.nn import Module
 from torch.tensor import Tensor
 
 from nni.compression.pytorch.speedup import ModelSpeedup
+from nni.algorithms.compression.v2.pytorch.utils import apply_compression_results, compute_sparsity_with_compact_model, compute_sparsity_with_mask
 from .pruner import Pruner
 
 _logger = logging.getLogger(__name__)
@@ -19,173 +20,136 @@ class ConfigGenerator:
     """
     This class used to generate config list for pruner in each iteration.
     """
-    def __init__(self, config_list: List[Dict]):
-        pass
+    def __init__(self, model: Module, config_list: List[Dict]):
+        self.origin_model = model
+        self.origin_config_list = config_list
+        self._best_pruned_model = None
+        self._best_config_list = None
+
+    @property
+    def best_pruned_model(self) -> Optional(Module):
+        """
+        Return the pruned model with the highest score.
+        """
+        return self._best_pruned_model
 
     @property
     def best_config_list(self) -> Optional(List[Dict]):
+        """
+        Return the generated config with the highest score.
+        """
+        return self._best_config_list
+
+    def generate_config_list(self, iteration: int) -> Optional[Tuple[Module, List[Dict], Optional[Dict[str, Dict[str, Tensor]]]]]:
+        """
+        Parameters
+        ----------
+        The current iteration.
+
+        Returns
+        -------
+        Optional[Tuple[Module, List[Dict], Optional[Dict[str, Dict[str, Tensor]]]]]
+            (model, config_list, masks).
+            The model to compress, config list and masks for this iteration, None means no more iterations.
+        """
         raise NotImplementedError()
 
-    def generate_config_list(self, model: Module, real_sparsity_config_list: List[Dict]) -> Optional[List[Dict]]:
+    def receive_compression_result(self, model: Module, score: Optional[float],
+                                   real_sparsity_config_list: List[Dict], masks: Optional[Dict[str, Tensor]]):
         """
         Parameters
         ----------
         model
-            The model that wants to sparsify.
+            The pruned model in the last iteration. It might be a sparsify model or a speed-up model.
+        score
+            The score of the model, higher score means better performance.
         real_sparsity_config_list
             Real sparsity config list.
-
-        Returns
-        -------
-        Optional[List[Dict]]
-            The config list for this iteration, None means no more iterations.
-        """
-        raise NotImplementedError()
-
-    def reset(self, origin_config_list: List[Dict], iteration_num: Optional[int] = None):
-        """
-        Parameters
-        ----------
-        origin_config_list
-            The origin config list.
+        masks
+            If masks is None, the pruned model is a compact model after speed up.
+            If masks is not None, the pruned model is a sparsify model without speed up.
         """
         raise NotImplementedError()
 
 
 class PruningScheduler:
-    def __init__(self, pruner: Pruner, config_generator: ConfigGenerator, finetuner: Callable[[Module]] = None,
-                 speed_up: bool = False, dummy_input: Tensor = None, consistant: bool = False):
+    def __init__(self, pruner: Pruner, config_generator: ConfigGenerator, evaluator: Callable[[Module], float],
+                 finetuner: Callable[[Module]] = None, speed_up: bool = False, dummy_input: Tensor = None,
+                 log_dir: str = '.'):
+        """
+        Parameters
+        ----------
+        pruner
+            The pruner used in pruner scheduler.
+            The scheduler will use `Pruner.reset(model, config_list)` to reset it in each iteration.
+        config_generator
+            Used to generate config_list for each iteration.
+        evaluator
+            Evaluate the pruned model and give a score.
+        finetuner
+            The finetuner handled all finetune logic, use a pytorch module as input.
+        speed_up
+            If set True, speed up the model in each iteration.
+        dummy_input
+            If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        """
         self.pruner = pruner
         self.config_generator = config_generator
+        self.evaluator = evaluator
         self.finetuner = finetuner
         self.speed_up = speed_up
         self.dummy_input = dummy_input
 
-        self.consistant = consistant
+        self.log_dir = Path(log_dir)
 
-    def compute_sparsity_with_compact_model(self, origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
-        real_config_list = []
-        for config in config_list:
-            left_weight_num = 0
-            total_weight_num = 0
-            for module_name, module in origin_model.named_modules():
-                module_type = type(module).__name__
-                if 'op_types' in config and module_type not in config['op_types']:
-                    continue
-                if 'op_names' in config and module_name not in config['op_names']:
-                    continue
-                total_weight_num += module.weight.data.numel()
-            for module_name, module in compact_model.named_modules():
-                module_type = type(module).__name__
-                if 'op_types' in config and module_type not in config['op_types']:
-                    continue
-                if 'op_names' in config and module_name not in config['op_names']:
-                    continue
-                left_weight_num += module.weight.data.numel()
-            real_config_list.append(deepcopy(config_list))
-            real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
-        return real_config_list
-
-    def compute_sparsity_with_mask(self, masked_model: Module, masks: Dict[str, Tensor], config_list: List[Dict], dim: int = 0):
-        real_config_list = []
-        for config in config_list:
-            left_weight_num = 0
-            total_weight_num = 0
-            for module_name, module in masked_model.named_modules():
-                module_type = type(module).__name__
-                if 'op_types' in config and module_type not in config['op_types']:
-                    continue
-                if 'op_names' in config and module_name not in config['op_names']:
-                    continue
-                weight_mask = masks[module_name]['weight']
-                mask_size = weight_mask.size()
-                if len(mask_size) == 1:
-                    index = torch.nonzero(weight_mask.abs() != 0).tolist()
-                else:
-                    sum_idx = list(range(len(mask_size)))
-                    sum_idx.remove(dim)
-                    index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0).tolist()
-                module_weight_num = module.weight.data.numel()
-                left_weight_num += module_weight_num * len(index) / weight_mask.size(dim)
-                total_weight_num += module_weight_num
-            real_config_list.append(deepcopy(config_list))
-            real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
-        return real_config_list
-
-    def compress_one_step(self, model: Module, config_list: List[Dict], log_dir: str):
-        model, mask = self.pruner.compress()
+    def compress_one_step(self, model: Module, config_list: List[Dict], masks: Optional[Dict[str, Dict[str, Tensor]]],
+                          log_dir: str) -> Tuple[Module, List[Dict]]:
+        # compress model and export mask
+        self.pruner.reset(model, config_list)
+        if masks is not None:
+            self.pruner.load_masks(masks)
+        model, masks = self.pruner.compress()
         self.pruner.show_pruned_weights()
         self.pruner.export_model(model_path=Path(log_dir, 'pruned_model.pth'), mask_path=Path(log_dir, 'pruned_model.pth'))
 
+        # apply masks to sparsify model
+        self.pruner._unwrap_model()
+        apply_compression_results(model, masks)
+
+        # speed up and compute real sparsity
         if self.speed_up:
-            self.pruner._unwrap_model()
             origin_structure_model = deepcopy(model)
             ModelSpeedup(model, self.dummy_input, Path(log_dir, 'pruned_model.pth')).speedup_model()
-
-        if self.finetuner is not None:
-            self.finetuner(model)
-
-        if self.speed_up:
-            real_config_list = self.compute_sparsity_with_compact_model(origin_structure_model, model, config_list)
+            real_config_list = compute_sparsity_with_compact_model(origin_structure_model, model, config_list)
+            masks = None
         else:
-            self.pruner._unwrap_model()
-            real_config_list = self.compute_sparsity_with_mask(model, mask, config_list)
+            real_config_list = compute_sparsity_with_mask(model, masks, config_list)
 
-        return real_config_list, model
+        # finetune
+        if self.finetuner is not None:
+            if self.speed_up:
+                self.finetuner(model)
+            else:
+                self.pruner._wrap_model()
+                self.finetuner(model)
+                self.pruner._unwrap_model()
+
+        # evaluate
+        score = self.evaluator(model)
+
+        return model, score, real_config_list, masks
 
     def compress(self):
-        if self.consistant:
-            model = self.pruner.bound_model
+        iteration = 0
+        model, config_list, masks = self.config_generator.generate_config_list(iteration)
 
-        model = deepcopy(self.origin_model)
-        config_list = self.sparsity_generator.generate_config_list(deepcopy(self.origin_model), deepcopy(self.origin_config_list))
-        iteration_round = 0
-        log_dir = Path(log_dir, '{}-{}'.format(tag, time.strftime("%Y_%m_%d_%H_%M_%S", time.localtime())))
+        while config_list is not None:
+            log_dir = Path(self.log_dir, str(iteration))
+            pruned_model, score, real_config_list, masks = self.compress_one_step(model, config_list, masks, log_dir)
+            _logger.info('\nIteration %d\nscore: %f\nconfig list:\n%s', iteration, score, real_config_list)
 
-        _logger.info('Pruning start...')
-        while config_list:
-            iteration_round += 1
-            _logger.info('###### Pruning Iteration %i ######', iteration_round)
-            _logger.info('config list in this iteration:\n%s', json_tricks.dumps(config_list, indent=4))
+            iteration += 1
+            self.config_generator.receive_compression_result(pruned_model, score, real_config_list, masks)
+            model, config_list, masks = self.config_generator.generate_config_list(iteration)
 
-            log_path = Path(log_dir, str(iteration_round))
-            log_path.mkdir(parents=True, exist_ok=True)
-            model_path = Path(log_path, 'model.pth')
-            mask_path = Path(log_path, 'mask.pth')
-            model = model if consistent else deepcopy(self.origin_model)
-
-            # pruning
-            pruner = self.pruner_cls(model, config_list)
-            pruner.compress()
-            pruner.export_model(model_path=model_path, mask_path=mask_path)
-            pruner.get_pruned_weights()
-
-            # speed up
-            if speed_up:
-                assert dummy_input is not None
-                pruner._unwrap_model()
-                masked_model = deepcopy(model)
-                self.speed_up(model, mask_path, dummy_input)
-
-            # fine-tuning
-            if finetuner:
-                assert finetune_optimizer_gen is not None and finetune_dataloader is not None
-                optimizer = finetune_optimizer_gen(model)
-                for i in range(finetune_epochs):
-                    finetuner(model, optimizer, finetune_dataloader, i)
-
-            # compute real sparsity
-            if speed_up:
-                real_config_list = compute_sparsity_with_compact_model(masked_model, model, config_list)
-            else:
-                real_config_list = compute_sparsity_with_mask(model, mask_path, config_list)
-                pruner._unwrap_model()
-                apply_compression_results(model, mask_path)
-
-            config_list = self.sparsity_generator.generate_config_list(model, real_config_list)
-
-        _logger.info('Pruning end.')
-        return model
-
-    def get_best_config_list(self):
-        return self.config_generator.best_config_list
+        return self.config_generator.best_pruned_model
