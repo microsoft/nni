@@ -254,7 +254,7 @@ class CompressorTestCase(TestCase):
 
         model.conv1.module.weight.grad.data = torch.tensor(grad1).float()
         model.conv2.module.weight.grad.data = torch.tensor(grad2).float()
-        optimizer.step()
+        pruner.optimizer.step()
 
         mask1 = pruner.calc_mask(model.conv1)
         mask2 = pruner.calc_mask(model.conv2)
