@@ -10,6 +10,7 @@ from torch.nn import Module
 from torch.tensor import Tensor
 
 from nni.common.graph_utils import TorchModuleGraph
+from nni.compression.pytorch.utils import get_module_by_name
 
 _logger = logging.getLogger(__name__)
 
@@ -24,10 +25,12 @@ class LayerInfo:
 
 
 def _setattr(model: Module, name: str, module: Module):
-    name_list = name.split(".")
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    setattr(model, name_list[-1], module)
+    parent_module, _ = get_module_by_name(model, name)
+    if parent_module is not None:
+        name_list = name.split(".")
+        setattr(parent_module, name_list[-1], module)
+    else:
+        raise '{} not exist.'.format(name)
 
 
 weighted_modules = [
