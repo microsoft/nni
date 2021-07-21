@@ -5,9 +5,12 @@ Quick Start
     :hidden:
 
     Tutorial <Tutorial>
+    Notebook Example <compression_pipeline_example>
 
 
 Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focuses on the second stage and provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress a model. 
+
+A `compression pipeline example <./compression_pipeline_example.rst>`__ with Jupyter notebook is supported and refer the code :githublink:`here <examples/notebooks/compression_pipeline_example.ipynb>`.
 
 Model Pruning
 -------------
