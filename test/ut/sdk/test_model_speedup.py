@@ -331,7 +331,7 @@ class SpeedupTestCase(TestCase):
         new_model = TransposeModel()
         state_dict = torch.load(MODEL_FILE)
         new_model.load_state_dict(state_dict)
-        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE, confidence=2)
+        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE, confidence=4)
         ms.speedup_model()
         zero_bn_bias(ori_model)
         zero_bn_bias(new_model)
@@ -405,7 +405,7 @@ class SpeedupTestCase(TestCase):
                 if speedup_cfg is None:
                     speedup_cfg = {}
                 ms = ModelSpeedup(speedup_model, data,
-                                  MASK_FILE, confidence=2, **speedup_cfg)
+                                  MASK_FILE, confidence=4, **speedup_cfg)
                 ms.speedup_model()
 
                 speedup_model.eval()
@@ -439,7 +439,7 @@ class SpeedupTestCase(TestCase):
         net.eval()
 
         data = torch.randn(BATCH_SIZE, 3, 128, 128).to(device)
-        ms = ModelSpeedup(net, data, MASK_FILE, confidence=2)
+        ms = ModelSpeedup(net, data, MASK_FILE, confidence=4)
         ms.speedup_model()
         ms.bound_model(data)
 
@@ -461,7 +461,7 @@ class SpeedupTestCase(TestCase):
         pruner.compress()
         model(dummy_input)
         pruner.export_model(MODEL_FILE, MASK_FILE)
-        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=2)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=4)
         ms.speedup_model()
 
     def test_finegrained_speedup(self):
