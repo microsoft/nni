@@ -502,7 +502,7 @@ class TaylorFOWeightFilterPruner(Pruner):
         return collect_taylor
 
     def _calculate_taylor_expansion(self, weight_tensor: Tensor, grad: Tensor) -> Tensor:
-        return (weight_tensor * grad).data.pow(2)
+        return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def _reset_tools(self):
         hook_targets = {layer_info.name: layer_info.module.weight for layer_info, _ in self._detect_modules_to_compress()}
