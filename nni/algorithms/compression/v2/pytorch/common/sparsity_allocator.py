@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import torch
@@ -97,7 +97,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
     A specify allocator for Conv2d with dependency aware.
     """
 
-    def __init__(self, pruner: Pruner, dim: int, dummy_input: Tensor):
+    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
         assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
         super().__init__(pruner, dim=dim)
         self.dummy_input = dummy_input

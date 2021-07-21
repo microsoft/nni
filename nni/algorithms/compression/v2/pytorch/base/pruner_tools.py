@@ -85,11 +85,13 @@ class TrainerBasedDataCollector(DataCollector):
             The compressor binded with this DataCollector.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
 
             Example::
 
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                    model.train()
+                    training = model.training
+                    model.train(mode=True)
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     for batch_idx, (data, target) in enumerate(train_loader):
                         data, target = data.to(device), target.to(device)
@@ -98,6 +100,7 @@ class TrainerBasedDataCollector(DataCollector):
                         loss = criterion(output, target)
                         loss.backward()
                         optimizer.step()
+                    model.train(mode=training)
         optimizer
             The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
             so do not use this optimizer in other places.
@@ -141,12 +144,15 @@ class TrainerBasedDataCollector(DataCollector):
     def reset(self):
         # refresh optimizer and criterion
         self.compressor._unwrap_model()
-        optimizer_cls = self._origin_optimizer.__class__
-        if optimizer_cls.__name__ == 'SGD':
-            self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+        if self._origin_optimizer is not None:
+            optimizer_cls = self._origin_optimizer.__class__
+            if optimizer_cls.__name__ == 'SGD':
+                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+            else:
+                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
+            self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
         else:
-            self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
-        self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
+            self.optimizer = None
 
         if self._criterion_patch is not None:
             self.criterion = self._criterion_patch(self._origin_criterion)

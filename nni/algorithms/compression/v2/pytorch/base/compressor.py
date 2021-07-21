@@ -152,9 +152,10 @@ class Compressor:
         """
         Wrap all modules that needed to be compressed.
         """
-        for _, wrapper in reversed(self.get_modules_wrapper().items()):
-            _setattr(self.bound_model, wrapper.name, wrapper)
-        self.is_wrapped = True
+        if not self.is_wrapped:
+            for _, wrapper in reversed(self.get_modules_wrapper().items()):
+                _setattr(self.bound_model, wrapper.name, wrapper)
+            self.is_wrapped = True
 
     def _unwrap_model(self):
         """
@@ -184,7 +185,7 @@ class Compressor:
             else:
                 setattr(wrapper, name, value)
 
-    def generate_graph(self, dummy_input: Tensor) -> TorchModuleGraph:
+    def generate_graph(self, dummy_input: Any) -> TorchModuleGraph:
         """
         Generate a `TorchModuleGraph` instance of `self.bound_model` based on `jit.trace`.
 

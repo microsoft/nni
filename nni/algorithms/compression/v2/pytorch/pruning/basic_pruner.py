@@ -234,11 +234,13 @@ class SlimPruner(Pruner):
                 - op_types : Only BatchNorm2D is supported in SlimPruner.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
 
             Example::
 
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                    model.train()
+                    training = model.training
+                    model.train(mode=True)
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     for batch_idx, (data, target) in enumerate(train_loader):
                         data, target = data.to(device), target.to(device)
@@ -247,6 +249,7 @@ class SlimPruner(Pruner):
                         loss = criterion(output, target)
                         loss.backward()
                         optimizer.step()
+                    model.train(mode=training)
         optimizer
             The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
             so do not use this optimizer in other places.
@@ -317,11 +320,13 @@ class ActivationFilterPruner(Pruner):
                 - op_types : Only Conv2d is supported in ActivationFilterPruner.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
 
             Example::
 
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                    model.train()
+                    training = model.training
+                    model.train(mode=True)
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     for batch_idx, (data, target) in enumerate(train_loader):
                         data, target = data.to(device), target.to(device)
@@ -330,6 +335,7 @@ class ActivationFilterPruner(Pruner):
                         loss = criterion(output, target)
                         loss.backward()
                         optimizer.step()
+                    model.train(mode=training)
         optimizer
             The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
             so do not use this optimizer in other places.
@@ -424,11 +430,13 @@ class TaylorFOWeightFilterPruner(Pruner):
                 - op_types : Only Conv2d is supported in TaylorFOWeightFilterPruner.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
 
             Example::
 
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                    model.train()
+                    training = model.training
+                    model.train(mode=True)
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     for batch_idx, (data, target) in enumerate(train_loader):
                         data, target = data.to(device), target.to(device)
@@ -437,6 +445,7 @@ class TaylorFOWeightFilterPruner(Pruner):
                         loss = criterion(output, target)
                         loss.backward()
                         optimizer.step()
+                    model.train(mode=training)
         optimizer
             The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
             so do not use this optimizer in other places.
