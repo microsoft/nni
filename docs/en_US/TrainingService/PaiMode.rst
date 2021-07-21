@@ -92,7 +92,7 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
 Note: You should set ``platform: pai`` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like ``10.10.5.1``\ , the default protocol in NNI is HTTPS, if your PAI's cluster disabled https, please use the uri in ``http://10.10.5.1`` format.
 
 OpenPai configurations
-^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , ``trainingService`` configuration in pai mode has the following additional keys:
 
