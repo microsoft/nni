@@ -388,14 +388,15 @@ class Pruner(Compressor):
         onnx_path : str
             (optional) path to save onnx model
         input_shape : list or tuple
-            input shape to onnx model
-            this shape is used for creating a dummy input tensor for torch.onnx.export
+            input shape to onnx model, used for creating a dummy input tensor for torch.onnx.export
             if the input has a complex structure (e.g., a tuple), please directly create the input and
             pass it to dummy_input instead
+            note: this argument is deprecated and will be removed; please use dummy_input instead
         device : torch.device
             device of the model, where to place the dummy input tensor for exporting onnx file;
             the tensor is placed on cpu if ```device``` is None
             only useful when both onnx_path and input_shape are passed
+            note: this argument is deprecated and will be removed; please use dummy_input instead
         dummy_input: torch.Tensor or tuple
             dummy input to the onnx model; used when input_shape is not enough to specify dummy input
             user should ensure that the dummy_input is on the same device as the model
@@ -432,7 +433,7 @@ class Pruner(Compressor):
                 'input_shape or dummy_input must be specified to export onnx model'
             # create dummy_input using input_shape if input_shape is not passed
             if dummy_input is None:
-                _logger.warning("""The argument input_shape and device will be removed in the next release.
+                _logger.warning("""The argument input_shape and device will be removed in the future.
                                    Please create a dummy input and pass it to dummy_input instead.""")
                 if device is None:
                     device = torch.device('cpu')
