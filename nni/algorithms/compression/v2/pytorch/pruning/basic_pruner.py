@@ -248,6 +248,7 @@ class SlimPruner(Pruner):
                         output = model(data)
                         loss = criterion(output, target)
                         loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                         optimizer.step()
                     model.train(mode=training)
         optimizer
@@ -334,6 +335,7 @@ class ActivationFilterPruner(Pruner):
                         output = model(data)
                         loss = criterion(output, target)
                         loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                         optimizer.step()
                     model.train(mode=training)
         optimizer
@@ -444,6 +446,7 @@ class TaylorFOWeightFilterPruner(Pruner):
                         output = model(data)
                         loss = criterion(output, target)
                         loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                         optimizer.step()
                     model.train(mode=training)
         optimizer
