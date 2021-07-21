@@ -23,6 +23,10 @@ class NniProxyHandler(RequestHandler):
 
     # TODO: post, put, etc
 
+    def set_default_headers(self):
+        self.clear_header('Content-Type')
+        self.clear_header('Date')
+
 def _get_experiment_port():
     experiment_list_path = Path.home() / 'nni-experiments/.experiment'
     if not experiment_list_path.exists():
