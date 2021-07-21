@@ -295,7 +295,7 @@ class SpeedupTestCase(TestCase):
         mask_out = model(dummy_input)
 
         model.train()
-        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=2)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=4)
         ms.speedup_model()
         assert model.training
 
