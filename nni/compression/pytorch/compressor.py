@@ -432,7 +432,7 @@ class Pruner(Compressor):
                 'input_shape or dummy_input must be specified to export onnx model'
             # create dummy_input using input_shape if input_shape is not passed
             if dummy_input is None:
-                _logger.warning("""The argument input_shape and device will be removed in the next release. 
+                _logger.warning("""The argument input_shape and device will be removed in the next release.
                                    Please create a dummy input and pass it to dummy_input instead.""")
                 if device is None:
                     device = torch.device('cpu')
