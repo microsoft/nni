@@ -374,8 +374,8 @@ class Pruner(Compressor):
         wrapper.to(layer.module.weight.device)
         return wrapper
 
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, dummy_input=None,
-                     opset_version=None, device=None):
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None,
+                     dummy_input=None, opset_version=None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
@@ -389,15 +389,19 @@ class Pruner(Compressor):
             (optional) path to save onnx model
         input_shape : list or tuple
             input shape to onnx model
+            this shape is used for creating a dummy input tensor for torch.onnx.export
+            if the input has a complex structure (e.g., a tuple), please directly create the input and
+            pass it to dummy_input instead
+        device : torch.device
+            device of the model, where to place the dummy input tensor for exporting onnx file;
+            the tensor is placed on cpu if ```device``` is None
+            only useful when both onnx_path and input_shape are passed
         dummy_input: torch.Tensor or tuple
-            dummy input to the onnx model (used when input_shape is not enough to specify dummy input)
+            dummy input to the onnx model; used when input_shape is not enough to specify dummy input
             user should ensure that the dummy_input is on the same device as the model
         opset_version: int
             opset_version parameter for torch.onnx.export; only useful when onnx_path is not None
             if not passed, torch.onnx.export will use its default opset_version
-        device : torch.device
-            device of the model, used to place the dummy input tensor for exporting onnx file.
-            the tensor is placed on cpu if ```device``` is None
         """
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
