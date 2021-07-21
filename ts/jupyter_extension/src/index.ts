@@ -11,7 +11,7 @@ class NniWidget extends IFrame {
                 'allow-scripts',
             ]
         });
-        this.url = PageConfig.getBaseUrl() + 'nni/oview';
+        this.url = PageConfig.getBaseUrl() + 'nni/index';
         this.id = 'nni';
         this.title.label = 'NNI';
         this.title.closable = true;
@@ -27,6 +27,7 @@ async function activate(app: JupyterFrontEnd, palette: ICommandPalette, launcher
     commands.addCommand(command, {
         label: 'NNI',
         caption: 'NNI',
+        iconClass: (args) => (args.isPalette ? null : 'jp-Launcher-kernelIcon'),
         execute: () => {
             shell.add(new NniWidget(), 'main');
         }
@@ -35,7 +36,11 @@ async function activate(app: JupyterFrontEnd, palette: ICommandPalette, launcher
     palette.addItem({ command, category });
 
     if (launcher) {
-        launcher.add({ command, category });
+        launcher.add({
+            command,
+            category,
+            kernelIconUrl: '/nni/icon.png'  // FIXME: this field only works for "Notebook" category
+        });
     }
 }
 

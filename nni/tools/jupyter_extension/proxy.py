@@ -11,15 +11,23 @@ def setup(server):
 
 class NniProxyHandler(RequestHandler):
     def get(self, path):
-        port = _get_experiment_port()
-        if port is None:
+        ports = _get_experiment_ports()
+        if not ports:
             self.set_status(404)
-        else:
-            r = requests.get(f'http://localhost:{port}/{path}')
-            self.set_status(r.status_code)
-            for key, value in r.headers.items():
-                self.add_header(key, value)
-            self.finish(r.content)
+            return
+
+        if path == 'index':
+            if len(ports) > 1:  # if there is more than one running experiments, show experiment list
+                self.redirect('experiment')
+            else:  # if there is only one running experiment, show that experiment
+                self.redirect('oview')
+            return
+
+        r = requests.get(f'http://localhost:{ports[0]}/{path}')
+        self.set_status(r.status_code)
+        for key, value in r.headers.items():
+            self.add_header(key, value)
+        self.finish(r.content)
 
     # TODO: post, put, etc
 
@@ -27,11 +35,9 @@ class NniProxyHandler(RequestHandler):
         self.clear_header('Content-Type')
         self.clear_header('Date')
 
-def _get_experiment_port():
+def _get_experiment_ports():
     experiment_list_path = Path.home() / 'nni-experiments/.experiment'
     if not experiment_list_path.exists():
         return None
     experiments = json.load(open(experiment_list_path))
-    for experiment in experiments.values():
-        if experiment['status'] != 'STOPPED':
-            return experiment['port']
+    return [exp['port'] for exp in experiments.values() if exp['status'] != 'STOPPED']
