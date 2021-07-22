@@ -7,7 +7,7 @@ import * as chai from 'chai';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as tar from 'tar';
-import { execCopydir, tarAdd, validateCodeDir } from '../common/util';
+import { execCopydir, tarAdd, validateCodeDir } from '../../training_service/common/util';
 
 const deleteFolderRecursive = (filePath: string) => {
     if (fs.existsSync(filePath)) {

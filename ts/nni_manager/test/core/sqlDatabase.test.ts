@@ -12,7 +12,7 @@ import { Database, MetricDataRecord, TrialJobEvent, TrialJobEventRecord } from '
 import { setExperimentStartupInfo } from '../../common/experimentStartupInfo';
 import { ExperimentConfig, ExperimentProfile } from '../../common/manager';
 import { cleanupUnitTest, getDefaultDatabaseDir, mkDirP, prepareUnitTest } from '../../common/utils';
-import { SqlDB } from '../sqlDatabase';
+import { SqlDB } from '../../core/sqlDatabase';
 
 const expParams1: ExperimentConfig = {
     experimentName: 'Exp1',

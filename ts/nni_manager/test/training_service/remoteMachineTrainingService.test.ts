@@ -11,12 +11,12 @@ import * as tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
-import { TrialConfigMetadataKey } from '../common/trialConfigMetadataKey';
-import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
+import { TrialConfigMetadataKey } from '../../training_service/common/trialConfigMetadataKey';
+import { RemoteMachineTrainingService } from '../../training_service/remote_machine/remoteMachineTrainingService';
 
 // copy mockedTrail.py to local folder
 const localCodeDir: string = tmp.dirSync().name
-const mockedTrialPath: string = './training_service/test/mockedTrial.py'
+const mockedTrialPath: string = './test/mock/mockedTrial.py'
 fs.copyFileSync(mockedTrialPath, localCodeDir + '/mockedTrial.py')
 
 describe('Unit Test for RemoteMachineTrainingService', () => {

@@ -258,8 +258,6 @@ class ModelSpeedup:
         node: the NodePy
             The target node to update the indirect sparsity
         """
-        module_name = node.name
-        _logger.info('Update indirect sparsity for %s', module_name)
         unique_name = node.unique_name
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
