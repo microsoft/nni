@@ -25,7 +25,7 @@ interface PlacementConstraint{
     /**
      * GPUNumber constraint is in form of Array<number>, e.g., [3] means it must be placed on a node of 3 GPUs
      * 
-     * Device constraint is in form of Array<[string,number]>, e.g., [('Node-0',1),('Node-0',0)] means it must be placed on 
+     * Device constraint is in form of Array<[string,number]>, e.g., [('Node-0',1),('Node-1',0)] means it must be placed on 
      *      Node-0's GPU-1 and Node-1's GPU-0
      */
 }

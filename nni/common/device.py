@@ -3,7 +3,7 @@ from dataclasses import dataclass
 
 @dataclass
 class GPUDevice:
-    node_id: str
+    host: str
     gpu_id: int
     status: str = 'free'
 
@@ -19,7 +19,7 @@ class GPUDevice:
             return self.gpu_id < o.gpu_id
 
     def __repr__(self) -> str:
-        return "{Server-%s, GPU-%d, Status: %s}" % (self.node_id, self.gpu_id, self.status)
+        return "{Server-%s, GPU-%d, Status: %s}" % (self.host, self.gpu_id, self.status)
 
     def __hash__(self) -> int:
         return hash(self.host + '_' + self.gpu_id)
