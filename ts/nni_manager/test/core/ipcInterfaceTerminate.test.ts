@@ -59,7 +59,6 @@ function startProcess(): void {
     });
 }
 
-/* FIXME
 describe('core/ipcInterface.terminate', (): void => {
     before(() => {
         prepareUnitTest();
@@ -102,4 +101,3 @@ describe('core/ipcInterface.terminate', (): void => {
         return deferred.promise;
     });
 });
-*/
