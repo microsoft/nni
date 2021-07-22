@@ -38,6 +38,6 @@ After the searching is done, we can use the exported architecture to instantiate
 
 .. code-block:: python
 
-  from nni.retiarii import fixed_arch
-  with fixed_arch('/path/to/checkpoint.json'):
-    model = Model()
+    from nni.retiarii import fixed_arch
+    with fixed_arch('/path/to/checkpoint.json'):
+        model = Model()
