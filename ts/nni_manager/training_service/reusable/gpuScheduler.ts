@@ -67,6 +67,7 @@ export class GpuScheduler {
                 }
             } else if (constraint.type == 'GPUNumber') {
                 const gpus = constraint.gpus as Array<number>;
+                // TODO: remove the following constraint when supporting distributed trial
                 if (gpus.length != 1) {
                     throw new Error("Placement constraint of GPUNumber must have exactly one number.");
                 }
@@ -118,6 +119,7 @@ export class GpuScheduler {
 
             const hostsOfConstraint: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedHost);
             if (hostsOfConstraint.length > 1) {
+                //TODO: remove this constraint when supporting multi-host placement
                 throw new Error("Device constraint does not support using multiple hosts")
             }
             if (environments.length == 0) {
@@ -127,6 +129,13 @@ export class GpuScheduler {
                     environment: undefined,
                 };
             }
+            for (const environment of environments) {
+                if(!(environment instanceof RemoteMachineEnvironmentInformation)){
+                    //TODO: remove this constraint when supporting other training services
+                    throw new Error("Device placement constraint only supports remote training service for now.");
+                }
+            }
+            //TODO: 
             const eligibleEnvironments: EnvironmentInformation[] = environments.filter(
                 (environment: EnvironmentInformation) =>
                     (environment as RemoteMachineEnvironmentInformation).rmMachineMeta != undefined &&
