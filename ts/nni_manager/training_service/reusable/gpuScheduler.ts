@@ -130,9 +130,9 @@ export class GpuScheduler {
                 };
             }
             for (const environment of environments) {
-                if(!(environment instanceof RemoteMachineEnvironmentInformation)){
+                if(!('rmMachineMeta' in environment)){
                     //TODO: remove this constraint when supporting other training services
-                    throw new Error("Device placement constraint only supports remote training service for now.");
+                    throw new Error(`Environment Device placement constraint only supports remote training service for now.`);
                 }
             }
             //TODO: 
