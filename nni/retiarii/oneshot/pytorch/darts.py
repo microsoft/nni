@@ -3,6 +3,7 @@
 
 import copy
 import logging
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
@@ -19,7 +20,7 @@ class DartsLayerChoice(nn.Module):
     def __init__(self, layer_choice):
         super(DartsLayerChoice, self).__init__()
         self.name = layer_choice.key
-        self.op_choices = nn.ModuleDict(layer_choice.named_children())
+        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
         self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
 
     def forward(self, *args, **kwargs):
@@ -38,7 +39,7 @@ class DartsLayerChoice(nn.Module):
             yield name, p
 
     def export(self):
-        return torch.argmax(self.alpha).item()
+        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
 
 
 class DartsInputChoice(nn.Module):

@@ -34,6 +34,6 @@ def fixed_arch(fixed_arch: Union[str, Path, Dict[str, Any]], verbose=True):
             fixed_arch = json.load(f)
 
     if verbose:
-        _logger.info(f'Fixed architecture: {fixed_arch}', __name__)
+        _logger.info(f'Fixed architecture: %s', fixed_arch)
 
     return ContextStack('fixed', fixed_arch)
