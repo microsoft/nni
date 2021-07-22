@@ -17,7 +17,7 @@ def apply_compression_results(model: Module, masks: Tensor):
     Parameters
     ----------
     model
-        The model to be compressed.
+        The model to be sparsified.
     masks
         The masks of the model.
     """
