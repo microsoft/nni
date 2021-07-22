@@ -13,7 +13,7 @@ from torch.nn import Module
 from torch.tensor import Tensor
 
 from nni.compression.pytorch.speedup import ModelSpeedup
-from nni.algorithms.compression.v2.pytorch.utils import apply_compression_results, compute_sparsity_with_compact_model, compute_sparsity_with_mask
+from nni.algorithms.compression.v2.pytorch.utils import apply_compression_results
 from .pruner import Pruner
 
 _logger = logging.getLogger(__name__)
@@ -74,6 +74,8 @@ class TaskGenerator:
         origin_task = Task(task_id, None, deepcopy(origin_config_list), task_log_dir)
         self.tasks_map[task_id] = origin_task
 
+        self.task_id_candidate += 1
+
         self.receive_task_result(task_id, origin_model, origin_masks)
 
     def receive_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
@@ -106,7 +108,7 @@ class TaskGenerator:
 
         self._save_task_result(task_id=task_id, pruned_model=pruned_model, masks=masks)
 
-        self._generate_tasks(pre_task_id=task_id)
+        self.pending_tasks.extend(self._generate_tasks(pre_task_id=task_id))
 
     def _save_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]]):
         """
@@ -137,7 +139,7 @@ class TaskGenerator:
         torch.save(pruned_model, Path(task.log_dir, MODEL_NAME))
         torch.save(masks, Path(task.log_dir, MASKS_NAME))
 
-    def _generate_tasks(self, pre_task_id: int):
+    def _generate_tasks(self, pre_task_id: int) -> List[Task]:
         """
         Subclass need implement this function to push new tasks into `self.pending_tasks`.
         """
