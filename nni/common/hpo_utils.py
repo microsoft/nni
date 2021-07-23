@@ -50,7 +50,7 @@ def validate_search_space(
             if not all(isinstance(arg, (float, int, str)) for arg in args):
                 # FIXME: need further check for each algorithm which types are actually supported
                 # for now validation only prints warning so it doesn't harm
-                raise ValueError(f'search space "{name}" (choice) should only contain numbers or strings')
+                raise ValueError(f'search space "{name}" (choice) should only contain numbers or strings : {spec}')
             continue
 
         if type_.startswith('q'):
