@@ -64,6 +64,8 @@ class TaskGenerator:
         self.best_score = float('-inf')
         self.best_task = None
 
+        self.origin_task_id = None
+
         self._init_origin_task(origin_model, origin_config_list, origin_masks)
 
     def _init_origin_task(self, origin_model: Module, origin_config_list: Optional[List[Dict]] = None,
@@ -73,6 +75,7 @@ class TaskGenerator:
         task_log_dir.mkdir(parents=True, exist_ok=True)
         origin_task = Task(task_id, None, deepcopy(origin_config_list), task_log_dir)
         self.tasks_map[task_id] = origin_task
+        self.origin_task_id = task_id
 
         self.task_id_candidate += 1
 
@@ -138,6 +141,15 @@ class TaskGenerator:
             json_tricks.dump(task.config_list, f)
         torch.save(pruned_model, Path(task.log_dir, MODEL_NAME))
         torch.save(masks, Path(task.log_dir, MASKS_NAME))
+
+    def load_task_result(self, task_id: int) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
+        """
+        Return the pruned model and masks of the task.
+        """
+        task = self.tasks_map[task_id]
+        model = torch.load(Path(task.log_dir, MODEL_NAME))
+        masks = torch.load(Path(task.log_dir, MASKS_NAME))
+        return model, masks
 
     def _generate_tasks(self, pre_task_id: int) -> List[Task]:
         """
