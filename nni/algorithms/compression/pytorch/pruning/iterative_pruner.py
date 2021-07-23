@@ -5,7 +5,7 @@ import logging
 import copy
 import torch
 from schema import And, Optional
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import PrunerSchema
 from .constants import MASKER_DICT
 from .dependency_aware_pruner import DependencyAwarePruner
 
@@ -138,10 +138,11 @@ class AGPPruner(IterativePruner):
         config_list : list
             List on pruning configs
         """
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 <= n <= 1),
+        schema = PrunerSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 <= n <= 1),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -300,16 +301,18 @@ class ADMMPruner(IterativePruner):
         """
 
         if self._base_algo == 'level':
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 Optional('op_types'): [str],
                 Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
         elif self._base_algo in ['l1', 'l2', 'fpgm']:
-            schema = CompressorSchema([{
-                'sparsity': And(float, lambda n: 0 < n < 1),
+            schema = PrunerSchema([{
+                Optional('sparsity'): And(float, lambda n: 0 < n < 1),
                 'op_types': ['Conv2d'],
-                Optional('op_names'): [str]
+                Optional('op_names'): [str],
+                Optional('exclude'): bool
             }], model, logger)
 
         schema.validate(config_list)
@@ -436,10 +439,11 @@ class SlimPruner(IterativePruner):
         self.patch_optimizer_before(self._callback)
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
-            'sparsity': And(float, lambda n: 0 < n < 1),
+        schema = PrunerSchema([{
+            Optional('sparsity'): And(float, lambda n: 0 < n < 1),
             'op_types': ['BatchNorm2d'],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -487,14 +491,20 @@ class TaylorFOWeightFilterPruner(IterativePruner):
     dummy_input : torch.Tensor
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
+    global_sort: bool
+        Only support TaylorFOWeightFilterPruner currently.
+        If prune the model in a global-sort way. If it is `True`, this pruner will prune
+        the model according to the global contributions information which means channel contributions
+        will be sorted globally and whether specific channel will be pruned depends on global information.
     """
 
     def __init__(self, model, config_list, optimizer, trainer, criterion, sparsifying_training_batches=1,
-                 dependency_aware=False, dummy_input=None):
+                 dependency_aware=False, dummy_input=None, global_sort=False):
         super().__init__(model, config_list, optimizer=optimizer, pruning_algorithm='taylorfo', trainer=trainer,
                          criterion=criterion, statistics_batch_num=sparsifying_training_batches, num_iterations=1,
                          epochs_per_iteration=1, dependency_aware=dependency_aware,
                          dummy_input=dummy_input)
+        self.masker.global_sort = global_sort
 
     def _supported_dependency_aware(self):
         return True

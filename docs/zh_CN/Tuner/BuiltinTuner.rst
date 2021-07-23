@@ -26,7 +26,7 @@
    * - `Naïve Evolution（朴素进化） <#Evolution>`__
      - Naïve Evolution（朴素进化算法）来自于 Large-Scale Evolution of Image Classifiers。 它会基于搜索空间随机生成一个种群。 在每一代中，会选择较好的结果，并对其下一代进行一些变异（例如，改动一个超参，增加或减少一层）。 朴素进化算法需要很多次的 Trial 才能有效，但它也非常简单，也很容易扩展新功能。 `参考论文 <https://arxiv.org/pdf/1703.01041.pdf>`__
    * - `SMAC <#SMAC>`__
-     - SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：SMAC 需要通过 ``pip install nni[SMAC]`` 命令来安装。 `参考论文 <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `代码仓库 <https://github.com/automl/SMAC3>`__
+     - SMAC 基于 Sequential Model-Based Optimization (SMBO，即序列的基于模型优化方法)。 它会利用使用过的突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。 SMAC 算法包装了 Github 的 SMAC3。 注意：参考样例中的格式来创建新的 ``config.yml`` 文件。 一些内置 Tuner 因为依赖问题需要使用 ``pip install nni[<tuner>]`` 来安装，比如使用 ``pip install nni[SMAC]`` 来安装 SMAC。 `参考论文 <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ `代码仓库 <https://github.com/automl/SMAC3>`__
    * - `Batch tuner（批处理） <#Batch>`__
      - Batch Tuner 能让用户简单的提供几组配置（如，超参选项的组合）。 当所有配置都完成后，Experiment 即结束。 Batch Tuner 仅支持 choice 类型。
    * - `Grid Search（遍历） <#GridSearch>`__
@@ -41,11 +41,10 @@
      - BOHB 是 Hyperband 算法的后续工作。 Hyperband 在生成新的配置时，没有利用已有的 Trial 结果，而本算法利用了 Trial 结果。 BOHB 中，HB 表示 Hyperband，BO 表示贝叶斯优化（Byesian Optimization）。 BOHB 会建立多个 TPE 模型，从而利用已完成的 Trial 生成新的配置。 `参考论文 <https://arxiv.org/abs/1807.01774>`__
    * - `GP Tuner <#GPTuner>`__
      - Gaussian Process（高斯过程） Tuner 是序列化的基于模型优化（SMBO）的方法，并使用了高斯过程来替代。 `参考论文 <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__\ , `Github 仓库 <https://github.com/fmfn/BayesianOptimization>`__
-   * - `PPO Tuner <#PPOTuner>`__
-     - PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 `参考论文 <https://arxiv.org/abs/1707.06347>`__
    * - `PBT Tuner <#PBTTuner>`__
      - PBT Tuner 是一种简单的异步优化算法，在固定的计算资源下，它能有效的联合优化一组模型及其超参来最大化性能。 `参考论文 <https://arxiv.org/abs/1711.09846v1>`__
-
+   * - `DNGO Tuner <#DNGOTuner>`__
+     - 使用神经网络作为 GP 的替代方法，对贝叶斯优化中的函数分布进行建模。
 
 用法
 ------------------------
@@ -71,7 +70,7 @@ TPE 是一种黑盒优化方法，可以使用在各种场景中，通常情况�
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 注意：为实现大规模并发 Trial，TPE 的并行性得到了优化。 有关优化原理或开启优化，参考 `TPE 文档 <./HyperoptTuner.rst>`__。
 
@@ -114,7 +113,7 @@ Random Search（随机搜索）
 :raw-html:`<a name="Anneal"></a>`
 
 Anneal（退火算法）
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ..
 
@@ -128,7 +127,7 @@ Anneal（退火算法）
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 
 **配置示例：**
 
@@ -145,7 +144,7 @@ Anneal（退火算法）
 :raw-html:`<a name="Evolution"></a>`
 
 Naïve Evolution（进化算法）
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 ..
 
@@ -188,7 +187,7 @@ SMAC
    名称：**SMAC**
 
 
-当前 SMAC 不支持在 WIndows 下运行。 原因参考：`GitHub issue <https://github.com/automl/SMAC3/issues/483>`__ 
+**当前 SMAC 不支持在 WIndows 下运行。** 原因参考：`GitHub issue <https://github.com/automl/SMAC3/issues/483>`__ 
 
 **安装**
 
@@ -306,7 +305,7 @@ Hyperband
 **classArgs 要求：**
 
 
-* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*\ ) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **optimize_mode** (*maximize 或 minimize, 可选项, 默认值为 maximize*) - 如果为 'maximize'，表示 Tuner 会试着最大化指标。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
 * **R** (*int, 可选, 默认为 60*)，分配给 Trial 的最大资源（可以是 mini-batches 或 epochs 的数值）。 每个 Trial 都需要用 TRIAL_BUDGET 来控制运行的步数。
 * **eta** (*int，可选，默认为 3*)，``(eta-1)/eta`` 是丢弃 Trial 的比例。
 * **exec_mode** (*串行或并行，可选默认值是并行*\ )，如果是“并行”， Tuner 会尝试使用可用资源立即启动新的分组。 如果是“串行”， Tuner 只会在当前分组完成后启动新的分组。
@@ -498,47 +497,6 @@ GP Tuner
        selection_num_warm_up: 100000
        selection_num_starting_points: 250
 
-:raw-html:`<a name="PPOTuner"></a>`
-
-PPO Tuner
-^^^^^^^^^
-
-..
-
-   名称: **PPOTuner**
-
-
-注意，搜索空间仅接受 ``layer_choice`` 和 ``input_choice`` 类型。 ``input_choice``\ , ``n_chosen`` 只能是 0, 1，或者 [0, 1]. 注意，NAS 的搜索空间文件通常通过 `nnictl ss_gen <../Tutorial/Nnictl.rst>`__ 命令自动生成。
-
-**建议场景**
-
-PPO Tuner 是基于 PPO 算法的强化学习 Tuner。 PPOTuner 可用于使用 NNI NAS 接口进行的神经网络结构搜索。 一般来说，尽管 PPO 算法比其它强化学习算法效率更高，但强化学习算法需要更多的计算资源。 当有大量可用的计算资源时，才建议使用此 Tuner。 以在简单的任务上尝试，如 :githublink:`mnist-nas <examples/nas/classic_nas>` 示例。 `查看详细信息 <./PPOTuner.rst>`__。
-
-**classArgs 要求：**
-
-
-* **optimize_mode** (*‘maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
-* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 ``trials_per_update`` 设为 ``trialConcurrency`` 的倍数，以提高 Trial 的并发效率。
-* **epochs_per_update** (*int, 可选, 默认为 4*) - 每次更新的 Epoch 数量。
-* **minibatch_size** (*int, 可选, 默认为 4*) - mini-batch 大小 (即每个 mini-batch 的 Trial 数量)。 注意，trials_per_update 必须可被 minibatch_size 整除。
-* **ent_coef** (*float, 可选, 默认为 0.0*) - 优化目标中的 Policy entropy coefficient。
-* **lr** (*float, 可选, 默认为 3e-4*) - 模型的学习率（LSTM 网络），为常数。
-* **vf_coef** (*float, 可选, 默认为 0.5*) - 优化目标中的价值函数损失系数
-* **max_grad_norm** (*float，可选，默认值是0.5*\ ) - 梯度正则裁剪系数
-* **gamma** (*float, 可选，默认值是 0.99*\ ) - 损失因子
-* **lam** (*float, 可选，默认值是 0.95*\ ) - 优势估计损失因子 (论文中的lambda)。
-* **cliprange** (*float, 可选, 默认为 0.2*) - PPO 算法的 cliprange, 为常数。
-
-**配置示例：**
-
-.. code-block:: yaml
-
-   # config.yml
-   tuner:
-     builtinTunerName: PPOTuner
-     classArgs:
-       optimize_mode: maximize
-
 :raw-html:`<a name="PBTTuner"></a>`
 
 PBT Tuner
@@ -573,6 +531,43 @@ Population Based Training (PBT，基于种群的训练)，将并扩展并行搜�
        optimize_mode: maximize
 
 注意，要使用此 Tuner，Trial 代码也需要相应的修改，参考 `PBTTuner 文档 <./PBTTuner.rst>`__ 了解详情。
+
+:raw-html:`<a name="PPOTuner"></a>`
+
+DNGO Tuner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+..
+
+   名称：**DNGOTuner**
+
+DNGO Advisor 需要 `pybnn`，可以使用以下命令安装。
+
+.. code-block:: bash
+
+   pip install nni[DNGO]
+
+**建议场景**
+
+适用于大规模超参数优化。 贝叶斯优化使用卷积网络快速找到基准对象识别任务的竞争模型，并使用神经语言模型生成图像标题。
+
+**classArgs 要求：**
+
+
+* **optimize_mode** (*‘maximize' 或 'minimize'*) - 如果为 'maximize'，表示 Tuner 的目标是将指标最大化。 如果为 'minimize'，表示 Tuner 的目标是将指标最小化。
+* **sample_size** (*int，默认是 1000*) - 每次迭代中选择的样本数。 最好的一个将从样本中挑选出来作为下一次 Trial。
+* **trials_per_update** (*int, 可选, 默认为 20*) - 每次更新的 Trial 数量。 此数字必须可被 minibatch_size 整除。 推荐将 ``trials_per_update`` 设为 ``trialConcurrency`` 的倍数，以提高 Trial 的并发效率。
+* **num_epochs_per_training** (*int，默认是500*) - 训练 DNGO 模型的 epoch 数。
+
+**配置示例：**
+
+.. code-block:: yaml
+
+   # config.yml
+   tuner:
+     builtinTunerName: DNGOTuner
+     classArgs:
+       optimize_mode: maximize
 
 **参考和反馈**
 ------------------------------

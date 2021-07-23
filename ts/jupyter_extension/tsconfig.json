@@ -1,0 +1,14 @@
+{
+    "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
+        "jsx": "react",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "outDir": "build",
+        "rootDir": "src",
+        "target": "es2017"
+    },
+    "include": [
+        "src/*"
+    ]
+}

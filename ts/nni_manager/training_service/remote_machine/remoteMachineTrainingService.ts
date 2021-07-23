@@ -16,7 +16,7 @@ import { getLogger, Logger } from '../../common/log';
 import { ObservableTimer } from '../../common/observableTimer';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, LogType
+    TrialJobDetail, TrialJobMetric
 } from '../../common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
@@ -204,7 +204,7 @@ class RemoteMachineTrainingService implements TrainingService {
      * @param _trialJobId ID of trial job
      * @param _logType 'TRIAL_LOG' | 'TRIAL_STDERR'
      */
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 
@@ -491,7 +491,7 @@ class RemoteMachineTrainingService implements TrainingService {
                 cudaVisible = `CUDA_VISIBLE_DEVICES=" "`;
             }
         }
-        const nniManagerIp: string = this.config.nniManagerIp ? this.config.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.config.nniManagerIp ? this.config.nniManagerIp : await getIPV4Address();
         if (this.remoteRestServerPort === undefined) {
             const restServer: RemoteMachineJobRestServer = component.get(RemoteMachineJobRestServer);
             this.remoteRestServerPort = restServer.clusterRestServerPort;

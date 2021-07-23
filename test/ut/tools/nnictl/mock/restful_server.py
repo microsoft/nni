@@ -156,7 +156,7 @@ def mock_get_latest_metric_data():
 
 def mock_get_trial_log():
     responses.add(
-        responses.DELETE, 'http://localhost:8080/api/v1/nni/trial-log/:id/:type',
+        responses.DELETE, 'http://localhost:8080/api/v1/nni/trial-file/:id/:filename',
         json={"status":"RUNNING","errors":[]},
         status=200,
         content_type='application/json',

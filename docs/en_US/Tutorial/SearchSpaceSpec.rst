@@ -7,14 +7,13 @@ Search Space
 Overview
 --------
 
-In NNI, tuner will sample parameters/architecture according to the search space, which is defined as a json file.
+In NNI, tuner will sample parameters/architectures according to the search space.
 
 To define a search space, users should define the name of the variable, the type of sampling strategy and its parameters.
 
+* An example of a search space definition in a JSON file is as follow:
 
-* An example of a search space definition is as follow:
-
-.. code-block:: yaml
+.. code-block:: json 
 
    {
        "dropout_rate": {"_type": "uniform", "_value": [0.1, 0.5]},
@@ -24,7 +23,9 @@ To define a search space, users should define the name of the variable, the type
        "learning_rate": {"_type": "uniform", "_value": [0.0001, 0.1]}
    }
 
-Take the first line as an example. ``dropout_rate`` is defined as a variable whose priori distribution is a uniform distribution with a range from ``0.1`` to ``0.5``.
+Take the first line as an example. ``dropout_rate`` is defined as a variable whose prior distribution is a uniform distribution with a range from ``0.1`` to ``0.5``.
+
+.. note:: In the `experiment configuration (V2) schema <ExperimentConfig.rst>`_, NNI supports defining the search space directly in the configuration file, detailed usage can be found `here <QuickStart.rst#step-2-define-the-search-space>`__. When using Python API, users can write the search space in the Python file, refer `here <HowToLaunchFromPython.rst>`__. 
 
 Note that the available sampling strategies within a search space depend on the tuner you want to use. We list the supported types for each builtin tuner below. For a customized tuner, you don't have to follow our convention and you will have the flexibility to define any type you want.
 
@@ -38,7 +39,7 @@ All types of sampling strategies and their parameter are listed here:
   ``{"_type": "choice", "_value": options}``
 
 
-  * The variable's value is one of the options. Here ``options`` should be a list of numbers or a list of strings. Using arbitrary objects as members of this list (like sublists, a mixture of numbers and strings, or null values) should work in most cases, but may trigger undefined behaviors.
+  * The variable's value is one of the options. Here ``options`` should be a list of **numbers** or a list of **strings**. Using arbitrary objects as members of this list (like sublists, a mixture of numbers and strings, or null values) should work in most cases, but may trigger undefined behaviors.
   * ``options`` can also be a nested sub-search-space, this sub-search-space takes effect only when the corresponding element is chosen. The variables in this sub-search-space can be seen as conditional variables. Here is an simple :githublink:`example of nested search space definition <examples/trials/mnist-nested-search-space/search_space.json>`. If an element in the options list is a dict, it is a sub-search-space, and for our built-in tuners you have to add a ``_name`` key in this dict, which helps you to identify which element is chosen. Accordingly, here is a :githublink:`sample <examples/trials/mnist-nested-search-space/sample.json>` which users can get from nni with nested search space definition. See the table below for the tuners which support nested search spaces.
 
 * 

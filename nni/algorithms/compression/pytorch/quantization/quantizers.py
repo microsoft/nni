@@ -5,7 +5,7 @@ import logging
 import copy
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
+from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
@@ -22,11 +22,12 @@ class NaiveQuantizer(Quantizer):
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): ['weight'],
             Optional('quant_bits'): Or(8, {'weight': 8}),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -183,7 +184,7 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
@@ -191,7 +192,8 @@ class QAT_Quantizer(Quantizer):
             })),
             Optional('quant_start_step'): And(int, lambda n: n >= 0),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -264,17 +266,6 @@ class QAT_Quantizer(Quantizer):
                                                                     module.ema_decay)
         module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
                                                                     module.ema_decay)
-
-        # if bias exists, quantize bias to uint32
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            bias = wrapper.module.bias.data
-            bias_bits = 32
-            rmin, rmax = torch.min(bias), torch.max(bias)
-            module.scale, module.zero_point = update_quantization_param(bias_bits, rmin, rmax)
-            bias = self._quantize(bias_bits, module, bias)
-            bias = self._dequantize(module, bias)
-            wrapper.module.bias.data = bias
-
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -397,13 +388,14 @@ class DoReFaQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32)
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -504,14 +496,15 @@ class BNNQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)

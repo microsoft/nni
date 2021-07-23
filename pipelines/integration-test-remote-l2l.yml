@@ -94,7 +94,10 @@ jobs:
           --remote_pwd $(password_in_docker) \
           --nni_manager_ip $(manager_ip) \
           --azurestoragetoken $(azureblob_token_test) \
-          --nfs_server $(NFS_IP)
+          --nfs_server $(NFS_IP) \
+          --local_mount_point $(LOCAL_MOUNT_POINT) \
+          --remote_mount_point $(REMOTE_MOUNT_POINT) \
+          --exported_directory $(Exported_Directory)
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
     displayName: Integration test (reuse mode)
 
