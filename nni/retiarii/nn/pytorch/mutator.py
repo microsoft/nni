@@ -9,7 +9,7 @@ import torch.nn as nn
 from ...mutator import Mutator
 from ...graph import Cell, Graph, Model, ModelStatus, Node
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
-from .component import Repeat
+from .component import Repeat, NasBench101Cell, NasBench101Mutator
 from ...utils import uid
 
 
@@ -47,7 +47,12 @@ class InputChoiceMutator(Mutator):
         n_candidates = self.nodes[0].operation.parameters['n_candidates']
         n_chosen = self.nodes[0].operation.parameters['n_chosen']
         candidates = list(range(n_candidates))
-        chosen = [self.choice(candidates) for _ in range(n_chosen)]
+        if n_chosen is None:
+            chosen = [i for i in candidates if self.choice([False, True])]
+            # FIXME This is a hack to make choice align with the previous format
+            self._cur_samples = chosen
+        else:
+            chosen = [self.choice(candidates) for _ in range(n_chosen)]
         for node in self.nodes:
             target = model.get_node_by_name(node.name)
             target.update_operation('__torch__.nni.retiarii.nn.pytorch.ChosenInputs',
@@ -199,8 +204,15 @@ class ManyChooseManyMutator(Mutator):
     def mutate(self, model: Model):
         # this mutate does not have any effect, but it is recorded in the mutation history
         for node in model.get_nodes_by_label(self.label):
-            for _ in range(self.number_of_chosen(node)):
-                self.choice(self.candidates(node))
+            n_chosen = self.number_of_chosen(node)
+            if n_chosen is None:
+                candidates = [i for i in self.candidates(node) if self.choice([False, True])]
+                # FIXME This is a hack to make choice align with the previous format
+                # For example, it will convert [False, True, True] into [1, 2].
+                self._cur_samples = candidates
+            else:
+                for _ in range(n_chosen):
+                    self.choice(self.candidates(node))
             break
 
 
@@ -242,6 +254,11 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
                 'candidates': list(range(module.min_depth, module.max_depth + 1))
             })
             node.label = module.label
+        if isinstance(module, NasBench101Cell):
+            node = graph.add_node(name, 'NasBench101Cell', {
+                'max_num_edges': module.max_num_edges
+            })
+            node.label = module.label
         if isinstance(module, Placeholder):
             raise NotImplementedError('Placeholder is not supported in python execution mode.')
 
@@ -250,13 +267,17 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         return model, None
 
     mutators = []
+    mutators_final = []
     for nodes in _group_by_label_and_type(graph.hidden_nodes):
         assert _is_all_equal(map(lambda n: n.operation.type, nodes)), \
             f'Node with label "{nodes[0].label}" does not all have the same type.'
         assert _is_all_equal(map(lambda n: n.operation.parameters, nodes)), \
             f'Node with label "{nodes[0].label}" does not agree on parameters.'
-        mutators.append(ManyChooseManyMutator(nodes[0].label))
-    return model, mutators
+        if nodes[0].operation.type == 'NasBench101Cell':
+            mutators_final.append(NasBench101Mutator(nodes[0].label))
+        else:
+            mutators.append(ManyChooseManyMutator(nodes[0].label))
+    return model, mutators + mutators_final
 
 
 # utility functions

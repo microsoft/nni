@@ -6,6 +6,7 @@ import logging
 import os
 import pkg_resources
 from colorama import init
+import nni.tools.jupyter_extension.management as jupyter_management
 from .common_utils import print_error
 from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
@@ -66,12 +67,16 @@ def parse_args():
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_resume.add_argument('--experiment_dir', '-e', help='resume experiment from external folder, specify the full path of ' \
+                               'experiment folder')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
     parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
     parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_view.add_argument('--experiment_dir', '-e', help='view experiment from external folder, specify the full path of ' \
+                             'experiment folder')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command
@@ -273,6 +278,14 @@ def parse_args():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
+
+    # jupyter-extension command
+    jupyter_parser = subparsers.add_parser('jupyter-extension', help='install or uninstall JupyterLab extension (internal preview)')
+    jupyter_subparsers = jupyter_parser.add_subparsers()
+    jupyter_install_parser = jupyter_subparsers.add_parser('install', help='install JupyterLab extension')
+    jupyter_install_parser.set_defaults(func=lambda _args: jupyter_management.install())  # TODO: prompt message
+    jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', help='uninstall JupyterLab extension')
+    jupyter_uninstall_parser.set_defaults(func=lambda _args: jupyter_management.uninstall())
 
     args = parser.parse_args()
     args.func(args)

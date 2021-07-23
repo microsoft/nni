@@ -1,7 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 import os
+import gc
 import psutil
 import sys
 import numpy as np
@@ -9,18 +11,20 @@ import torch
 import torchvision.models as models
 import torch.nn as nn
 import torch.nn.functional as F
-from torchvision.models.vgg import vgg16
+from torchvision.models.vgg import vgg16, vgg11
 from torchvision.models.resnet import resnet18
+from torchvision.models.mobilenet import mobilenet_v2
 import unittest
 from unittest import TestCase, main
 
 from nni.compression.pytorch import ModelSpeedup, apply_compression_results
-from nni.algorithms.compression.pytorch.pruning import L1FilterPruner
+from nni.algorithms.compression.pytorch.pruning import L1FilterPruner, LevelPruner
 from nni.algorithms.compression.pytorch.pruning.weight_masker import WeightMasker
 from nni.algorithms.compression.pytorch.pruning.dependency_aware_pruner import DependencyAwarePruner
 
 torch.manual_seed(0)
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 BATCH_SIZE = 2
 # the relative distance
 RELATIVE_THRESHOLD = 0.01
@@ -105,6 +109,55 @@ class TransposeModel(torch.nn.Module):
         return x
 
 
+class TupleUnpack_backbone(nn.Module):
+    def __init__(self, width):
+        super(TupleUnpack_backbone, self).__init__()
+        self.model_backbone = mobilenet_v2(
+            pretrained=False, width_mult=width, num_classes=3)
+
+    def forward(self, x):
+        x1 = self.model_backbone.features[:7](x)
+        x2 = self.model_backbone.features[7:14](x1)
+        x3 = self.model_backbone.features[14:18](x2)
+        return [x1, x2, x3]
+
+
+class TupleUnpack_FPN(nn.Module):
+    def __init__(self):
+        super(TupleUnpack_FPN, self).__init__()
+
+        self.conv1 = nn.Conv2d(32, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+        self.conv2 = nn.Conv2d(96, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+        self.conv3 = nn.Conv2d(320, 48, kernel_size=(
+            1, 1), stride=(1, 1), bias=False)
+
+        # self.init_weights()
+
+    def forward(self, inputs):
+        """Forward function."""
+        laterals = []
+
+        laterals.append(self.conv1(inputs[0]))  # inputs[0]==x1
+        laterals.append(self.conv2(inputs[1]))  # inputs[1]==x2
+        laterals.append(self.conv3(inputs[2]))  # inputs[2]==x3
+
+        return laterals
+
+
+class TupleUnpack_Model(nn.Module):
+    def __init__(self):
+        super(TupleUnpack_Model, self).__init__()
+        self.backbone = TupleUnpack_backbone(1.0)
+        self.fpn = TupleUnpack_FPN()
+
+    def forward(self, x):
+        x1 = self.backbone(x)
+        out = self.fpn(x1)
+        return out
+
+
 dummy_input = torch.randn(2, 1, 28, 28)
 SPARSITY = 0.5
 MODEL_FILE, MASK_FILE = './11_model.pth', './l1_mask.pth'
@@ -129,6 +182,7 @@ def generate_random_sparsity(model):
                              'sparsity': sparsity})
     return cfg_list
 
+
 def generate_random_sparsity_v2(model):
     """
     Only select 50% layers to prune.
@@ -139,8 +193,9 @@ def generate_random_sparsity_v2(model):
             if np.random.uniform(0, 1.0) > 0.5:
                 sparsity = np.random.uniform(0.5, 0.99)
                 cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
-                             'sparsity': sparsity})
+                                 'sparsity': sparsity})
     return cfg_list
+
 
 def zero_bn_bias(model):
     with torch.no_grad():
@@ -231,19 +286,6 @@ def channel_prune(model):
 
 
 class SpeedupTestCase(TestCase):
-    def test_speedup_vgg16(self):
-        prune_model_l1(vgg16())
-        model = vgg16()
-        model.train()
-        ms = ModelSpeedup(model, torch.randn(2, 3, 32, 32), MASK_FILE)
-        ms.speedup_model()
-
-        orig_model = vgg16()
-        assert model.training
-        assert model.features[2].out_channels == int(
-            orig_model.features[2].out_channels * SPARSITY)
-        assert model.classifier[0].in_features == int(
-            orig_model.classifier[0].in_features * SPARSITY)
 
     def test_speedup_bigmodel(self):
         prune_model_l1(BigModel())
@@ -253,7 +295,7 @@ class SpeedupTestCase(TestCase):
         mask_out = model(dummy_input)
 
         model.train()
-        ms = ModelSpeedup(model, dummy_input, MASK_FILE)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=8)
         ms.speedup_model()
         assert model.training
 
@@ -289,7 +331,7 @@ class SpeedupTestCase(TestCase):
         new_model = TransposeModel()
         state_dict = torch.load(MODEL_FILE)
         new_model.load_state_dict(state_dict)
-        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE)
+        ms = ModelSpeedup(new_model, dummy_input, MASK_FILE, confidence=8)
         ms.speedup_model()
         zero_bn_bias(ori_model)
         zero_bn_bias(new_model)
@@ -297,26 +339,38 @@ class SpeedupTestCase(TestCase):
         new_out = new_model(dummy_input)
         ori_sum = torch.sum(ori_out)
         speeded_sum = torch.sum(new_out)
-        print('Tanspose Speedup Test: ori_sum={} speedup_sum={}'.format(ori_sum, speeded_sum))
+        print('Tanspose Speedup Test: ori_sum={} speedup_sum={}'.format(
+            ori_sum, speeded_sum))
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
-                (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
+            (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
-    # FIXME: This test case might fail randomly, no idea why
-    # Example: https://msrasrg.visualstudio.com/NNIOpenSource/_build/results?buildId=16282
+    def test_speedup_integration_small(self):
+        model_list = ['resnet18', 'mobilenet_v2', 'alexnet']
+        self.speedup_integration(model_list)
 
-    def test_speedup_integration(self):
-        # skip this test on windows(7GB mem available) due to memory limit
+    def test_speedup_integration_big(self):
+        model_list = ['vgg11', 'vgg16', 'resnet34', 'squeezenet1_1',
+                      'densenet121', 'resnet50', 'wide_resnet50_2']
+        mem_info = psutil.virtual_memory()
+        ava_gb = mem_info.available/1024.0/1024/1024
+        print('Avaliable memory size: %.2f GB' % ava_gb)
+        if ava_gb < 8.0:
+            # memory size is too small that we may run into an OOM exception
+            # Skip this test in the pipeline test due to memory limitation
+            return
+        self.speedup_integration(model_list)
+
+    def speedup_integration(self, model_list, speedup_cfg=None):
         # Note: hack trick, may be updated in the future
         if 'win' in sys.platform or 'Win'in sys.platform:
             print('Skip test_speedup_integration on windows due to memory limit!')
             return
-
         Gen_cfg_funcs = [generate_random_sparsity, generate_random_sparsity_v2]
 
-        for model_name in ['resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121' , 'densenet169', 
-                           # 'inception_v3' inception is too large and may fail the pipeline
-                            'resnet50']:
-                            
+        # for model_name in ['vgg16', 'resnet18', 'mobilenet_v2', 'squeezenet1_1', 'densenet121',
+        #                    # 'inception_v3' inception is too large and may fail the pipeline
+        #                     'resnet50']:
+        for model_name in model_list:
             for gen_cfg_func in Gen_cfg_funcs:
                 kwargs = {
                     'pretrained': True
@@ -334,7 +388,10 @@ class SpeedupTestCase(TestCase):
                 speedup_model.eval()
                 # random generate the prune config for the pruner
                 cfgs = gen_cfg_func(net)
-                print("Testing {} with compression config \n {}".format(model_name, cfgs))
+                print("Testing {} with compression config \n {}".format(
+                    model_name, cfgs))
+                if len(cfgs) == 0:
+                    continue
                 pruner = L1FilterPruner(net, cfgs)
                 pruner.compress()
                 pruner.export_model(MODEL_FILE, MASK_FILE)
@@ -345,7 +402,10 @@ class SpeedupTestCase(TestCase):
                 zero_bn_bias(speedup_model)
 
                 data = torch.ones(BATCH_SIZE, 3, 128, 128).to(device)
-                ms = ModelSpeedup(speedup_model, data, MASK_FILE)
+                if speedup_cfg is None:
+                    speedup_cfg = {}
+                ms = ModelSpeedup(speedup_model, data,
+                                  MASK_FILE, confidence=8, **speedup_cfg)
                 ms.speedup_model()
 
                 speedup_model.eval()
@@ -355,12 +415,13 @@ class SpeedupTestCase(TestCase):
                 ori_sum = torch.sum(ori_out).item()
                 speeded_sum = torch.sum(speeded_out).item()
                 print('Sum of the output of %s (before speedup):' %
-                    model_name, ori_sum)
-                print('Sum of the output of %s (after speedup):' %
-                    model_name, speeded_sum)
+                      model_name, ori_sum)
+                print('Sum of the output of %s (after  speedup):' %
+                      model_name, speeded_sum)
                 assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
                     (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
-
+                print("Collecting Garbage")
+                gc.collect(2)
 
     def test_channel_prune(self):
         orig_net = resnet18(num_classes=10).to(device)
@@ -378,7 +439,7 @@ class SpeedupTestCase(TestCase):
         net.eval()
 
         data = torch.randn(BATCH_SIZE, 3, 128, 128).to(device)
-        ms = ModelSpeedup(net, data, MASK_FILE)
+        ms = ModelSpeedup(net, data, MASK_FILE, confidence=8)
         ms.speedup_model()
         ms.bound_model(data)
 
@@ -391,11 +452,56 @@ class SpeedupTestCase(TestCase):
         assert (abs(ori_sum - speeded_sum) / abs(ori_sum) < RELATIVE_THRESHOLD) or \
             (abs(ori_sum - speeded_sum) < ABSOLUTE_THRESHOLD)
 
+    def test_speedup_tupleunpack(self):
+        """This test is reported in issue3645"""
+        model = TupleUnpack_Model()
+        cfg_list = [{'op_types': ['Conv2d'], 'sparsity':0.5}]
+        dummy_input = torch.rand(2, 3, 224, 224)
+        pruner = L1FilterPruner(model, cfg_list)
+        pruner.compress()
+        model(dummy_input)
+        pruner.export_model(MODEL_FILE, MASK_FILE)
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=8)
+        ms.speedup_model()
+
+    def test_finegrained_speedup(self):
+        """ Test the speedup on the fine-grained sparsity"""
+        class MLP(nn.Module):
+            def __init__(self):
+                super(MLP, self).__init__()
+                self.fc1 = nn.Linear(1024, 1024)
+                self.fc2 = nn.Linear(1024, 1024)
+                self.fc3 = nn.Linear(1024, 512)
+                self.fc4 = nn.Linear(512, 10)
+
+            def forward(self, x):
+                x = x.view(-1, 1024)
+                x = self.fc1(x)
+                x = self.fc2(x)
+                x = self.fc3(x)
+                x = self.fc4(x)
+                return x
+        model = MLP().to(device)
+        dummy_input = torch.rand(16, 1, 32, 32).to(device)
+        cfg_list = [{'op_types': ['Linear'], 'sparsity':0.99}]
+        pruner = LevelPruner(model, cfg_list)
+        pruner.compress()
+        print('Original Arch')
+        print(model)
+        pruner.export_model(MODEL_FILE, MASK_FILE)
+        pruner._unwrap_model()
+        ms = ModelSpeedup(model, dummy_input, MASK_FILE, confidence=8)
+        ms.speedup_model()
+        print("Fine-grained speeduped model")
+        print(model)
+
     def tearDown(self):
         if os.path.exists(MODEL_FILE):
             os.remove(MODEL_FILE)
         if os.path.exists(MASK_FILE):
             os.remove(MASK_FILE)
+        # GC to release memory
+        gc.collect(2)
 
 
 if __name__ == '__main__':

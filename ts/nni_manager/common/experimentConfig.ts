@@ -167,6 +167,7 @@ export interface ExperimentConfig {
     trialConcurrency: number;
     trialGpuNumber?: number;
     maxExperimentDuration?: string;
+    maxTrialDuration?: string;
     maxTrialNumber?: number;
     nniManagerIp?: string;
     //useAnnotation: boolean;  // dealed inside nnictl

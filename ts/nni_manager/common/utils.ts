@@ -13,10 +13,10 @@ import * as fs from 'fs';
 import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
+import * as timersPromises from 'timers/promises';
 import * as lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
-import * as util from 'util';
 import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
@@ -49,39 +49,15 @@ function getExperimentsInfoPath(): string {
     return path.join(os.homedir(), 'nni-experiments', '.experiment');
 }
 
-function mkDirP(dirPath: string): Promise<void> {
-    const deferred: Deferred<void> = new Deferred<void>();
-    fs.exists(dirPath, (exists: boolean) => {
-        if (exists) {
-            deferred.resolve();
-        } else {
-            const parent: string = path.dirname(dirPath);
-            mkDirP(parent).then(() => {
-                fs.mkdir(dirPath, (err: Error | null) => {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve();
-                    }
-                });
-            }).catch((err: Error) => {
-                deferred.reject(err);
-            });
-        }
-    });
-
-    return deferred.promise;
+async function mkDirP(dirPath: string): Promise<void> {
+    await fs.promises.mkdir(dirPath, { recursive: true });
 }
 
 function mkDirPSync(dirPath: string): void {
-    if (fs.existsSync(dirPath)) {
-        return;
-    }
-    mkDirPSync(path.dirname(dirPath));
-    fs.mkdirSync(dirPath);
+    fs.mkdirSync(dirPath, { recursive: true });
 }
 
-const delay: (ms: number) => Promise<void> = util.promisify(setTimeout);
+const delay = timersPromises.setTimeout;
 
 /**
  * Convert index to character
@@ -223,7 +199,7 @@ let cachedIpv4Address: string | null = null;
 /**
  * Get IPv4 address of current machine.
  */
-function getIPV4Address(): string {
+async function getIPV4Address(): Promise<string> {
     if (cachedIpv4Address !== null) {
         return cachedIpv4Address;
     }
@@ -232,9 +208,19 @@ function getIPV4Address(): string {
     // since udp is connectionless, this does not send actual packets.
     const socket = dgram.createSocket('udp4');
     socket.connect(1, '192.0.2.0');
-    cachedIpv4Address = socket.address().address;
-    socket.close();
+    for (let i = 0; i < 10; i++) {  // wait the system to initialize "connection"
+        await timersPromises.setTimeout(1);
+        try {
+            cachedIpv4Address = socket.address().address;
+            socket.close();
+            return cachedIpv4Address;
+        } catch (error) {
+            /* retry */
+        }
+    }
 
+    cachedIpv4Address = socket.address().address;  // if it still fails, throw the error
+    socket.close();
     return cachedIpv4Address;
 }
 
