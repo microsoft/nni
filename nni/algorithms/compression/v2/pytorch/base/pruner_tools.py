@@ -5,6 +5,7 @@ import logging
 import types
 from typing import List, Dict, Optional, Callable, Union
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -365,3 +366,25 @@ class SparsityAllocator:
             if wrapper.bias_mask is not None and mask.size() == wrapper.bias_mask.size():
                 expand_mask['bias_mask'] = mask.clone()
         return expand_mask
+
+    def _compress_mask_with_dim(self, mask: Tensor) -> Tensor:
+        """
+        Parameters
+        ----------
+        name
+            The masked module name.
+        mask
+            The dimension mask on `dim` of the weight.
+
+        Returns
+        -------
+        Tensor
+            Reduce the mask with `self.dim`.
+        """
+        if self.dim is None:
+            return mask.clone()
+        else:
+            mask_dim = list(range(len(mask.size())))
+            for dim in self.dim:
+                mask_dim.remove(dim)
+            return torch.sum(mask, dim=mask_dim)
