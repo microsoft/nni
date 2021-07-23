@@ -22,6 +22,7 @@ bad_spec_type = { 'x': [1, 2, 3] }
 bad_fields = { 'x': { 'type': 'choice', 'value': ['a', 'b'] } }
 bad_type_name = { 'x': { '_type': 'choic', '_value': ['a'] } }
 bad_value = { 'x': { '_type': 'choice', '_value': 'ab' } }
+bad_choice_args = { 'x': { '_type': 'choice', 'value': [ 'a', object() ] } }
 bad_2_args = { 'x': { '_type': 'randint', '_value': [1, 2, 3] } }
 bad_3_args = { 'x': { '_type': 'quniform', '_value': [0] } }
 bad_int_args = { 'x': { '_type': 'randint', '_value': [1.0, 2.0] } }
@@ -37,6 +38,7 @@ def test_hpo_utils():
     assert not validate_search_space(bad_fields, raise_exception=False)
     assert not validate_search_space(bad_type_name, raise_exception=False)
     assert not validate_search_space(bad_value, raise_exception=False)
+    assert not validate_search_space(bad_choice_args, raise_exception=False)
     assert not validate_search_space(bad_2_args, raise_exception=False)
     assert not validate_search_space(bad_3_args, raise_exception=False)
     assert not validate_search_space(bad_int_args, raise_exception=False)
