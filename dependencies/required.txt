@@ -1,5 +1,5 @@
 astor
-hyperopt >= 0.1.2
+hyperopt == 0.1.2
 json_tricks
 psutil
 pyyaml
