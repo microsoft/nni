@@ -105,7 +105,7 @@ This command will be filled in the YAML configure file below. Please refer to `h
 
 *name* is used to specify a tuner in NNI, *classArgs* are the arguments pass to the tuner (the spec of builtin tuners can be found `here <../Tuner/BuiltinTuner.rst>`__\ ), *optimization_mode* is to indicate whether you want to maximize or minimize your trial's result.
 
-**Prepare configure file**\ : Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, ``cat ~/nni/examples/trials/mnist-mnist/config.yml`` to see it. Its content is basically shown below:
+**Prepare configure file**\ : Since you have already known which trial code you are going to run and which tuner you are going to use, it is time to prepare the YAML configure file. NNI provides a demo configure file for each trial example, ``cat ~/nni/examples/trials/mnist-pytorch/config.yml`` to see it. Its content is basically shown below:
 
 .. code-block:: yaml
 

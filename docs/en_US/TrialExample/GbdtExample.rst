@@ -192,7 +192,7 @@ In the config file, you could set some settings including:
 
 * Experiment setting: ``trialConcurrency``\ , ``trialGpuNumber``\ , etc.
 * Platform setting: ``trainingService``\ , etc.
-* Path seting: ``searchSpaceFile``\ , ``trialCodeDirectory``\ , etc.
+* Path setting: ``searchSpaceFile``\ , ``trialCodeDirectory``\ , etc.
 * Algorithm setting: select ``tuner`` algorithm, ``tuner optimize_mode``\ , etc.
 
 An config.yml as follow:
