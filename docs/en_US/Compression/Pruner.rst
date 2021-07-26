@@ -735,6 +735,8 @@ Transformer Head Pruner is a tool designed for pruning attention heads from the 
 
 Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normally, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned. Also, the weights in the output projection corresponding to the head's output are pruned. In our implementation, we calculate and apply masks to the four matrices together.
 
+Note: currently, the pruner can only handle models with projection weights written as separate `Linear` modules, i.e., it expects four `Linear` modules corresponding to query, key, value, and an output projections. Therefore, in the `config_list`, you should either write `['Linear']` for the `op_types` field, or write names corresponding to `Linear` modules for the `op_names` field.
+
 The pruner implements the following algorithm:
 
 .. code-block:: bash
@@ -754,14 +756,18 @@ Currently, the following head sorting criteria are supported:
 
 We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort.
 
-In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules (usage 1 below) to the pruner, or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below).
-
-However, if you would like to assign different sparsity to each layer, currently you could only use the first option, i.e., passing names of the weights to the pruner (usage 3 below). Also note that weights belong to the same layer must have the same sparsity.
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage 1 below), or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (usage 3 below). Also note that weights belonging to the same layer must have the same sparsity.
 
 In addition to the following usage guide, we provide a more detailed example of pruning BERT for tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
 
 Usage
 ^^^^^
+
+Suppose we want to prune a BERT with Huggingface implementation, which has the following architecture (obtained by calling `print(model)`). Note that we only show the first layer of the repeated layers in the encoder's `ModuleList layer`. 
+
+.. image:: ../../img/huggingface_bert_architecture.png
+   :target: ../../img/huggingface_bert_architecture.png
+   :alt: 
 
 Usage 1: one-shot pruning, same sparsity for all the layers (PyTorch code)
 
@@ -779,7 +785,7 @@ Usage 1: one-shot pruning, same sparsity for all the layers (PyTorch code)
              }
     config_list = [{
         'sparsity': 0.5,
-        'op_types': ["Linear"]
+        'op_types': ["Linear"] 
     }]
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
