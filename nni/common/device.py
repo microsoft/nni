@@ -1,11 +1,12 @@
 
 from dataclasses import dataclass
+from typing import Literal
 
 @dataclass
 class GPUDevice:
     node_id: str
     gpu_id: int
-    status: str = 'free'
+    status: Literal['idle', 'busy', 'unknown'] = 'idle'
 
     def __eq__(self, o) -> bool:
         return self.node_id == o.node_id and self.gpu_id == o.gpu_id
