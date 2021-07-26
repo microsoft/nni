@@ -139,7 +139,7 @@ MaskConflict
 
 When the masks of different layers in a model have conflict (for example, assigning different sparsities for the layers that have channel dependency), we can fix the mask conflict by MaskConflict. Specifically, the MaskConflict loads the masks exported by the pruners(L1FilterPruner, etc), and check if there is mask conflict, if so, MaskConflict sets the conflicting masks to the same value.
 
-.. code-block:: bash
+.. code-block:: python
 
    from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
    fixed_mask = fix_mask_conflict('./resnet18_mask', net, data)
@@ -149,14 +149,14 @@ not_safe_to_prune
 
 If we try to prune a layer whose output tensor is taken as the input by a shape-constraint OP(for example, view, reshape), then such pruning maybe not be safe. For example, we have a convolutional layer followed by a view function.
 
-.. code-block:: bash
+.. code-block:: python
 
    x = self.conv(x) # output shape is (batch, 1024, 3, 3)
    x = x.view(-1, 1024)
 
-If the output shape of the pruned conv layer is not disivible by 1024(for example(batch, 500, 3, 3)), we may meet a shape error. We cannot replace such a function that directly operates on the Tensor. Therefore, we need to be careful when pruning such layers. The function not_safe_to_prune finds all the layers followed by a shape-constraint function. Here is an example for usage.
+If the output shape of the pruned conv layer is not divisible by 1024(for example(batch, 500, 3, 3)), we may meet a shape error. We cannot replace such a function that directly operates on the Tensor. Therefore, we need to be careful when pruning such layers. The function not_safe_to_prune finds all the layers followed by a shape-constraint function. Here is an example for usage. If you meet a shape error when running the forward inference on the speeduped model, you can exclude the layers returned by not_safe_to_prune and try again. 
 
-.. code-block:: bash
+.. code-block:: python
 
    not_safe = not_safe_to_prune(model, dummy_input)
 
