@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 import argparse
 import logging
 import math
@@ -183,9 +186,9 @@ def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_
     Otherwise, finetune the model for 1 epoch. This is called by the pruner during pruning iterations.
     """
     if epoch_num == 0:
-        print("Running forward and backward on the entire dataset without updating parameters...")
+        logger.info("Running forward and backward on the entire dataset without updating parameters...")
     else:
-        print("Finetuning for 1 epoch...")
+        logger.info("Finetuning for 1 epoch...")
     progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
  
     train_epoch = args.num_train_epochs if epoch_num is None else 1
