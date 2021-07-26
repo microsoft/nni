@@ -16,6 +16,15 @@ good_partial = {
     'choice': good['choice'],
     'randint': good['randint'],
 }
+good_nested = {
+    'outer': {
+        '_type': 'choice',
+        '_value': [
+            { '_name': 'empty' },
+            { '_name': 'a', 'a_1': { '_type': 'choice', '_value': ['a', 'b'] } }
+        ]
+    }
+}
 
 bad_type = 'x'
 bad_spec_type = { 'x': [1, 2, 3] }
@@ -33,6 +42,7 @@ bad_sigma = { 'x': { '_type': 'normal', '_value': [0, 0] } }
 
 def test_hpo_utils():
     assert validate_search_space(good, raise_exception=False)
+    assert validate_search_space(good_nested, raise_exception=False)
     assert not validate_search_space(bad_type, raise_exception=False)
     assert not validate_search_space(bad_spec_type, raise_exception=False)
     assert not validate_search_space(bad_fields, raise_exception=False)
