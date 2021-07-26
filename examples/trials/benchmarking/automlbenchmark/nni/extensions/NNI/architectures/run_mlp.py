@@ -8,9 +8,9 @@ import numpy as np
 
 from sklearn.impute import SimpleImputer
 from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.pipeline import Pipeline
-from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.neural_network import MLPClassifier, MLPRegressor
 from sklearn.model_selection import cross_val_score
 
 from amlb.benchmark import TaskConfig
@@ -20,46 +20,27 @@ from amlb.utils import Timer
 from amlb.results import save_predictions_to_file
 
 
+arch_choices = [(16), (64), (128), (256),
+                (16, 16), (64, 64), (128, 128), (256, 256),
+                (16, 16, 16), (64, 64, 64), (128, 128, 128), (256, 256, 256),
+                (256, 128, 64, 16), (128, 64, 16), (64, 16),
+                (16, 64, 128, 256), (16, 64, 128), (16, 64)]
+
 SEARCH_SPACE = {
-    "n_estimators": {"_type":"randint", "_value": [4, 2048]},
-    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},     # 0 for None
-    "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
-    "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                      # 0 for None
+    "hidden_layer_sizes": {"_type":"choice", "_value": arch_choices},
+    "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+    "alpha": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]},
+    "momentum": {"_type":"uniform","_value":[0, 1]},
+    "beta_1": {"_type":"uniform","_value":[0, 1]},
+    "tol": {"_type":"choice", "_value": [0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+    "max_iter": {"_type":"randint", "_value": [2, 256]},
 }
 
-# change SEARCH_SPACE to the following spaces to experiment on different search spaces
-
-# SEARCH_SPACE_CHOICE = {
-#     "n_estimators": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]},
-#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
-#     "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
-#     "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
-#     "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 1024, 2048, 4096, 0]}   # 0 for None
-# }
-
-# SEARCH_SPACE_LOG = {
-#     "n_estimators": {"_type":"loguniform", "_value": [4, 2048]},
-#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None 
-#     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
-#     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-#     "max_leaf_nodes": {"_type":"loguniform", "_value": [4, 4096]}                 # 0 for None
-# }
-
-# SEARCH_SPACE_SIMPLE = {
-#     "n_estimators": {"_type":"choice", "_value": [10]},
-#     "max_depth": {"_type":"choice", "_value": [5]},
-#     "min_samples_leaf": {"_type":"choice", "_value": [8]},
-#     "min_samples_split": {"_type":"choice", "_value": [16]},
-#     "max_leaf_nodes": {"_type":"choice", "_value": [64]}
-# }
-
-
-def preprocess_random_forest(dataset, log):
+def preprocess_mlp(dataset, log):
     '''
-    For random forest:
-    - Do nothing for numerical features except null imputation. 
-    - For categorical features, use ordinal encoding to map them into integers. 
+    For MLP:
+    - For numerical features, normalize them after null imputation. 
+    - For categorical features, use one-hot encoding after null imputation. 
     '''
     cat_columns, num_columns = [], []
     shift_amount = 0
@@ -73,10 +54,11 @@ def preprocess_random_forest(dataset, log):
             num_columns.append(i - shift_amount)
 
     cat_pipeline = Pipeline([('imputer', SimpleImputer(strategy='most_frequent')),
-                             ('ordinal_encoder', OrdinalEncoder()),
+                             ('onehot_encoder', OneHotEncoder()),
                              ])
     
     num_pipeline = Pipeline([('imputer', SimpleImputer(strategy='mean')),
+                             ('standard_scaler', StandardScaler()),
                              ])
     
     data_pipeline = ColumnTransformer([
@@ -92,7 +74,7 @@ def preprocess_random_forest(dataset, log):
     return X_train, X_test
 
     
-def run_random_forest(dataset, config, tuner, log):
+def run_mlp(dataset, config, tuner, log):
     """
     Using the given tuner, tune a random forest within the given time constraint.
     This function uses cross validation score as the feedback score to the tuner. 
@@ -103,11 +85,11 @@ def run_random_forest(dataset, config, tuner, log):
     if limit_type == 'ntrials':
         trial_limit = int(config.framework_params['trial_limit'])
     
-    X_train, X_test = preprocess_random_forest(dataset, log)
+    X_train, X_test = preprocess_mlp(dataset, log)
     y_train, y_test = dataset.train.y, dataset.test.y
 
     is_classification = config.type == 'classification'
-    estimator = RandomForestClassifier if is_classification else RandomForestRegressor
+    estimator = MLPClassifier if is_classification else MLPRegressor
 
     best_score, best_params, best_model = None, None, None
     score_higher_better = True
@@ -125,13 +107,10 @@ def run_random_forest(dataset, config, tuner, log):
             if cur_params is not None and cur_params != {}:
                 trial_count += 1
                 train_params = cur_params.copy()
-                train_params = {x: int(train_params[x]) for x in train_params.keys()}
+                
                 if 'TRIAL_BUDGET' in cur_params:
                     train_params.pop('TRIAL_BUDGET')
-                if cur_params['max_leaf_nodes'] == 0: 
-                    train_params.pop('max_leaf_nodes')
-                if cur_params['max_depth'] == 0:
-                    train_params.pop('max_depth')
+
                 log.info("Trial {}: \n{}\n".format(param_idx, train_params))
                 
                 cur_model = estimator(random_state=config.seed, **train_params)

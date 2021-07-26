@@ -1,0 +1,29 @@
+---
+- name: __defaults__
+  folds: 2
+  cores: 2
+  max_runtime_seconds: 300
+  
+- name: car
+  openml_task_id: 146821
+
+- name: cnae-9
+  openml_task_id: 9981
+
+- name: dilbert
+  openml_task_id: 168909
+
+- name: fabert
+  openml_task_id: 168910
+
+- name: jasmine
+  openml_task_id: 168911
+
+- name: mfeat-factors
+  openml_task_id: 12
+
+- name: segment
+  openml_task_id: 146822
+
+- name: vehicle
+  openml_task_id: 53

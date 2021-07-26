@@ -1,21 +1,120 @@
+HPO Benchmarks
+==============
 
-Benchmark for Tuners
-====================
+..  toctree::
+    :hidden:
 
-We provide a benchmarking tool to compare the performances of tuners provided by NNI (and users' custom tuners) on different tasks. The implementation of this tool is based on the automlbenchmark repository (https://github.com/openml/automlbenchmark), which provides services of running different *frameworks* against different *benchmarks* consisting of multiple *tasks*. The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool and its usage. 
+    HPO Benchmark Example Statistics <hpo_benchmark_stats>
 
-Terminology
-^^^^^^^^^^^
+We provide a benchmarking tool to compare the performances of tuners provided by NNI (and users' custom tuners) on different
+types of tasks. This tool uses the `automlbenchmark repository <https://github.com/openml/automlbenchmark)>`_  to run different *benchmarks* on the NNI *tuners*.
+The tool is located in ``examples/trials/benchmarking/automlbenchmark``. This document provides a brief introduction to the tool, its usage, and currently available benchmarks.
 
+Overview and Terminologies
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* **task**\ : a task can be thought of as (dataset, evaluator). It gives out a dataset containing (train, valid, test), and based on the received predictions, the evaluator evaluates a given metric (e.g., mse for regression, f1 for classification). 
-* **benchmark**\ : a benchmark is a set of tasks, along with other external constraints such as time and resource. 
-* **framework**\ : given a task, a framework conceives answers to the proposed regression or classification problem and produces predictions. Note that the automlbenchmark framework does not pose any restrictions on the hypothesis space of a framework. In our implementation in this folder, each framework is a tuple (tuner, architecture), where architecture provides the hypothesis space (and search space for tuner), and tuner determines the strategy of hyperparameter optimization. 
-* **tuner**\ : a tuner or advisor defined in the hpo folder, or a custom tuner provided by the user. 
-* **architecture**\ : an architecture is a specific method for solving the tasks, along with a set of hyperparameters to optimize (i.e., the search space). In our implementation, the architecture calls tuner multiple times to obtain possible hyperparameter configurations, and produces the final prediction for a task. See ``./nni/extensions/NNI/architectures`` for examples.
+Ideally, an **HPO Benchmark** provides a tuner with a search space, calls the tuner repeatedly, and evaluates how the tuner probes
+the search space and approaches to good solutions. In addition, inside the benchmark, an evaluator should be associated to
+each search space for evaluating the score of points in this search space to give feedbacks to the tuner. For instance,
+the search space could be the space of hyperparameters for a neural network. Then the evaluator should contain train data,
+test data, and a criterion. To evaluate a point in the search space, the evaluator will train the network on the train data
+and report the score of the model on the test data as the score for the point.
 
-Note: currently, the only architecture supported is random forest. The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/run_random_forest.py``. The tasks in benchmarks "nnivalid" and "nnismall" are suitable to solve with random forests. 
-  
+However, a **benchmark** provided by the automlbenchmark repository only provides part of the functionality of the evaluator.
+More concretely, it assumes that it is evaluating a **framework**. Different from a tuner, given train data, a **framework**
+can directly solve a **task** and predict on the test set. The **benchmark** from the automlbenchmark repository directly provides
+train and test datasets to a **framework**, evaluates the prediction on the test set, and reports this score as the final score.
+Therefore, to implement **HPO Benchmark** using automlbenchmark, we pair up a tuner with a search space to form a **framework**,
+and handle the repeated trial-evaluate-feedback loop in the **framework** abstraction. In other words, each **HPO Benchmark**
+contains two main components: a **benchmark** from the automlbenchmark library, and an **architecture** which defines the search
+space and the evaluator. To further clarify, we provide the definition for the terminologies used in this document.
+
+* **tuner**\ : a `tuner or advisor provided by NNI <https://nni.readthedocs.io/en/stable/builtin_tuner.html>`_, or a custom tuner provided by the user.
+* **task**\ : an abstraction used by automlbenchmark. A task can be thought of as a tuple (dataset, metric). It provides train and test datasets to the frameworks. Then, based on the returns predictions on the test set, the task evaluates the metric (e.g., mse for regression, f1 for classification) and reports the score.
+* **benchmark**\ : an abstraction used by automlbenchmark. A benchmark is a set of tasks, along with other external constraints such as time limits.
+* **framework**\ : an abstraction used by automlbenchmark. Given a task, a framework solves the proposed regression or classification problem using train data and produces predictions on the test set. In our implementation, each framework is an architecture, which defines a search space. To evaluate a task given by the benchmark on a specific tuner, we let the tuner continuously tune the hyperparameters (by giving it cross-validation score on the train data as feedback) until the time or trial limit is reached. Then, the architecture is retrained on the entire train set using the best set of hyperparameters.
+* **architecture**\ : an architecture is a specific method for solving the tasks, along with a set of hyperparameters to optimize (i.e., the search space). See ``./nni/extensions/NNI/architectures`` for examples.
+
+Supported HPO Benchmarks
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+From the previous discussion, we can see that to define an **HPO Benchmark**, we need to specify a **benchmark** and an **architecture**.
+
+Currently, the only architectures we support are random forest and MLP. We use the
+`scikit-learn implementation <https://scikit-learn.org/stable/modules/classes.html#>`_. Typically, there are a number of
+hyperparameters that may directly affect the performances of random forest and MLP models. We design the search
+spaces to be the following.
+
+Search Space for Random Forest:
+
+.. code-block:: json
+
+   {
+       "n_estimators": {"_type":"randint", "_value": [4, 2048]},
+       "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},
+       "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
+       "min_samples_split": {"_type":"randint", "_value": [2, 16]},
+       "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}
+    }
+
+Search Space for MLP:
+
+.. code-block:: json
+
+    {
+       "hidden_layer_sizes": {"_type":"choice", "_value": [[16], [64], [128], [256], [16, 16], [64, 64], [128, 128], [256, 256], [16, 16, 16], [64, 64, 64], [128, 128, 128], [256, 256, 256], [256, 128, 64, 16], [128, 64, 16], [64, 16], [16, 64, 128, 256], [16, 64, 128], [16, 64]]},
+       "learning_rate_init": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+       "alpha": {"_type":"choice", "_value": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001]},
+       "momentum": {"_type":"uniform","_value":[0, 1]},
+       "beta_1": {"_type":"uniform","_value":[0, 1]},
+       "tol": {"_type":"choice", "_value": [0.001, 0.0005, 0.0001, 0.00005, 0.00001]},
+       "max_iter": {"_type":"randint", "_value": [2, 256]}
+    }
+
+In addition, we write the search space in different ways (e.g., using "choice" or "randint" or "loguniform").
+The architecture implementation and search space definition can be found in ``./nni/extensions/NNI/architectures/``.
+You may replace the search space definition in this file to experiment different search spaces.
+
+For the automlbenchmarks, in addition to the built-in benchmarks provided by automl
+(defined in ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``), we design several
+additional benchmarks, defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``.
+One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and
+8 multi-class classification tasks. We also provide three separate 8-task benchmarks "nnismall-regression", "nnismall-binary", and "nnismall-multiclass"
+corresponding to the three types of tasks in nnismall. These tasks are suitable to solve with random forest and MLP.
+
+The following table summarizes the benchmarks we provide. For ``nnismall``, please check ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``
+for a more detailed description for each task. Also, since all tasks are from the OpenML platform, you can find the descriptions
+of all datasets at `this webpage <https://www.openml.org/search?type=data>`_.
+
+.. list-table::
+   :header-rows: 1
+   :widths: 1 2 2 2
+
+   * - Benchmark name
+     - Description
+     - Task List
+     - Location
+   * - nnivalid
+     - A three-task benchmark to validate benchmark installation.
+     - ``kc2, iris, cholesterol``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
+   * - nnismall-regression
+     - An eight-task benchmark consisting of **regression** tasks only.
+     - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
+   * - nnismall-binary
+     - An eight-task benchmark consisting of **binary classification** tasks only.
+     - ``Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
+   * - nnismall-multiclass
+     - An eight-task benchmark consisting of **multi-class classification** tasks only.
+     - ``car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
+   * - nnismall
+     - A 24-task benchmark that is the superset of nnismall-regression, nnismall-binary, and nnismall-multiclass.
+     - ``cholesterol, liver-disorders, kin8nm, cpu_small, titanic_2, boston, stock, space_ga, Australian, blood-transfusion, christine, credit-g, kc1, kr-vs-kp, phoneme, sylvine, car, cnae-9, dilbert, fabert, jasmine, mfeat-factors, segment, vehicle``
+     - ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/``
+
 Setup
 ^^^^^
 
@@ -32,26 +131,47 @@ Run predefined benchmarks on existing tuners
 
    ./runbenchmark_nni.sh [tuner-names]
 
-This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/. To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. Some benchmarks are defined in ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks``\ , and others are defined in ``/examples/trials/benchmarking/automlbenchmark/automlbenchmark/resources/benchmarks/``. One example of larger benchmarks is "nnismall", which consists of 8 regression tasks, 8 binary classification tasks, and 8 multi-class classification tasks.
+This script runs the benchmark 'nnivalid', which consists of a regression task, a binary classification task, and a
+multi-class classification task. After the script finishes, you can find a summary of the results in the folder results_[time]/reports/.
+To run on other predefined benchmarks, change the ``benchmark`` variable in ``runbenchmark_nni.sh``. To change to another
+search space (by using another architecture), chang the `arch_type` parameter in ``./nni/frameworks.yaml``. Note that currently,
+we only support ``random_forest`` or ``mlp`` as the `arch_type`. To experiment on other search spaces with the same
+architecture, please change the search space defined in ``./nni/extensions/NNI/architectures/run_[architecture].py``.
 
-By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names], it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner", "Hyperband", "BOHB". It is also possible to evaluate custom tuners. See the next sections for details. 
+The ``./nni/frameworks.yaml`` is the actual configuration file for the HPO Benchmark. The ``limit_type`` parameter specifies
+the limits for running the benchmark on one tuner. If ``limit_type`` is set to `ntrials`, then the tuner is called for
+`trial_limit` times and then stopped. If ``limit_type`` is set to `time`, then the tuner is continuously called until
+timeout for the benchmark is reached. The timeout for the benchmarks can be changed in the each benchmark file located
+in ``./nni/benchmarks``.
 
-By default, the script runs the specified tuners against the specified benchmark one by one. To run all the experiments simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``. 
+By default, the script runs the benchmark on all embedded tuners in NNI. If provided a list of tuners in [tuner-names],
+it only runs the tuners in the list. Currently, the following tuner names are supported: "TPE", "Random", "Anneal",
+"Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner", "Hyperband", "BOHB". It is also possible to run the benchmark
+on custom tuners. See the next sections for details.
 
-Note: the SMAC tuner, DNGO tuner, and the BOHB advisor has to be manually installed before any experiments can be run on it. Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details on installing SMAC and BOHB.
+By default, the script runs the specified tuners against the specified benchmark one by one. To run the experiment for
+all tuners simultaneously in the background, set the "serialize" flag to false in ``runbenchmark_nni.sh``.
+
+Note: the SMAC tuner, DNGO tuner, and the BOHB advisor has to be manually installed before running benchmarks on them.
+Please refer to `this page <https://nni.readthedocs.io/en/stable/Tuner/BuiltinTuner.html?highlight=nni>`_ for more details
+on installation.
 
 Run customized benchmarks on existing tuners
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To run customized benchmarks, add a benchmark_name.yaml file in the folder ``./nni/benchmarks``\ , and change the ``benchmark`` variable in ``runbenchmark_nni.sh``. See ``./automlbenchmark/resources/benchmarks/`` for some examples of defining a custom benchmark.
+You can design your own benchmarks and evaluate the performance of NNI tuners on them. To run customized benchmarks,
+add a benchmark_name.yaml file in the folder ``./nni/benchmarks``, and change the ``benchmark`` variable in ``runbenchmark_nni.sh``.
+See ``./automlbenchmark/resources/benchmarks/`` for some examples of defining a custom benchmark.
 
 Run benchmarks on custom tuners
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_. Next, perform the following steps:
+You may also use the benchmark to compare a custom tuner written by yourself with the NNI built-in tuners. To use custom
+tuners, first make sure that the tuner inherits from ``nni.tuner.Tuner`` and correctly implements the required APIs. For
+more information on implementing a custom tuner, please refer to `here <https://nni.readthedocs.io/en/stable/Tuner/CustomizeTuner.html>`_.
+Next, perform the following steps:
 
-
-#. Install the custom tuner with command ``nnictl algo register``. Check `this document <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
+#. Install the custom tuner via the command ``nnictl algo register``. Check `this document <https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html>`_ for details. 
 #. In ``./nni/frameworks.yaml``\ , add a new framework extending the base framework NNI. Make sure that the parameter ``tuner_type`` corresponds to the "builtinName" of tuner installed in step 1.
 #. Run the following command
 
@@ -59,182 +179,4 @@ To use custom tuners, first make sure that the tuner inherits from ``nni.tuner.T
 
       ./runbenchmark_nni.sh new-tuner-builtinName
 
-A Benchmark Example 
-^^^^^^^^^^^^^^^^^^^
-
-As an example, we ran the "nnismall" benchmark on the following 8 tuners: "TPE", "Random", "Anneal", "Evolution", "SMAC", "GPTuner", "MetisTuner", "DNGOTuner". As some of the tasks contains a considerable amount of training data, it took about 2 days to run the whole benchmark on one tuner using a single CPU core. For a more detailed description of the tasks, please check ``/examples/trials/benchmarking/automlbenchmark/nni/benchmarks/nnismall_description.txt``. For binary and multi-class classification tasks, the metric "auc" and "logloss" were used for evaluation, while for regression, "r2" and "rmse" were used. 
-
-After the script finishes, the final scores of each tuner are summarized in the file ``results[time]/reports/performances.txt``. Since the file is large, we only show the following screenshot and summarize other important statistics instead. 
-
-.. image:: ../img/hpo_benchmark/performances.png
-   :target: ../img/hpo_benchmark/performances.png
-   :alt: 
-
-In addition, when the results are parsed, the tuners are ranked based on their final performance. ``results[time]/reports/rankings.txt`` presents the average ranking of the tuners for each metric (logloss, rmse, auc). Here we present the data in the first three tables. Also, for every tuner, their performance for each type of metric is summarized (another view of the same data). We present this statistics in the fourth table. 
-
-Average rankings for metric rmse:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Tuner Name
-     - Average Ranking
-   * - Anneal
-     - 3.75
-   * - Random
-     - 4.00
-   * - Evolution
-     - 4.44
-   * - DNGOTuner
-     - 4.44
-   * - SMAC
-     - 4.56
-   * - TPE
-     - 4.94
-   * - GPTuner
-     - 4.94
-   * - MetisTuner
-     - 4.94
-
-Average rankings for metric auc:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Tuner Name
-     - Average Ranking
-   * - SMAC
-     - 3.67
-   * - GPTuner
-     - 4.00
-   * - Evolution
-     - 4.22
-   * - Anneal
-     - 4.39
-   * - MetisTuner
-     - 4.39
-   * - TPE
-     - 4.67
-   * - Random
-     - 5.33
-   * - DNGOTuner
-     - 5.33
-
-Average rankings for metric logloss:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Tuner Name
-     - Average Ranking
-   * - Random
-     - 3.36
-   * - DNGOTuner
-     - 3.50
-   * - SMAC
-     - 3.93
-   * - GPTuner
-     - 4.64
-   * - TPE
-     - 4.71
-   * - Anneal
-     - 4.93
-   * - Evolution
-     - 5.00
-   * - MetisTuner
-     - 5.93
-
-Average rankings for tuners:
-
-.. list-table::
-   :header-rows: 1
-
-   * - Tuner Name
-     - rmse
-     - auc
-     - logloss
-   * - TPE
-     - 4.94
-     - 4.67
-     - 4.71
-   * - Random
-     - 4.00
-     - 5.33
-     - 3.36
-   * - Anneal
-     - 3.75
-     - 4.39
-     - 4.93
-   * - Evolution
-     - 4.44
-     - 4.22
-     - 5.00
-   * - GPTuner
-     - 4.94
-     - 4.00
-     - 4.64
-   * - MetisTuner
-     - 4.94
-     - 4.39
-     - 5.93
-   * - SMAC
-     - 4.56
-     - 3.67
-     - 3.93
-   * - DNGOTuner
-     - 4.44
-     - 5.33
-     - 3.50
-
-Besides these reports, our script also generates two graphs for each fold of each task. The first graph presents the best score seen by each tuner until trial x, and the second graph shows the scores of each tuner in trial x. These two graphs can give some information regarding how the tuners are "converging". We found that for "nnismall", tuners on the random forest model with search space defined in ``/examples/trials/benchmarking/automlbenchmark/nni/extensions/NNI/architectures/run_random_forest.py`` generally converge to the final solution after 40 to 60 trials. As there are too much graphs to incldue in a single report (96 graphs in total), we only present 10 graphs here.
-
-.. image:: ../img/hpo_benchmark/car_fold1_1.jpg
-   :target: ../img/hpo_benchmark/car_fold1_1.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/car_fold1_2.jpg
-   :target: ../img/hpo_benchmark/car_fold1_2.jpg
-   :alt: 
-
-For example, the previous two graphs are generated for fold 1 of the task "car". In the first graph, we can observe that most tuners find a relatively good solution within 40 trials. In this experiment, among all tuners, the DNGOTuner converges fastest to the best solution (within 10 trials). Its score improved three times in the entire experiment. In the second graph, we observe that most tuners have their score flucturate between 0.8 and 1 throughout the experiment duration. However, it seems that the Anneal tuner (green line) is more unstable (having more fluctuations) while the GPTuner has a more stable pattern. Regardless, although this pattern can to some extent be interpreted as a tuner's position on the explore-exploit tradeoff, it cannot be used for a comprehensive evaluation of a tuner's effectiveness. 
-
-.. image:: ../img/hpo_benchmark/christine_fold0_1.jpg
-   :target: ../img/hpo_benchmark/christine_fold0_1.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/christine_fold0_2.jpg
-   :target: ../img/hpo_benchmark/christine_fold0_2.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
-   :target: ../img/hpo_benchmark/cnae-9_fold0_1.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
-   :target: ../img/hpo_benchmark/cnae-9_fold0_2.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/credit-g_fold1_1.jpg
-   :target: ../img/hpo_benchmark/credit-g_fold1_1.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/credit-g_fold1_2.jpg
-   :target: ../img/hpo_benchmark/credit-g_fold1_2.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
-   :target: ../img/hpo_benchmark/titanic_2_fold1_1.jpg
-   :alt: 
-
-
-.. image:: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
-   :target: ../img/hpo_benchmark/titanic_2_fold1_2.jpg
-   :alt: 
-
+The benchmark will automatically find and match the tuner newly added to your NNI installation.
