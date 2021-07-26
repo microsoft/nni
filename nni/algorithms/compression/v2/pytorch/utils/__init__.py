@@ -1,2 +1,2 @@
 from .config_validation import PrunerSchema, QuantizerSchema
-from .pruning import apply_compression_results, compute_sparsity_with_compact_model, compute_sparsity_with_mask
+from .pruning import apply_compression_results, compute_sparsity_with_compact_model, compute_sparsity_with_masks

@@ -29,7 +29,7 @@ class AGPTaskGenerator(TaskGenerator):
         assert all('sparsity' in config for config in target_sparsity), 'Sparsity is needed in AGP, please specify sparsity for each config.'
         pre_real_sparsity, _, _ = compute_sparsity(origin_model, origin_model, origin_masks, origin_config_list)
         status = {
-            'current_iteration': -1,
+            'current_iteration': 0,
             'target_sparsity': target_sparsity,
             'pre_real_sparsity': pre_real_sparsity
         }
@@ -62,7 +62,7 @@ class AGPTaskGenerator(TaskGenerator):
         task_log_dir = Path(self.log_dir_root, str(task_id))
         task_log_dir.mkdir(parents=True, exist_ok=True)
         status = {
-            'current_iteration': -1,
+            'current_iteration': current_iteration,
             'target_sparsity': target_sparsity,
             'pre_real_sparsity': pre_real_sparsity
         }

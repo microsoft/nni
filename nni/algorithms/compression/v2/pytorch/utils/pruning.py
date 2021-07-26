@@ -106,7 +106,7 @@ def compute_sparsity_with_masks(masked_model: Module, masks: Dict[str, Dict[str,
             total_weight_num += module_weight_num
             if module_name in masks:
                 weight_mask = masks[module_name]['weight_mask']
-                left_weight_num += len(torch.nonzero(weight_mask, as_tuple=True).to_list())
+                left_weight_num += len(torch.nonzero(weight_mask, as_tuple=False))
             else:
                 left_weight_num += module_weight_num
         real_config_list.append(deepcopy(config))

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional, Callable, Tuple
@@ -37,8 +37,8 @@ class Task:
     pre_task_id: Optional[int]
     config_list: dict
     log_dir: Path
-    score: float = float('-inf')
-    status: Dict = {}
+    score: Optional[float] = None
+    status: dict = field(default_factory=list)
 
 
 class TaskGenerator:
@@ -61,7 +61,7 @@ class TaskGenerator:
         self.pending_tasks: List[Task] = []
         self.task_id_candidate = 0
 
-        self.best_score = float('-inf')
+        self.best_score = None
         self.best_task = None
 
         self.origin_task_id = None
@@ -105,7 +105,7 @@ class TaskGenerator:
         # update the task that has the best score
         if score is not None:
             task.score = score
-            if score > self.best_score:
+            if self.best_score is None or score > self.best_score:
                 self.best_score = score
                 self.best_task = task_id
 
@@ -130,15 +130,17 @@ class TaskGenerator:
         task = self.tasks_map[task_id]
 
         # save tasks info
-        with self.tasks_info_file.open(mode='rw') as f:
+        with self.tasks_info_file.open(mode='r') as f:
             tasks_info = json_tricks.load(f)
+
+        with self.tasks_info_file.open(mode='w') as f:
             tasks_info[task_id] = {PRE_TASK_ID: task.pre_task_id, SCORE: task.score, LOG_DIR: task.log_dir,
                                    STATUS: task.status}
-            json_tricks.dump(tasks_info, f)
+            json_tricks.dump(tasks_info, f, indent=4)
 
         # save config list, pruned model and masks
         with Path(task.log_dir, CONFIG_LIST_NAME).open(mode='w') as f:
-            json_tricks.dump(task.config_list, f)
+            json_tricks.dump(task.config_list, f, indent=4)
         torch.save(pruned_model, Path(task.log_dir, MODEL_NAME))
         torch.save(masks, Path(task.log_dir, MASKS_NAME))
 
@@ -181,7 +183,7 @@ class TaskGenerator:
 
 
 class PruningScheduler:
-    def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module]] = None,
+    def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
                  speed_up: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None):
         """
         Parameters
@@ -247,7 +249,7 @@ class PruningScheduler:
 
         while task_id is not None:
             pruned_model, masks, score = self.compress_one_step(model, config_list, masks)
-            _logger.info('\nIteration %d\ntask id: \%d\nscore: %f\nconfig list:\n%s', iteration, task_id, score, config_list)
+            _logger.info('\nIteration %d\ntask id: %d\nscore: %s\nconfig list:\n%s', iteration, task_id, str(score), json_tricks.dumps(config_list, indent=4))
 
             self.task_generator.receive_task_result(task_id, pruned_model, masks, score)
             task_id, model, config_list, masks = self.task_generator.next()
