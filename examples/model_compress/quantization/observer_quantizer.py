@@ -41,8 +41,8 @@ def test(model, device, test_loader):
 def calibration(model, device, test_loader):
     model.eval()
     with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
+        for data, _ in test_loader:
+            data = data.to(device)
             model(data)
 
 

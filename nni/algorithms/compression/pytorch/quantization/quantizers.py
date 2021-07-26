@@ -261,8 +261,6 @@ class ObserverQuantizer(Quantizer):
                 scale, zero_point = self.calculate_qparams(layer.name, 'weight')
                 module.register_buffer('weight_scale', scale.to(self.device))
                 module.register_buffer('weight_zero_point', zero_point.to(self.device))
-                # todo: recover old_weight to weight, because the compressed
-                # model may be further finetuned.
             if "input" in config.get("quant_types", []):
                 scale, zero_point = self.calculate_qparams(layer.name, 'input')
                 module.register_buffer('input_scale', scale.to(self.device))
@@ -301,11 +299,24 @@ class ObserverQuantizer(Quantizer):
         calibration_config = {}
 
         for name, module in self.bound_model.named_modules():
-            if hasattr(module, 'input_scale') or hasattr(module, 'output_scale'):
+            if hasattr(module, 'weight_scale') or hasattr(module, 'input_scale') or hasattr(module, 'output_scale'):
                 calibration_config[name] = {}
+            if hasattr(module, 'weight_scale'):
+                calibration_config[name]['weight_bit'] = 8
+                val = float(module.weight_scale * module.weight_qmax)
+                calibration_config[name]['tracked_min_weight'] = val
+                calibration_config[name]['tracked_max_weight'] = -val
+                calibration_config[name]['tracked_weight_qmin'] = -127
+                calibration_config[name]['tracked_weight_qmax'] = 127
+                actual_weight = getattr(module, 'old_weight', None)
+                if actual_weight is None:
+                    logger.warning("Can not recover weight for layer %s. "
+                                   "This may lead to a wrong accuracy performance on the backend.", name)
+                delattr(module, 'weight')
+                module.register_parameter('weight', actual_weight)
             # refactor these magic numbers when customizations of dtype and qscheme are ready.
             if hasattr(module, 'input_scale'):
-                calibration_config[name]['weight_bit'] = 8
+                calibration_config[name]['input_bit'] = 8
                 max_input = float(module.input_scale * (module.input_qmax - module.input_zero_point))
                 min_input = float(module.input_scale * (module.input_qmin - module.input_zero_point))
                 calibration_config[name]['tracked_min_input'] = min_input
