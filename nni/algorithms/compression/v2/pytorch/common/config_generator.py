@@ -12,7 +12,7 @@ from nni.algorithms.compression.v2.pytorch.base.scheduler import Task, TaskGener
 from nni.algorithms.compression.v2.pytorch.utils.pruning import unfold_config_list, dedupe_config_list, compute_sparsity
 
 
-class AGPTaskGenerator(TaskGenerator):
+class ConsistentTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.'):
         self.total_iteration = total_iteration
@@ -74,9 +74,26 @@ class AGPTaskGenerator(TaskGenerator):
         return [task]
 
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+        raise NotImplementedError()
+
+
+class AGPTaskGenerator(ConsistentTaskGenerator):
+    def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
             ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['sparsity']) / (1 - mo['sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['sparsity'])
+            config_list.append(deepcopy(target))
+            config_list[-1]['sparsity'] = sparsity
+        return config_list
+
+
+class LinearTaskGenerator(ConsistentTaskGenerator):
+    def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+        config_list = []
+        for target, mo in zip(target_sparsity, model_based_sparsity):
+            ori_sparsity = iteration / self.total_iteration * target['sparsity']
             sparsity = max(0.0, (ori_sparsity - mo['sparsity']) / (1 - mo['sparsity']))
             assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['sparsity'])
             config_list.append(deepcopy(target))
