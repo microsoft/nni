@@ -19,7 +19,7 @@ _logger = logging.getLogger(__name__)
 class DartsLayerChoice(nn.Module):
     def __init__(self, layer_choice):
         super(DartsLayerChoice, self).__init__()
-        self.name = layer_choice.key
+        self.name = layer_choice.label
         self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
         self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
 
@@ -45,7 +45,7 @@ class DartsLayerChoice(nn.Module):
 class DartsInputChoice(nn.Module):
     def __init__(self, input_choice):
         super(DartsInputChoice, self).__init__()
-        self.name = input_choice.key
+        self.name = input_choice.label
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
         self.n_chosen = input_choice.n_chosen or 1
 
