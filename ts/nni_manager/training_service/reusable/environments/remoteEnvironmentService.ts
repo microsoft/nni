@@ -248,6 +248,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
             }
 
             environment.command = await this.getScript(environment);
+            environment.useActiveGpu = rmMachineMeta.useActiveGpu;
             return Promise.resolve(true);
         }
     }

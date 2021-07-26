@@ -16,6 +16,7 @@ export interface TrainingServiceConfig {
 
 export interface LocalConfig extends TrainingServiceConfig {
     platform: 'local';
+    reuseMode: boolean;
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];

@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
-    def __init__(self, n_model_per_graph=4) -> None:
+    def __init__(self, devices=None, n_model_per_graph=4) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
@@ -25,6 +25,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._optimizers = [DedupInputOptimizer()]
         self._original_models = {}
         self._original_model_to_multi_model = {}
+        self.devices = [] if devices is None else devices
 
         # register advisor callbacks
         advisor = get_advisor()
