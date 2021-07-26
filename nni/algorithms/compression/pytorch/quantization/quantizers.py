@@ -143,7 +143,7 @@ class ObserverQuantizer(Quantizer):
         #  activation observer : per_tensor_affine, quint8, reduce_range=True
         # 2. add more kinds of observers, such as Kullback-Leibler divergence.
         # 3. add batch normalization folding
-        assert not model.training, "Currently observer quantizer only works in evaluation mode."
+        assert not model.training, "Currently the observer quantizer only works in evaluation mode."
         self.quant_grad = QuantForward()
         self.device = next(model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
