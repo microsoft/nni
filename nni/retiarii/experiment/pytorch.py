@@ -198,13 +198,13 @@ class RetiariiExperiment(Experiment):
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
-            engine = BaseExecutionEngine(devices = devices)
+            engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
-            engine = CGOExecutionEngine()
+            engine = CGOExecutionEngine(devices = devices)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
-            engine = PurePythonExecutionEngine(devices = devices)
+            engine = PurePythonExecutionEngine()
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()

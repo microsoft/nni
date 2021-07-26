@@ -37,7 +37,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     Resource management is implemented in this class.
     """
 
-    def __init__(self, devices=None) -> None:
+    def __init__(self) -> None:
         """
         Upon initialization, advisor callbacks need to be registered.
         Advisor will call the callbacks when the corresponding event has been triggered.
@@ -57,7 +57,6 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         self._history: List[Model] = []
 
         self.resources = 0
-        self.devices = [] if devices is None else devices
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
