@@ -4,6 +4,7 @@
 import types
 import logging
 import torch
+from nni.common.graph_utils import build_module_graph
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -463,7 +464,7 @@ class Pruner(Compressor):
 
 
 class QuantizerModuleWrapper(torch.nn.Module):
-    def __init__(self, module, module_name, module_type, config, quantizer):
+    def __init__(self, module, module_name, module_type, config, quantizer, bn_module=None):
         """
         Wrap an module to enable data parallel, forward method customization and buffer registeration.
 
@@ -479,6 +480,8 @@ class QuantizerModuleWrapper(torch.nn.Module):
             the type of the module to compress
         quantizer ：quantizer
             the quantizer used to calculate mask
+        bn_module : torch.nn.Module
+            batch norm layer corresponding to current module, used for simulating batch normalization folding
         """
         super().__init__()
         # origin layer information
@@ -488,6 +491,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.quantizer = quantizer
+        self.bn_module = bn_module
 
         # register buffer and parameter
         # old_weight is used to store origin weight and weight is used to store quantized weight
@@ -501,6 +505,17 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 delattr(self.module, 'weight')
                 self.module.register_buffer('weight', self.module.old_weight)
 
+                # for batch normalization folding
+                if self.bn_module is not None:
+                    if _check_bias(self.module):
+                        self.module.register_parameter('old_bias', torch.nn.Parameter(self.module.bias))
+                        init_tensor = self.module.old_bias
+                    else:
+                        init_tensor = torch.zeros_like(self.bn_module.weight)
+                    delattr(self.module, 'bias')
+                    self.module.register_buffer('bias', init_tensor)
+                    setattr(module, BN_FOLD_TAG, True)
+
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
             inputs = self.quantizer.quant_grad(
@@ -509,13 +524,20 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
+            if self.bn_module is not None:
+                # simulate batch normalization folding
+                new_weight, new_bias = self.quantizer.fold_bn(*inputs, wrapper=self)
+                self.module.bias = new_bias
+                self.module.weight = new_weight
+            else:
+                new_weight = self.module.old_weight
+
             self.quantizer.quant_grad(
-                self.module.old_weight,
+                new_weight,
                 QuantType.QUANT_WEIGHT,
                 self, inputs[0])
-            result = self.module(*inputs)
-        else:
-            result = self.module(*inputs)
+
+        result = self.module(*inputs)
 
         if 'output' in self.config['quant_types']:
             result = self.quantizer.quant_grad(
@@ -525,12 +547,35 @@ class QuantizerModuleWrapper(torch.nn.Module):
         return result
 
 
+class QuantizerIdentityWrapper(torch.nn.Module):
+    def __init__(self, module, module_name):
+        """
+        Used to wrap modules that should be treated as torch.Identity
+
+        Parameters
+        ----------
+        module : pytorch module
+            the module to be wrapped
+        module_name : str
+            the name of the module to wrapped, wrapper module shares same name
+        """
+        super().__init__()
+        self.module = module
+        self.module_name = module_name
+
+    def forward(self, x):
+        return x
+
+
 class Quantizer(Compressor):
     """
     Base quantizer for pytorch quantizer
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
+        self.identity_wrappers = []
+        self.conv_bn_patterns = {}
+        self.find_conv_bn_patterns(model, dummy_input)
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
@@ -540,6 +585,10 @@ class Quantizer(Compressor):
                     # old_weight is registered to keep track of weight before quantization
                     # and it is trainable, therefore, it should be added to optimizer.
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
+                # This is for conv with bias + bn. Although this situation is relatively rare,
+                # we still need to deal with the old_bias when it occurs
+                if hasattr(wrapper.module, "old_bias"):
+                    self.optimizer.add_param_group({"params": getattr(wrapper.module, "old_bias")})
 
     def quantize_weight(self, wrapper, **kwargs):
         """
@@ -597,7 +646,36 @@ class Quantizer(Compressor):
             for quant_type in config['quant_types']:
                 assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
-        return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+        # bound bn module to corresponding conv module
+        bn_module = None
+        if layer.name in self.conv_bn_patterns:
+            bn_module_name = self.conv_bn_patterns[layer.name]
+            for name, module in self.bound_model.named_modules():
+                if name == bn_module_name:
+                    bn_module = module
+                    break
+            assert bn_module is not None, "BN module corresponding to layer {} is not found".format(layer.name)
+            self.identity_wrappers.append(QuantizerIdentityWrapper(bn_module, bn_module_name))
+        return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self, bn_module)
+
+    def _wrap_model(self):
+        """
+        wrap all modules that needed to be compressed
+
+        """
+        # wrap folded bn in order to bypass its forward process
+        for wrapper in reversed(self.identity_wrappers):
+            _setattr(self.bound_model, wrapper.module_name, wrapper)
+        super()._wrap_model()
+
+    def _unwrap_model(self):
+        """
+        unwrap all modules that needed to be compressed
+
+        """
+        for wrapper in self.identity_wrappers:
+            _setattr(self.bound_model, wrapper.module_name, wrapper.module)
+        super()._unwrap_model()
 
     def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None,
                           input_shape=None, device=None):
@@ -660,6 +738,30 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload export_model()')
 
+    def find_conv_bn_patterns(self, model, dummy_input):
+        """
+        Find all Conv-BN patterns, used for batch normalization folding
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            model to be analyzed.
+        dummy_input : tupel of torch.tensor
+            inputs to the model, used for generating the torchscript
+        """
+        if dummy_input is None:
+            _logger.debug("Model inputs are not given, batch normalization folding is disabled")
+            return
+
+        graph = build_module_graph(model, dummy_input)
+        for node_group in graph.nodes_py.nodes_op:
+            if node_group.op_type in BN_FOLD_OP:
+                successors = graph.find_successors(node_group.unique_name)
+                successors = [graph.name_to_node[x] for x in successors]
+                for successor in successors:
+                    if successor.op_type == 'BatchNorm2d':
+                        self.conv_bn_patterns[node_group.name] = successor.name
+
     def step_with_optimizer(self):
         pass
 
@@ -676,6 +778,9 @@ QType_Dict = {
     1: "weight",
     2: "output"
 }
+
+BN_FOLD_OP = ["Conv2d"]
+BN_FOLD_TAG = 'BN_FOLD_TAG'
 
 class QuantGrad(torch.autograd.Function):
     """
@@ -770,6 +875,12 @@ class QuantGrad(torch.autograd.Function):
 def _check_weight(module):
     try:
         return isinstance(module.weight.data, torch.Tensor)
+    except AttributeError:
+        return False
+
+def _check_bias(module):
+    try:
+        return isinstance(module.bias.data, torch.Tensor)
     except AttributeError:
         return False
 
