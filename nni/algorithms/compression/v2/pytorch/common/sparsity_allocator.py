@@ -38,9 +38,10 @@ class NormalSparsityAllocator(SparsityAllocator):
             metric = metrics[name]
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
-                continue
-            threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
-            mask = torch.gt(metric, threshold).type_as(metric)
+                mask = torch.ones_like(metric)
+            else:
+                threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
+                mask = torch.gt(metric, threshold).type_as(metric)
             masks[name] = self._expand_mask_with_dim(name, mask)
         return masks
 

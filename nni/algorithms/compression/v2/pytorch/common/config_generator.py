@@ -29,7 +29,7 @@ class AGPTaskGenerator(TaskGenerator):
         assert all('sparsity' in config for config in target_sparsity), 'Sparsity is needed in AGP, please specify sparsity for each config.'
         pre_real_sparsity, _, _ = compute_sparsity(origin_model, origin_model, origin_masks, origin_config_list)
         status = {
-            'current_iteration': 0,
+            'current_iteration': -1,
             'target_sparsity': target_sparsity,
             'pre_real_sparsity': pre_real_sparsity
         }
@@ -76,9 +76,9 @@ class AGPTaskGenerator(TaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['sparsity']
-            sparsity = (sparsity - mo['sparsity']) / (1 - mo['sparsity'])
-            assert 0 <= sparsity <= 1
+            ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['sparsity']) / (1 - mo['sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['sparsity'])
             config_list.append(deepcopy(target))
             config_list[-1]['sparsity'] = sparsity
         return config_list

@@ -38,7 +38,7 @@ class Task:
     config_list: dict
     log_dir: Path
     score: Optional[float] = None
-    status: dict = field(default_factory=list)
+    status: dict = field(default_factory=dict)
 
 
 class TaskGenerator:
@@ -73,6 +73,7 @@ class TaskGenerator:
         task_id = self.task_id_candidate
         task_log_dir = Path(self.log_dir_root, str(task_id))
         task_log_dir.mkdir(parents=True, exist_ok=True)
+
         origin_task = Task(task_id, None, deepcopy(origin_config_list), task_log_dir)
         self.tasks_map[task_id] = origin_task
         self.origin_task_id = task_id
@@ -224,7 +225,13 @@ class PruningScheduler:
 
         # speed up
         # TODO: speed up only support mask file path as input, maybe we need also support masks directly.
-        torch.save(masks, Path('./temp_masks.pth'))
+        tmp_masks = {}
+        for name, mask in masks.items():
+            tmp_masks[name] = {}
+            tmp_masks[name]['weight'] = mask.get('weight_mask')
+            if 'bias' in masks:
+                tmp_masks[name]['bias'] = mask.get('bias_mask')
+        torch.save(tmp_masks, Path('./temp_masks.pth'))
         if self.speed_up:
             ModelSpeedup(model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
             masks = {}
