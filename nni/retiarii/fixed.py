@@ -13,6 +13,7 @@ def fixed_arch(fixed_arch: Union[str, Path, Dict[str, Any]], verbose=True):
     Load architecture from ``fixed_arch`` and apply to model. This should be used as a context manager. For example,
 
     .. code-block:: python
+
         with fixed_arch('/path/to/export.json'):
             model = Model(3, 224, 224)
 
