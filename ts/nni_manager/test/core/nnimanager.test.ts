@@ -33,7 +33,7 @@ async function initContainer(): Promise<void> {
     await component.get<DataStore>(DataStore).init();
 }
 
-/* FIXME: timeout on macOS
+// FIXME: timeout on macOS
 describe('Unit test for nnimanager', function () {
 
     let nniManager: NNIManager;
@@ -294,4 +294,3 @@ describe('Unit test for nnimanager', function () {
     })
 
 })
-*/
