@@ -61,12 +61,14 @@ class AttentionHeadMasker(WeightMasker):
                 'bias_mask': bias mask tensor (optional)
         """
         assert weight_group is not None
-        num_total = weight_group[0].module.weight.data.size(0) // self.head_hidden_dim
-        if num_total < 2:
+        if len(weight_group) == 0:
             return None
-        num_prune = max(int(num_total * sparsity), 1)
-
-        return self.get_mask(num_prune, weight_group, **kwargs)
+        else:
+            num_total = weight_group[0].module.weight.data.size(0) // self.head_hidden_dim
+            if num_total < 2:
+                return None
+            num_prune = max(int(num_total * sparsity), 1)
+            return self.get_mask(num_prune, weight_group, **kwargs)
 
     def calc_mask_global(self, n_heads_to_prune):
         """
@@ -84,10 +86,11 @@ class AttentionHeadMasker(WeightMasker):
         # calculate scores as normal (this step does not require global information)
         head_importance_scores = []
         for group_idx, group in enumerate(self.pruner.masking_groups):
-            scores = self.get_head_importance_scores(group)
-            n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
-            for head_idx in range(n_heads):
-                head_importance_scores.append([group_idx, head_idx, scores[head_idx]])
+            if len(group) != 0:
+                scores = self.get_head_importance_scores(group)
+                n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
+                for head_idx in range(n_heads):
+                    head_importance_scores.append([group_idx, head_idx, scores[head_idx]])
 
         # determine which head to prune for each layer
         n_selected = 0
@@ -103,10 +106,13 @@ class AttentionHeadMasker(WeightMasker):
         # generate masks
         all_masks = []
         for group_idx, group in enumerate(self.pruner.masking_groups):
-            n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
-            device = group[0].module.weight.device
-            head_level_mask = torch.tensor([i not in self.pruner.pruned_heads[group_idx] for i in range(n_heads)], device=device)  # pylint: disable=not-callable
-            masks = self._get_layer_masks_from_head_mask(group, head_level_mask)
+            if len(group) == 0:
+                masks = None
+            else:
+                n_heads = group[0].module.weight.size(0) // self.head_hidden_dim
+                device = group[0].module.weight.device
+                head_level_mask = torch.tensor([i not in self.pruner.pruned_heads[group_idx] for i in range(n_heads)], device=device)  # pylint: disable=not-callable
+                masks = self._get_layer_masks_from_head_mask(group, head_level_mask)
             all_masks.append(masks)
 
         return all_masks

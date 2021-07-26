@@ -172,6 +172,9 @@ class TransformerHeadPruner(Pruner):
         errmsg = 'Attention weight group sanity check not passed'
         sparsity = None
         for group in self.masking_groups:
+            # allow empty groups - may be caused by config list filtering
+            if len(group) == 0:
+                continue
             assert len(group) == 4, errmsg + ': each group must have four weights'
             assert group[0].module.weight.size() == group[1].module.weight.size() and \
                 group[1].module.weight.size() == group[2].module.weight.size(), \
@@ -306,8 +309,10 @@ class TransformerHeadPruner(Pruner):
 
         overall_sparsity = self.get_modules_wrapper()[0].config['sparsity'] / self.num_iterations
         n_heads_total = 0
-        for q_proj, _, _, _ in self.masking_groups:
-            n_heads_total += int(q_proj.module.weight.size()[0] / self.head_hidden_dim)
+        for group in self.masking_groups:
+            if len(group) != 0:
+                q_proj, _, _, _ = group
+                n_heads_total += int(q_proj.module.weight.size()[0] / self.head_hidden_dim)
         n_heads_to_prune = int(n_heads_total * overall_sparsity)
 
         return self.masker.calc_mask_global(n_heads_to_prune)
