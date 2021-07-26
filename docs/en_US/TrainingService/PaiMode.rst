@@ -50,136 +50,55 @@ You could use the following configuration in your NNI's config file:
 
 .. code-block:: yaml
 
-   nniManagerNFSMountPath: /local/mnt
+   localStorageMountPoint: /local/mnt
 
-**Step 4. Get OpenPAI's storage config name and nniManagerMountPath**
+**Step 4. Get OpenPAI's storage config name and localStorageMountPoint**
 
-The ``Team share storage`` field is storage configuration used to specify storage value in OpenPAI. You can get ``paiStorageConfigName`` and ``containerNFSMountPath`` field in ``Team share storage``\ , for example:
+The ``Team share storage`` field is storage configuration used to specify storage value in OpenPAI. You can get ``storageConfigName`` and ``containerStorageMountPoint`` field in ``Team share storage``\ , for example:
 
 .. code-block:: yaml
 
-   paiStorageConfigName: confignfs-data
-   containerNFSMountPath: /mnt/confignfs-data
+   storageConfigName: confignfs-data
+   containerStorageMountPoint: /mnt/confignfs-data
 
 Run an experiment
 -----------------
 
-Use ``examples/trials/mnist-annotation`` as an example. The NNI config YAML file's content is like:
+Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's content is like:
 
 .. code-block:: yaml
 
-   authorName: your_name
-   experimentName: auto_mnist
-   # how many trials could be concurrently running
-   trialConcurrency: 2
-   # maximum experiment running duration
-   maxExecDuration: 3h
-   # empty means never stop
-   maxTrialNum: 100
-   # choice: local, remote, pai
-   trainingServicePlatform: pai
-   # search space file
-   searchSpacePath: search_space.json
-   # choice: true, false
-   useAnnotation: true
+   searchSpaceFile: search_space.json
+   trialCommand: python3 mnist.py
+   trialGpuNumber: 0
+   trialConcurrency: 1
+   maxTrialNumber: 10
    tuner:
-     builtinTunerName: TPE
+     name: TPE
      classArgs:
        optimize_mode: maximize
-   trial:
-     command: python3 mnist.py
-     codeDir: ~/nni/examples/trials/mnist-annotation
-     gpuNum: 0
-     cpuNum: 1
-     memoryMB: 8196
-     image: msranni/nni:latest
-     virtualCluster: default
-     nniManagerNFSMountPath: /local/mnt
-     containerNFSMountPath: /mnt/confignfs-data
-     paiStorageConfigName: confignfs-data
-   # Configuration to access OpenPAI Cluster
-   paiConfig:
-     userName: your_pai_nni_user
-     token: your_pai_token
-     host: 10.1.1.1
-     # optional, experimental feature.
-     reuse: true
+   trainingService:
+     platform: openpai
+     host: http://123.123.123.123
+     username: ${your user name}
+     token: ${your token}
+     dockerImage: msranni/nni
+     trialCpuNumber: 1
+     trialMemorySize: 8GB
+     storageConfigName: ${your storage config name}
+     localStorageMountPoint: ${NFS mount point on local machine}
+     containerStorageMountPoint: ${NFS mount point inside Docker container}
 
-Note: You should set ``trainingServicePlatform: pai`` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like ``10.10.5.1``\ , the default http protocol in NNI is ``http``\ , if your PAI's cluster enabled https, please use the uri in ``https://10.10.5.1`` format.
+Note: You should set ``platform: pai`` in NNI config YAML file if you want to start experiment in pai mode. The host field in configuration file is PAI's job submission page uri, like ``10.10.5.1``\ , the default protocol in NNI is HTTPS, if your PAI's cluster disabled https, please use the uri in ``http://10.10.5.1`` format.
 
-Trial configurations
-^^^^^^^^^^^^^^^^^^^^
-
-Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , ``trial`` configuration in pai mode has the following additional keys:
-
-
-* 
-  cpuNum
-
-  Optional key. Should be positive number based on your trial program's CPU  requirement. If it is not set in trial configuration, it should be set in the config file specified in ``paiConfigPath`` field.
-
-* 
-  memoryMB
-
-  Optional key. Should be positive number based on your trial program's memory requirement. If it is not set in trial configuration, it should be set in the config file specified in ``paiConfigPath`` field.
-
-* 
-  image
-
-  Optional key. In pai mode, your trial program will be scheduled by OpenPAI to run in `Docker container <https://www.docker.com/>`__. This key is used to specify the Docker image used to create the container in which your trial will run.
-
-  We already build a docker image :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`. You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config file specified in ``paiConfigPath`` field.
-
-.. cannot find :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`
-
-* 
-  virtualCluster
-
-  Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
-
-* 
-  nniManagerNFSMountPath
-
-  Required key. Set the mount path in your nniManager machine.
-
-* 
-  containerNFSMountPath
-
-  Required key. Set the mount path in your container used in OpenPAI.
-
-* 
-  paiStorageConfigName:
-
-  Optional key. Set the storage name used in OpenPAI. If it is not set in trial configuration, it should be set in the config file specified in ``paiConfigPath`` field.
-
-* 
-  command
-
-  Optional key. Set the commands used in OpenPAI container.
-
-* 
-  paiConfigPath
-  Optional key. Set the file path of OpenPAI job configuration, the file is in yaml format.
-
-  If users set ``paiConfigPath`` in NNI's configuration file, no need to specify the fields ``command``\ , ``paiStorageConfigName``\ , ``virtualCluster``\ , ``image``\ , ``memoryMB``\ , ``cpuNum``\ , ``gpuNum`` in ``trial`` configuration. These fields will use the values from the config file specified by  ``paiConfigPath``.
-
-  Note:
-
-
-  #. 
-     The job name in OpenPAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is ``nni_exp_{this.experimentId}_trial_{trialJobId}`` .
-
-  #. 
-     If users set multiple taskRoles in OpenPAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error.
-
-OpenPAI configurations
+OpenPai configurations
 ^^^^^^^^^^^^^^^^^^^^^^
 
-``paiConfig`` includes OpenPAI specific configurations,
+Compared with `LocalMode <LocalMode.rst>`__ and `RemoteMachineMode <RemoteMachineMode.rst>`__\ , ``trainingService`` configuration in pai mode has the following additional keys:
 
 
 * 
-  userName
+  username
 
   Required key. User name of OpenPAI platform.
 
@@ -191,12 +110,67 @@ OpenPAI configurations
 * 
   host
 
-  Required key. The host of OpenPAI platform. It's OpenPAI's job submission page uri, like ``10.10.5.1``\ , the default http protocol in NNI is ``http``\ , if your OpenPAI cluster enabled https, please use the uri in ``https://10.10.5.1`` format.
+  Required key. The host of OpenPAI platform. It's OpenPAI's job submission page uri, like ``10.10.5.1``\ , the default protocol in NNI is HTTPS, if your OpenPAI cluster disabled https, please use the uri in ``http://10.10.5.1`` format.
 
 * 
-  reuse (experimental feature)
+  trialCpuNumber
 
-  Optional key, default is false. If it's true, NNI will reuse OpenPAI jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in same job, for example, avoid loading checkpoint from previous trials.
+  Optional key. Should be positive number based on your trial program's CPU  requirement. If it is not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
+
+* 
+  trialMemorySize
+
+  Optional key. Should be in format like ``2gb`` based on your trial program's memory requirement. If it is not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
+
+* 
+  dockerImage
+
+  Optional key. In OpenPai mode, your trial program will be scheduled by OpenPAI to run in `Docker container <https://www.docker.com/>`__. This key is used to specify the Docker image used to create the container in which your trial will run.
+
+  We already build a docker image :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`. You can either use this image directly in your config file, or build your own image based on it. If it is not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
+
+.. cannot find :githublink:`nnimsra/nni <deployment/docker/Dockerfile>`
+
+* 
+  virtualCluster
+
+  Optional key. Set the virtualCluster of OpenPAI. If omitted, the job will run on default virtual cluster.
+
+* 
+  localStorageMountPoint
+
+  Required key. Set the mount path in the machine you run nnictl.
+
+* 
+  containerStorageMountPoint
+
+  Required key. Set the mount path in your container used in OpenPAI.
+
+* 
+  storageConfigName:
+
+  Optional key. Set the storage name used in OpenPAI. If it is not set in trial configuration, it should be set in the config specified in ``openpaiConfig`` or ``openpaiConfigFile`` field.
+
+* 
+  openpaiConfigFile
+
+  Optional key. Set the file path of OpenPAI job configuration, the file is in yaml format.
+
+  If users set ``openpaiConfigFile`` in NNI's configuration file, no need to specify the fields ``storageConfigName``, ``virtualCluster``, ``dockerImage``, ``trialCpuNumber``, ``trialGpuNumber``, ``trialMemorySize`` in configuration. These fields will use the values from the config file specified by  ``openpaiConfigFile``.
+
+*
+  openpaiConfig
+
+  Optional key. Similar to ``openpaiConfigFile``, but instead of referencing an external file, using this field you embed the content into NNI's config YAML.
+
+  Note:
+
+
+  #. 
+     The job name in OpenPAI's configuration file will be replaced by a new job name, the new job name is created by NNI, the name format is ``nni_exp_{this.experimentId}_trial_{trialJobId}`` .
+
+  #. 
+     If users set multiple taskRoles in OpenPAI's configuration file, NNI will wrap all of these taksRoles and start multiple tasks in one trial job, users should ensure that only one taskRole report metric to NNI, otherwise there might be some conflict error.
 
 Once complete to fill NNI experiment config file and save (for example, save as exp_pai.yml), then run the following command
 
