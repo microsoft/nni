@@ -185,7 +185,7 @@ def _main(port):
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
-    exp_config.example_inputs = [1, 3, 32, 32]
+    exp_config.dummy_input = [1, 3, 32, 32]
 
     exp.run(exp_config, port)
 

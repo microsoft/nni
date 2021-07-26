@@ -683,13 +683,13 @@ class GraphConverterWithShape(GraphConverter):
        If forward path of candidates depends on input data, then wrong path will be traced.
        This will result in incomplete shape info.
     """
-    def convert_module(self, script_module, module, module_name, ir_model, example_inputs):
+    def convert_module(self, script_module, module, module_name, ir_model, dummy_input):
         module.eval()
 
         ir_graph, attrs = self._convert_module(script_module, module, module_name, ir_model)
         self.remove_dummy_nodes(ir_model)
         self._initialize_parameters(ir_model)
-        self._trace_module(module, module_name, ir_model, example_inputs)
+        self._trace_module(module, module_name, ir_model, dummy_input)
         return ir_graph, attrs
 
     def _initialize_parameters(self, ir_model: 'Model'):
@@ -699,9 +699,9 @@ class GraphConverterWithShape(GraphConverter):
             ir_node.operation.parameters.setdefault('input_shape', [])
             ir_node.operation.parameters.setdefault('output_shape', [])
 
-    def _trace_module(self, module, module_name, ir_model: 'Model', example_inputs):
+    def _trace_module(self, module, module_name, ir_model: 'Model', dummy_input):
         # First, trace the whole graph
-        tm_graph = self._trace(module, example_inputs)
+        tm_graph = self._trace(module, dummy_input)
 
         for node in tm_graph.nodes():
             parameters = _extract_info_from_trace_node(node)
@@ -832,8 +832,8 @@ class GraphConverterWithShape(GraphConverter):
         # remove subgraphs
         ir_model.graphs = {ir_model._root_graph_name: ir_model.root_graph}
 
-    def _trace(self, module, example_inputs):
-        traced_module = torch.jit.trace(module, example_inputs)
+    def _trace(self, module, dummy_input):
+        traced_module = torch.jit.trace(module, dummy_input)
         torch._C._jit_pass_inline(traced_module.graph)
         return traced_module.graph
 

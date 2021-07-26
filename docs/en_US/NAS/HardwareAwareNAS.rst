@@ -32,10 +32,10 @@ To support latency-aware NAS, you first need a `Strategy` that supports filterin
 ``LatencyFilter`` will predict the models\' latency by using nn-Meter and filter out the models whose latency are larger than the threshold (i.e., ``100`` in this example).
 You can also build your own strategies and filters to support more flexible NAS such as sorting the models according to latency.
 
-Then, pass this strategy to ``RetiariiExperiment`` along with some additional arguments: ``parse_shape=True, example_inputs=example_inputs``:
+Then, pass this strategy to ``RetiariiExperiment`` along with some additional arguments: ``parse_shape=True, dummy_input=dummy_input``:
 
 .. code-block:: python
 
-  RetiariiExperiment(base_model, trainer, [], simple_strategy, True, example_inputs)
+  RetiariiExperiment(base_model, trainer, [], simple_strategy, True, dummy_input)
 
-Here, ``parse_shape=True`` means extracting shape info from the torch model as it is required by nn-Meter to predict latency. ``example_inputs`` is required for tracing shape info.
+Here, ``parse_shape=True`` means extracting shape info from the torch model as it is required by nn-Meter to predict latency. ``dummy_input`` is required for tracing shape info.
