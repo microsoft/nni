@@ -785,7 +785,7 @@ Usage 1: one-shot pruning, same sparsity for all the layers (PyTorch code)
              }
     config_list = [{
         'sparsity': 0.5,
-        'op_types': ["Linear"] 
+        'op_types': ["Linear"]
     }]
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
