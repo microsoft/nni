@@ -189,9 +189,8 @@ class TransformerHeadPruner(Pruner):
             if self.global_sort:
                 assert sparsity == group[0].config['sparsity'], \
                     errmsg + ': for global_sort=True, the sparsity for all modules must be the same'
-            t = group[0].module.weight.size(0) / self.head_hidden_dim
-            assert t % 1 == 0, errmsg + ': head_hidden_dim must be a divisor of the output dimension of the ' \
-                                        'projection weights'
+            assert group[0].module.weight.size(0) % self.head_hidden_dim == 0, \
+                errmsg + ': head_hidden_dim must be a divisor of the output dimension of the projection weights'
 
     def remove_ungrouped_modules(self):
         """
