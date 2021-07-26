@@ -15,5 +15,5 @@ class ConvertWithShapeMixin:
     @staticmethod
     def _convert_model(model, input):
         script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model, converter=GraphConverterWithShape(), example_inputs=input)
+        model_ir = convert_to_graph(script_module, model, converter=GraphConverterWithShape(), dummy_input=input)
         return model_ir
