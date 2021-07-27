@@ -74,7 +74,7 @@ class TransformerHeadPruner(Pruner):
         For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
     """
     def __init__(self, model, config_list,head_hidden_dim, attention_name_groups=None, dummy_input=None,
-                 ranking_criterion='taylorfo', global_sort=False, num_iterations=1, epochs_per_iteration=1,
+                 ranking_criterion='l1_weight', global_sort=False, num_iterations=1, epochs_per_iteration=1,
                  optimizer=None, trainer=None, criterion=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
