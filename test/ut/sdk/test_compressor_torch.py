@@ -289,11 +289,18 @@ class CompressorTestCase(TestCase):
         input = torch.randn(1, 1, 28, 28)
         model(input)
         quantizer.compress()
+        buffers = dict(model.named_buffers())
+        scales = {k: v for k, v in buffers.items() if 'scale' in k}
         model_path = "test_model.pth"
         calibration_path = "test_calibration.pth"
         calibration_config = quantizer.export_model(model_path, calibration_path)
         new_parameters = dict(model.named_parameters())
-        self.assertTrue(all(torch.equal(v, new_parameters[k]) for k, v in origin_parameters.items()))
+        for layer_name, v in calibration_config.items():
+            scale_name = layer_name + '.module.weight_scale'
+            weight_name = layer_name + '.weight'
+            s = float(scales[scale_name])
+            self.assertTrue(torch.allclose(origin_parameters[weight_name], new_parameters[weight_name], atol=0.5 * s))
+
         self.assertTrue(calibration_config is not None)
         self.assertTrue(len(calibration_config) == 4)
 
