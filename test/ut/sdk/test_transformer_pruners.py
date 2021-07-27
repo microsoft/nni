@@ -112,7 +112,7 @@ def head_pruner_tests(criterion, global_sort, use_graph, iterative):
     # test model and mask export
     pruner.export_model('./model_tmp.pth', './mask_tmp.pth', device=device)
     dummy_input = (torch.randint(0, 100, (10, 32)).to(device), torch.ones(32).to(device))
-    pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=None, device=None,
+    pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth',
                         dummy_input=dummy_input, opset_version=10)
 
     # validate sparsity
