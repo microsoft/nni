@@ -312,8 +312,15 @@ class ObserverQuantizer(Quantizer):
                 if actual_weight is None:
                     logger.warning("Can not recover weight for layer %s. "
                                    "This may lead to a wrong accuracy performance on the backend.", name)
+                    continue
+                # simulate quantization
+                actual_quantized_weight = self._quantize(actual_weight,
+                                                         module.weight_scale,
+                                                         module.weight_zero_point,
+                                                         module.weight_qmin,
+                                                         module.weight_qmax)
                 delattr(module, 'weight')
-                module.register_parameter('weight', actual_weight)
+                module.register_parameter('weight', torch.nn.Parameter(actual_quantized_weight))
             # refactor these magic numbers when customizations of dtype and qscheme are ready.
             if hasattr(module, 'input_scale'):
                 calibration_config[name]['input_bit'] = 8
