@@ -841,7 +841,7 @@ Usage 3: one-shot pruning, setting different sparsity for different layers (PyTo
     {
         'sparsity': 0.25,
         'op_types': ["Linear"],
-        'op_names': [x for layer in attention_name_groups[:6] for x in layer]      # last six layers
+        'op_names': [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
     }
     ]
    pruner = TransformerHeadPruner(model, config_list, **kwargs)

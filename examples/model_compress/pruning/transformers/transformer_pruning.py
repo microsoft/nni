@@ -347,7 +347,7 @@ def main():
             {
                 "sparsity": args.sparsity / 2,
                 "op_types": ["Linear"],
-                "op_names": [x for layer in attention_name_groups[:6] for x in layer]
+                "op_names": [x for layer in attention_name_groups[6:] for x in layer]
             }
         ]
 
