@@ -230,6 +230,7 @@ class ObserverQuantizer(Quantizer):
                                        module.weight_zero_point,
                                        module.weight_qmin,
                                        module.weight_qmax)
+            module.weight = new_weight
         else:
             self.record(wrapper, 'weight', old_weight)
             new_weight = old_weight
@@ -313,7 +314,7 @@ class ObserverQuantizer(Quantizer):
                     logger.warning("Can not recover weight for layer %s. "
                                    "This may lead to a wrong accuracy performance on the backend.", name)
                     continue
-                # simulate quantization
+                # simulate quantization.
                 actual_quantized_weight = self._quantize(actual_weight,
                                                          module.weight_scale,
                                                          module.weight_zero_point,
