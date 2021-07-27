@@ -7,7 +7,7 @@ import random
 import string
 import time
 import threading
-from typing import Iterable, List, Dict, Tuple, Union
+from typing import Iterable, List, Dict, Tuple
 
 from nni.common.device import GPUDevice
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo

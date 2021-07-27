@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import copy
-from typing import Dict, Tuple, List, Any, Union
+from typing import Dict, Tuple, Any, Union
 
 from nni.retiarii.utils import uid
 from nni.common.device import GPUDevice

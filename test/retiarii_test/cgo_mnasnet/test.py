@@ -66,10 +66,10 @@ if __name__ == '__main__':
 
     rm_conf = RemoteMachineConfig()
     rm_conf.host = '127.0.0.1'
-    rm_conf.user = 'zhenhua'
-    rm_conf.password = 'zhenhua233'
+    rm_conf.user = 'xxx'
+    rm_conf.password = 'xxx'
     rm_conf.port = 22
-    rm_conf.python_path = '/home/zhenhua/py38/bin'
+    rm_conf.python_path = '/home/xxx/py38/bin'
     rm_conf.gpu_indices = [0, 1, 2]
     rm_conf.use_active_gpu = True
     rm_conf.max_trial_number_per_gpu = 3
