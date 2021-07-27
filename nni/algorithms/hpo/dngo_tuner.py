@@ -69,8 +69,18 @@ class DNGOTuner(Tuner):
             # random samples and pick best with model
             candidate_x = [_random_config(self.searchspace_json, self.random_state) for _ in range(self.sample_size)]
 
+            # The model has NaN issue when all the candidates are same
+            # Also we can save the predict time when this happens
+            if all(x == candidate_x[0] for x in candidate_x):
+                return candidate_x[0]
+
             x_test = np.array([np.array(list(xi.values())) for xi in candidate_x])
             m, v = self.model.predict(x_test)
+
+            # The model has NaN issue when all the candidates are very close
+            if np.isnan(m).any() or np.isnan(v).any():
+                return candidate_x[0]
+
             mean = torch.Tensor(m)
             sigma = torch.Tensor(v)
             u = (mean - torch.Tensor([0.95]).expand_as(mean)) / sigma

@@ -33,11 +33,12 @@ class StructuredWeightMasker(WeightMasker):
 
     """
 
-    def __init__(self, model, pruner, preserve_round=1, dependency_aware=False):
+    def __init__(self, model, pruner, preserve_round=1, dependency_aware=False, global_sort=False):
         self.model = model
         self.pruner = pruner
         self.preserve_round = preserve_round
         self.dependency_aware = dependency_aware
+        self.global_sort = global_sort
 
     def calc_mask(self, sparsity, wrapper, wrapper_idx=None, **depen_kwargs):
         """
@@ -60,7 +61,11 @@ class StructuredWeightMasker(WeightMasker):
         depen_kwargs: dict
             The kw_args for the dependency-aware mode.
         """
-        if not self.dependency_aware:
+        if self.global_sort:
+            # if the global_sort switch is on, calculate the mask based
+            # on global model information 
+            return self._global_calc_mask(sparsity, wrapper, wrapper_idx)
+        elif not self.dependency_aware:
             # calculate the mask in the normal way, each layer calculate its
             # own mask separately
             return self._normal_calc_mask(sparsity, wrapper, wrapper_idx)
@@ -126,6 +131,12 @@ class StructuredWeightMasker(WeightMasker):
             num_prune = num_total - num_preserve
         # weight*mask_weight: apply base mask for iterative pruning
         return mask, weight * mask_weight, num_prune
+
+    def _global_calc_mask(self, sparsity, wrapper, wrapper_idx=None):
+        num_prune = self._get_global_num_prune(wrapper, wrapper_idx)
+        mask, weight, _ = self._get_current_state(
+            sparsity, wrapper, wrapper_idx)
+        return self.get_mask(mask, weight, num_prune, wrapper, wrapper_idx)
 
     def _normal_calc_mask(self, sparsity, wrapper, wrapper_idx=None):
         """
@@ -477,6 +488,31 @@ class TaylorFOWeightFilterPrunerMasker(StructuredWeightMasker):
         self.pruner.iterations = 0
         self.pruner.set_wrappers_attribute("contribution", None)
         self.pruner.patch_optimizer(self.calc_contributions)
+        self.global_threshold = None
+
+    def _get_global_threshold(self):
+        channel_contribution_list = []
+        for wrapper_idx, wrapper in enumerate(self.pruner.get_modules_wrapper()):
+            channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
+            wrapper_size = wrapper.module.weight.size().numel()
+            channel_size = wrapper.module.weight.size(0)
+            contribution_expand = channel_contribution.expand(int(wrapper_size / channel_size), channel_size).reshape(-1)
+            channel_contribution_list.append(contribution_expand)
+        all_channel_contributions = torch.cat(channel_contribution_list)
+        k = int(all_channel_contributions.shape[0] * self.pruner.config_list[0]['sparsity'])
+        self.global_threshold = torch.topk(
+            all_channel_contributions.view(-1), k, largest=False)[0].max()
+    
+    def _get_global_num_prune(self, wrapper, wrapper_idx):
+        if self.global_threshold is None:
+            self._get_global_threshold()
+        weight = wrapper.module.weight.data
+        filters = weight.size(0)
+        channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)
+        num_prune = channel_contribution[channel_contribution < self.global_threshold].size()[0]
+        if num_prune == filters:
+            num_prune -= 1
+        return num_prune
 
     def get_mask(self, base_mask, weight, num_prune, wrapper, wrapper_idx, channel_masks=None):
         channel_contribution = self.get_channel_sum(wrapper, wrapper_idx)

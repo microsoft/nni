@@ -21,28 +21,38 @@ from amlb.results import save_predictions_to_file
 
 
 SEARCH_SPACE = {
-    "n_estimators": {"_type":"randint", "_value": [8, 512]},
-    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
+    "n_estimators": {"_type":"randint", "_value": [4, 2048]},
+    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},     # 0 for None
     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
-    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                    # 0 for None
+    "max_leaf_nodes": {"_type":"randint", "_value": [0, 4096]}                      # 0 for None
 }
 
-SEARCH_SPACE_CHOICE = {
-    "n_estimators": {"_type":"choice", "_value": [8, 16, 32, 64, 128, 256, 512]},
-    "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 0]},   # 0 for None
-    "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
-    "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
-    "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 0]}     # 0 for None
-}
+# change SEARCH_SPACE to the following spaces to experiment on different search spaces
 
-SEARCH_SPACE_SIMPLE = {
-    "n_estimators": {"_type":"choice", "_value": [10]},
-    "max_depth": {"_type":"choice", "_value": [5]},
-    "min_samples_leaf": {"_type":"choice", "_value": [8]},
-    "min_samples_split": {"_type":"choice", "_value": [16]},
-    "max_leaf_nodes": {"_type":"choice", "_value": [64]}
-}
+# SEARCH_SPACE_CHOICE = {
+#     "n_estimators": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048]},
+#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None
+#     "min_samples_leaf": {"_type":"choice", "_value": [1, 2, 4, 8]},
+#     "min_samples_split": {"_type":"choice", "_value": [2, 4, 8, 16]},
+#     "max_leaf_nodes": {"_type":"choice", "_value": [8, 32, 128, 512, 1024, 2048, 4096, 0]}   # 0 for None
+# }
+
+# SEARCH_SPACE_LOG = {
+#     "n_estimators": {"_type":"loguniform", "_value": [4, 2048]},
+#     "max_depth": {"_type":"choice", "_value": [4, 8, 16, 32, 64, 128, 256, 0]},   # 0 for None 
+#     "min_samples_leaf": {"_type":"randint", "_value": [1, 8]},
+#     "min_samples_split": {"_type":"randint", "_value": [2, 16]},
+#     "max_leaf_nodes": {"_type":"loguniform", "_value": [4, 4096]}                 # 0 for None
+# }
+
+# SEARCH_SPACE_SIMPLE = {
+#     "n_estimators": {"_type":"choice", "_value": [10]},
+#     "max_depth": {"_type":"choice", "_value": [5]},
+#     "min_samples_leaf": {"_type":"choice", "_value": [8]},
+#     "min_samples_split": {"_type":"choice", "_value": [16]},
+#     "max_leaf_nodes": {"_type":"choice", "_value": [64]}
+# }
 
 
 def preprocess_random_forest(dataset, log):
@@ -110,33 +120,35 @@ def run_random_forest(dataset, config, tuner, log):
     intermediate_best_scores = []           # should be monotonically increasing 
     
     while True:
-        try:
-            trial_count += 1
+        try:            
             param_idx, cur_params = tuner.generate_parameters()
-            train_params = cur_params.copy()
-            if 'TRIAL_BUDGET' in cur_params:
-                train_params.pop('TRIAL_BUDGET')
-            if cur_params['max_leaf_nodes'] == 0: 
-                train_params.pop('max_leaf_nodes')
-            if cur_params['max_depth'] == 0:
-                train_params.pop('max_depth')
-            log.info("Trial {}: \n{}\n".format(param_idx, cur_params))
+            if cur_params is not None and cur_params != {}:
+                trial_count += 1
+                train_params = cur_params.copy()
+                train_params = {x: int(train_params[x]) for x in train_params.keys()}
+                if 'TRIAL_BUDGET' in cur_params:
+                    train_params.pop('TRIAL_BUDGET')
+                if cur_params['max_leaf_nodes'] == 0: 
+                    train_params.pop('max_leaf_nodes')
+                if cur_params['max_depth'] == 0:
+                    train_params.pop('max_depth')
+                log.info("Trial {}: \n{}\n".format(param_idx, train_params))
                 
-            cur_model = estimator(random_state=config.seed, **train_params)
+                cur_model = estimator(random_state=config.seed, **train_params)
             
-            # Here score is the output of score() from the estimator
-            cur_score = cross_val_score(cur_model, X_train, y_train)
-            cur_score = sum(cur_score) / float(len(cur_score))
-            if np.isnan(cur_score):
-                cur_score = 0
+                # Here score is the output of score() from the estimator
+                cur_score = cross_val_score(cur_model, X_train, y_train)
+                cur_score = sum(cur_score) / float(len(cur_score))
+                if np.isnan(cur_score):
+                    cur_score = 0
             
-            log.info("Score: {}\n".format(cur_score))
-            if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
-                best_score, best_params, best_model = cur_score, cur_params, cur_model    
+                log.info("Score: {}\n".format(cur_score))
+                if best_score is None or (score_higher_better and cur_score > best_score) or (not score_higher_better and cur_score < best_score):
+                    best_score, best_params, best_model = cur_score, cur_params, cur_model    
             
-            intermediate_scores.append(cur_score)
-            intermediate_best_scores.append(best_score)
-            tuner.receive_trial_result(param_idx, cur_params, cur_score)
+                intermediate_scores.append(cur_score)
+                intermediate_best_scores.append(best_score)
+                tuner.receive_trial_result(param_idx, cur_params, cur_score)
 
             if limit_type == 'time':
                 current_time = time.time()

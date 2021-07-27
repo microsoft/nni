@@ -68,7 +68,27 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
 
-    def send_trial(self, parameters):
+    def _validate_placement_constraint(self, placement_constraint):
+        if placement_constraint is None:
+            raise ValueError('placement_constraint is None')
+        if not 'type' in placement_constraint:
+            raise ValueError('placement_constraint must have `type`')
+        if not 'gpus' in placement_constraint:
+            raise ValueError('placement_constraint must have `gpus`')
+        if placement_constraint['type'] not in ['None', 'GPUNumber', 'Device']:
+            raise ValueError('placement_constraint.type must be either `None`,. `GPUNumber` or `Device`')
+        if placement_constraint['type'] == 'None' and len(placement_constraint['gpus']) > 0:
+            raise ValueError('placement_constraint.gpus must be an empty list when type == None')
+        if placement_constraint['type'] == 'Device' and len(placement_constraint['gpus']) != 1:
+            raise ValueError('placement_constraint.gpus must be a list of number (currently only support one host)')
+        if placement_constraint['type'] == 'Device':
+            for e in placement_constraint['gpus']:
+                if not isinstance(e, tuple):
+                    raise ValueError('placement_constraint.gpus must be a list of tuple when type == Device')
+                if not (len(e) == 2 and isinstance(e[0], str) and isinstance(e[1], int)):
+                    raise ValueError('placement_constraint.gpus`s tuple must be (str, int)')
+
+    def send_trial(self, parameters, placement_constraint=None):
         """
         Send parameters to NNI.
 
@@ -84,10 +104,17 @@ class RetiariiAdvisor(MsgDispatcherBase):
             which will be used for identification in future.
         """
         self.parameters_count += 1
+        if placement_constraint is None:
+            placement_constraint = {
+                'type': 'None',
+                'gpus': []
+            }
+        self._validate_placement_constraint(placement_constraint)
         new_trial = {
             'parameter_id': self.parameters_count,
             'parameters': parameters,
-            'parameter_source': 'algorithm'
+            'parameter_source': 'algorithm',
+            'placement_constraint': placement_constraint
         }
         _logger.debug('New trial sent: %s', new_trial)
         send(CommandType.NewTrialJob, json_dumps(new_trial))

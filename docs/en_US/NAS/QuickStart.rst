@@ -158,8 +158,6 @@ If the built-in model evaluators do not meet your requirement, or you already wr
 
 .. warning:: Mutations on the parameters of model evaluator (known as hyper-parameter tuning) is currently not supported but will be supported in the future.
 
-.. warning:: To use PyTorch-lightning with Retiarii, currently you need to install PyTorch-lightning v1.1.x (v1.2 is not supported).
-
 Launch an Experiment
 --------------------
 

@@ -13,8 +13,9 @@ import torchvision
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import basic_unit
-from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
+
+from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
 class MnistNet(nn.Module):
     def __init__(self):
@@ -48,7 +49,7 @@ class Linear(nn.Module):
         out = self.linear(input.view(size[0] * size[1], -1))
         return out.view(size[0], size[1], -1)
 
-class TestConvert(unittest.TestCase):
+class TestConvert(unittest.TestCase, ConvertMixin):
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}
@@ -61,8 +62,7 @@ class TestConvert(unittest.TestCase):
         return result
 
     def checkExportImport(self, model, input):
-        script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model)
+        model_ir = self._convert_model(model, input)
         model_code = model_to_pytorch_script(model_ir)
 
         exec_vars = {}
@@ -579,3 +579,6 @@ class TestConvert(unittest.TestCase):
             self.checkExportImport(model, (x,))
         finally:
             remove_inject_pytorch_nn()
+
+class TestConvertWithShape(TestConvert, ConvertWithShapeMixin):
+    pass

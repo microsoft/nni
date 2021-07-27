@@ -3,13 +3,14 @@
 
 import copy
 import logging
+from collections import OrderedDict
 
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
 from ..interface import BaseOneShotTrainer
-from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
+from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice, to_device
 
 
 _logger = logging.getLogger(__name__)
@@ -18,8 +19,8 @@ _logger = logging.getLogger(__name__)
 class DartsLayerChoice(nn.Module):
     def __init__(self, layer_choice):
         super(DartsLayerChoice, self).__init__()
-        self.name = layer_choice.key
-        self.op_choices = nn.ModuleDict(layer_choice.named_children())
+        self.name = layer_choice.label
+        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
         self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
 
     def forward(self, *args, **kwargs):
@@ -38,13 +39,13 @@ class DartsLayerChoice(nn.Module):
             yield name, p
 
     def export(self):
-        return torch.argmax(self.alpha).item()
+        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
 
 
 class DartsInputChoice(nn.Module):
     def __init__(self, input_choice):
         super(DartsInputChoice, self).__init__()
-        self.name = input_choice.key
+        self.name = input_choice.label
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
         self.n_chosen = input_choice.n_chosen or 1
 
@@ -160,8 +161,8 @@ class DartsTrainer(BaseOneShotTrainer):
         self.model.train()
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
-            trn_X, trn_y = trn_X.to(self.device), trn_y.to(self.device)
-            val_X, val_y = val_X.to(self.device), val_y.to(self.device)
+            trn_X, trn_y = to_device(trn_X, self.device), to_device(trn_y, self.device)
+            val_X, val_y = to_device(val_X, self.device), to_device(val_y, self.device)
 
             # phase 1. architecture step
             self.ctrl_optim.zero_grad()

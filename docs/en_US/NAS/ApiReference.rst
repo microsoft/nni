@@ -106,3 +106,5 @@ Utilities
 ---------
 
 ..  autofunction:: nni.retiarii.serialize
+
+..  autofunction:: nni.retiarii.fixed_arch

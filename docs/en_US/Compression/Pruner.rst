@@ -335,6 +335,8 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
 
+What's more, we provide a global-sort mode for this pruner which is aligned with paper implementation. Please set parameter 'global_sort' to True when instantiate TaylorFOWeightFilterPruner.
+
 Usage
 ^^^^^
 

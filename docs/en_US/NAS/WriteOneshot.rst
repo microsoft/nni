@@ -16,7 +16,7 @@ A typical example is DartsTrainer, where learnable-parameters are used to combin
     class DartsLayerChoice(nn.Module):
         def __init__(self, layer_choice):
             super(DartsLayerChoice, self).__init__()
-            self.name = layer_choice.key
+            self.name = layer_choice.label
             self.op_choices = nn.ModuleDict(layer_choice.named_children())
             self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
 
