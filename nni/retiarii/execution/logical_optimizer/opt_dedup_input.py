@@ -5,11 +5,12 @@ from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
 from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
+from nni.common.device import GPUDevice
 
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
-                           OriginNode, PhysicalDevice)
+                           OriginNode)
 
 
 _supported_evaluators = [MultiModelSupervisedLearningModule]
@@ -24,7 +25,7 @@ class DedupInputNode(AbstractLogicalNode):
         self.origin_nodes: List[OriginNode] = nodes_to_dedup.copy()
         self.related_models = [_.original_graph.model for _ in self.origin_nodes]
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         for node in self.origin_nodes:
             if node.original_graph.model in multi_model_placement:
                 new_node = Node(node.original_graph, node.id,

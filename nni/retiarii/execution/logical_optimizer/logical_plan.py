@@ -2,34 +2,22 @@
 # Licensed under the MIT license.
 
 import copy
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Tuple, List, Any, Union
 
 from nni.retiarii.utils import uid
+from nni.common.device import GPUDevice
+
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
 
 
-class PhysicalDevice:
-    def __init__(self, server: str, device: str):
-        self.server = server
-        self.device = device
+class CPUDevice:
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.device = 'cpu'
 
-    def __eq__(self, o) -> bool:
-        return self.server == o.server and self.device == o.device
-
-    def __lt__(self, o) -> bool:
-        if self.server < o.server:
-            return True
-        elif self.server > o.server:
-            return False
-        else:
-            return self.device < o.device
-
-    def __repr__(self) -> str:
-        return "{Server: %s, Device: %s}" % (self.server, self.device)
-
-    def __hash__(self) -> int:
-        return hash(self.server + '_' + self.device)
+    def device_repr(self):
+        return "cpu"
 
 
 class AbstractLogicalNode(Node):
@@ -37,7 +25,7 @@ class AbstractLogicalNode(Node):
         super().__init__(graph, node_id, name, operation, _internal=_internal)
         self.related_models = []
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         raise NotImplementedError
 
     def _fork_to(self, graph: Graph):
@@ -104,7 +92,7 @@ class OriginNode(AbstractLogicalNode):
         self.original_graph = original_graph
         self.original_node = original_node
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         model_id = self.original_node.graph.model.model_id
         new_node = Node(self.original_node.graph, self.original_node.id,
                         f"M_{model_id}_" +
@@ -150,8 +138,8 @@ class LogicalPlan:
             new_tail = id_to_new_node[edge.tail.id]
             Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) \
-            -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) \
+            -> Tuple[Model, Dict[Node, Union[GPUDevice, CPUDevice]]]:
         phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
         phy_graph._rename_graph(phy_graph.name, "_model")
@@ -227,7 +215,7 @@ class LogicalPlan:
                 # input should be at CPU, move it to GPU first if necessary
                 if isinstance(new_node.operation, _IOPseudoOperation) and new_node.operation.type == '_inputs':
                     # hack: only support single_server
-                    node_placements[new_node] = PhysicalDevice("single_server", "cpu")
+                    node_placements[new_node] = CPUDevice(node_id=placement.node_id)
                 else:
                     node_placements[new_node] = placement
 
@@ -236,12 +224,12 @@ class LogicalPlan:
         # If two nodes are placed on different devices, use ToDevice op to copy the node
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
-        copied_op: Dict[Tuple(Node, PhysicalDevice), Node] = {}
+        copied_op: Dict[Tuple(Node, Union[GPUDevice, CPUDevice]), Node] = {}
         for edge in existing_edges:
             head_placement = node_placements[edge.head]
             tail_placement = node_placements[edge.tail]
             if head_placement != tail_placement:
-                if head_placement.server != tail_placement.server:
+                if head_placement.node_id != tail_placement.node_id:
                     raise ValueError('Cross-server placement is not supported.')
                 # Same server different devices
                 if (edge.head, tail_placement) in copied_op:
@@ -250,7 +238,7 @@ class LogicalPlan:
                     dst_name = edge.head.name + "_to_" + edge.tail.name
                     to_operation = Operation.new(
                         'ToDevice', {
-                            "device": tail_placement.device, "src": (
+                            "device": tail_placement.device_repr(), "src": (
                                 edge.head.name, edge.head_slot), "dst": dst_name})
                     to_node = Node(phy_graph, uid(), dst_name, to_operation)._register()
                     Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()

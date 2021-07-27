@@ -13,6 +13,7 @@ from pathlib import Path
 import nni
 
 try:
+    from nni.common.device import GPUDevice
     from nni.retiarii.execution.cgo_engine import CGOExecutionEngine
     from nni.retiarii import Model
     from nni.retiarii.graph import Node
@@ -256,8 +257,8 @@ class CGOEngineTest(unittest.TestCase):
         opt.convert(lp)
 
         advisor = RetiariiAdvisor()
-        available_devices = ['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3']
-        cgo = CGOExecutionEngine(available_devices=available_devices, batch_waiting_time=0)
+        available_devices = [GPUDevice("test", 0), GPUDevice("test", 1), GPUDevice("test", 2), GPUDevice("test", 3)]
+        cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 1)
@@ -273,8 +274,8 @@ class CGOEngineTest(unittest.TestCase):
         opt.convert(lp)
 
         advisor = RetiariiAdvisor()
-        available_devices = ['cuda:0', 'cuda:1']
-        cgo = CGOExecutionEngine(available_devices=available_devices, batch_waiting_time=0)
+        available_devices = [GPUDevice("test", 0), GPUDevice("test", 1)]
+        cgo = CGOExecutionEngine(devices=available_devices, batch_waiting_time=0)
 
         phy_models = cgo._assemble(lp)
         self.assertTrue(len(phy_models) == 2)
@@ -294,7 +295,8 @@ class CGOEngineTest(unittest.TestCase):
 
         models = _load_mnist(2)
         advisor = RetiariiAdvisor()
-        cgo_engine = CGOExecutionEngine(available_devices=['cuda:0', 'cuda:1', 'cuda:2', 'cuda:3'], batch_waiting_time=0)
+        cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
+                                                 GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
         set_execution_engine(cgo_engine)
         submit_models(*models)
         time.sleep(3)

@@ -7,6 +7,7 @@ import nni.retiarii.evaluator.pytorch.lightning as pl
 import nni.retiarii.evaluator.pytorch.cgo.evaluator as cgo
 from nni.retiarii import serialize
 from base_mnasnet import MNASNet
+from nni.experiment import RemoteMachineConfig
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.strategy import TPEStrategy
 from torchvision import transforms
@@ -52,18 +53,28 @@ if __name__ == '__main__':
 
     exp = RetiariiExperiment(base_model, trainer, applied_mutators, simple_strategy)
 
-    exp_config = RetiariiExeConfig('local')
-    exp_config.experiment_name = 'mnasnet_search'
-    exp_config.execution_engine = 'cgo'
+    exp_config = RetiariiExeConfig('remote')
+    exp_config.experiment_name = 'darts_search'
     exp_config.trial_concurrency = 3
-    # since CGO may merge multiple trials into one, RetiariiExperiment may run more trials than max_trial_number
-    # when max_trial_number = 3, it actually runs 9 models since each merged trial contains 3 trials from strategy
-    exp_config.max_trial_number = 100
-    exp_config.max_concurrency_cgo = 1
-    exp_config.batch_waiting_time = 0
-    exp_config.devices = ['cuda:0', 'cuda:1', 'cuda:2']
+    exp_config.max_trial_number = 10
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = True
+    exp_config.training_service.reuse_mode = True
     exp_config.training_service.gpu_indices = [0, 1, 2]
+    exp_config.max_concurrency_cgo = 1
+    exp_config.batch_waiting_time = 0
 
-    exp.run(exp_config, 8097)
+    rm_conf = RemoteMachineConfig()
+    rm_conf.host = '127.0.0.1'
+    rm_conf.user = 'zhenhua'
+    rm_conf.password = 'zhenhua233'
+    rm_conf.port = 22
+    rm_conf.python_path = '/home/zhenhua/py38/bin'
+    rm_conf.gpu_indices = [0, 1, 2]
+    rm_conf.use_active_gpu = True
+    rm_conf.max_trial_number_per_gpu = 3
+    
+    exp_config.training_service.machine_list = [rm_conf]
+    exp_config.execution_engine = 'cgo'
+
+    exp.run(exp_config, 8099)
