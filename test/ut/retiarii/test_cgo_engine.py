@@ -150,12 +150,15 @@ def _new_trainer():
 
     multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
 
-    lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                               max_epochs=1,
-                                                               limit_train_batches=0.25,
-                                                               progress_bar_refresh_rate=0),
-                             train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                             val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+    try:
+        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                max_epochs=1,
+                                                                limit_train_batches=0.25,
+                                                                progress_bar_refresh_rate=0),
+                                train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+    except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
     return lightning
 
 
@@ -199,11 +202,14 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                                   max_epochs=1,
-                                                                   limit_train_batches=0.25),
-                                 train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        try:
+            lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                    max_epochs=1,
+                                                                    limit_train_batches=0.25),
+                                    train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                    val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         lightning._execute(_model_cpu)
 
         result = _get_final_result()
@@ -222,11 +228,14 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                                   max_epochs=1,
-                                                                   limit_train_batches=0.25),
-                                 train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        try:
+            lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                    max_epochs=1,
+                                                                    limit_train_batches=0.25),
+                                    train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                    val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         lightning._execute(_model_gpu)
 
         result = _get_final_result()
