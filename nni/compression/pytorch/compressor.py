@@ -4,6 +4,7 @@
 import types
 import logging
 import torch
+from nni.common.graph_utils import build_module_graph
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -374,7 +375,8 @@ class Pruner(Compressor):
         wrapper.to(layer.module.weight.device)
         return wrapper
 
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
+    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None,
+                     dummy_input=None, opset_version=None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
@@ -387,10 +389,21 @@ class Pruner(Compressor):
         onnx_path : str
             (optional) path to save onnx model
         input_shape : list or tuple
-            input shape to onnx model
+            input shape to onnx model, used for creating a dummy input tensor for torch.onnx.export
+            if the input has a complex structure (e.g., a tuple), please directly create the input and
+            pass it to dummy_input instead
+            note: this argument is deprecated and will be removed; please use dummy_input instead
         device : torch.device
-            device of the model, used to place the dummy input tensor for exporting onnx file.
+            device of the model, where to place the dummy input tensor for exporting onnx file;
             the tensor is placed on cpu if ```device``` is None
+            only useful when both onnx_path and input_shape are passed
+            note: this argument is deprecated and will be removed; please use dummy_input instead
+        dummy_input: torch.Tensor or tuple
+            dummy input to the onnx model; used when input_shape is not enough to specify dummy input
+            user should ensure that the dummy_input is on the same device as the model
+        opset_version: int
+            opset_version parameter for torch.onnx.export; only useful when onnx_path is not None
+            if not passed, torch.onnx.export will use its default opset_version
         """
         assert model_path is not None, 'model_path must be specified'
         mask_dict = {}
@@ -411,17 +424,31 @@ class Pruner(Compressor):
 
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
+
         if mask_path is not None:
             torch.save(mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
+
         if onnx_path is not None:
-            assert input_shape is not None, 'input_shape must be specified to export onnx model'
-            # input info needed
-            if device is None:
-                device = torch.device('cpu')
-            input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
-            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+            assert input_shape is not None or dummy_input is not None,\
+                'input_shape or dummy_input must be specified to export onnx model'
+            # create dummy_input using input_shape if input_shape is not passed
+            if dummy_input is None:
+                _logger.warning("""The argument input_shape and device will be removed in the future.
+                                   Please create a dummy input and pass it to dummy_input instead.""")
+                if device is None:
+                    device = torch.device('cpu')
+                input_data = torch.Tensor(*input_shape).to(device)
+            else:
+                input_data = dummy_input
+            if opset_version is not None:
+                torch.onnx.export(self.bound_model, input_data, onnx_path, opset_version=opset_version)
+            else:
+                torch.onnx.export(self.bound_model, input_data, onnx_path)
+            if dummy_input is None:
+                _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
+            else:
+                _logger.info('Model in onnx saved to %s', onnx_path)
 
         self._wrap_model()
 
@@ -463,7 +490,7 @@ class Pruner(Compressor):
 
 
 class QuantizerModuleWrapper(torch.nn.Module):
-    def __init__(self, module, module_name, module_type, config, quantizer):
+    def __init__(self, module, module_name, module_type, config, quantizer, bn_module=None):
         """
         Wrap an module to enable data parallel, forward method customization and buffer registeration.
 
@@ -479,6 +506,8 @@ class QuantizerModuleWrapper(torch.nn.Module):
             the type of the module to compress
         quantizer ：quantizer
             the quantizer used to calculate mask
+        bn_module : torch.nn.Module
+            batch norm layer corresponding to current module, used for simulating batch normalization folding
         """
         super().__init__()
         # origin layer information
@@ -488,6 +517,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
         # config and pruner
         self.config = config
         self.quantizer = quantizer
+        self.bn_module = bn_module
 
         # register buffer and parameter
         # old_weight is used to store origin weight and weight is used to store quantized weight
@@ -501,6 +531,17 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 delattr(self.module, 'weight')
                 self.module.register_buffer('weight', self.module.old_weight)
 
+                # for batch normalization folding
+                if self.bn_module is not None:
+                    if _check_bias(self.module):
+                        self.module.register_parameter('old_bias', torch.nn.Parameter(self.module.bias))
+                        init_tensor = self.module.old_bias
+                    else:
+                        init_tensor = torch.zeros_like(self.bn_module.weight)
+                    delattr(self.module, 'bias')
+                    self.module.register_buffer('bias', init_tensor)
+                    setattr(module, BN_FOLD_TAG, True)
+
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
             inputs = self.quantizer.quant_grad(
@@ -509,13 +550,20 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
+            if self.bn_module is not None:
+                # simulate batch normalization folding
+                new_weight, new_bias = self.quantizer.fold_bn(*inputs, wrapper=self)
+                self.module.bias = new_bias
+                self.module.weight = new_weight
+            else:
+                new_weight = self.module.old_weight
+
             self.quantizer.quant_grad(
-                self.module.old_weight,
+                new_weight,
                 QuantType.QUANT_WEIGHT,
                 self, inputs[0])
-            result = self.module(*inputs)
-        else:
-            result = self.module(*inputs)
+
+        result = self.module(*inputs)
 
         if 'output' in self.config['quant_types']:
             result = self.quantizer.quant_grad(
@@ -525,12 +573,35 @@ class QuantizerModuleWrapper(torch.nn.Module):
         return result
 
 
+class QuantizerIdentityWrapper(torch.nn.Module):
+    def __init__(self, module, module_name):
+        """
+        Used to wrap modules that should be treated as torch.Identity
+
+        Parameters
+        ----------
+        module : pytorch module
+            the module to be wrapped
+        module_name : str
+            the name of the module to wrapped, wrapper module shares same name
+        """
+        super().__init__()
+        self.module = module
+        self.module_name = module_name
+
+    def forward(self, x):
+        return x
+
+
 class Quantizer(Compressor):
     """
     Base quantizer for pytorch quantizer
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
+        self.identity_wrappers = []
+        self.conv_bn_patterns = {}
+        self.find_conv_bn_patterns(model, dummy_input)
         super().__init__(model, config_list, optimizer)
         self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
@@ -540,6 +611,10 @@ class Quantizer(Compressor):
                     # old_weight is registered to keep track of weight before quantization
                     # and it is trainable, therefore, it should be added to optimizer.
                     self.optimizer.add_param_group({"params": wrapper.module.old_weight})
+                # This is for conv with bias + bn. Although this situation is relatively rare,
+                # we still need to deal with the old_bias when it occurs
+                if hasattr(wrapper.module, "old_bias"):
+                    self.optimizer.add_param_group({"params": getattr(wrapper.module, "old_bias")})
 
     def quantize_weight(self, wrapper, **kwargs):
         """
@@ -597,7 +672,36 @@ class Quantizer(Compressor):
             for quant_type in config['quant_types']:
                 assert quant_type in config['quant_bits'], 'bits length for %s must be specified in quant_bits dict' % quant_type
 
-        return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+        # bound bn module to corresponding conv module
+        bn_module = None
+        if layer.name in self.conv_bn_patterns:
+            bn_module_name = self.conv_bn_patterns[layer.name]
+            for name, module in self.bound_model.named_modules():
+                if name == bn_module_name:
+                    bn_module = module
+                    break
+            assert bn_module is not None, "BN module corresponding to layer {} is not found".format(layer.name)
+            self.identity_wrappers.append(QuantizerIdentityWrapper(bn_module, bn_module_name))
+        return QuantizerModuleWrapper(layer.module, layer.name, layer.type, config, self, bn_module)
+
+    def _wrap_model(self):
+        """
+        wrap all modules that needed to be compressed
+
+        """
+        # wrap folded bn in order to bypass its forward process
+        for wrapper in reversed(self.identity_wrappers):
+            _setattr(self.bound_model, wrapper.module_name, wrapper)
+        super()._wrap_model()
+
+    def _unwrap_model(self):
+        """
+        unwrap all modules that needed to be compressed
+
+        """
+        for wrapper in self.identity_wrappers:
+            _setattr(self.bound_model, wrapper.module_name, wrapper.module)
+        super()._unwrap_model()
 
     def export_model_save(self, model, model_path, calibration_config=None, calibration_path=None, onnx_path=None,
                           input_shape=None, device=None):
@@ -660,6 +764,30 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload export_model()')
 
+    def find_conv_bn_patterns(self, model, dummy_input):
+        """
+        Find all Conv-BN patterns, used for batch normalization folding
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            model to be analyzed.
+        dummy_input : tupel of torch.tensor
+            inputs to the model, used for generating the torchscript
+        """
+        if dummy_input is None:
+            _logger.debug("Model inputs are not given, batch normalization folding is disabled")
+            return
+
+        graph = build_module_graph(model, dummy_input)
+        for node_group in graph.nodes_py.nodes_op:
+            if node_group.op_type in BN_FOLD_OP:
+                successors = graph.find_successors(node_group.unique_name)
+                successors = [graph.name_to_node[x] for x in successors]
+                for successor in successors:
+                    if successor.op_type == 'BatchNorm2d':
+                        self.conv_bn_patterns[node_group.name] = successor.name
+
     def step_with_optimizer(self):
         pass
 
@@ -676,6 +804,9 @@ QType_Dict = {
     1: "weight",
     2: "output"
 }
+
+BN_FOLD_OP = ["Conv2d"]
+BN_FOLD_TAG = 'BN_FOLD_TAG'
 
 class QuantGrad(torch.autograd.Function):
     """
@@ -770,6 +901,12 @@ class QuantGrad(torch.autograd.Function):
 def _check_weight(module):
     try:
         return isinstance(module.weight.data, torch.Tensor)
+    except AttributeError:
+        return False
+
+def _check_bias(module):
+    try:
+        return isinstance(module.bias.data, torch.Tensor)
     except AttributeError:
         return False
 

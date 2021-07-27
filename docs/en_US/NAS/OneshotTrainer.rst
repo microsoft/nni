@@ -34,4 +34,10 @@ See `API reference <./ApiReference.rst>`__ for detailed usages. Here, we show an
   trainer.fit()
   final_architecture = trainer.export()
 
-**Format of the exported architecture.** TBD.
+After the searching is done, we can use the exported architecture to instantiate the full network for retraining. Here is an example:
+
+.. code-block:: python
+
+    from nni.retiarii import fixed_arch
+    with fixed_arch('/path/to/checkpoint.json'):
+        model = Model()
