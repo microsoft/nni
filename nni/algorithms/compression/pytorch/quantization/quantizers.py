@@ -320,7 +320,7 @@ class ObserverQuantizer(Quantizer):
                 calibration_config[name]['tracked_min_input'] = min_input
                 calibration_config[name]['tracked_max_input'] = max_input
                 calibration_config[name]['tracked_input_qmin'] = 0
-                calibration_config[name]['tracked_input_qmax'] = 255
+                calibration_config[name]['tracked_input_qmax'] = 127
             if hasattr(module, 'output_scale'):
                 calibration_config[name]['activation_bit'] = 8
                 max_input = float(module.output_scale * (module.output_qmax - module.output_zero_point))
@@ -328,7 +328,7 @@ class ObserverQuantizer(Quantizer):
                 calibration_config[name]['tracked_min_activation'] = min_input
                 calibration_config[name]['tracked_max_activation'] = max_input
                 calibration_config[name]['tracked_activation_qmin'] = 0
-                calibration_config[name]['tracked_activation_qmax'] = 255
+                calibration_config[name]['tracked_activation_qmax'] = 127
             self._del_simulated_attr(module)
 
         self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path,
