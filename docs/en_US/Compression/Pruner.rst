@@ -771,7 +771,13 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
    :target: ../../img/huggingface_bert_architecture.png
    :alt: 
 
-**Usage Example: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that here we specify ``op_names`` in the config list to assign different sparsity to different layers. Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer.
+**Usage Example: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that
+
+* Here we specify ``op_names`` in the config list to assign different sparsity to different layers.
+* Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer.
+* Since in this example we want to do one-shot pruning, the ``num_iterations`` parameter is set to 1, and the parameter ``epochs_per_iteration`` is ignored. If you would like to do iterative pruning instead, you can set the ``num_iterations`` parameter to the number of pruning iterations, and the ``epochs_per_iteration`` parameter to the number of finetuning epochs between two iterations.
+* The arguments ``trainer`` and ``optimizer`` are only used when we want to do iterative pruning, or the ranking criterion is ``taylorfo``. Here these two parameters are ignored by the pruner.
+* The argument ``forward_runner`` is only used when the ranking criterion is ``l1_activation`` or ``l2_activation``. Here this parameter is ignored by the pruner.
 
 .. code-block:: python
 
