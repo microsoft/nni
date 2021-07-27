@@ -222,19 +222,14 @@ class ObserverQuantizer(Quantizer):
         return inputs
 
     def quantize_weight(self, wrapper, **kwargs):
+        # If ObserverQuantizer.compress is executed, the weight will be set to
+        # the Pseudo-quantized one. So there is no need to quantize it
+        if self.compressed:
+            return
+
         module = wrapper.module
         old_weight = module.weight
-        if self.compressed:
-            new_weight = self._quantize(old_weight,
-                                       module.weight_scale,
-                                       module.weight_zero_point,
-                                       module.weight_qmin,
-                                       module.weight_qmax)
-            module.weight = new_weight
-        else:
-            self.record(wrapper, 'weight', old_weight)
-            new_weight = old_weight
-        return new_weight
+        self.record(wrapper, 'weight', old_weight)
 
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
@@ -262,6 +257,14 @@ class ObserverQuantizer(Quantizer):
                 scale, zero_point = self.calculate_qparams(layer.name, 'weight')
                 module.register_buffer('weight_scale', scale.to(self.device))
                 module.register_buffer('weight_zero_point', zero_point.to(self.device))
+                weight = module.weight
+                quantized_weight = self._quantize(weight,
+                                            module.weight_scale,
+                                            module.weight_zero_point,
+                                            module.weight_qmin,
+                                            module.weight_qmax)
+                delattr(module, 'weight')
+                module.register_parameter('weight', torch.nn.Parameter(quantized_weight))
             if "input" in config.get("quant_types", []):
                 scale, zero_point = self.calculate_qparams(layer.name, 'input')
                 module.register_buffer('input_scale', scale.to(self.device))
@@ -309,19 +312,6 @@ class ObserverQuantizer(Quantizer):
                 calibration_config[name]['tracked_min_weight'] = -val
                 calibration_config[name]['tracked_weight_qmin'] = -127
                 calibration_config[name]['tracked_weight_qmax'] = 127
-                actual_weight = getattr(module, 'old_weight', None)
-                if actual_weight is None:
-                    logger.warning("Can not recover weight for layer %s. "
-                                   "This may lead to a wrong accuracy performance on the backend.", name)
-                    continue
-                # simulate quantization.
-                actual_quantized_weight = self._quantize(actual_weight,
-                                                         module.weight_scale,
-                                                         module.weight_zero_point,
-                                                         module.weight_qmin,
-                                                         module.weight_qmax)
-                delattr(module, 'weight')
-                module.register_parameter('weight', torch.nn.Parameter(actual_quantized_weight))
             # refactor these magic numbers when customizations of dtype and qscheme are ready.
             if hasattr(module, 'input_scale'):
                 calibration_config[name]['input_bit'] = 8
