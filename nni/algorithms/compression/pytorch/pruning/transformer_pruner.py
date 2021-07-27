@@ -67,8 +67,10 @@ class TransformerHeadPruner(Pruner):
         Optimizer used to train model
     trainer: function
         Function used to train the model.
-        Users should write this function as a normal function to train the Pytorch model
-        and include `model, optimizer, criterion, epoch` as function arguments.
+        Users should write this function as a normal function to train the Pytorch model and include
+        `model, optimizer, criterion, epoch` as function arguments. Note that the trainer may be used for collecting
+        data for pruning. In that case, ``epoch=None`` will be passed. If you do not want to perform parameter update,
+        please avoid ``optimizer.step()`` when ``epoch == None``.
     criterion: function
         Function used to calculate the loss between the target and the output.
         For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
@@ -230,7 +232,7 @@ class TransformerHeadPruner(Pruner):
             if self.ranking_criterion in ['l1_activation', 'l2_activation', 'taylorfo']:
                 training = self.bound_model.training
                 self.bound_model.eval()
-                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=0)
+                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=None)
                 self.update_mask()
                 self.bound_model.train(training)
             else:

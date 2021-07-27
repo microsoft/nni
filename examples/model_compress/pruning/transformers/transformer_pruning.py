@@ -180,12 +180,12 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
 def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=None):
     """
     This function is used for to create a "trainer" that is passed to the pruner. 
-    If epoch_num is 0, the function just runs forward and backward without updating the parameters. 
-    This allows the pruner to collect data without parameter update (for activation or gradient based 
-    pruning methods). 
+    If epoch_num is 0 or None, the function just runs forward and backward without updating the
+    parameters. This allows the pruner to collect data without parameter update (for activation or
+    gradient based pruning methods).
     Otherwise, finetune the model for 1 epoch. This is called by the pruner during pruning iterations.
     """
-    if epoch_num == 0:
+    if not epoch_num or epoch_num == 0:
         logger.info("Running forward and backward on the entire dataset without updating parameters...")
     else:
         logger.info("Finetuning for 1 epoch...")
@@ -198,7 +198,7 @@ def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_
                 batch[field] = batch[field].to(device)
             outputs = model(**batch)
             outputs.loss.backward()
-            if epoch_num != 0:
+            if epoch_num and epoch_num != 0:
                 optimizer.step()
             optimizer.zero_grad()
             progress_bar.update(1)
