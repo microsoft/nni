@@ -177,18 +177,13 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
         logger.info(f"epoch {epoch}: {eval_metric}")
 
 
-def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=None):
+def trainer_helper(model, train_dataloader, optimizer, device):
     """
     This function is used for to create a "trainer" that is passed to the pruner. 
-    If epoch_num is None, the function just runs forward and backward without updating the
-    parameters. This allows the pruner to collect data without parameter update (for activation or
-    gradient based pruning methods).
-    Otherwise, finetune the model for 1 epoch. This is called by the pruner during pruning iterations.
+    Finetune the model for 1 epoch. This function is called by the pruner during pruning iterations (or called to
+    calculate scores for pruning when ranking criterion is "taylorfo").
     """
-    if epoch_num is None:
-        logger.info("Running forward and backward on the entire dataset without updating parameters...")
-    else:
-        logger.info("Finetuning for 1 epoch...")
+    logger.info("Training for 1 epoch...")
     progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
  
     train_epoch = 1
@@ -198,9 +193,27 @@ def dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_
                 batch[field] = batch[field].to(device)
             outputs = model(**batch)
             outputs.loss.backward()
-            if epoch_num is not None:
-                optimizer.step()
+            optimizer.step()
             optimizer.zero_grad()
+            progress_bar.update(1)
+
+
+def forward_runner_helper(model, train_dataloader, device):
+    """
+    This function is used for to create a "forward_runner" that is passed to the pruner.
+    The function just runs forward on the train set without updating the parameters.
+    This allows the pruner to collect data for activation-based pruning methods.
+    """
+    logger.info("Running forward on the entire train set without updating parameters...")
+    progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
+
+    forward_epoch = 1
+    for epoch in range(forward_epoch):
+        for step, batch in enumerate(train_dataloader):
+            for field in batch.keys():
+                batch[field] = batch[field].to(device)
+            _ = model(**batch)
+            # note: no loss.backward or optimizer.step() is performed here
             progress_bar.update(1)
  
 
@@ -280,7 +293,10 @@ def main():
 
     # Here criterion is embedded in the model. Upper levels can just pass None to trainer.
     def trainer(model, optimizer, criterion, epoch):
-        return dry_run_or_finetune(args, model, train_dataloader, optimizer, device, epoch_num=epoch)
+        return trainer_helper(model, train_dataloader, optimizer, device)
+
+    def forward_runner(model):
+        return forward_runner_helper(model, train_dataloader, device)
 
     # We provide three usage scenarios.
     # Set the "usage" parameter in the command line argument to run each one of them.
@@ -293,7 +309,8 @@ def main():
                   "head_hidden_dim": 64,
                   "dummy_input": dummy_input,
                   "trainer": trainer,
-                  "optimizer": optimizer}
+                  "optimizer": optimizer,
+                  "forward_runner": forward_runner}
 
         config_list = [{
             "sparsity": args.sparsity,
@@ -302,10 +319,10 @@ def main():
 
     # example 2: prune different layers with uniform sparsity, but specify names group instead of dummy_input
     elif args.usage == 2:
-        attention_name_groups = list(zip(["encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
+        attention_name_groups = list(zip(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
 
         kwargs = {"ranking_criterion": args.ranking_criterion,
                   "global_sort": args.global_sort,
@@ -314,7 +331,8 @@ def main():
                   "attention_name_groups": attention_name_groups,
                   "head_hidden_dim": 64,
                   "trainer": trainer,
-                  "optimizer": optimizer}
+                  "optimizer": optimizer,
+                  "forward_runner": forward_runner}
 
         config_list = [{
             "sparsity": args.sparsity,
@@ -325,10 +343,10 @@ def main():
 
     # example 3: prune different layers with different sparsity
     elif args.usage == 3:
-        attention_name_groups = list(zip(["encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
-                                         ["encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
+        attention_name_groups = list(zip(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
+                                         ["bert.encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
 
         kwargs = {"ranking_criterion": args.ranking_criterion,
                   "global_sort": args.global_sort,
@@ -337,7 +355,8 @@ def main():
                   "attention_name_groups": attention_name_groups,
                   "head_hidden_dim": 64,
                   "trainer": trainer,
-                  "optimizer": optimizer}
+                  "optimizer": optimizer,
+                  "forward_runner": forward_runner}
 
         config_list = [{
             "sparsity": args.sparsity,

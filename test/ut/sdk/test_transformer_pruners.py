@@ -16,6 +16,7 @@ from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
 sys.path.append(os.path.dirname(__file__))
 from models.pytorch_models.transformer import TransformerEncoder
 
+
 def validate_sparsity(wrapper, sparsity, bias=False):
     masks = [wrapper.weight_mask]
     if bias and wrapper.bias_mask is not None:
@@ -45,7 +46,6 @@ class Model(nn.Module):
 def train(model, dataloader, criterion, optimizer):
     model.train()
     device = next(model.parameters()).device
-
     for _ in range(2):
         y = torch.ones(10).to(device)
         out = model(torch.randint(0, 100, (4, 10)).to(device), torch.ones(10).to(device))
@@ -53,6 +53,13 @@ def train(model, dataloader, criterion, optimizer):
         optimizer.zero_grad()
         loss.backward()
         optimizer.step()
+
+
+def dry_run(model):
+    device = next(model.parameters()).device
+    for _ in range(2):
+        y = torch.ones(10).to(device)
+        _ = model(torch.randint(0, 100, (4, 10)).to(device), torch.ones(10).to(device))
 
 
 def head_pruner_tests(criterion, global_sort, use_graph, iterative):
@@ -94,17 +101,19 @@ def head_pruner_tests(criterion, global_sort, use_graph, iterative):
     kwargs['trainer'] = trainer
     kwargs['criterion'] = nn.BCELoss()
 
+    def forward_runner(model):
+        return dry_run(model)
+    kwargs['forward_runner'] = forward_runner
+
     # create pruner and call compress()
     pruner = TransformerHeadPruner(model, config_list, **kwargs)
     pruner.compress()
 
     # test model and mask export
     pruner.export_model('./model_tmp.pth', './mask_tmp.pth', device=device)
-
-    # TODO: test exporting to onnx when we can pass dummy_input instead of input_shape to export_model
-    # dummy_input = (torch.randint(0, 100, (10, 32)).to(device), torch.ones(32).to(device))
-    # pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=None,
-    #                     dummy_input=dummy_input, device=device)
+    dummy_input = (torch.randint(0, 100, (10, 32)).to(device), torch.ones(32).to(device))
+    pruner.export_model('./model_tmp.pth', './mask_tmp.pth', './onnx_tmp.pth', input_shape=None, device=None,
+                        dummy_input=dummy_input, opset_version=10)
 
     # validate sparsity
     if not global_sort:

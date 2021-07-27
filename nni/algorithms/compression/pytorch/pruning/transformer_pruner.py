@@ -61,23 +61,32 @@ class TransformerHeadPruner(Pruner):
         Number of pruning iterations. Defaults to 1 (ont-shot pruning). If num_iterations > 1, the pruner will split
         the sparsity specified in config_list uniformly and assign a fraction to each pruning iteration.
     epochs_per_iteration : int
-        Number of finetuning epochs before the next pruning iteration. This only has effect when num_iterations > 1.
+        Number of finetuning epochs before the next pruning iteration.
+        Only used when num_iterations > 1.
         If num_iterations is 1, then no finetuning is performed by the pruner after pruning.
     optimizer: torch.optim.Optimizer
         Optimizer used to train model
     trainer: function
-        Function used to train the model.
-        Users should write this function as a normal function to train the Pytorch model and include
-        `model, optimizer, criterion, epoch` as function arguments. Note that the trainer may be used for collecting
-        data for pruning. In that case, ``epoch=None`` will be passed. If you do not want to perform parameter update,
-        please avoid ``optimizer.step()`` when ``epoch == None``.
+        Function used to finetune the model between pruning iterations.
+        Only used when  num_iterations > 1 or ranking_criterion is 'taylorfo'.
+        Users should write this function as a normal function to train the PyTorch model and include
+        `model, optimizer, criterion, epoch` as function arguments. Note that the trainer is also used for collecting
+        gradients for pruning if ranking_criterion is 'taylorfo'. In that case, ``epoch=None`` will be passed.
     criterion: function
         Function used to calculate the loss between the target and the output.
+        Only used when  num_iterations > 1 or ranking_criterion is 'taylorfo'.
         For example, you can use ``torch.nn.CrossEntropyLoss()`` as input.
+    forward_runner: function
+        Function used to perform a "dry run" on the model on the entire train/validation dataset in order to collect
+        data for pruning required by the criteria 'l1_activation' or 'l2_activation'.
+        Only used when ranking_criterion is 'l1_activation' or 'l2_activation'.
+        Users should write this function as a normal function that accepts a PyTorch model and runs forward on the model
+        using the entire train/validation dataset. This function is not expected to perform any backpropagation or
+        parameter updates.
     """
     def __init__(self, model, config_list,head_hidden_dim, attention_name_groups=None, dummy_input=None,
                  ranking_criterion='l1_weight', global_sort=False, num_iterations=1, epochs_per_iteration=1,
-                 optimizer=None, trainer=None, criterion=None,
+                 optimizer=None, trainer=None, criterion=None, forward_runner=None,
                  **algo_kwargs):
         super().__init__(model, config_list)
 
@@ -94,9 +103,12 @@ class TransformerHeadPruner(Pruner):
         self._optimizer = optimizer
         self._trainer = trainer
         self._criterion = criterion
-        if self.ranking_criterion in ['l1_activation', 'l2_activation', 'taylorfo'] or num_iterations > 1:
+        self._forward_runner = forward_runner
+        if self.ranking_criterion in ['taylorfo'] or num_iterations > 1:
             assert self._trainer is not None
             assert self._optimizer is not None
+        if self.ranking_criterion in ['l1_activation', 'l2_activation']:
+            assert self._forward_runner is not None
 
         # Group generation: one group per attention layer, four weights per group
         self.masking_groups = []
@@ -229,12 +241,15 @@ class TransformerHeadPruner(Pruner):
 
     def compress(self):
         for pruning_iter in range(self.num_iterations):
-            if self.ranking_criterion in ['l1_activation', 'l2_activation', 'taylorfo']:
+            if self.ranking_criterion in ['l1_activation', 'l2_activation']:
                 training = self.bound_model.training
                 self.bound_model.eval()
-                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=None)
+                self._forward_runner(self.bound_model)       # dry run, forward only
                 self.update_mask()
                 self.bound_model.train(training)
+            elif self.ranking_criterion in ['taylorfo']:
+                self._trainer(self.bound_model, optimizer=self._optimizer, criterion=self._criterion, epoch=None)
+                self.update_mask()
             else:
                 self.update_mask()
 

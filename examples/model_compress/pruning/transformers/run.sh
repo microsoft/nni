@@ -8,7 +8,7 @@ PRETRAINED_MODEL="bert-base-uncased"          # "distilbert-base-uncased", "robe
 
 # parameters for pruning
 # change USAGE to different numbers (1, 2, 3) to run examples with different configs
-USAGE=2                       
+USAGE=3
 SPARSITY=0.5
 RANKING_CRITERION=l1_weight                   # "l1_weight", "l2_weight", "l1_activation", "l2_activation", "taylorfo"
 NUM_ITERATIONS=1                              # 1 for one-shot pruning
@@ -27,6 +27,7 @@ TASK_LIST=("cola" "sst2" "mrpc" "stsb" "qqp" "mnli" "qnli" "rte" "wnli")
 if [[ ${TASK_LIST[*]} =~ (^|[[:space:]])$TASK_NAME($|[[:space:]]) ]]; then
     mkdir $OUTDIR
     python transformer_pruning.py \
+	   --usage $USAGE \
 	   --sparsity $SPARSITY \
 	   --ranking_criterion $RANKING_CRITERION \
 	   --num_iterations $NUM_ITERATIONS \
