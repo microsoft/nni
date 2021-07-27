@@ -5,8 +5,8 @@ import logging
 import copy
 import torch
 from schema import Schema, And, Or, Optional
-from nni.compression.pytorch.utils.config_validation import CompressorSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
+from nni.compression.pytorch.utils.config_validation import QuantizerSchema
+from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad, QuantType
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
 
@@ -22,11 +22,12 @@ class NaiveQuantizer(Quantizer):
         self.layer_scale = {}
 
     def validate_config(self, model, config_list):
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): ['weight'],
             Optional('quant_bits'): Or(8, {'weight': 8}),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -125,7 +126,7 @@ class QAT_Quantizer(Quantizer):
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
         """
         Parameters
         ----------
@@ -144,8 +145,13 @@ class QAT_Quantizer(Quantizer):
                     state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
+                - dummy_input : tuple of tensor
+                    inputs to the model, which are used to get the graph of the module. The graph is used to find
+                    Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
+                    given, the batch normalization folding would be disabled.
         """
-        super().__init__(model, config_list, optimizer)
+
+        super().__init__(model, config_list, optimizer, dummy_input)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         device = next(model.parameters()).device
@@ -168,8 +174,9 @@ class QAT_Quantizer(Quantizer):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
-        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation',
+                         'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bit',
+                         'activation_bit', 'BN_FOLD_TAG']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -183,7 +190,7 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
@@ -191,7 +198,8 @@ class QAT_Quantizer(Quantizer):
             })),
             Optional('quant_start_step'): And(int, lambda n: n >= 0),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -245,7 +253,7 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
-        input = kwargs['input_tensor']
+        input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
         weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
@@ -264,17 +272,6 @@ class QAT_Quantizer(Quantizer):
                                                                     module.ema_decay)
         module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
                                                                     module.ema_decay)
-
-        # if bias exists, quantize bias to uint32
-        if hasattr(wrapper.module, 'bias') and wrapper.module.bias is not None:
-            bias = wrapper.module.bias.data
-            bias_bits = 32
-            rmin, rmax = torch.min(bias), torch.max(bias)
-            module.scale, module.zero_point = update_quantization_param(bias_bits, rmin, rmax)
-            bias = self._quantize(bias_bits, module, bias)
-            bias = self._dequantize(module, bias)
-            wrapper.module.bias.data = bias
-
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -304,7 +301,8 @@ class QAT_Quantizer(Quantizer):
                                                                        module.ema_decay)
             module.tracked_max_activation = update_ema(module.tracked_max_activation, current_max,
                                                                        module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(output_bits, module.tracked_min_activation, module.tracked_max_activation)
+            module.scale, module.zero_point = update_quantization_param(
+                output_bits, module.tracked_min_activation, module.tracked_max_activation)
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -342,6 +340,23 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['weight_bit'] = int(module.weight_bit)
                 calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
+
+                # Recover weight/bias for batch normalization folding
+                if hasattr(module, BN_FOLD_TAG):
+                    actual_weight = getattr(module, 'old_weight', None)
+                    if actual_weight is None:
+                        logger.warning("Can not recover weight for layer %s. "
+                                       "This may lead to a wrong accuracy performance on the backend.", name)
+                    delattr(module, 'weight')
+                    module.register_parameter('weight', actual_weight)
+
+                    actual_bias = getattr(module, 'old_bias', None)
+                    delattr(module, 'bias')
+                    if actual_bias is not None:
+                        module.register_parameter('bias', actual_bias)
+                    else:
+                        setattr(module, 'bias', None)
+
             if hasattr(module, 'activation_bit'):
                 calibration_config[name]['activation_bit'] = int(module.activation_bit)
                 calibration_config[name]['tracked_min_activation'] = float(module.tracked_min_activation)
@@ -352,9 +367,39 @@ class QAT_Quantizer(Quantizer):
 
         return calibration_config
 
-    def fold_bn(self, config, **kwargs):
-        # TODO simulate folded weight
-        pass
+    def fold_bn(self, *inputs, wrapper):
+        """
+        Simulate batch normalization folding in the training graph. Folded weight and bias are
+        returned for the following operations.
+
+        Parameters
+        ----------
+        inputs : tuple of torch.Tensor
+            inputs for the module
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
+
+        Returns
+        -------
+        Tuple of torch.Tensor
+        """
+        module = wrapper.module
+        bn_module = wrapper.bn_module
+        with torch.no_grad():
+            output = module(*inputs)
+            _ = bn_module(output)
+        running_mean = bn_module.running_mean
+        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
+        bn_weight = bn_module.weight
+        bn_bias = bn_module.bias
+        dimensions = len(module.weight.shape)
+        shape = [-1] + [1] * (dimensions - 1)
+        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
+        if hasattr(module, 'old_bias'):
+            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
+        else:
+            new_bias = bn_bias - running_mean / running_var * bn_weight
+        return new_weight, new_bias
 
     def step_with_optimizer(self):
         """
@@ -396,13 +441,14 @@ class DoReFaQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32)
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)
@@ -503,14 +549,15 @@ class BNNQuantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
-        schema = CompressorSchema([{
+        schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
             Optional('op_types'): [str],
-            Optional('op_names'): [str]
+            Optional('op_names'): [str],
+            Optional('exclude'): bool
         }], model, logger)
 
         schema.validate(config_list)

@@ -53,5 +53,6 @@ if __name__ == '__main__':
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = 10
     exp_config.training_service.use_active_gpu = False
+    exp_config.execution_engine = 'base'
 
     exp.run(exp_config, 8097)

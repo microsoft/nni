@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 
 from ..interface import BaseOneShotTrainer
-from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
+from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice, to_device
 
 
 _logger = logging.getLogger(__name__)
@@ -160,7 +160,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
         self.model.train()
         meters = AverageMeterGroup()
         for step, (x, y) in enumerate(self.train_loader):
-            x, y = x.to(self.device), y.to(self.device)
+            x, y = to_device(x, self.device), to_device(y, self.device)
             self.optimizer.zero_grad()
             self._resample()
             logits = self.model(x)
@@ -180,7 +180,7 @@ class SinglePathTrainer(BaseOneShotTrainer):
         meters = AverageMeterGroup()
         with torch.no_grad():
             for step, (x, y) in enumerate(self.valid_loader):
-                x, y = x.to(self.device), y.to(self.device)
+                x, y = to_device(x, self.device), to_device(y, self.device)
                 self._resample()
                 logits = self.model(x)
                 loss = self.loss(logits, y)

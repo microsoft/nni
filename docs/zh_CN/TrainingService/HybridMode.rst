@@ -15,40 +15,25 @@
 
 .. code-block:: yaml
 
-    authorName: default
     experimentName: example_mnist
+    searchSpacePath: search_space.json
+    command: python3 mnist.py
+    codeDir: .
     trialConcurrency: 2
+    gpuNum: 1
     maxExecDuration: 1h
     maxTrialNum: 10
-    trainingServicePlatform: hybrid
-    searchSpacePath: search_space.json
-    # 可选项：true, false
-    useAnnotation: false
     tuner:
       builtinTunerName: TPE
       classArgs:
-        # 可选项: maximize, minimize
         optimize_mode: maximize
-    trial:
-      command: python3 mnist.py
-      codeDir: .
-      gpuNum: 1
-    hybridConfig:
-      trainingServicePlatforms:
-        - local
-        - remote
-    remoteConfig:
-      reuse: true
-    machineList:
-      - ip: 10.1.1.1
-        username: bob
-        passwd: bob123
+    trainingServicePlatforms:
+      - remote
+        machineList:
+          - ip: 10.1.1.1
+            username: bob
+            passwd: bob123
+      - local
 
-混合模式的配置：
-
-hybridConfig:
-
-* trainingServicePlatforms. 必填。 该字段指定用于混合模式的平台，值使用 yaml 列表格式。 NNI 支持在此字段中设置 ``local``, ``remote``, ``aml``, ``pai`` 。
-
-
-.. Note:: 如果将平台设置为 trainingServicePlatforms 模式，则用户还应该为平台设置相应的配置。 例如，如果使用 ``remote`` 作为平台，还应设置 ``machineList`` 和 ``remoteConfig`` 配置。 混合模式下的本地平台暂时不支持Windows。
+要使用混合训练平台，用户应在 `trainingService` 字段中将训练平台设置为列表。  
+目前，混合训练平台只支持 `local`, `remote`, `pai` 和 `aml` 训练平台。

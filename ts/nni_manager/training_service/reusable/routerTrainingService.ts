@@ -5,11 +5,12 @@
 
 import { getLogger, Logger } from '../../common/log';
 import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig } from '../../common/experimentConfig';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType } from '../../common/trainingService';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from '../../common/experimentConfig';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
 import { delay } from '../../common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
+import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
 import { TrialDispatcher } from './trialDispatcher';
 
 
@@ -29,6 +30,8 @@ class RouterTrainingService implements TrainingService {
             instance.internalTrainingService = new RemoteMachineTrainingService(config);
         } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
             instance.internalTrainingService = new PAITrainingService(config);
+        } else if (platform === 'kubeflow' && !(<KubeflowConfig>config.trainingService).reuseMode) {
+            instance.internalTrainingService = new KubeflowTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);
         }
@@ -52,7 +55,7 @@ class RouterTrainingService implements TrainingService {
         return await this.internalTrainingService.getTrialJob(trialJobId);
     }
 
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 

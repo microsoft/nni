@@ -39,8 +39,5 @@ Reference
 PyTorch
 ^^^^^^^
 
-.. autoclass:: nni.algorithms.nas.pytorch.enas.EnasTrainer
-    :members:
-
-.. autoclass:: nni.algorithms.nas.pytorch.enas.EnasMutator
-    :members:
+..  autoclass:: nni.retiarii.oneshot.pytorch.EnasTrainer
+    :noindex:

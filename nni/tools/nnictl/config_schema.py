@@ -5,7 +5,6 @@ import json
 import logging
 import os
 
-import netifaces
 from schema import And, Optional, Or, Regex, Schema, SchemaError
 from nni.tools.package_utils import (
     create_validator_instance,
@@ -128,6 +127,7 @@ common_schema = {
     Optional('description'): setType('description', str),
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
+    Optional('maxTrialDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxTrialDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
         'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'),
@@ -493,7 +493,6 @@ class NNIConfigSchema:
         self.validate_tuner_adivosr_assessor(experiment_config)
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
-        self.validate_eth0_device(experiment_config)
         self.validate_hybrid_platforms(experiment_config)
         self.validate_frameworkcontroller_trial_config(experiment_config)
 
@@ -598,13 +597,6 @@ class NNIConfigSchema:
             if experiment_config.get('trial').get('outputDir'):
                 print_warning(warning_information.format('outputDir'))
             self.validate_pai_config_path(experiment_config)
-
-    def validate_eth0_device(self, experiment_config):
-        '''validate whether the machine has eth0 device'''
-        if experiment_config.get('trainingServicePlatform') not in ['local'] \
-                and not experiment_config.get('nniManagerIp') \
-                and 'eth0' not in netifaces.interfaces():
-            raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
 
     def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {

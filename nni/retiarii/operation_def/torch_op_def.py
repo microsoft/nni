@@ -67,9 +67,9 @@ class PrimConstant(PyTorchOperation):
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         # TODO: refactor this part, maybe we can remove the code gen of prim::Constant
         # TODO: deal with all the types
-        if self.parameters['type'] == 'None':
+        if self.parameters['type'] in ['None', 'NoneType']:
             return f'{output} = None'
-        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'):
+        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'): # 'Long()' ???
             return f'{output} = {self.parameters["value"]}'
         elif self.parameters['type'] == 'str':
             str_val = self.parameters["value"]
@@ -206,7 +206,7 @@ class AtenTensors(PyTorchOperation):
                       'aten::ones_like', 'aten::zeros_like', 'aten::rand',
                       'aten::randn', 'aten::scalar_tensor', 'aten::new_full',
                       'aten::new_empty', 'aten::new_zeros', 'aten::arange',
-                      'aten::tensor', 'aten::ones', 'aten::zeros']
+                      'aten::tensor', 'aten::ones', 'aten::zeros', 'aten::as_tensor']
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         schemas = torch._C._jit_get_schemas_for_operator(self.type)
@@ -282,7 +282,13 @@ class AtenIndex(PyTorchOperation):
 
 ManuallyChooseDef = {
     'aten::flatten': [('start_dim', 'int', '0'), ('end_dim', 'int', '-1')],
-    'aten::split': [('split_size', 'int', 'None'), ('dim', 'int', '0')]
+    'aten::split': [('split_size', 'int', 'None'), ('dim', 'int', '0')],
+    # in v1.9 dtype is supported as input argument for view, but torch script does not support it
+    'aten::view': [('size', 'List[int]', 'None')],
+    # NOTE: dim supports different types: List[int], List[str], Optional[List[int]], now we only support the first two, refactor needed
+    # torch.std(input, dim, unbiased, keepdim=False, *, out=None)  Tensor
+    # torch.std(input, unbiased)  Tensor
+    'aten::std': [('dim', 'List[int]', 'None'), ('unbiased', 'bool', 'True'), ('keepdim', 'bool', 'False')]
 }
 
 TensorOpExceptions = {
@@ -496,3 +502,9 @@ class ToDevice(PyTorchOperation):
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
         return f'{output} = {inputs[0]}.to("{self.device}")'
+class AtenDet(PyTorchOperation):
+    # for torch 1.9
+    # NOTE: it is not included in the above aten ops, maybe because torch.det is alias for torch.linalg.det
+    _ori_type_name = ['aten::linalg_det']
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = torch.det({inputs[0]})'

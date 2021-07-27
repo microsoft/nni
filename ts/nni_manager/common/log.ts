@@ -71,7 +71,7 @@ export class Logger {
 
     private log(level: number, args: any[]): void {
         const logFile: Writable | undefined = (global as any).logFile;
-        if (level < logLevel || logFile === undefined) {
+        if (level < logLevel) {
             return;
         }
 
@@ -84,7 +84,12 @@ export class Logger {
         const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
         const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
-        logFile.write(record);
+
+        if (logFile === undefined) {
+            console.log(record);
+        } else {
+            logFile.write(record);
+        }
     }
 }
 

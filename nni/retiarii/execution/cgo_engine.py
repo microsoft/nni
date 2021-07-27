@@ -42,7 +42,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         The trials within one batch could apply cross-graph optimization.
     """
 
-    def __init__(self, available_devices: List[Union[str, PhysicalDevice]] = None,
+    def __init__(self, devices: List[Union[str, PhysicalDevice]] = None,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
                  ) -> None:
@@ -51,7 +51,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self.logical_plan_counter = 0
         self.available_devices: List[PhysicalDevice] = []
         self.max_concurrency: int = max_concurrency
-        for device in available_devices:
+        for device in devices:
             if isinstance(device, str):
                 self.available_devices.append(PhysicalDevice("single_server", device))
             elif isinstance(device, PhysicalDevice):

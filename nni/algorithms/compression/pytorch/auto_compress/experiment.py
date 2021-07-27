@@ -5,8 +5,6 @@ import inspect
 from pathlib import Path, PurePath
 from typing import overload, Union, List
 
-from numpy import tri
-
 from nni.experiment import Experiment, ExperimentConfig
 from nni.algorithms.compression.pytorch.auto_compress.interface import AbstractAutoCompressionModule
 
@@ -62,7 +60,8 @@ class AutoCompressionExperiment(Experiment):
 
     def start(self, port: int, debug: bool) -> None:
         trial_code_directory = str(PurePath(Path(self.config.trial_code_directory).absolute())) + '/'
-        assert self.module_file_path.startswith(trial_code_directory), 'The file path of the user-provided module should under trial_code_directory.'
+        assert self.module_file_path.startswith(trial_code_directory), \
+            'The file path of the user-provided module should under trial_code_directory.'
         relative_module_path = self.module_file_path.split(trial_code_directory)[1]
         # only support linux, need refactor?
         command = 'python3 -m nni.algorithms.compression.pytorch.auto_compress.trial_entry --module_file_name {} --module_class_name {}'

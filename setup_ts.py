@@ -22,7 +22,7 @@ import tarfile
 from zipfile import ZipFile
 
 
-node_version = 'v10.23.0'
+node_version = 'v16.3.0'
 yarn_version = 'v1.22.10'
 
 
@@ -153,6 +153,10 @@ def compile_ts():
     _yarn('ts/nasui')
     _yarn('ts/nasui', 'build')
 
+    _print('Building JupyterLab extension')
+    _yarn('ts/jupyter_extension')
+    _yarn('ts/jupyter_extension', 'build')
+
 
 def symlink_nni_node():
     """
@@ -171,6 +175,8 @@ def symlink_nni_node():
     Path('nni_node/nasui').mkdir(exist_ok=True)
     _symlink('ts/nasui/build', 'nni_node/nasui/build')
     _symlink('ts/nasui/server.js', 'nni_node/nasui/server.js')
+
+    _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 def copy_nni_node(version):
@@ -204,6 +210,8 @@ def copy_nni_node(version):
     Path('nni_node/nasui').mkdir(exist_ok=True)
     shutil.copytree('ts/nasui/build', 'nni_node/nasui/build')
     shutil.copyfile('ts/nasui/server.js', 'nni_node/nasui/server.js')
+
+    shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 _yarn_env = dict(os.environ)
@@ -241,7 +249,9 @@ generated_files = [
     'ts/nasui/node_modules',
 
     # unit test
+    'ts/nni_manager/.nyc_output',
     'ts/nni_manager/exp_profile.json',
+    'ts/nni_manager/htmlcov',
     'ts/nni_manager/metrics.json',
     'ts/nni_manager/trial_jobs.json',
 ]

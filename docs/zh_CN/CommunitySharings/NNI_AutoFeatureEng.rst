@@ -24,7 +24,6 @@ NNI (Neural Network Intelligence) 是一个微软开源的自动机器学习工�
 或复杂系统的参数
 。
 
-链接
 ：`https://github.com/Microsoft/nni <https://github.com/Microsoft/nni>`__
 
 总体看微软的工具都有一个比较大的特点，
@@ -138,5 +137,6 @@ NNI 的 AutoFeature 模块是给整个行业制定了一个教科书般的标准
 
 大家用的时候如果是 Mac 电脑可能会遇到 gcc 的问题，因为开源项目自带的脚本是基于 gcc7 编译的， 可以用下面的方法绕过去：
 
-brew install libomp
-===================
+.. code-block:: bash
+
+   brew install libomp

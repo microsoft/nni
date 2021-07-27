@@ -150,9 +150,9 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
-interface ClusterItem {
-    command?: string;
-}
+//interface ClusterItem {
+//    command?: string;
+//}
 
 interface ExperimentProfile {
     params: ExperimentConfig;
@@ -163,6 +163,21 @@ interface ExperimentProfile {
     endTime?: number;
     maxSequenceId: number;
     revision: number;
+}
+
+interface ExperimentMetadata {
+    id: string;
+    port: number;
+    startTime: number | string;
+    endTime: number | string;
+    status: string;
+    platform: string;
+    experimentName: string;
+    tag: any[];
+    pid: number;
+    webuiUrl: any[];
+    logDir: string;
+    prefixUrl: string | null;
 }
 
 interface NNIManagerStatus {
@@ -230,6 +245,7 @@ export {
     MetricDataRecord,
     TrialJobInfo,
     ExperimentProfile,
+    ExperimentMetadata,
     NNIManagerStatus,
     EventMap,
     SingleAxis,

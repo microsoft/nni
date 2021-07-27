@@ -5,7 +5,7 @@ from collections import Counter
 import nni.retiarii.nn.pytorch as nn
 import torch
 import torch.nn.functional as F
-from nni.retiarii import Sampler, basic_unit
+from nni.retiarii import InvalidMutation, Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 from nni.retiarii.execution.python import _unpack_if_only_one
@@ -110,6 +110,33 @@ class GraphIR(unittest.TestCase):
             model_new = mutator.apply(model)
             self.assertEqual(self._get_converted_pytorch_model(model_new)(torch.randn(1, 3, 3, 3)).size(),
                              torch.Size([1, i, 3, 3]))
+
+    def test_nested_layer_choice(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.module = nn.LayerChoice([
+                    nn.LayerChoice([nn.Conv2d(3, 3, kernel_size=1),
+                                    nn.Conv2d(3, 4, kernel_size=1),
+                                    nn.Conv2d(3, 5, kernel_size=1)]),
+                    nn.Conv2d(3, 1, kernel_size=1)
+                ])
+
+            def forward(self, x):
+                return self.module(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 2)
+        mutators[0].bind_sampler(EnumerateSampler())
+        mutators[1].bind_sampler(EnumerateSampler())
+        input = torch.randn(1, 3, 5, 5)
+        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+                         torch.Size([1, 3, 5, 5]))
+        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+                         torch.Size([1, 1, 5, 5]))
+        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+                         torch.Size([1, 5, 5, 5]))
 
     def test_input_choice(self):
         @self.get_serializer()
@@ -493,6 +520,45 @@ class GraphIR(unittest.TestCase):
                 model = mutator.bind_sampler(sampler).apply(model)
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(1, 16)).size() == torch.Size([1, 64]))
 
+    def test_nasbench201_cell(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.NasBench201Cell([
+                    lambda x, y: nn.Linear(x, y),
+                    lambda x, y: nn.Linear(x, y, bias=False)
+                ], 10, 16)
+
+            def forward(self, x):
+                return self.cell(x)
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
+
+    def test_autoactivation(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.act = nn.AutoActivation()
+
+            def forward(self, x):
+                return self.act(x)
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 10]))
+
 
 class Python(GraphIR):
     def _get_converted_pytorch_model(self, model_ir):
@@ -518,3 +584,29 @@ class Python(GraphIR):
 
     @unittest.skip
     def test_valuechoice_access_functional_expression(self): ...
+
+    def test_nasbench101_cell(self):
+        # this is only supported in python engine for now.
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.NasBench101Cell([lambda x: nn.Linear(x, x), lambda x: nn.Linear(x, x, bias=False)],
+                                               10, 16, lambda x, y: nn.Linear(x, y), max_num_nodes=5, max_num_edges=7)
+
+            def forward(self, x):
+                return self.cell(x)
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+
+        succeeded = 0
+        sampler = RandomSampler()
+        while succeeded <= 10:
+            try:
+                model = raw_model
+                for mutator in mutators:
+                    model = mutator.bind_sampler(sampler).apply(model)
+                succeeded += 1
+            except InvalidMutation:
+                continue
+            self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))

@@ -362,14 +362,8 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     private getSelectedData(type: string, date: Date | null | undefined): void {
         if (date !== null && date !== undefined) {
-            const {
-                selectedStatus,
-                selectedPlatform,
-                selectedStartDate,
-                selectedEndDate,
-                searchSource,
-                sortInfo
-            } = this.state;
+            const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate, searchSource, sortInfo } =
+                this.state;
             const hasPlatform = selectedPlatform === '' ? false : true;
 
             // filter status, platform

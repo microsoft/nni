@@ -2,11 +2,13 @@ import logging
 
 import numpy as np
 import torch
-import nni.parameter_expressions as parameter_expressions
-from nni import ClassArgsValidator
-from nni.tuner import Tuner
 from pybnn import DNGO
 from torch.distributions import Normal
+
+import nni.parameter_expressions as parameter_expressions
+from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
+from nni.tuner import Tuner
 
 _logger = logging.getLogger(__name__)
 
@@ -67,8 +69,18 @@ class DNGOTuner(Tuner):
             # random samples and pick best with model
             candidate_x = [_random_config(self.searchspace_json, self.random_state) for _ in range(self.sample_size)]
 
+            # The model has NaN issue when all the candidates are same
+            # Also we can save the predict time when this happens
+            if all(x == candidate_x[0] for x in candidate_x):
+                return candidate_x[0]
+
             x_test = np.array([np.array(list(xi.values())) for xi in candidate_x])
             m, v = self.model.predict(x_test)
+
+            # The model has NaN issue when all the candidates are very close
+            if np.isnan(m).any() or np.isnan(v).any():
+                return candidate_x[0]
+
             mean = torch.Tensor(m)
             sigma = torch.Tensor(v)
             u = (mean - torch.Tensor([0.95]).expand_as(mean)) / sigma
@@ -85,6 +97,7 @@ class DNGOTuner(Tuner):
             return new_x
 
     def update_search_space(self, search_space):
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform', 'loguniform', 'qloguniform'])
         self.searchspace_json = search_space
         self.random_state = np.random.RandomState()
 

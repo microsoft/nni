@@ -17,6 +17,9 @@ import { TensorboardManager, TensorboardTaskInfo } from '../common/tensorboardMa
 import { ValidationSchemas } from './restValidationSchemas';
 import { NNIRestServer } from './nniRestServer';
 import { getVersion } from '../common/utils';
+import { MetricType } from '../common/datastore';
+import { ProfileUpdateType } from '../common/manager';
+import { TrialJobStatus } from '../common/trainingService';
 
 const expressJoi = require('express-joi-validator');
 
@@ -50,6 +53,7 @@ class NNIRestHandler {
         this.version(router);
         this.checkStatus(router);
         this.getExperimentProfile(router);
+        this.getExperimentMetadata(router);
         this.updateExperimentProfile(router);
         this.importData(router);
         this.getImportedData(router);
@@ -63,7 +67,7 @@ class NNIRestHandler {
         this.getMetricData(router);
         this.getMetricDataByRange(router);
         this.getLatestMetricData(router);
-        this.getTrialLog(router);
+        this.getTrialFile(router);
         this.exportData(router);
         this.getExperimentsInfo(router);
         this.startTensorboardTask(router);
@@ -139,7 +143,7 @@ class NNIRestHandler {
 
     private updateExperimentProfile(router: Router): void {
         router.put('/experiment', (req: Request, res: Response) => {
-            this.nniManager.updateExperimentProfile(req.body, req.query.update_type).then(() => {
+            this.nniManager.updateExperimentProfile(req.body, req.query.update_type as ProfileUpdateType).then(() => {
                 res.send();
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -219,7 +223,7 @@ class NNIRestHandler {
 
     private listTrialJobs(router: Router): void {
         router.get('/trial-jobs', (req: Request, res: Response) => {
-            this.nniManager.listTrialJobs(req.query.status).then((jobInfos: TrialJobInfo[]) => {
+            this.nniManager.listTrialJobs(req.query.status as TrialJobStatus).then((jobInfos: TrialJobInfo[]) => {
                 jobInfos.forEach((trialJob: TrialJobInfo) => {
                     this.setErrorPathForFailedJob(trialJob);
                 });
@@ -263,7 +267,7 @@ class NNIRestHandler {
 
     private getMetricData(router: Router): void {
         router.get('/metric-data/:job_id*?', async (req: Request, res: Response) => {
-            this.nniManager.getMetricData(req.params.job_id, req.query.type).then((metricsData: MetricDataRecord[]) => {
+            this.nniManager.getMetricData(req.params.job_id, req.query.type as MetricType).then((metricsData: MetricDataRecord[]) => {
                 res.send(metricsData);
             }).catch((err: Error) => {
                 this.handleError(err, res);
@@ -293,13 +297,20 @@ class NNIRestHandler {
         });
     }
 
-    private getTrialLog(router: Router): void {
-        router.get('/trial-log/:id/:type', async(req: Request, res: Response) => {
-            this.nniManager.getTrialLog(req.params.id, req.params.type).then((log: string) => {
-                if (log === '') {
-                    log = 'No logs available.'
+    private getTrialFile(router: Router): void {
+        router.get('/trial-file/:id/:filename', async(req: Request, res: Response) => {
+            let encoding: string | null = null;
+            const filename = req.params.filename;
+            if (!filename.includes('.') || filename.match(/.*\.(txt|log)/g)) {
+                encoding = 'utf8';
+            }
+            this.nniManager.getTrialFile(req.params.id, filename).then((content: Buffer | string) => {
+                if (content instanceof Buffer) {
+                    res.header('Content-Type', 'application/octet-stream');
+                } else if (content === '') {
+                    content = `${filename} is empty.`;
                 }
-                res.send(log);
+                res.send(content);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
@@ -310,6 +321,24 @@ class NNIRestHandler {
         router.get('/export-data', (req: Request, res: Response) => {
             this.nniManager.exportData().then((exportedData: string) => {
                 res.send(exportedData);
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private getExperimentMetadata(router: Router): void {
+        router.get('/experiment-metadata', (req: Request, res: Response) => {
+            Promise.all([
+                this.nniManager.getExperimentProfile(),
+                this.experimentsManager.getExperimentsInfo()
+            ]).then(([profile, experimentInfo]) => {
+                for (const info of experimentInfo as any) {
+                    if (info.id === profile.id) {
+                        res.send(info);
+                        break;
+                    }
+                }
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
