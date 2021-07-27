@@ -304,8 +304,8 @@ class ObserverQuantizer(Quantizer):
             if hasattr(module, 'weight_scale'):
                 calibration_config[name]['weight_bit'] = 8
                 val = float(module.weight_scale * module.weight_qmax)
-                calibration_config[name]['tracked_min_weight'] = val
-                calibration_config[name]['tracked_max_weight'] = -val
+                calibration_config[name]['tracked_max_weight'] = val
+                calibration_config[name]['tracked_min_weight'] = -val
                 calibration_config[name]['tracked_weight_qmin'] = -127
                 calibration_config[name]['tracked_weight_qmax'] = 127
                 actual_weight = getattr(module, 'old_weight', None)
