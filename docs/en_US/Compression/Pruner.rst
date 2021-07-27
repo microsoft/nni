@@ -744,7 +744,7 @@ The pruner implements the following algorithm:
 .. code-block:: bash
 
     Repeat for each pruning iteration (1 for one-shot pruning):
-       1. Calculate importance scores for each head in each specified layer using a specific criterion
+       1. Calculate importance scores for each head in each specified layer using a specific criterion.
        2. Sort heads locally or globally, and prune out some heads with lowest scores. The number of pruned heads is determined according to the sparsity specified in the config.
        3. If the specified pruning iteration is larger than 1 (iterative pruning), finetune the model for a while before the next pruning iteration.
 
@@ -758,7 +758,7 @@ Currently, the following head sorting criteria are supported:
 
 We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort.
 
-In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage 1 below), or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (usage 2 below). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (usage 3 below). Also note that weights belonging to the same layer must have the same sparsity.
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage below), or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (experimental feature). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (see usage below). Also note that weights belonging to the same layer must have the same sparsity.
 
 In addition to the following usage guide, we provide a more detailed example of pruning BERT for tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
 
@@ -771,59 +771,39 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
    :target: ../../img/huggingface_bert_architecture.png
    :alt: 
 
-**Usage 1: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that here we specify ``op_names`` in the config list to assign different sparsity to different layers. Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer. Alternatively, you can pass a ``dummy_input`` parameter and omit the ``attention_name_groups``, and the pruner will attempt to group the layers together (see usage 2).
+**Usage Example: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that here we specify ``op_names`` in the config list to assign different sparsity to different layers. Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer.
 
 .. code-block:: python
 
    from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
-   attention_name_groups = list(zip(['encoder.layer.{}.attention.self.query'.format(i) for i in range(12)],
-                                    ['encoder.layer.{}.attention.self.key'.format(i) for i in range(12)],
-                                    ['encoder.layer.{}.attention.self.value'.format(i) for i in range(12)],
-                                    ['encoder.layer.{}.attention.output.dense'.format(i) for i in range(12)]))
-   kwargs = {'ranking_criterion': "l1_weight",
-             'global_sort': False,
-             'num_iterations': 1,
-             'epochs_per_iteration': 1,    # this is ignored when num_iterations = 1
-             'head_hidden_dim': 64,
-             'attention_name_groups': attention_name_groups,     # can change to dummy_input here
-             'trainer': trainer,
-             'optimizer': optimizer
+   attention_name_groups = list(zip(["encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
+   kwargs = {"ranking_criterion": "l1_weight",
+             "global_sort": False,
+             "num_iterations": 1,
+             "epochs_per_iteration": 1,    # this is ignored when num_iterations = 1
+             "head_hidden_dim": 64,
+             "attention_name_groups": attention_name_groups,
+             "trainer": trainer,
+             "optimizer": optimizer,
+             "forward_runner": forward_runner
              }
     config_list = [{
-        'sparsity': 0.5,
-        'op_types': ["Linear"],
-        'op_names': [x for layer in attention_name_groups[:6] for x in layer]      # first six layers
+        "sparsity": 0.5,
+        "op_types": ["Linear"],
+        "op_names": [x for layer in attention_name_groups[:6] for x in layer]      # first six layers
     },
     {
-        'sparsity': 0.25,
-        'op_types': ["Linear"],
-        'op_names': [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
+        "sparsity": 0.25,
+        "op_types": ["Linear"],
+        "op_names": [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
     }
     ]
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
-**Usage 2: one-shot pruning, same sparsity for all the layers (PyTorch code)**. Here we replace the ``attention_name_groups`` parameter with ``dummy_input`` (for our current implementation, either parameter will work). Since in this example we prune all the attention layers with the same sparsity, the config list can be simplied and specified without ``op_names``. Note that although other ``Linear`` layers such as those in feed-forward layers will be matched by this config, they will not be pruned since this pruner only prunes attention heads. 
-
-.. code-block:: python
-
-   from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
-   kwargs = {'ranking_criterion': "l1_weight",
-             'global_sort': False,
-             'num_iterations': 1,
-             'epochs_per_iteration': 1,        # this is ignored when num_iterations = 1
-             'head_hidden_dim': 64,
-             'dummy_input': dummy_input,
-             'trainer': trainer,
-             'optimizer': optimizer
-             }
-    config_list = [{
-        'sparsity': 0.5,
-        'op_types': ["Linear"]
-    }]
-   pruner = TransformerHeadPruner(model, config_list, **kwargs)
-   pruner.compress()
-   
    
 User configuration for Transformer Head Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

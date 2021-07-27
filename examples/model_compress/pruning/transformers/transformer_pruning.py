@@ -47,8 +47,6 @@ def parse_args():
                         choices=["cola", "mnli", "mrpc", "qnli", "qqp", "rte", "sst2", "stsb", "wnli"])
     parser.add_argument("--output_dir", type=str, default=None,
                         help="Where to store the model and mask.")
-    parser.add_argument("--usage", type=int, default=1,
-                        help="Select which pruning config example to run")
     parser.add_argument("--sparsity", type=float, required=True,
                         help="Sparsity: proportion of heads to prune (should be between 0 and 1)")
     parser.add_argument("--global_sort", action="store_true", default=False,
@@ -298,80 +296,33 @@ def main():
     def forward_runner(model):
         return forward_runner_helper(model, train_dataloader, device)
 
-    # We provide three usage scenarios.
-    # Set the "usage" parameter in the command line argument to run each one of them.
-    # example 1: prune all layers with uniform sparsity
-    if args.usage == 1:
-        kwargs = {"ranking_criterion": args.ranking_criterion,
-                  "global_sort": args.global_sort,
-                  "num_iterations": args.num_iterations,
-                  "epochs_per_iteration": args.epochs_per_iteration,
-                  "head_hidden_dim": 64,
-                  "dummy_input": dummy_input,
-                  "trainer": trainer,
-                  "optimizer": optimizer,
-                  "forward_runner": forward_runner}
+    # example: prune different layers with different sparsity
+    attention_name_groups = list(zip(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
+                                     ["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
+                                     ["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
+                                     ["bert.encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
 
-        config_list = [{
-            "sparsity": args.sparsity,
+    kwargs = {"ranking_criterion": args.ranking_criterion,
+              "global_sort": args.global_sort,
+              "num_iterations": args.num_iterations,
+              "epochs_per_iteration": args.epochs_per_iteration,
+              "attention_name_groups": attention_name_groups,
+              "head_hidden_dim": 64,
+              "trainer": trainer,
+              "optimizer": optimizer,
+              "forward_runner": forward_runner}
+
+    config_list = [{
+        "sparsity": args.sparsity,
+        "op_types": ["Linear"],
+        "op_names": [x for layer in attention_name_groups[:6] for x in layer]
+    },
+        {
+            "sparsity": args.sparsity / 2,
             "op_types": ["Linear"],
-        }]
-
-    # example 2: prune different layers with uniform sparsity, but specify names group instead of dummy_input
-    elif args.usage == 2:
-        attention_name_groups = list(zip(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
-
-        kwargs = {"ranking_criterion": args.ranking_criterion,
-                  "global_sort": args.global_sort,
-                  "num_iterations": args.num_iterations,
-                  "epochs_per_iteration": args.epochs_per_iteration,
-                  "attention_name_groups": attention_name_groups,
-                  "head_hidden_dim": 64,
-                  "trainer": trainer,
-                  "optimizer": optimizer,
-                  "forward_runner": forward_runner}
-
-        config_list = [{
-            "sparsity": args.sparsity,
-            "op_types": ["Linear"],
-            "op_names": [x for layer in attention_name_groups for x in layer]
+            "op_names": [x for layer in attention_name_groups[6:] for x in layer]
         }
-        ]
-
-    # example 3: prune different layers with different sparsity
-    elif args.usage == 3:
-        attention_name_groups = list(zip(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
-                                         ["bert.encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
-
-        kwargs = {"ranking_criterion": args.ranking_criterion,
-                  "global_sort": args.global_sort,
-                  "num_iterations": args.num_iterations,
-                  "epochs_per_iteration": args.epochs_per_iteration,
-                  "attention_name_groups": attention_name_groups,
-                  "head_hidden_dim": 64,
-                  "trainer": trainer,
-                  "optimizer": optimizer,
-                  "forward_runner": forward_runner}
-
-        config_list = [{
-            "sparsity": args.sparsity,
-            "op_types": ["Linear"],
-            "op_names": [x for layer in attention_name_groups[:6] for x in layer]
-        },
-            {
-                "sparsity": args.sparsity / 2,
-                "op_types": ["Linear"],
-                "op_names": [x for layer in attention_name_groups[6:] for x in layer]
-            }
-        ]
-
-    else:
-        raise RuntimeError("Wrong usage number")
+    ]
 
     pruner = TransformerHeadPruner(model, config_list, **kwargs)
     pruner.compress()
