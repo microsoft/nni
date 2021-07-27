@@ -769,7 +769,7 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
    :target: ../../img/huggingface_bert_architecture.png
    :alt: 
 
-Usage 1: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code). Note that here we specify ``op_names`` in the config list to assign different sparsity to different layers. Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer. Alternatively, you can pass a ``dummy_input`` parameter and omit the ``attention_name_groups``, and the pruner will attempt to group the layers together (see usage 2).
+**Usage 1: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that here we specify ``op_names`` in the config list to assign different sparsity to different layers. Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer. Alternatively, you can pass a ``dummy_input`` parameter and omit the ``attention_name_groups``, and the pruner will attempt to group the layers together (see usage 2).
 
 .. code-block:: python
 
@@ -801,7 +801,7 @@ Usage 1: one-shot pruning, assigning sparsity 0.5 to the first six layers and sp
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
-Usage 2: one-shot pruning, same sparsity for all the layers (PyTorch code). Here we replace the ``attention_name_groups`` parameter with ``dummy_input`` (for our current implementation, either parameter will work). Since in this example we prune all the attention layers with the same sparsity, the config list can be simplied and specified without ``op_names``. Note that although other ``Linear`` layers such as those in feed-forward layers will be matched by this config, they will not be pruned since this pruner only prunes attention heads. 
+**Usage 2: one-shot pruning, same sparsity for all the layers (PyTorch code)**. Here we replace the ``attention_name_groups`` parameter with ``dummy_input`` (for our current implementation, either parameter will work). Since in this example we prune all the attention layers with the same sparsity, the config list can be simplied and specified without ``op_names``. Note that although other ``Linear`` layers such as those in feed-forward layers will be matched by this config, they will not be pruned since this pruner only prunes attention heads. 
 
 .. code-block:: python
 
