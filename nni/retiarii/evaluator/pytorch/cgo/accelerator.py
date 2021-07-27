@@ -97,4 +97,5 @@ class BypassAccelerator(Accelerator):
     def __init__(self, precision_plugin=None, device="cpu"):
         if precision_plugin is None:
             precision_plugin = get_accelerator_connector().precision_plugin
+        # pylint: disable=abstract-class-instantiated
         super().__init__(precision_plugin=precision_plugin, training_type_plugin=BypassPlugin(device))
