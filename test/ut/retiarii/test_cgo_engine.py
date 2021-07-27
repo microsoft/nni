@@ -308,7 +308,10 @@ class CGOEngineTest(unittest.TestCase):
         protocol._out_file = open('generated/debug_protocol_out_file.py', 'wb')
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
-        models = _load_mnist(2)
+        try:
+            models = _load_mnist(2)
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         advisor = RetiariiAdvisor()
         cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
                                                  GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
