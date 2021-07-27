@@ -150,15 +150,12 @@ def _new_trainer():
 
     multi_module = MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits})
 
-    try:
-        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                                max_epochs=1,
-                                                                limit_train_batches=0.25,
-                                                                progress_bar_refresh_rate=0),
-                                train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
-    except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+    lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                            max_epochs=1,
+                                                            limit_train_batches=0.25,
+                                                            progress_bar_refresh_rate=0),
+                            train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                            val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     return lightning
 
 
@@ -253,7 +250,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_add_model(self):
         _reset()
-        lp, models = self._build_logical_with_mnist(3)
+        try:
+            lp, models = self._build_logical_with_mnist(3)
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         for node in lp.logical_graph.hidden_nodes:
             old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
 
@@ -261,7 +261,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_dedup_input_four_devices(self):
         _reset()
-        lp, models = self._build_logical_with_mnist(3)
+        try:
+            lp, models = self._build_logical_with_mnist(3)
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
@@ -278,7 +281,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_dedup_input_two_devices(self):
         _reset()
-        lp, models = self._build_logical_with_mnist(3)
+        try:
+            lp, models = self._build_logical_with_mnist(3)
+        except TypeError:
+            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
