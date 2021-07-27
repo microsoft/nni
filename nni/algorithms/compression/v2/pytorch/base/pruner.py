@@ -73,7 +73,7 @@ class Pruner(Compressor):
     def _reset_tools(self):
         """
         This function is used to reset `self.data_collector`, `self.metrics_calculator` and `self.sparsity_allocator`.
-        The subclass need implement this function to complete the pruning process.
+        The subclass needs to implement this function to complete the pruning process.
         See `compress()` to understand how NNI use these three part to generate mask for the bound model.
         """
         raise NotImplementedError()
