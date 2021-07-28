@@ -36,10 +36,8 @@ def build(release):
     otherwise this is a release build and copies files instead.
     On Windows it always copies files because creating symlink requires extra privilege.
     """
-    #if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
-    _print('start to download toolchain')
-    download_toolchain()
-    _print('finish to download toolchain')
+    if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
+        download_toolchain()
     prepare_nni_node()
     compile_ts()
     if release or sys.platform == 'win32':
@@ -97,8 +95,8 @@ def download_toolchain():
     """
     Download and extract node and yarn.
     """
-    if Path('toolchain/node', node_executable_in_tarball).is_file():
-        return
+    #if Path('toolchain/node', node_executable_in_tarball).is_file():
+    #    return
 
     Path('toolchain').mkdir(exist_ok=True)
     import requests  # place it here so setup.py can install it before importing
