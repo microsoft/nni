@@ -95,8 +95,8 @@ def download_toolchain():
     """
     Download and extract node and yarn.
     """
-    #if Path('toolchain/node', node_executable_in_tarball).is_file():
-    #    return
+    if Path('toolchain/node', node_executable_in_tarball).is_file():
+        return
 
     Path('toolchain').mkdir(exist_ok=True)
     import requests  # place it here so setup.py can install it before importing
