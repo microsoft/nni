@@ -112,7 +112,7 @@ class TaskGenerator:
 
         self._save_task_result(task_id=task_id, pruned_model=pruned_model, masks=masks)
 
-        self.pending_tasks.extend(self._generate_tasks(pre_task_id=task_id))
+        self.pending_tasks.extend(self._generate_tasks(received_task_id=task_id))
 
     def _save_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]]):
         """
@@ -154,7 +154,7 @@ class TaskGenerator:
         masks = torch.load(Path(task.log_dir, MASKS_NAME))
         return model, masks
 
-    def _generate_tasks(self, pre_task_id: int) -> List[Task]:
+    def _generate_tasks(self, received_task_id: int) -> List[Task]:
         """
         Subclass need implement this function to push new tasks into `self.pending_tasks`.
         """

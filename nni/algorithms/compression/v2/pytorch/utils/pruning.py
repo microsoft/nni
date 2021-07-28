@@ -124,3 +124,26 @@ def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[st
         real_config_list.append(deepcopy(config))
         real_config_list[-1]['sparsity'] = 1 - (1 - mo_sparsity['sparsity']) * (1 - ms_sparsity['sparsity'])
     return real_config_list, model_based_sparsity, masks_based_sparsity
+
+
+def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}) -> Dict:
+    """
+    Count the layer weight elements number in config_list.
+    If masks is not empty, the masked weight will not be counted.
+    """
+    model_weights_numel = {}
+    masked_rate = {}
+    for config in config_list:
+        for module_name, module in model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            if module_name in masks and isinstance(masks[module_name]['weight_mask'], Tensor):
+                weight_mask = masks[module_name]['weight_mask']
+                masked_rate[module_name] = 1 - (weight_mask.sum().item() / weight_mask.numel())
+                model_weights_numel[module_name] = round(weight_mask.sum().item())
+            else:
+                model_weights_numel[module_name] = module.weight.data.numel()
+    return model_weights_numel, masked_rate

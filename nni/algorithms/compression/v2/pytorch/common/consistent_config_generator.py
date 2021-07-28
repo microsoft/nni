@@ -27,14 +27,14 @@ class ConsistentTaskGenerator(TaskGenerator):
         super().__init__(origin_model, origin_config_list=origin_config_list, origin_masks=origin_masks,
                          log_dir=log_dir)
 
-    def _generate_tasks(self, pre_task_id: int) -> List[Task]:
-        pruned_model, masks = self.load_task_result(pre_task_id)
+    def _generate_tasks(self, received_task_id: int) -> List[Task]:
+        pruned_model, masks = self.load_task_result(received_task_id)
 
         origin_model, _ = self.load_task_result(self.origin_task_id)
         origin_config_list = self.tasks_map[self.origin_task_id].config_list
 
         real_sparsity, mo_sparsity, _ = compute_sparsity(origin_model, pruned_model, masks, origin_config_list)
-        _logger.info('Task %s total real sparsity compared with original model is:\n%s', str(pre_task_id), json_tricks.dumps(real_sparsity, indent=4))
+        _logger.info('Task %s total real sparsity compared with original model is:\n%s', str(received_task_id), json_tricks.dumps(real_sparsity, indent=4))
 
         # if reach the total_iteration, no more task will be generated
         if self.current_iteration > self.total_iteration:
@@ -45,7 +45,7 @@ class ConsistentTaskGenerator(TaskGenerator):
         task_log_dir = Path(self.log_dir_root, str(task_id))
         task_log_dir.mkdir(parents=True, exist_ok=True)
 
-        task = Task(task_id, pre_task_id, config_list, task_log_dir)
+        task = Task(task_id, received_task_id, config_list, task_log_dir)
         self.tasks_map[task_id] = task
 
         self.task_id_candidate += 1
