@@ -5,9 +5,12 @@ Quick Start
     :hidden:
 
     Tutorial <Tutorial>
+    Notebook Example <compression_pipeline_example>
 
 
 Model compression usually consists of three stages: 1) pre-training a model, 2) compress the model, 3) fine-tuning the model. NNI mainly focuses on the second stage and provides very simple APIs for compressing a model. Follow this guide for a quick look at how easy it is to use NNI to compress a model. 
+
+A `compression pipeline example <./compression_pipeline_example.rst>`__ with Jupyter notebook is supported and refer the code :githublink:`here <examples/notebooks/compression_pipeline_example.ipynb>`.
 
 Model Pruning
 -------------
@@ -31,7 +34,7 @@ The specification of configuration can be found `here <./Tutorial.rst#specify-th
 Step2. Choose a pruner and compress the model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model. Note that, some algorithms may check gradients for compressing, so we may also define an optimizer and pass it to the pruner.
+First instantiate the chosen pruner with your model and configuration as arguments, then invoke ``compress()`` to compress your model. Note that, some algorithms may check gradients for compressing, so we may also define a trainer, an optimizer, a criterion and pass them to the pruner.
 
 .. code-block:: python
 
@@ -42,19 +45,16 @@ First instantiate the chosen pruner with your model and configuration as argumen
 
 Some pruners (e.g., L1FilterPruner, FPGMPruner) prune once, some pruners (e.g., AGPPruner) prune your model iteratively, the masks are adjusted epoch by epoch during training.
 
-Note that, ``pruner.compress`` simply adds masks on model weights, it does not include fine-tuning logic. If users want to fine tune the compressed model, they need to write the fine tune logic by themselves after ``pruner.compress``.
+So if the pruners prune your model iteratively or they need training or inference to get gradients, you need pass finetuning logic to pruner.
 
 For example:
 
 .. code-block:: python
 
-   for epoch in range(1, args.epochs + 1):
-        pruner.update_epoch(epoch)
-        train(args, model, device, train_loader, optimizer_finetune, epoch)
-        test(model, device, test_loader)
+   from nni.algorithms.compression.pytorch.pruning import AGPPruner
 
-More APIs to control the fine-tuning can be found `here <./Tutorial.rst#apis-to-control-the-fine-tuning>`__. 
-
+   pruner = AGPPruner(model, config_list, optimizer, trainer, criterion, num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level')
+   model = pruner.compress()
 
 Step3. Export compression result
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
