@@ -37,7 +37,9 @@ def build(release):
     On Windows it always copies files because creating symlink requires extra privilege.
     """
     #if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
+    _print('start to download toolchain')
     download_toolchain()
+    _print('finish to download toolchain')
     prepare_nni_node()
     compile_ts()
     if release or sys.platform == 'win32':
