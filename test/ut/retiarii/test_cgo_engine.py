@@ -199,14 +199,14 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        try:
-            lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                                    max_epochs=1,
-                                                                    limit_train_batches=0.25),
-                                    train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                    val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                max_epochs=1,
+                                                                limit_train_batches=0.25),
+                                train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         lightning._execute(_model_cpu)
 
         result = _get_final_result()
@@ -225,14 +225,14 @@ class CGOEngineTest(unittest.TestCase):
 
         multi_module = _MultiModelSupervisedLearningModule(nn.CrossEntropyLoss, {'acc': pl._AccuracyWithLogits}, n_models=2)
 
-        try:
-            lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
-                                                                    max_epochs=1,
-                                                                    limit_train_batches=0.25),
-                                    train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                    val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
+                                                                max_epochs=1,
+                                                                limit_train_batches=0.25),
+                                train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         lightning._execute(_model_gpu)
 
         result = _get_final_result()
@@ -250,10 +250,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_add_model(self):
         _reset()
-        try:
-            lp, models = self._build_logical_with_mnist(3)
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        lp, models = self._build_logical_with_mnist(3)
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         for node in lp.logical_graph.hidden_nodes:
             old_nodes = [m.root_graph.get_node_by_id(node.id) for m in models]
 
@@ -261,10 +261,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_dedup_input_four_devices(self):
         _reset()
-        try:
-            lp, models = self._build_logical_with_mnist(3)
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        lp, models = self._build_logical_with_mnist(3)
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
@@ -281,10 +281,10 @@ class CGOEngineTest(unittest.TestCase):
 
     def test_dedup_input_two_devices(self):
         _reset()
-        try:
-            lp, models = self._build_logical_with_mnist(3)
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        lp, models = self._build_logical_with_mnist(3)
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         opt = DedupInputOptimizer()
         opt.convert(lp)
 
@@ -308,10 +308,10 @@ class CGOEngineTest(unittest.TestCase):
         protocol._out_file = open('generated/debug_protocol_out_file.py', 'wb')
         protocol._in_file = open('generated/debug_protocol_out_file.py', 'rb')
 
-        try:
-            models = _load_mnist(2)
-        except TypeError:
-            self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
+        # try:
+        models = _load_mnist(2)
+        # except TypeError:
+        #     self.skipTest('test skip due to pytorch_lightning version < 1.3.3')
         advisor = RetiariiAdvisor()
         cgo_engine = CGOExecutionEngine(devices=[GPUDevice("test", 0), GPUDevice("test", 1),
                                                  GPUDevice("test", 2), GPUDevice("test", 3)], batch_waiting_time=0)
