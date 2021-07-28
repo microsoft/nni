@@ -57,7 +57,7 @@ export class GpuScheduler {
      */
     public scheduleMachine(environments: EnvironmentInformation[], constraint: PlacementConstraint,
         defaultRequiredGPUNum: number | undefined, trialDetail: TrialDetail): GpuScheduleResult {
-        if (constraint === undefined || constraint.type == 'None' || constraint.type == 'GPUNumber') {
+        if (constraint.type == 'None' || constraint.type == 'GPUNumber') {
             let requiredGPUNum = 0;
             if (constraint.type == 'None') {
                 if (defaultRequiredGPUNum === undefined) {
