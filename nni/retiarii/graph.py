@@ -307,9 +307,9 @@ class Graph:
     @overload
     def add_node(self, name: str, operation: Operation) -> 'Node': ...
     @overload
-    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
 
-    def add_node(self, name, operation_or_type, parameters={}):
+    def add_node(self, name, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -319,9 +319,9 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
     @overload
-    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
 
-    def insert_node_on_edge(self, edge, name, operation_or_type, parameters={}) -> 'Node':
+    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -562,9 +562,9 @@ class Node:
     @overload
     def update_operation(self, operation: Operation) -> None: ...
     @overload
-    def update_operation(self, type_name: str, parameters: Dict[str, Any] = {}) -> None: ...
+    def update_operation(self, type_name: str, parameters: Dict[str, Any] = None) -> None: ...
 
-    def update_operation(self, operation_or_type, parameters={}):
+    def update_operation(self, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):
             self.operation = operation_or_type
         else:

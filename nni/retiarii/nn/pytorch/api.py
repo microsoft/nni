@@ -98,6 +98,7 @@ class LayerChoice(nn.Module):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
+        self._first_module = self._modules[self.names[0]]  # to make the dummy forward meaningful
 
     @property
     def key(self):
@@ -151,7 +152,7 @@ class LayerChoice(nn.Module):
 
     def forward(self, x):
         warnings.warn('You should not run forward of this module directly.')
-        return x
+        return self._first_module(x)
 
     def __repr__(self):
         return f'LayerChoice({self.candidates}, label={repr(self.label)})'

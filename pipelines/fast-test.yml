@@ -124,7 +124,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
 
     - task: NodeTool@0
@@ -170,14 +170,8 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
+        python -m pip install -e .[PPOTuner,DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         set -e
@@ -368,12 +362,6 @@ stages:
         python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
-
     - script: |
         cd test
         python -m pytest ut
@@ -390,6 +378,7 @@ stages:
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+    timeoutInMinutes: 120  # windows test need extra time
 
     steps:
     - task: UsePythonVersion@0
@@ -433,12 +422,6 @@ stages:
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         cd test

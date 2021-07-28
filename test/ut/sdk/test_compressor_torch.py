@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
 from unittest import TestCase, main
 import numpy as np
 import torch
@@ -262,6 +263,46 @@ class CompressorTestCase(TestCase):
         print(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy())
         assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0, 0., 25.]))
         assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 125., 125., 125., 0., 0., 0.]))
+
+    def test_torch_observer_quantizer(self):
+        model = TorchModel()
+        # test invalid config
+        # only support 8bit for now
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 5,
+            'op_types': ['Conv2d', 'Linear']
+        }]
+        with self.assertRaises(schema.SchemaError):
+            torch_quantizer.ObserverQuantizer(model, config_list)
+
+        # weight will not change for now
+        model = TorchModel().eval()
+        origin_parameters = copy.deepcopy(dict(model.named_parameters()))
+
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types': ['Conv2d', 'Linear']
+        }]
+        quantizer = torch_quantizer.ObserverQuantizer(model, config_list)
+        input = torch.randn(1, 1, 28, 28)
+        model(input)
+        quantizer.compress()
+        buffers = dict(model.named_buffers())
+        scales = {k: v for k, v in buffers.items() if 'scale' in k}
+        model_path = "test_model.pth"
+        calibration_path = "test_calibration.pth"
+        calibration_config = quantizer.export_model(model_path, calibration_path)
+        new_parameters = dict(model.named_parameters())
+        for layer_name, v in calibration_config.items():
+            scale_name = layer_name + '.module.weight_scale'
+            weight_name = layer_name + '.weight'
+            s = float(scales[scale_name])
+            self.assertTrue(torch.allclose(origin_parameters[weight_name], new_parameters[weight_name], atol=0.5 * s))
+
+        self.assertTrue(calibration_config is not None)
+        self.assertTrue(len(calibration_config) == 4)
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()

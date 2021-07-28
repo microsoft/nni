@@ -67,27 +67,26 @@ Modify ``nni/examples/trials/ga_squad/config.yml``\ , here is the default config
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_ga_squad
+   experimentName: ga-squad example
+   trialCommand: python3 trial.py
+   trialCodeDirectory: ~/nni/examples/trials/ga_squad
+
+   trialGpuNumber: 0
    trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 1
-   #choice: local, remote
-   trainingServicePlatform: local
-   #choice: true, false
-   useAnnotation: false
+   maxTrialNumber: 10
+   maxExperimentDuration: 1h
+
+   searchSpace: {}  # hard-coded in tuner
    tuner:
-     codeDir: ~/nni/examples/tuners/ga_customer_tuner
-     classFileName: customer_tuner.py
-     className: CustomerTuner
+     className: customer_tuner.CustomerTuner
+     codeDirectory: ~/nni/examples/tuners/ga_customer_tuner
      classArgs:
        optimize_mode: maximize
-   trial:
-     command: python3 trial.py
-     codeDir: ~/nni/examples/trials/ga_squad
-     gpuNum: 0
 
-In the **trial** part, if you want to use GPU to perform the architecture search, change ``gpuNum`` from ``0`` to ``1``. You need to increase the ``maxTrialNum`` and ``maxExecDuration``\ , according to how long you want to wait for the search result.
+   trainingService:
+     platform: local
+
+In the **trial** part, if you want to use GPU to perform the architecture search, change ``trialGpuNum`` from ``0`` to ``1``. You need to increase the ``maxTrialNumber`` and ``maxExperimentDuration``\ , according to how long you want to wait for the search result.
 
 2.3 submit this job
 ^^^^^^^^^^^^^^^^^^^
@@ -96,73 +95,15 @@ In the **trial** part, if you want to use GPU to perform the architecture search
 
    nnictl create --config ~/nni/examples/trials/ga_squad/config.yml
 
-3 Run this example on OpenPAI
------------------------------
-
-Due to the memory limitation of upload, we only upload the source code and complete the data download and training on OpenPAI. This experiment requires sufficient memory that ``memoryMB >= 32G``\ , and the training may last for several hours.
-
-3.1 Update configuration
-^^^^^^^^^^^^^^^^^^^^^^^^
-
-Modify ``nni/examples/trials/ga_squad/config_pai.yml``\ , here is the default configuration:
-
-.. code-block:: yaml
-
-   authorName: default
-   experimentName: example_ga_squad
-   trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 10
-   #choice: local, remote, pai
-   trainingServicePlatform: pai
-   #choice: true, false
-   useAnnotation: false
-   #Your nni_manager ip
-   nniManagerIp: 10.10.10.10
-   tuner:
-     codeDir: https://github.com/Microsoft/nni/tree/v2.3/examples/tuners/ga_customer_tuner
-     classFileName: customer_tuner.py
-     className: CustomerTuner
-     classArgs:
-       optimize_mode: maximize
-   trial:
-     command: chmod +x ./download.sh && ./download.sh && python3 trial.py
-     codeDir: .
-     gpuNum: 0
-     cpuNum: 1
-     memoryMB: 32869
-     #The docker image to run nni job on OpenPAI
-     image: msranni/nni:latest
-   paiConfig:
-     #The username to login OpenPAI
-     userName: username
-     #The password to login OpenPAI
-     passWord: password
-     #The host of restful server of OpenPAI
-     host: 10.10.10.10
-
-Please change the default value to your personal account and machine information. Including ``nniManagerIp``\ , ``userName``\ , ``passWord`` and ``host``.
-
-In the "trial" part, if you want to use GPU to perform the architecture search, change ``gpuNum`` from ``0`` to ``1``. You need to increase the ``maxTrialNum`` and ``maxExecDuration``\ , according to how long you want to wait for the search result.
-
-``trialConcurrency`` is the number of trials running concurrently, which is the number of GPUs you want to use, if you are setting ``gpuNum`` to 1.
-
-3.2 submit this job
-^^^^^^^^^^^^^^^^^^^
-
-.. code-block:: bash
-
-   nnictl create --config ~/nni/examples/trials/ga_squad/config_pai.yml
-
-4. Technical details about the trial
+3. Technical details about the trial
 ------------------------------------
 
-4.1 How does it works
+3.1 How does it works
 ^^^^^^^^^^^^^^^^^^^^^
 
 The evolution-algorithm based architecture for question answering has two different parts just like any other examples: the trial and the tuner.
 
-4.2 The trial
+3.2 The trial
 ^^^^^^^^^^^^^
 
 The trial has a lot of different files, functions and classes. Here we will only give most of those files a brief introduction:
@@ -224,7 +165,7 @@ performs topological sorting on the internal graph representation, and the code 
 
 performs actually conversion that maps each layer to a part in Tensorflow computation graph.
 
-4.3 The tuner
+3.3 The tuner
 ^^^^^^^^^^^^^
 
 The tuner is much more simple than the trial. They actually share the same ``graph.py``. Besides, the tuner has a ``customer_tuner.py``\ , the most important class in which is ``CustomerTuner``\ :
@@ -272,7 +213,7 @@ As we can see, the overloaded method ``generate_parameters`` implements a pretty
 
 controls the mutation process. It will always take two random individuals in the population, only keeping and mutating the one with better result.
 
-4.4 Model configuration format
+3.4 Model configuration format
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Here is an example of the model configuration, which is passed from the tuner to the trial in the architecture search procedure.

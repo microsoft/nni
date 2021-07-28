@@ -535,8 +535,8 @@ class TrialDispatcher implements TrainingService {
                     if (undefined === trial) {
                         throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
                     }
-                    const gpuNum = this.config.trialGpuNumber;
-                    const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, gpuNum, trial);
+                    const defaultGpuNum = this.config.trialGpuNumber;
+                    const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, trial.form.placementConstraint!, defaultGpuNum, trial);
                     switch (result.resultType) {
                         case ScheduleResultType.REQUIRE_EXCEED_TOTAL:
                             {
@@ -546,7 +546,7 @@ class TrialDispatcher implements TrainingService {
                                     waitingTrials = [];
                                     this.isLoggedNoGpuAvailable = false;
                                 } else if (reusableEnvironments.length > 0) {
-                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${gpuNum} is too large, no machine can meet`;
+                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${defaultGpuNum} is too large, no machine can meet`;
                                     this.log.error(errorMessage);
                                     throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
                                 } else {
@@ -709,8 +709,11 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
         trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
-        if (environment.environmentService.hasStorageService) {	
-            const storageService = component.get<StorageService>(StorageService);	
+        if (this.useSharedStorage) {
+            const storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            trial.workingDirectory = storageService.joinPath('trials', trial.id);
+        } else if (environment.environmentService.hasStorageService) {	
+            const storageService = component.get<StorageService>(StorageService);
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
         }	
         trial.settings = {

@@ -25,9 +25,11 @@ from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
+from nni.common.device import GPUDevice
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
+from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.python import get_mutation_dict
 from ..graph import Model, Evaluator
@@ -57,6 +59,9 @@ class RetiariiExeConfig(ConfigBase):
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
+
+    # input used in GraphConverterWithShape. Currently support shape tuple only.
+    dummy_input: Optional[List[int]] = None
 
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
@@ -106,7 +111,7 @@ _validation_rules = {
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
 
-def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
+def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_input=None):
     # TODO: this logic might need to be refactored into execution engine
     if full_ir:
         try:
@@ -114,7 +119,13 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True):
         except Exception as e:
             _logger.error('Your base model cannot be parsed by torch.jit.script, please fix the following error:')
             raise e
-        base_model_ir = convert_to_graph(script_module, base_model)
+        if dummy_input is not None:
+            # FIXME: this is a workaround as full tensor is not supported in configs
+            dummy_input = torch.randn(*dummy_input)
+            converter = GraphConverterWithShape()
+            base_model_ir = convert_to_graph(script_module, base_model, converter, dummy_input=dummy_input)
+        else:
+            base_model_ir = convert_to_graph(script_module, base_model)
         # handle inline mutations
         mutators = process_inline_mutation(base_model_ir)
     else:
@@ -171,7 +182,8 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py')
+            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py',
+            dummy_input=self.config.dummy_input)
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
@@ -193,13 +205,14 @@ class RetiariiExperiment(Experiment):
         """
         atexit.register(self.stop)
 
+        devices = self._construct_devices()
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
             engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
-            engine = CGOExecutionEngine()
+            engine = CGOExecutionEngine(devices = devices)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
@@ -241,6 +254,17 @@ class RetiariiExperiment(Experiment):
         _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
         exp_status_checker.join()
 
+    def _construct_devices(self):
+        devices = []
+        if hasattr(self.config.training_service, 'machine_list'):
+            for machine_idx, machine in enumerate(self.config.training_service.machine_list):
+                for gpu_idx in machine.gpu_indices:
+                    devices.append(GPUDevice(machine.host, gpu_idx))
+        else:
+            for gpu_idx in self.config.training_service.gpu_indices:
+                devices.append(GPUDevice('local', gpu_idx))
+        return devices
+    
     def _create_dispatcher(self):
         return self._dispatcher
 

@@ -91,6 +91,8 @@ Pruners
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.lottery_ticket.LotteryTicketPruner
     :members:
 
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.transformer_pruner.TransformerHeadPruner
+    :members:
 
 Quantizers
 ^^^^^^^^^^

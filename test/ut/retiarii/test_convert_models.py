@@ -10,11 +10,12 @@ import torchvision
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import serialize
-from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
 
+from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
-class TestModels(unittest.TestCase):
+
+class TestModels(unittest.TestCase, ConvertMixin):
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}
@@ -27,8 +28,7 @@ class TestModels(unittest.TestCase):
         return result
 
     def run_test(self, model, input, check_value=True):
-        script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model)
+        model_ir = self._convert_model(model, input)
         model_code = model_to_pytorch_script(model_ir)
         print(model_code)
 
@@ -89,3 +89,6 @@ class TestModels(unittest.TestCase):
         model = Net(4)
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
+
+class TestModelsWithShape(TestModels, ConvertWithShapeMixin):
+    pass

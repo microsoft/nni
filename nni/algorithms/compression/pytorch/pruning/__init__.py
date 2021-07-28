@@ -3,6 +3,7 @@
 
 from .finegrained_pruning_masker import *
 from .structured_pruning_masker import *
+from .transformer_pruning_head_masker import *
 from .one_shot_pruner import *
 from .iterative_pruner import *
 from .lottery_ticket import LotteryTicketPruner
@@ -11,3 +12,4 @@ from .net_adapt_pruner import NetAdaptPruner
 from .auto_compress_pruner import AutoCompressPruner
 from .sensitivity_pruner import SensitivityPruner
 from .amc import AMCPruner
+from .transformer_pruner import TransformerHeadPruner

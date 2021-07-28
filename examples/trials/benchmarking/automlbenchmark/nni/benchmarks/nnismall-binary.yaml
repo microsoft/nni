@@ -1,0 +1,29 @@
+---
+- name: __defaults__
+  folds: 2
+  cores: 2
+  max_runtime_seconds: 300
+  
+- name: Australian
+  openml_task_id: 146818
+
+- name: blood-transfusion
+  openml_task_id: 10101
+
+- name: christine
+  openml_task_id: 168908
+
+- name: credit-g
+  openml_task_id: 31
+
+- name: kc1
+  openml_task_id: 3917
+
+- name: kr-vs-kp
+  openml_task_id: 3
+
+- name: phoneme
+  openml_task_id: 9952
+
+- name: sylvine
+  openml_task_id: 168912
