@@ -25,7 +25,7 @@ jobs:
 
   - script: |
       set -e
-      python3 setup.py build_ts
+      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S) python3 setup.py build_ts
       python3 setup.py bdist_wheel -p manylinux1_x86_64
       python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
     displayName: Build and install NNI
