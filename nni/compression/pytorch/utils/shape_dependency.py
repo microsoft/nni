@@ -6,7 +6,8 @@ import logging
 import numpy as np
 
 
-__all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency']
+__all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency', 'AttentionWeightDependency']
+
 
 CONV_TYPE = 'aten::_convolution'
 ADD_TYPES = ['aten::add', 'aten::add_']
@@ -88,7 +89,6 @@ class ChannelDependency(Dependency):
         """
         This model analyze the channel dependencies between the conv
         layers in a model.
-
         Parameters
         ----------
         model : torch.nn.Module
@@ -105,12 +105,10 @@ class ChannelDependency(Dependency):
     def _get_parent_layers(self, node):
         """
         Find the nearest father conv layers for the target node.
-
         Parameters
         ---------
         node : torch._C.Node
             target node.
-
         Returns
         -------
         parent_layers: list
@@ -182,7 +180,6 @@ class ChannelDependency(Dependency):
         means the output channel(filters) numbers of these
         three layers should be same with each other, otherwise
         the model may has shape conflict.
-
         Output example:
         Dependency Set,Convolutional Layers
         Set 1,layer1.1.conv2,layer1.0.conv2,conv1
@@ -219,7 +216,6 @@ class ChannelDependency(Dependency):
         dependency_sets : list
             list of the dependency sets. For example,
             [set(['conv1', 'conv2']), set(['conv3', 'conv4'])]
-
         """
         d_sets = []
         visited = set()
@@ -256,7 +252,6 @@ class InputChannelDependency(ChannelDependency):
         """
         This model analyze the input channel dependencies between the conv
         layers in a model.
-
         Parameters
         ----------
         model : torch.nn.Module
@@ -319,7 +314,6 @@ class GroupDependency(Dependency):
         """
         This model analyze the group dependencis between the conv
         layers in a model.
-
         Parameters
         ----------
         model : torch.nn.Module
@@ -336,12 +330,10 @@ class GroupDependency(Dependency):
     def _get_parent_convs(self, node):
         """
         Find the nearest father conv layers for the target node.
-
         Parameters
         ---------
         node : torch._C.Node
             target node.
-
         Returns
         -------
         parent_layers : list
@@ -369,12 +361,10 @@ class GroupDependency(Dependency):
     def _get_conv_groups(self, node_group):
         """
         Get the number of groups for a convolutional layer.
-
         Parameters
         ----------
         node_group : NodePyGroup
             target node.
-
         Returns
         -------
         group : int
@@ -401,7 +391,7 @@ class GroupDependency(Dependency):
         conv2 takes the output features of conv1 as input.
         Then we have to the filters of conv1 can still be
         divided into 4 groups after filter pruning, because
-        the input channels of conv2 shoule be divided into
+        the input channels of conv2 should be divided into
         4 groups.
 
         Returns
@@ -448,7 +438,6 @@ class GroupDependency(Dependency):
         line is the group count of the filters in this layer.
         Note that, the group count may be larger than this
         layers original group number.
-
         output example:
         Conv layer, Groups
         Conv1, 1
@@ -466,7 +455,6 @@ class GroupDependency(Dependency):
     @property
     def dependency_sets(self):
         return self.dependency
-
 
 
 class ReshapeDependency(Dependency):
@@ -573,3 +561,142 @@ class ReshapeDependency(Dependency):
             d_sets.extend(self.dependency[reshape_node])
         d_sets = list(set(d_sets))
         return d_sets
+
+
+class AttentionWeightDependency(Dependency):
+    def __init__(self, model=None, dummy_input=None, traced_model=None):
+        """
+        Groups the linear layers belonging to the same attention layer in a model.
+        Currently, we only capture weights in attention layers with forward computations written
+        as four Linear layers (projections for Q, K, V, and output) and two matmul operations.
+        The method implemented here can work for Huggingface transformers but may not correctly
+        capture transformers written in other fashions (e.g., torch.nn.Transformer).
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            The model to be analyzed.
+        dummy_input : torch.Tensor
+            The example input data to trace the network architecture.
+        traced_model : torch._C.Graph
+            if we already have the traced graph of the target model, we do not
+            need to trace the model again.
+        """
+        super(AttentionWeightDependency, self).__init__(
+            model, dummy_input, traced_model)
+
+    def _get_parent_layers(self, node):
+        """
+        Find the nearest parent linear layers for the target node.
+
+        Parameters
+        ---------
+        node : torch._C.Node
+            target node.
+
+        Returns
+        -------
+        parent_layers: list
+            nearest parent linear layers for the target worknode.
+        """
+        parent_layers = []
+        queue = []
+        queue.append(node)
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Linear':
+                if curnode.name not in parent_layers:
+                    parent_layers.append(curnode.name)
+                continue
+            if curnode.op_type == 'LayerNorm':
+                continue
+            parents = self.graph.find_predecessors(curnode.unique_name)
+            parents = [self.graph.name_to_node[name] for name in parents]
+            for parent in parents:
+                queue.append(parent)
+        return parent_layers
+
+    def _get_children_layers(self, node):
+        """
+        Find the nearest children linear layers for the target node.
+
+        Parameters
+        ---------
+        node : torch._C.Node
+            target node.
+
+        Returns
+        -------
+        children_layers: list
+            nearest children linear layers for the target worknode.
+        """
+        children_layers = []
+        queue = []
+        queue.append(node)
+        while queue:
+            curnode = queue.pop(0)
+            if curnode.op_type == 'Linear':
+                if curnode.name not in children_layers:
+                    children_layers.append(curnode.name)
+                continue
+            if curnode.op_type == 'LayerNorm':
+                continue
+            children = self.graph.find_successors(curnode.unique_name)
+            children = [self.graph.name_to_node[name] for name in children]
+            for child in children:
+                queue.append(child)
+        return children_layers
+
+    def build_dependency(self):
+        """
+        For every matmul operation, find the immediate parent and children Linear operations.
+        If we get three parents and one children, add these four weights as a dependecy group.
+        """
+        self.graph.unpack_manually()
+        for node in self.graph.nodes_py.nodes_op:
+            layers = []
+            if node.op_type == 'aten::matmul':
+                parent_layers = self._get_parent_layers(node)
+                children_layers = self._get_children_layers(node)
+                if len(parent_layers) == 3 and len(children_layers) == 1:
+                    layers.extend(parent_layers)
+                    layers.extend(children_layers)
+
+            self.dependency[node.name] = layers
+
+    @property
+    def dependency_sets(self):
+        """
+        Get the list of the dependency set.
+
+        Returns
+        -------
+        dependency_sets : list
+            list of the dependency sets.
+            Each dependency set is a 4-element list of module names, with the first three elements being the projection
+            matrices for Q, K, V (in any order), and the last element being the dense matrix.
+        """
+        d_sets = []
+        for node in self.graph.nodes_py.nodes_op:
+            if node.op_type != 'aten::matmul' or node.name not in self.dependency or len(self.dependency[node.name]) != 4:
+                continue
+            d_sets.append(self.dependency[node.name])
+
+        return d_sets
+
+    def export(self, filepath):
+        """
+        Export the group dependency to a csv file. Each line describes an attention layer.
+
+        Output example:
+        Attention layer matmul op, Group
+        """
+        header = ['Attention layer matmul op', 'Group']
+        with open(filepath, 'w') as csvf:
+            csv_w = csv.writer(csvf, delimiter=',')
+            csv_w.writerow(header)
+            for name in self.dependency:
+                group = self.dependency[name]
+                if len(group) > 0:
+                    csv_w.writerow([name, group])
+
