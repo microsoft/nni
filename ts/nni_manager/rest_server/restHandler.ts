@@ -211,6 +211,7 @@ class NNIRestHandler {
                 const keys: string[] = Object.keys(metadata);
                 try {
                     for (const key of keys) {
+                        this.log.info("------set cluster metadata-------key: " + key + ", value: " + metadata[key]);
                         await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
                     }
                     res.send();
