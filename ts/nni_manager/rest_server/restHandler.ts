@@ -207,6 +207,8 @@ class NNIRestHandler {
         router.put(
             '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
+                this.log.info("------set cluster metadata-210 ");
+                this.log.info(req);
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
                 try {
