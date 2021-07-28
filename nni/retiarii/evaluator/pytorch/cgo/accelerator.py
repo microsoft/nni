@@ -21,6 +21,11 @@ class BypassPlugin(TrainingTypePlugin):
         self.local_rank = 0
         self.world_size = 1
 
+    def connect(self, model: torch.nn.Module) -> torch.nn.Module:
+        self._model = model
+        self.model_to_device()
+        return self.model
+
     @property
     def on_tpu(self) -> bool:
         return False
