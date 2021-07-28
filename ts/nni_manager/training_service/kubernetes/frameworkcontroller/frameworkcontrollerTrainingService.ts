@@ -198,6 +198,7 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
     }
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
+        this.log.info('---------------framesorkcontroller training service 201------------');
         switch (key) {
             case TrialConfigMetadataKey.NNI_MANAGER_IP:
                 this.nniManagerIpConfig = <NNIManagerIpConfig>JSON.parse(value);
