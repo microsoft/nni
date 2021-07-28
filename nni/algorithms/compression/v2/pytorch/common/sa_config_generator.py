@@ -14,7 +14,7 @@ from nni.algorithms.compression.v2.pytorch.utils.pruning import unfold_config_li
 
 
 class SimulatedAnnealingTaskGenerator(TaskGenerator):
-    def __init__(self, origin_model: Module, origin_config_list: List[Dict] = [],
+    def __init__(self, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.',
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
                  perturbation_magnitude: float = 0.35):
@@ -24,7 +24,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self.cool_down_rate = cool_down_rate
         self.perturbation_magnitude = perturbation_magnitude
 
-        self.weights_numel, self.masked_rate = get_model_weights_numel(origin_model, origin_model, origin_masks)
+        self.weights_numel, self.masked_rate = get_model_weights_numel(origin_model, origin_config_list, origin_masks)
         self.target_sparsity_list = dedupe_config_list(unfold_config_list(origin_model, origin_config_list))
         self._adjust_target_sparsity()
 
@@ -117,7 +117,8 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
                     break
 
     def receive_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
-                            score: Optional[float]):
+                            score: Optional[float] = None):
+        assert task_id == self.origin_task_id or score is not None, 'score can not be None in simulated annealing.'
         return super().receive_task_result(task_id, pruned_model, masks, score=score)
 
     def _generate_tasks(self, received_task_id: int) -> List[Task]:
@@ -130,7 +131,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
                 self._current_score = score
             else:
                 delta_E = np.abs(score - self._current_score)
-                probability = np.exp(-1 * delta_E / self._current_temperature)
+                probability = np.exp(-1 * delta_E / self.current_temperature)
                 if self._current_score < score or np.random.uniform(0, 1) < probability:
                     self._current_score = score
                     self._current_sparsity_list = deepcopy(self._temp_sparsity_list)
@@ -143,7 +144,8 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         task_log_dir = Path(self.log_dir_root, str(task_id))
         task_log_dir.mkdir(parents=True, exist_ok=True)
 
-        task = Task(self.task_id_candidate, self.origin_task_id, deepcopy(self._temp_config_list))
+        task = Task(self.task_id_candidate, self.origin_task_id, deepcopy(self._temp_config_list), task_log_dir)
+        self.tasks_map[task_id] = task
 
         self.task_id_candidate += 1
 

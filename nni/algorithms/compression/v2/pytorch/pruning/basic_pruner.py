@@ -95,7 +95,7 @@ class NormFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -201,7 +201,7 @@ class FPGMPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -275,7 +275,7 @@ class SlimPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            'op_types': ['BatchNorm2d'],
+            SchemaOptional('op_types'): ['BatchNorm2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -362,7 +362,7 @@ class ActivationFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -476,7 +476,7 @@ class TaylorFOWeightFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
