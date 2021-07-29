@@ -65,7 +65,6 @@ def check_rest_server(rest_port):
     '''Check if restful server is ready'''
     retry_count = 20
     for _ in range(retry_count):
-        print(check_status_url(rest_port))
         response = rest_get(check_status_url(rest_port), REST_TIME_OUT)
         if response:
             if response.status_code == 200:
