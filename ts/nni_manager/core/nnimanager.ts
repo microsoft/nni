@@ -457,6 +457,9 @@ class NNIManager implements Manager {
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
+        } else if (platform === 'kubeflow') {
+            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
+            return new module_.KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();
