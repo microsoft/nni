@@ -834,7 +834,7 @@ class QuantGrad(torch.autograd.Function):
     @classmethod
     def get_bits_length(cls, config, quant_type):
         """
-        Get bit for quantize config
+        Get bits for quantize config
         Parameters
         ----------
         config : Dict
