@@ -570,14 +570,13 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
                 # Recover weight/bias for batch normalization folding
+                actual_weight = getattr(module, 'old_weight', None)
+                if actual_weight is None:
+                    logger.warning("Can not recover weight for layer %s. "
+                                   "This may lead to a wrong accuracy performance on the backend.", name)
+                delattr(module, 'weight')
+                module.register_parameter('weight', actual_weight)
                 if hasattr(module, BN_FOLD_TAG):
-                    actual_weight = getattr(module, 'old_weight', None)
-                    if actual_weight is None:
-                        logger.warning("Can not recover weight for layer %s. "
-                                       "This may lead to a wrong accuracy performance on the backend.", name)
-                    delattr(module, 'weight')
-                    module.register_parameter('weight', actual_weight)
-
                     actual_bias = getattr(module, 'old_bias', None)
                     delattr(module, 'bias')
                     if actual_bias is not None:
