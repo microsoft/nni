@@ -205,7 +205,7 @@ class NNIRestHandler {
 
     private setClusterMetaData(router: Router): void {
         router.put(
-            '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
+            '/experiment/cluster-metadata', //expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
