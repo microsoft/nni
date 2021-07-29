@@ -21,7 +21,8 @@ import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
 
-const expressJoi = require('express-joi-validator');
+// TODO: fix expressJoi
+//const expressJoi = require('express-joi-validator');
 
 class NNIRestHandler {
     private restServer: NNIRestServer;
@@ -205,7 +206,7 @@ class NNIRestHandler {
 
     private setClusterMetaData(router: Router): void {
         router.put(
-            '/experiment/cluster-metadata', //expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
+            '/experiment/cluster-metadata', //TODO: Fix validation expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
             async (req: Request, res: Response) => {
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);

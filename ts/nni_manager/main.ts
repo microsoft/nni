@@ -128,7 +128,6 @@ mkDirP(getLogDir())
             const restServer: NNIRestServer = component.get(NNIRestServer);
             await restServer.start();
             getLogger('main').info(`Rest server listening on: ${restServer.endPoint}`);
-            getLogger('main').info(`----test log-----`);
         } catch (err) {
             getLogger('main').error(`${err.stack}`);
             throw err;

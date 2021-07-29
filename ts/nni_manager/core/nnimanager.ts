@@ -433,8 +433,6 @@ class NNIManager implements Manager {
     }
 
     private get maxTrialDuration(): number {
-        this.log.info("--------------------------436---------------------");
-        this.log.info(this.experimentProfile.params.maxTrialDuration);
         const value = this.experimentProfile.params.maxTrialDuration;
         return (value === undefined ? Infinity : toSeconds(value));
     }
