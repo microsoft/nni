@@ -82,7 +82,7 @@ export namespace ValidationSchemas {
                     gpuNum: joi.number().min(0).required(),
                     command: joi.string().min(1).required()
                 }),
-                taskRoles: joi.array().items({
+                taskRoles: joi.array()({
                     name: joi.string().min(1),
                     taskNum: joi.number().min(1).required(),
                     image: joi.string().min(1),
@@ -98,7 +98,7 @@ export namespace ValidationSchemas {
                         minSucceededTaskCount: joi.number()
                     })
                 }),
-                imagePullSecrets: joi.array().items({
+                imagePullSecrets: joi.array()({
                     name: joi.string().min(1).required()
                 }),
                 // ############## adl ###############
