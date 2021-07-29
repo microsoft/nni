@@ -116,8 +116,8 @@ def run_test_case(test_case_config, it_config, args):
         if exit_command:
             subprocess.run(exit_command, shell=True, check=True)
         # remove tmp config file
-        #if os.path.exists(new_config_file):
-        #    os.remove(new_config_file)
+        if os.path.exists(new_config_file):
+            os.remove(new_config_file)
 
 
 def invoke_validator(test_case_config, nni_source_dir, training_service):
