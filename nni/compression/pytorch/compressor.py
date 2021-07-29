@@ -615,6 +615,8 @@ class Quantizer(Compressor):
                 # we still need to deal with the old_bias when it occurs
                 if hasattr(wrapper.module, "old_bias"):
                     self.optimizer.add_param_group({"params": getattr(wrapper.module, "old_bias")})
+        else:
+            _logger.warning("Quantization step may not happen since optimizer is not set. Suggest passing an optimizer to Quantizer.")
 
     def quantize_weight(self, wrapper, **kwargs):
         """
