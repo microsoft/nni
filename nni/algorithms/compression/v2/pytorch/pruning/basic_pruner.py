@@ -20,8 +20,8 @@ from nni.algorithms.compression.v2.pytorch.utils.config_validation import Pruner
 
 _logger = logging.getLogger(__name__)
 
-__all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', 'SlimPruner', 'ActivationFilterPruner',
-           'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', 'TaylorFOWeightFilterPruner']
+__all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner',
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
 
 
 class LevelPruner(Pruner):
@@ -60,7 +60,7 @@ class LevelPruner(Pruner):
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode)
 
 
-class NormFilterPruner(Pruner):
+class NormPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -71,7 +71,7 @@ class NormFilterPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in NormFilterPruner.
+                - op_types : Only Conv2d is supported in NormPruner.
         p
             The order of norm.
         mode
@@ -95,7 +95,7 @@ class NormFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            SchemaOptional('op_types'): ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -113,7 +113,7 @@ class NormFilterPruner(Pruner):
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
 
 
-class L1FilterPruner(NormFilterPruner):
+class L1NormPruner(NormPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -124,7 +124,7 @@ class L1FilterPruner(NormFilterPruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L1FilterPruner.
+                - op_types : Only Conv2d is supported in L1NormPruner.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -141,7 +141,7 @@ class L1FilterPruner(NormFilterPruner):
         super().__init__(model, config_list, 1, mode, dummy_input)
 
 
-class L2FilterPruner(NormFilterPruner):
+class L2NormPruner(NormPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -152,7 +152,7 @@ class L2FilterPruner(NormFilterPruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L2FilterPruner.
+                - op_types : Only Conv2d is supported in L2NormPruner.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -306,7 +306,7 @@ class SlimPruner(Pruner):
             self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer)
 
 
-class ActivationFilterPruner(Pruner):
+class ActivationPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -318,7 +318,7 @@ class ActivationFilterPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in ActivationFilterPruner.
+                - op_types : Only Conv2d is supported in ActivationPruner.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -370,7 +370,7 @@ class ActivationFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            SchemaOptional('op_types'): ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -407,17 +407,17 @@ class ActivationFilterPruner(Pruner):
         raise NotImplementedError()
 
 
-class ActivationAPoZRankFilterPruner(ActivationFilterPruner):
+class ActivationAPoZRankPruner(ActivationPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(dim=1)
 
 
-class ActivationMeanRankFilterPruner(ActivationFilterPruner):
+class ActivationMeanRankPruner(ActivationPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(dim=1)
 
 
-class TaylorFOWeightFilterPruner(Pruner):
+class TaylorFOWeightPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', max_sparsity_per_layer: float = 1, dummy_input: Optional[Tensor] = None):
@@ -429,7 +429,7 @@ class TaylorFOWeightFilterPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in TaylorFOWeightFilterPruner.
+                - op_types : Only Conv2d is supported in TaylorFOWeightPruner.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -488,7 +488,7 @@ class TaylorFOWeightFilterPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            SchemaOptional('op_types'): ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
