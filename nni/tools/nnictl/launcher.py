@@ -212,7 +212,7 @@ def set_frameworkcontroller_config(experiment_config, port, config_file_name):
     frameworkcontroller_config_data = dict()
     frameworkcontroller_config_data['frameworkcontroller_config'] = experiment_config['frameworkcontrollerConfig']
     print(cluster_metadata_url(port))
-    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT, True)
+    response = rest_put(cluster_metadata_url(port), json.dumps(frameworkcontroller_config_data), REST_TIME_OUT)
     err_message = None
     if not response or not response.status_code == 200:
         if response is not None:

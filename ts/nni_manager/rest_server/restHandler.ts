@@ -119,11 +119,8 @@ class NNIRestHandler {
     // TODO add validators for request params, query, body
     private checkStatus(router: Router): void {
         router.get('/check-status', (req: Request, res: Response) => {
-            this.log.info('-----------get check status 122----------')
             const ds: DataStore = component.get<DataStore>(DataStore);
             ds.init().then(() => {
-                this.log.info('-----------get check status 125----------');
-                this.log.info(this.nniManager.getStatus());
                 res.send(this.nniManager.getStatus());
             }).catch(async (err: Error) => {
                 this.handleError(err, res);
@@ -207,15 +204,13 @@ class NNIRestHandler {
     }
 
     private setClusterMetaData(router: Router): void {
-        router.put('/experiment/cluster-metadata', async (req: Request, res: Response) => {
-            console.log("------set cluster metadata-210 ");
-                this.log.info("------set cluster metadata-210 ");
-                this.log.info(req);
+        router.put(
+            '/experiment/cluster-metadata', expressJoi(ValidationSchemas.SETCLUSTERMETADATA),
+            async (req: Request, res: Response) => {
                 const metadata: any = req.body;
                 const keys: string[] = Object.keys(metadata);
                 try {
                     for (const key of keys) {
-                        this.log.info("------set cluster metadata-------key: " + key + ", value: " + metadata[key]);
                         await this.nniManager.setClusterMetadata(key, JSON.stringify(metadata[key]));
                     }
                     res.send();

@@ -262,7 +262,6 @@ class NNIManager implements Manager {
 
     public async setClusterMetadata(key: string, value: string): Promise<void> {
         // Hack for supporting v2 config, need refactor
-        this.log.info('-----------nnimanager 256-----------');
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             switch (key) {
@@ -285,7 +284,6 @@ class NNIManager implements Manager {
                     throw new Error("Setup training service failed.");
             }
         }
-        this.log.info('-----------nnimanager 288-----------');
         await this.trainingService.setClusterMetadata(key, value);
     }
 
@@ -435,6 +433,8 @@ class NNIManager implements Manager {
     }
 
     private get maxTrialDuration(): number {
+        this.log.info("--------------------------436---------------------");
+        this.log.info(this.experimentProfile.params.maxTrialDuration);
         const value = this.experimentProfile.params.maxTrialDuration;
         return (value === undefined ? Infinity : toSeconds(value));
     }
