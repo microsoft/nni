@@ -175,6 +175,5 @@ class MeanRankMetricsCalculator(MetricsCalculator):
             keeped_dim = list(range(len(activations.size()))) if self.dim is None else self.dim
             across_dim = list(range(len(activations.size())))
             [across_dim.pop(i) for i in reversed(keeped_dim)]
-            print(across_dim)
             metrics[name] = torch.mean(activations, across_dim)
         return metrics

@@ -5,6 +5,7 @@ import logging
 import types
 from typing import List, Dict, Optional, Callable, Union
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
@@ -85,11 +86,13 @@ class TrainerBasedDataCollector(DataCollector):
             The compressor binded with this DataCollector.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
 
             Example::
 
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
-                    model.train()
+                    training = model.training
+                    model.train(mode=True)
                     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
                     for batch_idx, (data, target) in enumerate(train_loader):
                         data, target = data.to(device), target.to(device)
@@ -97,7 +100,9 @@ class TrainerBasedDataCollector(DataCollector):
                         output = model(data)
                         loss = criterion(output, target)
                         loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                         optimizer.step()
+                    model.train(mode=training)
         optimizer
             The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
             so do not use this optimizer in other places.
@@ -141,12 +146,15 @@ class TrainerBasedDataCollector(DataCollector):
     def reset(self):
         # refresh optimizer and criterion
         self.compressor._unwrap_model()
-        optimizer_cls = self._origin_optimizer.__class__
-        if optimizer_cls.__name__ == 'SGD':
-            self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+        if self._origin_optimizer is not None:
+            optimizer_cls = self._origin_optimizer.__class__
+            if optimizer_cls.__name__ == 'SGD':
+                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+            else:
+                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
+            self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
         else:
-            self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
-        self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
+            self.optimizer = None
 
         if self._criterion_patch is not None:
             self.criterion = self._criterion_patch(self._origin_criterion)
@@ -358,3 +366,25 @@ class SparsityAllocator:
             if wrapper.bias_mask is not None and mask.size() == wrapper.bias_mask.size():
                 expand_mask['bias_mask'] = mask.clone()
         return expand_mask
+
+    def _compress_mask_with_dim(self, mask: Tensor) -> Tensor:
+        """
+        Parameters
+        ----------
+        name
+            The masked module name.
+        mask
+            The dimension mask on `dim` of the weight.
+
+        Returns
+        -------
+        Tensor
+            Reduce the mask with `self.dim`.
+        """
+        if self.dim is None:
+            return mask.clone()
+        else:
+            mask_dim = list(range(len(mask.size())))
+            for dim in self.dim:
+                mask_dim.remove(dim)
+            return torch.sum(mask, dim=mask_dim)

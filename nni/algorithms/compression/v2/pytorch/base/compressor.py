@@ -10,6 +10,7 @@ from torch.nn import Module
 from torch.tensor import Tensor
 
 from nni.common.graph_utils import TorchModuleGraph
+from nni.compression.pytorch.utils import get_module_by_name
 
 _logger = logging.getLogger(__name__)
 
@@ -24,10 +25,12 @@ class LayerInfo:
 
 
 def _setattr(model: Module, name: str, module: Module):
-    name_list = name.split(".")
-    for name in name_list[:-1]:
-        model = getattr(model, name)
-    setattr(model, name_list[-1], module)
+    parent_module, _ = get_module_by_name(model, name)
+    if parent_module is not None:
+        name_list = name.split(".")
+        setattr(parent_module, name_list[-1], module)
+    else:
+        raise '{} not exist.'.format(name)
 
 
 weighted_modules = [
@@ -149,9 +152,10 @@ class Compressor:
         """
         Wrap all modules that needed to be compressed.
         """
-        for _, wrapper in reversed(self.get_modules_wrapper().items()):
-            _setattr(self.bound_model, wrapper.name, wrapper)
-        self.is_wrapped = True
+        if not self.is_wrapped:
+            for _, wrapper in reversed(self.get_modules_wrapper().items()):
+                _setattr(self.bound_model, wrapper.name, wrapper)
+            self.is_wrapped = True
 
     def _unwrap_model(self):
         """
@@ -181,7 +185,7 @@ class Compressor:
             else:
                 setattr(wrapper, name, value)
 
-    def generate_graph(self, dummy_input: Tensor) -> TorchModuleGraph:
+    def generate_graph(self, dummy_input: Any) -> TorchModuleGraph:
         """
         Generate a `TorchModuleGraph` instance of `self.bound_model` based on `jit.trace`.
 

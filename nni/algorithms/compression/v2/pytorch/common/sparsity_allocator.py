@@ -1,7 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Dict, List, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import torch
@@ -35,7 +35,7 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
-            metric = metrics[name]
+            metric = metrics[name] * self._compress_mask_with_dim(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
                 mask = torch.ones_like(metric)
@@ -74,10 +74,12 @@ class GlobalSparsityAllocator(SparsityAllocator):
         sub_thresholds = {}
         total_weight_num = 0
         for name, metric in group_metric_dict.items():
-            layer_weight_num = self.pruner.get_modules_wrapper()[name].module.weight.data.numel()
+            wrapper = self.pruner.get_modules_wrapper()[name]
+            metric = metric * self._compress_mask_with_dim(wrapper.weight_mask)
+            layer_weight_num = wrapper.module.weight.data.numel()
             stay_num = int(metric.numel() * self._max_sparsity_per_layer)
             # Remove the weight parts that must be left
-            stay_metric = torch.topk(metric.abs().view(-1), stay_num, largest=False)[0]
+            stay_metric = torch.topk(metric.view(-1), stay_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
             expend_times = int(layer_weight_num / metric.numel())
             if expend_times > 1:
@@ -98,21 +100,24 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
     A specify allocator for Conv2d with dependency aware.
     """
 
-    def __init__(self, pruner: Pruner, dim: int, dummy_input: Tensor):
+    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
         assert isinstance(dim, int), 'Only support single dim in Conv2dDependencyAwareAllocator.'
         super().__init__(pruner, dim=dim)
         self.dummy_input = dummy_input
 
     def _get_dependency(self):
         graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
-        self.channel_depen = ChannelDependency(traced_model=graph).dependency_sets
-        self.group_depen = GroupDependency(traced_model=graph).dependency_sets
+        self.channel_depen = ChannelDependency(traced_model=graph.trace).dependency_sets
+        self.group_depen = GroupDependency(traced_model=graph.trace).dependency_sets
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         self._get_dependency()
         masks = {}
-        grouped_metrics = {idx: {name: metrics[name] for name in names}
-                           for idx, names in enumerate(self.channel_depen)}
+        grouped_metrics = {}
+        for idx, names in enumerate(self.channel_depen):
+            grouped_metric = {name: metrics[name] * self._compress_mask_with_dim(self.pruner.get_modules_wrapper()[name].weight_mask) for name in names if name in metrics}
+            if len(grouped_metric) > 0:
+                grouped_metrics[idx] = grouped_metric
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
