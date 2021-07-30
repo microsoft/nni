@@ -7,7 +7,6 @@ from typing import List, Dict, Optional, OrderedDict, Tuple, Any
 
 import torch
 from torch.nn import Module
-from torch.tensor import Tensor
 
 from nni.common.graph_utils import TorchModuleGraph
 from nni.compression.pytorch.utils import get_module_by_name

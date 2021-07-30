@@ -38,7 +38,6 @@ class PrunerModuleWrapper(Module):
         # origin layer information
         self.module = module
         self.name = module_name
-        self.type = module_type
         # config and pruner
         self.config = config
         self.pruner = pruner
@@ -97,6 +96,14 @@ class Pruner(Compressor):
         return wrapper
 
     def load_masks(self, masks: Dict[str, Dict[str, Tensor]]):
+        """
+        Load an exist masks on the wrapper. You can train the model with an exist masks after load the masks.
+
+        Parameters
+        ----------
+        masks
+            The masks dict with format {'op_name': {'weight_mask': mask, 'bias_mask': mask}}.
+        """
         wrappers = self.get_modules_wrapper()
         for name, layer_mask in masks.items():
             assert name in wrappers, '{} is not in wrappers of this pruner, can not apply the mask.'.format(name)
