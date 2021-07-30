@@ -10,7 +10,7 @@ prefix = '/home/user/PyTorch-YOLOv3' # replace this path with yours
 # Load the YOLO model
 model = models.load_model(
   "%s/config/yolov3.cfg" % prefix, 
-  "%s/yolov3.weights" % prefix)
+  "%s/yolov3.weights" % prefix).cpu()
 model.eval()
 dummy_input = torch.rand(8, 3, 320, 320)
 model(dummy_input)
