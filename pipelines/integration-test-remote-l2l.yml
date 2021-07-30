@@ -5,9 +5,6 @@ schedules:
   branches:
     include: [ master ]
 
-variables:
-  worker: remote_nni-ci-gpu-03
-
 # variables set on VSO: (for security concern)
 #   manager_ip
 #   worker_ip

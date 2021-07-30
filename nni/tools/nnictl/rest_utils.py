@@ -13,6 +13,9 @@ def rest_put(url, data, timeout, show_error=False):
         response = requests.put(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                 data=data, timeout=timeout)
         return response
+    except requests.exceptions.Timeout:
+        print_error("Connect %s timeout." % url)
+        return None
     except Exception as exception:
         if show_error:
             print_error(exception)
@@ -24,6 +27,9 @@ def rest_post(url, data, timeout, show_error=False):
         response = requests.post(url, headers={'Accept': 'application/json', 'Content-Type': 'application/json'},\
                                  data=data, timeout=timeout)
         return response
+    except requests.exceptions.Timeout:
+        print_error("Connect %s timeout." % url)
+        return None
     except Exception as exception:
         if show_error:
             print_error(exception)
@@ -34,6 +40,9 @@ def rest_get(url, timeout, show_error=False):
     try:
         response = requests.get(url, timeout=timeout)
         return response
+    except requests.exceptions.Timeout:
+        print_error("Connect %s timeout." % url)
+        return None
     except Exception as exception:
         if show_error:
             print_error(exception)
@@ -44,6 +53,9 @@ def rest_delete(url, timeout, show_error=False):
     try:
         response = requests.delete(url, timeout=timeout)
         return response
+    except requests.exceptions.Timeout:
+        print_error("Connect %s timeout." % url)
+        return None
     except Exception as exception:
         if show_error:
             print_error(exception)
