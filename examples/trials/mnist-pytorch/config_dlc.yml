@@ -1,0 +1,20 @@
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialConcurrency: 1
+maxTrialNumber: 10
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+# ref: https://help.aliyun.com/document_detail/203290.html?spm=a2c4g.11186623.6.727.6f9b5db6bzJh4x
+trainingService:
+  platform: dlc
+  type: Worker
+  image: registry-vpc.cn-hangzhou.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
+  podCount: 1
+  ecsSpec: ecs.c6.large
+  region: cn-hangzhou
+  nasDataSourceId: ${your_nas_data_source_id}
+  accessKeyId: ${your_ak_id}
+  accessKeySecret: ${your_ak_key}
+  nasDataSourceId: ${your_nas_data_source_id}   #e.g., datat56by9n1xt0a
