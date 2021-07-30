@@ -13,7 +13,7 @@ schedules:
 
 jobs:
 - job: pai
-  pool: NNI CI PAI CLI
+  pool: NNI CI PAI LINUX CLI
   timeoutInMinutes: 120
 
   steps:
