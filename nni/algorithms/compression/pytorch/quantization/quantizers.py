@@ -310,8 +310,8 @@ class ObserverQuantizer(Quantizer):
                 val = float(module.weight_scale * module.weight_qmax)
                 calibration_config[name]['tracked_max_weight'] = val
                 calibration_config[name]['tracked_min_weight'] = -val
-                calibration_config[name]['tracked_weight_qmin'] = -127
-                calibration_config[name]['tracked_weight_qmax'] = 127
+                calibration_config[name]['tracked_qmin_weight'] = -127
+                calibration_config[name]['tracked_qmax_weight'] = 127
             # refactor these magic numbers when customizations of dtype and qscheme are ready.
             if hasattr(module, 'input_scale'):
                 calibration_config[name]['input_bits'] = 8
@@ -319,8 +319,8 @@ class ObserverQuantizer(Quantizer):
                 min_input = float(module.input_scale * (module.input_qmin - module.input_zero_point))
                 calibration_config[name]['tracked_min_input'] = min_input
                 calibration_config[name]['tracked_max_input'] = max_input
-                calibration_config[name]['tracked_input_qmin'] = 0
-                calibration_config[name]['tracked_input_qmax'] = 127
+                calibration_config[name]['tracked_qmin_input'] = 0
+                calibration_config[name]['tracked_qmax_input'] = 127
             if hasattr(module, 'output_scale'):
                 calibration_config[name]['output_bits'] = 8
                 max_input = float(module.output_scale * (module.output_qmax - module.output_zero_point))
