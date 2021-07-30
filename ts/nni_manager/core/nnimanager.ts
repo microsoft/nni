@@ -639,8 +639,6 @@ class NNIManager implements Manager {
                 this.trialConcurrencyChange = requestTrialNum;
             }
 
-            this.requestTrialJobs(requestTrialNum);
-
             // check maxtrialnum and maxduration here
             // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
             // might tell nnimanager that this is no more trials. In NO_MORE_TRIAL state, the experiment is viewed
@@ -665,6 +663,8 @@ class NNIManager implements Manager {
                     }
                 }
             } else {
+                this.requestTrialJobs(requestTrialNum);
+
                 if (this.status.status === 'DONE') {
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
