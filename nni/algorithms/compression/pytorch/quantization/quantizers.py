@@ -354,7 +354,7 @@ class QAT_Quantizer(Quantizer):
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
+    def __init__(self, model, config_list, optimizer, dummy_input=None):
         """
         Parameters
         ----------
@@ -379,6 +379,7 @@ class QAT_Quantizer(Quantizer):
                     given, the batch normalization folding would be disabled.
         """
 
+        assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer, dummy_input)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
@@ -642,7 +643,8 @@ class DoReFaQuantizer(Quantizer):
     (https://arxiv.org/abs/1606.06160)
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
+        assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer)
         device = next(model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
@@ -749,7 +751,8 @@ class BNNQuantizer(Quantizer):
     (https://arxiv.org/abs/1602.02830)
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
+        assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer)
         device = next(model.parameters()).device
         self.quant_grad = ClipGrad.apply
@@ -848,7 +851,7 @@ class LsqQuantizer(Quantizer):
        https://arxiv.org/pdf/1902.08153.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer):
         """
         Parameters
         ----------
@@ -868,6 +871,7 @@ class LsqQuantizer(Quantizer):
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
         """
+        assert isinstance(optimizer, torch.optim.Optimizer), "unrecognized optimizer type"
         super().__init__(model, config_list, optimizer)
         device = next(model.parameters()).device
         self.quant_grad = QuantForward()
