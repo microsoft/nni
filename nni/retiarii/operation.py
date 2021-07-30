@@ -98,6 +98,10 @@ class PyTorchOperation(Operation):
             if hasattr(subclass, '_ori_type_name') and \
                 subclass_name in subclass._ori_type_name:
                 return subclass
+        for subclass in cls.__subclasses__():
+            if hasattr(subclass, '_artificial_op_name') and \
+                subclass_name in subclass._artificial_op_name:
+                return subclass
         return cls
 
     @classmethod
