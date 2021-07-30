@@ -317,7 +317,9 @@ class CompressorTestCase(TestCase):
             'op_types': ['ReLU']
         }]
         model.relu = torch.nn.ReLU()
-        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
+
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer)
         quantizer.compress()
 
         # test quantize
@@ -390,9 +392,10 @@ class CompressorTestCase(TestCase):
         quantize_algorithm_set = [torch_quantizer.QAT_Quantizer, torch_quantizer.DoReFaQuantizer, torch_quantizer.BNNQuantizer]
 
         for config, quantize_algorithm in zip(config_set, quantize_algorithm_set):
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
             model = TorchModel()
             model.relu = torch.nn.ReLU()
-            quantizer = quantize_algorithm(model, config)
+            quantizer = quantize_algorithm(model, config, optimizer)
             quantizer.compress()
 
             x = torch.rand((1, 1, 28, 28), requires_grad=True)
