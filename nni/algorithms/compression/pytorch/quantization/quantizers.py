@@ -148,8 +148,8 @@ class ObserverQuantizer(Quantizer):
         self.device = next(model.parameters()).device
         modules_to_compress = self.get_modules_to_compress()
         all_observers = defaultdict(dict)
-        weight_q_min, weight_q_max = -127, 127
-        output_q_min, output_q_max = 0, 127  # reduce_range is set to True
+        weight_qmin, weight_qmax = -127, 127
+        output_qmin, output_qmax = 0, 127  # reduce_range is set to True
         self.compressed = False
 
         for layer, config in modules_to_compress:
@@ -157,16 +157,16 @@ class ObserverQuantizer(Quantizer):
             module = layer.module
             if "weight" in config.get("quant_types", []):
                 all_observers[layer_name]["weight"] = default_weight_observer()
-                setattr(module, "weight_qmax", weight_q_max)
-                setattr(module, "weight_qmin", weight_q_min)
+                setattr(module, "weight_qmax", weight_qmax)
+                setattr(module, "weight_qmin", weight_qmin)
             if "input" in config.get("quant_types", []):
                 all_observers[layer_name]["input"] = default_histogram_observer()
-                setattr(module, "input_qmax", output_q_max)
-                setattr(module, "input_qmin", output_q_min)
+                setattr(module, "input_qmax", output_qmax)
+                setattr(module, "input_qmin", output_qmin)
             if "output" in config.get("quant_types", []):
                 all_observers[layer_name]["output"] = default_histogram_observer()
-                setattr(module, "output_qmax", output_q_max)
-                setattr(module, "output_qmin", output_q_min)
+                setattr(module, "output_qmax", output_qmax)
+                setattr(module, "output_qmin", output_qmin)
         self.all_observers = all_observers
         self.bound_model.to(self.device)
 
