@@ -8,7 +8,7 @@ EndToEnd Multi-trial SPOS Demo
 
 Basically, this demo will select the model whose latency satisfy constraints to train.
 
-To run this demo, first install nn-Meter from source code (currently we haven't released this package, so development installation is required).
+To run this demo, first install nn-Meter from source code (Github repo link: https://github.com/microsoft/nn-Meter. Currently we haven't released this package, so development installation is required).
 
 .. code-block:: bash
 
