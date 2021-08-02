@@ -786,6 +786,7 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
                                     ["encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
                                     ["encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
                                     ["encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
+
    kwargs = {"ranking_criterion": "l1_weight",
              "global_sort": False,
              "num_iterations": 1,
@@ -796,17 +797,16 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
              "optimizer": optimizer,
              "forward_runner": forward_runner
              }
-    config_list = [{
-        "sparsity": 0.5,
+   config_list = [{
+	"sparsity": 0.5,
         "op_types": ["Linear"],
         "op_names": [x for layer in attention_name_groups[:6] for x in layer]      # first six layers
-    },
-    {
-        "sparsity": 0.25,
-        "op_types": ["Linear"],
-        "op_names": [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
-    }
-    ]
+   }, {
+	"sparsity": 0.25,
+	"op_types": ["Linear"],
+	"op_names": [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
+   }]
+
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
