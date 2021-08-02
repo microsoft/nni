@@ -3,12 +3,15 @@
 
 import logging
 import copy
+from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
-from nni.compression.pytorch.compressor import Quantizer, QuantForward, QuantGrad, QuantType
+from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad, QuantType
 
-__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer']
+from .observers import default_weight_observer, default_histogram_observer
+
+__all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer', 'ObserverQuantizer']
 
 logger = logging.getLogger(__name__)
 
@@ -120,13 +123,238 @@ class QATGrad(QuantGrad):
         return grad_output
 
 
+class ObserverQuantizer(Quantizer):
+    """This quantizer uses observers to record weight/activation statistics to get quantization information.
+    The whole process can be divided into three steps:
+        1. It will register observers to the place where quantization would happen (just like registering hooks).
+        2. The observers would record tensors' statistics during calibration.
+        3. Scale & zero point would be obtained after calibration.
+    Note that the observer type, tensor dtype and quantization qscheme are hard coded for now. Their customization
+    are under development and will be ready soon.
+    """
+
+    def __init__(self, model, config_list, optimizer=None):
+        super().__init__(model, config_list, optimizer)
+        # NOTE: this quantizer is experimental for now. The dtype and qscheme of quantization
+        # is hard-coded.
+        # TODO:
+        # 1. support dtype and qscheme customization through config_list. Current settings:
+        #  weight observer     : per_tensor_symmetric, qint8
+        #  activation observer : per_tensor_affine, quint8, reduce_range=True
+        # 2. add more kinds of observers, such as Kullback-Leibler divergence.
+        # 3. add batch normalization folding
+        assert not model.training, "Currently the observer quantizer only works in evaluation mode."
+        self.quant_grad = QuantForward()
+        self.device = next(model.parameters()).device
+        modules_to_compress = self.get_modules_to_compress()
+        all_observers = defaultdict(dict)
+        weight_q_min, weight_q_max = -127, 127
+        activation_q_min, activation_q_max = 0, 127  # reduce_range is set to True
+        self.compressed = False
+
+        for layer, config in modules_to_compress:
+            layer_name = layer.name
+            module = layer.module
+            if "weight" in config.get("quant_types", []):
+                all_observers[layer_name]["weight"] = default_weight_observer()
+                setattr(module, "weight_qmax", weight_q_max)
+                setattr(module, "weight_qmin", weight_q_min)
+            if "input" in config.get("quant_types", []):
+                all_observers[layer_name]["input"] = default_histogram_observer()
+                setattr(module, "input_qmax", activation_q_max)
+                setattr(module, "input_qmin", activation_q_min)
+            if "output" in config.get("quant_types", []):
+                all_observers[layer_name]["output"] = default_histogram_observer()
+                setattr(module, "output_qmax", activation_q_max)
+                setattr(module, "output_qmin", activation_q_min)
+        self.all_observers = all_observers
+        self.bound_model.to(self.device)
+
+    def validate_config(self, model, config_list):
+        schema = QuantizerSchema([{
+            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
+            Optional('quant_bits'): Or(And(int, lambda n: n == 8), Schema({
+                Optional('weight'): And(int, lambda n: n == 8),
+                Optional('output'): And(int, lambda n: n == 8),
+                Optional('input'): And(int, lambda n: n == 8),
+            })),
+            Optional('op_types'): [str],
+            Optional('op_names'): [str]
+        }], model, logger)
+
+        schema.validate(config_list)
+
+    def record(self, wrapper, quant_type, tensor):
+        name = wrapper.name
+        observer = self.all_observers[name][quant_type]
+        if isinstance(tensor, tuple):
+            # NB: This only works for single tensor
+            tensor = (t.cpu() for t in tensor)
+            observer(*tensor)
+        else:
+            observer(tensor.cpu())
+
+    def calculate_qparams(self, name, quant_type):
+        observer = self.all_observers[name][quant_type]
+        scale, zero_point = observer.calculate_qparams()
+        return scale, zero_point
+
+    def _quantize(self, x, scale, zero_point, qmin, qmax):
+        x = x / scale + zero_point
+        x = torch.clamp(x, qmin, qmax)
+        x = torch.round(x)
+        x = (x - zero_point) * scale
+        return x
+
+    def quantize_input(self, *inputs, wrapper, **kwargs):
+        if self.compressed:
+            module = wrapper.module
+            new_input = self._quantize(inputs[0],
+                                      module.input_scale,
+                                      module.input_zero_point,
+                                      module.input_qmin,
+                                      module.input_qmax)
+            list_inp = list(inputs)
+            list_inp[0] = new_input
+            inputs = tuple(list_inp)
+        else:
+            self.record(wrapper, 'input', inputs)
+        return inputs
+
+    def quantize_weight(self, wrapper, **kwargs):
+        # If ObserverQuantizer.compress is executed, the weight will be set to
+        # the Pseudo-quantized one. So there is no need to quantize it
+        if self.compressed:
+            return
+
+        module = wrapper.module
+        old_weight = module.weight
+        self.record(wrapper, 'weight', old_weight)
+
+    def quantize_output(self, output, wrapper, **kwargs):
+        if self.compressed:
+            module = wrapper.module
+            new_output = self._quantize(output,
+                                       module.output_scale,
+                                       module.output_zero_point,
+                                       module.output_qmin,
+                                       module.output_qmax)
+        else:
+            self.record(wrapper, 'output', output)
+            new_output = output
+        return new_output
+
+    def compress(self):
+        """
+        Calculate quantization information of each tensor. Note that the inference of
+        the compressed model will no longer update the corresponding. Instead, the quantization
+        process will be simulated, which is used to test the accuracy of the quantization.
+        """
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            module = layer.module
+            if "weight" in config.get("quant_types", []):
+                scale, zero_point = self.calculate_qparams(layer.name, 'weight')
+                module.register_buffer('weight_scale', scale.to(self.device))
+                module.register_buffer('weight_zero_point', zero_point.to(self.device))
+                weight = module.weight
+                quantized_weight = self._quantize(weight,
+                                            module.weight_scale,
+                                            module.weight_zero_point,
+                                            module.weight_qmin,
+                                            module.weight_qmax)
+                delattr(module, 'weight')
+                module.register_parameter('weight', torch.nn.Parameter(quantized_weight))
+            if "input" in config.get("quant_types", []):
+                scale, zero_point = self.calculate_qparams(layer.name, 'input')
+                module.register_buffer('input_scale', scale.to(self.device))
+                module.register_buffer('input_zero_point', zero_point.to(self.device))
+            if "output" in config.get("quant_types", []):
+                scale, zero_point = self.calculate_qparams(layer.name, 'output')
+                module.register_buffer('output_scale', scale.to(self.device))
+                module.register_buffer('output_zero_point', zero_point.to(self.device))
+        self.compressed = True
+        super().compress()
+
+    def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
+        """
+        Export quantized model weights and calibration parameters(optional)
+
+        Parameters
+        ----------
+        model_path : str
+            path to save quantized model weight
+        calibration_path : str
+            (optional) path to save quantize parameters after calibration
+        onnx_path : str
+            (optional) path to save onnx model
+        input_shape : list or tuple
+            input shape to onnx model
+        device : torch.device
+            device of the model, used to place the dummy input tensor for exporting onnx file.
+            the tensor is placed on cpu if ```device``` is None
+
+        Returns
+        -------
+        Dict
+        """
+        assert model_path is not None, 'model_path must be specified'
+        self._unwrap_model()
+        calibration_config = {}
+
+        for name, module in self.bound_model.named_modules():
+            if hasattr(module, 'weight_scale') or hasattr(module, 'input_scale') or hasattr(module, 'output_scale'):
+                calibration_config[name] = {}
+            if hasattr(module, 'weight_scale'):
+                calibration_config[name]['weight_bit'] = 8
+                val = float(module.weight_scale * module.weight_qmax)
+                calibration_config[name]['tracked_max_weight'] = val
+                calibration_config[name]['tracked_min_weight'] = -val
+                calibration_config[name]['tracked_weight_qmin'] = -127
+                calibration_config[name]['tracked_weight_qmax'] = 127
+            # refactor these magic numbers when customizations of dtype and qscheme are ready.
+            if hasattr(module, 'input_scale'):
+                calibration_config[name]['input_bit'] = 8
+                max_input = float(module.input_scale * (module.input_qmax - module.input_zero_point))
+                min_input = float(module.input_scale * (module.input_qmin - module.input_zero_point))
+                calibration_config[name]['tracked_min_input'] = min_input
+                calibration_config[name]['tracked_max_input'] = max_input
+                calibration_config[name]['tracked_input_qmin'] = 0
+                calibration_config[name]['tracked_input_qmax'] = 127
+            if hasattr(module, 'output_scale'):
+                calibration_config[name]['activation_bit'] = 8
+                max_input = float(module.output_scale * (module.output_qmax - module.output_zero_point))
+                min_input = float(module.output_scale * (module.output_qmin - module.output_zero_point))
+                calibration_config[name]['tracked_min_activation'] = min_input
+                calibration_config[name]['tracked_max_activation'] = max_input
+                calibration_config[name]['tracked_activation_qmin'] = 0
+                calibration_config[name]['tracked_activation_qmax'] = 127
+            self._del_simulated_attr(module)
+
+        self.export_model_save(self.bound_model, model_path, calibration_config, calibration_path, onnx_path,
+                               input_shape, device)
+
+        return calibration_config
+
+    def _del_simulated_attr(self, module):
+        """
+        delete redundant parameters in quantize module
+        """
+        del_attr_list = ['old_weight', 'steps', 'weight_qmax', 'weight_qmin', 'input_qmax', 'input_qmin',
+                         'output_qmax', 'output_qmin', 'weight_scale', 'weight_zero_point', 'input_scale',
+                         'input_zero_point', 'output_scale', 'output_zero_point']
+        for attr in del_attr_list:
+            if hasattr(module, attr):
+                delattr(module, attr)
+
+
 class QAT_Quantizer(Quantizer):
     """Quantizer defined in:
     Quantization and Training of Neural Networks for Efficient Integer-Arithmetic-Only Inference
     http://openaccess.thecvf.com/content_cvpr_2018/papers/Jacob_Quantization_and_Training_CVPR_2018_paper.pdf
     """
 
-    def __init__(self, model, config_list, optimizer=None):
+    def __init__(self, model, config_list, optimizer=None, dummy_input=None):
         """
         Parameters
         ----------
@@ -145,8 +373,13 @@ class QAT_Quantizer(Quantizer):
                     state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
                 - op_types : list of string
                     types of nn.module you want to apply quantization, eg. 'Conv2d'
+                - dummy_input : tuple of tensor
+                    inputs to the model, which are used to get the graph of the module. The graph is used to find
+                    Conv-Bn patterns. And then the batch normalization folding would be enabled. If dummy_input is not
+                    given, the batch normalization folding would be disabled.
         """
-        super().__init__(model, config_list, optimizer)
+
+        super().__init__(model, config_list, optimizer, dummy_input)
         self.quant_grad = QATGrad.apply
         modules_to_compress = self.get_modules_to_compress()
         device = next(model.parameters()).device
@@ -169,8 +402,9 @@ class QAT_Quantizer(Quantizer):
         """
         delete redundant parameters in quantize module
         """
-        del_attr_list = ['old_weight', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation', 'tracked_min_input', \
-        'tracked_max_input', 'scale', 'zero_point', 'weight_bit', 'activation_bit']
+        del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_activation', 'tracked_max_activation',
+                         'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bit',
+                         'activation_bit', 'BN_FOLD_TAG']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -334,6 +568,23 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['weight_bit'] = int(module.weight_bit)
                 calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
+
+                # Recover weight/bias for batch normalization folding
+                if hasattr(module, BN_FOLD_TAG):
+                    actual_weight = getattr(module, 'old_weight', None)
+                    if actual_weight is None:
+                        logger.warning("Can not recover weight for layer %s. "
+                                       "This may lead to a wrong accuracy performance on the backend.", name)
+                    delattr(module, 'weight')
+                    module.register_parameter('weight', actual_weight)
+
+                    actual_bias = getattr(module, 'old_bias', None)
+                    delattr(module, 'bias')
+                    if actual_bias is not None:
+                        module.register_parameter('bias', actual_bias)
+                    else:
+                        setattr(module, 'bias', None)
+
             if hasattr(module, 'activation_bit'):
                 calibration_config[name]['activation_bit'] = int(module.activation_bit)
                 calibration_config[name]['tracked_min_activation'] = float(module.tracked_min_activation)
@@ -344,9 +595,39 @@ class QAT_Quantizer(Quantizer):
 
         return calibration_config
 
-    def fold_bn(self, config, **kwargs):
-        # TODO simulate folded weight
-        pass
+    def fold_bn(self, *inputs, wrapper):
+        """
+        Simulate batch normalization folding in the training graph. Folded weight and bias are
+        returned for the following operations.
+
+        Parameters
+        ----------
+        inputs : tuple of torch.Tensor
+            inputs for the module
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
+
+        Returns
+        -------
+        Tuple of torch.Tensor
+        """
+        module = wrapper.module
+        bn_module = wrapper.bn_module
+        with torch.no_grad():
+            output = module(*inputs)
+            _ = bn_module(output)
+        running_mean = bn_module.running_mean
+        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
+        bn_weight = bn_module.weight
+        bn_bias = bn_module.bias
+        dimensions = len(module.weight.shape)
+        shape = [-1] + [1] * (dimensions - 1)
+        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
+        if hasattr(module, 'old_bias'):
+            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
+        else:
+            new_bias = bn_bias - running_mean / running_var * bn_weight
+        return new_weight, new_bias
 
     def step_with_optimizer(self):
         """

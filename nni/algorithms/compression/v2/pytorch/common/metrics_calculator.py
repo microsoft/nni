@@ -15,6 +15,7 @@ __all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetri
 class NormMetricsCalculator(MetricsCalculator):
     """
     Calculate the specify norm for each tensor in data.
+    L1, L2, Level, Slim pruner use this to calculate metric.
     """
 
     def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None):
@@ -64,6 +65,7 @@ class NormMetricsCalculator(MetricsCalculator):
 class MultiDataNormMetricsCalculator(NormMetricsCalculator):
     """
     Sum each list of tensor in data at first, then calculate the specify norm for each sumed tensor.
+    TaylorFO pruner use this to calculate metric.
     """
 
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
@@ -74,6 +76,7 @@ class MultiDataNormMetricsCalculator(NormMetricsCalculator):
 class DistMetricsCalculator(MetricsCalculator):
     """
     Calculate the sum of specify distance for each element with all other elements in specify `dim` in each tensor in data.
+    FPGM pruner use this to calculate metric.
     """
 
     def __init__(self, p: float, dim: Union[int, List[int]]):
@@ -142,6 +145,7 @@ class APoZRankMetricsCalculator(MetricsCalculator):
     This metric counts the zero number at the same position in the tensor list in data,
     then sum the zero number on `dim` and calculate the non-zero rate.
     Note that the metric we return is (1 - apoz), because we assume a higher metric value has higher importance.
+    APoZRank pruner use this to calculate metric.
     """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
@@ -166,6 +170,7 @@ class APoZRankMetricsCalculator(MetricsCalculator):
 class MeanRankMetricsCalculator(MetricsCalculator):
     """
     This metric simply concat the list of tensor on dim 0, and average on `dim`.
+    MeanRank pruner use this to calculate metric.
     """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}

@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 import torch
-import torch.nn as nn
+import nni.retiarii.nn.pytorch as nn
 
 
 class ShuffleNetBlock(nn.Module):
@@ -27,17 +27,18 @@ class ShuffleNetBlock(nn.Module):
 
         self.branch_main = nn.Sequential(*self._decode_point_depth_conv(sequence))
 
-        if stride == 2:
-            self.branch_proj = nn.Sequential(
-                # dw
-                nn.Conv2d(self.channels, self.channels, ksize, stride, self.pad,
-                          groups=self.channels, bias=False),
-                nn.BatchNorm2d(self.channels, affine=affine),
-                # pw-linear
-                nn.Conv2d(self.channels, self.channels, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(self.channels, affine=affine),
-                nn.ReLU(inplace=True)
-            )
+        # FIXME: restore before merging into master
+        # remove if stride == 2 for torchscript
+        self.branch_proj = nn.Sequential(
+            # dw
+            nn.Conv2d(self.channels, self.channels, ksize, stride, self.pad,
+                        groups=self.channels, bias=False),
+            nn.BatchNorm2d(self.channels, affine=affine),
+            # pw-linear
+            nn.Conv2d(self.channels, self.channels, 1, 1, 0, bias=False),
+            nn.BatchNorm2d(self.channels, affine=affine),
+            nn.ReLU(inplace=True)
+        )
 
     def forward(self, x):
         if self.stride == 2:
@@ -76,8 +77,7 @@ class ShuffleNetBlock(nn.Module):
         return result
 
     def _channel_shuffle(self, x):
-        bs, num_channels, height, width = x.data.size()
-        assert (num_channels % 4 == 0)
+        bs, num_channels, height, width = x.size()
         x = x.reshape(bs * num_channels // 2, 2, height * width)
         x = x.permute(1, 0, 2)
         x = x.reshape(2, -1, num_channels // 2, height, width)

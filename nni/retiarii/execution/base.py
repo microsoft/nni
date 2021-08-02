@@ -14,6 +14,7 @@ from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
 
+
 class BaseGraphData:
     def __init__(self, model_script: str, evaluator: Evaluator) -> None:
         self.model_script = model_script

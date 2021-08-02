@@ -82,10 +82,25 @@ configuration needed by this algorithm :
 disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
 state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
-note
-^^^^
+Batch normalization folding
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-batch normalization folding is currently not supported.
+Batch normalization folding is supported in QAT quantizer. It can be easily enabled by passing an argument `dummy_input` to
+the quantizer, like:
+
+.. code-block:: python
+
+    # assume your model takes an input of shape (1, 1, 28, 28)
+    # and dummy_input must be on the same device as the model
+    dummy_input = torch.randn(1, 1, 28, 28)
+
+    # pass the dummy_input to the quantizer
+    quantizer = QAT_Quantizer(model, config_list, dummy_input=dummy_input)
+
+
+The quantizer will automatically detect Conv-BN patterns and simulate batch normalization folding process in the training
+graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
+`quantizer.export_model`.
 
 ----
 

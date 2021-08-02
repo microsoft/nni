@@ -95,94 +95,45 @@ e.g. there are three machines, which can be logged in with username and password
 
 Install and run NNI on one of those three machines or another machine, which has network access to them.
 
-Use ``examples/trials/mnist-annotation`` as the example. Below is content of ``examples/trials/mnist-annotation/config_remote.yml``\ :
+Use ``examples/trials/mnist-pytorch`` as the example. Below is content of ``examples/trials/mnist-pytorch/config_remote.yml``\ :
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_mnist
-   trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 10
-   #choice: local, remote, pai
-   trainingServicePlatform: remote
-   # search space file
-   searchSpacePath: search_space.json
-   #choice: true, false
-   useAnnotation: true
+   searchSpaceFile: search_space.json
+   trialCommand: python3 mnist.py
+   trialCodeDirectory: .  # default value, can be omitted
+   trialGpuNumber: 0
+   trialConcurrency: 4
+   maxTrialNumber: 20
    tuner:
-     #choice: TPE, Random, Anneal, Evolution, BatchTuner
-     #SMAC (SMAC should be installed through nnictl)
-     builtinTunerName: TPE
+     name: TPE
      classArgs:
-       #choice: maximize, minimize
        optimize_mode: maximize
-   trial:
-     command: python3 mnist.py
-     codeDir: .
-     gpuNum: 0
-   #machineList can be empty if the platform is local
-   machineList:
-     - ip: 10.1.1.1
-       username: bob
-       passwd: bob123
-       #port can be skip if using default ssh port 22
-       #port: 22
-     - ip: 10.1.1.2
-       username: bob
-       passwd: bob123
-     - ip: 10.1.1.3
-       username: bob
-       passwd: bob123
+   trainingService:
+     platform: remote
+     machineList:
+       - host: 192.0.2.1
+         user: alice
+         ssh_key_file: ~/.ssh/id_rsa
+       - host: 192.0.2.2
+         port: 10022
+         user: bob
+         password: bob123
+         pythonPath: /usr/bin
 
-Files in ``codeDir`` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
+Files in ``trialCodeDirectory`` will be uploaded to remote machines automatically. You can run below command on Windows, Linux, or macOS to spawn trials on remote Linux machines:
 
 .. code-block:: bash
 
-   nnictl create --config examples/trials/mnist-annotation/config_remote.yml
+   nnictl create --config examples/trials/mnist-pytorch/config_remote.yml
 
 Configure python environment
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 By default, commands and scripts will be executed in the default environment in remote machine. If there are multiple python virtual environments in your remote machine, and you want to run experiments in a specific environment, then use **pythonPath** to specify a python environment on your remote machine. 
 
-Use ``examples/trials/mnist-tfv2`` as the example. Below is content of ``examples/trials/mnist-tfv2/config_remote.yml``\ :
+For example, with anaconda you can specify:
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_mnist
-   trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 10
-   #choice: local, remote, pai
-   trainingServicePlatform: remote
-   searchSpacePath: search_space.json
-   #choice: true, false
-   useAnnotation: false
-   tuner:
-     #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-     #SMAC (SMAC should be installed through nnictl)
-     builtinTunerName: TPE
-     classArgs:
-       #choice: maximize, minimize
-       optimize_mode: maximize
-   trial:
-     command: python3 mnist.py
-     codeDir: .
-     gpuNum: 0
-   #machineList can be empty if the platform is local
-   machineList:
-     - ip: ${replace_to_your_remote_machine_ip}
-       username: ${replace_to_your_remote_machine_username}
-       sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
-       # Below is an example of specifying python environment.
-       pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}
-
-Remote machine supports running experiment in reuse mode. In this mode, NNI will reuse remote machine jobs to run as many as possible trials. It can save time of creating new jobs. User needs to make sure each trial can run independent in the same job, for example, avoid loading checkpoint from previous trials.  
-Follow the setting to enable reuse mode:
-
-.. code-block:: yaml
-
-   remoteConfig:
-     reuse: true
+   pythonPath: /home/bob/.conda/envs/ENV-NAME/bin

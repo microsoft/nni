@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent, PlacementConstraint
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -178,7 +178,7 @@ class NNIManager implements Manager {
         this.config = config;
         this.log.info(`Starting experiment: ${this.experimentProfile.id}`);
         await this.storeExperimentProfile();
-        
+
         if (this.trainingService === undefined) {
             this.log.info('Setup training service...');
             this.trainingService = await this.initTrainingService(config);
@@ -449,8 +449,12 @@ class NNIManager implements Manager {
         if (!platform) {
             throw new Error('Cannot detect training service platform');
         }
+        const reuseMode = Array.isArray(config.trainingService) || (config.trainingService as any).reuseMode;
 
-        if (platform === 'local') {
+        if (reuseMode) {
+            const module_ = await import('../training_service/reusable/routerTrainingService');
+            return await module_.RouterTrainingService.construct(config);
+        } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
         } else if (platform === 'kubeflow') {
@@ -545,13 +549,13 @@ class NNIManager implements Manager {
 
     private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
         const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-        if(undefined !== trialJobDetail &&
+        if (undefined !== trialJobDetail &&
             trialJobDetail.status === 'RUNNING' &&
-            trialJobDetail.startTime !== undefined){
-                const isEarlyStopped = true;
-                await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
-                this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
-            }
+            trialJobDetail.startTime !== undefined) {
+            const isEarlyStopped = true;
+            await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+            this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+        }
     }
 
     private async requestTrialJobsStatus(): Promise<number> {
@@ -635,8 +639,6 @@ class NNIManager implements Manager {
                 this.trialConcurrencyChange = requestTrialNum;
             }
 
-            this.requestTrialJobs(requestTrialNum);
-
             // check maxtrialnum and maxduration here
             // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
             // might tell nnimanager that this is no more trials. In NO_MORE_TRIAL state, the experiment is viewed
@@ -661,6 +663,8 @@ class NNIManager implements Manager {
                     }
                 }
             } else {
+                this.requestTrialJobs(requestTrialNum);
+
                 if (this.status.status === 'DONE') {
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
@@ -677,7 +681,7 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async ()=> this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
+                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
@@ -750,7 +754,7 @@ class NNIManager implements Manager {
 
     private async onTrialJobMetrics(metric: TrialJobMetric): Promise<void> {
         this.log.debug('NNIManager received trial job metrics:', metric);
-        if (this.trialJobs.has(metric.id)){
+        if (this.trialJobs.has(metric.id)) {
             await this.dataStore.storeMetricData(metric.id, metric.data);
             if (this.dispatcher === undefined) {
                 throw new Error('Error: tuner has not been setup');
@@ -799,12 +803,15 @@ class NNIManager implements Manager {
                     this.log.warning('It is not supposed to receive more trials after NO_MORE_TRIAL is set');
                     this.setStatus('RUNNING');
                 }
+                const trialRequestContent: TrialCommandContent = JSON.parse(content);
+                const noneConstraint: PlacementConstraint = {type: 'None', gpus: []};
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
                         value: content,
                         index: 0
-                    }
+                    },
+                    placementConstraint: trialRequestContent.placement_constraint? trialRequestContent.placement_constraint : noneConstraint
                 };
                 this.waitingTrials.push(form);
                 break;

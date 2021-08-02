@@ -1,6 +1,8 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+# pylint: skip-file
+
 import logging
 
 import tensorflow as tf

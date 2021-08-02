@@ -9,3 +9,4 @@ Python API Reference
     Auto Tune <autotune_ref>
     NAS <NAS/ApiReference>
     Compression <Compression/CompressionReference>
+    Python API <Tutorial/HowToLaunchFromPython>

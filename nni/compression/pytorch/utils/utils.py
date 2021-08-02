@@ -70,7 +70,14 @@ def randomize_tensor(tensor, start=1, end=100):
 
 def not_safe_to_prune(model, dummy_input):
     """
-    Get the layers that are safe to prune(will not bring the shape conflict).
+    Get the layers that are not safe to prune(may bring the shape conflict).
+    For example, if the output tensor of a conv layer is directly followed by
+    a shape-dependent function(such as reshape/view), then this conv layer
+    may be not safe to be pruned. Pruning may change the output shape of
+    this conv layer and result in shape problems. This function find all the
+    layers that directly followed by the shape-dependent functions(view, reshape, etc).
+    If you run the inference after the speedup and run into a shape related error,
+    please exclude the layers returned by this function and try again.
 
     Parameters
     ----------
