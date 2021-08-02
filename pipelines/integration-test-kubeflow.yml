@@ -50,6 +50,7 @@ jobs:
   - script: |
       set -e
       cd test
+      echo ${keyvault_vaultname}
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts kubeflow \
           --keyvault_vaultname ${keyvault_vaultname} \
