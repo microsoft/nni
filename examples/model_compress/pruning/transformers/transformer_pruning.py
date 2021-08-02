@@ -316,7 +316,7 @@ def main():
         "sparsity": args.sparsity,
         "op_types": ["Linear"],
         "op_names": [x for layer in attention_name_groups[:6] for x in layer]
-    },{
+    }, {
         "sparsity": args.sparsity / 2,
         "op_types": ["Linear"],
         "op_names": [x for layer in attention_name_groups[6:] for x in layer]
