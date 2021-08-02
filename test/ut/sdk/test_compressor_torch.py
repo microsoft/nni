@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
 from unittest import TestCase, main
 import numpy as np
 import torch
@@ -218,6 +219,90 @@ class CompressorTestCase(TestCase):
         mask2 = pruner.calc_mask(model.conv2)
         assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 25., 25., 25., 25.]))
         assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 0., 0., 0., 0., 0., 0., ]))
+
+    def test_torch_taylorFOweight_pruner_global_sort(self):
+        """
+        After enabling global_sort, taylorFOweight pruner will calculate contributions and rank topk from all
+        of the conv operators. Then it will prune low contribution filters depends on the global information.
+
+        So if sparsity of conv operator is 0.4, the expected masks should mask out filter 0 and filter 1 together, 
+        this can be verified through:
+        `all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0, 0., 25.]))`
+        `all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 125., 125., 125., 0., 0., 0.]))`
+        """
+
+        w1 = np.array([np.zeros((1, 5, 5)), np.ones((1, 5, 5)), np.ones((1, 5, 5)) * 2,
+                      np.ones((1, 5, 5)) * 3, np.ones((1, 5, 5)) * 4])
+        w2 = np.array([[[[i + 1] * 5] * 5] * 5 for i in range(10)[::-1]])
+
+        grad1 = np.array([np.ones((1, 5, 5)) * -1, np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1,
+                      np.ones((1, 5, 5)) * 1, np.ones((1, 5, 5)) * -1])
+
+        grad2 = np.array([[[[(-1)**i] * 5] * 5] * 5 for i in range(10)])
+
+        config_list = [{'sparsity': 0.4, 'op_types': ['Conv2d']}]
+
+        model = TorchModel()
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        pruner = torch_pruner.TaylorFOWeightFilterPruner(model, config_list, optimizer, trainer=None, criterion=None, sparsifying_training_batches=1, global_sort=True)
+
+        x = torch.rand((1, 1, 28, 28), requires_grad=True)
+        model.conv1.module.weight.data = torch.tensor(w1).float()
+        model.conv2.module.weight.data = torch.tensor(w2).float()
+
+        y = model(x)
+        y.backward(torch.ones_like(y))
+
+        model.conv1.module.weight.grad.data = torch.tensor(grad1).float()
+        model.conv2.module.weight.grad.data = torch.tensor(grad2).float()
+        optimizer.step()
+
+        mask1 = pruner.calc_mask(model.conv1)
+        mask2 = pruner.calc_mask(model.conv2)
+        print(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy())
+        print(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy())
+        assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0, 0., 25.]))
+        assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 125., 125., 125., 0., 0., 0.]))
+
+    def test_torch_observer_quantizer(self):
+        model = TorchModel()
+        # test invalid config
+        # only support 8bit for now
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 5,
+            'op_types': ['Conv2d', 'Linear']
+        }]
+        with self.assertRaises(schema.SchemaError):
+            torch_quantizer.ObserverQuantizer(model, config_list)
+
+        # weight will not change for now
+        model = TorchModel().eval()
+        origin_parameters = copy.deepcopy(dict(model.named_parameters()))
+
+        config_list = [{
+            'quant_types': ['weight'],
+            'quant_bits': 8,
+            'op_types': ['Conv2d', 'Linear']
+        }]
+        quantizer = torch_quantizer.ObserverQuantizer(model, config_list)
+        input = torch.randn(1, 1, 28, 28)
+        model(input)
+        quantizer.compress()
+        buffers = dict(model.named_buffers())
+        scales = {k: v for k, v in buffers.items() if 'scale' in k}
+        model_path = "test_model.pth"
+        calibration_path = "test_calibration.pth"
+        calibration_config = quantizer.export_model(model_path, calibration_path)
+        new_parameters = dict(model.named_parameters())
+        for layer_name, v in calibration_config.items():
+            scale_name = layer_name + '.module.weight_scale'
+            weight_name = layer_name + '.weight'
+            s = float(scales[scale_name])
+            self.assertTrue(torch.allclose(origin_parameters[weight_name], new_parameters[weight_name], atol=0.5 * s))
+
+        self.assertTrue(calibration_config is not None)
+        self.assertTrue(len(calibration_config) == 4)
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()

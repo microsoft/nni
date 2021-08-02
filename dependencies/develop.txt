@@ -10,3 +10,4 @@ pytest-cov
 pytest-azurepipelines
 coverage
 ipython
+jupyterlab

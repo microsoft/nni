@@ -52,7 +52,9 @@ class Operation:
         return True
 
     @staticmethod
-    def new(type_name: str, parameters: Dict[str, Any] = {}, cell_name: str = None) -> 'Operation':
+    def new(type_name: str, parameters: Dict[str, Any] = None, cell_name: str = None) -> 'Operation':
+        if parameters is None:
+            parameters = {}
         if type_name == '_cell':
             # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
             return Cell(cell_name, parameters)
@@ -95,6 +97,10 @@ class PyTorchOperation(Operation):
         for subclass in cls.__subclasses__():
             if hasattr(subclass, '_ori_type_name') and \
                 subclass_name in subclass._ori_type_name:
+                return subclass
+        for subclass in cls.__subclasses__():
+            if hasattr(subclass, '_artificial_op_name') and \
+                subclass_name in subclass._artificial_op_name:
                 return subclass
         return cls
 
@@ -199,9 +205,11 @@ class Cell(PyTorchOperation):
         No real usage. Exists for compatibility with base class.
     """
 
-    def __init__(self, cell_name: str, parameters: Dict[str, Any] = {}):
+    def __init__(self, cell_name: str, parameters: Dict[str, Any] = None):
         self.type = '_cell'
         self.cell_name = cell_name
+        if parameters is None:
+            parameters = {}
         self.parameters = parameters
 
     def _to_class_name(self):

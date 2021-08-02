@@ -22,6 +22,8 @@ class EngineTest(unittest.TestCase):
         self.assertEqual(script.strip(), reference_script.strip())
 
     def test_base_execution_engine(self):
+        nni.retiarii.integration_api._advisor = None
+        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         set_execution_engine(BaseExecutionEngine())
         with open(self.enclosing_dir / 'mnist_pytorch.json') as f:
@@ -33,7 +35,8 @@ class EngineTest(unittest.TestCase):
         advisor.assessor_worker.join()
 
     def test_py_execution_engine(self):
-        
+        nni.retiarii.integration_api._advisor = None
+        nni.retiarii.execution.api._execution_engine = None
         advisor = RetiariiAdvisor()
         set_execution_engine(PurePythonExecutionEngine())
         model = Model._load({

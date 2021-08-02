@@ -28,6 +28,7 @@ We provide several pruning algorithms that support fine-grained weight pruning a
 **Others**
 
 * `Lottery Ticket Hypothesis <#lottery-ticket-hypothesis>`__
+* `Transformer Head Pruner <#transformer-head-pruner>`__
 
 Level Pruner
 ------------
@@ -333,6 +334,8 @@ TaylorFOWeightFilter Pruner is a pruner which prunes convolutional layers based 
 
 
 We also provide a dependency-aware mode for this pruner to get better speedup from the pruning. Please reference `dependency-aware <./DependencyAware.rst>`__ for more details.
+
+What's more, we provide a global-sort mode for this pruner which is aligned with paper implementation. Please set parameter 'global_sort' to True when instantiate TaylorFOWeightFilterPruner.
 
 Usage
 ^^^^^
@@ -722,3 +725,95 @@ User configuration for Sensitivity Pruner
 **PyTorch**
 
 ..  autoclass:: nni.algorithms.compression.pytorch.pruning.SensitivityPruner
+
+Transformer Head Pruner
+-----------------------
+
+Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__. The following image from `Efficient Transformers: A Survey <https://arxiv.org/pdf/2009.06732.pdf>`__ gives a good overview the general structure of the Transformer.
+
+.. image:: ../../img/transformer_structure.png
+   :target: ../../img/transformer_structure.png
+   :alt: 
+
+Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normally, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned. Also, the weights in the output projection corresponding to the head's output are pruned. In our implementation, we calculate and apply masks to the four matrices together.
+
+Note: currently, the pruner can only handle models with projection weights written as separate ``Linear`` modules, i.e., it expects four ``Linear`` modules corresponding to query, key, value, and an output projections. Therefore, in the ``config_list``, you should either write ``['Linear']`` for the ``op_types`` field, or write names corresponding to ``Linear`` modules for the ``op_names`` field.
+
+The pruner implements the following algorithm:
+
+.. code-block:: bash
+
+    Repeat for each pruning iteration (1 for one-shot pruning):
+       1. Calculate importance scores for each head in each specified layer using a specific criterion.
+       2. Sort heads locally or globally, and prune out some heads with lowest scores. The number of pruned heads is determined according to the sparsity specified in the config.
+       3. If the specified pruning iteration is larger than 1 (iterative pruning), finetune the model for a while before the next pruning iteration.
+
+Currently, the following head sorting criteria are supported:
+
+    * "l1_weight": rank heads by the L1-norm of weights of the query, key, and value projection matrices.
+    * "l2_weight": rank heads by the L2-norm of weights of the query, key, and value projection matrices.
+    * "l1_activation": rank heads by the L1-norm of their attention computation output.
+    * "l2_activation": rank heads by the L2-norm of their attention computation output.
+    * "taylorfo": rank heads by l1 norm of the output of attention computation * gradient for this output. Check more details in `this paper <https://arxiv.org/abs/1905.10650>`__ and `this one <https://arxiv.org/abs/1611.06440>`__.
+
+We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort.
+
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage below), or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (experimental feature). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (see usage below). Also note that weights belonging to the same layer must have the same sparsity.
+
+In addition to the following usage guide, we provide a more detailed example of pruning BERT for tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
+
+Usage
+^^^^^
+
+Suppose we want to prune a BERT with Huggingface implementation, which has the following architecture (obtained by calling ``print(model)``). Note that we only show the first layer of the repeated layers in the encoder's ``ModuleList layer``. 
+
+.. image:: ../../img/huggingface_bert_architecture.png
+   :target: ../../img/huggingface_bert_architecture.png
+   :alt: 
+
+**Usage Example: one-shot pruning, assigning sparsity 0.5 to the first six layers and sparsity 0.25 to the last six layers (PyTorch code)**. Note that
+
+* Here we specify ``op_names`` in the config list to assign different sparsity to different layers.
+* Meanwhile, we pass ``attention_name_groups`` to the pruner so that the pruner may group together the weights belonging to the same attention layer.
+* Since in this example we want to do one-shot pruning, the ``num_iterations`` parameter is set to 1, and the parameter ``epochs_per_iteration`` is ignored. If you would like to do iterative pruning instead, you can set the ``num_iterations`` parameter to the number of pruning iterations, and the ``epochs_per_iteration`` parameter to the number of finetuning epochs between two iterations.
+* The arguments ``trainer`` and ``optimizer`` are only used when we want to do iterative pruning, or the ranking criterion is ``taylorfo``. Here these two parameters are ignored by the pruner.
+* The argument ``forward_runner`` is only used when the ranking criterion is ``l1_activation`` or ``l2_activation``. Here this parameter is ignored by the pruner.
+
+.. code-block:: python
+
+   from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
+   attention_name_groups = list(zip(["encoder.layer.{}.attention.self.query".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.self.key".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.self.value".format(i) for i in range(12)],
+                                    ["encoder.layer.{}.attention.output.dense".format(i) for i in range(12)]))
+   kwargs = {"ranking_criterion": "l1_weight",
+             "global_sort": False,
+             "num_iterations": 1,
+             "epochs_per_iteration": 1,    # this is ignored when num_iterations = 1
+             "head_hidden_dim": 64,
+             "attention_name_groups": attention_name_groups,
+             "trainer": trainer,
+             "optimizer": optimizer,
+             "forward_runner": forward_runner
+             }
+    config_list = [{
+        "sparsity": 0.5,
+        "op_types": ["Linear"],
+        "op_names": [x for layer in attention_name_groups[:6] for x in layer]      # first six layers
+    },
+    {
+        "sparsity": 0.25,
+        "op_types": ["Linear"],
+        "op_names": [x for layer in attention_name_groups[6:] for x in layer]      # last six layers
+    }
+    ]
+   pruner = TransformerHeadPruner(model, config_list, **kwargs)
+   pruner.compress()
+
+   
+User configuration for Transformer Head Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.pytorch.pruning.TransformerHeadPruner

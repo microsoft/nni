@@ -46,39 +46,28 @@ Use ``examples/trials/mnist-pytorch`` as an example. The NNI config YAML file's 
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_mnist
+   searchSpaceFile: search_space.json
+   trialCommand: python3 mnist.py
    trialConcurrency: 1
-   maxExecDuration: 1h
-   maxTrialNum: 10
-   trainingServicePlatform: aml
-   searchSpacePath: search_space.json
-   #choice: true, false
-   useAnnotation: false
+   maxTrialNumber: 10
    tuner:
-     #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-     #SMAC (SMAC should be installed through nnictl)
-     builtinTunerName: TPE
+     name: TPE
      classArgs:
-       #choice: maximize, minimize
        optimize_mode: maximize
-   trial:
-     command: python3 mnist.py
-     codeDir: .
-     image: msranni/nni
-     gpuNum: 1
-   amlConfig:
-     subscriptionId: ${replace_to_your_subscriptionId}
-     resourceGroup: ${replace_to_your_resourceGroup}
-     workspaceName: ${replace_to_your_workspaceName}
-     computeTarget: ${replace_to_your_computeTarget}
+   trainingService:
+     platform: aml
+     dockerImage: msranni/nni
+     subscriptionId: ${your subscription ID}
+     resourceGroup: ${your resource group}
+     workspaceName: ${your workspace name}
+     computeTarget: ${your compute target}
 
-Note: You should set ``trainingServicePlatform: aml`` in NNI config YAML file if you want to start experiment in aml mode.
+Note: You should set ``platform: aml`` in NNI config YAML file if you want to start experiment in aml mode.
 
-Compared with `LocalMode <LocalMode.rst>`__ trial configuration in aml mode have these additional keys:
+Compared with `LocalMode <LocalMode.rst>`__ training service configuration in aml mode have these additional keys:
 
 
-* image
+* dockerImage
 
   * required key. The docker image name used in job. NNI support image ``msranni/nni`` for running aml jobs.
 
@@ -103,7 +92,7 @@ amlConfig:
 
   * required key, the compute cluster name you want to use in your AML workspace. `refer <https://docs.microsoft.com/en-us/azure/machine-learning/concept-compute-target>`__ See Step 6.
 
-* maxTrialNumPerGpu
+* maxTrialNumberPerGpu
 
   * optional key, default 1. Used to specify the max concurrency trial number on a GPU device.
 

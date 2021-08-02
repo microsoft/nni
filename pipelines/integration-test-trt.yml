@@ -18,13 +18,13 @@ jobs:
 
       echo "Working directory: ${PWD}"
       echo "NNI version: ${NNI_RELEASE}"
-      echo "Build docker image: $(build_docker_image)"
 
       python3 -m pip install --upgrade pip setuptools
     displayName: Prepare
 
   - script: |
       set -e
+      export PATH="$PATH:/home/nni-test/ENTER/bin"
       python3 setup.py build_ts
       python3 setup.py bdist_wheel -p manylinux1_x86_64
       python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]

@@ -1,10 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+
 import collections
+import logging
 from typing import Dict, Any, List
 from ..graph import Model
 from ..mutator import Mutator, Sampler
+
+_logger = logging.getLogger(__name__)
 
 
 class _FixedSampler(Sampler):
@@ -30,3 +34,16 @@ def get_targeted_model(base_model: Model, mutators: List[Mutator], sample: dict)
     for mutator in mutators:
         model = mutator.bind_sampler(sampler).apply(model)
     return model
+
+
+def filter_model(model_filter, ir_model):
+    if model_filter is not None:
+        _logger.debug(f'Check if model satisfies constraints.')
+        if model_filter(ir_model):
+            _logger.debug(f'Model satisfied. Submit the model.')
+            return True
+        else:
+            _logger.debug(f'Model unsatisfied. Discard the model.')
+            return False
+    else:
+        return True

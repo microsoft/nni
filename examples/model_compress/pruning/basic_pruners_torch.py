@@ -218,6 +218,10 @@ def main(args):
         }]
 
     else:
+        if args.global_sort:
+            print('Enable the global_sort mode')
+            # only taylor pruner supports global sort mode currently
+            kw_args['global_sort'] = True
         if args.dependency_aware:
             dummy_input = get_dummy_input(args, device)
             print('Enable the dependency_aware mode')
@@ -340,6 +344,8 @@ if __name__ == '__main__':
                         help='target overall target sparsity')
     parser.add_argument('--dependency-aware', action='store_true', default=False,
                         help='toggle dependency aware mode')
+    parser.add_argument('--global-sort', action='store_true', default=False,
+                        help='toggle global sort mode')
     parser.add_argument('--pruner', type=str, default='l1filter',
                         choices=['level', 'l1filter', 'l2filter', 'slim', 'agp',
                                  'fpgm', 'mean_activation', 'apoz', 'taylorfo'],

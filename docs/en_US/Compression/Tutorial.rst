@@ -185,13 +185,6 @@ Please refer to `here <ModelSpeedup.rst>`__ for detailed description. The exampl
 Control the Fine-tuning process
 -------------------------------
 
-APIs to control the fine-tuning
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Some compression algorithms control the progress of compression during fine-tuning (e.g. `AGP <../Compression/Pruner.rst#agp-pruner>`__\ ), and some algorithms need to do something after every minibatch. Therefore, we provide another two APIs for users to invoke: ``pruner.update_epoch(epoch)`` and ``pruner.step()``.
-
-``update_epoch`` should be invoked in every epoch, while ``step`` should be invoked after each minibatch. Note that most algorithms do not require calling the two APIs. Please refer to each algorithm's document for details. For the algorithms that do not need them, calling them is allowed but has no effect.
-
 Enhance the fine-tuning process
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

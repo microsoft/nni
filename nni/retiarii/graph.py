@@ -307,9 +307,9 @@ class Graph:
     @overload
     def add_node(self, name: str, operation: Operation) -> 'Node': ...
     @overload
-    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+    def add_node(self, name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
 
-    def add_node(self, name, operation_or_type, parameters={}):
+    def add_node(self, name, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -319,9 +319,9 @@ class Graph:
     @overload
     def insert_node_on_edge(self, edge: 'Edge', name: str, operation: Operation) -> 'Node': ...
     @overload
-    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = {}) -> 'Node': ...
+    def insert_node_on_edge(self, edge: 'Edge', name: str, type_name: str, parameters: Dict[str, Any] = None) -> 'Node': ...
 
-    def insert_node_on_edge(self, edge, name, operation_or_type, parameters={}) -> 'Node':
+    def insert_node_on_edge(self, edge, name, operation_or_type, parameters=None) -> 'Node':
         if isinstance(operation_or_type, Operation):
             op = operation_or_type
         else:
@@ -410,7 +410,7 @@ class Graph:
         return self is other
 
     def _fork_to(self, model: Model, name_prefix='') -> 'Graph':
-        new_graph = Graph(model, self.id, name_prefix+self.name, _internal=True)._register()
+        new_graph = Graph(model, self.id, name_prefix + self.name, _internal=True)._register()
         # TODO: use node copy instead
         new_graph.input_node.operation.io_names = self.input_node.operation.io_names
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
@@ -457,6 +457,11 @@ class Graph:
     def _register(self) -> 'Graph':
         self.model.graphs[self.name] = self
         return self
+
+    def _rename_graph(self, old_name, new_name):
+        self.model.graphs[old_name].name = new_name
+        self.model.graphs[new_name] = self.model.graphs[old_name]
+        del self.model.graphs[old_name]
 
     @staticmethod
     def _load(model: Model, name: str, ir: Any) -> 'Graph':
@@ -562,9 +567,9 @@ class Node:
     @overload
     def update_operation(self, operation: Operation) -> None: ...
     @overload
-    def update_operation(self, type_name: str, parameters: Dict[str, Any] = {}) -> None: ...
+    def update_operation(self, type_name: str, parameters: Dict[str, Any] = None) -> None: ...
 
-    def update_operation(self, operation_or_type, parameters={}):
+    def update_operation(self, operation_or_type, parameters=None):
         if isinstance(operation_or_type, Operation):
             self.operation = operation_or_type
         else:
