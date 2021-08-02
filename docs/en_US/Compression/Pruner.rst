@@ -737,7 +737,7 @@ Transformer Head Pruner is a tool designed for pruning attention heads from the 
 
 Typically, each attention layer in the Transformer models consists of four weights: three projection matrices for query, key, value, and an output projection matrix. The outputs of the former three matrices contains the projected results for all heads. Normally, the results are then reshaped so that each head performs that attention computation independently. The final results are concatenated back before fed into the output projection. Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned. Also, the weights in the output projection corresponding to the head's output are pruned. In our implementation, we calculate and apply masks to the four matrices together.
 
-Note: currently, the pruner can only handle models with projection weights written as separate ``Linear`` modules, i.e., it expects four ``Linear`` modules corresponding to query, key, value, and an output projections. Therefore, in the ``config_list``, you should either write ``['Linear']`` for the ``op_types`` field, or write names corresponding to ``Linear`` modules for the ``op_names`` field.
+Note: currently, the pruner can only handle models with projection weights written as separate ``Linear`` modules, i.e., it expects four ``Linear`` modules corresponding to query, key, value, and an output projections. Therefore, in the ``config_list``, you should either write ``['Linear']`` for the ``op_types`` field, or write names corresponding to ``Linear`` modules for the ``op_names`` field. For instance, the `Huggingface transformers <https://huggingface.co/transformers/index.html>`_ are supported, but ``torch.nn.Transformer`` is not.
 
 The pruner implements the following algorithm:
 
@@ -756,11 +756,9 @@ Currently, the following head sorting criteria are supported:
     * "l2_activation": rank heads by the L2-norm of their attention computation output.
     * "taylorfo": rank heads by l1 norm of the output of attention computation * gradient for this output. Check more details in `this paper <https://arxiv.org/abs/1905.10650>`__ and `this one <https://arxiv.org/abs/1611.06440>`__.
 
-We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort.
+We support local sorting (i.e., sorting heads within a layer) and global sorting (sorting all heads together), and you can control by setting the ``global_sort`` parameter. Note that if ``global_sort=True`` is passed, all weights must have the same sparsity in the config list. However, this does not mean that each layer will be prune to the same sparsity as specified. This sparsity value will be interpreted as a global sparsity, and each layer is likely to have different sparsity after pruning by global sort. As a reminder, we found that if global sorting is used, it is usually helpful to use an iterative pruning scheme, interleaving pruning with intermediate finetuning, since global sorting often results in non-uniform sparsity distributions, which makes the model more susceptible to forgetting.
 
-In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage below), or simply pass a dummy input and the pruner will run ``torch.jit.trace`` to group the weights (experimental feature). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (see usage below). Also note that weights belonging to the same layer must have the same sparsity.
-
-In addition to the following usage guide, we provide a more detailed example of pruning BERT for tasks from the GLUE benchmark. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`.
+In our implementation, we support two ways to group the four weights in the same layer together. You can either pass a nested list containing the names of these modules as the pruner's initialization parameters (usage below), or simply pass a dummy input instead and the pruner will run ``torch.jit.trace`` to group the weights (experimental feature). However, if you would like to assign different sparsity to each layer, you can only use the first option, i.e., passing names of the weights to the pruner (see usage below). Also, note that we require the weights belonging to the same layer to have the same sparsity.
 
 Usage
 ^^^^^
@@ -810,6 +808,13 @@ Suppose we want to prune a BERT with Huggingface implementation, which has the f
    pruner = TransformerHeadPruner(model, config_list, **kwargs)
    pruner.compress()
 
+In addition to this usage guide, we provide a more detailed example of pruning BERT (Huggingface implementation) for transfer learning on the tasks from the `GLUE benchmark <https://gluebenchmark.com/>`_. Please find it in this :githublink:`page <examples/model_compress/pruning/transformers>`. To run the example, first make sure that you install the package ``transformers`` and ``datasets``. Then, you may start by running the following command:
+
+.. code-block:: bash
+
+	./run.sh gpu_id glue_task
+
+By default, the code will download a pretrained BERT language model, and then finetune for several epochs on the downstream GLUE task. Then, the ``TransformerHeadPruner`` will be used to prune out heads from each layer by a certain criterion (by default, the code lets the pruner uses magnitude ranking, and prunes out 50% of the heads in each layer in an one-shot manner). Finally, the pruned model will be finetuned in the downstream task for several epochs. You can check the details of pruning from the logs printed out by the example. You can also experiment with different pruning settings by changing the parameters in ``run.sh``, or directly changing the ``config_list`` in ``transformer_pruning.py``.
    
 User configuration for Transformer Head Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
