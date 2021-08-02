@@ -81,7 +81,9 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         if (this.createStoragePromise) {
             await this.createStoragePromise;
         }
-        environment.command = `cd ${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId} && ${environment.command}`;
+        const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
+        environment.command = `cd ${expFolder} && ${environment.command} \
+        1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
         if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
             environment.useActiveGpu = this.config.deprecated.useActiveGpu;
         }
