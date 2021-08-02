@@ -3,19 +3,14 @@
 
 import argparse
 import logging
-import math
 import os
-import random
 
 import torch
 from torch.utils.data.dataloader import DataLoader
 from tqdm.auto import tqdm
 
-import nni
-from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.pytorch.pruning import TransformerHeadPruner
-
 
 import datasets
 from datasets import load_dataset, load_metric
@@ -23,13 +18,9 @@ import transformers
 from transformers import (
     AdamW,
     AutoConfig,
-    AutoModel,
-    AutoModelForPreTraining,
     AutoModelForSequenceClassification,
     AutoTokenizer,
     DataCollatorWithPadding,
-    PretrainedConfig,
-    default_data_collator,
     get_scheduler,
 )
 
@@ -38,7 +29,8 @@ logger = logging.getLogger("bert_pruning_example")
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="Example: prune a Huggingface transformer and finetune on GLUE tasks.")
+    parser = argparse.ArgumentParser(
+        description="Example: prune a Huggingface transformer and finetune on GLUE tasks.")
 
     parser.add_argument("--model_name", type=str, required=True,
                         help="Pretrained model architecture.")
@@ -53,7 +45,8 @@ def parse_args():
                         help="Rank the heads globally and prune the heads with lowest scores. If set to False, the "
                              "heads are only ranked within one layer")
     parser.add_argument("--ranking_criterion", type=str, default="l1_weight",
-                        choices=["l1_weight", "l2_weight", "l1_activation", "l2_activation", "taylorfo"],
+                        choices=["l1_weight", "l2_weight",
+                                 "l1_activation", "l2_activation", "taylorfo"],
                         help="Criterion by which the attention heads are ranked.")
     parser.add_argument("--num_iterations", type=int, default=1,
                         help="Number of pruning iterations (1 for one-shot pruning).")
@@ -93,7 +86,8 @@ def get_raw_dataset(task_name):
     """
     raw_dataset = load_dataset("glue", task_name)
     is_regression = task_name == "stsb"
-    num_labels = 1 if is_regression else len(raw_dataset["train"].features["label"].names)
+    num_labels = 1 if is_regression else len(
+        raw_dataset["train"].features["label"].names)
 
     return raw_dataset, is_regression, num_labels
 
@@ -105,29 +99,32 @@ def preprocess(args, tokenizer, raw_dataset):
     assert args.task_name is not None
 
     task_to_keys = {
-    "cola": ("sentence", None),
-    "mnli": ("premise", "hypothesis"),
-    "mrpc": ("sentence1", "sentence2"),
-    "qnli": ("question", "sentence"),
-    "qqp": ("question1", "question2"),
-    "rte": ("sentence1", "sentence2"),
-    "sst2": ("sentence", None),
-    "stsb": ("sentence1", "sentence2"),
-    "wnli": ("sentence1", "sentence2"),
+        "cola": ("sentence", None),
+        "mnli": ("premise", "hypothesis"),
+        "mrpc": ("sentence1", "sentence2"),
+        "qnli": ("question", "sentence"),
+        "qqp": ("question1", "question2"),
+        "rte": ("sentence1", "sentence2"),
+        "sst2": ("sentence", None),
+        "stsb": ("sentence1", "sentence2"),
+        "wnli": ("sentence1", "sentence2"),
     }
     sentence1_key, sentence2_key = task_to_keys[args.task_name]
 
     def tokenize(data):
         texts = (
-            (data[sentence1_key],) if sentence2_key is None else (data[sentence1_key], data[sentence2_key])
+            (data[sentence1_key],) if sentence2_key is None else (
+                data[sentence1_key], data[sentence2_key])
         )
-        result = tokenizer(*texts, padding=False, max_length=args.max_length, truncation=True)
+        result = tokenizer(*texts, padding=False,
+                           max_length=args.max_length, truncation=True)
 
         if "label" in data:
             result["labels"] = data["label"]
         return result
 
-    processed_datasets = raw_dataset.map(tokenize, batched=True, remove_columns=raw_dataset["train"].column_names)
+    processed_datasets = raw_dataset.map(
+        tokenize, batched=True, remove_columns=raw_dataset["train"].column_names)
     return processed_datasets
 
 
@@ -168,7 +165,8 @@ def train_model(args, model, is_regression, train_dataloader, eval_dataloader, o
             for field in batch.keys():
                 batch[field] = batch[field].to(device)
             outputs = model(**batch)
-            predictions = outputs.logits.argmax(dim=-1) if not is_regression else outputs.logits.squeeze()
+            predictions = outputs.logits.argmax(dim=-1) if not is_regression \
+                else outputs.logits.squeeze()
             metric.add_batch(predictions=predictions, references=batch["labels"])
 
         eval_metric = metric.compute()
@@ -183,7 +181,7 @@ def trainer_helper(model, train_dataloader, optimizer, device):
     """
     logger.info("Training for 1 epoch...")
     progress_bar = tqdm(range(len(train_dataloader)), position=0, leave=True)
- 
+
     train_epoch = 1
     for epoch in range(train_epoch):
         for step, batch in enumerate(train_dataloader):
@@ -213,7 +211,7 @@ def forward_runner_helper(model, train_dataloader, device):
             _ = model(**batch)
             # note: no loss.backward or optimizer.step() is performed here
             progress_bar.update(1)
- 
+
 
 def final_eval_for_mnli(args, model, processed_datasets, metric, data_collator):
     """
@@ -248,15 +246,18 @@ def main():
     transformers.utils.logging.set_verbosity_info()
 
     # Load dataset and tokenizer, and then preprocess the dataset
-    raw_dataset, is_regression, num_labels = get_raw_dataset(args.task_name)    
+    raw_dataset, is_regression, num_labels = get_raw_dataset(args.task_name)
     tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=True)
     processed_datasets = preprocess(args, tokenizer, raw_dataset)
     train_dataset = processed_datasets["train"]
-    eval_dataset = processed_datasets["validation_matched" if args.task_name == "mnli" else "validation"]
+    eval_dataset = processed_datasets["validation_matched" if args.task_name ==
+                                      "mnli" else "validation"]
 
     # Load pretrained model
-    config = AutoConfig.from_pretrained(args.model_name, num_labels=num_labels, finetuning_task=args.task_name)
-    model = AutoModelForSequenceClassification.from_pretrained(args.model_name, config=config)
+    config = AutoConfig.from_pretrained(
+        args.model_name, num_labels=num_labels, finetuning_task=args.task_name)
+    model = AutoModelForSequenceClassification.from_pretrained(
+        args.model_name, config=config)
     model.to(device)
 
     #########################################################################
@@ -269,9 +270,10 @@ def main():
     lr_scheduler = get_scheduler(name=args.lr_scheduler_type, optimizer=optimizer, num_warmup_steps=args.num_warmup_steps,
                                  num_training_steps=train_steps)
     metric = load_metric("glue", args.task_name)
-    
+
     logger.info("================= Finetuning before pruning =================")
-    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
+    train_model(args, model, is_regression, train_dataloader,
+                eval_dataloader, optimizer, lr_scheduler, metric, device)
 
     if args.output_dir is not None:
         torch.save(model.state_dict(), args.output_dir + "/model_before_pruning.pt")
@@ -358,7 +360,7 @@ def main():
     # After pruning, finetune again on the target task
     # Get the metric function
     metric = load_metric("glue", args.task_name)
-    
+
     # re-initialize the optimizer and the scheduler
     optimizer, _, _, data_collator = get_dataloader_and_optimizer(args, tokenizer, model, train_dataset,
                                                                   eval_dataset)
@@ -366,13 +368,16 @@ def main():
                                  num_training_steps=train_steps)
 
     logger.info("================= Finetuning after Pruning =================")
-    train_model(args, model, is_regression, train_dataloader, eval_dataloader, optimizer, lr_scheduler, metric, device)
+    train_model(args, model, is_regression, train_dataloader,
+                eval_dataloader, optimizer, lr_scheduler, metric, device)
 
     if args.output_dir is not None:
-        torch.save(model.state_dict(), args.output_dir + "/model_after_pruning.pt")
+        torch.save(model.state_dict(), args.output_dir +
+                   "/model_after_pruning.pt")
 
     if args.task_name == "mnli":
-        final_eval_for_mnli(args, model, processed_datasets, metric, data_collator)
+        final_eval_for_mnli(args, model, processed_datasets,
+                            metric, data_collator)
 
     flops, params, results = count_flops_params(model, dummy_input)
     print(f"Final model FLOPs {flops / 1e6:.2f} M, #Params: {params / 1e6:.2f}M")
