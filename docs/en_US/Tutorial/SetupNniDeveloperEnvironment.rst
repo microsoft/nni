@@ -20,7 +20,8 @@ Note, if you want to contribute code back, it needs to fork your own NNI repo, a
 
 .. code-block:: bash
 
-   python3 -m pip install --upgrade pip setuptools
+   python3 -m pip install -U -r dependencies/setup.txt
+   python3 -m pip install -r dependencies/develop.txt
    python3 setup.py develop
 
 This installs NNI in `development mode <https://setuptools.readthedocs.io/en/latest/userguide/development_mode.html>`__,
