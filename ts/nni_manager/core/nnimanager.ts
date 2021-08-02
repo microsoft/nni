@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent, PlacementConstraint
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -457,6 +457,9 @@ class NNIManager implements Manager {
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
+        } else if (platform === 'kubeflow') {
+            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
+            return new module_.KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();
@@ -636,8 +639,6 @@ class NNIManager implements Manager {
                 this.trialConcurrencyChange = requestTrialNum;
             }
 
-            this.requestTrialJobs(requestTrialNum);
-
             // check maxtrialnum and maxduration here
             // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
             // might tell nnimanager that this is no more trials. In NO_MORE_TRIAL state, the experiment is viewed
@@ -662,6 +663,8 @@ class NNIManager implements Manager {
                     }
                 }
             } else {
+                this.requestTrialJobs(requestTrialNum);
+
                 if (this.status.status === 'DONE') {
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
@@ -801,13 +804,14 @@ class NNIManager implements Manager {
                     this.setStatus('RUNNING');
                 }
                 const trialRequestContent: TrialCommandContent = JSON.parse(content);
+                const noneConstraint: PlacementConstraint = {type: 'None', gpus: []};
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
                         value: content,
                         index: 0
                     },
-                    placementConstraint: trialRequestContent.placement_constraint
+                    placementConstraint: trialRequestContent.placement_constraint? trialRequestContent.placement_constraint : noneConstraint
                 };
                 this.waitingTrials.push(form);
                 break;
