@@ -4,10 +4,10 @@ import os
 import logging
 import torch
 import numpy as np
-from .shape_dependency import ChannelDependency, GroupDependency, CatPaddingDependency, InputChannelDependency
+from .shape_dependency import ChannelDependency, GroupDependency, InputChannelDependency
 from .utils import get_module_by_name
 # logging.basicConfig(level = logging.DEBUG)
-_logger = logging.getLogger(__name__)
+_logger = logging.getLogger('FixMaskConflict')
 
 
 def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
@@ -21,7 +21,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
         A dict object that stores the masks or the path of the mask file
     model : torch.nn.Module
         model to fix the mask conflict
-    dummy_input : torch.Tensor
+    dummy_input : torch.Tensor/list of tensors/dict of tensors
         input example to trace the model
     traced : torch._C.torch.jit.TopLevelTracedModule
         the traced model of the target model, is this parameter is not None,
@@ -31,7 +31,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
         # if the input is the path of the mask_file
         assert os.path.exists(masks)
         masks = torch.load(masks)
-    assert len(masks) > 0,  'Mask tensor cannot be empty'
+    assert len(masks) > 0, 'Mask tensor cannot be empty'
     # if the user uses the model and dummy_input to trace the model, we
     # should get the traced model handly, so that, we only trace the
     # model once, GroupMaskConflict and ChannelMaskConflict will reuse
@@ -48,9 +48,7 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     masks = fix_group_mask.fix_mask()
     fix_channel_mask = ChannelMaskConflict(masks, model, dummy_input, traced)
     masks = fix_channel_mask.fix_mask()
-    padding_cat_mask = CatMaskPadding(masks, model, dummy_input, traced)
-    masks = padding_cat_mask.fix_mask()
-    return masks, fix_channel_mask.conv_prune_dim
+    return masks
 
 
 class MaskFix:
@@ -76,70 +74,6 @@ class MaskFix:
         Export the masks after fixing the conflict to file.
         """
         torch.save(self.masks, path)
-
-
-class CatMaskPadding(MaskFix):
-    def __init__(self, masks, model, dummy_input=None, traced=None):
-        """
-        CatMaskPadding find the layers whose output tensor is passed
-        to the same cat operation. The cat operation concatnates the
-        masks of the input tensors as the output mask, so when some
-        of the input layers of the cat operation are not pruned, we still
-        need to pass the masks of these non-pruned layers(the mask are
-        all ones) to the cat operation to ensure the shape of the output
-        mask is right.
-
-        Parameters
-        ----------
-        masks : dict
-            a dict object that stores the masks
-        model : torch.nn.Module
-            model to fix the mask conflict
-        dummy_input : torch.Tensor
-            input example to trace the model
-        traced : torch._C.torch.jit.TopLevelTracedModule
-            the traced model of the target model, is this parameter is not None,
-            we donnot use the model and dummpy_input to get the trace graph.
-        """
-        super(CatMaskPadding, self).__init__(masks, model, dummy_input, traced)
-
-    def fix_mask(self):
-        cat_padding_depen = CatPaddingDependency(
-            self.model, self.dummy_input, self.traced)
-        name_to_module = {}
-        for name, module in self.model.named_modules():
-            name_to_module[name] = module
-        depen = cat_padding_depen.dependency_sets
-        for layers in depen:
-            device = None
-            count = 0
-            for layer in layers:
-                if layer in self.masks:
-                    count += 1
-                    if device is None:
-                        device = self.masks[layer]['weight'].device
-            if count == 0:
-                # no layer is pruned
-                continue
-            elif count == len(layers):
-                # all the layers have been pruned
-                continue
-            # pad the mask for the non-pruned layers
-            for layer in layers:
-                if layer in self.masks:
-                    continue
-
-                module = name_to_module[layer]
-                w_shape = module.weight.data.size()
-                w_mask = torch.ones(w_shape).to(device)
-                b_mask = None
-                if hasattr(module, 'bias') and module.bias is not None:
-                    # module.bias may be None
-                    b_shape = module.bias.data.size()
-                    b_mask = torch.ones(b_shape).to(device)
-                self.masks[layer] = {'weight': w_mask, 'bias': b_mask}
-
-        return self.masks
 
 
 class GroupMaskConflict(MaskFix):
@@ -172,46 +106,60 @@ class GroupMaskConflict(MaskFix):
         group_depen = GroupDependency(
             self.model, self.dummy_input, self.traced)
         depens = group_depen.dependency
+        min_groups = group_depen.min_groups
         _logger.info(depens)
         for layername in depens:
-            group = depens[layername]
+            group_max = depens[layername]
+            group_min = min_groups[layername]
             if layername not in self.masks:
                 # this layer not pruned
                 continue
             w_mask = self.masks[layername]['weight']
             shape = w_mask.size()
             count = np.prod(shape[1:])
-            all_ones = (w_mask.flatten(1).sum(-1) ==
-                        count).nonzero().squeeze(1).tolist()
-            all_zeros = (w_mask.flatten(1).sum(-1) ==
-                         0).nonzero().squeeze(1).tolist()
+            all_ones = (w_mask.flatten(1).sum(-1) == count).nonzero().squeeze(1).tolist()
+            all_zeros = (w_mask.flatten(1).sum(-1) == 0).nonzero().squeeze(1).tolist()
             if len(all_ones) + len(all_zeros) < w_mask.size(0):
                 # In fine-grained pruning, skip this layer
                 _logger.info('Layers %s using fine-grained pruning', layername)
                 continue
-            assert shape[0] % group == 0
+            assert shape[0] % group_max == 0
             # Find the number of masked filter for each group (mini_masked).
             # Because we have to keep the pruned filter can still
             # be divided into the same number of groups, so we only can
             # prune mini_masked filters for each group.
-            step = shape[0] / group
+            step = shape[0] / group_max
             group_masked = []
-            for i in range(group):
+            for i in range(group_max):
                 _start = step * i
-                _end = step * (i+1)
+                _end = step * (i + 1)
                 _tmp_list = list(
                     filter(lambda x: _start <= x and x < _end, all_zeros))
                 group_masked.append(_tmp_list)
             mini_masked = min([len(x) for x in group_masked])
+            need_unmask = set()
             for gm in group_masked:
                 for i in range(mini_masked, len(gm)):
                     # To keep the output channel number still being divisible to
                     # groups, we set the masks of following filters to be zero.
                     pos = gm[i]
-                    self.masks[layername]['weight'][pos] = torch.ones(
-                        shape[1:])
-                    if 'bias' in self.masks[layername] and self.masks[layername]['bias'] is not None:
-                        self.masks[layername]['bias'][pos] = 1
+                    need_unmask.add(pos)
+            step = shape[0] / group_min
+            for i in range(group_min):
+                _start = step * i
+                _end = step * (i+1)
+                _tmp_list = list(
+                    filter(lambda x: _start <= x and x < _end, all_zeros))
+                if len(_tmp_list) == step:
+                    # if the whole group is removed, then we don't have to unmask for
+                    # the filters in this group
+                    for pos in _tmp_list:
+                        if pos in need_unmask:
+                            need_unmask.remove(pos)
+            for pos in need_unmask:
+                self.masks[layername]['weight'][pos] = torch.ones(shape[1:])
+                if hasattr(self.masks[layername], 'bias'):
+                    self.masks[layername]['bias'][pos] = 1
         return self.masks
 
 
@@ -236,9 +184,14 @@ class ChannelMaskConflict(MaskFix):
         super(ChannelMaskConflict, self).__init__(
             masks, model, dummy_input, traced)
         self.conv_prune_dim = detect_mask_prune_dim(masks, model)
-        _logger.info('detected conv prune dim: %s', self.conv_prune_dim)
+        _logger.info('Dectected conv prune dim" %d', self.conv_prune_dim)
 
     def fix_mask(self):
+        """
+        Fix the mask conflict before the mask inference for the layers that
+        has shape dependencies. This function should be called before the
+        mask inference of the 'speedup' module.
+        """
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
@@ -276,7 +229,12 @@ class ChannelMaskConflict(MaskFix):
                         if (channel_mask.sum() * (mask.numel() / mask.shape[self.conv_prune_dim])).item() != (mask > 0).sum().item():
                             fine_grained = True
                     elif type(m).__name__ == 'Linear':
-                        channel_masks.append((mask.abs().sum(0) != 0).int())
+                        if self.conv_prune_dim == 1:
+                            channel_masks.append(
+                                (mask.abs().sum(0) != 0).int())
+                        else:
+                            channel_masks.append(
+                                (mask.abs().sum(1) != 0).int())
                     elif type(m).__name__ == 'BatchNorm2d':
                         channel_masks.append(mask.int())
                     elif type(m).__name__ == 'ConvTranspose2d':
@@ -286,7 +244,7 @@ class ChannelMaskConflict(MaskFix):
                             0, 2, 3) if self.conv_prune_dim == 0 else (1, 2, 3)
                         channel_mask = (mask.abs().sum(tmp_sum_idx) != 0).int()
                         channel_masks.append(channel_mask)
-                        if (channel_mask.sum() * (mask.numel() / mask.shape[1-self.conv_prune_dim])).item() != (mask > 0).sum().item():
+                        if (channel_mask.sum() * (mask.numel() / mask.shape[1 - self.conv_prune_dim])).item() != (mask > 0).sum().item():
                             fine_grained = True
                     else:
                         raise RuntimeError(
@@ -295,9 +253,7 @@ class ChannelMaskConflict(MaskFix):
                     # no mask means not pruned, equivlent to full masks
                     channel_masks.append(None)
             if fine_grained:
-                _logger.info(
-                    'fine-grained mask detected, skip solving conflict for this set: %s', dset)
-                continue
+                _logger.info("Fine-grianed mask detected")
             if all(x is None for x in channel_masks):
                 continue
             num_channels_list = [len(x)
@@ -308,7 +264,8 @@ class ChannelMaskConflict(MaskFix):
 
             for i, dim_mask in enumerate(channel_masks):
                 if dim_mask is None:
-                    channel_masks[i] = torch.ones(num_channels).int().to(device)
+                    channel_masks[i] = torch.ones(
+                        num_channels).int().to(device)
 
             # merge masks with 'or'
             merged_channel_mask = channel_masks[0].clone()
@@ -331,19 +288,22 @@ class ChannelMaskConflict(MaskFix):
                     else:
                         new_mask[:, merged_index, :, :] = 1.
                 elif type(m).__name__ == 'Linear':
-                    new_mask[:, merged_index] = 1.
+                    if self.conv_prune_dim == 0:
+                        new_mask[merged_index, :] = 1
+                    elif self.conv_prune_dim == 1:
+                        new_mask[:, merged_index] = 1.
                 elif type(m).__name__ == 'BatchNorm2d':
-                    new_mask = merged_index.type_as(orig_mask)
+                    new_mask = merged_channel_mask.type_as(orig_mask)
                 else:
                     raise RuntimeError(
                         f'unsupported module type: {type(m).__name__}')
-
                 self.masks[name]['weight'] = new_mask
                 if 'bias' in self.masks[name] and self.masks[name]['bias'] is not None:
                     if type(m).__name__ == 'Conv2d':
                         assert self.conv_prune_dim == 0
-                    self.masks[name]['bias'] = merged_channel_mask.type_as(
-                        self.masks[name]['bias'])
+                    if self.conv_prune_dim == 0:
+                        self.masks[name]['bias'] = merged_channel_mask.type_as(
+                            self.masks[name]['bias'])
 
         return self.masks
 
@@ -351,14 +311,12 @@ class ChannelMaskConflict(MaskFix):
 def detect_mask_prune_dim(masks, model):
     """
     Detect how the masks of convolutional layers are pruned.
-
     Parameters
     ----------
     masks: dict
         A dict object that stores the masks.
     model: nn.Module
         Model object which the mask can be applied on.
-
     Returns:
     -------
         How the masks of convolutional layers are pruned, this depends on pruning algorithms, it should

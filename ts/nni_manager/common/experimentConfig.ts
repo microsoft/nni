@@ -5,6 +5,9 @@
 
 import * as assert from 'assert';
 
+import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
+import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
+
 export interface TrainingServiceConfig {
     platform: string;
 }
@@ -13,6 +16,7 @@ export interface TrainingServiceConfig {
 
 export interface LocalConfig extends TrainingServiceConfig {
     platform: 'local';
+    reuseMode: boolean;
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
@@ -68,35 +72,38 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
-/* Kubeflow */
-
-// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
-    storage: string;
+    storageType: string;
+    maxTrialNumberPerGpu?: number;
     server?: string;
     path?: string;
     azureAccount?: string;
     azureShare?: string;
-    keyVault?: string;
-    keyVaultSecret?: string;
+    keyVaultName?: string;
+    keyVaultKey?: string;
 }
 
 export interface KubeflowRoleConfig {
     replicas: number;
+    codeDirectory: string;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: string;
+    memorySize: number;
     dockerImage: string;
+    privateRegistryAuthPath?: string;
 }
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
-    operator: string;
-    apiVersion: string;
+    ps?: KubeflowRoleConfig;
+    master?: KubeflowRoleConfig;
+    worker?: KubeflowRoleConfig;
+    maxTrialNumberPerGpu: number;
+    operator: KubeflowOperator;
+    apiVersion: OperatorApiVersion;
     storage: KubeflowStorageConfig;
-    worker: KubeflowRoleConfig;
-    parameterServer?: KubeflowRoleConfig;
+    reuseMode: boolean;
 }
 
 /* FrameworkController */
@@ -161,6 +168,7 @@ export interface ExperimentConfig {
     trialConcurrency: number;
     trialGpuNumber?: number;
     maxExperimentDuration?: string;
+    maxTrialDuration?: string;
     maxTrialNumber?: number;
     nniManagerIp?: string;
     //useAnnotation: boolean;  // dealed inside nnictl

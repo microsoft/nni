@@ -1,6 +1,6 @@
 import { MANAGER_IP } from '../const';
 import { ExperimentConfig, toSeconds } from '../experimentConfig';
-import { ExperimentProfile, NNIManagerStatus } from '../interface';
+import { ExperimentProfile, ExperimentMetadata, NNIManagerStatus } from '../interface';
 import { requestAxios } from '../function';
 import { SearchSpace } from './searchspace';
 
@@ -32,8 +32,24 @@ const emptyProfile: ExperimentProfile = {
     revision: 0
 };
 
+const emptyMetadata: ExperimentMetadata = {
+    id: '',
+    port: 0,
+    startTime: '',
+    endTime: '',
+    status: '',
+    platform: '',
+    experimentName: '',
+    tag: [],
+    pid: 0,
+    webuiUrl: [],
+    logDir: '',
+    prefixUrl: null
+};
+
 class Experiment {
     private profileField?: ExperimentProfile;
+    private metadataField?: ExperimentMetadata = undefined;
     private statusField?: NNIManagerStatus = undefined;
     private isNestedExperiment: boolean = false;
     private isexperimentError: boolean = false;
@@ -82,10 +98,14 @@ class Experiment {
     public async update(): Promise<boolean> {
         let updated = false;
 
-        await requestAxios(`${MANAGER_IP}/experiment`)
-            .then(data => {
-                updated = updated || !compareProfiles(this.profileField, data);
-                this.profileField = data;
+        await Promise.all([requestAxios(`${MANAGER_IP}/experiment`), requestAxios(`${MANAGER_IP}/experiment-metadata`)])
+            .then(([profile, metadata]) => {
+                updated ||= !compareProfiles(this.profileField, profile);
+                this.profileField = profile;
+
+                if (JSON.stringify(this.metadataField) !== JSON.stringify(metadata)) {
+                    this.metadataField = metadata;
+                }
             })
             .catch(error => {
                 this.isexperimentError = true;
@@ -111,6 +131,10 @@ class Experiment {
         return this.profileField === undefined ? emptyProfile : this.profileField;
     }
 
+    get metadata(): ExperimentMetadata {
+        return this.metadataField === undefined ? emptyMetadata : this.metadataField;
+    }
+
     get config(): ExperimentConfig {
         return this.profile.params;
     }
@@ -131,8 +155,8 @@ class Experiment {
 
     get optimizeMode(): string {
         for (const algo of [this.config.tuner, this.config.advisor, this.config.assessor]) {
-            if (algo && algo.classArgs && algo.classArgs['optimizeMode']) {
-                return algo.classArgs['optimizeMode'];
+            if (algo && algo.classArgs && algo.classArgs['optimize_mode']) {
+                return algo.classArgs['optimize_mode'];
             }
         }
         return 'unknown';

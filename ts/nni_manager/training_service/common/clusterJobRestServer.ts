@@ -76,7 +76,7 @@ export abstract class ClusterJobRestServer extends RestServer {
         const router: Router = Router();
 
         router.use((req: Request, res: Response, next: any) => {
-            this.log.info(`${req.method}: ${req.url}: body:\n${JSON.stringify(req.body, undefined, 4)}`);
+            this.log.info(`${req.method}: ${req.url}: body:`, req.body);
             res.setHeader('Content-Type', 'application/json');
             next();
         });
@@ -109,7 +109,7 @@ export abstract class ClusterJobRestServer extends RestServer {
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
                 this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
-                this.log.info(`update-metrics body is ${JSON.stringify(req.body)}`);
+                this.log.info('update-metrics body is', req.body);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
 

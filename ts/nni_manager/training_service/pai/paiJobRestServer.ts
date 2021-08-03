@@ -46,7 +46,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
 
         router.post(`/parameter-file-meta`, (req: Request, res: Response) => {
             try {
-                this.log.info(`POST /parameter-file-meta, body is ${JSON.stringify(req.body)}`);
+                this.log.info('POST /parameter-file-meta, body is', req.body);
                 this.parameterFileMetaList.push(req.body);
                 res.send();
             } catch (err) {

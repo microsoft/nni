@@ -10,6 +10,8 @@
 /ts/nni_manager/exp_profile.json
 /ts/nni_manager/metrics.json
 /ts/nni_manager/trial_jobs.json
+/test/ut/retiarii/_debug_graph_data.json
+/test/ut/retiarii/out.tmp
 
 # Logs
 logs
@@ -32,6 +34,12 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+junit/
+coverage.xml
+test-*.xml
+.coverage.*
+htmlcov/
+.coverage
 
 # nyc test coverage
 .nyc_output
@@ -99,5 +107,3 @@ venv.bak/
 .vscode
 .vs
 .history
-generated/
-test/ut/retiarii/_debug_graph_data.json

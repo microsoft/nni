@@ -8,11 +8,11 @@ import socket
 from subprocess import Popen
 import sys
 import time
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Any
 
 import colorama
 
-import nni_node  # pylint: disable=import-error
+import nni_node  # pylint: disable=wrong-import-order, import-error
 import nni.runtime.protocol
 
 from .config import ExperimentConfig
@@ -39,11 +39,11 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         start_time, proc = _start_rest_server(config, port, debug, exp_id, mode=mode)
-        _logger.info('Statring web server...')
+        _logger.info('Starting web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,
-                                     config.experiment_name, proc.pid, str(config.experiment_working_directory))
+                                     config.experiment_name, proc.pid, str(config.experiment_working_directory), [])
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json())
         return proc
@@ -74,11 +74,11 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
         nni.runtime.protocol._out_file = pipe_file
-        _logger.info('Statring web server...')
+        _logger.info('Starting web server...')
         _check_rest_server(port)
         platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
         _save_experiment_information(exp_id, port, start_time, platform,
-                                     config.experiment_name, proc.pid, config.experiment_working_directory)
+                                     config.experiment_name, proc.pid, config.experiment_working_directory, ['retiarii'])
         _logger.info('Setting up...')
         rest.post(port, '/experiment', config.json())
         return proc, pipe
@@ -156,9 +156,10 @@ def _check_rest_server(port: int, retry: int = 3) -> None:
     rest.get(port, '/check-status')
 
 
-def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str, name: str, pid: int, logDir: str) -> None:
+def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str,
+                                 name: str, pid: int, logDir: str, tag: List[Any]) -> None:
     experiments_config = Experiments()
-    experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir)
+    experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir, tag=tag)
 
 
 def get_stopped_experiment_config(exp_id: str, mode: str) -> None:

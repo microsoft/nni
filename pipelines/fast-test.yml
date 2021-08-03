@@ -87,6 +87,10 @@ stages:
     variables:
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
     steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
     - task: Cache@2
       inputs:
         key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
@@ -120,8 +124,13 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
 
     - script: |
         sudo apt-get install -y pandoc
@@ -161,24 +170,19 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[PPOTuner,DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         set -e
         cd test
-        python -m pytest ut --ignore=ut/sdk/test_pruners.py \
+        python -m pytest ut --cov-config=.coveragerc \
+          --ignore=ut/sdk/test_pruners.py \
           --ignore=ut/sdk/test_compressor_tf.py \
           --ignore=ut/sdk/test_compressor_torch.py
-        python -m pytest ut/sdk/test_pruners.py
-        python -m pytest ut/sdk/test_compressor_tf.py
-        python -m pytest ut/sdk/test_compressor_torch.py
+        python -m pytest ut/sdk/test_pruners.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/sdk/test_compressor_tf.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/sdk/test_compressor_torch.py --cov-config=.coveragerc --cov-append
       displayName: Python unit test
 
     - script: |
@@ -188,6 +192,19 @@ stages:
         cd ../nasui
         CI=true yarn test
       displayName: TypeScript unit test
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
+        testRunTitle: 'Publish test results for Python $(python.version)'
+      displayName: Publish test results
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+      displayName: Publish code coverage results
 
     - script: |
         cd test
@@ -201,12 +218,16 @@ stages:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
-    # This platform runs integration test first.
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.6
       displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
 
     - script: |
         sudo apt-get install -y pandoc
@@ -246,7 +267,7 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended_legacy.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
     # Need del later
@@ -283,13 +304,16 @@ stages:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
-    # This platform runs TypeScript unit test first.
-
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
 
     - script: |
         brew install swig@3
@@ -335,14 +359,8 @@ stages:
     - script: |
         set -e
         python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner]
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         cd test
@@ -360,14 +378,18 @@ stages:
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-
-    # This platform runs Python unit test first.
+    timeoutInMinutes: 120  # windows test need extra time
 
     steps:
     - task: UsePythonVersion@0
       inputs:
         versionSpec: 3.8
       displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
 
     - task: Cache@2
       inputs:
@@ -398,13 +420,8 @@ stages:
 
     - script: |
         python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[DNGO]
       displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
 
     - script: |
         cd test

@@ -15,19 +15,18 @@ __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'list_models', 'submit_models', 'wait_models', 'query_available_resources',
            'set_execution_engine', 'is_stopped_exec', 'budget_exhausted']
 
-def set_execution_engine(engine) -> None:
+
+def set_execution_engine(engine: AbstractExecutionEngine) -> None:
     global _execution_engine
     if _execution_engine is None:
         _execution_engine = engine
     else:
-        raise RuntimeError('execution engine is already set')
+        raise RuntimeError('Execution engine is already set.')
 
 
 def get_execution_engine() -> AbstractExecutionEngine:
-    """
-    Currently we assume the default execution engine is BaseExecutionEngine.
-    """
     global _execution_engine
+    assert _execution_engine is not None, 'You need to set execution engine, before using it.'
     return _execution_engine
 
 

@@ -2,30 +2,30 @@
 # Licensed under the MIT license.
 
 import copy
-from typing import Dict, Tuple, List, Any
+from typing import Dict, Tuple, Any, Union
 
 from nni.retiarii.utils import uid
+from nni.common.device import GPUDevice
+
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
 
 
-class PhysicalDevice:
-    def __init__(self, server: str, device: str):
-        self.server = server
-        self.device = device
+class CPUDevice:
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.device = 'cpu'
 
-    def __eq__(self, o) -> bool:
-        return self.server == o.server and self.device == o.device
-
-    def __hash__(self) -> int:
-        return hash(self.server + '_' + self.device)
+    def device_repr(self):
+        return "cpu"
 
 
 class AbstractLogicalNode(Node):
     def __init__(self, graph, node_id, name, operation, _internal=False):
         super().__init__(graph, node_id, name, operation, _internal=_internal)
+        self.related_models = []
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         raise NotImplementedError
 
     def _fork_to(self, graph: Graph):
@@ -40,8 +40,7 @@ class LogicalGraph(Graph):
         nodes_dump = {}
         for node in self.hidden_nodes:
             if isinstance(node, OriginNode):
-                nodes_dump[f"{node.original_graph.model.model_id}_{node.name}"] = node._dump(
-                )
+                nodes_dump[f"{node.original_graph.model.model_id}_{node.name}"] = node._dump()
             else:
                 nodes_dump[f"{node.graph.model.model_id}_{node.name}"] = node._dump()
 
@@ -93,7 +92,7 @@ class OriginNode(AbstractLogicalNode):
         self.original_graph = original_graph
         self.original_node = original_node
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         model_id = self.original_node.graph.model.model_id
         new_node = Node(self.original_node.graph, self.original_node.id,
                         f"M_{model_id}_" +
@@ -137,29 +136,31 @@ class LogicalPlan:
         for edge in from_graph.edges:
             new_head = id_to_new_node[edge.head.id]
             new_tail = id_to_new_node[edge.tail.id]
-            Edge((new_head, edge.head_slot), (new_tail,
-                                              edge.tail_slot), _internal=True)._register()
+            Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) \
-            -> Tuple[Model, Dict[Node, PhysicalDevice], List[Model]]:
-        phy_model = Model(_internal=True)  # self.lp_model.fork()
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) \
+            -> Tuple[Model, Dict[Node, Union[GPUDevice, CPUDevice]]]:
+        phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
-
-        # Add a flag to mark multi-model in graph json.
-        # Multi-model has a list of training configs in kwargs['model_kwargs']
-        if len(multi_model_placement) > 1:
-            phy_model.evaluator.kwargs['is_multi_model'] = True
-            phy_model.evaluator.kwargs['model_cls'] = phy_graph.name
-            phy_model.evaluator.kwargs['model_kwargs'] = []
-            # FIXME: allow user to specify
-            phy_model.evaluator.module = 'nni.retiarii.trainer.pytorch.PyTorchMultiModelTrainer'
+        phy_graph._rename_graph(phy_graph.name, "_model")
 
         # merge sub-graphs
         for model in multi_model_placement:
+            if phy_model.evaluator is None and model.evaluator is not None:
+                phy_model.evaluator = model.evaluator
             for graph_name in model.graphs:
                 if graph_name != model._root_graph_name:
-                    model.graphs[graph_name]._fork_to(
+                    new_graph = model.graphs[graph_name]._fork_to(
                         phy_model, name_prefix=f'M_{model.model_id}_')
+
+                    # prefix of M_ of hidden_nodes name in non-root graphs is added here
+                    for new_node in new_graph.hidden_nodes:
+                        if isinstance(new_node.operation, Cell):
+                            old_cell_name = new_node.operation.cell_name
+                            new_node.operation = copy.deepcopy(new_node.operation)
+                            new_node.operation.cell_name = f'M_{model.model_id}_{old_cell_name}'
+
+        assert(phy_model.evaluator is not None)
 
         # When replace logical nodes, merge the training configs when
         # input/output nodes are replaced.
@@ -169,6 +170,9 @@ class LogicalPlan:
         # Replace all logical nodes to executable physical nodes
         hidden_nodes = phy_graph.hidden_nodes.copy()
         node_placements = {}
+
+        added_models = []
+
         for node in hidden_nodes:
             if isinstance(node, OriginNode):
                 model_id = node.original_graph.model.model_id
@@ -185,12 +189,9 @@ class LogicalPlan:
                 if isinstance(new_node.operation, _IOPseudoOperation):
                     model_id = new_node.graph.model.model_id
                     if model_id not in evaluator_slot:
-                        phy_model.evaluator.kwargs['model_kwargs'].append(new_node.graph.model.evaluator.kwargs.copy())
-                        evaluator_slot[model_id] = len(phy_model.evaluator.kwargs['model_kwargs']) - 1
+                        added_models.append(model_id)
+                        evaluator_slot[model_id] = len(added_models) - 1
                         slot = evaluator_slot[model_id]
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['model_id'] = model_id
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = False
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = False
                     else:
                         slot = evaluator_slot[model_id]
                     # If a model's inputs/outputs are not used in the multi-model
@@ -199,37 +200,47 @@ class LogicalPlan:
                     # an input/output of a model is used in a multi-model
                     if new_node.operation.type == '_inputs':
                         input_slot_mapping[new_node] = slot
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_input'] = True
                     if new_node.operation.type == '_outputs':
                         output_slot_mapping[new_node] = slot
-                        phy_model.evaluator.kwargs['model_kwargs'][slot]['use_output'] = True
 
                 self.node_replace(node, new_node)
 
+                # name prefix of M_ of cells in hidden_nodes of root graphs is added here
+                # FIXME: merge this rename with non-root graph, only do once.
                 if isinstance(new_node.operation, Cell):
                     old_cell_name = new_node.operation.cell_name
                     new_node.operation = copy.deepcopy(new_node.operation)
                     new_node.operation.cell_name = f'M_{model_id}_{old_cell_name}'
-                node_placements[new_node] = placement
+
+                # input should be at CPU, move it to GPU first if necessary
+                if isinstance(new_node.operation, _IOPseudoOperation) and new_node.operation.type == '_inputs':
+                    # hack: only support single_server
+                    node_placements[new_node] = CPUDevice(node_id=placement.node_id)
+                else:
+                    node_placements[new_node] = placement
 
                 node.remove()
 
         # If two nodes are placed on different devices, use ToDevice op to copy the node
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
-        copied_op: Dict[Tuple(Node, PhysicalDevice), Node] = {}
+        copied_op: Dict[Tuple(Node, Union[GPUDevice, CPUDevice]), Node] = {}
         for edge in existing_edges:
             head_placement = node_placements[edge.head]
             tail_placement = node_placements[edge.tail]
             if head_placement != tail_placement:
-                if head_placement.server != tail_placement.server:
+                if head_placement.node_id != tail_placement.node_id:
                     raise ValueError('Cross-server placement is not supported.')
                 # Same server different devices
                 if (edge.head, tail_placement) in copied_op:
                     to_node = copied_op[(edge.head, tail_placement)]
                 else:
-                    to_operation = Operation.new('ToDevice', {"device": tail_placement.device})
-                    to_node = Node(phy_graph, uid(), edge.head.name + "_to_" + edge.tail.name, to_operation)._register()
+                    dst_name = edge.head.name + "_to_" + edge.tail.name
+                    to_operation = Operation.new(
+                        'ToDevice', {
+                            "device": tail_placement.device_repr(), "src": (
+                                edge.head.name, edge.head_slot), "dst": dst_name})
+                    to_node = Node(phy_graph, uid(), dst_name, to_operation)._register()
                     Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node
                 edge.head = to_node

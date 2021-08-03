@@ -3,14 +3,14 @@
 
 import copy
 import warnings
-from collections import OrderedDict
-from typing import Any, List, Union, Dict
+from typing import Any, List, Union, Dict, Optional
 
 import torch
 import torch.nn as nn
 
 from ...serializer import Translatable, basic_unit
-from ...utils import uid
+from ...utils import NoContextError
+from .utils import generate_new_label, get_fixed_value
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
@@ -26,6 +26,8 @@ class LayerChoice(nn.Module):
     ----------
     candidates : list of nn.Module or OrderedDict
         A module list to be selected from.
+    prior : list of float
+        Prior distribution used in random sampling.
     label : str
         Identifier of the layer choice.
 
@@ -55,7 +57,21 @@ class LayerChoice(nn.Module):
     ``self.op_choice[1] = nn.Conv3d(...)``. Adding more choices is not supported yet.
     """
 
-    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], label: str = None, **kwargs):
+    # FIXME: prior is designed but not supported yet
+
+    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
+                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
+        try:
+            chosen = get_fixed_value(label)
+            if isinstance(candidates, list):
+                return candidates[int(chosen)]
+            else:
+                return candidates[chosen]
+        except NoContextError:
+            return super().__new__(cls)
+
+    def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
+                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         super(LayerChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -65,10 +81,12 @@ class LayerChoice(nn.Module):
         if 'reduction' in kwargs:
             warnings.warn(f'"reduction" is deprecated. Ignoring...')
         self.candidates = candidates
-        self._label = label if label is not None else f'layerchoice_{uid()}'
+        self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
+        assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
+        self._label = generate_new_label(label)
 
         self.names = []
-        if isinstance(candidates, OrderedDict):
+        if isinstance(candidates, dict):
             for name, module in candidates.items():
                 assert name not in ["length", "reduction", "return_mask", "_key", "key", "names"], \
                     "Please don't use a reserved name '{}' for your module.".format(name)
@@ -80,6 +98,7 @@ class LayerChoice(nn.Module):
                 self.names.append(str(i))
         else:
             raise TypeError("Unsupported candidates type: {}".format(type(candidates)))
+        self._first_module = self._modules[self.names[0]]  # to make the dummy forward meaningful
 
     @property
     def key(self):
@@ -133,7 +152,7 @@ class LayerChoice(nn.Module):
 
     def forward(self, x):
         warnings.warn('You should not run forward of this module directly.')
-        return x
+        return self._first_module(x)
 
     def __repr__(self):
         return f'LayerChoice({self.candidates}, label={repr(self.label)})'
@@ -159,11 +178,23 @@ class InputChoice(nn.Module):
         Recommended inputs to choose. If None, mutator is instructed to select any.
     reduction : str
         ``mean``, ``concat``, ``sum`` or ``none``.
+    prior : list of float
+        Prior distribution used in random sampling.
     label : str
         Identifier of the input choice.
     """
 
-    def __init__(self, n_candidates: int, n_chosen: int = 1, reduction: str = 'sum', label: str = None, **kwargs):
+    def __new__(cls, n_candidates: int, n_chosen: Optional[int] = 1,
+                reduction: str = 'sum', *,
+                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
+        try:
+            return ChosenInputs(get_fixed_value(label), reduction=reduction)
+        except NoContextError:
+            return super().__new__(cls)
+
+    def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
+                 reduction: str = 'sum', *,
+                 prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
         super(InputChoice, self).__init__()
         if 'key' in kwargs:
             warnings.warn(f'"key" is deprecated. Assuming label.')
@@ -175,8 +206,9 @@ class InputChoice(nn.Module):
         self.n_candidates = n_candidates
         self.n_chosen = n_chosen
         self.reduction = reduction
+        self.prior = prior or [1 / n_candidates for _ in range(n_candidates)]
         assert self.reduction in ['mean', 'concat', 'sum', 'none']
-        self._label = label if label is not None else f'inputchoice_{uid()}'
+        self._label = generate_new_label(label)
 
     @property
     def key(self):
@@ -261,14 +293,26 @@ class ValueChoice(Translatable, nn.Module):
     ----------
     candidates : list
         List of values to choose from.
+    prior : list of float
+        Prior distribution to sample from.
     label : str
         Identifier of the value choice.
     """
 
-    def __init__(self, candidates: List[Any], label: str = None):
+    # FIXME: prior is designed but not supported yet
+
+    def __new__(cls, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
+        try:
+            return get_fixed_value(label)
+        except NoContextError:
+            return super().__new__(cls)
+
+    def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()
         self.candidates = candidates
-        self._label = label if label is not None else f'valuechoice_{uid()}'
+        self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
+        assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
+        self._label = generate_new_label(label)
         self._accessor = []
 
     @property
@@ -296,6 +340,14 @@ class ValueChoice(Translatable, nn.Module):
         except KeyError:
             raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
         return v
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        new_item = ValueChoice(self.candidates, label=self.label)
+        new_item._accessor = [*self._accessor]
+        return new_item
 
     def __getitem__(self, item):
         """
@@ -331,9 +383,9 @@ class ChosenInputs(nn.Module):
     The already-chosen version of InputChoice.
     """
 
-    def __init__(self, chosen: List[int], reduction: str):
+    def __init__(self, chosen: Union[List[int], int], reduction: str):
         super().__init__()
-        self.chosen = chosen
+        self.chosen = chosen if isinstance(chosen, list) else [chosen]
         self.reduction = reduction
 
     def forward(self, candidate_inputs):

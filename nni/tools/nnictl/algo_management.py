@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import os
 import importlib
 import json
 from nni.tools.package_utils import read_registerd_algo_meta, get_registered_algo_meta, \

@@ -5,18 +5,20 @@ from dataclasses import dataclass
 from typing import List, Optional, Union
 
 from .common import TrainingServiceConfig
+from . import util
 
 __all__ = ['LocalConfig']
 
 @dataclass(init=False)
 class LocalConfig(TrainingServiceConfig):
     platform: str = 'local'
+    reuse_mode: bool = False
     use_active_gpu: Optional[bool] = None
     max_trial_number_per_gpu: int = 1
-    gpu_indices: Optional[Union[List[int], str]] = None
+    gpu_indices: Union[List[int], str, int, None] = None
 
     _canonical_rules = {
-        'gpu_indices': lambda value: [int(idx) for idx in value.split(',')] if isinstance(value, str) else value
+        'gpu_indices': util.canonical_gpu_indices
     }
 
     _validation_rules = {

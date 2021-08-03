@@ -12,6 +12,7 @@ from collections import deque
 from unittest import TestCase, main
 
 from nni.algorithms.hpo.batch_tuner import BatchTuner
+from nni.algorithms.hpo.dngo_tuner import DNGOTuner
 from nni.algorithms.hpo.evolution_tuner import EvolutionTuner
 from nni.algorithms.hpo.gp_tuner import GPTuner
 from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
@@ -21,8 +22,10 @@ from nni.algorithms.hpo.pbt_tuner import PBTTuner
 from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionTuner
 from nni.runtime.msg_dispatcher import _pack_parameter, MsgDispatcher
 
-if sys.platform != 'win32':
+smac_imported = False
+if sys.platform != 'win32' and sys.version_info < (3, 9):
     from nni.algorithms.hpo.smac_tuner import SMACTuner
+    smac_imported = True
 
 from nni.tuner import Tuner
 
@@ -333,7 +336,7 @@ class BuiltinTunersTestCase(TestCase):
         self.import_data_test(tuner_fn)
 
     def test_smac(self):
-        if sys.platform == "win32":
+        if not smac_imported:
             return  # smac doesn't work on windows
         tuner_fn = lambda: SMACTuner()
         self.search_space_test_all(tuner_fn,
@@ -387,6 +390,12 @@ class BuiltinTunersTestCase(TestCase):
             population_size=100
         ))
         self.import_data_test_for_pbt()
+
+    def test_dngo(self):
+        tuner_fn = lambda: DNGOTuner(trials_per_update=100, num_epochs_per_training=1)
+        self.search_space_test_all(tuner_fn, fail_types=["choice_str", "choice_mixed",
+                                                         "normal", "lognormal", "qnormal", "qlognormal"])
+        self.import_data_test(tuner_fn, stype='choice_num')
 
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]

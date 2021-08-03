@@ -13,7 +13,7 @@ import * as component from '../../common/component';
 import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
 import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
-import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus, LogType } from '../../common/trainingService';
+import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
 import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
 import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentConfig';
 import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
@@ -24,7 +24,7 @@ import { TrialConfig } from '../common/trialConfig';
 import { validateCodeDir } from '../common/util';
 import { Command, CommandChannel } from './commandChannel';
 import { EnvironmentInformation, EnvironmentService, NodeInformation, RunnerSettings, TrialGpuSummary } from './environment';
-import { EnvironmentServiceFactory } from './environments/environmentServiceFactory';
+import { createEnvironmentService } from './environments/environmentServiceFactory';
 import { GpuScheduler } from './gpuScheduler';
 import { MountedStorageService } from './storages/mountedStorageService';
 import { StorageService } from './storageService';
@@ -39,20 +39,20 @@ import { TrialDetail } from './trial';
 **/
 @component.Singleton
 class TrialDispatcher implements TrainingService {
-    private readonly log: Logger;
-    private readonly isDeveloping: boolean = false;
+    private log: Logger;
+    private isDeveloping: boolean = false;
     private stopping: boolean = false;
 
-    private readonly metricsEmitter: EventEmitter;
-    private readonly experimentId: string;
-    private readonly experimentRootDir: string;
+    private metricsEmitter: EventEmitter;
+    private experimentId: string;
+    private experimentRootDir: string;
 
     private enableVersionCheck: boolean = true;
 
     private trialConfig: TrialConfig | undefined;
 
-    private readonly trials: Map<string, TrialDetail>;
-    private readonly environments: Map<string, EnvironmentInformation>;
+    private trials: Map<string, TrialDetail>;
+    private environments: Map<string, EnvironmentInformation>;
     // make public for ut
     public environmentServiceList: EnvironmentService[] = [];
     public commandChannelSet: Set<CommandChannel>;
@@ -82,8 +82,14 @@ class TrialDispatcher implements TrainingService {
 
     private config: ExperimentConfig;
 
-    constructor(config: ExperimentConfig) {
-        this.log = getLogger();
+    public static async construct(config: ExperimentConfig): Promise<TrialDispatcher> {
+        const instance = new TrialDispatcher(config);
+        await instance.asyncConstructor(config);
+        return instance;
+    }
+
+    private constructor(config: ExperimentConfig) {
+        this.log = getLogger('TrialDispatcher');
         this.trials = new Map<string, TrialDetail>();
         this.environments = new Map<string, EnvironmentInformation>();
         this.metricsEmitter = new EventEmitter();
@@ -109,18 +115,14 @@ class TrialDispatcher implements TrainingService {
         if (this.enableGpuScheduler) {
             this.log.info(`TrialDispatcher: GPU scheduler is enabled.`)
         }
+    }
 
-        validateCodeDir(config.trialCodeDirectory);
+    private async asyncConstructor(config: ExperimentConfig): Promise<void> {
+        await validateCodeDir(config.trialCodeDirectory);
 
-        if (Array.isArray(config.trainingService)) {
-            config.trainingService.forEach(trainingService => {
-                const env = EnvironmentServiceFactory.createEnvironmentService(trainingService.platform, config);
-                this.environmentServiceList.push(env);
-            });
-        } else {
-            const env = EnvironmentServiceFactory.createEnvironmentService(config.trainingService.platform, config);
-            this.environmentServiceList.push(env);
-        }
+        const serviceConfigs = Array.isArray(config.trainingService) ? config.trainingService : [ config.trainingService ];
+        const servicePromises = serviceConfigs.map(serviceConfig => createEnvironmentService(serviceConfig.platform, config));
+        this.environmentServiceList = await Promise.all(servicePromises);
 
         this.environmentMaintenceLoopInterval = Math.max(
             ...this.environmentServiceList.map((env) => env.environmentMaintenceLoopInterval)
@@ -132,7 +134,7 @@ class TrialDispatcher implements TrainingService {
         }
 
         if (this.config.sharedStorage !== undefined) {
-            this.initializeSharedStorage(this.config.sharedStorage);
+            await this.initializeSharedStorage(this.config.sharedStorage);
         }
     }
 
@@ -155,7 +157,7 @@ class TrialDispatcher implements TrainingService {
         return trial;
     }
 
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 
@@ -214,7 +216,7 @@ class TrialDispatcher implements TrainingService {
         for(const environmentService of this.environmentServiceList) {
             
             const runnerSettings: RunnerSettings = new RunnerSettings();
-            runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? getIPV4Address() : this.config.nniManagerIp;
+            runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? await getIPV4Address() : this.config.nniManagerIp;
             runnerSettings.nniManagerPort = getBasePort() + 1;
             runnerSettings.commandChannel = environmentService.getCommandChannel.channelName;
             runnerSettings.enableGpuCollector = this.enableGpuScheduler;
@@ -533,8 +535,8 @@ class TrialDispatcher implements TrainingService {
                     if (undefined === trial) {
                         throw new Error(`TrialDispatcher: waiting trial shouldn't be undefined!`);
                     }
-                    const gpuNum = this.config.trialGpuNumber;
-                    const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, gpuNum, trial);
+                    const defaultGpuNum = this.config.trialGpuNumber;
+                    const result = this.gpuScheduler.scheduleMachine(reusableEnvironments, trial.form.placementConstraint!, defaultGpuNum, trial);
                     switch (result.resultType) {
                         case ScheduleResultType.REQUIRE_EXCEED_TOTAL:
                             {
@@ -544,7 +546,7 @@ class TrialDispatcher implements TrainingService {
                                     waitingTrials = [];
                                     this.isLoggedNoGpuAvailable = false;
                                 } else if (reusableEnvironments.length > 0) {
-                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${gpuNum} is too large, no machine can meet`;
+                                    const errorMessage: string = `TrialDispatcher: REQUIRE_EXCEED_TOTAL Required GPU number ${defaultGpuNum} is too large, no machine can meet`;
                                     this.log.error(errorMessage);
                                     throw new NNIError(NNIErrorNames.RESOURCE_NOT_AVAILABLE, errorMessage);
                                 } else {
@@ -707,8 +709,11 @@ class TrialDispatcher implements TrainingService {
             throw new Error(`${environment.id} environmentService not initialized!`);
         }
         trial.message = `Platform: ${environment.environmentService.getName}, environment: ${environment.id}`;
-        if (environment.environmentService.hasStorageService) {	
-            const storageService = component.get<StorageService>(StorageService);	
+        if (this.useSharedStorage) {
+            const storageService = component.get<SharedStorageService>(SharedStorageService).storageService;
+            trial.workingDirectory = storageService.joinPath('trials', trial.id);
+        } else if (environment.environmentService.hasStorageService) {	
+            const storageService = component.get<StorageService>(StorageService);
             trial.workingDirectory = storageService.joinPath('trials', trial.id);
         }	
         trial.settings = {
@@ -730,6 +735,9 @@ class TrialDispatcher implements TrainingService {
      * @param trial 
      */
     private releaseEnvironment(trial: TrialDetail): void {
+        if (true === this.enableGpuScheduler) {
+            this.gpuScheduler.removeGpuReservation(trial);
+        }
         if (trial.environment !== undefined) {
             if (trial.environment.runningTrialCount <= 0) {
                 throw new Error(`TrialDispatcher: environment ${trial.environment.id} has no counted running trial!`);
@@ -737,9 +745,6 @@ class TrialDispatcher implements TrainingService {
             trial.environment.runningTrialCount--;
             trial.environment.latestTrialReleasedTime = Date.now();
             trial.environment = undefined;
-        }
-        if (true === this.enableGpuScheduler) {
-            this.gpuScheduler.removeGpuReservation(trial);
         }
     }
 

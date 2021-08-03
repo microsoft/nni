@@ -34,8 +34,33 @@ testCases:
   # check status of experiment before calling validator
   experimentStatusCheck: True
 
+- name: shared-storage-remote-azureblob
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_azureblob.yml
+  config:
+    sharedStorage:
+      localMountPoint: /tmp/nnimount/testlocalrootpath
+      remoteMountPoint: /tmp/nnimount/testremoterootpath
+      storageAccountName: nennistorage
+      storageAccountKey: $(azureblob_token_test)
+      containerName: sharedstorage
+  trainingService: remote
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
+
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
+
+# mount point in local may late to umount when stop experiment in shared-storage-remote-azureblob,
+# so keep two shared storage tests away from each other.
+- name: shared-storage-remote-nfs
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
+  trainingService: remote
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
 
 - name: mnist-tensorflow
   configFile: test/config/examples/mnist-tfv2.yml
@@ -227,4 +252,3 @@ testCases:
 #########################################################################
 - name: customized-tuners-demotuner
   configFile: test/config/customized_tuners/demotuner-sklearn-classification.yml
-

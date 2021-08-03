@@ -22,7 +22,7 @@ export namespace AzureStorageClientUtility {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         fileServerClient.createShareIfNotExists(azureShare, (error: any, _result: any, _response: any) => {
             if (error) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`Create share failed:, ${error}`);
                 deferred.resolve(false);
             } else {
@@ -43,7 +43,7 @@ export namespace AzureStorageClientUtility {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         fileServerClient.createDirectoryIfNotExists(azureShare, azureFoler, (error: any, _result: any, _response: any) => {
             if (error) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`Create directory failed:, ${error}`);
                 deferred.resolve(false);
             } else {
@@ -91,7 +91,7 @@ export namespace AzureStorageClientUtility {
         await fileServerClient.createFileFromLocalFile(azureShare, azureDirectory, azureFileName, localFilePath,
                                                        (error: any, _result: any, _response: any) => {
             if (error) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`Upload file failed:, ${error}`);
                 deferred.resolve(false);
             } else {
@@ -116,7 +116,7 @@ export namespace AzureStorageClientUtility {
         await fileServerClient.getFileToStream(azureShare, azureDirectory, azureFileName, fs.createWriteStream(localFilePath),
                                                (error: any, _result: any, _response: any) => {
             if (error) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`Download file failed:, ${error}`);
                 deferred.resolve(false);
             } else {
@@ -185,19 +185,19 @@ export namespace AzureStorageClientUtility {
         fileServerClient.listFilesAndDirectoriesSegmented(azureShare, azureDirectory, 'null',
                                                           async (_error: any, result: any, _response: any) => {
             if (('entries' in result) === false) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`list files failed, can't get entries in result`);
                 throw new Error(`list files failed, can't get entries in result`);
             }
 
             if (('files' in result.entries) === false) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`list files failed, can't get files in result['entries']`);
                 throw new Error(`list files failed, can't get files in result['entries']`);
             }
 
             if (('directories' in result.directories) === false) {
-                getLogger()
+                getLogger('AzureStorageClientUtility')
                   .error(`list files failed, can't get directories in result['entries']`);
                 throw new Error(`list files failed, can't get directories in result['entries']`);
             }

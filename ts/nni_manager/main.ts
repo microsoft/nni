@@ -25,9 +25,9 @@ import { NNIRestServer } from './rest_server/nniRestServer';
 
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
-    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string): void {
+    logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string, urlprefix: string): void {
     const createNew: boolean = (startExpMode === ExperimentStartUpMode.NEW);
-    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe);
+    setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
 }
 
 async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
@@ -53,9 +53,9 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
         } else {
             startLogging(logFileName);
         }
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        setLogLevel(logLevel);
     }
+    // eslint-disable-next-line @typescript-eslint/no-use-before-define
+    setLogLevel(logLevel);
     const ds: DataStore = component.get(DataStore);
 
     await ds.init();
@@ -83,11 +83,6 @@ const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : fals
 const port: number = parseInt(strPort, 10);
 
 const mode: string = parseArg(['--mode', '-m']);
-if (!['local', 'remote', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'].includes(mode)) {
-    console.log(`FATAL: unknown mode: ${mode}`);
-    usage();
-    process.exit(1);
-}
 
 const startMode: string = parseArg(['--start_mode', '-s']);
 if (![ExperimentStartUpMode.NEW, ExperimentStartUpMode.RESUME].includes(startMode)) {
@@ -122,7 +117,9 @@ const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 
-initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe);
+const urlPrefix: string = parseArg(['--url_prefix']);
+
+initStartupInfo(startMode, experimentId, port, mode, logDir, logLevel, readonly, dispatcherPipe, urlPrefix);
 
 mkDirP(getLogDir())
     .then(async () => {

@@ -1,18 +1,10 @@
-authorName: default
-experimentName: example_mnist-keras
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist-keras.py
+trialGpuNumber: 0
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 10
+maxExperimentDuration: 1h
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: BatchTuner
-trial:
-  command: python3 mnist-keras.py
-  codeDir: .
-  gpuNum: 0
+  name: BatchTuner
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

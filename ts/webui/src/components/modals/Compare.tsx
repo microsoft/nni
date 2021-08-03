@@ -1,12 +1,17 @@
 import * as React from 'react';
 import { renderToString } from 'react-dom/server';
-import { Stack, Modal, IconButton, IDragOptions, ContextualMenu } from '@fluentui/react';
+import { Stack, Modal, IconButton, IDragOptions, ContextualMenu, Dropdown, IDropdownOption } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { TooltipForIntermediate, TableObj, SingleAxis } from '../../static/interface';
 import { contentStyles, iconButtonStyles } from '../buttons/ModalTheme';
 import { convertDuration, parseMetrics } from '../../static/function';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import '../../static/style/compare.scss';
+
+/***
+ * Compare file is design for [each trial intermediate result and trials compare function]
+ * if trial has dict intermediate result, graph support shows all keys that type is number
+ */
 
 function _getWebUIWidth(): number {
     return window.innerWidth;
@@ -20,7 +25,7 @@ const dragOptions: IDragOptions = {
 
 // TODO: this should be refactored to the common modules
 // copied from trial.ts
-function _parseIntermediates(trial: TableObj): number[] {
+function _parseIntermediates(trial: TableObj, key: string): number[] {
     const intermediates: number[] = [];
     for (const metric of trial.intermediates) {
         if (metric === undefined) {
@@ -29,7 +34,7 @@ function _parseIntermediates(trial: TableObj): number[] {
         const parsedMetric = parseMetrics(metric.data);
         if (typeof parsedMetric === 'object') {
             // TODO: should handle more types of metric keys
-            intermediates.push(parsedMetric.default);
+            intermediates.push(parsedMetric[key]);
         } else {
             intermediates.push(parsedMetric);
         }
@@ -51,11 +56,20 @@ interface CompareProps {
     title: string;
     showDetails: boolean;
     onHideDialog: () => void;
+    changeSelectTrialIds?: () => void;
 }
 
-class Compare extends React.Component<CompareProps, {}> {
+interface CompareState {
+    intermediateKey: string; // default, dict other keys
+}
+
+class Compare extends React.Component<CompareProps, CompareState> {
     constructor(props: CompareProps) {
         super(props);
+
+        this.state = {
+            intermediateKey: 'default'
+        };
     }
 
     private _generateTooltipSummary = (row: Item, value: string): string =>
@@ -196,8 +210,26 @@ class Compare extends React.Component<CompareProps, {}> {
         );
     }
 
+    private closeCompareModal = (): void => {
+        const { showDetails, changeSelectTrialIds, onHideDialog } = this.props;
+        if (showDetails === true) {
+            // eslint-disable-next-line  @typescript-eslint/no-non-null-assertion
+            changeSelectTrialIds!();
+        }
+        onHideDialog();
+    };
+
+    private selectOtherKeys = (_event: React.FormEvent<HTMLDivElement>, item?: IDropdownOption): void => {
+        if (item !== undefined) {
+            this.setState(() => ({ intermediateKey: item.text }));
+        }
+    };
+
     render(): React.ReactNode {
-        const { onHideDialog, trials, title, showDetails } = this.props;
+        const { trials, title, showDetails } = this.props;
+        const { intermediateKey } = this.state;
+        let intermediateAllKeysList: string[] = [];
+
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
         };
@@ -208,8 +240,22 @@ class Compare extends React.Component<CompareProps, {}> {
             duration: convertDuration(trial.duration),
             parameters: flatten(trial.parameters(inferredSearchSpace)),
             metrics: flatten(trial.metrics(TRIALS.inferredMetricSpace())),
-            intermediates: _parseIntermediates(trial)
+            intermediates: _parseIntermediates(trial, intermediateKey)
         }));
+
+        if (trials[0].intermediates !== undefined && trials[0].intermediates[0]) {
+            const parsedMetric = parseMetrics(trials[0].intermediates[0].data);
+            if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+                const allIntermediateKeys: string[] = [];
+                // just add type=number keys
+                for (const key in parsedMetric) {
+                    if (typeof parsedMetric[key] === 'number') {
+                        allIntermediateKeys.push(key);
+                    }
+                }
+                intermediateAllKeysList = allIntermediateKeys;
+            }
+        }
 
         return (
             <Modal
@@ -218,7 +264,7 @@ class Compare extends React.Component<CompareProps, {}> {
                 className='compare-modal'
                 allowTouchBodyScroll={true}
                 dragOptions={dragOptions}
-                onDismiss={onHideDialog}
+                onDismiss={this.closeCompareModal}
             >
                 <div>
                     <div className={contentStyles.header}>
@@ -227,9 +273,22 @@ class Compare extends React.Component<CompareProps, {}> {
                             styles={iconButtonStyles}
                             iconProps={{ iconName: 'Cancel' }}
                             ariaLabel='Close popup modal'
-                            onClick={onHideDialog}
+                            onClick={this.closeCompareModal}
                         />
                     </div>
+                    {intermediateAllKeysList.length > 1 ? (
+                        <Stack horizontalAlign='end' className='selectKeys'>
+                            <Dropdown
+                                className='select'
+                                selectedKey={intermediateKey}
+                                options={intermediateAllKeysList.map((key, item) => ({
+                                    key: key,
+                                    text: intermediateAllKeysList[item]
+                                }))}
+                                onChange={this.selectOtherKeys}
+                            />
+                        </Stack>
+                    ) : null}
                     <Stack className='compare-modal-intermediate'>
                         {this._intermediates(items)}
                         <Stack className='compare-yAxis'># Intermediate result</Stack>

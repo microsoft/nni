@@ -9,7 +9,7 @@ from typing import Any
 
 import json_tricks
 
-from .utils import get_importable_name, get_module_name, import_
+from .utils import get_importable_name, get_module_name, import_, reset_uid
 
 
 def get_init_parameters_or_fail(obj, silently=False):
@@ -83,9 +83,11 @@ class Translatable(abc.ABC):
         pass
 
 
-def _create_wrapper_cls(cls, store_init_parameters=True):
+def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=False):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
+            if reset_mutation_uid:
+                reset_uid('mutation')
             if store_init_parameters:
                 argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
                 full_args = {}
@@ -137,6 +139,7 @@ def serialize(cls, *args, **kwargs):
     To create an serializable instance inline without decorator. For example,
 
     .. code-block:: python
+
         self.op = serialize(MyCustomOp, hidden_units=128)
     """
     return serialize_cls(cls)(*args, **kwargs)
@@ -149,3 +152,15 @@ def basic_unit(cls):
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
     return serialize_cls(cls)
+
+
+def model_wrapper(cls):
+    """
+    Wrap the model if you are using pure-python execution engine.
+
+    The wrapper serves two purposes:
+
+        1. Capture the init parameters of python class so that it can be re-instantiated in another process.
+        2. Reset uid in `mutation` namespace so that each model counts from zero. Can be useful in unittest and other multi-model scenarios.
+    """
+    return _create_wrapper_cls(cls, reset_mutation_uid=True)

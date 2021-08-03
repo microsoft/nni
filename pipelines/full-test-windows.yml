@@ -12,8 +12,8 @@ jobs:
 
   steps:
   - script: |
-      python -m pip install --upgrade pip setuptools wheel
-      python -m pip install pytest
+      python -m pip install -U -r dependencies/setup.txt
+      python -m pip install -r dependencies/develop.txt
     displayName: Install Python tools
 
   - script: |
@@ -25,18 +25,9 @@ jobs:
     displayName: Install NNI
 
   - script: |
-      python -m pip install scikit-learn==0.24.1
-      python -m pip install keras==2.1.6
-      python -m pip install torch==1.6.0 torchvision==0.7.0 -f https://download.pytorch.org/whl/torch_stable.html
-      python -m pip install 'pytorch-lightning>=1.1.1'
-      python -m pip install tensorflow==2.3.1 tensorflow-estimator==2.3.0
+      python -m pip install -r dependencies/recommended.txt
+      python -m pip install -e .[DNGO]
     displayName: Install extra dependencies
-
-  # Need del later
-  - script: |
-      set -e
-      python interim_vision_patch.py
-    displayName: Vision MNIST Patch
 
   - script: |
       cd examples/tuners/customized_tuner

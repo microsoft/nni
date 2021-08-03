@@ -11,7 +11,6 @@ import * as path from 'path';
 import * as tar from 'tar';
 import { getLogger } from '../../common/log';
 import { String } from 'typescript-string-operations';
-import { validateFileName } from '../../common/utils';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 
 /**
@@ -54,7 +53,6 @@ export function* listDirWithIgnoredFiles(root: string, relDir: string, ignoreFil
 export async function validateCodeDir(codeDir: string): Promise<number> {
     let fileCount: number = 0;
     let fileTotalSize: number = 0;
-    let fileNameValid: boolean = true;
     for (const relPath of listDirWithIgnoredFiles(codeDir, '', [])) {
         const d = path.join(codeDir, relPath);
         fileCount += 1;
@@ -66,13 +64,16 @@ export async function validateCodeDir(codeDir: string): Promise<number> {
         if (fileTotalSize > 300 * 1024 * 1024) {
             throw new Error(`File total size too large in code dir (${fileTotalSize} bytes already scanned, exceeds 300MB).`);
         }
-        fileNameValid = true;
-        relPath.split(path.sep).forEach(fpart => {
-            if (fpart !== '' && !validateFileName(fpart))
-                fileNameValid = false;
-        });
+        // NOTE: We added this test in case any training service or shared storage (e.g. HDFS) does not support complex file name.
+        // If there is no bug found for long time, feel free to remove it.
+        const fileNameValid = relPath.split(path.sep).every(fpart => (fpart.match('^[a-z0-9A-Z._-]*$') !== null));
         if (!fileNameValid) {
-            throw new Error(`Validate file name error: '${d}' is an invalid file name.`);
+            const message = [
+                `File ${relPath} in directory ${codeDir} contains spaces or special characters in its name.`,
+                'This might cause problem when uploading to cloud or remote machine.',
+                'If you encounter any error, please report an issue: https://github.com/microsoft/nni/issues'
+            ].join(' ');
+            getLogger('validateCodeDir').warning(message);
         }
     }
 
@@ -111,7 +112,7 @@ export async function execCopydir(source: string, destination: string): Promise<
                 await fs.promises.mkdir(destPath);
             }
         } else {
-            getLogger().debug(`Copying file from ${sourcePath} to ${destPath}`);
+            getLogger('execCopydir').debug(`Copying file from ${sourcePath} to ${destPath}`);
             await fs.promises.copyFile(sourcePath, destPath);
         }
     }

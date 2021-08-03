@@ -6,13 +6,20 @@ Entrypoint for trials.
 
 Assuming execution engine is BaseExecutionEngine.
 """
-import os
+import argparse
 
-from .execution.base import BaseExecutionEngine
-from .execution.cgo_engine import CGOExecutionEngine
 
 if __name__ == '__main__':
-    if os.environ.get('CGO') == 'true':
-        CGOExecutionEngine.trial_execute_graph()
-    else:
-        BaseExecutionEngine.trial_execute_graph()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('exec', choices=['base', 'py', 'cgo'])
+    args = parser.parse_args()
+    if args.exec == 'base':
+        from .execution.base import BaseExecutionEngine
+        engine = BaseExecutionEngine
+    elif args.exec == 'cgo':
+        from .execution.cgo_engine import CGOExecutionEngine
+        engine = CGOExecutionEngine
+    elif args.exec == 'py':
+        from .execution.python import PurePythonExecutionEngine
+        engine = PurePythonExecutionEngine
+    engine.trial_execute_graph()

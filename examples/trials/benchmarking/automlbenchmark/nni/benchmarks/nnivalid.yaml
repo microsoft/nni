@@ -1,0 +1,43 @@
+---
+#for doc purpose using <placeholder:default_value> syntax when it applies.
+
+#FORMAT: global defaults are defined in config.yaml
+- name: __dummy-task
+  enabled: false  # actual default is `true` of course...
+  openml_task_id: 0
+  metric: # the first metric in the task list will be optimized against and used for the main result, the other ones are optional and purely informative. Only the metrics annotated with (*) can be used as a performance metric.
+    - # classification
+    - acc # (*) accuracy
+    - auc # (*) array under curve
+    - logloss # (*) log loss
+    - f1  # F1 score
+    - # regression
+    - mae  # (*) mean absolute error
+    - mse # (*) mean squared error
+    - rmse  # root mean squared error
+    - rmsle  # root mean squared log error
+    - r2  # R^2 score
+  folds: 1
+  max_runtime_seconds: 600
+  cores: 1
+  max_mem_size_mb: -1
+  ec2_instance_type: m5.large
+
+
+# local defaults (applying only to tasks defined in this file) can be defined in a task named "__defaults__"
+- name: __defaults__
+  folds: 2
+  cores: 2
+  max_runtime_seconds: 180
+
+- name: kc2
+  openml_task_id: 3913
+  description: "binary test dataset"
+
+- name: iris
+  openml_task_id: 59
+  description: "multiclass test dataset"
+
+- name: cholesterol
+  openml_task_id: 2295
+  description: "regression test dataset"

@@ -12,8 +12,8 @@ from torch.utils.tensorboard import SummaryWriter
 import datasets
 import utils
 from model import CNN
-from nni.nas.pytorch.fixed import apply_fixed_architecture
 from nni.nas.pytorch.utils import AverageMeter
+from nni.retiarii import fixed_arch
 
 logger = logging.getLogger('nni')
 
@@ -119,8 +119,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     dataset_train, dataset_valid = datasets.get_dataset("cifar10", cutout_length=16)
 
-    model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
-    apply_fixed_architecture(model, args.arc_checkpoint)
+    with fixed_arch(args.arc_checkpoint):
+        model = CNN(32, 3, 36, 10, args.layers, auxiliary=True)
     criterion = nn.CrossEntropyLoss()
 
     model.to(device)

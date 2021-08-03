@@ -34,13 +34,13 @@ fi
 id=$(lsb_release -i | cut -c16- | sed s/[[:space:]]//g)
 version=$(lsb_release -r | cut -c9- | sed s/[[:space:]]//g)
 
-if [ $id = "Ubuntu" ]
+if [ "$id" = "Ubuntu" ]
 then
     wget https://packages.microsoft.com/config/ubuntu/$version/packages-microsoft-prod.deb
-    sudo dpkg -i packages-microsoft-prod.deb
+    sudo DEBIAN_FRONTEND=noninteractive dpkg -i packages-microsoft-prod.deb
     sudo apt-get update
     sudo apt-get install -y blobfuse fuse
-elif [ $id = "CentOS" ] || [ $id = "RHEL" ]
+elif [ "$id" = "CentOS" ] || [ "$id" = "RHEL" ]
 then
     sudo rpm -Uvh https://packages.microsoft.com/config/rhel/$(echo $version | cut -c1)/packages-microsoft-prod.rpm
     sudo yum install -y blobfuse fuse
@@ -66,7 +66,7 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
 
     constructor() {
         super();
-        this.log = getLogger();
+        this.log = getLogger('AzureBlobSharedStorageService');
         this.internalStorageService = new MountedStorageService();
         this.experimentId = getExperimentId();
     }

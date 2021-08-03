@@ -6,6 +6,7 @@ import logging
 import os
 import pkg_resources
 from colorama import init
+import nni.tools.jupyter_extension.management as jupyter_management
 from .common_utils import print_error
 from .launcher import create_experiment, resume_experiment, view_experiment
 from .updater import update_searchspace, update_concurrency, update_duration, update_trialnum, import_data
@@ -16,6 +17,8 @@ from .nnictl_utils import stop_experiment, trial_ls, trial_kill, list_experiment
                           save_experiment, load_experiment
 from .algo_management import algo_reg, algo_unreg, algo_show, algo_list
 from .constants import DEFAULT_REST_PORT
+from .import ts_management
+
 init(autoreset=True)
 
 if os.environ.get('COVERAGE_PROCESS_START'):
@@ -54,6 +57,7 @@ def parse_args():
     parser_start.add_argument('--config', '-c', required=True, dest='config', help='the path of yaml config file')
     parser_start.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_start.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
+    parser_start.add_argument('--url_prefix', '-u', dest='url_prefix', help=' set prefix url')
     parser_start.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
     parser_start.set_defaults(func=create_experiment)
 
@@ -63,12 +67,16 @@ def parse_args():
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
+    parser_resume.add_argument('--experiment_dir', '-e', help='resume experiment from external folder, specify the full path of ' \
+                               'experiment folder')
     parser_resume.set_defaults(func=resume_experiment)
 
     # parse view command
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
     parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
     parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
+    parser_view.add_argument('--experiment_dir', '-e', help='view experiment from external folder, specify the full path of ' \
+                             'experiment folder')
     parser_view.set_defaults(func=view_experiment)
 
     # parse update command
@@ -241,6 +249,22 @@ def parse_args():
     parser_algo_list = parser_algo_subparsers.add_parser('list', help='list registered algorithms')
     parser_algo_list.set_defaults(func=algo_list)
 
+    #parse trainingservice command
+    parser_ts = subparsers.add_parser('trainingservice', help='control training service')
+    # add subparsers for parser_ts
+    parser_ts_subparsers = parser_ts.add_subparsers()
+
+    parser_ts_reg = parser_ts_subparsers.add_parser('register', help='register training service')
+    parser_ts_reg.add_argument('--package', dest='package', help='package name', required=True)
+    parser_ts_reg.set_defaults(func=ts_management.register)
+
+    parser_ts_unreg = parser_ts_subparsers.add_parser('unregister', help='unregister training service')
+    parser_ts_unreg.add_argument('--package', dest='package', help='package name', required=True)
+    parser_ts_unreg.set_defaults(func=ts_management.unregister)
+
+    parser_ts_list = parser_ts_subparsers.add_parser('list', help='list custom training services')
+    parser_ts_list.set_defaults(func=ts_management.list_services)
+
     # To show message that nnictl package command is replaced by nnictl algo, to be remove in the future release.
     def show_messsage_for_nnictl_package(args):
         print_error('nnictl package command is replaced by nnictl algo, please run nnictl algo -h to show the usage')
@@ -254,6 +278,14 @@ def parse_args():
     parser_top.add_argument('--time', '-t', dest='time', type=int, default=3, help='the time interval to update the experiment status, ' \
     'the unit is second')
     parser_top.set_defaults(func=monitor_experiment)
+
+    # jupyter-extension command
+    jupyter_parser = subparsers.add_parser('jupyter-extension', help='install or uninstall JupyterLab extension (internal preview)')
+    jupyter_subparsers = jupyter_parser.add_subparsers()
+    jupyter_install_parser = jupyter_subparsers.add_parser('install', help='install JupyterLab extension')
+    jupyter_install_parser.set_defaults(func=lambda _args: jupyter_management.install())  # TODO: prompt message
+    jupyter_uninstall_parser = jupyter_subparsers.add_parser('uninstall', help='uninstall JupyterLab extension')
+    jupyter_uninstall_parser.set_defaults(func=lambda _args: jupyter_management.uninstall())
 
     args = parser.parse_args()
     args.func(args)

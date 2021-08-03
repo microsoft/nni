@@ -150,9 +150,9 @@ interface TrialJobInfo {
     stderrPath?: string;
 }
 
-interface ClusterItem {
-    command?: string;
-}
+//interface ClusterItem {
+//    command?: string;
+//}
 
 interface ExperimentProfile {
     params: ExperimentConfig;
@@ -163,6 +163,21 @@ interface ExperimentProfile {
     endTime?: number;
     maxSequenceId: number;
     revision: number;
+}
+
+interface ExperimentMetadata {
+    id: string;
+    port: number;
+    startTime: number | string;
+    endTime: number | string;
+    status: string;
+    platform: string;
+    experimentName: string;
+    tag: any[];
+    pid: number;
+    webuiUrl: any[];
+    logDir: string;
+    prefixUrl: string | null;
 }
 
 interface NNIManagerStatus {
@@ -203,6 +218,16 @@ interface Tensorboard {
     port: string;
 }
 
+// for TableList search
+interface SearchItems {
+    name: string;
+    operator: string;
+    value1: string; // first input value
+    value2: string; // second input value
+    choice: string[]; // use select multiy value list
+    isChoice: boolean; // for parameters: type = choice and status also as choice type
+}
+
 export {
     TableObj,
     TableRecord,
@@ -220,11 +245,13 @@ export {
     MetricDataRecord,
     TrialJobInfo,
     ExperimentProfile,
+    ExperimentMetadata,
     NNIManagerStatus,
     EventMap,
     SingleAxis,
     MultipleAxes,
     SortInfo,
     AllExperimentList,
-    Tensorboard
+    Tensorboard,
+    SearchItems
 };

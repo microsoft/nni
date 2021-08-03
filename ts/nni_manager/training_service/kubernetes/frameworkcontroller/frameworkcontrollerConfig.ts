@@ -27,7 +27,7 @@ export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfi
     public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
     public readonly name: string;
     public readonly taskNum: number;
-    constructor(taskNum: number, command: string, gpuNum: number,
+    constructor(name: string, taskNum: number, command: string, gpuNum: number,
         cpuNum: number, memoryMB: number, image: string,
         frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy, privateRegistryFilePath?: string | undefined) {
         super(command, gpuNum, cpuNum, memoryMB, image, privateRegistryFilePath);
