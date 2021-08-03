@@ -16,6 +16,8 @@ _logger = logging.getLogger(__name__)
 def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
+    if platform == 'pai':
+        platform = 'openpai'
     assert platform in ['local', 'remote', 'openpai', 'aml']
     v2 = ExperimentConfig(platform)
 
