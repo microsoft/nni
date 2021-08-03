@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 
 import nni
 try:
-    import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
+    from .cgo import trainer as cgo_trainer
     cgo_import_failed = False
 except ImportError:
     cgo_import_failed = True
