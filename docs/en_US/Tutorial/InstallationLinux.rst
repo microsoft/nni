@@ -26,7 +26,8 @@ Install NNI through source code
 
      git clone -b v2.3 https://github.com/Microsoft/nni.git
      cd nni
-     python3 -m pip install --upgrade pip setuptools
+     python3 -m pip install -U -r dependencies/setup.txt
+     python3 -m pip install -r dependencies/develop.txt
      python3 setup.py develop
 
 Build wheel package from NNI source code
@@ -40,7 +41,8 @@ If you want to perform a persist install instead, we recommend to build your own
     git clone -b v2.3 https://github.com/Microsoft/nni.git
     cd nni
     export NNI_RELEASE=2.0
-    python3 -m pip install --upgrade pip setuptools wheel
+    python3 -m pip install -U -r dependencies/setup.txt
+    python3 -m pip install -r dependencies/develop.txt
     python3 setup.py clean --all
     python3 setup.py build_ts
     python3 setup.py bdist_wheel -p manylinux1_x86_64
