@@ -85,7 +85,7 @@ def reshape_break_channel_dependency(op_node):
 
 
 class ChannelDependency(Dependency):
-    def __init__(self, model=None, dummy_input=None, traced_model=None):
+    def __init__(self, model=None, dummy_input=None, traced_model=None, prune_type='Filter'):
         """
         This model analyze the channel dependencies between the conv
         layers in a model.
@@ -98,7 +98,18 @@ class ChannelDependency(Dependency):
         traced_model : torch._C.Graph
             if we alreay has the traced graph of the target model, we donnot
             need to trace the model again.
+        prune_type: str
+            This parameter indicates the channel pruning type: 1) `Filter`
+            prune the filter of the convolution layer to prune the corresponding
+            channels 2) prune the channel in the batchnorm layer
         """
+        self.prune_type = prune_type
+        self.target_types = []
+        if self.prune_type == 'Filter':
+            self.target_types.extend(['Conv2d', 'Linear', 'ConvTranspose2d'])
+        elif self.prune_type == 'Batchnorm':
+            self.target_types.append('BatchNorm2d')
+
         super(ChannelDependency, self).__init__(
             model, dummy_input, traced_model)
 
@@ -114,12 +125,13 @@ class ChannelDependency(Dependency):
         parent_layers: list
             nearest father conv/linear layers for the target worknode.
         """
+
         parent_layers = []
         queue = []
         queue.append(node)
         while queue:
             curnode = queue.pop(0)
-            if curnode.op_type == 'Conv2d' or curnode.op_type == 'Linear' or curnode.op_type == 'ConvTranspose2d':
+            if curnode.op_type in self.target_types:
                 # find the first met conv
                 parent_layers.append(curnode.name)
                 continue
@@ -130,6 +142,7 @@ class ChannelDependency(Dependency):
             parents = [self.graph.name_to_node[name] for name in parents]
             for parent in parents:
                 queue.append(parent)
+
         return parent_layers
 
     def build_dependency(self):
@@ -193,7 +206,7 @@ class ChannelDependency(Dependency):
             csv_w = csv.writer(csvf, delimiter=',')
             csv_w.writerow(header)
             for node in self.graph.nodes_py.nodes_op:
-                if node.op_type != 'Conv2d' or node in visited:
+                if node.op_type not in self.target_types or node in visited:
                     continue
                 setid += 1
                 row = ['Set %d' % setid]
@@ -220,7 +233,7 @@ class ChannelDependency(Dependency):
         d_sets = []
         visited = set()
         for node in self.graph.nodes_py.nodes_op:
-            if (node.op_type != 'Conv2d' and node.op_type != 'Linear') or node in visited:
+            if node.op_type not in self.target_types or node in visited:
                 continue
             tmp_set = set()
             if node.name not in self.dependency:
