@@ -101,7 +101,7 @@ class ChannelDependency(Dependency):
         prune_type: str
             This parameter indicates the channel pruning type: 1) `Filter`
             prune the filter of the convolution layer to prune the corresponding
-            channels 2) prune the channel in the batchnorm layer
+            channels 2) `Batchnorm`: prune the channel in the batchnorm layer
         """
         self.prune_type = prune_type
         self.target_types = []

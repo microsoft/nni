@@ -191,11 +191,6 @@ class ChannelMaskConflict(MaskFix):
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
-        mask inference of the 'speedup' module.
-        """
-        """
-        Fix the mask conflict before the mask inference for the layers that
-        has shape dependencies. This function should be called before the
         mask inference of the 'speedup' module. Only structured pruning masks
         are supported.
         """
@@ -323,6 +318,7 @@ def detect_channel_prune_type(masks, model):
         A dict object that stores the masks.
     model: nn.Module
         Model object which the mask can be applied on.
+
     Returns:
     -------
     prune_type: str
