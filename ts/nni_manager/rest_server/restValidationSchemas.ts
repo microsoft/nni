@@ -226,6 +226,7 @@ export namespace ValidationSchemas {
             trainingServicePlatform: joi.string(),
             searchSpace: joi.string().required(),
             maxExecDuration: joi.number().min(0).required(),
+            maxTrialDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             nniManagerIp: joi.string(),

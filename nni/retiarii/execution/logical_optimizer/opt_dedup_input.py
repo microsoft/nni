@@ -4,23 +4,28 @@
 from typing import List, Dict, Tuple
 
 from nni.retiarii.utils import uid
+from nni.retiarii.evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
+from nni.common.device import GPUDevice
+
 from ...graph import Graph, Model, Node
 from .interface import AbstractOptimizer
 from .logical_plan import (AbstractLogicalNode, LogicalGraph, LogicalPlan,
-                           OriginNode, PhysicalDevice)
+                           OriginNode)
 
-_supported_training_modules = ['nni.retiarii.trainer.pytorch.PyTorchImageClassificationTrainer']
+
+_supported_evaluators = [MultiModelSupervisedLearningModule]
 
 
 class DedupInputNode(AbstractLogicalNode):
     def __init__(self, logical_graph: LogicalGraph, node_id: int,
                  nodes_to_dedup: List[Node], _internal=False):
         super().__init__(logical_graph, node_id,
-                         "Dedup_"+nodes_to_dedup[0].name,
+                         "Dedup_" + nodes_to_dedup[0].name,
                          nodes_to_dedup[0].operation)
         self.origin_nodes: List[OriginNode] = nodes_to_dedup.copy()
+        self.related_models = [_.original_graph.model for _ in self.origin_nodes]
 
-    def assemble(self, multi_model_placement: Dict[Model, PhysicalDevice]) -> Tuple[Node, PhysicalDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
         for node in self.origin_nodes:
             if node.original_graph.model in multi_model_placement:
                 new_node = Node(node.original_graph, node.id,
@@ -41,6 +46,12 @@ class DedupInputOptimizer(AbstractOptimizer):
     def __init__(self) -> None:
         pass
 
+    def _check_supported_evaluator(self, evaluator):
+        for e in _supported_evaluators:
+            if isinstance(evaluator, e):
+                return True
+        return False
+
     def _check_deduplicate_by_node(self, root_node, node_to_check):
         if root_node == node_to_check:
             return True
@@ -48,7 +59,7 @@ class DedupInputOptimizer(AbstractOptimizer):
             node_to_check.operation.type == '_inputs' and \
                 isinstance(root_node, OriginNode) and \
                 isinstance(node_to_check, OriginNode):
-            if root_node.original_graph.model.evaluator.module not in _supported_training_modules:
+            if self._check_supported_evaluator(root_node.original_graph.model.evaluator):
                 return False
             if root_node.original_graph.model.evaluator == node_to_check.original_graph.model.evaluator:
                 return True
@@ -68,7 +79,7 @@ class DedupInputOptimizer(AbstractOptimizer):
                     continue
                 root_node = node
                 break
-            if root_node == None:
+            if root_node is None:
                 break  # end of convert
             else:
                 nodes_to_dedup = []

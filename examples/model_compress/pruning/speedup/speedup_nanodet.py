@@ -12,7 +12,7 @@ NanoDet model can be installed from https://github.com/RangiLyu/nanodet.git
 cfg_path = r"nanodet/config/nanodet-RepVGG-A0_416.yml"
 load_config(cfg, cfg_path)
 
-model = build_model(cfg.model)
+model = build_model(cfg.model).cpu()
 dummy_input  = torch.rand(8, 3, 416, 416)
 
 op_names = []

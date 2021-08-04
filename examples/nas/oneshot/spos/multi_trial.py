@@ -13,7 +13,7 @@ from torchvision.datasets import CIFAR10
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
-from nn_meter import get_default_config, load_latency_predictors
+from nn_meter import load_latency_predictor
 
 
 class ShuffleNetV2(nn.Module):
@@ -128,7 +128,7 @@ class ShuffleNetV2(nn.Module):
 
 
 class LatencyFilter:
-    def __init__(self, threshold, config=None, hardware='', reverse=False):
+    def __init__(self, threshold, predictor, predictor_version=None, reverse=False):
         """
         Filter the models according to predcted latency.
 
@@ -142,17 +142,11 @@ class LatencyFilter:
             if reverse is `False`, then the model returns `True` when `latency < threshold`,
             else otherwisse
         """
-        default_config, default_hardware = get_default_config()
-        if config is None:
-            config = default_config
-        if not hardware:
-            hardware = default_hardware
-
-        self.predictors = load_latency_predictors(config, hardware)
+        self.predictors = load_latency_predictor(predictor, predictor_version)
         self.threshold = threshold
 
     def __call__(self, ir_model):
-        latency = self.predictors.predict(ir_model, 'nni')
+        latency = self.predictors.predict(ir_model, 'nni-ir')
         return latency < self.threshold
 
 
@@ -160,6 +154,7 @@ class LatencyFilter:
 @click.option('--port', default=8081, help='On which port the experiment is run.')
 def _main(port):
     base_model = ShuffleNetV2(32)
+    base_predictor = 'cortexA76cpu_tflite21'
     transf = [
         transforms.RandomCrop(32, padding=4),
         transforms.RandomHorizontalFlip()
@@ -175,7 +170,7 @@ def _main(port):
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
                                 max_epochs=2, gpus=1)
 
-    simple_strategy = strategy.Random(model_filter=LatencyFilter(100))
+    simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
 
     exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
 

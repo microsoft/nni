@@ -50,8 +50,11 @@ class RetiariiExeConfig(ConfigBase):
     trial_code_directory: PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
+    devices: Optional[List[Union[str, GPUDevice]]] = None
     max_experiment_duration: Optional[str] = None
     max_trial_number: Optional[int] = None
+    max_concurrency_cgo: Optional[int] = None
+    batch_waiting_time: Optional[int] = None
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
@@ -134,10 +137,11 @@ def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_
 
     if mutators is not None and applied_mutators:
         raise RuntimeError('Have not supported mixed usage of LayerChoice/InputChoice and mutators, '
-                            'do not use mutators when you use LayerChoice/InputChoice')
+                           'do not use mutators when you use LayerChoice/InputChoice')
     if mutators is not None:
         applied_mutators = mutators
     return base_model_ir, applied_mutators
+
 
 def debug_mutated_model(base_model, trainer, applied_mutators):
     """
@@ -189,7 +193,7 @@ class RetiariiExperiment(Experiment):
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
         # TODO: find out a proper way to show no more trial message on WebUI
-        #self._dispatcher.mark_experiment_as_ending()
+        # self._dispatcher.mark_experiment_as_ending()
 
     def start(self, port: int = 8080, debug: bool = False) -> None:
         """
@@ -205,14 +209,18 @@ class RetiariiExperiment(Experiment):
         """
         atexit.register(self.stop)
 
-        devices = self._construct_devices()
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
             from ..execution.base import BaseExecutionEngine
             engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
-            engine = CGOExecutionEngine(devices = devices)
+            # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
+            assert self.config.batch_waiting_time is not None
+            devices = self._construct_devices()
+            engine = CGOExecutionEngine(devices,
+                                        max_concurrency=self.config.max_concurrency_cgo,
+                                        batch_waiting_time=self.config.batch_waiting_time)
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
@@ -310,7 +318,12 @@ class RetiariiExperiment(Experiment):
         """
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
- 
+
+        # stop strategy first
+        if self._dispatcher_thread is not None:
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
+
         if self.id is not None:
             nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
@@ -326,9 +339,6 @@ class RetiariiExperiment(Experiment):
 
         if self._pipe is not None:
             self._pipe.close()
-        if self._dispatcher_thread is not None:
-            self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
 
         self.id = None
         self.port = None

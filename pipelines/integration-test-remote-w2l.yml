@@ -6,7 +6,7 @@ schedules:
     include: [ master ]
 
 variables:
-  worker: remote_nni-ci-gpu-03
+  worker: remote-nni-ci-gpu-04
 
 # variables set on VSO:
 #   manager_ip
@@ -15,7 +15,7 @@ variables:
 
 jobs:
 - job: remote_windows2linux
-  pool: NNI CI WINDOWS2
+  pool: NNI CI WINDOWS REMOTE CLI
   timeoutInMinutes: 120
 
   steps:
