@@ -7,22 +7,10 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.base.pruner_tools import SparsityAllocator
-
+from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
-
-def get_sparsity_allocator(pruner: Pruner, mode: str, dim: Optional[Union[int, list]] = None,
-                           max_sparsity_per_layer: Optional[float] = None, dummy_input: Optional[Tensor] = None):
-    if mode == 'normal':
-        return NormalSparsityAllocator(pruner=pruner, dim=dim)
-    elif mode == 'global':
-        assert max_sparsity_per_layer is not None, 'max_sparsity_per_layer is required in GlobalSparsityAllocator.'
-        return GlobalSparsityAllocator(pruner=pruner, dim=dim, max_sparsity_per_layer=max_sparsity_per_layer)
-    elif mode == 'dependency_aware':
-        assert dummy_input is not None, 'dummy_input is required in Conv2dDependencyAwareAllocator'
-        return Conv2dDependencyAwareAllocator(pruner=pruner, dim=dim, dummy_input=dummy_input)
+from .base import SparsityAllocator
 
 
 class NormalSparsityAllocator(SparsityAllocator):
@@ -68,7 +56,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
                 masks[name] = self._expand_mask_with_dim(name, mask)
         return masks
 
-    def _calculate_threshold(self, group_metric_dict: Dict[int, Dict[str, Tensor]]) -> Tuple[float, Dict[str, float]]:
+    def _calculate_threshold(self, group_metric_dict: Dict[int, Tensor]) -> Tuple[float, Dict[str, float]]:
         metric_list = []
         sub_thresholds = {}
         total_weight_num = 0

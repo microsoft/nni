@@ -2,9 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
-from schema import And, Optional as SchemaOptional
-from typing import List, Dict, Callable, Optional
+from typing import List, Dict, Tuple, Callable, Optional
 
+from schema import And, Optional as SchemaOptional
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -12,11 +12,31 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.base.pruner_tools import HookCollectorInfo, MetricsCalculator
-from nni.algorithms.compression.v2.pytorch.common.data_collector import WeightDataCollector, WeightTrainerBasedDataCollector, SingleHookTrainerBasedDataCollector
-from nni.algorithms.compression.v2.pytorch.common.metrics_calculator import NormMetricsCalculator, MultiDataNormMetricsCalculator, DistMetricsCalculator, APoZRankMetricsCalculator, MeanRankMetricsCalculator
-from nni.algorithms.compression.v2.pytorch.common.sparsity_allocator import get_sparsity_allocator
 from nni.algorithms.compression.v2.pytorch.utils.config_validation import PrunerSchema
+
+from .tools import (
+    DataCollector,
+    HookCollectorInfo,
+    WeightDataCollector,
+    WeightTrainerBasedDataCollector,
+    SingleHookTrainerBasedDataCollector
+)
+
+from .tools import (
+    MetricsCalculator,
+    NormMetricsCalculator,
+    MultiDataNormMetricsCalculator,
+    DistMetricsCalculator,
+    APoZRankMetricsCalculator,
+    MeanRankMetricsCalculator
+)
+
+from .tools import (
+    SparsityAllocator,
+    NormalSparsityAllocator,
+    GlobalSparsityAllocator,
+    Conv2dDependencyAwareAllocator
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -24,7 +44,47 @@ __all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', 'Sli
            'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', 'TaylorFOWeightFilterPruner']
 
 
-class LevelPruner(Pruner):
+class OneShotPruner(Pruner):
+    def __init__(self, model: Module, config_list: List[Dict]):
+        self.data_collector: DataCollector = None
+        self.metrics_calculator: MetricsCalculator = None
+        self.sparsity_allocator: SparsityAllocator = None
+        super().__init__(model, config_list)
+
+    def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
+        super().reset(model=model, config_list=config_list)
+        self.reset_tools()
+
+    def reset_tools(self):
+        """
+        This function is used to reset `self.data_collector`, `self.metrics_calculator` and `self.sparsity_allocator`.
+        The subclass needs to implement this function to complete the pruning process.
+        See `compress()` to understand how NNI use these three part to generate mask for the bound model.
+        """
+        raise NotImplementedError()
+
+    def compress(self) -> Tuple[Module, Dict]:
+        """
+        Used to generate the mask. Pruning process is divided in three stages.
+        `self.data_collector` collect the data used to calculate the specify metric.
+        `self.metrics_calculator` calculate the metric and `self.sparsity_allocator` generate the mask depend on the metric.
+
+        Returns
+        -------
+        Tuple[Module, Dict]
+            Return the wrapped model and mask.
+        """
+        data = self.data_collector.collect()
+        _logger.debug('Collected Data:\n%s', data)
+        metrics = self.metrics_calculator.calculate_metrics(data)
+        _logger.debug('Metrics Calculate:\n%s', metrics)
+        masks = self.sparsity_allocator.generate_sparsity(metrics)
+        _logger.debug('Masks:\n%s', masks)
+        self.load_masks(masks)
+        return self.bound_model, masks
+
+
+class LevelPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         """
         Parameters
@@ -57,10 +117,10 @@ class LevelPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode)
+            self.sparsity_allocator = NormalSparsityAllocator(self)
 
 
-class NormFilterPruner(Pruner):
+class NormFilterPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -77,7 +137,7 @@ class NormFilterPruner(Pruner):
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the l1-norm of weights and the channel-dependency or
+            prune the model according to the norm of weights and the channel-dependency or
             group-dependency of the model. In this way, the pruner will force the conv layers
             that have dependencies to prune the same channels, so the speedup module can better
             harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
@@ -110,7 +170,12 @@ class NormFilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator(p=self.p, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            else:
+                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
 class L1FilterPruner(NormFilterPruner):
@@ -156,7 +221,7 @@ class L2FilterPruner(NormFilterPruner):
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the l1-norm of weights and the channel-dependency or
+            prune the model according to the l2-norm of weights and the channel-dependency or
             group-dependency of the model. In this way, the pruner will force the conv layers
             that have dependencies to prune the same channels, so the speedup module can better
             harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
@@ -169,7 +234,7 @@ class L2FilterPruner(NormFilterPruner):
         super().__init__(model, config_list, 2, mode, dummy_input)
 
 
-class FPGMPruner(Pruner):
+class FPGMPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -216,10 +281,15 @@ class FPGMPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = DistMetricsCalculator(p=2, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            else:
+                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
-class SlimPruner(Pruner):
+class SlimPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global', max_sparsity_per_layer: float = 1):
@@ -303,10 +373,15 @@ class SlimPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer)
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'global':
+                self.sparsity_allocator = GlobalSparsityAllocator(self, 0, self.max_sparsity_per_layer)
+            else:
+                raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationFilterPruner(Pruner):
+class ActivationFilterPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -348,7 +423,7 @@ class ActivationFilterPruner(Pruner):
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the l1-norm of weights and the channel-dependency or
+            prune the model according to the activation-based metrics and the channel-dependency or
             group-dependency of the model. In this way, the pruner will force the conv layers
             that have dependencies to prune the same channels, so the speedup module can better
             harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
@@ -401,7 +476,12 @@ class ActivationFilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = self._get_metrics_calculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, dummy_input=self.dummy_input)
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            else:
+                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
     def _get_metrics_calculator(self) -> MetricsCalculator:
         raise NotImplementedError()
@@ -417,7 +497,7 @@ class ActivationMeanRankFilterPruner(ActivationFilterPruner):
         return MeanRankMetricsCalculator(dim=1)
 
 
-class TaylorFOWeightFilterPruner(Pruner):
+class TaylorFOWeightFilterPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', max_sparsity_per_layer: float = 1, dummy_input: Optional[Tensor] = None):
@@ -460,7 +540,7 @@ class TaylorFOWeightFilterPruner(Pruner):
             'normal', 'dependency_aware' or 'global'.
 
             If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the l1-norm of weights and the channel-dependency or
+            prune the model according to the taylorFO and the channel-dependency or
             group-dependency of the model. In this way, the pruner will force the conv layers
             that have dependencies to prune the same channels, so the speedup module can better
             harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
@@ -515,4 +595,11 @@ class TaylorFOWeightFilterPruner(Pruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = MultiDataNormMetricsCalculator(p=1, dim=0)
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = get_sparsity_allocator(pruner=self, mode=self.mode, dim=0, max_sparsity_per_layer=self.max_sparsity_per_layer, dummy_input=self.dummy_input)
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'global':
+                self.sparsity_allocator = GlobalSparsityAllocator(self, 0, self.max_sparsity_per_layer)
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            else:
+                raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')

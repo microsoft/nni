@@ -10,7 +10,7 @@ from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from .compressor import Compressor, LayerInfo
+from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo
 
 _logger = logging.getLogger(__name__)
 

@@ -6,7 +6,7 @@ from typing import Dict, List, Optional, Union
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base.pruner_tools import MetricsCalculator
+from .base import MetricsCalculator
 
 __all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetricsCalculator',
            'APoZRankMetricsCalculator', 'MeanRankMetricsCalculator']

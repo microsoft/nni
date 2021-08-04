@@ -9,7 +9,6 @@ from torch import Tensor
 from torch.nn import Module
 
 from .compressor import Compressor, LayerInfo
-from .pruner_tools import DataCollector, MetricsCalculator, SparsityAllocator
 
 _logger = logging.getLogger(__name__)
 
@@ -64,18 +63,6 @@ class Pruner(Compressor):
 
     def reset(self, model: Optional[Module] = None, config_list: Optional[List[Dict]] = None):
         super().reset(model=model, config_list=config_list)
-        self.data_collector: Optional[DataCollector] = None
-        self.metrics_calculator: Optional[MetricsCalculator] = None
-        self.sparsity_allocator: Optional[SparsityAllocator] = None
-        self._reset_tools()
-
-    def _reset_tools(self):
-        """
-        This function is used to reset `self.data_collector`, `self.metrics_calculator` and `self.sparsity_allocator`.
-        The subclass needs to implement this function to complete the pruning process.
-        See `compress()` to understand how NNI use these three part to generate mask for the bound model.
-        """
-        raise NotImplementedError()
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
@@ -111,25 +98,14 @@ class Pruner(Compressor):
                 assert hasattr(wrappers[name], mask_type), 'there is no attribute {} in wrapper'.format(mask_type)
                 setattr(wrappers[name], mask_type, mask)
 
-    def compress(self) -> Tuple[Module, Dict]:
+    def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
         """
-        Used to generate the mask. Pruning process is divided in three stages.
-        `self.data_collector` collect the data used to calculate the specify metric.
-        `self.metrics_calculator` calculate the metric and `self.sparsity_allocator` generate the mask depend on the metric.
-
         Returns
         -------
         Tuple[Module, Dict]
             Return the wrapped model and mask.
         """
-        data = self.data_collector.collect()
-        _logger.debug('Collected Data:\n%s', data)
-        metrics = self.metrics_calculator.calculate_metrics(data)
-        _logger.debug('Metrics Calculate:\n%s', metrics)
-        masks = self.sparsity_allocator.generate_sparsity(metrics)
-        _logger.debug('Masks:\n%s', masks)
-        self.load_masks(masks)
-        return self.bound_model, masks
+        return self.bound_model, {}
 
     # NOTE: need refactor dim with supporting list
     def show_pruned_weights(self, dim: int = 0):
