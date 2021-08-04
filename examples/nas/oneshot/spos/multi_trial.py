@@ -13,7 +13,7 @@ from torchvision.datasets import CIFAR10
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
-from nn_meter import get_default_config, load_latency_predictors
+from nn_meter import load_latency_predictor
 
 
 class ShuffleNetV2(nn.Module):
@@ -142,11 +142,11 @@ class LatencyFilter:
             if reverse is `False`, then the model returns `True` when `latency < threshold`,
             else otherwisse
         """
-        self.predictors = load_latency_predictors(predictor, predictor_version)
+        self.predictors = load_latency_predictor(predictor, predictor_version)
         self.threshold = threshold
 
     def __call__(self, ir_model):
-        latency = self.predictors.predict(ir_model, 'nni')
+        latency = self.predictors.predict(ir_model, 'nni-ir')
         return latency < self.threshold
 
 

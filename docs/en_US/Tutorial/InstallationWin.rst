@@ -42,6 +42,8 @@ If you want to contribute to NNI, refer to `setup development environment <Setup
 
        git clone -b v2.3 https://github.com/Microsoft/nni.git
        cd nni
+       python -m pip install -U -r dependencies/setup.txt
+       python -m pip install -r dependencies/develop.txt
        python setup.py develop
 
 Verify installation
