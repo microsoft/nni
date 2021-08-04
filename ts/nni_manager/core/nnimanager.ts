@@ -434,7 +434,9 @@ class NNIManager implements Manager {
 
     private get maxTrialDuration(): number {
         const value = this.experimentProfile.params.maxTrialDuration;
-        return (value === undefined ? Infinity : toSeconds(value));
+        let duration = (value === undefined ? Infinity : toSeconds(value));
+        // Fix timeout warning : Infinity does not fit into a 32-bit signed integer(2147483647).
+        return duration > 2147483647 ? 2147483647 : duration;
     }
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
