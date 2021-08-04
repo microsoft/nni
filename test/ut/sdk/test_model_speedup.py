@@ -406,6 +406,7 @@ class SpeedupTestCase(TestCase):
                     speedup_cfg = {}
                 ms = ModelSpeedup(speedup_model, data,
                                   MASK_FILE, confidence=4, **speedup_cfg)
+
                 ms.speedup_model()
 
                 speedup_model.eval()

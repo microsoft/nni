@@ -184,14 +184,10 @@ class ChannelMaskConflict(MaskFix):
         super(ChannelMaskConflict, self).__init__(
             masks, model, dummy_input, traced)
         self.conv_prune_dim = detect_mask_prune_dim(masks, model)
+        self.channel_prune_type = detect_channel_prune_type(masks, model)
         _logger.info('Dectected conv prune dim" %d', self.conv_prune_dim)
 
     def fix_mask(self):
-        """
-        Fix the mask conflict before the mask inference for the layers that
-        has shape dependencies. This function should be called before the
-        mask inference of the 'speedup' module.
-        """
         """
         Fix the mask conflict before the mask inference for the layers that
         has shape dependencies. This function should be called before the
@@ -200,7 +196,8 @@ class ChannelMaskConflict(MaskFix):
         """
         if self.conv_prune_dim == 0:
             channel_depen = ChannelDependency(
-                self.model, self.dummy_input, self.traced)
+                self.model, self.dummy_input, self.traced, self.channel_prune_type)
+
         else:
             channel_depen = InputChannelDependency(
                 self.model, self.dummy_input, self.traced)
@@ -307,10 +304,44 @@ class ChannelMaskConflict(MaskFix):
 
         return self.masks
 
+def detect_channel_prune_type(masks, model):
+    """
+    User can prune a channel through two ways: 1) prune
+    the corresponding filter of the conv layer(all the
+    filter related pruner), 2) prune the BN layers that
+    followed after a conv(Slim pruner). This function find
+    the pruning type of the masks.
+
+    Parameters
+    ----------
+    masks: dict
+        A dict object that stores the masks.
+    model: nn.Module
+        Model object which the mask can be applied on.
+
+    Returns:
+    -------
+    prune_type: str
+        Could be Filter or Batchnorm
+    """
+    prune_type = 'Filter'
+    all_batch_norm = True
+    for layer_name in masks:
+        _, m = get_module_by_name(model, layer_name)
+        if m is None or (not isinstance(m, torch.nn.BatchNorm2d)):
+            all_batch_norm = False
+            break
+    if all_batch_norm:
+        # if all masks are for batchnorm layers, then the prune_type is BatchNorm
+        # Note, actually we currently do not support pruning both Conv and BatchNorm
+        # at the same time.
+        prune_type = 'Batchnorm'
+    return prune_type
 
 def detect_mask_prune_dim(masks, model):
     """
     Detect how the masks of convolutional layers are pruned.
+
     Parameters
     ----------
     masks: dict
