@@ -349,6 +349,7 @@ class SpeedupTestCase(TestCase):
         self.speedup_integration(model_list)
 
     def test_speedup_integration_big(self):
+        # TODO: will revert vgg16, resnet50, wide_resnet50_2 after confidence refactor
         model_list = ['vgg11', 'resnet34', 'squeezenet1_1', 'densenet121']
         mem_info = psutil.virtual_memory()
         ava_gb = mem_info.available/1024.0/1024/1024
