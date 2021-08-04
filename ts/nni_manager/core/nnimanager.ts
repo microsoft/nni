@@ -28,6 +28,7 @@ import {
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 import { NNIRestServer } from '../rest_server/nniRestServer';
+import { inflate } from 'zlib';
 
 /**
  * NNIManager which implements Manager interface
@@ -434,9 +435,7 @@ class NNIManager implements Manager {
 
     private get maxTrialDuration(): number {
         const value = this.experimentProfile.params.maxTrialDuration;
-        const duration = (value === undefined ? Infinity : toSeconds(value)) * 1000;
-        // Fix timeout warning : Infinity does not fit into a 32-bit signed integer(2147483647).
-        return duration > 2147483647 ? 2147483647 : duration;
+        return (value === undefined ? Infinity : toSeconds(value));
     }
 
     private async initTrainingService(config: ExperimentConfig): Promise<TrainingService> {
@@ -683,7 +682,12 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), this.maxTrialDuration);
+                    if(this.maxTrialDuration !== Infinity){
+                        // Fix timeout warning : Infinity does not fit into a 32-bit signed integer(2147483647).
+                        const duration = (this.maxTrialDuration * 1000) > 2147483647 ? 2147483647 : this.maxTrialDuration * 1000;
+                        setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), duration);
+                    }
+
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
