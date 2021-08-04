@@ -28,7 +28,6 @@ import {
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
 import { NNIRestServer } from '../rest_server/nniRestServer';
-import { inflate } from 'zlib';
 
 /**
  * NNIManager which implements Manager interface
