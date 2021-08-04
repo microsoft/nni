@@ -66,7 +66,7 @@ if __name__ == "__main__":
     while True:
         line = sys.stdin.readline().rstrip()
         if line == 'update_status':
-            print('status:' + client.get_job(job_id).body)
+            print('status:' + client.get_job(job_id).body.status)
         elif line == 'tracking_url':
             #TODO: 1. get this url by api? 2. change this url in private dlc mode.
             print('tracking_url:' + f'https://pai-dlc.console.aliyun.com/#/jobs/detail?jobId={job_id}&regionId={args.region}')

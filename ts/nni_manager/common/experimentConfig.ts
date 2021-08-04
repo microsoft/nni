@@ -85,6 +85,8 @@ export interface DlcConfig extends TrainingServiceConfig {
     nasDataSourceId: string;
     accessKeyId: string;
     accessKeySecret: string;
+    localStorageMountPoint: string;
+    containerStorageMountPoint: string;
 }
 /* Kubeflow */
 

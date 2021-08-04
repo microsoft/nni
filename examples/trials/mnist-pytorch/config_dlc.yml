@@ -1,5 +1,8 @@
+# working directory on DSW, please provie FULL path
+experimentWorkingDirectory: /home/admin/workspace/{your_working_dir}
 searchSpaceFile: search_space.json
-trialCommand: python3 mnist.py
+# the command on trial runner(or, DLC container), be aware of data_dir
+trialCommand: python mnist.py --data_dir /root/data/{your_data_dir}
 trialConcurrency: 1
 maxTrialNumber: 10
 tuner:
@@ -10,7 +13,7 @@ tuner:
 trainingService:
   platform: dlc
   type: Worker
-  image: registry-vpc.cn-hangzhou.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
+  image: registry-vpc.cn-beijing.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
   podCount: 1
   ecsSpec: ecs.c6.large
   region: cn-hangzhou
@@ -18,3 +21,5 @@ trainingService:
   accessKeyId: ${your_ak_id}
   accessKeySecret: ${your_ak_key}
   nasDataSourceId: ${your_nas_data_source_id}   #e.g., datat56by9n1xt0a
+  localStorageMountPoint: /home/admin/workspace/  # DSW default root path, please do NOT change it
+  containerStorageMountPoint: /root/data/         # DLC container default root Path, change it based on your DLC NAS config.

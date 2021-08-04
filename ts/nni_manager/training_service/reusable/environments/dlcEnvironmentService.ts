@@ -15,6 +15,9 @@ import { DlcEnvironmentInformation } from '../dlc/dlcConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { EventEmitter } from "events";
 import { FileCommandChannel } from '../channels/fileCommandChannel';
+import { MountedStorageService } from '../storages/mountedStorageService';
+import { Scope } from 'typescript-ioc';
+import { StorageService } from '../storageService';
 
 interface FlattenDlcConfig extends ExperimentConfig, DlcConfig { }
 
@@ -35,6 +38,7 @@ export class DlcEnvironmentService extends EnvironmentService {
         this.experimentRootDir = info.logDir;
         this.config = flattenConfig(config, 'dlc');
         validateCodeDir(this.config.trialCodeDirectory);
+        component.Container.bind(StorageService).to(MountedStorageService).scope(Scope.Singleton);
     }
 
     public get hasStorageService(): boolean {
@@ -61,6 +65,8 @@ export class DlcEnvironmentService extends EnvironmentService {
             }
             const newStatus = await dlcClient.updateStatus(environment.status);
             switch (newStatus.toUpperCase()) {
+                case 'CREATING':
+                case 'CREATED':
                 case 'WAITING':
                 case 'QUEUED':
                     environment.setStatus('WAITING');
@@ -92,12 +98,19 @@ export class DlcEnvironmentService extends EnvironmentService {
             await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
         }
 
+        let dlcFolder: string = this.experimentRootDir.replace(
+            this.config.localStorageMountPoint, this.config.containerStorageMountPoint);
+        dlcEnvironment.workingFolder = `${this.experimentRootDir}/envs/${environment.id}`;
+        dlcEnvironment.runnerWorkingFolder = `${dlcFolder}/envs/${environment.id}`;
         let script: string = environment.command;
 
-        let dlcFolder: string = this.experimentRootDir.replace('/home/admin/workspace', '/root/data');
-        const prepare = `cd ${dlcFolder} && mkdir -p envs/${environment.id} && cd envs/${environment.id} \
-                        && cp -r ../../environment-temp/envs/* .`
-        const startrun = `sh install_nni.sh && python -m nni.tools.trial_tool.trial_runner`;
+        // environment id dir and command dir
+        if (!fs.existsSync(`${dlcEnvironment.workingFolder}/commands`)) {
+            await fs.promises.mkdir(`${dlcEnvironment.workingFolder}/commands`, {recursive: true});
+        }
+
+        const prepare = `cd ${dlcEnvironment.runnerWorkingFolder} && cp -r ../../environment-temp/envs/* ../`;
+        const startrun = `sh ../install_nni.sh && python -m nni.tools.trial_tool.trial_runner`;
 
         script = `${prepare} && ${startrun}`;
         script = `${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
@@ -117,6 +130,7 @@ export class DlcEnvironmentService extends EnvironmentService {
             script,
             dlcFolder,
         );
+
         dlcEnvironment.id = await dlcClient.submit();
         this.log.debug('dlc: before getTrackingUrl');
         dlcEnvironment.trackingUrl = await dlcClient.getTrackingUrl();

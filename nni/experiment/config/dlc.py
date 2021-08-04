@@ -18,6 +18,8 @@ class DlcConfig(TrainingServiceConfig):
     nas_data_source_id: str
     access_key_id: str
     access_key_secret: str
+    localStorageMountPoint: str
+    containerStorageMountPoint: str
 
     _validation_rules = {
         'platform': lambda value: (value == 'dlc', 'cannot be modified')
