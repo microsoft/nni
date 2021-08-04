@@ -42,9 +42,10 @@ jobs:
 
   - script: |
       set -e
-      (cd test && python3 -m pytest ut)
       export PATH=$PATH:$PWD/toolchain/yarn/bin
       export CI=true
+      which yarn
+      which node
       (cd ts/nni_manager && yarn test)
       (cd ts/nasui && yarn test)
     displayName: Unit test
