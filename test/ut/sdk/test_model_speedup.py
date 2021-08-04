@@ -405,7 +405,7 @@ class SpeedupTestCase(TestCase):
                 if speedup_cfg is None:
                     speedup_cfg = {}
                 ms = ModelSpeedup(speedup_model, data,
-                                  MASK_FILE, confidence=6, **speedup_cfg)
+                                  MASK_FILE, confidence=4, **speedup_cfg)
                 ms.speedup_model()
 
                 speedup_model.eval()
