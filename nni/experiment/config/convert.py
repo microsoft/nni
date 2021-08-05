@@ -17,6 +17,8 @@ def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
     assert platform in ['local', 'remote', 'pai', 'aml']
+    if platform == 'pai':
+        platform = 'openpai'
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -81,7 +83,7 @@ def to_v2(v1) -> ExperimentConfig:
             _move_field(v1_machine, v2_machine, 'passwd', 'password')
             assert not v1_machine, v1_machine
 
-    if platform == 'pai':
+    if platform == 'openpai':
         _move_field(v1_trial, ts, 'nniManagerNFSMountPath', 'local_storage_mount_point')
         _move_field(v1_trial, ts, 'containerNFSMountPath', 'container_storage_mount_point')
         _move_field(v1_trial, ts, 'cpuNum', 'trial_cpu_number')
