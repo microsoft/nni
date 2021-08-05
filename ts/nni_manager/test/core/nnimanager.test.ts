@@ -141,139 +141,139 @@ describe('Unit test for nnimanager', function () {
 
 
 
-    it('test addCustomizedTrialJob', () => {
-        return nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
+    // it('test addCustomizedTrialJob', () => {
+    //     return nniManager.addCustomizedTrialJob('"hyperParams"').then(() => {
 
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
 
-    it('test listTrialJobs', () => {
-        return nniManager.listTrialJobs().then(function (trialjobdetails) {
-            expect(trialjobdetails.length).to.be.equal(2);
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test listTrialJobs', () => {
+    //     return nniManager.listTrialJobs().then(function (trialjobdetails) {
+    //         expect(trialjobdetails.length).to.be.equal(2);
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test getTrialJob valid', () => {
-        //query a exist id
-        return nniManager.getTrialJob('1234').then(function (trialJobDetail) {
-            expect(trialJobDetail.trialJobId).to.be.equal('1234');
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test getTrialJob valid', () => {
+    //     //query a exist id
+    //     return nniManager.getTrialJob('1234').then(function (trialJobDetail) {
+    //         expect(trialJobDetail.trialJobId).to.be.equal('1234');
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test getTrialJob with invalid id', () => {
-        //query a not exist id, and the function should throw error, and should not process then() method
-        return nniManager.getTrialJob('4567').then((jobid) => {
-            assert.fail();
-        }).catch((error) => {
-            assert.isTrue(true);
-        })
-    })
+    // it('test getTrialJob with invalid id', () => {
+    //     //query a not exist id, and the function should throw error, and should not process then() method
+    //     return nniManager.getTrialJob('4567').then((jobid) => {
+    //         assert.fail();
+    //     }).catch((error) => {
+    //         assert.isTrue(true);
+    //     })
+    // })
 
-    it('test cancelTrialJobByUser', () => {
-        return nniManager.cancelTrialJobByUser('1234').then(() => {
+    // it('test cancelTrialJobByUser', () => {
+    //     return nniManager.cancelTrialJobByUser('1234').then(() => {
 
-        }).catch((error) => {
-            console.log(error);
-            assert.fail(error);
-        })
-    })
+    //     }).catch((error) => {
+    //         console.log(error);
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test getExperimentProfile', () => {
-        return nniManager.getExperimentProfile().then((experimentProfile) => {
-            expect(experimentProfile.id).to.be.equal('unittest');
-            expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni-experiments','unittest'));
+    // it('test getExperimentProfile', () => {
+    //     return nniManager.getExperimentProfile().then((experimentProfile) => {
+    //         expect(experimentProfile.id).to.be.equal('unittest');
+    //         expect(experimentProfile.logDir).to.be.equal(path.join(os.homedir(),'nni-experiments','unittest'));
 
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test updateExperimentProfile TRIAL_CONCURRENCY',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.trialConcurrency).to.be.equal(2);
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test updateExperimentProfile TRIAL_CONCURRENCY',  () => {
+    //     return nniManager.updateExperimentProfile(experimentProfile, 'TRIAL_CONCURRENCY').then(() => {
+    //         nniManager.getExperimentProfile().then((updateProfile) => {
+    //             expect(updateProfile.params.trialConcurrency).to.be.equal(2);
+    //         });
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxExperimentDuration).to.be.equal('6s');
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test updateExperimentProfile MAX_EXEC_DURATION',  () => {
+    //     return nniManager.updateExperimentProfile(experimentProfile, 'MAX_EXEC_DURATION').then(() => {
+    //         nniManager.getExperimentProfile().then((updateProfile) => {
+    //             expect(updateProfile.params.maxExperimentDuration).to.be.equal('6s');
+    //         });
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test updateExperimentProfile SEARCH_SPACE',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
-            });
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test updateExperimentProfile SEARCH_SPACE',  () => {
+    //     return nniManager.updateExperimentProfile(experimentProfile, 'SEARCH_SPACE').then(() => {
+    //         nniManager.getExperimentProfile().then((updateProfile) => {
+    //             expect(updateProfile.params.searchSpace).to.be.equal('{"lr": {"_type": "choice", "_value": [0.01,0.001]}}');
+    //         });
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test updateExperimentProfile MAX_TRIAL_NUM',  () => {
-        return nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM').then(() => {
-            nniManager.getExperimentProfile().then((updateProfile) => {
-                expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
-            });
-        }).catch((error: any) => {
-            assert.fail(error);
-        })
-    })
+    // it('test updateExperimentProfile MAX_TRIAL_NUM',  () => {
+    //     return nniManager.updateExperimentProfile(experimentProfile, 'MAX_TRIAL_NUM').then(() => {
+    //         nniManager.getExperimentProfile().then((updateProfile) => {
+    //             expect(updateProfile.params.maxTrialNumber).to.be.equal(2);
+    //         });
+    //     }).catch((error: any) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test getStatus', () => {
-        assert.strictEqual(nniManager.getStatus().status,'RUNNING');
-    })
+    // it('test getStatus', () => {
+    //     assert.strictEqual(nniManager.getStatus().status,'RUNNING');
+    // })
 
-    it('test getMetricData with trialJobId', () => {
-        //query a exist trialJobId
-        return nniManager.getMetricData('4321', 'CUSTOM').then((metricData) => {
-            expect(metricData.length).to.be.equal(1);
-            expect(metricData[0].trialJobId).to.be.equal('4321');
-            expect(metricData[0].parameterId).to.be.equal('param1');
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test getMetricData with trialJobId', () => {
+    //     //query a exist trialJobId
+    //     return nniManager.getMetricData('4321', 'CUSTOM').then((metricData) => {
+    //         expect(metricData.length).to.be.equal(1);
+    //         expect(metricData[0].trialJobId).to.be.equal('4321');
+    //         expect(metricData[0].parameterId).to.be.equal('param1');
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
-    it('test getMetricData with invalid trialJobId', () => {
-        //query an invalid trialJobId
-        return nniManager.getMetricData('43210', 'CUSTOM').then((metricData) => {
-            assert.fail();
-        }).catch((error) => {
-        })
-    })
+    // it('test getMetricData with invalid trialJobId', () => {
+    //     //query an invalid trialJobId
+    //     return nniManager.getMetricData('43210', 'CUSTOM').then((metricData) => {
+    //         assert.fail();
+    //     }).catch((error) => {
+    //     })
+    // })
 
-    it('test getTrialJobStatistics', () => {
-        // get 3 trial jobs (init, addCustomizedTrialJob, cancelTrialJobByUser)
-        return nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
-            expect(trialJobStatistics.length).to.be.equal(2);
-            if (trialJobStatistics[0].trialJobStatus === 'WAITING') {
-                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
-                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(1);
-            }
-            else {
-                expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
-                expect(trialJobStatistics[0].trialJobNumber).to.be.equal(1);
-            }
-        }).catch((error) => {
-            assert.fail(error);
-        })
-    })
+    // it('test getTrialJobStatistics', () => {
+    //     // get 3 trial jobs (init, addCustomizedTrialJob, cancelTrialJobByUser)
+    //     return nniManager.getTrialJobStatistics().then(function (trialJobStatistics) {
+    //         expect(trialJobStatistics.length).to.be.equal(2);
+    //         if (trialJobStatistics[0].trialJobStatus === 'WAITING') {
+    //             expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
+    //             expect(trialJobStatistics[1].trialJobNumber).to.be.equal(1);
+    //         }
+    //         else {
+    //             expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
+    //             expect(trialJobStatistics[0].trialJobNumber).to.be.equal(1);
+    //         }
+    //     }).catch((error) => {
+    //         assert.fail(error);
+    //     })
+    // })
 
     it('test addCustomizedTrialJob reach maxTrialNumber', () => {
         // test currSubmittedTrialNum reach maxTrialNumber
@@ -289,8 +289,8 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test resumeExperiment', async () => {
-       //TODO: add resume experiment unit test
-    })
+    // it('test resumeExperiment', async () => {
+    //    //TODO: add resume experiment unit test
+    // })
 
 })
