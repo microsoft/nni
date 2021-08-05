@@ -5,10 +5,6 @@ schedules:
   branches:
     include: [ master ]
 
-variables:
-  worker: remote_nni-ci-gpu-03
-
-
 jobs:
 - job: hybrid
   pool: NNI CI REMOTE CLI
