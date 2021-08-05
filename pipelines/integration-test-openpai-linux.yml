@@ -43,15 +43,15 @@ jobs:
       nnictl algo register --meta meta_file.yml
     displayName: Install customized tuner
 
-  - script: |
-      set -e
-      docker login -u nnidev -p $(docker_hub_password)
-      echo '## Build docker image ##'
-      docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
-      echo '## Upload docker image ##'
-      docker push nnidev/nni-nightly
-    condition: eq(variables['build_docker_image'], 'true')
-    displayName: Build and upload docker image
+  # - script: |
+  #     set -e
+  #     docker login -u nnidev -p $(docker_hub_password)
+  #     echo '## Build docker image ##'
+  #     docker build --build-arg NNI_RELEASE=${NNI_RELEASE} -t nnidev/nni-nightly .
+  #     echo '## Upload docker image ##'
+  #     docker push nnidev/nni-nightly
+  #   condition: eq(variables['build_docker_image'], 'true')
+  #   displayName: Build and upload docker image
 
   # - script: |
   #     set -e
