@@ -289,7 +289,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.config.trialGpuNumber,
+                            gpu: this.config.trialGpuNumber === undefined? 0: this.config.trialGpuNumber,
                             cpu: this.config.trialCpuNumber,
                             memoryMB: toMegaBytes(this.config.trialMemorySize)
                         },
