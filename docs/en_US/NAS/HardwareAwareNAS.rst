@@ -6,7 +6,7 @@ Hardware-aware NAS
 EndToEnd Multi-trial SPOS Demo
 ------------------------------
 
-Basically, this demo will select the model whose latency satisfy constraints to train.
+To empower affordable DNN on the edge and mobile devices, hardware-aware NAS searches both high accuracy and low latency models. In particular, the search algorithm only considers the models within the target latency constraints during the search process.
 
 To run this demo, first install nn-Meter from source code (Github repo link: https://github.com/microsoft/nn-Meter. Currently we haven't released this package, so development installation is required).
 
@@ -23,19 +23,19 @@ Then run multi-trail SPOS demo:
 How the demo works
 ------------------
 
-To support latency-aware NAS, you first need a `Strategy` that supports filtering the models by latency. We provide such a filter named `LatencyFilter` in NNI and initialize a `Random` strategy with the filter:
+To support hardware-aware NAS, you first need a `Strategy` that supports filtering the models by latency. We provide such a filter named `LatencyFilter` in NNI and initialize a `Random` strategy with the filter:
 
 .. code-block:: python
 
-  simple_strategy = strategy.Random(model_filter=LatencyFilter(100)
+  simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
 
 ``LatencyFilter`` will predict the models\' latency by using nn-Meter and filter out the models whose latency are larger than the threshold (i.e., ``100`` in this example).
 You can also build your own strategies and filters to support more flexible NAS such as sorting the models according to latency.
 
-Then, pass this strategy to ``RetiariiExperiment`` along with some additional arguments: ``parse_shape=True, dummy_input=dummy_input``:
+Then, pass this strategy to ``RetiariiExperiment`` along with additional argument: ``applied_mutators=[]``:
 
 .. code-block:: python
 
-  RetiariiExperiment(base_model, trainer, [], simple_strategy, True, dummy_input)
+  RetiariiExperiment(base_model, trainer, [], simple_strategy)
 
-Here, ``parse_shape=True`` means extracting shape info from the torch model as it is required by nn-Meter to predict latency. ``dummy_input`` is required for tracing shape info.
+Here, ``applied_mutators=[]`` means do not use any mutators.
