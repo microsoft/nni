@@ -283,7 +283,9 @@ describe('Unit test for nnimanager', function () {
                     expect(trialJobStatistics[0].trialJobNumber).to.be.equal(2);
                 else
                     expect(trialJobStatistics[1].trialJobNumber).to.be.equal(2);
-            })
+            }).catch((error) => {
+                assert.fail(error);
+            });
         }).catch((error) => {
             assert.fail(error);
         })
