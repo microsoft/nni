@@ -58,6 +58,7 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
+    virtualCluster?: string;
 }
 
 /* AML */

@@ -16,7 +16,7 @@ _logger = logging.getLogger(__name__)
 def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local', 'remote', 'openpai', 'aml']
+    assert platform in ['local', 'remote', 'pai', 'aml']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -81,14 +81,14 @@ def to_v2(v1) -> ExperimentConfig:
             _move_field(v1_machine, v2_machine, 'passwd', 'password')
             assert not v1_machine, v1_machine
 
-    if platform == 'openpai':
+    if platform == 'pai':
         _move_field(v1_trial, ts, 'nniManagerNFSMountPath', 'local_storage_mount_point')
         _move_field(v1_trial, ts, 'containerNFSMountPath', 'container_storage_mount_point')
         _move_field(v1_trial, ts, 'cpuNum', 'trial_cpu_number')
         if 'memoryMB' in v1_trial:
             ts.trial_memory_size = str(v1_trial.pop('memoryMB')) + 'mb'
         _move_field(v1_trial, ts, 'image', 'docker_image')
-        _deprecate(v1_trial, v2, 'virtualCluster')
+        _move_field(v1_trial, ts, 'virtualCluster', 'virtual_cluster')
         _move_field(v1_trial, ts, 'paiStorageConfigName', 'storage_config_name')
         _move_field(v1_trial, ts, 'paiConfigPath', 'openpaiConfigFile')
 
