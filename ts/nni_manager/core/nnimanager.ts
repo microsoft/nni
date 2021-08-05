@@ -681,7 +681,12 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
+                    if(this.maxTrialDuration !== Infinity){
+                        // Fix timeout warning : Infinity does not fit into a 32-bit signed integer(2147483647).
+                        const duration = (this.maxTrialDuration * 1000) > 2147483647 ? 2147483647 : this.maxTrialDuration * 1000;
+                        setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), duration);
+                    }
+
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
