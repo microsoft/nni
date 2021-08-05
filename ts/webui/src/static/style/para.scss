@@ -1,0 +1,93 @@
+.parameter {
+    height: 100%;
+}
+
+.para-filter {
+    width: 97%;
+    margin-top: 15px;
+
+    &-text {
+        line-height: 32px;
+        margin-right: 10px;
+    }
+
+    &-percent {
+        margin-right: 10px;
+    }
+
+    &-middle {
+        vertical-align: top;
+    }
+}
+
+.meline {
+    margin-top: 15px;
+
+    span {
+        font-size: 14px;
+        margin-right: 6px;
+    }
+}
+
+.searcHyper {
+    position: relative;
+    margin: 0 19px;
+
+    .noneData {
+        position: absolute;
+        left: 49%;
+        top: 2.5%;
+        font-size: 13px;
+        color: #999;
+    }
+}
+
+/* Intermediate Result Style */
+.intermediate {
+    width: 95%;
+
+    /* border: 1px solid blue; */
+    input {
+        width: 64px;
+        height: 26px;
+        padding-left: 8px;
+    }
+
+    .strange {
+        margin-right: 15px;
+    }
+
+    .hyphen {
+        margin-left: 6px;
+        margin-right: 6px;
+    }
+
+    .filter-x {
+        margin-left: 15px;
+    }
+
+    .filter-toggle {
+        line-height: 32px;
+    }
+}
+
+.parcoords {
+    text.label,
+    text {
+        font-family: "Segoe UI", "Segoe UI Web (West European)", -apple-system, BlinkMacSystemFont, Roboto, "Helvetica Neue", sans-serif;
+        font-size: 12px;
+    }
+}
+
+.nodata {
+    font-size: 18px;
+    font-weight: 600;
+    color: #666;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    left: 0;
+    right: 0;
+    text-align: center;
+    top: 45%;
+}

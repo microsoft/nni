@@ -1,0 +1,23 @@
+authorName: default
+experimentName: MatMul_N512K1024M1024_GBFS
+trialConcurrency: 5
+maxExecDuration: 24h
+maxTrialNum: 512
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  codeDir: /root/algorithms/
+  classFileName: gbfs.py
+  className: G_BFS
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example 
+  classArgs:
+    optimize_mode: maximize
+    num_samples: 5
+trial:
+  command: OP=matmul N=512 K=1024 M=1024 P=NN ./run.sh
+  codeDir: /root
+  # gpuNum: 0

@@ -18,7 +18,7 @@ class NaiveAssessor(Assessor):
         _logger.info('init')
 
     def assess_trial(self, trial_job_id, trial_history):
-        _logger.info('assess trial %s %s' % (trial_job_id, trial_history))
+        _logger.info('assess trial %s %s', trial_job_id, trial_history)
 
         id_ = trial_history[0]
         if id_ in self._killed:

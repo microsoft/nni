@@ -1,9 +1,10 @@
 
 defaultTestCaseConfig:
-  launchCommand: nnictl create --config $configFile
+  launchCommand: nnictl create --config $configFile --debug
   stopCommand: nnictl stop
   experimentStatusCheck: True
   platform: linux darwin win32
+  trainingService: all
 
 testCases:
 #######################################################################
@@ -22,7 +23,7 @@ testCases:
   validator:
 
   # launch command, default launch command is 'nnictl create --config $configFile'
-  launchCommand: nnictl create --config $configFile
+  launchCommand: nnictl create --config $configFile --debug
 
   # stop command, default stop command is 'nnictl stop', empty means no stop command
   stopCommand: nnictl stop
@@ -33,20 +34,60 @@ testCases:
   # check status of experiment before calling validator
   experimentStatusCheck: True
 
+- name: shared-storage-remote-azureblob
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_azureblob.yml
+  config:
+    sharedStorage:
+      localMountPoint: /tmp/nnimount/testlocalrootpath
+      remoteMountPoint: /tmp/nnimount/testremoterootpath
+      storageAccountName: nennistorage
+      storageAccountKey: $(azureblob_token_test)
+      containerName: sharedstorage
+  trainingService: remote
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
+
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression.yml
 
-- name: mnist-tfv1
-  configFile: test/config/examples/mnist-tfv1.yml
+# mount point in local may late to umount when stop experiment in shared-storage-remote-azureblob,
+# so keep two shared storage tests away from each other.
+- name: shared-storage-remote-nfs
+  configFile: test/config/sharedstorage_test/config_sharedstorage_remote_nfs.yml
+  trainingService: remote
+  validator:
+    class: FileExistValidator
+    kwargs:
+      rootpath: /tmp/nnimount/testlocalrootpath
 
-- name: mnist-keras
-  configFile: test/config/examples/mnist-keras.yml
+- name: mnist-tensorflow
+  configFile: test/config/examples/mnist-tfv2.yml
+  config:
+    maxExecDuration: 10m # This example will use longger time in remote mode, set max_duration to 10m to avoid timeout error.
+    maxTrialNum: 1
+    trialConcurrency: 1
+  trainingService: local remote # FIXME: timeout on pai, looks like tensorflow failed to link CUDA
 
-- name: mnist-pytorch
+- name: mnist-pytorch-local
   configFile: test/config/examples/mnist-pytorch.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 --data_dir ../examples/trials/mnist-pytorch/data && nnictl create --config $configFile --debug
+  trainingService: local
 
-- name: mnist-annotation
-  configFile: test/config/examples/mnist-annotation.yml
+- name: mnist-pytorch-non-local
+  configFile: test/config/examples/mnist-pytorch.yml
+  # download data first, to prevent concurrent issue.
+  launchCommand: nnictl create --config $configFile --debug
+  trainingService: remote pai kubeflow frameworkcontroller dlts
+
+# TODO: move this and following commented test cases to pytorch or tf2
+#- name: mnist-annotation
+#  configFile: test/config/examples/mnist-annotation.yml
+#  config:
+#    maxTrialNum: 1
+#    trialConcurrency: 1
 
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch.yml
@@ -60,9 +101,26 @@ testCases:
       command: python3 main.py --epochs 1 --batches 1
       gpuNum: 0
 
-- name: nested-ss
-  configFile: test/config/examples/mnist-nested-search-space.yml
+- name: cifar10-pytorch-adl
+  configFile: test/config/examples/cifar10-pytorch-adl.yml
+  trainingService: adl
 
+#- name: nested-ss
+#  configFile: test/config/examples/mnist-nested-search-space.yml
+
+- name: classic-nas-gen-ss
+  configFile: test/config/examples/classic-nas-pytorch.yml
+  launchCommand: nnictl ss_gen --trial_command="python3 mnist.py --epochs 1" --trial_dir=../examples/nas/legacy/classic_nas --file=config/examples/nni-nas-search-space.json
+  stopCommand:
+  experimentStatusCheck: False
+  trainingService: local
+
+- name: classic-nas-pytorch
+  configFile: test/config/examples/classic-nas-pytorch.yml
+  # remove search space file
+  stopCommand: nnictl stop
+  onExitCommand: python3 -c "import os; os.remove('config/examples/nni-nas-search-space.json')"
+  trainingService: local
 
 #########################################################################
 # nni features test
@@ -77,6 +135,14 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics.json
 
+- name: export-float
+  configFile: test/config/metrics_test/config.yml
+  config:
+    maxTrialNum: 1
+    trialConcurrency: 1
+  validator:
+    class: ExportValidator 
+
 - name: metrics-dict
   configFile: test/config/metrics_test/config_dict_metrics.yml
   config:
@@ -87,16 +153,20 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics_dict.json
 
-- name: nnicli
-  configFile: test/config/examples/sklearn-regression.yml
+- name: export-dict
+  configFile: test/config/metrics_test/config_dict_metrics.yml
   config:
-    maxTrialNum: 4
-    trialConcurrency: 4
-  launchCommand: python3 -c 'import nnicli as nc; nc.start_nni("$configFile")'
-  stopCommand: python3 -c 'import nnicli as nc; nc.stop_nni()'
+    maxTrialNum: 1
+    trialConcurrency: 1
   validator:
-    class: NnicliValidator
-  platform: linux darwin
+    class: ExportValidator 
+
+- name: experiment-import
+  configFile: test/config/nnictl_experiment/sklearn-classification.yml
+  validator:
+    class: ImportValidator
+    kwargs:
+      import_data_file_path: config/nnictl_experiment/test_import.json
 
 - name: foreground
   configFile: test/config/examples/sklearn-regression.yml
@@ -109,6 +179,8 @@ testCases:
 - name: nnictl-resume-1
   configFile: test/config/examples/sklearn-regression.yml
   setExperimentIdtoVar: $resumeExpId
+  # for subfolder in codedir test
+  launchCommand: python3 -c "import os; os.makedirs('../examples/trials/sklearn/regression/subfolder', exist_ok=True); open('../examples/trials/sklearn/regression/subfolder/subfile', 'a').close()" && nnictl create --config $configFile --debug
 
 # Experiment resume test part 2
 - name: nnictl-resume-2
@@ -124,27 +196,6 @@ testCases:
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml
 
-- name: multi-phase-batch
-  configFile: test/config/multi_phase/batch.yml
-  config:
-    # for batch tuner, maxTrialNum can not exceed length of search space
-    maxTrialNum: 2
-    trialConcurrency: 2
-
-- name: multi-phase-evolution
-  configFile: test/config/multi_phase/evolution.yml
-
-- name: multi-phase-grid
-  configFile: test/config/multi_phase/grid.yml
-  config:
-    maxTrialNum: 2
-    trialConcurrency: 2
-
-- name: multi-phase-metis
-  configFile: test/config/multi_phase/metis.yml
-
-- name: multi-phase-tpe
-  configFile: test/config/multi_phase/tpe.yml
 
 #########################################################################
 # nni assessor test
@@ -158,37 +209,46 @@ testCases:
 #########################################################################
 # nni tuners test
 #########################################################################
-- name: tuner-annel
-  configFile: test/config/tuners/anneal.yml
+#- name: tuner-annel
+#  configFile: test/config/tuners/anneal.yml
 
-- name: tuner-evolution
-  configFile: test/config/tuners/evolution.yml
+#- name: tuner-evolution
+#  configFile: test/config/tuners/evolution.yml
 
-- name: tuner-random
-  configFile: test/config/tuners/random.yml
+#- name: tuner-random
+#  configFile: test/config/tuners/random.yml
 
-- name: tuner-smac
-  configFile: test/config/tuners/smac.yml
-  platform: linux darwin
+#- name: tuner-smac
+#  configFile: test/config/tuners/smac.yml
+#  platform: linux darwin
 
-- name: tuner-tpe
-  configFile: test/config/tuners/tpe.yml
+#- name: tuner-tpe
+#  configFile: test/config/tuners/tpe.yml
 
-- name: tuner-batch
-  configFile: test/config/tuners/batch.yml
+#- name: tuner-batch
+#  configFile: test/config/tuners/batch.yml
 
-- name: tuner-bohb
-  configFile: test/config/tuners/bohb.yml
-  platform: linux darwin
+#- name: tuner-bohb
+#  configFile: test/config/tuners/bohb.yml
+#  platform: linux darwin
 
-- name: tuner-gp
-  configFile: test/config/tuners/gp.yml
+#- name: tuner-gp
+#  configFile: test/config/tuners/gp.yml
 
-- name: tuner-grid
-  configFile: test/config/tuners/gridsearch.yml
+#- name: tuner-grid
+#  configFile: test/config/tuners/gridsearch.yml
 
-- name: tuner-hyperband
-  configFile: test/config/tuners/hyperband.yml
+#- name: tuner-hyperband
+#  configFile: test/config/tuners/hyperband.yml
 
-- name: tuner-metis
-  configFile: test/config/tuners/metis.yml
+#- name: tuner-metis
+#  configFile: test/config/tuners/metis.yml
+
+- name: tuner-regularized_evolution
+  configFile: test/config/tuners/regularized_evolution_tuner.yml
+
+#########################################################################
+# nni customized-tuners test
+#########################################################################
+- name: customized-tuners-demotuner
+  configFile: test/config/customized_tuners/demotuner-sklearn-classification.yml

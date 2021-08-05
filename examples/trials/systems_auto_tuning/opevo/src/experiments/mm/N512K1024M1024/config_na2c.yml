@@ -1,0 +1,22 @@
+authorName: default
+experimentName: MatMul_N512K1024M1024_NA2C
+trialConcurrency: 6
+maxExecDuration: 24h
+maxTrialNum: 512
+#choice: local, remote, pai
+trainingServicePlatform: local
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  codeDir: /root/algorithms/
+  classFileName: na2c.py
+  className: N_A2C
+  # Any parameter need to pass to your tuner class __init__ constructor
+  # can be specified in this optional classArgs field, for example 
+  classArgs:
+    optimize_mode: maximize
+trial:
+  command: OP=matmul N=512 K=1024 M=1024 P=NN ./run.sh
+  codeDir: /root
+  # gpuNum: 0

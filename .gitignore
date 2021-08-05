@@ -1,3 +1,18 @@
+/nni/version.py
+/nni_node/
+/toolchain/
+
+# unit test generated files
+/test/model_path/
+/test/temp.json
+/test/ut/sdk/*.pth
+/test/ut/tools/annotation/_generated/
+/ts/nni_manager/exp_profile.json
+/ts/nni_manager/metrics.json
+/ts/nni_manager/trial_jobs.json
+/test/ut/retiarii/_debug_graph_data.json
+/test/ut/retiarii/out.tmp
+
 # Logs
 logs
 *.log
@@ -19,6 +34,12 @@ lib-cov
 
 # Coverage directory used by tools like istanbul
 coverage
+junit/
+coverage.xml
+test-*.xml
+.coverage.*
+htmlcov/
+.coverage
 
 # nyc test coverage
 .nyc_output
@@ -38,6 +59,7 @@ build/Release
 # Dependency directories
 node_modules/
 jspm_packages/
+**/package-lock.json
 
 # TypeScript v1 declaration files
 typings/
@@ -67,7 +89,10 @@ typings/
 __pycache__
 build
 *.egg-info
+.eggs/
 setup.pye
+**/__init__.pye
+**/.ipynb_checkpoints
 
 # Environments
 .env
@@ -81,6 +106,4 @@ venv.bak/
 # VSCode
 .vscode
 .vs
-
-# In case you place source code in ~/nni/
-/experiments
+.history

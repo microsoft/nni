@@ -1,6 +1,6 @@
 authorName: nni
 experimentName: default_test
-maxExecDuration: 5m
+maxExecDuration: 10m
 maxTrialNum: 8
 trialConcurrency: 8
 searchSpacePath: ../naive_trial/search_space.json
@@ -13,7 +13,6 @@ assessor:
     builtinAssessorName: Curvefitting
     classArgs:
       epoch_num: 20
-      optimize_mode: maximize
       start_step: 6
       threshold: 0.95
 trial:

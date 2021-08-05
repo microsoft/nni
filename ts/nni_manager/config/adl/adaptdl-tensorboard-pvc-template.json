@@ -1,0 +1,27 @@
+{
+    "apiVersion": "v1",
+    "kind": "PersistentVolumeClaim",
+    "metadata": {
+        "name": "<name>",
+        "ownerReferences": [
+            {
+                "apiVersion": "apps/v1",
+                "kind": "Deployment",
+                "name": "<adaptdl_tensorboard_name>",
+                "uid": "<adaptdl_tensorboard_uid>"
+            }
+        ]
+    },
+    "spec": {
+        "accessModes": [
+            "ReadWriteMany"
+        ],
+        "resources": {
+            "requests": {
+                "storage": "<storage_size>"
+            }
+        },
+        "storageClassName": "<storage_class>",
+        "volumeMode": "Filesystem"
+    }
+}

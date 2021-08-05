@@ -1,0 +1,24 @@
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
+trialConcurrency: 4
+maxTrialNumber: 20
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: remote
+  machineList:
+    - host: ${your server's IP or domain name}
+      user: ${your user name}
+      ssh_key_file: ~/.ssh/id_rsa  # We recommend public key over password, it's more secure and convenient.
+    # You can specify more than one SSH servers:
+    - host: 123.123.123.123
+      port: 10022
+      user: nniuser
+      password: 12345
+      pythonPath: /usr/bin  # Other examples:
+                            #   /opt/python3.9/bin
+                            #   C:/Python39
+                            #   C:/Users/USERNAME/.conda/envs/ENVNAME;C:/Users/USERNAME/.conda/envs/ENVNAME/Scripts;C:/Users/USERNAME/.conda/envs/ENVNAME/Library/bin

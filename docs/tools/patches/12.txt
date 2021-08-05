@@ -1,0 +1,7 @@
+..
+
+   make: *** [install-XXX] Segmentation fault (core dumped)
+%%%%%%
+.. code-block:: text
+
+   make: *** [install-XXX] Segmentation fault (core dumped)

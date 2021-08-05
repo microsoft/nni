@@ -1,0 +1,15 @@
+experimentName: auto_rocksdb_SMAC
+searchSpaceFile: search_space.json
+trialCommand: python3 main.py
+trialCodeDirectory: .
+trialGpuNumber: 0
+trialConcurrency: 1
+maxExperimentDuration: 24h
+maxTrialNumber: 256
+tuner:
+  name: SMAC
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local
+  useActiveGpu: False

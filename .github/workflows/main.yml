@@ -1,0 +1,88 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events but only for the master branch
+on:
+  push:
+    branches: [ master ]
+    paths:
+      - '**.md'
+      - '**.rst'
+      - '/docs/en_US/**'
+      - '/crowdin.yml'
+  schedule:
+    - cron:  '*/30 * * * *'
+    
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  translation-syncup:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+    
+    # get branch name
+    - name: Get the current branch name
+      shell: bash
+      run: echo "::set-output name=branch::${GITHUB_REF#refs/heads/}"
+      id: branchname
+
+    # crowin-translation
+    - name: crowdin-action
+      uses: crowdin/github-action@1.0.8
+      with:
+        # Upload sources to Crowdin
+        upload_sources: true # optional, default is true
+        # Upload translations to Crowdin
+        upload_translations: false # optional, default is false
+        # Automatically approves uploaded translations
+        auto_approve_imported: false # optional, default is false
+        # Defines whether to add translation if it is equal to source string in Crowdin project
+        import_eq_suggestions: false # optional, default is false
+        # Make pull request of Crowdin translations
+        download_translations: true # optional, default is false
+        # Use this option to download translations for a single specified language
+        # download_language: # optional
+        # Skip untranslated strings in exported files (does not work with .docx, .html, .md and other document files)
+        # skip_untranslated_strings: # optional, default is false
+        # Omit downloading not fully downloaded files
+        # skip_untranslated_files: # optional, default is false
+        # Include approved translations only in exported files. If not combined with --skip-untranslated-strings option, strings without approval are fulfilled with the source language
+        export_only_approved: false # optional, default is false
+        # Download translations with pushing to branch
+        push_translations: true # optional, default is true
+        # To download translations to the specified version branch
+        localization_branch_name: l10n_${{ steps.branchname.outputs.branch }} # optional, default is l10n_crowdin_action
+        # Create pull request after pushing to branch
+        create_pull_request: false # optional, default is true
+        # Option to upload or download files to the specified version branch in your Crowdin project
+        crowdin_branch_name: ${{ steps.branchname.outputs.branch }} # optional
+        # Option to specify a path to user-specific credentials
+        # identity: # optional
+        # Option to specify a path to the configuration file
+        config: crowdin.yml # optional
+        # Option to preview the list of managed files
+        # dryrun_action: true # optional, default is false
+        # Numerical ID of the project
+        project_id: 304950 # optional
+        # Personal access token required for authentication
+        token: ${{ secrets.CROWDIN_TOKEN }} # optional
+        # Base URL of Crowdin server for API requests execution
+        # base_url: # optional
+        # Path to your project directory on a local machine
+        # base_path: # optional
+        # Path to the source files
+        # source: # optional
+        # Path to the translation files
+        # translation: # optional
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        CROWDIN_PROJECT_ID: 304950
+        CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_TOKEN }}

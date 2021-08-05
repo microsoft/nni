@@ -1,0 +1,22 @@
+.logpath {
+    margin-left: 10px;
+    font-size: 14px;
+
+    .logName {
+        color: #268bd2;
+        margin-right: 5px;
+    }
+
+    .logContent {
+        color: #333;
+    }
+
+    .error {
+        color: #cb4b16;
+    }
+}
+
+.logHref:hover {
+    color: blue;
+    text-decoration: underline;
+}

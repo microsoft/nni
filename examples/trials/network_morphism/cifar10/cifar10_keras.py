@@ -28,7 +28,7 @@ from keras.utils import multi_gpu_model, to_categorical
 import keras.backend.tensorflow_backend as KTF
 
 import nni
-from nni.networkmorphism_tuner.graph import json_to_graph
+from nni.algorithms.hpo.networkmorphism_tuner.graph import json_to_graph
 
 # set the logger format
 log_format = "%(asctime)s %(message)s"
@@ -152,9 +152,11 @@ class SendMetrics(keras.callbacks.Callback):
         if logs is None:
             logs = dict()
         logger.debug(logs)
-        # accuracy key for keras 2.2.2: val_acc
-        # for keras 2.3.1: val_accuracy
-        nni.report_intermediate_result(logs["val_accuracy"])
+        # TensorFlow 2.0 API reference claims the key is `val_acc`, but in fact it's `val_accuracy`
+        if 'val_acc' in logs:
+            nni.report_intermediate_result(logs['val_acc'])
+        else:
+            nni.report_intermediate_result(logs['val_accuracy'])
 
 
 # Training

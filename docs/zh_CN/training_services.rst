@@ -2,11 +2,13 @@ NNI 支持的训练平台介绍
 =====================================
 
 ..  toctree::
-    概述 <./TrainingService/SupportTrainingService>
+    Overview <./TrainingService/Overview>
     本机<./TrainingService/LocalMode>
     远程<./TrainingService/RemoteMachineMode>
     OpenPAI<./TrainingService/PaiMode>
-    OpenPAI Yarn 模式<./TrainingService/PaiYarnMode>
     Kubeflow<./TrainingService/KubeflowMode>
+    AdaptDL<./TrainingService/AdaptDLMode>
     FrameworkController<./TrainingService/FrameworkControllerMode>
-    OpenPAI<./TrainingService/DLTSMode>
+    DLTS<./TrainingService/DLTSMode>
+    AML<./TrainingService/AMLMode>
+    混合模式 <./TrainingService/HybridMode>

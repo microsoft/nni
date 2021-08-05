@@ -5,30 +5,36 @@ about: Report an issue or question while using nni instance (deployment).
 
 ---
 
-<!-- Please use this template while reporting an issue and provide as much info as possible. Not doing so may result in your bug not being addressed in a timely manner. Thanks!-->
+**Describe the issue**:
 
 
-**Short summary about the issue/question**:
 
-**Brief what process you are following**: 
+**Environment**:
+- NNI version:
+- Training service (local|remote|pai|aml|etc):
+- Client OS:
+- Server OS (for remote mode only):
+- Python version:
+- PyTorch/TensorFlow version:
+- Is conda/virtualenv/venv used?:
+- Is running in Docker?:
 
-<!--deployment related issues
-Please fill this for deployment related issues: 
-- Operating type: Initial deployment / upgrading / operating etc.
-- Brief what deployment process you are following -->
 
-**How to reproduce it**: 
+**Configuration**:
+ - Experiment config (remember to remove secrets!):
+ - Search space:
 
-<!--Fill the following information if your issue need diagnostic support from the team, as minimally and precisely as possible!-->
 
-**nni Environment**:
-- nni version:
-- nni mode(local|pai|remote):
-- OS:
-- python version:
-- is conda or virtualenv used?: 
-- is running in docker?:
+**Log message**:
+ - nnimanager.log:
+ - dispatcher.log:
+ - nnictl stdout and stderr:
+ 
+<!--
+Where can you find the log files:
+LOG: https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/HowToDebug.md#experiment-root-director
+STDOUT/STDERR: https://github.com/microsoft/nni/blob/master/docs/en_US/Tutorial/Nnictl.md#nnictl%20log%20stdout
+-->
 
-**need to update document(yes/no)**:
 
-**Anything else we need to know**:
+**How to reproduce it?**:

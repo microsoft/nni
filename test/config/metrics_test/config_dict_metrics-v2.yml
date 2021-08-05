@@ -1,0 +1,16 @@
+experimentName: default_test
+searchSpaceFile: ./search_space.json
+trialCommand: python3 trial.py --dict_metrics
+trialCodeDirectory: .
+trialGpuNumber: 0
+trialConcurrency: 1
+maxExperimentDuration: 15m
+maxTrialNumber: 1
+tuner:
+  name: Random
+trainingService:
+  platform: local
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize

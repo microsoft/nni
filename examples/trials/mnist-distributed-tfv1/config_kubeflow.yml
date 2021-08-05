@@ -1,0 +1,45 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 2
+maxExecDuration: 1h
+maxTrialNum: 20
+#choice: local, remote, pai, kubeflow
+trainingServicePlatform: kubeflow
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+assessor:
+  builtinAssessorName: Medianstop
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: .
+  worker:
+    replicas: 2
+    command: python3 dist_mnist.py
+    gpuNum: 1
+    cpuNum: 1
+    memoryMB: 8196
+    image: msranni/nni:latest
+  ps:
+    replicas: 1
+    command: python3 dist_mnist.py
+    gpuNum: 0
+    cpuNum: 1
+    memoryMB: 8196
+    image: msranni/nni:latest
+kubeflowConfig:
+  operator: tf-operator
+  apiVersion: v1alpha2
+  storage: nfs
+  nfs:
+    # Your NFS server IP, like 10.10.10.10
+    server: {your_nfs_server_ip}
+    # Your NFS server export path, like /var/nfs/nni
+    path: {your_nfs_server_export_path}

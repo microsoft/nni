@@ -2,16 +2,48 @@
 # Licensed under the MIT license.
 
 import os.path as osp
+from os import remove
+import subprocess
 import json
 import requests
-import nnicli as nc
-from utils import METRICS_URL
+from nni.experiment import Experiment
+from nni.tools.nnictl.updater import load_search_space
+from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
 
 class ITValidator:
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         pass
 
+class ExportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        proc1 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "csv", "-f", "report.csv"])
+        assert proc1.returncode == 0, '`nnictl experiment export -t csv` failed with code %d' % proc1.returncode
+        with open("report.csv", 'r') as f:
+            print('Exported CSV file: \n')
+            print(''.join(f.readlines()))
+            print('\n\n')
+        remove('report.csv')
+
+        proc2 = subprocess.run(["nnictl", "experiment", "export", exp_id, "-t", "json", "-f", "report.json"])
+        assert proc2.returncode == 0, '`nnictl experiment export -t json` failed with code %d' % proc2.returncode
+        with open("report.json", 'r') as f:
+            print('Exported JSON file: \n')
+            print('\n'.join(f.readlines()))
+            print('\n\n')
+        remove('report.json')
+
+class ImportValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        exp_id = osp.split(experiment_dir)[-1]
+        import_data_file_path = kwargs.get('import_data_file_path')
+        proc = subprocess.run(['nnictl', 'experiment', 'import', exp_id, '-f', import_data_file_path])
+        assert proc.returncode == 0, \
+            '`nnictl experiment import {0} -f {1}` failed with code {2}'.format(exp_id, import_data_file_path, proc.returncode)
+        imported_data = requests.get(GET_IMPORTED_DATA_URL).json()
+        origin_data = load_search_space(import_data_file_path).replace(' ', '')
+        assert origin_data in imported_data
 
 class MetricsValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
@@ -60,8 +92,22 @@ class MetricsValidator(ITValidator):
 class NnicliValidator(ITValidator):
     def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
         print(rest_endpoint)
-        nc.set_endpoint(rest_endpoint)
-        #print(nc.version())
-        print(nc.get_job_statistics())
-        print(nc.get_experiment_status())
-        print(nc.list_trial_jobs())
+        exp = Experiment()
+        exp.connect(int(rest_endpoint.split(':')[-1]))
+        print(exp.get_job_statistics())
+        print(exp.get_experiment_status())
+        print(exp.list_trial_jobs())
+
+class FileExistValidator(ITValidator):
+    def __call__(self, rest_endpoint, experiment_dir, nni_source_dir, **kwargs):
+        print(rest_endpoint)
+        exp_id = osp.split(experiment_dir)[-1]
+        rootpath = kwargs.get('rootpath')
+        
+        metrics = requests.get(METRICS_URL).json()
+        for metric in metrics:
+            trial_id = metric['trialJobId']
+            checkpath = osp.join(rootpath, 'nni', exp_id, 'trials', trial_id, 'nnioutput', 'checkingfile.txt')
+            print('Checking shared storage log exists on trial ',trial_id)
+            assert osp.exists(checkpath)
+

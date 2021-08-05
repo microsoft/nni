@@ -1,0 +1,15 @@
+searchSpaceFile: search_net.json
+trialCodeDirectory: EfficientNet-PyTorch
+trialCommand: python3 main.py /data/imagenet -j 12 -a efficientnet --batch-size 48 --lr 0.048 --wd 1e-5 --epochs 5 --request-from-nni
+trialGpuNumber: 1
+trialConcurrency: 4
+maxTrialNumber: 100
+tuner:
+  className: tuner.FixedProductTuner
+  codeDirectory: .
+  classArgs:
+    product: 2
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local
+  useActiveGpu: false  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+                       # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegputrial:

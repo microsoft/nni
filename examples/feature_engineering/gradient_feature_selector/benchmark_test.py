@@ -33,7 +33,7 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.feature_selection import SelectFromModel
 
-from nni.feature_engineering.gradient_selector import FeatureGradientSelector
+from nni.algorithms.feature_engineering.gradient_selector import FeatureGradientSelector
 
 
 class Benchmark():

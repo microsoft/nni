@@ -1,0 +1,84 @@
+diff --git a/python/tvm/autotvm/tuner/tuner.py b/python/tvm/autotvm/tuner/tuner.py
+index 76d088f4c..7ed4ff02a 100644
+--- a/python/tvm/autotvm/tuner/tuner.py
++++ b/python/tvm/autotvm/tuner/tuner.py
+@@ -122,7 +122,7 @@ class Tuner(object):
+             configs = self.next_batch(min(n_parallel, n_trial - i))
+ 
+             inputs = [MeasureInput(self.task.target, self.task, config) for config in configs]
+-            results = measure_batch(inputs)
++            results = self.parse_configs(self.task, configs) if hasattr(self, 'parse_configs') else measure_batch(inputs)
+ 
+             # keep best config
+             for k, (inp, res) in enumerate(zip(inputs, results)):
+diff --git a/src/codegen/codegen_c.cc b/src/codegen/codegen_c.cc
+index eab542dd3..2f1a11303 100644
+--- a/src/codegen/codegen_c.cc
++++ b/src/codegen/codegen_c.cc
+@@ -808,6 +808,7 @@ void CodeGenC::VisitStmt_(const AttrStmt* op) {
+     IterVar iv = Downcast<IterVar>(op->node);
+     if (iv->thread_tag.length() != 0) {
+       if (!var_idmap_.count(iv->var.get())) {
++        this->currentOp = op;
+         BindThreadIndex(iv);
+       }
+     }
+diff --git a/src/codegen/codegen_c.h b/src/codegen/codegen_c.h
+index 8701cda1e..7d3d56ddc 100644
+--- a/src/codegen/codegen_c.h
++++ b/src/codegen/codegen_c.h
+@@ -174,6 +174,8 @@ class CodeGenC :
+   // Get a cast type from to
+   virtual std::string CastFromTo(std::string value, Type from, Type target);
+ 
++  const AttrStmt* currentOp;
++
+  protected:
+   // Print reference to struct location
+   std::string GetStructRef(
+diff --git a/src/codegen/codegen_cuda.cc b/src/codegen/codegen_cuda.cc
+index 6656fa077..a4f0f962d 100644
+--- a/src/codegen/codegen_cuda.cc
++++ b/src/codegen/codegen_cuda.cc
+@@ -106,6 +106,9 @@ void CodeGenCUDA::BindThreadIndex(const IterVar& iv) {
+   CHECK(!var_idmap_.count(iv->var.get()));
+   var_idmap_[iv->var.get()] =
+       CastFromTo(iv->thread_tag, UInt(32), iv->var.type());
++  int nthread = static_cast<int>(this->currentOp->value.as<IntImm>()->value);
++  if (iv->thread_tag.find("threadIdx.") == 0 || iv->thread_tag.find("blockIdx.") == 0)
++    this->stream << "  // [thread_extent] " << iv->thread_tag << " = " << nthread << "\n";
+ }
+ 
+ void CodeGenCUDA::PrintType(Type t, std::ostream& os) {  // NOLINT(*)
+diff --git a/src/codegen/opt/build_cuda_on.cc b/src/codegen/opt/build_cuda_on.cc
+index 1992ac5d9..9b0ff4cd9 100644
+--- a/src/codegen/opt/build_cuda_on.cc
++++ b/src/codegen/opt/build_cuda_on.cc
+@@ -137,6 +137,9 @@ runtime::Module BuildCUDA(Array<LoweredFunc> funcs) {
+     cg.AddFunction(f);
+   }
+   std::string code = cg.Finish();
++  const auto* backendproc = Registry::Get("tvm_callback_backend_proc");
++  if (backendproc)
++    return CUDAModuleCreate((*backendproc)(code).operator std::string(), "cubin", ExtractFuncInfo(funcs), code);
+ 
+   if (const auto* f = Registry::Get("tvm_callback_cuda_postproc")) {
+     code = (*f)(code).operator std::string();
+diff --git a/src/lang/expr_operator.cc b/src/lang/expr_operator.cc
+index 220d4378c..cc435d138 100644
+--- a/src/lang/expr_operator.cc
++++ b/src/lang/expr_operator.cc
+@@ -208,11 +208,11 @@ Expr operator%(Expr a, Expr b) {
+ 
+ // TODO(tqchen): switch to floordiv
+ Expr indexdiv(Expr a, Expr b) {
+-  return floordiv(a, b);
++  return truncdiv(a, b);
+ }
+ 
+ Expr indexmod(Expr a, Expr b) {
+-  return floormod(a, b);
++  return truncmod(a, b);
+ }
+ 
+ Expr floordiv(Expr a, Expr b) {

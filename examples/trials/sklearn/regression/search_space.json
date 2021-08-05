@@ -1,5 +1,4 @@
 {
-    "model_name":{"_type":"choice","_value":["LinearRegression", "SVR", "KNeighborsRegressor", "DecisionTreeRegressor"]},
-    "svr_kernel": {"_type":"choice","_value":["linear", "poly", "rbf"]},
-    "knr_weights": {"_type":"choice","_value":["uniform", "distance"]}
+    "model_name":{"_type":"choice","_value":["LinearRegression", "Lars", "Ridge", "ARDRegression"]},
+    "normalize": {"_type":"choice","_value":["true", "false"]}
 }

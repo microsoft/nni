@@ -1,0 +1,4 @@
+tensorflow==1.15.2
+tqdm
+peewee
+git+https://github.com/google-research/nasbench
