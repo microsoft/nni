@@ -40,7 +40,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
 
         // FIXME: only support MountedStorageService
-        const storageService = new MountedStorageService();
+        const storageService = component.get<MountedStorageService>(MountedStorageService);
         const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
         storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
     }
