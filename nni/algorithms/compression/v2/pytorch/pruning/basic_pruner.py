@@ -40,8 +40,8 @@ from .tools import (
 
 _logger = logging.getLogger(__name__)
 
-__all__ = ['LevelPruner', 'L1FilterPruner', 'L2FilterPruner', 'FPGMPruner', 'SlimPruner', 'ActivationFilterPruner',
-           'ActivationAPoZRankFilterPruner', 'ActivationMeanRankFilterPruner', 'TaylorFOWeightFilterPruner']
+__all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
 
 
 class OneShotPruner(Pruner):
@@ -93,8 +93,11 @@ class LevelPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
                 - op_types : Operation types to prune.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         """
         self.mode = 'normal'
         super().__init__(model, config_list)
@@ -102,6 +105,7 @@ class LevelPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): [str],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
@@ -120,7 +124,7 @@ class LevelPruner(OneShotPruner):
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
 
-class NormFilterPruner(OneShotPruner):
+class NormPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -130,8 +134,11 @@ class NormFilterPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in NormFilterPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Conv2d and Linear are supported in NormPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         p
             The order of norm.
         mode
@@ -155,7 +162,8 @@ class NormFilterPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -178,7 +186,7 @@ class NormFilterPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
-class L1FilterPruner(NormFilterPruner):
+class L1NormPruner(NormPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -188,8 +196,11 @@ class L1FilterPruner(NormFilterPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L1FilterPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Conv2d and Linear are supported in L1NormPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -206,7 +217,7 @@ class L1FilterPruner(NormFilterPruner):
         super().__init__(model, config_list, 1, mode, dummy_input)
 
 
-class L2FilterPruner(NormFilterPruner):
+class L2NormPruner(NormPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -216,8 +227,11 @@ class L2FilterPruner(NormFilterPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L2FilterPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Conv2d and Linear are supported in L2NormPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -244,12 +258,15 @@ class FPGMPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in FPGMPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Conv2d and Linear are supported in FPGMPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the l1-norm of weights and the channel-dependency or
+            prune the model according to the FPGM of weights and the channel-dependency or
             group-dependency of the model. In this way, the pruner will force the conv layers
             that have dependencies to prune the same channels, so the speedup module can better
             harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
@@ -266,7 +283,8 @@ class FPGMPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -300,8 +318,14 @@ class SlimPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only BatchNorm2D is supported in SlimPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - total_sparsity : This is to specify the total sparsity for all layers in this config,
+                each layer may have different sparsity.
+                - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
+                - op_types : Only BatchNorm2d is supported in SlimPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -349,7 +373,10 @@ class SlimPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
-            'op_types': ['BatchNorm2d'],
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): ['BatchNorm2d'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -381,7 +408,7 @@ class SlimPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationFilterPruner(OneShotPruner):
+class ActivationPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -392,8 +419,11 @@ class ActivationFilterPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in ActivationFilterPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Conv2d and Linear are supported in ActivationPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -445,7 +475,8 @@ class ActivationFilterPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -487,17 +518,17 @@ class ActivationFilterPruner(OneShotPruner):
         raise NotImplementedError()
 
 
-class ActivationAPoZRankFilterPruner(ActivationFilterPruner):
+class ActivationAPoZRankPruner(ActivationPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(dim=1)
 
 
-class ActivationMeanRankFilterPruner(ActivationFilterPruner):
+class ActivationMeanRankPruner(ActivationPruner):
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(dim=1)
 
 
-class TaylorFOWeightFilterPruner(OneShotPruner):
+class TaylorFOWeightPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', max_sparsity_per_layer: float = 1, dummy_input: Optional[Tensor] = None):
@@ -508,8 +539,14 @@ class TaylorFOWeightFilterPruner(OneShotPruner):
             Model to be pruned
         config_list
             Supported keys:
-                - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in TaylorFOWeightFilterPruner.
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - total_sparsity : This is to specify the total sparsity for all layers in this config,
+                each layer may have different sparsity.
+                - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
+                - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -568,7 +605,10 @@ class TaylorFOWeightFilterPruner(OneShotPruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
-            'op_types': ['Conv2d'],
+            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
