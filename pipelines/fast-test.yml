@@ -303,6 +303,7 @@ stages:
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+    timeoutInMinutes: 90  # macos test need extra time
 
     steps:
     - task: UsePythonVersion@0
