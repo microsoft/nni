@@ -42,7 +42,7 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts frameworkcontroller \
-          --keyvault_vaultname $(keyvault_vaultname}) \
+          --keyvault_vaultname $(keyvault_vaultname) \
           --keyvault_name $(keyvault_name) \
           --azs_account $(azs_account) \
           --azs_share $(azs_share) \
