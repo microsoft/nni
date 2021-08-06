@@ -36,7 +36,7 @@ Then, pass this strategy to ``RetiariiExperiment`` along with additional argumen
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
+  exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
 
   exp_config = RetiariiExeConfig('local')
   ...
@@ -44,4 +44,4 @@ Then, pass this strategy to ``RetiariiExperiment`` along with additional argumen
 
   exp.run(exp_config, port)
 
-Here, ``applied_mutators=[]`` means do not use any mutators. In ``exp_config``, ``dummy_input`` is required for tracing shape info.
+In ``exp_config``, ``dummy_input`` is required for tracing shape info.
