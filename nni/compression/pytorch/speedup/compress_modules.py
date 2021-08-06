@@ -40,9 +40,9 @@ replace_module = {
     'Dropout3d': lambda module, masks: no_replace(module, masks),
     'Upsample': lambda module, masks: no_replace(module, masks),
     'LayerNorm': lambda module, masks: replace_layernorm(module, masks),
-    'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks)
+    'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
+    'Embedding': lambda module, masks: replace_embedding(module, masks)
 }
-
 
 
 def convert_to_coarse_mask(t_mask, dim):
@@ -87,6 +87,7 @@ def no_replace(module, masks):
     _logger.debug("no need to replace")
     return module
 
+
 def replace_prelu(prelu, masks):
     """
     Parameters
@@ -116,8 +117,10 @@ def replace_prelu(prelu, masks):
     if n_remained_in == 0:
         return torch.nn.Identity()
     new_prelu = torch.nn.PReLU(n_remained_in)
-    new_prelu.weight.data = torch.index_select(prelu.weight.data, 0, remained_in)
+    new_prelu.weight.data = torch.index_select(
+        prelu.weight.data, 0, remained_in)
     return new_prelu
+
 
 def replace_linear(linear, masks):
     """
@@ -261,7 +264,6 @@ def replace_batchnorm2d(norm, masks):
     return new_norm
 
 
-
 def replace_conv2d(conv, masks):
     """
     Replace the original conv with a new one according to the infered
@@ -385,7 +387,6 @@ def replace_conv2d(conv, masks):
     if conv.bias is not None:
         new_conv.bias.data.copy_(torch.index_select(
             conv.bias.data, 0, remained_out))
-
 
     return new_conv
 
@@ -517,3 +518,27 @@ def replace_layernorm(layernorm, masks):
         new_shape.append(n_remained)
 
     return nn.LayerNorm(tuple(new_shape), layernorm.eps, layernorm.elementwise_affine)
+
+
+def replace_embedding(embedding, masks):
+    """
+    Replace the embedding layer according the infered masks.
+    We replace the embedding layer according the weight masks,
+    """
+    import pdb; pdb.set_trace()
+    in_masks, out_masks, weight_masks = masks
+    w_mask = weight_masks['weight']
+    # weight size [num_embeddings, embeddings_dim]
+    pruned_dim, remained_dim = convert_to_coarse_mask(w_mask, 1)
+    pruned_embeddings, remained_embeddings = convert_to_coarse_mask(w_mask, 0)
+    n_remain_dim = remained_dim.size(0)
+    n_remain_embeddings = remained_embeddings.size(0)
+    padding_idx = embedding.padding_idx
+    max_norm = embedding.max_norm
+    norm_type = embedding.norm_type
+    scale_grad_by_freq = embedding.scale_grad_by_freq
+    new_embedding = torch.nn.Embedding(n_remain_embeddings, n_remain_dim, padding_idx=padding_idx,
+                                       max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
+    tmp_weight = torch.index_select(embedding.weight.data, 0, remained_embeddings)
+    new_embedding.weight.data = torch.index_select(tmp_weight.data, 1, remained_dim)
+    return new_embedding

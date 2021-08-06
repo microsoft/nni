@@ -9,7 +9,7 @@ import torch
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
-
+jitid_2_dtype = {4: torch.long, 6:torch.float32}
 
 def translate_list(list_node, speedup=None):
     """
@@ -253,6 +253,7 @@ def squeeze_python(node, speedup):
     new_squeeze = partial(torch.squeeze, dim=dim)
     return new_squeeze
 
+
 def unsqueeze_python(node, speedup):
     c_node = node.key_node
     inputs = list(c_node.inputs())
@@ -297,7 +298,17 @@ def slice_python(node, speedup):
         slice_list.append(slice(None, None))
     logger.info('Slice dim:%s, Slice obj:%s', str(slice_dim), str(slice_obj))
     slice_list.append(slice_obj)
-    return SliceMoudle(tuple(slice_list))
+
+    if inputs[0].debugName() not in speedup.internal_result:
+        # The inputs of slice operator may be the constant
+        target_tensor = parse_constant(inputs[0], speedup)
+        slice_list = tuple(slice_list)
+
+        def constant_slice(*args):
+            return target_tensor[slice_list]
+        return constant_slice
+    else:
+        return SliceMoudle(tuple(slice_list))
 
 
 def select_python(node, speedup):
@@ -387,6 +398,7 @@ def getattr_python(node, speedup):
     """
     Note: Ops started with Prim:: is not taken as the key node,
     so we directly pass the Cpp node into this funciton.
+
     Parameters
     ----------
     node: torch._C.Node
@@ -410,6 +422,44 @@ def getattr_python(node, speedup):
     assert len(key_words) == 1
     return GetModule(key_words[0])
 
+def constant_python(node, speedup):
+    """
+    get the constant value of constant operator node.
+
+    Parameters
+    ----------
+    node: torch._C.Node
+        The cpp node of prim::Getattr
+    speedup: ModelSpeedup
+        The corresponding speedup object.
+    """
+    class ConstantModule(torch.nn.Module):
+        def __init__(self, constant):
+            super(ConstantModule, self).__init__()
+            self.constant = constant
+        def forward(self):
+            return self.constant
+    # import pdb; pdb.set_trace()
+    assert node.kind() == 'prim::Constant'
+    pattern = '\[value=(.*?)\]'
+    key_words = re.findall(pattern, str(node))
+    if len(key_words) == 0:
+        return ConstantModule(None)
+    assert len(key_words) == 1
+    # parse the constant value
+    value = key_words[0]
+    if value.startswith("\""):
+        value = torch.device(value[1:-1])
+    elif value.startswith('{'):
+        # TODO Support set values in the future
+        value = set()
+    elif '.' in value:
+        # float value
+        value = float(value)
+    else:
+        # integer value
+        value = int(value)
+    return ConstantModule(value)
 
 def upsample_bilinear2d_python(node, speedup):
     class UpsampleModule(torch.nn.Module):
@@ -456,18 +506,28 @@ def typeas_python(node, speedup):
 
 
 def to_python(node, speedup):
+    # import pdb; pdb.set_trace()
     # for the time being, only device parameters are supported
     class ToModule(torch.nn.Module):
-        def __init__(self, device):
+        def __init__(self, device, dtype):
             super(ToModule, self).__init__()
-
+            self.device = device
+            self.dtype = dtype
         def forward(self, x):
-            return x.to(device)
+            return x.to(device, dtype=self.dtype)
 
     c_node = node.key_node
     inputs = list(c_node.inputs())
-    device = inputs[3].toIValue()
-    return ToModule(device)
+    in_debugname = inputs[0].debugName()
+    # device of the input tensor
+    device = speedup.internal_result[in_debugname].device
+
+    for _, _node in enumerate(inputs[1:]):
+        val = parse_constant(_node, speedup)
+        if isinstance(val, torch.device):
+            device = val
+    dtype = jitid_2_dtype[parse_constant(inputs[1], speedup)]
+    return ToModule(device, dtype)
 
 
 def cat_python(node, speedup):
@@ -484,6 +544,63 @@ def cat_python(node, speedup):
     dim = inputs[1].toIValue()
     return CatModule(dim)
 
+
+def ones_python(node, speedup):
+    class OnesModule(torch.nn.Module):
+        def __init__(self, out_size, dtype_id, device, require_grad):
+            super(OnesModule, self).__init__()
+            self.out_size = out_size
+            self.device = device
+            self.require_grad = require_grad
+            self.dtype = jitid_2_dtype[dtype_id]
+
+        def forward(self, *args):
+            return torch.ones(size=self.out_size, dtype=self.dtype, device=self.device, requires_grad=self.require_grad)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    output_shape = translate_list(inputs[0], speedup)
+    dtype_id = parse_constant(inputs[1], speedup)
+    # layout = parse_constant(inputs[2], speedup)
+    device = parse_constant(inputs[3], speedup)
+    require_grad = parse_constant(inputs[4], speedup)
+    return OnesModule(output_shape, dtype_id, device, require_grad)
+
+
+def zeros_python(node, speedup):
+    class ZerosModule(torch.nn.Module):
+        def __init__(self, out_size, dtype_id, device, require_grad):
+            super(ZerosModule, self).__init__()
+            self.out_size = out_size
+            self.device = device
+            self.require_grad = require_grad
+            self.dtype = jitid_2_dtype[dtype_id]
+
+        def forward(self, *args):
+            return torch.zeros(size=self.out_size, dtype=self.dtype, device=self.device, requires_grad=self.require_grad)
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    output_shape = translate_list(inputs[0], speedup)
+    dtype_id = parse_constant(inputs[1], speedup)
+    # layout = parse_constant(inputs[2], speedup)
+    device = parse_constant(inputs[3], speedup)
+    require_grad = parse_constant(inputs[4], speedup)
+    return ZerosModule(output_shape, dtype_id, device, require_grad)
+
+def rsub_python(node, speedup):
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    constant = None
+    other_name = inputs[1].debugName()
+    alpha = parse_constant(inputs[2], speedup)
+    if other_name not in speedup.internal_result:
+        constant = parse_constant(inputs[1], speedup)
+    if constant is None:
+        return torch.sub()
+    else:
+        new_sub = partial(torch.sub, other=constant, alpha=alpha)
+        return new_sub
 
 trans_from_jit_to_python = {
     'aten::add': add_python,
@@ -525,10 +642,14 @@ trans_from_jit_to_python = {
     'aten::exp': exp_python,
     'aten::squeeze': squeeze_python,
     'aten::unsqueeze': unsqueeze_python,
+    'aten::ones': ones_python,
+    'aten::zeros': zeros_python,
+    'aten::rsub': rsub_python,
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
-    'prim::GetAttr': getattr_python
+    'prim::GetAttr': getattr_python,
+    'prim::Constant': constant_python
 
 }
 
