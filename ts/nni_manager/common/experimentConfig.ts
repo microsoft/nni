@@ -147,7 +147,6 @@ export interface NfsConfig extends SharedStorageConfig {
 export interface AzureBlobConfig extends SharedStorageConfig {
     storageAccountName: string;
     storageAccountKey?: string;
-    resourceGroupName?: string;
     containerName: string;
 }
 

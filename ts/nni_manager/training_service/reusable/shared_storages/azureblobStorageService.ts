@@ -79,11 +79,9 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
         this.storageAccountName = azureblobConfig.storageAccountName;
         this.containerName = azureblobConfig.containerName;
         if (azureblobConfig.storageAccountKey !== undefined) {
-            this.storageAccountKey =azureblobConfig.storageAccountKey;
-        } else if (azureblobConfig.resourceGroupName !== undefined) {
-            await this.setAccountKey(azureblobConfig.resourceGroupName);
+            this.storageAccountKey = azureblobConfig.storageAccountKey;
         } else {
-            const errorMessage = `${this.storageType} Shared Storage: must set one of 'storageAccountKey' or 'resourceGroupName'.`;
+            const errorMessage = `${this.storageType} Shared Storage: must set 'storageAccountKey'.`;
             this.log.error(errorMessage);
             return Promise.reject(errorMessage);
         }
@@ -172,21 +170,6 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
         }
 
         return Promise.resolve();
-    }
-
-    private async setAccountKey(resourceGroupName: string): Promise<void> {
-        try {
-            const result = await cpp.exec(`az storage account keys list --resource-group ${resourceGroupName} --account-name ${this.storageAccountName} --query "[0].value" | tr -d '"'`);
-            if (result.stderr) {
-                throw Error(result.stderr);
-            } else {
-                this.storageAccountKey = result.stdout.trim();
-            }
-        } catch (error) {
-            const errorMessage: string = `${this.storageType} Shared Storage: get account key failed, error is ${error}`;
-            this.log.error(errorMessage);
-            return Promise.reject(errorMessage);
-        }
     }
 
     public async cleanUp(): Promise<void> {
