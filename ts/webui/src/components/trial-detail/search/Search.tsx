@@ -110,9 +110,9 @@ function Search(props): any {
         updatePage();
     }
 
-    // "[hello, world]", JSON.parse(it) doesn't work so write this function
+    // deal with the format 1.[x, (space)xx] 2. (space)[x]
     function convertStringArrToList(str: string): string[] {
-        const value = str.slice(1, str.length - 1); // delete []
+        const value = str.trim().slice(1, str.trim().length - 1); // delete []
         // delete ""
         const result: string[] = [];
 
@@ -172,7 +172,7 @@ function Search(props): any {
                     newSearchFilter.push({
                         name: eachFilterConditionArr[0],
                         operator: operator,
-                        value1: eachFilterConditionArr[1],
+                        value1: eachFilterConditionArr[1].trim(),
                         value2: '',
                         choice: [],
                         isChoice: false
@@ -185,7 +185,7 @@ function Search(props): any {
                     newSearchFilter.push({
                         name: filterName,
                         operator: '≠',
-                        value1: isChoicesType ? '' : JSON.parse(eachFilterConditionArr[1]),
+                        value1: isChoicesType ? '' : JSON.parse(eachFilterConditionArr[1].trim()),
                         value2: '',
                         choice: isChoicesType ? convertStringArrToList(eachFilterConditionArr[1]) : [],
                         isChoice: isChoicesType ? true : false
@@ -215,8 +215,8 @@ function Search(props): any {
                             newSearchFilter.push({
                                 name: eachFilterConditionArr[0],
                                 operator: 'between',
-                                value1: JSON.parse(eachFilterConditionArr[1])[0],
-                                value2: JSON.parse(eachFilterConditionArr[1])[1],
+                                value1: JSON.parse(eachFilterConditionArr[1].trim())[0],
+                                value2: JSON.parse(eachFilterConditionArr[1].trim())[1],
                                 choice: [],
                                 isChoice: false
                             });
@@ -225,7 +225,7 @@ function Search(props): any {
                         newSearchFilter.push({
                             name: eachFilterConditionArr[0],
                             operator: '=',
-                            value1: eachFilterConditionArr[1],
+                            value1: eachFilterConditionArr[1].trim(),
                             value2: '',
                             choice: [],
                             isChoice: false

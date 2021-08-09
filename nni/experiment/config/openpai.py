@@ -21,6 +21,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     trial_memory_size: str
     storage_config_name: str
     docker_image: str = 'msranni/nni:latest'
+    virtual_cluster: Optional[str]
     local_storage_mount_point: PathLike
     container_storage_mount_point: str
     reuse_mode: bool = True
