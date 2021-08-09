@@ -16,7 +16,7 @@ __all__ = ['Pruner']
 
 
 class PrunerModuleWrapper(Module):
-    def __init__(self, module: Module, module_name: str, module_type: str, config: Dict, pruner: Compressor):
+    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
         """
         Wrap an module to enable data parallel, forward method customization and buffer registeration.
 
@@ -28,8 +28,6 @@ class PrunerModuleWrapper(Module):
             The configurations that users specify for compression.
         module_name
             The name of the module to compress, wrapper module shares same name.
-        module_type
-            The type of the module to compress.
         pruner
             The pruner used to calculate mask.
         """
@@ -76,7 +74,7 @@ class Pruner(Compressor):
             The configuration for generating the mask.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
-        wrapper = PrunerModuleWrapper(layer.module, layer.name, layer.type, config, self)
+        wrapper = PrunerModuleWrapper(layer.module, layer.name, config, self)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)

@@ -1,14 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from math import log
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, pruner
+from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 from .base import SparsityAllocator
