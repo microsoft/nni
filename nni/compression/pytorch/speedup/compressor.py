@@ -51,6 +51,7 @@ class ModelSpeedup:
         self.bound_model = model
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
+        self.confidence = confidence
         self.dummy_input, self.device = self._random_model_input(dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
@@ -208,18 +209,19 @@ class ModelSpeedup:
                 return
             # function doesn't have weights
             _auto_infer = AutoMaskInference(
-                func, dummy_input, in_masks, in_constants=in_constants, batch_dim=self.batch_dim)
+                func, dummy_input, self, in_masks, in_constants=in_constants)
         else:
             weight_mask = None
             if module_name in self.masks:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInference(
-                module, dummy_input, in_masks, weight_mask, in_constants=in_constants,
-                state_dict=copy.deepcopy(module.state_dict()), batch_dim=self.batch_dim)
+                module, dummy_input, self,in_masks, weight_mask, in_constants=in_constants,
+                state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
-
+        if 'token_type_embeddings' in module_name:
+            import pdb; pdb.set_trace()
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
         _auto_infer.input_debugname = input_debugname
@@ -296,6 +298,7 @@ class ModelSpeedup:
                 # This small range is due to the ·ReLU6·, we will add
                 # the manual specific mask inference rule for several
                 # ops in the future, so that we can remove the constraint.
+                # import pdb; pdb.set_trace()
                 return torch.randint(0, 10, shape, device=self.device)
         else:
             value = c_node.toIValue()
@@ -437,6 +440,8 @@ class ModelSpeedup:
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
+            # if 'query' in unique_name:
+            #     import pdb; pdb.set_trace()
             compressed_module = replace_module[m_type](
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module

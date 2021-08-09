@@ -5,6 +5,7 @@ import re
 import logging
 from functools import partial
 import torch
+import copy
 
 
 logger = logging.getLogger(__name__)
@@ -273,7 +274,10 @@ def slice_python(node, speedup):
     class SliceMoudle(torch.nn.Module):
         def __init__(self, sliceobj):
             super(SliceMoudle, self).__init__()
-            self.sliceobj = sliceobj
+            # we need to deepcopy the value here, because, in the
+            # follwing steps, we may randomize the input tensor
+            # which will change the values of the sliceobj
+            self.sliceobj = copy.deepcopy(sliceobj)
 
         def forward(self, x, *args):
             # args is for the slice dimension and indexes, however,
@@ -293,6 +297,7 @@ def slice_python(node, speedup):
     slice_end = parse_constant(inputs[3], speedup)
     slice_step = parse_constant(inputs[4], speedup)
     slice_obj = slice(slice_start, slice_end, slice_step)
+    # import pdb; pdb.set_trace()
     slice_list = []
     for _ in range(slice_dim):
         slice_list.append(slice(None, None))
@@ -315,8 +320,8 @@ def select_python(node, speedup):
     class SelectModule(torch.nn.Module):
         def __init__(self, dim, index):
             super(SelectModule, self).__init__()
-            self.dim = dim
-            self.index = index
+            self.dim = copy.deepcopy(dim)
+            self.index = copy.deepcopy(index)
 
         def forward(self, x):
             return x.select(self.dim, self.index)
@@ -384,7 +389,11 @@ def permute_python(node, speedup):
     class PermuteModule(torch.nn.Module):
         def __init__(self, dimlist):
             super(PermuteModule, self).__init__()
-            self.dimlist = dimlist
+            # deepcopy the values here, because the following randomize operation
+            # will change the value of the dimlist
+            print('################')
+            print(dimlist)
+            self.dimlist = copy.deepcopy(dimlist)
 
         def forward(self, x):
             return x.permute(self.dimlist)

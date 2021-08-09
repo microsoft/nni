@@ -150,9 +150,12 @@ def replace_linear(linear, masks):
     in_mask = in_masks[0]
 
     weight_mask = weight_mask['weight']
+    # the input of the linear may have two dimensions(CV models) or three
+    # dimensions(Bert, for example)
+    n_dim = len(in_mask.size())
     # N C K
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, n_dim-1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, n_dim-1)
     n_remained_in = weight_mask.size(1) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(
@@ -529,16 +532,17 @@ def replace_embedding(embedding, masks):
     in_masks, out_masks, weight_masks = masks
     w_mask = weight_masks['weight']
     # weight size [num_embeddings, embeddings_dim]
+    # currently, only support the pruning on the embedding_dim
+    # dimension.
     pruned_dim, remained_dim = convert_to_coarse_mask(w_mask, 1)
-    pruned_embeddings, remained_embeddings = convert_to_coarse_mask(w_mask, 0)
+    
     n_remain_dim = remained_dim.size(0)
-    n_remain_embeddings = remained_embeddings.size(0)
+    num_embeddings = embedding.num_embeddings
     padding_idx = embedding.padding_idx
     max_norm = embedding.max_norm
     norm_type = embedding.norm_type
     scale_grad_by_freq = embedding.scale_grad_by_freq
-    new_embedding = torch.nn.Embedding(n_remain_embeddings, n_remain_dim, padding_idx=padding_idx,
+    new_embedding = torch.nn.Embedding(num_embeddings, n_remain_dim, padding_idx=padding_idx,
                                        max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
-    tmp_weight = torch.index_select(embedding.weight.data, 0, remained_embeddings)
-    new_embedding.weight.data = torch.index_select(tmp_weight.data, 1, remained_dim)
+    new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
     return new_embedding
