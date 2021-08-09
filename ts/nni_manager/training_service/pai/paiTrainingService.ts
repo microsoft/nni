@@ -78,7 +78,7 @@ class PAITrainingService implements TrainingService {
 
     private async copyTrialCode(): Promise<void> {
         await validateCodeDir(this.config.trialCodeDirectory);
-        const nniManagerNFSExpCodeDir = path.join(this.config.trialCodeDirectory, this.experimentId, 'nni-code');
+        const nniManagerNFSExpCodeDir = path.join(this.config.localStorageMountPoint, this.experimentId, 'nni-code');
         await execMkdir(nniManagerNFSExpCodeDir);
         this.log.info(`Starting copy codeDir data from ${this.config.trialCodeDirectory} to ${nniManagerNFSExpCodeDir}`);
         await execCopydir(this.config.trialCodeDirectory, nniManagerNFSExpCodeDir);
