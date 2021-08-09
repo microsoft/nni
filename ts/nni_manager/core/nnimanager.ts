@@ -551,10 +551,18 @@ class NNIManager implements Manager {
         const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
         if (undefined !== trialJobDetail &&
             trialJobDetail.status === 'RUNNING' &&
-            trialJobDetail.startTime !== undefined) {
+            trialJobDetail.startTime !== undefined &&
+            trialJobDetail.submitTime !== undefined) {
+            const durationCorrection  = trialJobDetail.startTime - trialJobDetail.submitTime;
+            await delay(durationCorrection);
             const isEarlyStopped = true;
             await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
             this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+        } else if (undefined !== trialJobDetail &&
+            trialJobDetail.status === 'WAITING'){
+            // Just in case 'MaxTrialDuration' value is very small
+            const isEarlyStopped = true;
+            await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
         }
     }
 
