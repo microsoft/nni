@@ -211,7 +211,6 @@ export namespace ValidationSchemas {
                 storageAccountName: joi.string(),
                 storageAccountKey: joi.string(),
                 containerName: joi.string(),
-                resourceGroupName: joi.string(),
                 localMounted: joi.string()
             })
         }

@@ -158,7 +158,6 @@ common_schema = {
         Optional('storageAccountName'): setType('storageAccountName', str),
         Optional('storageAccountKey'): setType('storageAccountKey', str),
         Optional('containerName'): setType('containerName', str),
-        Optional('resourceGroupName'): setType('resourceGroupName', str),
         Optional('localMounted'): setChoice('localMounted', 'usermount', 'nnimount', 'nomount')
     }
 }
