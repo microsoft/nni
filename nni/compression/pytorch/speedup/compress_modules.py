@@ -43,6 +43,13 @@ replace_module = {
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
     'Embedding': lambda module, masks: replace_embedding(module, masks)
 }
+need_replace_function = {
+    'aten::view': lambda func, masks: need_replace_view(func, masks)
+}
+
+replace_func = {
+    'aten::view': lambda father_module, dummy_input, func, masks: replace_view(father_module, dummy_input, func, masks)
+}
 
 
 def convert_to_coarse_mask(t_mask, dim):
@@ -79,6 +86,29 @@ def convert_to_coarse_mask(t_mask, dim):
     remained_indexes = torch.nonzero(need_remain, as_tuple=True)[0]
     return indexes, remained_indexes
 
+
+def convert_dense_shape(mask):
+    """
+    Get the dense shape of the tensor after removing the sparsity
+    values.
+
+    Parameters
+    ----------
+    mask: torch.Tensor
+        The mask tensor.
+
+    Returns
+    -------
+    dense_shape: tuple
+        The dense shape after removing the sparsity values.
+    """
+    assert isinstance(mask, torch.Tensor)
+    n_dim = len(mask.size())
+    dense_shape = []
+    for dim in range(n_dim):
+        _, remained = convert_to_coarse_mask(mask, dim)
+        dense_shape.append(remained.size(0))
+    return tuple(dense_shape)
 
 def no_replace(module, masks):
     """
@@ -528,7 +558,8 @@ def replace_embedding(embedding, masks):
     Replace the embedding layer according the infered masks.
     We replace the embedding layer according the weight masks,
     """
-    import pdb; pdb.set_trace()
+    # import pdb; pdb.set_trace()
+    return embedding
     in_masks, out_masks, weight_masks = masks
     w_mask = weight_masks['weight']
     # weight size [num_embeddings, embeddings_dim]
@@ -546,3 +577,21 @@ def replace_embedding(embedding, masks):
                                        max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
     new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
     return new_embedding
+
+def need_replace_view(view_module, masks):
+    in_masks, out_masks, _ = masks
+    assert len(in_masks) == 1
+    assert len(out_masks) == 1
+    in_dense_shape = convert_dense_shape(in_masks[0])
+    out_dense_shape = convert_dense_shape(out_masks[0])
+    t_in = torch.rand(in_dense_shape)
+    try:
+        t_out = view_module(t_in)
+        assert t_out.size() == out_dense_shape
+    except Exception as err:
+        # there is an
+        return True
+    return False
+
+def replace_view(father_module, dummy_input, func, masks):
+    return None
