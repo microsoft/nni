@@ -32,7 +32,7 @@ To support hardware-aware NAS, you first need a `Strategy` that supports filteri
 ``LatencyFilter`` will predict the models\' latency by using nn-Meter and filter out the models whose latency are larger than the threshold (i.e., ``100`` in this example).
 You can also build your own strategies and filters to support more flexible NAS such as sorting the models according to latency.
 
-Then, pass this strategy to ``RetiariiExperiment`` along with additional argument: ``applied_mutators=[]``:
+Then, pass this strategy to ``RetiariiExperiment``:
 
 .. code-block:: python
 
