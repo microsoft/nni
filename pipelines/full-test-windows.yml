@@ -7,7 +7,7 @@ schedules:
 
 jobs:
 - job: local_windows
-  pool: NNI CI WINDOWS2
+  pool: NNI CI WINDOWS FULL TEST
   timeoutInMinutes: 120
 
   steps:
