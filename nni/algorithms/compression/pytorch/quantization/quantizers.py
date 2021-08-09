@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import copy
 from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
