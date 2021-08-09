@@ -544,7 +544,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
-            assert len(inputs) == 1, "Quantization of input only supports ops with single input"
+            assert len(inputs) == 1, "Quantization of input only supports ops with single input."
             new_inp = self.quantizer.quant_grad(
                 inputs[0],
                 QuantType.QUANT_INPUT,
