@@ -289,8 +289,8 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test resumeExperiment', async () => {
+    //it('test resumeExperiment', async () => {
        //TODO: add resume experiment unit test
-    })
+    //})
 
 })

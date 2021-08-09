@@ -11,7 +11,7 @@ And we will develop more practical features in the future based on shared storag
 
 .. note::
     Shared storage is currently in the experimental stage. We suggest use AzureBlob under Ubuntu/CentOS/RHEL, and NFS under Ubuntu/CentOS/RHEL/Fedora/Debian for remote.
-    And make sure your local machine can mount NFS or fuse AzureBlob and has ``sudo`` permission on your remote runtime. We only support shared storage under training service with reuse mode for now.
+    And make sure your local machine can mount NFS or fuse AzureBlob and the machine used in training service has ``sudo`` permission without password. We only support shared storage under training service with reuse mode for now.
 
 Example
 -------
@@ -21,17 +21,25 @@ If you want to use AzureBlob, add below to your config. Full config file see :gi
 
     sharedStorage:
         storageType: AzureBlob
+        # please set localMountPoint as absolute path and localMountPoint should outside the code directory
+        # because nni will copy user code to localMountPoint
         localMountPoint: ${your/local/mount/point}
+        # remoteMountPoint is the mount point on training service machine, it can be set as both absolute path and relative path
+        # make sure you have `sudo` permission without password on training service machine
         remoteMountPoint: ${your/remote/mount/point}
         storageAccountName: ${replace_to_your_storageAccountName}
         storageAccountKey: ${replace_to_your_storageAccountKey}
-        # If you did not set storageAccountKey, you need use `az login` with Azure CLI at first and set resourceGroupName.
-        # resourceGroupName: ${replace_to_your_resourceGroupName}
         containerName: ${replace_to_your_containerName}
         # usermount means you have already mount this storage on localMountPoint
         # nnimount means nni will try to mount this storage on localMountPoint
         # nomount means storage will not mount in local machine, will support partial storages in the future 
         localMounted: nnimount
+
+You can find ``storageAccountName``, ``storageAccountKey``, ``containerName`` on azure storage account portal.
+
+.. image:: ../../img/azure_storage.png
+   :target: ../../img/azure_storage.png
+   :alt: 
 
 If you want to use NFS, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_nfs.yml <examples/trials/mnist-sharedstorage/config_nfs.yml>`.
 

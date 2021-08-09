@@ -16,9 +16,9 @@ _logger = logging.getLogger(__name__)
 def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
+    assert platform in ['local', 'remote', 'pai', 'aml']
     if platform == 'pai':
         platform = 'openpai'
-    assert platform in ['local', 'remote', 'openpai', 'aml']
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -90,7 +90,7 @@ def to_v2(v1) -> ExperimentConfig:
         if 'memoryMB' in v1_trial:
             ts.trial_memory_size = str(v1_trial.pop('memoryMB')) + 'mb'
         _move_field(v1_trial, ts, 'image', 'docker_image')
-        _deprecate(v1_trial, v2, 'virtualCluster')
+        _move_field(v1_trial, ts, 'virtualCluster', 'virtual_cluster')
         _move_field(v1_trial, ts, 'paiStorageConfigName', 'storage_config_name')
         _move_field(v1_trial, ts, 'paiConfigPath', 'openpaiConfigFile')
 
