@@ -49,10 +49,22 @@ class TrainingServiceConfig(ConfigBase):
 @dataclass(init=False)
 class SharedStorageConfig(ConfigBase):
     storage_type: str
-    local_mount_point: str
+    local_mount_point: PathLike
     remote_mount_point: str
     local_mounted: str
+    storage_account_name: Optional[str] = None
+    storage_account_key: Optional[str] = None
+    container_name: Optional[str] = None
+    nfs_server: Optional[str] = None
+    exported_directory: Optional[str] = None
 
+    def __init__(self, *, _base_path: Optional[Path], **kwargs):
+        kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
+        if 'localmountpoint' in kwargs:
+            kwargs['localmountpoint'] = Path(kwargs['localmountpoint']).expanduser()
+            if not kwargs['localmountpoint'].is_absolute():
+                raise ValueError('localMountPoint can only be set as an absolute path.')
+        super().__init__(_base_path=_base_path, **kwargs)
 
 @dataclass(init=False)
 class ExperimentConfig(ConfigBase):
@@ -101,6 +113,8 @@ class ExperimentConfig(ConfigBase):
         for algo_type in ['tuner', 'assessor', 'advisor']:
             if isinstance(kwargs.get(algo_type), dict):
                 setattr(self, algo_type, _AlgorithmConfig(**kwargs.pop(algo_type)))
+        if isinstance(kwargs.get('sharedstorage'), dict):
+            setattr(self, 'shared_storage', SharedStorageConfig(_base_path=base_path, **kwargs.pop('sharedstorage')))
 
     def canonical(self):
         ret = super().canonical()

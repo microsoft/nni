@@ -306,10 +306,10 @@ class NNIRestHandler {
                 encoding = 'utf8';
             }
             this.nniManager.getTrialFile(req.params.id, filename).then((content: Buffer | string) => {
-                if (content instanceof Buffer) {
-                    res.header('Content-Type', 'application/octet-stream');
-                } else if (content === '') {
-                    content = `${filename} is empty.`;
+                const contentType = content instanceof Buffer ? 'application/octet-stream' : 'text/plain';
+                res.header('Content-Type', contentType);
+                if (content === '') {
+                    content = `${filename} is empty.`;  // FIXME: this should be handled in front-end
                 }
                 res.send(content);
             }).catch((err: Error) => {
