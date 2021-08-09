@@ -381,7 +381,7 @@ class SparsityAllocator:
         Tensor
             Reduce the mask with `self.dim`.
         """
-        if self.dim is None:
+        if self.dim is None or len(mask.size()) == 1:
             return mask.clone()
         else:
             mask_dim = list(range(len(mask.size())))

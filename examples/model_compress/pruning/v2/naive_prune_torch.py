@@ -78,7 +78,7 @@ def main(args):
 
     config_list = [{
         'op_types': ['Conv2d'],
-        'sparsity': 0.8
+        'sparsity_per_layer': 0.8
     }]
     kwargs = {
         'model': model,
@@ -90,12 +90,10 @@ def main(args):
         kwargs['mode'] = args.mode
         if kwargs['mode'] == 'dependency_aware':
             kwargs['dummy_input'] = torch.rand(10, 3, 32, 32).to(device)
-        if kwargs['mode'] == 'global':
-            kwargs['max_sparsity_per_layer'] = 0.9
-        if args.pruner == 'l1filter':
-            pruner = pruning.L1FilterPruner(**kwargs)
-        elif args.pruner == 'l2filter':
-            pruner = pruning.L2FilterPruner(**kwargs)
+        if args.pruner == 'l1norm':
+            pruner = pruning.L1NormPruner(**kwargs)
+        elif args.pruner == 'l2norm':
+            pruner = pruning.L2NormPruner(**kwargs)
         elif args.pruner == 'fpgm':
             pruner = pruning.FPGMPruner(**kwargs)
         else:
@@ -103,18 +101,19 @@ def main(args):
             kwargs['optimizer'] = optimizer
             kwargs['criterion'] = criterion
             if args.pruner == 'slim':
-                kwargs['config_list'] = {
-                    'op_types': ['Conv2d'],
-                    'sparsity': 0.8
-                }
+                kwargs['config_list'] = [{
+                    'op_types': ['BatchNorm2d'],
+                    'total_sparsity': 0.8,
+                    'max_sparsity_per_layer': 0.9
+                }]
                 kwargs['training_epochs'] = 1
                 pruner = pruning.SlimPruner(**kwargs)
             elif args.pruner == 'mean_activation':
-                pruner = pruning.ActivationMeanRankFilterPruner(**kwargs)
+                pruner = pruning.ActivationMeanRankPruner(**kwargs)
             elif args.pruner == 'apoz':
-                pruner = pruning.ActivationAPoZRankFilterPruner(**kwargs)
+                pruner = pruning.ActivationAPoZRankPruner(**kwargs)
             elif args.pruner == 'taylorfo':
-                pruner = pruning.TaylorFOWeightFilterPruner(**kwargs)
+                pruner = pruning.TaylorFOWeightPruner(**kwargs)
 
     pruned_model, masks = pruner.compress()
     pruner.show_pruned_weights()
@@ -137,8 +136,8 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Example for model comporession')
-    parser.add_argument('--pruner', type=str, default='l1filter',
-                        choices=['level', 'l1filter', 'l2filter', 'slim',
+    parser.add_argument('--pruner', type=str, default='l1norm',
+                        choices=['level', 'l1norm', 'l2norm', 'slim',
                                  'fpgm', 'mean_activation', 'apoz', 'taylorfo'],
                         help='pruner to use')
     parser.add_argument('--mode', type=str, default='normal',

@@ -49,7 +49,20 @@ class OneShotPruner(Pruner):
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
         self.sparsity_allocator: SparsityAllocator = None
+        self._convert_config_list(config_list)
+
         super().__init__(model, config_list)
+
+    def _convert_config_list(self, config_list: List[Dict]):
+        """
+        Convert `sparsity` in config to `sparsity_per_layer`.
+        """
+        for config in config_list:
+            if 'sparsity' in config:
+                if 'sparsity_per_layer' in config:
+                    raise ValueError("'sparsity' and 'sparsity_per_layer' have the same semantics, can not set both in one config.")
+                else:
+                    config['sparsity_per_layer'] = config.pop('sparsity')
 
     def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         super().reset(model=model, config_list=config_list)
@@ -104,7 +117,6 @@ class LevelPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): [str],
             SchemaOptional('op_names'): [str],
@@ -113,7 +125,7 @@ class LevelPruner(OneShotPruner):
 
         schema.validate(config_list)
 
-    def _reset_tools(self):
+    def reset_tools(self):
         if self.data_collector is None:
             self.data_collector = WeightDataCollector(self)
         else:
@@ -161,7 +173,6 @@ class NormPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
@@ -170,7 +181,7 @@ class NormPruner(OneShotPruner):
 
         schema.validate(config_list)
 
-    def _reset_tools(self):
+    def reset_tools(self):
         if self.data_collector is None:
             self.data_collector = WeightDataCollector(self)
         else:
@@ -282,7 +293,6 @@ class FPGMPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
@@ -291,7 +301,7 @@ class FPGMPruner(OneShotPruner):
 
         schema.validate(config_list)
 
-    def _reset_tools(self):
+    def reset_tools(self):
         if self.data_collector is None:
             self.data_collector = WeightDataCollector(self)
         else:
@@ -310,7 +320,7 @@ class FPGMPruner(OneShotPruner):
 class SlimPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
-                 training_epochs: int, scale: float = 0.0001, mode='global', max_sparsity_per_layer: float = 1):
+                 training_epochs: int, scale: float = 0.0001, mode='global'):
         """
         Parameters
         ----------
@@ -357,12 +367,8 @@ class SlimPruner(OneShotPruner):
             If prune the model in a global way, all layer weights with same config will be considered uniformly.
             That means a single layer may not reach or exceed the sparsity setting in config,
             but the total pruned weights meet the sparsity setting.
-        max_sparsity_per_layer
-            The max sparsity per layer constraint, to prevent all weight in a layer be pruned in global mode.
         """
         self.mode = mode
-        assert 0 < max_sparsity_per_layer <= 1, 'max_sparsity_per_layer must in range (0, 1].'
-        self.max_sparsity_per_layer = max_sparsity_per_layer
         self.trainer = trainer
         self.optimizer = optimizer
         self.criterion = criterion
@@ -372,7 +378,6 @@ class SlimPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
@@ -391,7 +396,7 @@ class SlimPruner(OneShotPruner):
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 
-    def _reset_tools(self):
+    def reset_tools(self):
         if self.data_collector is None:
             self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
                                                                   self.training_epochs, criterion_patch=self.criterion_patch)
@@ -401,9 +406,9 @@ class SlimPruner(OneShotPruner):
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+                self.sparsity_allocator = NormalSparsityAllocator(self)
             elif self.mode == 'global':
-                self.sparsity_allocator = GlobalSparsityAllocator(self, 0, self.max_sparsity_per_layer)
+                self.sparsity_allocator = GlobalSparsityAllocator(self)
             else:
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
@@ -474,7 +479,6 @@ class ActivationPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
@@ -497,7 +501,7 @@ class ActivationPruner(OneShotPruner):
                 buffer.append(self._activation(output.detach()))
         return collect_activation
 
-    def _reset_tools(self):
+    def reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
         if self.data_collector is None:
             self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
@@ -531,7 +535,7 @@ class ActivationMeanRankPruner(ActivationPruner):
 class TaylorFOWeightPruner(OneShotPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
-                 mode: str = 'normal', max_sparsity_per_layer: float = 1, dummy_input: Optional[Tensor] = None):
+                 mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
         Parameters
         ----------
@@ -587,14 +591,11 @@ class TaylorFOWeightPruner(OneShotPruner):
             If prune the model in a global way, all layer weights with same config will be considered uniformly.
             That means a single layer may not reach or exceed the sparsity setting in config,
             but the total pruned weights meet the sparsity setting.
-        max_sparsity_per_layer
-            The max sparsity per layer constraint, to prevent all weight in a layer be pruned in global mode.
         dummy_input
             The dummy input to analyze the topology constraints. Note that, the dummy_input
             should on the same device with the model.
         """
         self.mode = mode
-        self.max_sparsity_per_layer = max_sparsity_per_layer
         self.dummy_input = dummy_input
         self.trainer = trainer
         self.optimizer = optimizer
@@ -604,7 +605,6 @@ class TaylorFOWeightPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
@@ -624,7 +624,7 @@ class TaylorFOWeightPruner(OneShotPruner):
     def _calculate_taylor_expansion(self, weight_tensor: Tensor, grad: Tensor) -> Tensor:
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
-    def _reset_tools(self):
+    def reset_tools(self):
         hook_targets = {layer_info.name: layer_info.module.weight for layer_info, _ in self._detect_modules_to_compress()}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
         if self.data_collector is None:
@@ -638,7 +638,7 @@ class TaylorFOWeightPruner(OneShotPruner):
             if self.mode == 'normal':
                 self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
             elif self.mode == 'global':
-                self.sparsity_allocator = GlobalSparsityAllocator(self, 0, self.max_sparsity_per_layer)
+                self.sparsity_allocator = GlobalSparsityAllocator(self, dim=0)
             elif self.mode == 'dependency_aware':
                 self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
             else:

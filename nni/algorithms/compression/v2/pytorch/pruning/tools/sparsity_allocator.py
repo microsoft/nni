@@ -1,13 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import Any, Dict, List, Tuple, Union, Optional
+from math import log
+from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.algorithms.compression.v2.pytorch.base import Pruner, pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
 
 from .base import SparsityAllocator
@@ -20,7 +21,7 @@ class NormalSparsityAllocator(SparsityAllocator):
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
         for name, wrapper in self.pruner.get_modules_wrapper().items():
-            sparsity_rate = wrapper.config['sparsity']
+            sparsity_rate = wrapper.config['sparsity_per_layer']
 
             assert name in metrics, 'Metric of %s is not calculated.'
             metric = metrics[name] * self._compress_mask_with_dim(wrapper.weight_mask)
@@ -39,11 +40,6 @@ class GlobalSparsityAllocator(SparsityAllocator):
     This means all layers in a group will sort metrics uniformly.
     The layers with the same config in config_list is a group.
     """
-    def __init__(self, pruner: Pruner, dim: Optional[Union[int, List[int]]] = None, max_sparsity_per_layer: float = 1):
-        assert 0 < max_sparsity_per_layer <= 1, 'max_sparsity_per_layer must in range (0, 1].'
-        self._max_sparsity_per_layer = max_sparsity_per_layer
-        super().__init__(pruner, dim=dim)
-
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
         # {group_index: {layer_name: metric}}
@@ -56,15 +52,21 @@ class GlobalSparsityAllocator(SparsityAllocator):
                 masks[name] = self._expand_mask_with_dim(name, mask)
         return masks
 
-    def _calculate_threshold(self, group_metric_dict: Dict[int, Tensor]) -> Tuple[float, Dict[str, float]]:
+    def _calculate_threshold(self, group_metric_dict: Dict[str, Tensor]) -> Tuple[float, Dict[str, float]]:
         metric_list = []
         sub_thresholds = {}
         total_weight_num = 0
+
+        temp_wrapper_config = self.pruner.get_modules_wrapper()[list(group_metric_dict.keys())[0]].config
+        total_sparsity = temp_wrapper_config['total_sparsity']
+        max_sparsity_per_layer = temp_wrapper_config.get('max_sparsity_per_layer', 1.0)
+
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
             metric = metric * self._compress_mask_with_dim(wrapper.weight_mask)
+            print(metric)
             layer_weight_num = wrapper.module.weight.data.numel()
-            stay_num = int(metric.numel() * self._max_sparsity_per_layer)
+            stay_num = int(metric.numel() * max_sparsity_per_layer)
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.view(-1), stay_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
@@ -74,9 +76,8 @@ class GlobalSparsityAllocator(SparsityAllocator):
             metric_list.append(stay_metric)
             total_weight_num += layer_weight_num
 
-        sparsity = self.pruner.get_modules_wrapper()[name].config['sparsity']
-        assert sparsity <= self._max_sparsity_per_layer, 'Sparsity ratio should less than max_sparsity_per_layer.'
-        total_prune_num = int(sparsity * total_weight_num)
+        assert total_sparsity <= max_sparsity_per_layer, 'total_sparsity should less than max_sparsity_per_layer.'
+        total_prune_num = int(total_sparsity * total_weight_num)
 
         threshold = torch.topk(torch.cat(metric_list).view(-1), total_prune_num, largest=False)[0].max().item()
         return threshold, sub_thresholds
@@ -108,7 +109,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
-            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['sparsity'] for name in group_metric_dict.keys()}
+            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['sparsity_per_layer'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
             conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]

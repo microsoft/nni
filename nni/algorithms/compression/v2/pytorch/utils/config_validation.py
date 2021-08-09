@@ -53,8 +53,8 @@ class CompressorSchema:
         self.compressor_schema.validate(data)
 
 def validate_exclude_sparsity(data):
-    if not ('exclude' in data or 'sparsity' in data or 'sparsity_per_layer' in data or 'total_sparsity' in data):
-        raise SchemaError('One of [sparsity, sparsity_per_layer, total_sparsity, exclude] should be specified.')
+    if not ('exclude' in data or 'sparsity_per_layer' in data or 'total_sparsity' in data):
+        raise SchemaError('One of [sparsity_per_layer, total_sparsity, exclude] should be specified.')
     return True
 
 def validate_exclude_quant_types_quant_bits(data):
