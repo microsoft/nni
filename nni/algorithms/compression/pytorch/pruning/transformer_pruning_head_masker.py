@@ -437,7 +437,7 @@ class TaylorFOHeadMasker(AttentionHeadMasker):
                 md.head_importance_scores = heads_scores
 
         for _, _, _, output_proj in self.pruner.masking_groups:
-            handle = output_proj.register_backward_hook(grad_hook)
+            handle = output_proj.register_full_backward_hook(grad_hook)
             self.backward_hooks[output_proj.group_idx] = handle
 
     def get_mask(self, num_prune, weight_group, **kwargs):
