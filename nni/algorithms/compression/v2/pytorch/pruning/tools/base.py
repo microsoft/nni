@@ -299,7 +299,8 @@ class SparsityAllocator:
     An abstract class for allocate mask based on metrics.
     """
 
-    def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None):
+    def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
+                 block_sparse_size: Optional[Union[int, List[int]]] = None):
         """
         Parameters
         ----------
@@ -316,12 +317,25 @@ class SparsityAllocator:
             Then the metric should have a size (3,), i.e., `metric=[0.9, 0.1, 0.8]`.
             Assuming by some kind of `SparsityAllocator` get the mask on weight dimension 1 `mask=[1, 0, 1]`,
             then the dimension mask will expand to the final mask `[[[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]], [[1, 1, 1, 1], [0, 0, 0, 0], [1, 1, 1, 1]]]`.
+        block_sparse_size
+            This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
+            Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
+
+            Example:
+
+            The under pruning weight size is (3, 16, 16), and you want to apply a block sparse on dim=[1, 2] with block size [3, 4, 4],
+            then you can set block_sparse_size=[4, 4].
         """
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
+        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
+        if self.block_sparse_size is not None:
+            assert all(i >= 1 for i in self.block_sparse_size)
+        elif self.dim is not None:
+            self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim = sorted(self.dim)
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         """
@@ -332,59 +346,84 @@ class SparsityAllocator:
         """
         raise NotImplementedError()
 
-    def _expand_mask_with_dim(self, name: str, mask: Tensor) -> Dict[str, Tensor]:
+    def _expand_mask(self, name: str, mask: Tensor) -> Dict[str, Tensor]:
         """
         Parameters
         ----------
         name
             The masked module name.
         mask
-            The dimension mask on `dim` of the weight.
+            The reduced mask with `self.dim` and `self.block_sparse_size`.
 
         Returns
         -------
         Dict[str, Tensor]
             The key is `weight_mask` or `bias_mask`, value is the final mask.
         """
+        weight_mask = mask.clone()
+
+        if self.block_sparse_size is not None:
+            # expend mask with block_sparse_size
+            expand_size = list(weight_mask.size())
+            reshape_size = list(weight_mask.size())
+            for i, block_width in reversed(list(enumerate(self.block_sparse_size))):
+                weight_mask = weight_mask.unsqueeze(i + 1)
+                expand_size.insert(i + 1, block_width)
+                reshape_size[i] *= block_width
+            weight_mask = weight_mask.expand(expand_size).reshape(reshape_size)
+
         wrapper = self.pruner.get_modules_wrapper()[name]
         weight_size = wrapper.module.weight.data.size()
+
         if self.dim is None:
-            assert len(mask.size()) == len(weight_size)
-            expand_mask = {'weight_mask': mask}
+            assert weight_mask.size() == weight_size
+            expand_mask = {'weight_mask': weight_mask}
         else:
-            # expand mask to weight size
-            assert len(mask.size()) == len(self.dim)
-            assert all(weight_size[j] == mask.size()[i] for i, j in enumerate(self.dim))
+            # expand mask to weight size with dim
+            assert len(weight_mask.size()) == len(self.dim)
+            assert all(weight_size[j] == weight_mask.size(i) for i, j in enumerate(self.dim))
+
             idxs = list(range(len(weight_size)))
             [idxs.pop(i) for i in reversed(self.dim)]
-            weight_mask = mask.clone()
             for i in idxs:
                 weight_mask = weight_mask.unsqueeze(i)
             expand_mask = {'weight_mask': weight_mask.expand(weight_size).clone()}
             # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
             # If we support more kind of masks, this place need refactor.
-            if wrapper.bias_mask is not None and mask.size() == wrapper.bias_mask.size():
-                expand_mask['bias_mask'] = mask.clone()
+            if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():
+                expand_mask['bias_mask'] = weight_mask.clone()
         return expand_mask
 
-    def _compress_mask_with_dim(self, mask: Tensor) -> Tensor:
+    def _compress_mask(self, mask: Tensor) -> Tensor:
         """
         Parameters
         ----------
         name
             The masked module name.
         mask
-            The dimension mask on `dim` of the weight.
+            The entire mask has the same size with weight.
 
         Returns
         -------
         Tensor
-            Reduce the mask with `self.dim`.
+            Reduce the mask with `self.dim` and `self.block_sparse_size`.
         """
         if self.dim is None or len(mask.size()) == 1:
-            return mask.clone()
+            mask = mask.clone()
         else:
             mask_dim = list(range(len(mask.size())))
             for dim in self.dim:
                 mask_dim.remove(dim)
-            return torch.sum(mask, dim=mask_dim)
+            mask = torch.sum(mask, dim=mask_dim)
+
+        if self.block_sparse_size is not None:
+            # operation like pooling
+            lower_case_letters = 'abcdefghijklmnopqrstuvwxyz'
+            ein_expression = ''
+            for i, step in enumerate(self.block_sparse_size):
+                mask = mask.unfold(i, step, step)
+                ein_expression += lower_case_letters[i]
+            ein_expression = '...{},{}'.format(ein_expression, ein_expression)
+            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size))
+
+        return (mask != 0).type_as(mask)

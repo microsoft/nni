@@ -23,13 +23,13 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['sparsity_per_layer']
 
             assert name in metrics, 'Metric of %s is not calculated.'
-            metric = metrics[name] * self._compress_mask_with_dim(wrapper.weight_mask)
+            metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
                 continue
             threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
             mask = torch.gt(metric, threshold).type_as(metric)
-            masks[name] = self._expand_mask_with_dim(name, mask)
+            masks[name] = self._expand_mask(name, mask)
         return masks
 
 
@@ -48,7 +48,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             threshold, sub_thresholds = self._calculate_threshold(group_metric_dict)
             for name, metric in group_metric_dict.items():
                 mask = torch.gt(metric, min(threshold, sub_thresholds[name])).type_as(metric)
-                masks[name] = self._expand_mask_with_dim(name, mask)
+                masks[name] = self._expand_mask(name, mask)
         return masks
 
     def _calculate_threshold(self, group_metric_dict: Dict[str, Tensor]) -> Tuple[float, Dict[str, float]]:
@@ -62,7 +62,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
-            metric = metric * self._compress_mask_with_dim(wrapper.weight_mask)
+            metric = metric * self._compress_mask(wrapper.weight_mask)
             print(metric)
             layer_weight_num = wrapper.module.weight.data.numel()
             stay_num = int(metric.numel() * max_sparsity_per_layer)
@@ -102,7 +102,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         masks = {}
         grouped_metrics = {}
         for idx, names in enumerate(self.channel_depen):
-            grouped_metric = {name: metrics[name] * self._compress_mask_with_dim(self.pruner.get_modules_wrapper()[name].weight_mask) for name in names if name in metrics}
+            grouped_metric = {name: metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask) for name in names if name in metrics}
             if len(grouped_metric) > 0:
                 grouped_metrics[idx] = grouped_metric
         for _, group_metric_dict in grouped_metrics.items():
@@ -134,7 +134,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
                 pruned_num = int(sparsities[name] * len(metric))
                 threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
-                masks[name] = self._expand_mask_with_dim(name, mask)
+                masks[name] = self._expand_mask(name, mask)
 
         return masks
 
