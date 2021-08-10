@@ -7,13 +7,14 @@ schedules:
 
 jobs:
 - job: local_windows
-  pool: NNI CI WINDOWS2
+  pool: NNI CI WINDOWS FULL TEST
   timeoutInMinutes: 120
 
   steps:
   - script: |
       python -m pip install -U -r dependencies/setup.txt
       python -m pip install -r dependencies/develop.txt
+      python -m pip install -r dependencies/recommended.txt
     displayName: Install Python tools
 
   - script: |
@@ -21,13 +22,8 @@ jobs:
       set NNI_RELEASE=999.0
       python setup.py build_ts
       python setup.py bdist_wheel -p win_amd64
-      python -m pip install dist/nni-999.0-py3-none-win_amd64.whl[PPOTuner]
+      python -m pip install dist/nni-999.0-py3-none-win_amd64.whl[PPOTuner,DNGO]
     displayName: Install NNI
-
-  - script: |
-      python -m pip install -r dependencies/recommended.txt
-      python -m pip install -e .[DNGO]
-    displayName: Install extra dependencies
 
   - script: |
       cd examples/tuners/customized_tuner
