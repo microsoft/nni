@@ -14,7 +14,13 @@ function getPrefix(): string | undefined {
             newPathName = pathName.replace(item, '');
         }
     });
-    return newPathName === '' || newPathName === '/' ? undefined : newPathName;
+    let result = newPathName === '' || newPathName === '/' ? undefined : newPathName;
+    if (result !== undefined) {
+        if (result.endsWith('/')) {
+            result = result.slice(0, result.length - 1);
+        }
+    }
+    return result;
 }
 
 async function requestAxios(url: string): Promise<any> {
