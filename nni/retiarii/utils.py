@@ -43,7 +43,7 @@ def get_module_name(cls_or_func):
             if inspect.getmodule(frm[0]).__name__ == '__main__':
                 # main module found
                 main_file_path = Path(inspect.getsourcefile(frm[0]))
-                if main_file_path.parents[0] != Path('.'):
+                if main_file_path.parents[0] != Path().resolve():
                     raise RuntimeError(f'You are using "{main_file_path}" to launch your experiment, '
                                        f'please launch the experiment under the directory where "{main_file_path.name}" is located.')
                 module_name = main_file_path.stem
