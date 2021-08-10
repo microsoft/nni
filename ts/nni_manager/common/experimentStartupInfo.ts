@@ -128,6 +128,6 @@ export function getAPIRootUrl(): string {
 }
 
 export function getPrefixUrl(): string {
-    const prefix = getExperimentStartupInfo().urlprefix === ''?'':`/${getExperimentStartupInfo().urlprefix}`;
+    const prefix = getExperimentStartupInfo().urlprefix === '' ? '' : `/${getExperimentStartupInfo().urlprefix}`;
     return prefix;
 }
