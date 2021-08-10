@@ -12,9 +12,6 @@ import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
 import { getAPIRootUrl, getPrefixUrl } from '../common/experimentStartupInfo';
-import { getLogger } from '../common/log';
-
-var log = getLogger('NNIManager');
 
 /**
  * NNI Main rest server, provides rest API to support
