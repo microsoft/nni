@@ -265,6 +265,23 @@ class CompressorTestCase(TestCase):
         assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0, 0., 25.]))
         assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 125., 125., 125., 0., 0., 0.]))
 
+    def test_torch_quantizer_interface(self):
+        # test quantize_weight
+        quantizers = [torch_quantizer.DoReFaQuantizer, torch_quantizer.BNNQuantizer]
+        for quantizer in quantizers:
+            model = TorchModel()
+            config_list = [{
+                'quant_types': ['weight'],
+                'quant_bits': 8,
+                'op_types': ['Conv2d', 'Linear']
+            }]
+            quantizer = quantizer(model, config_list)
+            quantizer.compress()
+            weight = torch.tensor([[1, 2], [3, 5]]).float()
+            # test interface
+            quantizer.quantize_weight(weight, model.conv2)
+
+
     def test_torch_observer_quantizer(self):
         model = TorchModel()
         # test invalid config
