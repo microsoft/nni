@@ -24,7 +24,7 @@
 
 .. code-block:: bash
 
-     git clone -b v2.0 https://github.com/Microsoft/nni.git
+     git clone -b v2.3 https://github.com/Microsoft/nni.git
      cd nni
      python3 -m pip install --upgrade pip setuptools
      python3 setup.py develop
@@ -37,14 +37,14 @@
 
 .. code-block:: bash
 
-    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    git clone -b v2.3 https://github.com/Microsoft/nni.git
     cd nni
-    export NNI_RELEASE=2.0
+    export NNI_RELEASE=2.3
     python3 -m pip install --upgrade pip setuptools wheel
     python3 setup.py clean --all
     python3 setup.py build_ts
     python3 setup.py bdist_wheel -p manylinux1_x86_64
-    python3 -m pip install dist/nni-2.0-py3-none-manylinux1_x86_64.whl
+    python3 -m pip install dist/nni-2.3-py3-none-manylinux1_x86_64.whl
 
 在 Docker 映像中使用 NNI
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -59,7 +59,7 @@
 
   .. code-block:: bash
 
-     git clone -b v2.0 https://github.com/Microsoft/nni.git
+     git clone -b v2.3 https://github.com/Microsoft/nni.git
 
 * 
   运行 MNIST 示例。
