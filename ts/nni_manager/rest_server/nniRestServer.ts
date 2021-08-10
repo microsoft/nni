@@ -38,7 +38,7 @@ export class NNIRestServer extends RestServer {
      * NNIRestServer's own router registration
      */
     protected registerRestHandler(): void {
-        this.app.use(getPrefixUrl(), express.static('static'))
+        this.app.use(getPrefixUrl(), express.static('static'));
         this.app.use(bodyParser.json({limit: '50mb'}));
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
         this.app.use(this.LOGS_ROOT_URL, express.static(getLogDir()));
