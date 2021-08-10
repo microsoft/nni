@@ -23,7 +23,6 @@ export class DlcClient {
     public environmentId: string;
     public userCommand: string;
     public pythonShellClient: undefined | PythonShell;
-    public codeDir: string;
 
     constructor(
         type: string,
@@ -37,7 +36,6 @@ export class DlcClient {
         accessKeyId: string,
         accessKeySecret: string,
         userCommand: string,
-        codeDir: string,
         ) {
         this.log = getLogger('DlcClient');
         this.type = type;
@@ -52,7 +50,6 @@ export class DlcClient {
         this.experimentId = experimentId;
         this.environmentId = environmentId;
         this.userCommand = userCommand;
-        this.codeDir = codeDir;
     }
 
     private getScript(): string[] {
@@ -61,7 +58,7 @@ export class DlcClient {
             `python ./config/dlc/dlcUtil.py --type ${this.type} --image ${this.image} --pod_count ${this.podCount} ` +
             `--ecs_spec ${this.ecsSpec} --experiment_name nni_exp_${this.experimentId} ` +
             `--region ${this.region} --nas_data_source_id ${this.nasDataSourceId} --access_key_id ${this.accessKeyId} ` + 
-            `--access_key_secret ${this.accessKeySecret} --user_command "${this.userCommand}" --script_dir ${this.codeDir}` );
+            `--access_key_secret ${this.accessKeySecret} --user_command "${this.userCommand}"` );
         return script;
     }
 
@@ -81,7 +78,6 @@ export class DlcClient {
                 '--access_key_id', this.accessKeyId,
                 '--access_key_secret', this.accessKeySecret,
                 '--experiment_name', `nni_exp_${this.experimentId}_env_${this.environmentId}`,
-                '--script_dir', this.codeDir,
                 '--user_command', this.userCommand,
               ]
         });
@@ -125,9 +121,7 @@ export class DlcClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('update_status');
-        var log = this.log;
         this.pythonShellClient.on('message', (status: any) => {
-            log.debug(`updateStatus: message  ${status}`);
             let newStatus = this.parseContent('status', status);
             if (newStatus === '') {
                 newStatus = oldStatus;
@@ -152,9 +146,7 @@ export class DlcClient {
             throw Error('python shell client not initialized!');
         }
         this.pythonShellClient.send('receive');
-        var log = this.log;
         this.pythonShellClient.on('message', (command: any) => {
-            log.debug(`message*** ${command}`);
             const message = this.parseContent('receive', command);
             if (message !== '') {
                 deferred.resolve(JSON.parse(message))
@@ -166,13 +158,10 @@ export class DlcClient {
     
     // Monitor error information in dlc python shell client
     private monitorError(pythonShellClient: PythonShell, deferred: Deferred<any>): void {
-        var log = this.log;
         pythonShellClient.on('error', function (error: any) {
-            log.debug(`error*** ${error}`);
             deferred.reject(error);
         });
         pythonShellClient.on('close', function (error: any) {
-            log.debug(`close*** ${error}`);
             deferred.reject(error);
         });
     }

@@ -9,7 +9,6 @@ import * as component from '../../../common/component';
 import { getLogger, Logger } from '../../../common/log';
 import { ExperimentConfig, DlcConfig, flattenConfig } from '../../../common/experimentConfig';
 import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { validateCodeDir } from '../../common/util';
 import { DlcClient } from '../dlc/dlcClient';
 import { DlcEnvironmentInformation } from '../dlc/dlcConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
@@ -37,7 +36,6 @@ export class DlcEnvironmentService extends EnvironmentService {
         this.experimentId = info.experimentId;
         this.experimentRootDir = info.logDir;
         this.config = flattenConfig(config, 'dlc');
-        validateCodeDir(this.config.trialCodeDirectory);
         component.Container.bind(StorageService).to(MountedStorageService).scope(Scope.Singleton);
     }
 
@@ -98,7 +96,7 @@ export class DlcEnvironmentService extends EnvironmentService {
             await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
         }
 
-        let dlcFolder: string = this.experimentRootDir.replace(
+        const dlcFolder: string = this.experimentRootDir.replace(
             this.config.localStorageMountPoint, this.config.containerStorageMountPoint);
         dlcEnvironment.workingFolder = `${this.experimentRootDir}/envs/${environment.id}`;
         dlcEnvironment.runnerWorkingFolder = `${dlcFolder}/envs/${environment.id}`;
@@ -128,7 +126,6 @@ export class DlcEnvironmentService extends EnvironmentService {
             this.config.accessKeyId,
             this.config.accessKeySecret,
             script,
-            dlcFolder,
         );
 
         dlcEnvironment.id = await dlcClient.submit();

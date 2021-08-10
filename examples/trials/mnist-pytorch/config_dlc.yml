@@ -3,7 +3,7 @@ experimentWorkingDirectory: /home/admin/workspace/{your_working_dir}
 searchSpaceFile: search_space.json
 # the command on trial runner(or, DLC container), be aware of data_dir
 trialCommand: python mnist.py --data_dir /root/data/{your_data_dir}
-trialConcurrency: 1
+trialConcurrency: 1  # NOTE: please provide number <= 3 due to DLC system limit.
 maxTrialNumber: 10
 tuner:
   name: TPE

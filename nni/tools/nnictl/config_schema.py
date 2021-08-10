@@ -283,6 +283,8 @@ dlc_config_schema = {
         'ecsSpec': setType('ecsSpec', str),
         'region': setType('region', str),
         'nasDataSourceId': setType('nasDataSourceId', str),
+        'localStorageMountPoint': setType('localStorageMountPoint', str),
+        'containerStorageMountPoint': setType('containerStorageMountPoint', str),
     }
 }
 

@@ -22,7 +22,6 @@ if __name__ == "__main__":
     parser.add_argument('--access_key_id', help='access_key_id')
     parser.add_argument('--access_key_secret', help='access_key_secret')
     parser.add_argument('--experiment_name', help='the experiment name')
-    parser.add_argument('--script_dir', help='script directory')
     parser.add_argument('--user_command', help='user command')
     args = parser.parse_args()
 
