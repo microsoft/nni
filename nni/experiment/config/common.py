@@ -58,7 +58,7 @@ class SharedStorageConfig(ConfigBase):
     nfs_server: Optional[str] = None
     exported_directory: Optional[str] = None
 
-    def __init__(self, *, _base_path: Optional[Path], **kwargs):
+    def __init__(self, *, _base_path: Optional[Path] = None, **kwargs):
         kwargs = {util.case_insensitive(key): value for key, value in kwargs.items()}
         if 'localmountpoint' in kwargs:
             kwargs['localmountpoint'] = Path(kwargs['localmountpoint']).expanduser()
