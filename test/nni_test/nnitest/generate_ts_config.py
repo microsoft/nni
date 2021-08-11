@@ -33,6 +33,8 @@ def update_training_service_config(args):
             config[args.ts]['trial']['paiStorageConfigName'] = args.pai_storage_config_name
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
+        if args.debug is not None:
+            config[args.ts]['debug'] = args.debug
     elif args.ts == 'kubeflow':
         if args.nfs_server is not None:
             config[args.ts]['kubeflowConfig']['nfs']['server'] = args.nfs_server
