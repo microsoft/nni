@@ -33,6 +33,8 @@ def update_training_service_config(args):
             config[args.ts]['trial']['paiStorageConfigName'] = args.pai_storage_config_name
         if args.vc is not None:
             config[args.ts]['trial']['virtualCluster'] = args.vc
+        if args.debug is not None:
+            config[args.ts]['debug'] = args.debug.lower() == 'true'
     elif args.ts == 'kubeflow':
         if args.nfs_server is not None:
             config[args.ts]['kubeflowConfig']['nfs']['server'] = args.nfs_server
@@ -146,6 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--pai_storage_config_name", type=str)
     parser.add_argument("--nni_manager_nfs_mount_path", type=str)
     parser.add_argument("--container_nfs_mount_path", type=str)
+    parser.add_argument("--debug", type=str)
     # args for kubeflow and frameworkController
     parser.add_argument("--nfs_path", type=str)
     parser.add_argument("--keyvault_vaultname", type=str)
