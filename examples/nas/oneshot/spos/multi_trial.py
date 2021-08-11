@@ -172,7 +172,7 @@ def _main(port):
 
     simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
 
-    exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
+    exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.trial_concurrency = 2
