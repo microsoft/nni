@@ -247,7 +247,8 @@ class MetricsCalculator:
     """
     An abstract class for calculate a kind of metrics of the given data.
     """
-    def __init__(self, dim: Optional[Union[int, List[int]]] = None):
+    def __init__(self, dim: Optional[Union[int, List[int]]] = None,
+                 block_sparse_size: Optional[Union[int, List[int]]] = None):
         """
         Parameters
         ----------
@@ -272,11 +273,24 @@ class MetricsCalculator:
                 So in this case, `dim=1` will set in `__init__`.
 
             In both of these two case, the metric of this module has size (32,).
+        block_sparse_size
+            This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
+            Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
+
+            Example:
+
+            The under pruning weight size is (768, 768), and you want to apply a block sparse on dim=[0] with block size [64, 768],
+            then you can set block_sparse_size=[64]. The final metric size is (12,).
         """
         self.dim = dim if not isinstance(dim, int) else [dim]
+        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
+        if self.block_sparse_size is not None:
+            assert all(i >= 1 for i in self.block_sparse_size)
+        elif self.dim is not None:
+            self.block_sparse_size = [1] * len(self.dim)
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
-            self.dim = sorted(self.dim)
+            self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
 
     def calculate_metrics(self, data: Dict) -> Dict[str, Tensor]:
         """
@@ -323,8 +337,7 @@ class SparsityAllocator:
 
             Example:
 
-            The under pruning weight size is (3, 16, 16), and you want to apply a block sparse on dim=[1, 2] with block size [3, 4, 4],
-            then you can set block_sparse_size=[4, 4].
+            The metric size is (12,), and block_sparse_size=[64], then the mask will expand to (768,) at first before expand with `dim`.
         """
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
