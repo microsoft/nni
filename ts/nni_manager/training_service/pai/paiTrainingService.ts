@@ -70,6 +70,7 @@ class PAITrainingService implements TrainingService {
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.log.info('Construct paiBase training service.');
         this.config = flattenConfig(config, 'openpai');
+        this.versionCheck = !this.config.debug;
         this.paiJobRestServer = new PAIJobRestServer(this);
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
@@ -78,7 +79,7 @@ class PAITrainingService implements TrainingService {
 
     private async copyTrialCode(): Promise<void> {
         await validateCodeDir(this.config.trialCodeDirectory);
-        const nniManagerNFSExpCodeDir = path.join(this.config.trialCodeDirectory, this.experimentId, 'nni-code');
+        const nniManagerNFSExpCodeDir = path.join(this.config.localStorageMountPoint, this.experimentId, 'nni-code');
         await execMkdir(nniManagerNFSExpCodeDir);
         this.log.info(`Starting copy codeDir data from ${this.config.trialCodeDirectory} to ${nniManagerNFSExpCodeDir}`);
         await execCopydir(this.config.trialCodeDirectory, nniManagerNFSExpCodeDir);
