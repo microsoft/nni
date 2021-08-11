@@ -27,11 +27,11 @@ Model Compression
 * Refactor of ModelSpeedup: auto shape/mask inference (#3462)
 * Added more examples for ModelSpeedup (#3880)
 * Support global sort for Taylor pruning (#3896)
-* Supported TransformerHeadPruner (#3884)
-* Supported batch normalization folding in QAT quantizer (#3911, thanks the external contributor @chenbohua3)
-* Supported post-training observer quantizer (#3915, thanks the external contributor @chenbohua3)
-* Supported ModelSpeedup for Slim Pruner (#4008)
-* Supported TensorRT 8.0.0 in ModelSpeedup (#3866)
+* Support TransformerHeadPruner (#3884)
+* Support batch normalization folding in QAT quantizer (#3911, thanks the external contributor @chenbohua3)
+* Support post-training observer quantizer (#3915, thanks the external contributor @chenbohua3)
+* Support ModelSpeedup for Slim Pruner (#4008)
+* Support TensorRT 8.0.0 in ModelSpeedup (#3866)
 
 Hyper-parameter Tuning
 """"""""""""""""""""""
@@ -42,10 +42,10 @@ Hyper-parameter Tuning
 Training service & nnictl
 """""""""""""""""""""""""
 
-* Supported JupyterLab (#3668 #3954)
-* Supported viewing experiment from experiment folder (#3870)
-* Supported kubeflow in training service reuse framework (#3919)
-* Supported viewing trial log on WebUI for an experiment launched in `view` mode (#3872)
+* Support JupyterLab (#3668 #3954)
+* Support viewing experiment from experiment folder (#3870)
+* Support kubeflow in training service reuse framework (#3919)
+* Support viewing trial log on WebUI for an experiment launched in `view` mode (#3872)
 
 Minor Updates & Bug Fixes
 """""""""""""""""""""""""
@@ -56,7 +56,7 @@ Minor Updates & Bug Fixes
 * Improve IP address detection in modern way (#3860)
 * Fix bug of the search box on WebUI (#3935)
 * Fix bug in url_prefix of WebUI (#4051)
-* Supported dict format of intermediate on WebUI (#3895)
+* Support dict format of intermediate on WebUI (#3895)
 * Fix bug in openpai training service induced by experiment config v2 (#4027 #4057)
 * Improved doc (#3861 #3885 #3966 #4004 #3955)
 * Improved the API `export_model` in model compression (#3968)
