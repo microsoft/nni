@@ -154,6 +154,13 @@ class TaskGenerator:
         masks = torch.load(Path(task.log_dir, MASKS_NAME))
         return model, masks
 
+    def get_best_result(self) -> Optional[Tuple[Module, Dict[str, Dict[str, Tensor]]]]:
+        if self.best_task is None:
+            _logger.warning('Do not record the score of each task, if you want to check which is the best, \
+                            please pass score to `receive_task_result`')
+            return None
+        return self.load_task_result(self.best_task)
+
     def _generate_tasks(self, received_task_id: int) -> List[Task]:
         """
         Subclass need implement this function to push new tasks into `self.pending_tasks`.
@@ -210,6 +217,9 @@ class PruningScheduler:
         self.dummy_input = dummy_input
         self.evaluator = evaluator
 
+        self.latest_model = None
+        self.latest_masks = None
+
     def compress_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, List[Dict], Optional[float]]:
         # compress model
         self.pruner.reset(model, config_list)
@@ -250,15 +260,93 @@ class PruningScheduler:
 
         return model, masks, score
 
-    def compress(self):
+    def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
+        """
+        Pruning the model step by step, until task generator return config list which is None.
+
+        Returns
+        -------
+        Tuple[Module, Dict[str, Dict[str, Tensor]]]
+            Return the pruned model and the masks on the pruned model returned by the last compress step.
+        """
         iteration = 0
         task_id, model, config_list, masks = self.task_generator.next()
 
         while task_id is not None:
-            pruned_model, masks, score = self.compress_one_step(model, config_list, masks)
-            _logger.info('\nIteration %d\ntask id: %d\nscore: %s\nconfig list:\n%s', iteration, task_id, str(score), json_tricks.dumps(config_list, indent=4))
+            self.latest_model, self.latest_masks, score = self.compress_one_step(model, config_list, masks)
+            _logger.info('\nIteration %d\ntask id: %d\nscore: %s\nconfig list:\n%s', iteration, task_id, str(score),
+                         json_tricks.dumps(config_list, indent=4))
 
-            self.task_generator.receive_task_result(task_id, pruned_model, masks, score)
+            self.task_generator.receive_task_result(task_id, self.latest_model, self.latest_masks, score)
             task_id, model, config_list, masks = self.task_generator.next()
 
             iteration += 1
+
+        return self.latest_model, self.latest_masks
+
+    def get_best_result(self) -> Optional[Tuple[Module, Dict[str, Dict[str, Tensor]]]]:
+        return self.task_generator.get_best_result()
+
+
+class PruningScheduler:
+    def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        """
+        Returns
+        -------
+        Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]
+            Return new task id, model under pruning, config list used in this task and pre-masks.
+        """
+        raise NotImplementedError()
+
+    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float):
+        """
+        Used to record the task result.
+
+        Parameters
+        ----------
+        task_id
+            The id of the finished task.
+        pruned_model
+            The pruned model after `pruning_one_step`.
+        masks
+            The masks should be applied on the pruned model.
+        score
+            The score of the pruning performance in this task.
+        """
+        raise NotImplementedError()
+
+    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, Dict[str, Dict[str, Tensor]], float]:
+        """
+        Pruning the model with config list.
+
+        Parameters
+        ----------
+        model
+            The model under pruning.
+        config_list
+            The config list usually identify the layers that want to prune.
+        masks
+            The masks should be applied on the under pruning model.
+        """
+        raise NotImplementedError()
+
+    def get_best_result(self) -> Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]:
+        """
+        Returns
+        -------
+        Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]
+            Return the task result that has the best performance,
+            inculde task id, the pruned model, the masks on the pruned model and score.
+        """
+        raise NotImplementedError()
+
+    def compress(self):
+        """
+        The pruning schedule main loop.
+        """
+        task_id, model, config_list, pre_masks = self.generate_task()
+
+        while task_id is not None:
+            pruned_model, masks, score = self.pruning_one_step(model, config_list, pre_masks)
+            self.record_task_result(task_id, pruned_model, masks, score)
+            task_id, model, config_list, pre_masks = self.generate_task()

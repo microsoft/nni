@@ -34,7 +34,9 @@ class LevelPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Operation types to prune.
+                - op_types : Operation module types to prune.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         """
         self.mode = 'normal'
         super().__init__(model, config_list)
@@ -71,7 +73,9 @@ class NormPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in NormPruner.
+                - op_types : Conv2d and Linear are supported in NormPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         p
             The order of norm.
         mode
@@ -124,7 +128,9 @@ class L1NormPruner(NormPruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L1NormPruner.
+                - op_types : Conv2d and Linear are supported in L1NormPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -152,7 +158,9 @@ class L2NormPruner(NormPruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in L2NormPruner.
+                - op_types : Conv2d and Linear are supported in L2NormPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -180,7 +188,9 @@ class FPGMPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in FPGMPruner.
+                - op_types : Conv2d and Linear are supported in FPGMPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
             If prune the model in a dependency-aware way, this pruner will
@@ -201,7 +211,7 @@ class FPGMPruner(Pruner):
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
             SchemaOptional('sparsity'): And(float, lambda n: 0 <= n < 1),
-            SchemaOptional('op_types'): ['Conv2d'],
+            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
         }], model, _logger)
@@ -222,7 +232,7 @@ class FPGMPruner(Pruner):
 class SlimPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
-                 training_epochs: int, scale: float = 0.0001, mode='global', max_sparsity_per_layer: float = 1):
+                 training_epochs: int = 1, scale: float = 0.0001, mode='global', max_sparsity_per_layer: float = 1):
         """
         Parameters
         ----------
@@ -232,6 +242,8 @@ class SlimPruner(Pruner):
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
                 - op_types : Only BatchNorm2D is supported in SlimPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -318,7 +330,9 @@ class ActivationPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in ActivationPruner.
+                - op_types : Conv2d and Linear are supported in ActivationPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -429,7 +443,9 @@ class TaylorFOWeightPruner(Pruner):
         config_list
             Supported keys:
                 - sparsity : This is to specify the sparsity operations to be compressed to.
-                - op_types : Only Conv2d is supported in TaylorFOWeightPruner.
+                - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
+                - op_names : Operation module names to prune.
+                - exclude : If `exclude` is seted as True, `op_types` and `op_names` seted in this config will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
