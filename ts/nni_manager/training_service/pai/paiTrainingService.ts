@@ -70,6 +70,7 @@ class PAITrainingService implements TrainingService {
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.log.info('Construct paiBase training service.');
         this.config = flattenConfig(config, 'openpai');
+        this.versionCheck = !this.config.debug;
         this.paiJobRestServer = new PAIJobRestServer(this);
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
@@ -409,9 +410,9 @@ class PAITrainingService implements TrainingService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+            if (this.config.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.config.deprecated.virtualCluster
+                    virtualCluster: this.config.virtualCluster
                 }
             }
         }
