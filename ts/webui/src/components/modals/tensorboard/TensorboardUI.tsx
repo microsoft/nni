@@ -41,11 +41,13 @@ function TensorboardUI(props): any {
                             setTensorboardPanelVisible(true);
                         }
                     })
-                    .catch(error => {
-                        setErrorMessage({
-                            error: true,
-                            message: error.message || 'Tensorboard start failed'
-                        });
+                    .catch(err => {
+                        if (err.response) {
+                            setErrorMessage({
+                                error: true,
+                                message: err.response.data.error || 'Failed to start tensorBoard!'
+                            });
+                        }
                         setTensorboardPanelVisible(true);
                     });
                 setReaptedTensorboard(false);

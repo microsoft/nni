@@ -13,7 +13,7 @@ from torch.utils.data import DataLoader
 
 import nni
 try:
-    import nni.retiarii.evaluator.pytorch.cgo.trainer as cgo_trainer
+    from .cgo import trainer as cgo_trainer
     cgo_import_failed = False
 except ImportError:
     cgo_import_failed = True
@@ -178,7 +178,10 @@ class _SupervisedLearningModule(LightningModule):
         y_hat = self(x)
 
         if not self._already_exported:
-            self.to_onnx(self.export_onnx, x, export_params=True)
+            try:
+                self.to_onnx(self.export_onnx, x, export_params=True)
+            except RuntimeError as e:
+                warnings.warn(f'ONNX conversion failed. As a result, you might not be able to use visualization. Error message: {e}')
             self._already_exported = True
 
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)

@@ -56,6 +56,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel twine
+      python -m pip install jupyter jupyterlab
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
     displayName: Build wheel
 
@@ -101,6 +102,7 @@ jobs:
 
   - script: |
       python -m pip install --upgrade pip setuptools wheel twine
+      python -m pip install jupyter jupyterlab
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
     displayName: Build wheel
 
@@ -128,6 +130,7 @@ jobs:
 
   - powershell: |
       python -m pip install --upgrade pip setuptools wheel twine
+      python -m pip install jupyter jupyterlab
       python test/vso_tools/build_wheel.py $(NNI_RELEASE)
     displayName: Build wheel
 

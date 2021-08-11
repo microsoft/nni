@@ -126,3 +126,8 @@ export function getDispatcherPipe(): string | null {
 export function getAPIRootUrl(): string {
     return getExperimentStartupInfo().apiRootUrl;
 }
+
+export function getPrefixUrl(): string {
+    const prefix = getExperimentStartupInfo().urlprefix === '' ? '' : `/${getExperimentStartupInfo().urlprefix}`;
+    return prefix;
+}
