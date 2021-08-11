@@ -148,6 +148,7 @@ if __name__ == '__main__':
     parser.add_argument("--pai_storage_config_name", type=str)
     parser.add_argument("--nni_manager_nfs_mount_path", type=str)
     parser.add_argument("--container_nfs_mount_path", type=str)
+    parser.add_argument("--debug", type=str)
     # args for kubeflow and frameworkController
     parser.add_argument("--nfs_path", type=str)
     parser.add_argument("--keyvault_vaultname", type=str)
