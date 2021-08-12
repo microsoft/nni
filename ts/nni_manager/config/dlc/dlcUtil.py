@@ -13,8 +13,9 @@ from alibabacloud_pai_dlc20201203.models import * #CreateJobRequest, JobSpec
 
 if __name__ == "__main__":
     parser = ArgumentParser()
-    parser.add_argument('--type', help='the type of pod')
+    parser.add_argument('--type', help='the type of job spec')
     parser.add_argument('--image', help='the docker image of job')
+    parser.add_argument('--job_type', choices=['TFJob', 'PyTorchJob'], help='the job type')
     parser.add_argument('--pod_count', type=int, default=1, help='pod count')
     parser.add_argument('--ecs_spec', help='ecs spec')
     parser.add_argument('--region', help='region')
@@ -42,16 +43,15 @@ if __name__ == "__main__":
 
     # job spec
     spec = JobSpec(
-        type='Worker',
+        type=args.type,
         image=args.image,
         pod_count=args.pod_count,
         ecs_spec=args.ecs_spec,
     )
 
-    job_type = 'TFJob' if args.image.find('tensorflow') >= 0 else 'PyTorchJob'
     req = CreateJobRequest(
         display_name=args.experiment_name,
-        job_type=job_type,
+        job_type=args.job_type,
         job_specs=[spec],
         data_sources=[nas_1],
         user_command=args.user_command
@@ -70,7 +70,7 @@ if __name__ == "__main__":
             #TODO: 1. get this url by api? 2. change this url in private dlc mode.
             print('tracking_url:' + f'https://pai-dlc.console.aliyun.com/#/jobs/detail?jobId={job_id}&regionId={args.region}')
         elif line == 'stop':
-            client.stop_job()
+            client.stop_job(job_id)
             exit(0)
         elif line == 'receive':
             print('receive:' + json.dumps(run.get_metrics()))

@@ -11,6 +11,7 @@ export class DlcClient {
     private log: Logger;
     public type: string;
     public image: string;
+    public jobType: string;
     public podCount: number;
     public ecsSpec: string;
     public region: string;
@@ -27,6 +28,7 @@ export class DlcClient {
     constructor(
         type: string,
         image: string,
+        jobType: string,
         podCount: number,
         experimentId: string,
         environmentId: string,
@@ -40,6 +42,7 @@ export class DlcClient {
         this.log = getLogger('DlcClient');
         this.type = type;
         this.image = image;
+        this.jobType = jobType;
         this.podCount = podCount;
         this.ecsSpec = ecsSpec;
         this.image = image;
@@ -55,8 +58,8 @@ export class DlcClient {
     private getScript(): string[] {
         const script: string[] = [];
         script.push(
-            `python ./config/dlc/dlcUtil.py --type ${this.type} --image ${this.image} --pod_count ${this.podCount} ` +
-            `--ecs_spec ${this.ecsSpec} --experiment_name nni_exp_${this.experimentId} ` +
+            `python ./config/dlc/dlcUtil.py --type ${this.type} --image ${this.image} --job_type ${this.jobType} ` +
+            `--pod_count ${this.podCount} --ecs_spec ${this.ecsSpec} --experiment_name nni_exp_${this.experimentId} ` +
             `--region ${this.region} --nas_data_source_id ${this.nasDataSourceId} --access_key_id ${this.accessKeyId} ` + 
             `--access_key_secret ${this.accessKeySecret} --user_command "${this.userCommand}"` );
         return script;
@@ -71,6 +74,7 @@ export class DlcClient {
             args: [
                 '--type', this.type,
                 '--image', this.image,
+                '--job_type', this.jobType,
                 '--pod_count', String(this.podCount),
                 '--ecs_spec', this.ecsSpec,
                 '--region', this.region,
@@ -87,8 +91,6 @@ export class DlcClient {
             deferred.resolve(envId);
         });
         this.monitorError(this.pythonShellClient, deferred);
-        return deferred.promise;
-
         return deferred.promise;
     }
 

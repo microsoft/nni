@@ -12,6 +12,7 @@ class DlcConfig(TrainingServiceConfig):
     platform: str = 'dlc'
     type: str = 'Worker'
     image: str # 'registry-vpc.{region}.aliyuncs.com/pai-dlc/tensorflow-training:1.15.0-cpu-py36-ubuntu18.04',
+    job_type: str = 'TFJob'
     pod_count: int
     ecs_spec: str # e.g.,'ecs.c6.large'
     region: str

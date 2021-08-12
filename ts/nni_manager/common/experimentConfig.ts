@@ -79,6 +79,7 @@ export interface DlcConfig extends TrainingServiceConfig {
     platfrom: 'dlc';
     type: string;
     image: string;
+    jobType: string;
     podCount: number;
     ecsSpec: string;
     region: string;

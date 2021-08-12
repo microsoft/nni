@@ -279,6 +279,7 @@ dlc_config_schema = {
     Optional('dlcConfig'): {
         'type': setType('type', str),
         'image': setType('image', str),
+        'jobType': setType('jobType', str),
         'podCount': setType('podCount', int),
         'ecsSpec': setType('ecsSpec', str),
         'region': setType('region', str),

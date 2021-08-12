@@ -14,12 +14,13 @@ trainingService:
   platform: dlc
   type: Worker
   image: registry-vpc.cn-beijing.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
+  jobType: PyTorchJob                             # choices: [TFJob, PyTorchJob]
   podCount: 1
   ecsSpec: ecs.c6.large
   region: cn-hangzhou
   nasDataSourceId: ${your_nas_data_source_id}
   accessKeyId: ${your_ak_id}
   accessKeySecret: ${your_ak_key}
-  nasDataSourceId: ${your_nas_data_source_id}   #e.g., datat56by9n1xt0a
-  localStorageMountPoint: /home/admin/workspace/  # DSW default root path, please do NOT change it
-  containerStorageMountPoint: /root/data/         # DLC container default root Path, change it based on your DLC NAS config.
+  nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID，e.g., datat56by9n1xt0a
+  localStorageMountPoint: /home/admin/workspace/  # default NAS path on DSW
+  containerStorageMountPoint: /root/data/         # default NAS path on DLC container, change it according your setting

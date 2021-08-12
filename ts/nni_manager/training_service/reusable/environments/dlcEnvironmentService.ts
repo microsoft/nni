@@ -117,6 +117,7 @@ export class DlcEnvironmentService extends EnvironmentService {
         const dlcClient = new DlcClient(
             this.config.type,
             this.config.image,
+            this.config.jobType,
             this.config.podCount,
             this.experimentId,
             environment.id,
