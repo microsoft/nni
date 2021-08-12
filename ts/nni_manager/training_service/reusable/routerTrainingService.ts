@@ -26,11 +26,11 @@ class RouterTrainingService implements TrainingService {
         const instance = new RouterTrainingService();
         instance.log = getLogger('RouterTrainingService');
         const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
-        if (platform === 'remote' && !(<RemoteConfig>config.trainingService).reuseMode) {
+        if (platform === 'remote' && (<RemoteConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new RemoteMachineTrainingService(config);
-        } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
+        } else if (platform === 'openpai' && (<OpenpaiConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new PAITrainingService(config);
-        } else if (platform === 'kubeflow' && !(<KubeflowConfig>config.trainingService).reuseMode) {
+        } else if (platform === 'kubeflow' && (<KubeflowConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new KubeflowTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);
