@@ -410,9 +410,9 @@ class PAITrainingService implements TrainingService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+            if (this.config.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.config.deprecated.virtualCluster
+                    virtualCluster: this.config.virtualCluster
                 }
             }
         }
