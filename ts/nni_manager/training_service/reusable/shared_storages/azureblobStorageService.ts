@@ -136,18 +136,18 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
     }
 
     private getCommand(mountPoint: string): string {
-        let install_fuseblob_script_path = 'nni_install_fuseblob.sh';
-        let fuseblob_config_path = 'nni_fuse_connection.cfg';
+        let installFuseblobScriptPath = 'nni_install_fuseblob.sh';
+        let fuseblobConfigPath = 'nni_fuse_connection.cfg';
         if (mountPoint == this.localMountPoint) {
             const experimentRootDir = getExperimentRootDir();
-            install_fuseblob_script_path = path.join(experimentRootDir, install_fuseblob_script_path);
-            fuseblob_config_path = path.join(experimentRootDir, fuseblob_config_path);
+            installFuseblobScriptPath = path.join(experimentRootDir, installFuseblobScriptPath);
+            fuseblobConfigPath = path.join(experimentRootDir, fuseblobConfigPath);
         }
 
-        const install = `rm -f ${install_fuseblob_script_path} && touch ${install_fuseblob_script_path} && echo "${INSTALL_BLOBFUSE.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> ${install_fuseblob_script_path} && bash ${install_fuseblob_script_path}`;
-        const prepare = `sudo mkdir /mnt/resource/nniblobfusetmp -p && rm -f ${fuseblob_config_path} && touch ${fuseblob_config_path} && echo "accountName ${this.storageAccountName}\\naccountKey ${this.storageAccountKey}\\ncontainerName ${this.containerName}" >> ${fuseblob_config_path}`;
-        const mount = `mkdir -p ${mountPoint} && sudo blobfuse ${mountPoint} --tmp-path=/mnt/resource/nniblobfusetmp  --config-file=${fuseblob_config_path} -o attr_timeout=240 -o entry_timeout=240 -o negative_timeout=120 -o allow_other`;
-        const clean = `rm -f ${install_fuseblob_script_path} ${fuseblob_config_path}`;
+        const install = `rm -f ${installFuseblobScriptPath} && touch ${installFuseblobScriptPath} && echo "${INSTALL_BLOBFUSE.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> ${installFuseblobScriptPath} && bash ${installFuseblobScriptPath}`;
+        const prepare = `sudo mkdir /mnt/resource/nniblobfusetmp -p && rm -f ${fuseblobConfigPath} && touch ${fuseblobConfigPath} && echo "accountName ${this.storageAccountName}\\naccountKey ${this.storageAccountKey}\\ncontainerName ${this.containerName}" >> ${fuseblobConfigPath}`;
+        const mount = `mkdir -p ${mountPoint} && sudo blobfuse ${mountPoint} --tmp-path=/mnt/resource/nniblobfusetmp  --config-file=${fuseblobConfigPath} -o attr_timeout=240 -o entry_timeout=240 -o negative_timeout=120 -o allow_other`;
+        const clean = `rm -f ${installFuseblobScriptPath} ${fuseblobConfigPath}`;
         return `${install} && ${prepare} && ${mount} && ${clean}`;
     }
 
