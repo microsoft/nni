@@ -1,19 +1,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from enum import unique
 import queue
 import logging
 import copy
+import types
 import torch
 import torch.nn as nn
 
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
 from nni.compression.pytorch.utils.utils import get_module_by_name
-from .compress_modules import replace_module
+from .compress_modules import replace_module, replace_func
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
-from ..utils import rand_like_with_shape
+from ..utils import rand_like_with_shape, translate_jit_code
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)
@@ -52,7 +54,8 @@ class ModelSpeedup:
         self.inferred_masks = dict()  # key: module_name, value: ModuleMasks
         self.batch_dim = batch_dim
         self.confidence = confidence
-        self.dummy_input, self.device = self._random_model_input(dummy_input, confidence, batch_dim)
+        self.dummy_input, self.device = self._random_model_input(
+            dummy_input, confidence, batch_dim)
         self.torch_graph = build_module_graph(model, self.dummy_input)
         # dict object to save the auto inferences objects of the submodules
         self.auto_inferences = {}
@@ -216,12 +219,13 @@ class ModelSpeedup:
                 weight_mask = self.masks[module_name]
             _, module = get_module_by_name(self.bound_model, module_name)
             _auto_infer = AutoMaskInference(
-                module, dummy_input, self,in_masks, weight_mask, in_constants=in_constants,
+                module, dummy_input, self, in_masks, weight_mask, in_constants=in_constants,
                 state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
         if 'token_type_embeddings' in module_name:
-            import pdb; pdb.set_trace()
+            import pdb
+            pdb.set_trace()
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
         _auto_infer.input_debugname = input_debugname
@@ -280,7 +284,8 @@ class ModelSpeedup:
                 else:
                     last_output.grad = tin.grad
         else:
-            _logger.warning('Note: %s does not have corresponding mask inference object', node.name)
+            _logger.warning(
+                'Note: %s does not have corresponding mask inference object', node.name)
 
     def _vnode_to_value(self, c_node):
         """
@@ -381,6 +386,27 @@ class ModelSpeedup:
         with torch.no_grad():
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
+            need_replace_forward = False
+            # We separate the module replacement with the function replacement,
+            # We will try to forward inference the model after the module
+            # replacement, and if it already works, then we donnot replace the
+            # function(function replacement is new feature and may have potential
+            # bugs)
+            try:
+                self.bound_model(self.dummy_input)
+            except Exception as err:
+                need_replace_forward = True
+                _logger.warning(
+                    'Meet errors when try to run the forward inference after module replacement: %s', str(err))
+            if need_replace_forward:
+                _logger.info('Replace the function of the model')
+                for unique_name in self.auto_inferences:
+                    self.replace_function(unique_name)
+                # import pdb; pdb.set_trace()
+                _new_forward_implementation = translate_jit_code(
+                    self.torch_graph.trace.code)
+                setattr(self.bound_model, 'forward', types.MethodType(
+                    _new_forward_implementation, self.bound_model))
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
@@ -402,6 +428,7 @@ class ModelSpeedup:
             method is shutdown, in the future, we will merge these two methods into a graph
             pass which is used to resolve the mask conflict.
             """
+
             def __init__(self, ori_module, reindex_dim, reindex):
                 super(ReindexModule, self).__init__()
                 self.ori_module = ori_module
@@ -420,7 +447,6 @@ class ModelSpeedup:
                                   requires_grad=tmpout.requires_grad)
                 out[self.t_index] = tmpout
                 return out
-
         assert unique_name in self.auto_inferences
         g_node = self.torch_graph.name_to_node[unique_name]
         _logger.debug("replace %s, in %s type, with op_type %s",
@@ -455,12 +481,28 @@ class ModelSpeedup:
                 setattr(super_module, g_node.name.split(
                     '.')[-1], new_submodule)
             return new_submodule
-        elif g_node.type == 'func':
-            _logger.info("Warning: cannot replace (name: %s, op_type: %s) which is func type",
+        else:
+            return None
+
+    def replace_function(self, unique_name):
+        assert unique_name in self.auto_inferences
+        g_node = self.torch_graph.name_to_node[unique_name]
+        _logger.debug("replace %s, in %s type, with op_type %s",
+                      unique_name, g_node.type, g_node.op_type)
+        auto_infer = self.auto_inferences[unique_name]
+
+        if g_node.type == 'func':
+            if g_node.op_type in replace_func:
+                _logger.info("replace (name: %s, op_type: %s) which is func type",
+                         unique_name, g_node.op_type)
+                masks = auto_infer.get_masks()
+                traced = self.torch_graph.trace
+                cpp_func_node = g_node.key_node
+                replace_func[g_node.op_type](traced, cpp_func_node, masks)
+            else:
+                _logger.warning("Cannot replace (name: %s, op_type: %s) which is func type",
                          unique_name, g_node.op_type)
             return None
-        else:
-            raise RuntimeError("Unsupported node type: {}".format(g_node.type))
 
     def initialize_speedup(self):
         """

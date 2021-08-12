@@ -1,10 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import torch
+import re
+import logging
 from .shape_dependency import ReshapeDependency
 
-torch_float_dtype = [torch.float, torch.float16, torch.float32, torch.float64, torch.half, torch.double]
-torch_integer_dtype = [torch.uint8, torch.int16, torch.short, torch.int32, torch.long, torch.bool]
+torch_float_dtype = [torch.float, torch.float16,
+                     torch.float32, torch.float64, torch.half, torch.double]
+torch_integer_dtype = [torch.uint8, torch.int16,
+                       torch.short, torch.int32, torch.long, torch.bool]
+
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
+
 
 def get_module_by_name(model, module_name):
     """
@@ -52,6 +60,7 @@ def rand_like_with_shape(shape, ori_t):
     else:
         return torch.rand(shape, dtype=dtype, device=device, requires_grad=require_grad)
 
+
 def randomize_tensor(tensor, start=1, end=100):
     """
     Randomize the target tensor according to the given
@@ -60,7 +69,8 @@ def randomize_tensor(tensor, start=1, end=100):
     assert isinstance(tensor, torch.Tensor)
     if tensor.dtype in torch_integer_dtype:
         # integer tensor can only be randomized by the torch.randint
-        torch.randint(int(start), int(end), tensor.size(), out=tensor.data, dtype=tensor.dtype)
+        torch.randint(int(start), int(end), tensor.size(),
+                      out=tensor.data, dtype=tensor.dtype)
         # pass
     else:
         # we can use nn.init.uniform_ to randomize this tensor
@@ -88,3 +98,29 @@ def not_safe_to_prune(model, dummy_input):
     """
     reshape_dset = ReshapeDependency(model, dummy_input)
     return reshape_dset.dependency_sets
+
+
+def translate_jit_code(code):
+    pattern = 'torch\.(.*?)\('
+    func_names = re.findall(pattern, code)
+    modules = {'torch.': torch, 'torch.nn.functional.': torch.nn.functional,
+               'torch.Tensor.': torch.Tensor, 'torch._C._nn.': torch._C._nn}
+    replace = {}
+    # rebase the namespace to get the runnable python code
+    for full_name in func_names:
+        func = re.split('\.', full_name)[-1]
+        found = False
+        for module_name in modules:
+            torch_module = modules[module_name]
+            if hasattr(torch_module, func):
+                replace['torch.'+full_name] = module_name + func
+                found = True
+                break
+        assert found == True, 'Cannot find the function call %s' % full_name
+    for key, value in replace.items():
+        code = code.replace(key, value)
+    code = 'import torch\nfrom torch import Tensor\n' + code
+    with open('nni_jit_tmp_forward.py', 'w') as f:
+        f.write(code)
+    from nni_jit_tmp_forward import forward
+    return forward

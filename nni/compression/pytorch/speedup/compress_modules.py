@@ -43,12 +43,9 @@ replace_module = {
     'ConvTranspose2d': lambda module, masks: replace_convtranspose2d(module, masks),
     'Embedding': lambda module, masks: replace_embedding(module, masks)
 }
-need_replace_function = {
-    'aten::view': lambda func, masks: need_replace_view(func, masks)
-}
 
 replace_func = {
-    'aten::view': lambda father_module, dummy_input, func, masks: replace_view(father_module, dummy_input, func, masks)
+    'aten::view': lambda father_module, cpp_node, masks: replace_view(father_module, cpp_node, masks)
 }
 
 
@@ -559,6 +556,8 @@ def replace_embedding(embedding, masks):
     We replace the embedding layer according the weight masks,
     """
     # import pdb; pdb.set_trace()
+    # currently we donnot support replace the embedding layer
+    # because we donnot have the corressponding pruner
     return embedding
     in_masks, out_masks, weight_masks = masks
     w_mask = weight_masks['weight']
@@ -578,20 +577,41 @@ def replace_embedding(embedding, masks):
     new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
     return new_embedding
 
-def need_replace_view(view_module, masks):
-    in_masks, out_masks, _ = masks
-    assert len(in_masks) == 1
-    assert len(out_masks) == 1
-    in_dense_shape = convert_dense_shape(in_masks[0])
-    out_dense_shape = convert_dense_shape(out_masks[0])
-    t_in = torch.rand(in_dense_shape)
-    try:
-        t_out = view_module(t_in)
-        assert t_out.size() == out_dense_shape
-    except Exception as err:
-        # there is an
-        return True
-    return False
 
-def replace_view(father_module, dummy_input, func, masks):
-    return None
+def replace_view(trace_model, cpp_node, masks):
+    """
+    We cannot directly replace the view operator in the model
+    because it isn't a module(function call). But in some cases
+    we have to replace such funcions else the whole model cannot
+    run the inference successfully. So we propose a method that
+    we replace the forward function of the father module of the
+    view operator to replace the view function. This method is not
+    stable, so we replace the view function only when we found there
+    is a shape-related exception.
+
+    Parameters
+    ----------
+    trace_model: torch.jit._trace.TracedModule
+        The traced module that including this view operator.
+    cpp_node: torch._C.Node
+        The cpp node of the target view operator
+    masks: Tensor
+        The input, output, weight masks of the target module.
+
+    Returns:
+    -------
+    new_cpp_node: None or torch._C.Node
+        The new cpp node to be repalced with. If None then we donnot
+        need to replace this function.
+    """
+    # import pdb; pdb.set_trace()
+    in_masks, out_mask, _ = masks
+
+    in_dense_shape = convert_dense_shape(in_masks[0])
+    out_dense_shape = convert_dense_shape(out_mask)
+    assert isinstance(trace_model, torch.jit._trace.TracedModule)
+    assert isinstance(cpp_node, torch._C.Node)
+    new_shape_value = trace_model.graph.insertConstant(out_dense_shape)
+    ori_inputs = list(cpp_node.inputs())
+    cpp_node.replaceInputWith(ori_inputs[1], new_shape_value)
+    return cpp_node
