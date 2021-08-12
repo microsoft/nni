@@ -136,9 +136,13 @@ export class AzureBlobSharedStorageService extends SharedStorageService {
     }
 
     private getCommand(mountPoint: string): string {
-        const experimentRootDir = getExperimentRootDir();
-        const install_fuseblob_script_path = path.join(experimentRootDir, 'nni_install_fuseblob.sh');
-        const fuseblob_config_path = path.join(experimentRootDir, 'nni_fuse_connection.cfg');
+        let install_fuseblob_script_path = 'nni_install_fuseblob.sh';
+        let fuseblob_config_path = 'nni_fuse_connection.cfg';
+        if (mountPoint == this.localMountPoint) {
+            const experimentRootDir = getExperimentRootDir();
+            install_fuseblob_script_path = path.join(experimentRootDir, install_fuseblob_script_path);
+            fuseblob_config_path = path.join(experimentRootDir, fuseblob_config_path);
+        }
 
         const install = `rm -f ${install_fuseblob_script_path} && touch ${install_fuseblob_script_path} && echo "${INSTALL_BLOBFUSE.replace(/\$/g, `\\$`).replace(/\n/g, `\\n`).replace(/"/g, `\\"`)}" >> ${install_fuseblob_script_path} && bash ${install_fuseblob_script_path}`;
         const prepare = `sudo mkdir /mnt/resource/nniblobfusetmp -p && rm -f ${fuseblob_config_path} && touch ${fuseblob_config_path} && echo "accountName ${this.storageAccountName}\\naccountKey ${this.storageAccountKey}\\ncontainerName ${this.containerName}" >> ${fuseblob_config_path}`;
