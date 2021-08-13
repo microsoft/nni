@@ -7,7 +7,7 @@ import chaiAsPromised = require("chai-as-promised");
 import { NFSSharedStorageService } from "../../../../training_service/reusable/shared_storages/nfsStorageService";
 import { NfsConfig } from '../../../../common/experimentConfig';
 
-describe('Unit Test for sharedstorage', () => {
+describe('Unit Test for NFSSharedstorage', () => {
     let service: NFSSharedStorageService;
     let testNFSConfig: NfsConfig = JSON.parse(
         "{\"storageType\": \"NFS\",\"localMountPoint\": \"localMountPoint\",\"remoteMountPoint\": \"remoteMountPoint\",\"localMounted\":\"localMounted\",\"nfsServer\":\"nfsServer\",\"exportedDirectory\":\"exportedDirectory\"}");

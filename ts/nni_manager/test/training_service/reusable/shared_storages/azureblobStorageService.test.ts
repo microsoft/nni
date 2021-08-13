@@ -7,7 +7,7 @@ import chaiAsPromised = require("chai-as-promised");
 import { AzureBlobSharedStorageService } from "../../../../training_service/reusable/shared_storages/azureblobStorageService";
 import { AzureBlobConfig } from '../../../../common/experimentConfig';
 
-describe('Unit Test for sharedstorage', () => {
+describe('Unit Test for AzureBlobSharedstorage', () => {
     let service: AzureBlobSharedStorageService;
     let testAzureBlobConfig: AzureBlobConfig = JSON.parse(
         "{\"storageType\": \"AzureBlob\",\"localMountPoint\": \"localMountPoint\",\"remoteMountPoint\": \"remoteMountPoint\",\"localMounted\":\"localMounted\",\"storageAccountName\":\"storageAccountName\",\"storageAccountKey\":\"storageAccountKey\",\"containerName\":\"containerName\"}");
