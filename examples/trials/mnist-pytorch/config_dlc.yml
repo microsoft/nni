@@ -1,5 +1,4 @@
 # working directory on DSW, please provie FULL path
-experimentWorkingDirectory: /home/admin/workspace/{your_working_dir}
 searchSpaceFile: search_space.json
 # the command on trial runner(or, DLC container), be aware of data_dir
 trialCommand: python mnist.py --data_dir /root/data/{your_data_dir}
@@ -22,5 +21,5 @@ trainingService:
   accessKeyId: ${your_ak_id}
   accessKeySecret: ${your_ak_key}
   nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID，e.g., datat56by9n1xt0a
-  localStorageMountPoint: /home/admin/workspace/  # default NAS path on DSW
+  localStorageMountPoint: /home/admin/workspace/  # default NAS path on DSW, MUST provide full path.
   containerStorageMountPoint: /root/data/         # default NAS path on DLC container, change it according your setting

@@ -55,21 +55,11 @@ export class DlcClient {
         this.userCommand = userCommand;
     }
 
-    private getScript(): string[] {
-        const script: string[] = [];
-        script.push(
-            `python ./config/dlc/dlcUtil.py --type ${this.type} --image ${this.image} --job_type ${this.jobType} ` +
-            `--pod_count ${this.podCount} --ecs_spec ${this.ecsSpec} --experiment_name nni_exp_${this.experimentId} ` +
-            `--region ${this.region} --nas_data_source_id ${this.nasDataSourceId} --access_key_id ${this.accessKeyId} ` + 
-            `--access_key_secret ${this.accessKeySecret} --user_command "${this.userCommand}"` );
-        return script;
-    }
-
     public submit(): Promise<string> {
         const deferred: Deferred<string> = new Deferred<string>();
         this.pythonShellClient = new PythonShell('dlcUtil.py', {
             scriptPath: './config/dlc',
-            pythonPath: 'python',
+            pythonPath: 'python3',
             pythonOptions: ['-u'], // get print results in real-time
             args: [
                 '--type', this.type,
@@ -142,8 +132,8 @@ export class DlcClient {
         this.pythonShellClient.send(`command:${message}`);
     }
 
-    public receiveCommand(): Promise<any> {
-        const deferred: Deferred<any> = new Deferred<any>();
+    public receiveCommand(): Promise<string> {
+        const deferred: Deferred<string> = new Deferred<string>();
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }

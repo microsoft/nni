@@ -130,7 +130,7 @@ common_schema = {
     Optional('maxTrialDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxTrialDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
-        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid', 'dlc'),
+        'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'),
     Optional('searchSpacePath'): And(os.path.exists, error=SCHEMA_PATH_ERROR % 'searchSpacePath'),
     Optional('multiPhase'): setType('multiPhase', bool),
     Optional('multiThread'): setType('multiThread', bool),
@@ -264,28 +264,6 @@ aml_config_schema = {
         'computeTarget': setType('computeTarget', str),
         Optional('maxTrialNumPerGpu'): setType('maxTrialNumPerGpu', int),
         Optional('useActiveGpu'): setType('useActiveGpu', bool),
-    }
-}
-
-dlc_trial_schema = {
-    'trial': {
-        'codeDir': setPathCheck('codeDir'),
-        'command': setType('command', str),
-        'image': setType('image', str),
-    }
-}
-
-dlc_config_schema = {
-    Optional('dlcConfig'): {
-        'type': setType('type', str),
-        'image': setType('image', str),
-        'jobType': setType('jobType', str),
-        'podCount': setType('podCount', int),
-        'ecsSpec': setType('ecsSpec', str),
-        'region': setType('region', str),
-        'nasDataSourceId': setType('nasDataSourceId', str),
-        'localStorageMountPoint': setType('localStorageMountPoint', str),
-        'containerStorageMountPoint': setType('containerStorageMountPoint', str),
     }
 }
 
@@ -499,7 +477,6 @@ training_service_schema_dict = {
     'dlts': Schema({**common_schema, **dlts_trial_schema, **dlts_config_schema}),
     'hybrid': Schema({**common_schema, **hybrid_trial_schema, **hybrid_config_schema, **machine_list_schema,
                              **pai_config_schema, **aml_config_schema, **remote_config_schema}),
-    'dlc': Schema({**common_schema, **dlc_trial_schema, **dlc_config_schema}),
 }
 
 

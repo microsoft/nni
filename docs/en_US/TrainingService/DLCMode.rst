@@ -12,9 +12,9 @@ Step 1. Install NNI, follow the install guide `here <../Tutorial/QuickStart.rst>
 
 Step 2. Create PAI-DSW server following this `link <https://help.aliyun.com/document_detail/163684.html?section-2cw-lsi-es9#title-ji9-re9-88x>`__. Note as the training service will be run on PAI-DLC, it won't cost many resources to run and you may just need a PAI-DSW server with CPU.
 
-Step 3. Open PAI-DLC `here <https://docs.microsoft.com/en-us/cli/azure/install-azure-cli?view=azure-cli-latest>`__, select the same region as your PAI-DSW server. Move to ``dataset configuration`` and mount the same NAS disk as the PAI-DSW server does. (Note currently only PAI-DLC public-cluster is supported.)
+Step 3. Open PAI-DLC `here <https://pai-dlc.console.aliyun.com/#/guide>`__, select the same region as your PAI-DSW server. Move to ``dataset configuration`` and mount the same NAS disk as the PAI-DSW server does. (Note currently only PAI-DLC public-cluster is supported.)
 
-Step 4. Open your PAI-DSW server command line, download and install PAI-DLC python SDK to submit DLC tasks, refer to `this link <https://help.aliyun.com/document_detail/203290.html>`__.
+Step 4. Open your PAI-DSW server command line, download and install PAI-DLC python SDK to submit DLC tasks, refer to `this link <https://help.aliyun.com/document_detail/203290.html>`__. Skip this step if SDK is already installed.
 
 
 .. code-block:: bash
@@ -78,6 +78,6 @@ Run the following commands to start the example experiment:
 Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.3``.
 
 Monitor your job
---------------------------------------------------
+----------------
 
 To monitor your job on DLC, you need to visit `DLC  <https://pai-dlc.console.aliyun.com/#/jobs>`__ to check job status.

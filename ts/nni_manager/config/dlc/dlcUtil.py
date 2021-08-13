@@ -72,9 +72,3 @@ if __name__ == "__main__":
         elif line == 'stop':
             client.stop_job(job_id)
             exit(0)
-        elif line == 'receive':
-            print('receive:' + json.dumps(run.get_metrics()))
-        elif line:
-            items = line.split(':')
-            if items[0] == 'command':
-                run.log('nni_manager', line[8:])

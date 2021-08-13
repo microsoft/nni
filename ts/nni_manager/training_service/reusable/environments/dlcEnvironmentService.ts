@@ -28,19 +28,21 @@ export class DlcEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger('dlcEnvironmentService');
     private experimentId: string;
-    private experimentRootDir: string;
     private config: FlattenDlcConfig;
 
     constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
         this.experimentId = info.experimentId;
-        this.experimentRootDir = info.logDir;
         this.config = flattenConfig(config, 'dlc');
         component.Container.bind(StorageService).to(MountedStorageService).scope(Scope.Singleton);
+        const storageService = component.get<StorageService>(StorageService)
+        const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, 'nni-experiments', this.experimentId);
+        const localRoot = storageService.joinPath(this.config.localStorageMountPoint, 'nni-experiments');
+        storageService.initialize(localRoot, remoteRoot);
     }
 
     public get hasStorageService(): boolean {
-        return false;
+        return true;
     }
 
     public initCommandChannel(eventEmitter: EventEmitter): void {
@@ -91,28 +93,19 @@ export class DlcEnvironmentService extends EnvironmentService {
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
         const dlcEnvironment: DlcEnvironmentInformation = environment as DlcEnvironmentInformation;
-        const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
-        if (!fs.existsSync(environmentLocalTempFolder)) {
-            await fs.promises.mkdir(environmentLocalTempFolder, {recursive: true});
-        }
 
-        const dlcFolder: string = this.experimentRootDir.replace(
-            this.config.localStorageMountPoint, this.config.containerStorageMountPoint);
-        dlcEnvironment.workingFolder = `${this.experimentRootDir}/envs/${environment.id}`;
-        dlcEnvironment.runnerWorkingFolder = `${dlcFolder}/envs/${environment.id}`;
-        let script: string = environment.command;
+        const environmentRoot = path.join(this.config.containerStorageMountPoint, `/nni-experiments/${this.experimentId}`);
+        const localRoot = path.join(this.config.localStorageMountPoint, `/nni-experiments/${this.experimentId}`);
 
-        // environment id dir and command dir
+        dlcEnvironment.workingFolder = `${localRoot}/envs/${environment.id}`;
+        dlcEnvironment.runnerWorkingFolder = `${environmentRoot}/envs/${environment.id}`;
+
+        // environment id dir and command dir, folder created on DLC side can't be accessed on DSW.
         if (!fs.existsSync(`${dlcEnvironment.workingFolder}/commands`)) {
             await fs.promises.mkdir(`${dlcEnvironment.workingFolder}/commands`, {recursive: true});
         }
 
-        const prepare = `cd ${dlcEnvironment.runnerWorkingFolder} && cp -r ../../environment-temp/envs/* ../`;
-        const startrun = `sh ../install_nni.sh && python -m nni.tools.trial_tool.trial_runner`;
-
-        script = `${prepare} && ${startrun}`;
-        script = `${script} --job_pid_file ${environment.runnerWorkingFolder}/pid \
-            1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr`;
+        environment.command = `cd ${environmentRoot} && ${environment.command} 1>${environment.runnerWorkingFolder}/trialrunner_stdout 2>${environment.runnerWorkingFolder}/trialrunner_stderr`;
 
         const dlcClient = new DlcClient(
             this.config.type,
@@ -126,7 +119,7 @@ export class DlcEnvironmentService extends EnvironmentService {
             this.config.nasDataSourceId,
             this.config.accessKeyId,
             this.config.accessKeySecret,
-            script,
+            environment.command,
         );
 
         dlcEnvironment.id = await dlcClient.submit();
