@@ -44,7 +44,7 @@ __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPru
            'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
 
 
-class OneShotPruner(Pruner):
+class ToolBasedPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
@@ -97,7 +97,7 @@ class OneShotPruner(Pruner):
         return self.bound_model, masks
 
 
-class LevelPruner(OneShotPruner):
+class LevelPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         """
         Parameters
@@ -136,7 +136,7 @@ class LevelPruner(OneShotPruner):
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
 
-class NormPruner(OneShotPruner):
+class NormPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -259,7 +259,7 @@ class L2NormPruner(NormPruner):
         super().__init__(model, config_list, 2, mode, dummy_input)
 
 
-class FPGMPruner(OneShotPruner):
+class FPGMPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -317,7 +317,7 @@ class FPGMPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
-class SlimPruner(OneShotPruner):
+class SlimPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global'):
@@ -413,7 +413,7 @@ class SlimPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationPruner(OneShotPruner):
+class ActivationPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -532,7 +532,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         return MeanRankMetricsCalculator(dim=1)
 
 
-class TaylorFOWeightPruner(OneShotPruner):
+class TaylorFOWeightPruner(ToolBasedPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):

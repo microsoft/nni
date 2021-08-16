@@ -21,3 +21,9 @@ from .sparsity_allocator import (
     GlobalSparsityAllocator,
     Conv2dDependencyAwareAllocator
 )
+from .task_generator import (
+    Task,
+    TaskGenerator,
+    AGPTaskGenerator,
+    LinearTaskGenerator
+)
