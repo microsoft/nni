@@ -53,7 +53,7 @@ class BypassPlugin(TrainingTypePlugin):
     def all_gather(self, tensor: torch.Tensor, group: Optional[Any] = None, sync_grads: bool = False) -> torch.Tensor:
         """Perform a all_gather on all processes """
         return tensor
-    
+
     def teardown(self):
         """
         This method is called to teardown the training process.
@@ -105,24 +105,24 @@ def get_accelerator_connector(
         **other_trainier_kwargs) -> AcceleratorConnector:
     gpu_ids = Trainer()._parse_devices(gpus, auto_select_gpus, tpu_cores)
     return AcceleratorConnector(
-            num_processes,
-            devices,
-            tpu_cores,
-            ipus,
-            distributed_backend,
-            accelerator,
-            gpus,
-            gpu_ids,
-            num_nodes,
-            sync_batchnorm,
-            benchmark,
-            replace_sampler_ddp,
-            deterministic,
-            precision,
-            amp_backend,
-            amp_level,
-            plugins,
-        )
+        num_processes,
+        devices,
+        tpu_cores,
+        ipus,
+        distributed_backend,
+        accelerator,
+        gpus,
+        gpu_ids,
+        num_nodes,
+        sync_batchnorm,
+        benchmark,
+        replace_sampler_ddp,
+        deterministic,
+        precision,
+        amp_backend,
+        amp_level,
+        plugins,
+    )
 
 
 @serialize_cls
