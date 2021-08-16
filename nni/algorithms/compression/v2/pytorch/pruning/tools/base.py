@@ -588,12 +588,13 @@ class TaskGenerator:
         masks = torch.load(Path(task.log_dir, MASKS_NAME))
         return model, masks
 
-    def get_best_result(self) -> Optional[Tuple[Module, Dict[str, Dict[str, Tensor]]]]:
+    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]]:
         if self.best_task is None:
             _logger.warning('Do not record the score of each task, if you want to check which is the best, \
                             please pass score to `receive_task_result`')
             return None
-        return self.load_task_result(self.best_task)
+        model, masks = self.load_task_result(self.best_task)
+        return self.best_task, model, masks, self.best_score
 
     def _generate_tasks(self, received_task_id: int) -> List[Task]:
         """

@@ -1,24 +1,20 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import logging
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 
-import json_tricks
 import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.algorithms.compression.v2.pytorch.base import Pruner, PruningScheduler
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from .tools import TaskGenerator
 
-_logger = logging.getLogger(__name__)
 
-
-class ToolBasedPruningScheduler:
+class ToolBasedPruningScheduler(PruningScheduler):
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
                  speed_up: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None):
         """
@@ -45,11 +41,14 @@ class ToolBasedPruningScheduler:
         self.dummy_input = dummy_input
         self.evaluator = evaluator
 
-        self.latest_model = None
-        self.latest_masks = None
+    def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        return self.task_generator.next()
 
-    def compress_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, List[Dict], Optional[float]]:
-        # compress model
+    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float):
+        self.task_generator.receive_task_result(task_id, pruned_model, masks, score)
+
+    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, Dict[str, Dict[str, Tensor]], float]:
+        # pruning model
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
         model, masks = self.pruner.compress()
@@ -87,28 +86,5 @@ class ToolBasedPruningScheduler:
 
         return model, masks, score
 
-    def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
-        """
-        Pruning the model step by step, until task generator return config list which is None.
-        Returns
-        -------
-        Tuple[Module, Dict[str, Dict[str, Tensor]]]
-            Return the pruned model and the masks on the pruned model returned by the last compress step.
-        """
-        iteration = 0
-        task_id, model, config_list, masks = self.task_generator.next()
-
-        while task_id is not None:
-            self.latest_model, self.latest_masks, score = self.compress_one_step(model, config_list, masks)
-            _logger.info('\nIteration %d\ntask id: %d\nscore: %s\nconfig list:\n%s', iteration, task_id, str(score),
-                         json_tricks.dumps(config_list, indent=4))
-
-            self.task_generator.receive_task_result(task_id, self.latest_model, self.latest_masks, score)
-            task_id, model, config_list, masks = self.task_generator.next()
-
-            iteration += 1
-
-        return self.latest_model, self.latest_masks
-
-    def get_best_result(self) -> Optional[Tuple[Module, Dict[str, Dict[str, Tensor]]]]:
+    def get_best_result(self) -> Optional(Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]):
         return self.task_generator.get_best_result()
