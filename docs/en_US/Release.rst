@@ -5,6 +5,65 @@
 Change Log
 ==========
 
+Release 2.4 - 8/11/2021
+-----------------------
+
+Major Updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* NAS visualization: visualize model graph through Netron (#3878)
+* Support NAS bench 101/201 on Retiarii framework (#3871 #3920)
+* Support hypermodule AutoActivation (#3868)
+* Support PyTorch v1.8/v1.9 (#3937)
+* Support Hardware-aware NAS with nn-Meter (#3938)
+* Enable `fixed_arch` on Retiarii (#3972)
+
+Model Compression
+"""""""""""""""""
+
+* Refactor of ModelSpeedup: auto shape/mask inference (#3462)
+* Added more examples for ModelSpeedup (#3880)
+* Support global sort for Taylor pruning (#3896)
+* Support TransformerHeadPruner (#3884)
+* Support batch normalization folding in QAT quantizer (#3911, thanks the external contributor @chenbohua3)
+* Support post-training observer quantizer (#3915, thanks the external contributor @chenbohua3)
+* Support ModelSpeedup for Slim Pruner (#4008)
+* Support TensorRT 8.0.0 in ModelSpeedup (#3866)
+
+Hyper-parameter Tuning
+""""""""""""""""""""""
+
+* Improve HPO benchmarks (#3925)
+* Improve type validation of user defined search space (#3975)
+
+Training service & nnictl
+"""""""""""""""""""""""""
+
+* Support JupyterLab (#3668 #3954)
+* Support viewing experiment from experiment folder (#3870)
+* Support kubeflow in training service reuse framework (#3919)
+* Support viewing trial log on WebUI for an experiment launched in `view` mode (#3872)
+
+Minor Updates & Bug Fixes
+"""""""""""""""""""""""""
+
+* Fix the failure of the exit of Retiarii experiment (#3899)
+* Fix `exclude` not supported in some `config_list` cases (#3815)
+* Fix bug in remote training service on reuse mode (#3941)
+* Improve IP address detection in modern way (#3860)
+* Fix bug of the search box on WebUI (#3935)
+* Fix bug in url_prefix of WebUI (#4051)
+* Support dict format of intermediate on WebUI (#3895)
+* Fix bug in openpai training service induced by experiment config v2 (#4027 #4057)
+* Improved doc (#3861 #3885 #3966 #4004 #3955)
+* Improved the API `export_model` in model compression (#3968)
+* Supported `UnSqueeze` in ModelSpeedup (#3960)
+* Thanks other external contributors: @Markus92 (#3936), @thomasschmied (#3963), @twmht (#3842)
+
+
 Release 2.3 - 6/15/2021
 -----------------------
 
