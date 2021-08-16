@@ -8,6 +8,10 @@ from torch.nn import Module
 
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
+    '''
+    Split the config by op_names if 'sparsity' or 'sparsity_per_layer' in config,
+    and set the sub_config['total_sparsity'] = config['sparsity_per_layer'].
+    '''
     for config in config_list:
         if 'sparsity' in config:
             if 'sparsity_per_layer' in config:
@@ -23,10 +27,10 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
             sparsity_per_layer = config.pop('sparsity_per_layer')
             op_names = config.pop('op_names')
             for op_name in op_names:
-                new_config = deepcopy(config)
-                new_config['op_names'] = [op_name]
-                new_config['total_sparsity'] = sparsity_per_layer
-                new_config_list.append(new_config)
+                sub_config = deepcopy(config)
+                sub_config['op_names'] = [op_name]
+                sub_config['total_sparsity'] = sparsity_per_layer
+                new_config_list.append(sub_config)
         else:
             new_config_list.append(config)
 
@@ -35,7 +39,7 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
 
 def unfold_config_list(model: Module, config_list: List[Dict]) -> List[Dict]:
     '''
-    unfold config_list to op_names level
+    Unfold config_list to op_names level.
     '''
     unfolded_config_list = []
     for config in config_list:
@@ -55,7 +59,7 @@ def unfold_config_list(model: Module, config_list: List[Dict]) -> List[Dict]:
 
 def dedupe_config_list(config_list: List[Dict]) -> List[Dict]:
     '''
-    dedupe the op_names in unfolded config_list
+    Dedupe the op_names in unfolded config_list.
     '''
     exclude = set()
     exclude_idxes = []
