@@ -20,7 +20,7 @@ class NormalSparsityAllocator(SparsityAllocator):
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
         for name, wrapper in self.pruner.get_modules_wrapper().items():
-            sparsity_rate = wrapper.config['sparsity_per_layer']
+            sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
             metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
@@ -108,7 +108,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
-            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['sparsity_per_layer'] for name in group_metric_dict.keys()}
+            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
             conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]

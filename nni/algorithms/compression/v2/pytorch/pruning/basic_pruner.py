@@ -13,6 +13,7 @@ from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression.v2.pytorch.utils.config_validation import PrunerSchema
+from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
 
 from .tools import (
     DataCollector,
@@ -46,23 +47,12 @@ __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPru
 
 class OneShotPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict]):
+        config_list = config_list_canonical(model, config_list)
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
         self.sparsity_allocator: SparsityAllocator = None
-        self._convert_config_list(config_list)
 
         super().__init__(model, config_list)
-
-    def _convert_config_list(self, config_list: List[Dict]):
-        """
-        Convert `sparsity` in config to `sparsity_per_layer`.
-        """
-        for config in config_list:
-            if 'sparsity' in config:
-                if 'sparsity_per_layer' in config:
-                    raise ValueError("'sparsity' and 'sparsity_per_layer' have the same semantics, can not set both in one config.")
-                else:
-                    config['sparsity_per_layer'] = config.pop('sparsity')
 
     def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         super().reset(model=model, config_list=config_list)
@@ -117,7 +107,7 @@ class LevelPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('op_types'): [str],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
@@ -173,7 +163,7 @@ class NormPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
@@ -293,7 +283,7 @@ class FPGMPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
@@ -378,8 +368,7 @@ class SlimPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): ['BatchNorm2d'],
             SchemaOptional('op_names'): [str],
@@ -479,7 +468,7 @@ class ActivationPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
             SchemaOptional('exclude'): bool
@@ -605,8 +594,7 @@ class TaylorFOWeightPruner(OneShotPruner):
 
     def validate_config(self, model: Module, config_list: List[Dict]):
         schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
+            SchemaOptional('total_sparsity'): And(float, lambda n: 0 <= n < 1),
             SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
             SchemaOptional('op_types'): ['Conv2d', 'Linear'],
             SchemaOptional('op_names'): [str],
