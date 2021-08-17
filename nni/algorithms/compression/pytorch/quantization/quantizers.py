@@ -187,12 +187,7 @@ class ObserverQuantizer(Quantizer):
     def record(self, wrapper, quant_type, tensor):
         name = wrapper.name
         observer = self.all_observers[name][quant_type]
-        if isinstance(tensor, tuple):
-            # NB: This only works for single tensor
-            tensor = (t.cpu() for t in tensor)
-            observer(*tensor)
-        else:
-            observer(tensor.cpu())
+        observer(tensor.cpu())
 
     def calculate_qparams(self, name, quant_type):
         observer = self.all_observers[name][quant_type]
@@ -206,17 +201,14 @@ class ObserverQuantizer(Quantizer):
         x = (x - zero_point) * scale
         return x
 
-    def quantize_input(self, *inputs, wrapper, **kwargs):
+    def quantize_input(self, inputs, wrapper, **kwargs):
         if self.compressed:
             module = wrapper.module
-            new_input = self._quantize(inputs[0],
+            inputs = self._quantize(inputs,
                                       module.input_scale,
                                       module.input_zero_point,
                                       module.input_qmin,
                                       module.input_qmax)
-            list_inp = list(inputs)
-            list_inp[0] = new_input
-            inputs = tuple(list_inp)
         else:
             self.record(wrapper, 'input', inputs)
         return inputs
@@ -973,20 +965,16 @@ class LsqQuantizer(Quantizer):
         output = self.quantize(output, module.output_scale, module.output_qmin, module.output_qmax)
         return output
 
-    def quantize_input(self, *inputs, wrapper, **kwargs):
-        # This is hacky since it is not recommended to modify a tuple
-        # NB: support layers with multi inputs
+    def quantize_input(self, inputs, wrapper, **kwargs):
         module = wrapper.module
         # initialize the scale
         if self.bound_model.steps == 1:
             qmax = module.input_qmax
-            init_oup_scale = inputs[0].data.detach().abs().mean() * 2 / (qmax ** 0.5)
+            init_oup_scale = inputs.data.detach().abs().mean() * 2 / (qmax ** 0.5)
             module.input_scale.data = init_oup_scale
 
-        new_input = self.quantize(inputs[0], module.input_scale, module.input_qmin, module.input_qmax)
-        list_inp = list(inputs)
-        list_inp[0] = new_input
-        return tuple(list_inp)
+        inputs = self.quantize(inputs, module.input_scale, module.input_qmin, module.input_qmax)
+        return inputs
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
