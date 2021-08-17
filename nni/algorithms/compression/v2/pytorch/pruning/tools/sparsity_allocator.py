@@ -77,8 +77,10 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         assert total_sparsity <= max_sparsity_per_layer, 'total_sparsity should less than max_sparsity_per_layer.'
         total_prune_num = int(total_sparsity * total_weight_num)
-
-        threshold = torch.topk(torch.cat(metric_list).view(-1), total_prune_num, largest=False)[0].max().item()
+        if total_prune_num == 0:
+            threshold = torch.cat(metric_list).min().item() - 1
+        else:
+            threshold = torch.topk(torch.cat(metric_list).view(-1), total_prune_num, largest=False)[0].max().item()
         return threshold, sub_thresholds
 
 
