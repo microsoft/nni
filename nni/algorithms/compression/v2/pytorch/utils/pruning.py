@@ -2,9 +2,12 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
+import math
 from typing import Dict, List
 
 from torch.nn import Module
+
+from nni.compression.pytorch.utils import get_module_by_name
 
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
@@ -31,6 +34,15 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                 sub_config['op_names'] = [op_name]
                 sub_config['total_sparsity'] = sparsity_per_layer
                 new_config_list.append(sub_config)
+        elif 'max_sparsity_per_layer' in config:
+            min_retention_per_layer = (1 - config.pop('max_sparsity_per_layer'))
+            op_names = config.get('op_names', [])
+            min_retention_numel = {}
+            for op_name in op_names:
+                total_element_num = get_module_by_name(model, op_name)[0].weight.numel()
+                min_retention_numel[op_name] = math.floor(total_element_num * min_retention_per_layer)
+            config['min_retention_numel'] = min_retention_numel
+            new_config_list.append(config)
         else:
             new_config_list.append(config)
 

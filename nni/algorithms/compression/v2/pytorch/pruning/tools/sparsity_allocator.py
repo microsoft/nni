@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import math
 from typing import Any, Dict, List, Tuple, Union
 
 import numpy as np
@@ -58,24 +59,25 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         temp_wrapper_config = self.pruner.get_modules_wrapper()[list(group_metric_dict.keys())[0]].config
         total_sparsity = temp_wrapper_config['total_sparsity']
-        max_sparsity_per_layer = temp_wrapper_config.get('max_sparsity_per_layer', 1.0)
+        min_retention_numel = temp_wrapper_config.get('min_retention_numel', {})
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
             metric = metric * self._compress_mask(wrapper.weight_mask)
-            print(metric)
             layer_weight_num = wrapper.module.weight.data.numel()
-            stay_num = int(metric.numel() * max_sparsity_per_layer)
+
+            retention_numel = 0 if name not in min_retention_numel else min_retention_numel[name]
+            removed_metric_num = math.floor(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
+            stay_metric_num = metric.numel() - removed_metric_num
             # Remove the weight parts that must be left
-            stay_metric = torch.topk(metric.view(-1), stay_num, largest=False)[0]
+            stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
             expend_times = int(layer_weight_num / metric.numel())
             if expend_times > 1:
-                stay_metric = stay_metric.expand(stay_num, int(layer_weight_num / metric.numel())).view(-1)
+                stay_metric = stay_metric.expand(stay_metric_num, int(layer_weight_num / metric.numel())).view(-1)
             metric_list.append(stay_metric)
             total_weight_num += layer_weight_num
 
-        assert total_sparsity <= max_sparsity_per_layer, 'total_sparsity should less than max_sparsity_per_layer.'
         total_prune_num = int(total_sparsity * total_weight_num)
         if total_prune_num == 0:
             threshold = torch.cat(metric_list).min().item() - 1
