@@ -31,7 +31,7 @@ class AverageMeter(object):
 
 
 def accuracy(output, target, topk=(1, 5)):
-    """Compute the precision@k for the specified values of k"""
+    """Computes the precision@k for the specified values of k"""
     batch_size = target.size(0)
     num = output.size(1)
     target_topk = []
