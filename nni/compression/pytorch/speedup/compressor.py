@@ -223,9 +223,9 @@ class ModelSpeedup:
                 state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
-        if 'token_type_embeddings' in module_name:
-            import pdb
-            pdb.set_trace()
+        # if 'token_type_embeddings' in module_name:
+        #     import pdb
+        #     pdb.set_trace()
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
         _auto_infer.input_debugname = input_debugname
@@ -498,6 +498,7 @@ class ModelSpeedup:
                 masks = auto_infer.get_masks()
                 traced = self.torch_graph.trace
                 cpp_func_node = g_node.key_node
+                # import pdb; pdb.set_trace()
                 replace_func[g_node.op_type](traced, cpp_func_node, masks)
             else:
                 _logger.warning("Cannot replace (name: %s, op_type: %s) which is func type",

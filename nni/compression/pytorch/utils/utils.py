@@ -100,6 +100,11 @@ def not_safe_to_prune(model, dummy_input):
     return reshape_dset.dependency_sets
 
 
+jit_python_code_replacement = {
+    'torch.slice': lambda tmpstr: python_slice_replace(tmpstr)
+}
+
+
 def translate_jit_code(code):
     pattern = 'torch\.(.*?)\('
     func_names = re.findall(pattern, code)
@@ -109,18 +114,59 @@ def translate_jit_code(code):
     # rebase the namespace to get the runnable python code
     for full_name in func_names:
         func = re.split('\.', full_name)[-1]
-        found = False
         for module_name in modules:
             torch_module = modules[module_name]
             if hasattr(torch_module, func):
                 replace['torch.'+full_name] = module_name + func
-                found = True
                 break
-        assert found == True, 'Cannot find the function call %s' % full_name
+        # assert found == True, 'Cannot find the function call %s' % full_name
+    # import pdb; pdb.set_trace()
     for key, value in replace.items():
         code = code.replace(key, value)
-    code = 'import torch\nfrom torch import Tensor\n' + code
+    # pdb.set_trace()
+    # several function cannot find the coresponding function under the namespace
+    # torch.Tensor and torch.(for example torch.slice), so we need to handle these
+    # functions manually
+    lines = code.split('\n')
+    for i, line in enumerate(lines):
+        for fname in jit_python_code_replacement:
+            if fname in line:
+                lines[i] = jit_python_code_replacement[fname](line)
+    code = '\n'.join(lines)
+    code = 'import torch\nfrom torch import Tensor\nfrom typing import *\n' + code
     with open('nni_jit_tmp_forward.py', 'w') as f:
         f.write(code)
     from nni_jit_tmp_forward import forward
     return forward
+
+
+def python_slice_replace(funcstr):
+    """
+    translate the torch.slice to the appropriate python str that can be replace
+    in the forward function string.
+
+    Parameters
+    ----------
+    funcstr: str
+        the str that calling the torch.slice, for example:
+        _8 = torch.slice(attention_mask, 0, 0, 9223372036854775807, 1)
+
+    Returns:
+    new_str: str
+        the string that should replace the original one
+    """
+    # parse the input parameters
+    pattern = '\((.*)\)'
+    # import pdb; pdb.set_trace()
+    parameter_str = re.findall(pattern, funcstr)
+    parameters = re.split(',', parameter_str[0])
+    target_tensor = parameters[0]
+    dim = int(parameters[1])
+    dim_str = ','.join([':']*(dim-1) + [':'.join(parameters[2:])])
+
+    print('%s[%s]' % (target_tensor, dim_str))
+    new_str = funcstr.replace(
+        parameter_str[0], '%s[%s]' % (target_tensor, dim_str))
+    # import pdb
+    # pdb.set_trace()
+    return new_str

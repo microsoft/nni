@@ -4,6 +4,7 @@
 import logging
 import torch
 import torch.nn as nn
+from torch._C import ListType
 
 _logger = logging.getLogger(__name__)
 
@@ -611,7 +612,18 @@ def replace_view(trace_model, cpp_node, masks):
     out_dense_shape = convert_dense_shape(out_mask)
     assert isinstance(trace_model, torch.jit._trace.TracedModule)
     assert isinstance(cpp_node, torch._C.Node)
-    new_shape_value = trace_model.graph.insertConstant(out_dense_shape)
+    input_nodes = []
+    for _dim in out_dense_shape:
+        _tmp_constant = trace_model.graph.insertConstant(_dim)
+        _tmp_constant.node().moveBefore(cpp_node)
+        input_nodes.append(_tmp_constant)
+    out_shape_list_node = trace_model.graph.create('prim::ListConstruct', input_nodes)
+    trace_model.graph.insertNode(out_shape_list_node)
+    out_shape_list_node.moveBefore(cpp_node)
+
+    out_shape_list = list(out_shape_list_node.outputs())[0]
+    out_shape_list.setType(ListType.ofInts())
+    # import pdb; pdb.set_trace()
     ori_inputs = list(cpp_node.inputs())
-    cpp_node.replaceInputWith(ori_inputs[1], new_shape_value)
+    cpp_node.replaceInputWith(ori_inputs[1], out_shape_list)
     return cpp_node
