@@ -603,7 +603,7 @@ class TaylorFOWeightPruner(OneShotPruner):
 
         schema.validate(config_list)
 
-    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Module, Tensor, Tensor], None]:
+    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
         def collect_taylor(grad: Tensor):
             if len(buffer) < self.training_batches:
                 buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
