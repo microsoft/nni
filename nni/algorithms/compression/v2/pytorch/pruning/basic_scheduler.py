@@ -86,5 +86,5 @@ class ToolBasedPruningScheduler(PruningScheduler):
 
         return model, masks, score
 
-    def get_best_result(self) -> Optional(Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]):
+    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]]:
         return self.task_generator.get_best_result()

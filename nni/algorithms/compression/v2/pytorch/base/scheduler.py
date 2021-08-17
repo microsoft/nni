@@ -57,13 +57,14 @@ class PruningScheduler:
         """
         raise NotImplementedError()
 
-    def compress(self) -> Optional[Tuple[Module, Dict[str, Dict[str, Tensor]]]]:
+    def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
         """
         The pruning schedule main loop.
 
         Returns
         -------
-
+        Tuple[Module, Dict[str, Dict[str, Tensor]]]
+            Return the pruned_model and the masks on it in the last iteration.
         """
         task_id, model, config_list, pre_masks = self.generate_task()
         pruned_model, masks = None, None
