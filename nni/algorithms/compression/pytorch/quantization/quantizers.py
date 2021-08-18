@@ -380,8 +380,10 @@ class QAT_Quantizer(Quantizer):
             layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bits', torch.zeros(1))
+            if "input" in config.get("quant_types", []):
                 layer.module.register_buffer('tracked_min_input', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_input', torch.zeros(1))
+                layer.module.register_buffer('input_bits', torch.zeros(1))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('output_bits', torch.zeros(1))
                 layer.module.register_buffer('tracked_min_output', torch.zeros(1))
@@ -394,7 +396,7 @@ class QAT_Quantizer(Quantizer):
         """
         del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_output', 'tracked_max_output',
                          'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bits',
-                         'output_bits', 'BN_FOLD_TAG']
+                         'output_bits', 'BN_FOLD_TAG', 'input_bits']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -409,8 +411,9 @@ class QAT_Quantizer(Quantizer):
             List of configurations
         """
         schema = QuantizerSchema([{
-            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
+            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
+                Optional('input'): And(int, lambda n: 0 < n < 32),
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
@@ -479,17 +482,10 @@ class QAT_Quantizer(Quantizer):
 
         # we dont update weight in evaluation stage
         if quant_start_step > self.bound_model.steps:
-            module.tracked_min_input, module.tracked_max_input = torch.min(input), torch.max(input)
             return weight
 
         if not wrapper.training:
             return weight
-
-        current_min, current_max = torch.min(input), torch.max(input)
-        module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
-                                                                    module.ema_decay)
-        module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
-                                                                    module.ema_decay)
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -499,6 +495,31 @@ class QAT_Quantizer(Quantizer):
         module.weight_bits = torch.Tensor([weight_bits])
         wrapper.module.weight = weight
         return weight
+
+    def quantize_input(self, inputs, wrapper, **kwargs):
+        config = wrapper.config
+        module = wrapper.module
+        input_bits = get_bits_length(config, 'input')
+        module.input_bit = torch.Tensor([input_bits])
+        quant_start_step = config.get('quant_start_step', 0)
+        assert input_bits >= 1, "quant bits length should be at least 1"
+
+        if quant_start_step > self.bound_model.steps:
+            module.tracked_min_input, module.tracked_max_input = torch.min(inputs), torch.max(inputs)
+            return inputs
+
+        # we dont update output quantization parameters in evaluation stage
+        if wrapper.training:
+            current_min, current_max = torch.min(inputs), torch.max(inputs)
+            module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
+                                                                       module.ema_decay)
+            module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
+                                                                       module.ema_decay)
+        module.scale, module.zero_point = update_quantization_param(
+            input_bits, module.tracked_min_input, module.tracked_max_input)
+        inp = self._quantize(input_bits, module, inputs)
+        inp = self._dequantize(module, inp)
+        return inp
 
     def quantize_output(self, output, wrapper, **kwargs):
         config = wrapper.config
@@ -519,8 +540,9 @@ class QAT_Quantizer(Quantizer):
                                                                        module.ema_decay)
             module.tracked_max_output = update_ema(module.tracked_max_output, current_max,
                                                                        module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(
-                output_bits, module.tracked_min_output, module.tracked_max_output)
+        module.scale, module.zero_point = update_quantization_param(
+            output_bits, module.tracked_min_output, module.tracked_max_output)
+
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -556,8 +578,6 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name] = {}
             if hasattr(module, 'weight_bits'):
                 calibration_config[name]['weight_bits'] = int(module.weight_bits)
-                calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
-                calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
                 # Recover weight/bias for batch normalization folding
                 actual_weight = getattr(module, 'old_weight', None)
@@ -573,6 +593,10 @@ class QAT_Quantizer(Quantizer):
                         module.register_parameter('bias', actual_bias)
                     else:
                         setattr(module, 'bias', None)
+            if hasattr(module, 'input_bit'):
+                calibration_config[name]['input_bits'] = int(module.input_bit)
+                calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
+                calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
             if hasattr(module, 'output_bits'):
                 calibration_config[name]['output_bits'] = int(module.output_bits)
