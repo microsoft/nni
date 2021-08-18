@@ -262,6 +262,8 @@ def unsqueeze_python(node, speedup):
     new_unsqueeze = partial(torch.unsqueeze, dim=dim)
     return new_unsqueeze
 
+
+
 ##########################################################
 # Split Line
 # Following module/functions cannot be translated into a
@@ -611,6 +613,23 @@ def rsub_python(node, speedup):
         new_sub = partial(torch.sub, other=constant, alpha=alpha)
         return new_sub
 
+def expand_python(node, speedup):
+    class ExpandModule(torch.nn.Module):
+        def __init__(self, new_size):
+            super(ExpandModule, self).__init__()
+            # need deepcopy when the input is size-related
+            self.new_size = copy.deepcopy(new_size)
+
+        def forward(self, *args):
+            # import pdb; pdb.set_trace()
+            return args[0].expand(self.new_size).clone()
+
+    c_node = node.key_node
+    inputs = list(c_node.inputs())
+    new_size = translate_list(inputs[1], speedup)
+    return ExpandModule(new_size)
+
+
 trans_from_jit_to_python = {
     'aten::add': add_python,
     'aten::add_': add_python,
@@ -654,6 +673,7 @@ trans_from_jit_to_python = {
     'aten::ones': ones_python,
     'aten::zeros': zeros_python,
     'aten::rsub': rsub_python,
+    'aten::expand': expand_python,
     'prim::TupleUnpack': tupleunpack_python,
     'prim::ListUnpack': tupleunpack_python,
     'prim::NumToTensor': num2tensor_python,
