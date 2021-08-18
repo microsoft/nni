@@ -120,7 +120,7 @@ class DistMetricsCalculator(MetricsCalculator):
 
             metric = torch.ones(*reorder_tensor.size()[:len(keeped_dim)], device=reorder_tensor.device)
             across_dim = list(range(len(keeped_dim), len(reorder_dim)))
-            idxs = metric.nonzero()
+            idxs = metric.nonzero(as_tuple=False)
             for idx in idxs:
                 other = reorder_tensor
                 for i in idx:
