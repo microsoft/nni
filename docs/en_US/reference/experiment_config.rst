@@ -926,17 +926,6 @@ Azure storage account key.
 
 type: ``Optional[str]``
 
-When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
-
-
-resourceGroupName
-"""""""""""""""""
-
-Resource group that AzureBlob container belongs to.
-
-type: ``Optional[str]``
-
-Required if ``storageAccountKey`` not set.
 
 containerName
 """""""""""""

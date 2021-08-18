@@ -58,6 +58,7 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
+    virtualCluster?: string;
 }
 
 /* AML */
@@ -147,7 +148,6 @@ export interface NfsConfig extends SharedStorageConfig {
 export interface AzureBlobConfig extends SharedStorageConfig {
     storageAccountName: string;
     storageAccountKey?: string;
-    resourceGroupName?: string;
     containerName: string;
 }
 
@@ -198,7 +198,7 @@ export function toSeconds(time: string): number {
     throw new Error(`Bad time string "${time}"`);
 }
 
-const sizeUnits = { tb: 1024 * 1024, gb: 1024 * 1024, mb: 1, kb: 1 / 1024 };
+const sizeUnits = { tb: 1024 * 1024, gb: 1024, mb: 1, kb: 1 / 1024 };
 
 export function toMegaBytes(size: string): number {
     for (const [unit, factor] of Object.entries(sizeUnits)) {
