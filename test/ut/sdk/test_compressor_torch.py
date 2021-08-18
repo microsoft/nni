@@ -265,23 +265,6 @@ class CompressorTestCase(TestCase):
         assert all(torch.sum(mask1['weight_mask'], (1, 2, 3)).numpy() == np.array([0., 0., 0, 0., 25.]))
         assert all(torch.sum(mask2['weight_mask'], (1, 2, 3)).numpy() == np.array([125., 125., 125., 125., 125., 125., 125., 0., 0., 0.]))
 
-    def test_torch_quantizer_interface(self):
-        # test quantize_weight
-        quantizers = [torch_quantizer.DoReFaQuantizer, torch_quantizer.BNNQuantizer]
-        for quantizer in quantizers:
-            model = TorchModel()
-            config_list = [{
-                'quant_types': ['weight'],
-                'quant_bits': 8,
-                'op_types': ['Conv2d', 'Linear']
-            }]
-            quantizer = quantizer(model, config_list)
-            quantizer.compress()
-            weight = torch.tensor([[1, 2], [3, 5]]).float()
-            # test interface
-            quantizer.quantize_weight(weight, model.conv2)
-
-
     def test_torch_observer_quantizer(self):
         model = TorchModel()
         # test invalid config
@@ -346,13 +329,13 @@ class CompressorTestCase(TestCase):
         input = torch.tensor([[0, 4], [2, 1]]).float()
         weight = torch.tensor([[1, 2], [3, 5]]).float()
         model.conv2.module.old_weight.data = weight
-        quantizer.quantize_weight(weight, model.conv2, input_tensor=input)
+        quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         model.conv2.module.old_weight.data = weight
-        quantizer.quantize_weight(weight, model.conv2, input_tensor=input)
+        quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
         # test value of weight and bias after quantization
@@ -362,7 +345,7 @@ class CompressorTestCase(TestCase):
         bias_valid = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
         model.conv2.module.old_weight.data = weight
         model.conv2.module.bias.data = bias
-        quantizer.quantize_weight(weight, model.conv2, input_tensor=input)
+        quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert torch.all(torch.isclose(model.conv2.module.weight.data, weight_valid, rtol=1e-4))
         assert torch.all(torch.isclose(model.conv2.module.bias.data, bias_valid, rtol=1e-7))
 

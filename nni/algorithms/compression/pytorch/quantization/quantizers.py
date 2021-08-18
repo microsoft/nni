@@ -34,7 +34,8 @@ class NaiveQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
+        weight = wrapper.module.weight
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
         self.layer_scale[wrapper.name] = scale
@@ -211,12 +212,12 @@ class ObserverQuantizer(Quantizer):
             self.record(wrapper, 'input', inputs)
         return inputs
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         # If ObserverQuantizer.compress is executed, the weight will be set to
         # the Pseudo-quantized one. So there is no need to quantize it
         if self.compressed:
             return
-
+        weight = wrapper.module.weight
         self.record(wrapper, 'weight', weight)
 
     def quantize_output(self, output, wrapper, **kwargs):
@@ -467,9 +468,10 @@ class QAT_Quantizer(Quantizer):
         real_val = op.scale * (quantized_val - op.zero_point)
         return real_val
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
+        weight = module.weight
         input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
@@ -670,7 +672,8 @@ class DoReFaQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
+        weight = wrapper.module.old_weight
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
         weight = weight / (2 * weight.abs().max()) + 0.5
@@ -779,7 +782,8 @@ class BNNQuantizer(Quantizer):
 
         schema.validate(config_list)
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
+        weight = wrapper.module.old_weight
         weight = torch.sign(weight)
         # remove zeros
         weight[weight == 0] = 1
@@ -936,8 +940,9 @@ class LsqQuantizer(Quantizer):
         x = x * scale
         return x
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         module = wrapper.module
+        weight = wrapper.module.weight
 
         # todo: add support for quantize bias. If we use TensorRT as backend, there is no need to quantize
         # bias

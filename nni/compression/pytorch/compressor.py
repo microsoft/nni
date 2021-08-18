@@ -618,14 +618,12 @@ class Quantizer(Compressor):
                 if hasattr(wrapper.module, "old_bias"):
                     self.optimizer.add_param_group({"params": getattr(wrapper.module, "old_bias")})
 
-    def quantize_weight(self, weight, wrapper, **kwargs):
+    def quantize_weight(self, wrapper, **kwargs):
         """
         quantize should overload this method to quantize weight.
         This method is effectively hooked to :meth:`forward` of the model.
         Parameters
         ----------
-        weight : Tensor
-            weight of module that needs to be quantized
         wrapper : QuantizerModuleWrapper
             the wrapper for origin module
         """
@@ -918,7 +916,7 @@ def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
     if quant_type == QuantType.QUANT_INPUT:
         output = wrapper.quantizer.quantize_input(tensor, wrapper=wrapper, **kwargs)
     elif quant_type == QuantType.QUANT_WEIGHT:
-        output = wrapper.quantizer.quantize_weight(tensor, wrapper, input_tensor=input_tensor, **kwargs)
+        output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
     elif quant_type == QuantType.QUANT_OUTPUT:
         output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
     else:
