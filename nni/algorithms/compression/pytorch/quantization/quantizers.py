@@ -673,7 +673,7 @@ class DoReFaQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = wrapper.module.old_weight
+        weight = wrapper.module.weight
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
         weight = weight / (2 * weight.abs().max()) + 0.5
@@ -783,7 +783,7 @@ class BNNQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = wrapper.module.old_weight
+        weight = wrapper.module.weight
         weight = torch.sign(weight)
         # remove zeros
         weight[weight == 0] = 1
