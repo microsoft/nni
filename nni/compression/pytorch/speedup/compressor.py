@@ -399,12 +399,18 @@ class ModelSpeedup:
                 _logger.warning(
                     'Meet errors when try to run the forward inference after module replacement: %s', str(err))
             if need_replace_forward:
+                # import pdb; pdb.set_trace()
                 _logger.info('Replace the function of the model')
                 for unique_name in self.auto_inferences:
                     self.replace_function(unique_name)
-                # import pdb; pdb.set_trace()
-                _new_forward_implementation = translate_jit_code(
-                    self.torch_graph.trace.code)
+                code = self.torch_graph.trace.code
+                constants = self.torch_graph.trace.code_with_constants[1].const_mapping
+                for constant_name in constants:
+                    _name = 'CONSTANTS.' + constant_name
+                    # print(_name)
+                    code = code.replace(_name, str(constants[constant_name]))
+
+                _new_forward_implementation = translate_jit_code(code)
                 setattr(self.bound_model, 'forward', types.MethodType(
                     _new_forward_implementation, self.bound_model))
 

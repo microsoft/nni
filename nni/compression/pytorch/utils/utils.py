@@ -133,7 +133,7 @@ def translate_jit_code(code):
             if fname in line:
                 lines[i] = jit_python_code_replacement[fname](line)
     code = '\n'.join(lines)
-    code = 'import torch\nfrom torch import Tensor\nfrom typing import *\n' + code
+    code = 'import torch\nfrom torch import Tensor, tensor\nfrom typing import *\n' + code
     with open('nni_jit_tmp_forward.py', 'w') as f:
         f.write(code)
     from nni_jit_tmp_forward import forward
@@ -156,17 +156,17 @@ def python_slice_replace(funcstr):
         the string that should replace the original one
     """
     # parse the input parameters
-    pattern = '\((.*)\)'
+    pattern = 'torch\.slice\((.*)\)'
     # import pdb; pdb.set_trace()
     parameter_str = re.findall(pattern, funcstr)
     parameters = re.split(',', parameter_str[0])
     target_tensor = parameters[0]
     dim = int(parameters[1])
-    dim_str = ','.join([':']*(dim-1) + [':'.join(parameters[2:])])
+    dim_str = ','.join([':']*(dim) + [':'.join(parameters[2:])])
 
     print('%s[%s]' % (target_tensor, dim_str))
     new_str = funcstr.replace(
-        parameter_str[0], '%s[%s]' % (target_tensor, dim_str))
+        'torch.slice(%s)' % parameter_str[0], '%s[%s]' % (target_tensor, dim_str))
     # import pdb
     # pdb.set_trace()
     return new_str
