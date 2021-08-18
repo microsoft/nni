@@ -40,7 +40,7 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                 op_names = config.get('op_names', [])
                 min_retention_numel = {}
                 for op_name in op_names:
-                    total_element_num = get_module_by_name(model, op_name)[0].weight.numel()
+                    total_element_num = get_module_by_name(model, op_name)[1].weight.numel()
                     min_retention_numel[op_name] = math.floor(total_element_num * min_retention_per_layer)
                 config['_min_retention_numel'] = min_retention_numel
             config['_sparsity'] = config.pop('total_sparsity')

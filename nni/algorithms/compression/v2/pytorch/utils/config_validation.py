@@ -10,7 +10,7 @@ from torch.nn import Module
 
 class CompressorSchema:
     def __init__(self, data_schema: List[Dict], model: Module, logger: Logger):
-        assert isinstance(data_schema, list) and len(data_schema) <= 1
+        assert isinstance(data_schema, list)
         self.data_schema = data_schema
         self.compressor_schema = Schema(self._modify_schema(data_schema, model, logger))
 
