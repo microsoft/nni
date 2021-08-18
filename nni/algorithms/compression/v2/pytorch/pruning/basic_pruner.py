@@ -53,13 +53,20 @@ NORMAL_SCHEMA = {
 
 GLOBAL_SCHEMA = {
     'total_sparsity': And(float, lambda n: 0 <= n < 1),
-    'max_sparsity_per_layer': And(float, lambda n: 0 < n <= 1),
+    SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n <= 1),
     SchemaOptional('op_types'): [str],
     SchemaOptional('op_names'): [str]
 }
 
 EXCLUDE_SCHEMA = {
     'exclude': bool,
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
+INTERNAL_SCHEMA = {
+    '_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('_min_retention_numel'): {str: int},
     SchemaOptional('op_types'): [str],
     SchemaOptional('op_names'): [str]
 }
@@ -132,7 +139,8 @@ class LevelPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
-        schema = CompressorSchema([deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA)], model, _logger)
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
 
     def reset_tools(self):
@@ -182,11 +190,10 @@ class NormPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
-        normal_schema = deepcopy(NORMAL_SCHEMA)
-        normal_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        exclude_schema = deepcopy(EXCLUDE_SCHEMA)
-        exclude_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        schema = CompressorSchema([normal_schema, exclude_schema], model, _logger)
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -301,11 +308,10 @@ class FPGMPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
-        normal_schema = deepcopy(NORMAL_SCHEMA)
-        normal_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        exclude_schema = deepcopy(EXCLUDE_SCHEMA)
-        exclude_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        schema = CompressorSchema([normal_schema, exclude_schema], model, _logger)
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -385,14 +391,14 @@ class SlimPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
         if self.mode == 'global':
-            normal_schema = deepcopy(GLOBAL_SCHEMA)
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
         else:
-            normal_schema = deepcopy(NORMAL_SCHEMA)
-        normal_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        exclude_schema = deepcopy(EXCLUDE_SCHEMA)
-        exclude_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        schema = CompressorSchema([normal_schema, exclude_schema], model, _logger)
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['BatchNorm2d']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -486,11 +492,10 @@ class ActivationPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
-        normal_schema = deepcopy(NORMAL_SCHEMA)
-        normal_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        exclude_schema = deepcopy(EXCLUDE_SCHEMA)
-        exclude_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        schema = CompressorSchema([normal_schema, exclude_schema], model, _logger)
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -611,14 +616,14 @@ class TaylorFOWeightPruner(OneShotPruner):
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
         if self.mode == 'global':
-            normal_schema = deepcopy(GLOBAL_SCHEMA)
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
         else:
-            normal_schema = deepcopy(NORMAL_SCHEMA)
-        normal_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        exclude_schema = deepcopy(EXCLUDE_SCHEMA)
-        exclude_schema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
-        schema = CompressorSchema([normal_schema, exclude_schema], model, _logger)
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
