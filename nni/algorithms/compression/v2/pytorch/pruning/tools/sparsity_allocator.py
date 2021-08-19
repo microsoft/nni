@@ -27,8 +27,9 @@ class NormalSparsityAllocator(SparsityAllocator):
             metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
-                continue
-            threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
+                threshold = metric.min() - 1
+            else:
+                threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
             mask = torch.gt(metric, threshold).type_as(metric)
             masks[name] = self._expand_mask(name, mask)
         return masks
@@ -59,24 +60,27 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         temp_wrapper_config = self.pruner.get_modules_wrapper()[list(group_metric_dict.keys())[0]].config
         total_sparsity = temp_wrapper_config['_sparsity']
-        min_retention_numel = temp_wrapper_config.get('min_retention_numel', {})
+        min_retention_numel = temp_wrapper_config.get('_min_retention_numel', {})
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
             metric = metric * self._compress_mask(wrapper.weight_mask)
             layer_weight_num = wrapper.module.weight.data.numel()
+            total_weight_num += layer_weight_num
+            expend_times = int(layer_weight_num / metric.numel())
 
             retention_numel = 0 if name not in min_retention_numel else min_retention_numel[name]
-            removed_metric_num = math.floor(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
+            removed_metric_num = math.ceil(retention_numel / expend_times)
             stay_metric_num = metric.numel() - removed_metric_num
+            if stay_metric_num <= 0:
+                sub_thresholds[name] = metric.min().item() - 1
+                continue
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
-            expend_times = int(layer_weight_num / metric.numel())
             if expend_times > 1:
                 stay_metric = stay_metric.expand(stay_metric_num, int(layer_weight_num / metric.numel())).view(-1)
             metric_list.append(stay_metric)
-            total_weight_num += layer_weight_num
 
         total_prune_num = int(total_sparsity * total_weight_num)
         if total_prune_num == 0:
