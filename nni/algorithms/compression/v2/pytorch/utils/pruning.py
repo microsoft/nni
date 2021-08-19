@@ -5,6 +5,8 @@ from copy import deepcopy
 import math
 from typing import Dict, List
 
+import torch
+from torch import Tensor
 from torch.nn import Module
 
 from nni.compression.pytorch.utils import get_module_by_name
@@ -88,3 +90,85 @@ def dedupe_config_list(config_list: List[Dict]) -> List[Dict]:
     for idx in sorted(exclude_idxes, reverse=True):
         config_list.pop(idx)
     return config_list
+
+
+def compute_sparsity_with_compact_model(origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
+    real_config_list = []
+    for config in config_list:
+        left_weight_num = 0
+        total_weight_num = 0
+        for module_name, module in origin_model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            total_weight_num += module.weight.data.numel()
+        for module_name, module in compact_model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            left_weight_num += module.weight.data.numel()
+        real_config_list.append(deepcopy(config))
+        real_config_list[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
+    return real_config_list
+
+
+def compute_sparsity_with_masks(masked_model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
+    real_config_list = []
+    for config in config_list:
+        left_weight_num = 0
+        total_weight_num = 0
+        for module_name, module in masked_model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            module_weight_num = module.weight.data.numel()
+            total_weight_num += module_weight_num
+            if module_name in masks:
+                weight_mask = masks[module_name]['weight_mask']
+                left_weight_num += len(torch.nonzero(weight_mask, as_tuple=False))
+            else:
+                left_weight_num += module_weight_num
+        real_config_list.append(deepcopy(config))
+        real_config_list[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
+    return real_config_list
+
+
+def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[str, Dict[str, Tensor]],
+                     config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
+    model_based_sparsity = compute_sparsity_with_compact_model(origin_model, compact_model, config_list)
+    masks_based_sparsity = compute_sparsity_with_masks(compact_model, masks, config_list)
+    assert len(model_based_sparsity) == len(masks_based_sparsity), 'Length mismatch.'
+    real_config_list = []
+    for mo_sparsity, ms_sparsity, config in zip(model_based_sparsity, masks_based_sparsity, config_list):
+        real_config_list.append(deepcopy(config))
+        real_config_list[-1]['total_sparsity'] = 1 - (1 - mo_sparsity['total_sparsity']) * (1 - ms_sparsity['total_sparsity'])
+    return real_config_list, model_based_sparsity, masks_based_sparsity
+
+
+def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}) -> Dict:
+    """
+    Count the layer weight elements number in config_list.
+    If masks is not empty, the masked weight will not be counted.
+    """
+    model_weights_numel = {}
+    masked_rate = {}
+    for config in config_list:
+        for module_name, module in model.named_modules():
+            module_type = type(module).__name__
+            if 'op_types' in config and module_type not in config['op_types']:
+                continue
+            if 'op_names' in config and module_name not in config['op_names']:
+                continue
+            if module_name in masks and isinstance(masks[module_name]['weight_mask'], Tensor):
+                weight_mask = masks[module_name]['weight_mask']
+                masked_rate[module_name] = 1 - (weight_mask.sum().item() / weight_mask.numel())
+                model_weights_numel[module_name] = round(weight_mask.sum().item())
+            else:
+                model_weights_numel[module_name] = module.weight.data.numel()
+    return model_weights_numel, masked_rate
