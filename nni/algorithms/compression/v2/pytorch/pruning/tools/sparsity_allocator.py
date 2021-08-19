@@ -21,7 +21,7 @@ class NormalSparsityAllocator(SparsityAllocator):
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
         masks = {}
         for name, wrapper in self.pruner.get_modules_wrapper().items():
-            sparsity_rate = wrapper.config['_sparsity']
+            sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
             metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
@@ -58,16 +58,17 @@ class GlobalSparsityAllocator(SparsityAllocator):
         total_weight_num = 0
 
         temp_wrapper_config = self.pruner.get_modules_wrapper()[list(group_metric_dict.keys())[0]].config
-        total_sparsity = temp_wrapper_config['_sparsity']
-        min_retention_numel = temp_wrapper_config.get('min_retention_numel', {})
+        total_sparsity = temp_wrapper_config['total_sparsity']
+        max_sparsity_per_layer = temp_wrapper_config.get('max_sparsity_per_layer', {})
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
             metric = metric * self._compress_mask(wrapper.weight_mask)
             layer_weight_num = wrapper.module.weight.data.numel()
 
-            retention_numel = 0 if name not in min_retention_numel else min_retention_numel[name]
-            removed_metric_num = math.floor(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
+            retention_ratio = 1 - max_sparsity_per_layer.get(name, 1)
+            retention_numel = math.ceil(retention_ratio * layer_weight_num)
+            removed_metric_num = math.ceil(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
             stay_metric_num = metric.numel() - removed_metric_num
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
@@ -112,7 +113,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for _, group_metric_dict in grouped_metrics.items():
             group_metric = self._group_metric_calculate(group_metric_dict)
 
-            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['_sparsity'] for name in group_metric_dict.keys()}
+            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
             min_sparsity = min(sparsities.values())
 
             conv2d_groups = [self.group_depen[name] for name in group_metric_dict.keys()]
