@@ -5,16 +5,19 @@ import copy
 from typing import Dict, Tuple, Any, Union
 
 from nni.retiarii.utils import uid
-from nni.common.device import GPUDevice
+from nni.common.device import Device
 
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
 
 
-class CPUDevice:
+class CPUDevice(Device):
     def __init__(self, node_id):
         self.node_id = node_id
         self.device = 'cpu'
+
+    def __repr__(self) -> str:
+        return "{CPU Device, NodeID %s, Status %s}" % (self.node_id, self.status)
 
     def device_repr(self):
         return "cpu"
@@ -25,7 +28,7 @@ class AbstractLogicalNode(Node):
         super().__init__(graph, node_id, name, operation, _internal=_internal)
         self.related_models = []
 
-    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, Device]) -> Tuple[Node, Device]:
         raise NotImplementedError
 
     def _fork_to(self, graph: Graph):
@@ -92,7 +95,7 @@ class OriginNode(AbstractLogicalNode):
         self.original_graph = original_graph
         self.original_node = original_node
 
-    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) -> Tuple[Node, GPUDevice]:
+    def assemble(self, multi_model_placement: Dict[Model, Device]) -> Tuple[Node, Device]:
         model_id = self.original_node.graph.model.model_id
         new_node = Node(self.original_node.graph, self.original_node.id,
                         f"M_{model_id}_" +
@@ -138,8 +141,8 @@ class LogicalPlan:
             new_tail = id_to_new_node[edge.tail.id]
             Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
 
-    def assemble(self, multi_model_placement: Dict[Model, GPUDevice]) \
-            -> Tuple[Model, Dict[Node, Union[GPUDevice, CPUDevice]]]:
+    def assemble(self, multi_model_placement: Dict[Model, Device]) \
+            -> Tuple[Model, Dict[Node, Device]]:
         phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
         phy_graph._rename_graph(phy_graph.name, "_model")
@@ -224,7 +227,7 @@ class LogicalPlan:
         # If two nodes are placed on different devices, use ToDevice op to copy the node
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
-        copied_op: Dict[Tuple(Node, Union[GPUDevice, CPUDevice]), Node] = {}
+        copied_op: Dict[Tuple(Node, Device), Node] = {}
         for edge in existing_edges:
             head_placement = node_placements[edge.head]
             tail_placement = node_placements[edge.tail]
@@ -238,11 +241,12 @@ class LogicalPlan:
                     dst_name = edge.head.name + "_to_" + edge.tail.name
                     to_operation = Operation.new(
                         'ToDevice', {
-                            "device": tail_placement.device_repr(), "src": (
+                            "device": tail_placement, "src": (
                                 edge.head.name, edge.head_slot), "dst": dst_name})
                     to_node = Node(phy_graph, uid(), dst_name, to_operation)._register()
                     Edge((edge.head, edge.head_slot), (to_node, None), _internal=True)._register()
                     copied_op[(edge.head, tail_placement)] = to_node
+                    node_placements[to_node] = head_placement
                 edge.head = to_node
                 edge.head_slot = None
 

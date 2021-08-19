@@ -494,14 +494,25 @@ class ToDevice(PyTorchOperation):
     def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
         self.type = "ToDevice"
         self.device = parameters['device']
+        self.overridden_device_repr = None
         self.src = parameters['src']
         self.dst = parameters['dst']
 
+    def overide_device_repr(self, device_repr):
+        self.overridden_device_repr = device_repr
+
     def __repr__(self):
-        return f'to("{self.device}")'
+        if self.overridden_device_repr == None:
+            return f'to("{self.device.device_repr()}")'
+        else:
+            return f'to("{self.overridden_device_repr}")'
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
-        return f'{output} = {inputs[0]}.to("{self.device}")'
+        if self.overridden_device_repr == None:
+            forward_code = f'{output} = {inputs[0]}.to("{self.device.device_repr()}")'
+        else:
+            forward_code = f'{output} = {inputs[0]}.to("{self.overridden_device_repr}")'
+        return forward_code
 class AtenDet(PyTorchOperation):
     # for torch 1.9
     # NOTE: it is not included in the above aten ops, maybe because torch.det is alias for torch.linalg.det
