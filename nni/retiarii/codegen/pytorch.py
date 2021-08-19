@@ -130,7 +130,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     for node in nodes:
         if node.operation:
             if isinstance(node.operation, ToDevice):
-                node.operation.overide_device_repr("cuda:%d" % cuda_remapped_id[node.operation.device])
+                node.operation.override_device_repr("cuda:%d" % cuda_remapped_id[node.operation.device])
 
             if node.operation.type == 'shared':
                 continue

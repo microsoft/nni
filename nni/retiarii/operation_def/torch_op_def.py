@@ -498,7 +498,7 @@ class ToDevice(PyTorchOperation):
         self.src = parameters['src']
         self.dst = parameters['dst']
 
-    def overide_device_repr(self, device_repr):
+    def override_device_repr(self, device_repr):
         self.overridden_device_repr = device_repr
 
     def __repr__(self):
