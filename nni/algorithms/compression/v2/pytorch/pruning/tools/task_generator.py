@@ -21,7 +21,6 @@ class ConsistentTaskGenerator(TaskGenerator):
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.'):
         self.current_iteration = 0
         self.target_sparsity = dedupe_config_list(unfold_config_list(origin_model, origin_config_list))
-        assert all('sparsity' in config for config in self.target_sparsity), 'Sparsity is needed in AGP, please specify sparsity for each config.'
         self.total_iteration = total_iteration
 
         super().__init__(origin_model, origin_config_list=origin_config_list, origin_masks=origin_masks,
@@ -37,7 +36,7 @@ class ConsistentTaskGenerator(TaskGenerator):
         _logger.info('Task %s total real sparsity compared with original model is:\n%s', str(received_task_id), json_tricks.dumps(real_sparsity, indent=4))
 
         # if reach the total_iteration, no more task will be generated
-        if self.current_iteration > self.total_iteration:
+        if self.current_iteration >= self.total_iteration:
             return []
         config_list = self._generate_config_list(self.target_sparsity, self.current_iteration, mo_sparsity)
 
@@ -61,11 +60,11 @@ class AGPTaskGenerator(ConsistentTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['sparsity']
-            sparsity = max(0.0, (ori_sparsity - mo['sparsity']) / (1 - mo['sparsity']))
-            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['sparsity'])
+            ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['_sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['_sparsity']) / (1 - mo['_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['_sparsity'])
             config_list.append(deepcopy(target))
-            config_list[-1]['sparsity'] = sparsity
+            config_list[-1]['_sparsity'] = sparsity
         return config_list
 
 
@@ -73,9 +72,9 @@ class LinearTaskGenerator(ConsistentTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            ori_sparsity = iteration / self.total_iteration * target['sparsity']
-            sparsity = max(0.0, (ori_sparsity - mo['sparsity']) / (1 - mo['sparsity']))
-            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['sparsity'])
+            ori_sparsity = iteration / self.total_iteration * target['_sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['_sparsity']) / (1 - mo['_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['_sparsity'])
             config_list.append(deepcopy(target))
-            config_list[-1]['sparsity'] = sparsity
+            config_list[-1]['_sparsity'] = sparsity
         return config_list
