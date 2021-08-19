@@ -92,8 +92,8 @@ def dedupe_config_list(config_list: List[Dict]) -> List[Dict]:
     return config_list
 
 
-def compute_sparsity_with_compact_model(origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
-    real_config_list = []
+def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
+    compact2origin_sparsity = []
     for config in config_list:
         left_weight_num = 0
         total_weight_num = 0
@@ -111,13 +111,13 @@ def compute_sparsity_with_compact_model(origin_model: Module, compact_model: Mod
             if 'op_names' in config and module_name not in config['op_names']:
                 continue
             left_weight_num += module.weight.data.numel()
-        real_config_list.append(deepcopy(config))
-        real_config_list[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
-    return real_config_list
+        compact2origin_sparsity.append(deepcopy(config))
+        compact2origin_sparsity[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
+    return compact2origin_sparsity
 
 
-def compute_sparsity_with_masks(masked_model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
-    real_config_list = []
+def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
+    mask2compact_sparsity = []
     for config in config_list:
         left_weight_num = 0
         total_weight_num = 0
@@ -134,21 +134,21 @@ def compute_sparsity_with_masks(masked_model: Module, masks: Dict[str, Dict[str,
                 left_weight_num += len(torch.nonzero(weight_mask, as_tuple=False))
             else:
                 left_weight_num += module_weight_num
-        real_config_list.append(deepcopy(config))
-        real_config_list[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
-    return real_config_list
+        mask2compact_sparsity.append(deepcopy(config))
+        mask2compact_sparsity[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
+    return mask2compact_sparsity
 
 
 def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[str, Dict[str, Tensor]],
                      config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
-    model_based_sparsity = compute_sparsity_with_compact_model(origin_model, compact_model, config_list)
-    masks_based_sparsity = compute_sparsity_with_masks(compact_model, masks, config_list)
-    assert len(model_based_sparsity) == len(masks_based_sparsity), 'Length mismatch.'
-    real_config_list = []
-    for mo_sparsity, ms_sparsity, config in zip(model_based_sparsity, masks_based_sparsity, config_list):
-        real_config_list.append(deepcopy(config))
-        real_config_list[-1]['_sparsity'] = 1 - (1 - mo_sparsity['_sparsity']) * (1 - ms_sparsity['_sparsity'])
-    return real_config_list, model_based_sparsity, masks_based_sparsity
+    compact2origin_sparsity = compute_sparsity_mask2compact(origin_model, compact_model, config_list)
+    mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, masks, config_list)
+    assert len(compact2origin_sparsity) == len(mask2compact_sparsity), 'Length mismatch.'
+    current2origin_sparsity = []
+    for mo_sparsity, ms_sparsity, config in zip(compact2origin_sparsity, mask2compact_sparsity, config_list):
+        current2origin_sparsity.append(deepcopy(config))
+        current2origin_sparsity[-1]['_sparsity'] = 1 - (1 - mo_sparsity['_sparsity']) * (1 - ms_sparsity['_sparsity'])
+    return current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity
 
 
 def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}) -> Dict:
