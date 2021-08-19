@@ -2,9 +2,10 @@
 # Licensed under the MIT license.
 
 import logging
+from typing import Dict, List, Tuple, Any
+
 from nni.retiarii.operation_def.torch_op_def import ToDevice
 from nni.common.device import Device, GPUDevice
-from typing import Dict, List, Tuple, Any
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
@@ -109,7 +110,7 @@ def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:
     unique_devices = sorted(list(set([e for e in placement.values() if isinstance(e, GPUDevice)])))
     node_gpu_cnt = {}
     cuda_remapped_id = {}
-    for idx, d in enumerate(unique_devices):
+    for d in unique_devices:
         if d.node_id not in node_gpu_cnt:
             node_gpu_cnt[d.node_id] = 0
         node_gpu_cnt[d.node_id] += 1
