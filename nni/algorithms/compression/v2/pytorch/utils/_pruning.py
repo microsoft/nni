@@ -86,7 +86,7 @@ def compute_sparsity_with_compact_model(origin_model: Module, compact_model: Mod
                 continue
             left_weight_num += module.weight.data.numel()
         real_config_list.append(deepcopy(config))
-        real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
+        real_config_list[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
     return real_config_list
 
 
@@ -109,7 +109,7 @@ def compute_sparsity_with_masks(masked_model: Module, masks: Dict[str, Dict[str,
             else:
                 left_weight_num += module_weight_num
         real_config_list.append(deepcopy(config))
-        real_config_list[-1]['sparsity'] = 1 - left_weight_num / total_weight_num
+        real_config_list[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
     return real_config_list
 
 
@@ -121,7 +121,7 @@ def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[st
     real_config_list = []
     for mo_sparsity, ms_sparsity, config in zip(model_based_sparsity, masks_based_sparsity, config_list):
         real_config_list.append(deepcopy(config))
-        real_config_list[-1]['sparsity'] = 1 - (1 - mo_sparsity['sparsity']) * (1 - ms_sparsity['sparsity'])
+        real_config_list[-1]['total_sparsity'] = 1 - (1 - mo_sparsity['total_sparsity']) * (1 - ms_sparsity['total_sparsity'])
     return real_config_list, model_based_sparsity, masks_based_sparsity
 
 
