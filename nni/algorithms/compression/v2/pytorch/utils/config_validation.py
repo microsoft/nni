@@ -27,7 +27,7 @@ class CompressorSchema:
                     new_schema = And(old_schema, lambda n: validate_op_names(model, n, logger))
                     sub_schema[k] = new_schema
 
-            sub_schema = And(data_schema[0], lambda d: validate_op_types_op_names(d))
+            sub_schema = And(sub_schema, lambda d: validate_op_types_op_names(d))
 
         return data_schema
 
