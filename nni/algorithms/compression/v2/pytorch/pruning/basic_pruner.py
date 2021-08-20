@@ -65,8 +65,8 @@ EXCLUDE_SCHEMA = {
 }
 
 INTERNAL_SCHEMA = {
-    '_sparsity': And(float, lambda n: 0 <= n < 1),
-    SchemaOptional('_min_retention_numel'): {str: int},
+    'total_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('max_sparsity_per_layer'): {str: float},
     SchemaOptional('op_types'): [str],
     SchemaOptional('op_names'): [str]
 }
