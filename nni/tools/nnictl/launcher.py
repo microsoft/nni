@@ -421,6 +421,18 @@ def launch_experiment(args, experiment_config, mode, experiment_id, config_versi
         else:
             experiment_config['searchSpace'] = ''
 
+    # Only for BOHB: The search space may contain the path to another search space file in
+    # ConfigSpace format by defining the parameter 'ConfigSpace' as a 'choice' parameter
+    # with '_value' being the path to the configuration file. If the path is relative, we
+    # need to expand it
+    if experiment_config.get('advisor') and experiment_config['advisor'].get('name') == 'BOHB' and 'ConfigSpace' in experiment_config['searchSpace'].keys():
+        print_normal("BOHB detected with ConfigSpace search space file path. Adapting search space path to an absolute path, if necessary.")
+        search_space = experiment_config['searchSpace']
+        trialCodeDirectory = experiment_config['trialCodeDirectory']
+        configSpaceFilePath = search_space['ConfigSpace']['_value'][0]
+        if not os.path.isabs(configSpaceFilePath):
+            search_space['ConfigSpace']['_value'][0] = os.path.join(trialCodeDirectory,configSpaceFilePath)
+
     # check rest server
     running, _ = check_rest_server(args.port)
     if running:
