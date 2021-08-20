@@ -5,7 +5,7 @@ trialCodeDirectory: ../../../examples/trials/mnist-tfv2
 trialGpuNumber: 0
 trialConcurrency: 2
 maxExperimentDuration: 15m
-maxTrialNumber: 4
+maxTrialNumber: 2
 tuner:
   name: Random
 trainingService:
