@@ -79,7 +79,7 @@ class DependencyawareTest(TestCase):
                 print('Testing on ', pruner)
                 ori_filters = {}
                 Model = getattr(models, model_name)
-                net = Model(pretrained=True, progress=False)
+                net = Model(pretrained=False, progress=False)
                 # record the number of the filter of each conv layer
                 for name, module in net.named_modules():
                     if isinstance(module, nn.Conv2d):
@@ -127,7 +127,7 @@ class DependencyawareTest(TestCase):
                 Model = getattr(models, model_name)
                 cfg_generator = [generate_random_sparsity, generate_random_sparsity_v2]
                 for _generator in cfg_generator:
-                    net = Model(pretrained=True, progress=False)
+                    net = Model(pretrained=False, progress=False)
                     cfg_list = _generator(net)
 
                     print('\n\nModel:', model_name)
