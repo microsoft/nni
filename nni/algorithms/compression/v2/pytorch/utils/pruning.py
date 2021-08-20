@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 from torch import Tensor
@@ -106,7 +106,7 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
                 continue
             left_weight_num += module.weight.data.numel()
         compact2origin_sparsity.append(deepcopy(config))
-        compact2origin_sparsity[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
+        compact2origin_sparsity[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
     return compact2origin_sparsity
 
 
@@ -129,19 +129,19 @@ def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[st
             else:
                 left_weight_num += module_weight_num
         mask2compact_sparsity.append(deepcopy(config))
-        mask2compact_sparsity[-1]['_sparsity'] = 1 - left_weight_num / total_weight_num
+        mask2compact_sparsity[-1]['total_sparsity'] = 1 - left_weight_num / total_weight_num
     return mask2compact_sparsity
 
 
 def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[str, Dict[str, Tensor]],
                      config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
-    compact2origin_sparsity = compute_sparsity_mask2compact(origin_model, compact_model, config_list)
+    compact2origin_sparsity = compute_sparsity_compact2origin(origin_model, compact_model, config_list)
     mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, masks, config_list)
     assert len(compact2origin_sparsity) == len(mask2compact_sparsity), 'Length mismatch.'
     current2origin_sparsity = []
     for mo_sparsity, ms_sparsity, config in zip(compact2origin_sparsity, mask2compact_sparsity, config_list):
         current2origin_sparsity.append(deepcopy(config))
-        current2origin_sparsity[-1]['_sparsity'] = 1 - (1 - mo_sparsity['_sparsity']) * (1 - ms_sparsity['_sparsity'])
+        current2origin_sparsity[-1]['total_sparsity'] = 1 - (1 - mo_sparsity['total_sparsity']) * (1 - ms_sparsity['total_sparsity'])
     return current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity
 
 

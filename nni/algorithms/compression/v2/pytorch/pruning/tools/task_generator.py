@@ -60,11 +60,11 @@ class AGPTaskGenerator(ConsistentTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['_sparsity']
-            sparsity = max(0.0, (ori_sparsity - mo['_sparsity']) / (1 - mo['_sparsity']))
-            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['_sparsity'])
+            ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['total_sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
             config_list.append(deepcopy(target))
-            config_list[-1]['_sparsity'] = sparsity
+            config_list[-1]['total_sparsity'] = sparsity
         return config_list
 
 
@@ -72,9 +72,9 @@ class LinearTaskGenerator(ConsistentTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            ori_sparsity = iteration / self.total_iteration * target['_sparsity']
-            sparsity = max(0.0, (ori_sparsity - mo['_sparsity']) / (1 - mo['_sparsity']))
-            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['_sparsity'])
+            ori_sparsity = iteration / self.total_iteration * target['total_sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
             config_list.append(deepcopy(target))
-            config_list[-1]['_sparsity'] = sparsity
+            config_list[-1]['total_sparsity'] = sparsity
         return config_list
