@@ -126,10 +126,12 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
-    cuda_remapped_id = generate_cuda_mapping(placement)
+    cuda_remapped_id = None
+    if placement:
+        cuda_remapped_id = generate_cuda_mapping(placement)
     for node in nodes:
         if node.operation:
-            if isinstance(node.operation, ToDevice):
+            if placement and isinstance(node.operation, ToDevice):
                 node.operation.override_device_repr("cuda:%d" % cuda_remapped_id[node.operation.device])
 
             if node.operation.type == 'shared':
