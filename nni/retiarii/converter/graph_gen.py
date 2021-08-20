@@ -575,9 +575,7 @@ class GraphConverter:
         # also has LayerChoice or InputChoice or ValueChoice
         original_type_name = script_module.original_name
         m_attrs = None
-        if original_type_name in MODULE_EXCEPT_LIST:
-            pass  # do nothing
-        elif original_type_name == OpTypeName.LayerChoice:
+        if original_type_name == OpTypeName.LayerChoice:
             graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
             candidate_name_list = []
             for cand_name in module.names:
@@ -599,7 +597,9 @@ class GraphConverter:
             m_attrs = self._handle_valuechoice(module)
         elif original_type_name == OpTypeName.Placeholder:
             m_attrs = get_init_parameters_or_fail(module)
-        elif module.__class__.__module__.startswith('torch.nn') and original_type_name in torch.nn.__dict__:
+        elif module.__class__.__module__.startswith('torch.nn') and \
+            original_type_name in torch.nn.__dict__ and \
+                original_type_name not in MODULE_EXCEPT_LIST:
             # this is a basic module from pytorch, no need to parse its graph
             m_attrs = get_init_parameters_or_fail(module)
         elif getattr(module, '_stop_parsing', False):
