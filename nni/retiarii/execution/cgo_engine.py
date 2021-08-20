@@ -110,7 +110,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             time.sleep(1)
 
     def _extract_placement_constaint(self, placement_mapping: Dict[Node, Device]):
-        unique_gpus = sorted(list(set([ e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
+        unique_gpus = sorted(list(set([e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
         placement_constraint = None
         if len(unique_gpus) > 0:
             placement_constraint = {}
@@ -156,10 +156,10 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         # try to use the available_devices first so that it can be launched as early as possible
         # if free devices are not enough to assemble all models in one trial, try all devices
         if len(self.available_devices) > 0:
-            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.available_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy.group(logical_plan, self.available_devices)
 
         if len(self.available_devices) == 0 or len(grouped_models) > 1:
-            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.all_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy.group(logical_plan, self.all_devices)
 
         phy_models_and_placements = []
         for multi_model in grouped_models:
@@ -269,9 +269,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         os.remove(file_name)
 
 
-
-
-
 class AssemblePolicy:
     @staticmethod
     def _is_related_node(model: Model, node: Node):
@@ -299,7 +296,7 @@ class AssemblePolicy:
     @staticmethod
     def _check_evaluator(new_model: Model, group_model: Dict[Model, Device]) -> bool:
         if not (isinstance(new_model.evaluator, Lightning)
-                and isinstance(new_model.evaluator.module, MultiModelSupervisedLearningModule)):
+                and isinstance(new_model.evaluator.module, _MultiModelSupervisedLearningModule)):
             return False
         for m in group_model:
             if not m.evaluator == new_model.evaluator:
