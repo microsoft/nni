@@ -298,11 +298,11 @@ class NasBench101Cell(nn.Module):
             label, selected = get_fixed_dict(label)
             op_candidates = cls._make_dict(op_candidates)
             num_nodes = selected[f'{label}/num_nodes']
-            adjacency_list = [make_list(selected[f'{label}/input_{i}']) for i in range(1, num_nodes)]
+            adjacency_list = [make_list(selected[f'{label}/input{i}']) for i in range(1, num_nodes)]
             if sum([len(e) for e in adjacency_list]) > max_num_edges:
                 raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
             return _NasBench101CellFixed(
-                [op_candidates[selected[f'{label}/op_{i}']] for i in range(1, num_nodes - 1)],
+                [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
                 adjacency_list, in_features, out_features, num_nodes, projection)
         except NoContextError:
             return super().__new__(cls)

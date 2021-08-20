@@ -166,6 +166,10 @@ def _multi_trial_test(epochs, batch_size, port):
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
 
+    # uncomment this to enable training-free benchmarking
+    # exp_config.benchmark = 'nasbench101'
+    # exp_config.execution_engine = 'benchmark'
+
     exp.run(exp_config, port)
 
 
