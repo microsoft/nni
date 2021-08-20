@@ -149,10 +149,6 @@ def compile_ts():
     _yarn('ts/webui')
     _yarn('ts/webui', 'build')
 
-    _print('Building NAS UI')
-    _yarn('ts/nasui')
-    _yarn('ts/nasui', 'build')
-
     _print('Building JupyterLab extension')
     _yarn('ts/jupyter_extension')
     _yarn('ts/jupyter_extension', 'build')
@@ -171,10 +167,6 @@ def symlink_nni_node():
     _symlink('ts/nni_manager/node_modules', 'nni_node/node_modules')
 
     _symlink('ts/webui/build', 'nni_node/static')
-
-    Path('nni_node/nasui').mkdir(exist_ok=True)
-    _symlink('ts/nasui/build', 'nni_node/nasui/build')
-    _symlink('ts/nasui/server.js', 'nni_node/nasui/server.js')
 
     _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
@@ -206,10 +198,6 @@ def copy_nni_node(version):
     _yarn('ts/nni_manager', '--prod', '--cwd', str(Path('nni_node').resolve()))
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
-
-    Path('nni_node/nasui').mkdir(exist_ok=True)
-    shutil.copytree('ts/nasui/build', 'nni_node/nasui/build')
-    shutil.copyfile('ts/nasui/server.js', 'nni_node/nasui/server.js')
 
     shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
@@ -245,8 +233,6 @@ generated_files = [
     'ts/nni_manager/node_modules',
     'ts/webui/build',
     'ts/webui/node_modules',
-    'ts/nasui/build',
-    'ts/nasui/node_modules',
 
     # unit test
     'ts/nni_manager/.nyc_output',

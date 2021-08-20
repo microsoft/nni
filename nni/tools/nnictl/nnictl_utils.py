@@ -457,21 +457,6 @@ def webui_url(args):
     experiments_dict = Experiments().get_all_experiments()
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(experiments_dict[experiment_id].get('webuiUrl'))))
 
-def webui_nas(args):
-    '''launch nas ui'''
-    print_normal('Starting NAS UI...')
-    try:
-        entry_dir = nni_node.__path__[0]
-        entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
-        if sys.platform == 'win32':
-            node_command = os.path.join(entry_dir, 'node.exe')
-        else:
-            node_command = os.path.join(entry_dir, 'node')
-        cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
-        subprocess.run(cmds, cwd=entry_dir)
-    except KeyboardInterrupt:
-        pass
-
 def local_clean(directory):
     '''clean up local data'''
     print_normal('removing folder {0}'.format(directory))
