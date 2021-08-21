@@ -328,7 +328,7 @@ class CompressorTestCase(TestCase):
         eps = 1e-7
         input = torch.tensor([[0, 4], [2, 1]]).float()
         weight = torch.tensor([[1, 2], [3, 5]]).float()
-        model.conv2.module.old_weight.data = weight
+        model.conv2.module.weight.data = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
