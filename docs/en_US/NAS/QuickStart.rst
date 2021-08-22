@@ -58,53 +58,50 @@ Below is a very simple example of defining a base model, it is almost the same a
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A base model is only one concrete model not a model space. We provide APIs and primitives for users to express how the base model can be mutated, i.e., a model space which includes many models.
+A base model is only one concrete model not a model space. We provide `APIs and primitives <./MutationPrimitives.rst>`__ for users to express how the base model can be mutated. That is, to build a model space which includes many models.
 
-We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
+Based on the above base model, we can define a model space as below. 
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+.. code-block:: python
 
-  .. code-block:: python
+  import torch.nn.functional as F
+  import nni.retiarii.nn.pytorch as nn
+  from nni.retiarii import model_wrapper
 
-    # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
-    self.layer = nn.LayerChoice([
-      ops.PoolBN('max', channels, 3, stride, 1),
-      ops.SepConv(channels, channels, 3, stride, 1),
-      nn.Identity()
-    ]))
-    # invoked in `forward` method
-    out = self.layer(x)
+  class BasicBlock(nn.Module):
+    def __init__(self, const):
+      self.const = const
+    def forward(self, x):
+      return x + self.const
 
-* ``nn.InputChoice``. It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
+  class ConvPool(nn.Module):
+    def __init__(self):
+      super().__init__()
+  -    self.conv = nn.Conv2d(32, 1, 5)
+  +    self.conv = nn.LayerChoice([
+  +                  nn.Conv2d(32, 1, 5),
+  +                  nn.Conv2d(32, 1, 5, bias=False)
+  +                ]) 
+  -    self.pool = nn.MaxPool2d(kernel_size=2)
+  +    self.pool = nn.MaxPool2d(kernel_size=nn.ValueChoice([2, 4]))
+    def forward(self, x):
+      return self.pool(self.conv(x))
 
-  .. code-block:: python
+  @model_wrapper      # this decorator should be put on the out most PyTorch module
+  class Model(nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.convpool = ConvPool()
+  -    self.mymodule = BasicBlock(2.)
+  +    self.mymodule = BasicBlock(nn.ValueChoice([2., 3.]))
+    def forward(self, x):
+      return F.relu(self.convpool(self.mymodule(x)))
 
-    # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
-    self.input_switch = nn.InputChoice(n_chosen=1)
-    # invoked in `forward` method, choose one from the three
-    out = self.input_switch([tensor1, tensor2, tensor3])
+This example uses two mutation APIs, `nn.LayerChoice` and `nn.ValueChoice`. `nn.LayerChoice` takes a list of candidate modules, one will be chosen for each sampled model. It can be used just like PyTorch module. `nn.ValueChoice` takes a list of candidate values, one will be chosen to take effect for each sampled model.
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of basic units, that is, modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``.
+More detailed API description and usage can be found `here <./construct_space.rst>`__\.
 
-  .. code-block:: python
-
-    # import nni.retiarii.nn.pytorch as nn
-    # used in `__init__` method
-    self.conv = nn.Conv2d(XX, XX, kernel_size=nn.ValueChoice([1, 3, 5])
-    self.op = MyOp(nn.ValueChoice([0, 1]), nn.ValueChoice([-1, 1]))
-
-All the APIs have an optional argument called ``label``, mutations with the same label will share the same choice. A typical example is,
-
-  .. code-block:: python
-
-    self.net = nn.Sequential(
-        nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim'),
-        nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
-    )
-
-Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutation APIs, to make it easier to express a new search space. Please refer to `here <./construct_space.rst>`__ for more tutorials about how to express complex model spaces.
+.. note:: We are actively enriching the mutation APIs, to facilitate easy construction of model space. If the currently supported mutation APIs cannot express your model space, please refer to `this doc <./Mutators.rst>`__ for customizing mutators.
 
 Explore the Defined Model Space
 -------------------------------
