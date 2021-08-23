@@ -11,7 +11,7 @@ import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
 import { createRestHandler } from './restHandler';
-import { getAPIRootUrl } from '../common/experimentStartupInfo';
+import { getAPIRootUrl, getPrefixUrl } from '../common/experimentStartupInfo';
 
 /**
  * NNI Main rest server, provides rest API to support
@@ -38,7 +38,7 @@ export class NNIRestServer extends RestServer {
      * NNIRestServer's own router registration
      */
     protected registerRestHandler(): void {
-        this.app.use(express.static('static'));
+        this.app.use(getPrefixUrl(), express.static('static'));
         this.app.use(bodyParser.json({limit: '50mb'}));
         this.app.use(this.API_ROOT_URL, createRestHandler(this));
         this.app.use(this.LOGS_ROOT_URL, express.static(getLogDir()));
@@ -50,7 +50,7 @@ export class NNIRestServer extends RestServer {
                 target: 'https://netron.app'
             });
         });
-        this.app.get('*', (req: express.Request, res: express.Response) => {
+        this.app.get(`${getPrefixUrl()}/*`, (req: express.Request, res: express.Response) => {
             res.sendFile(path.resolve('static/index.html'));
         });
     }

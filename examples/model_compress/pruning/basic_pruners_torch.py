@@ -20,6 +20,7 @@ from torchvision import datasets, transforms
 sys.path.append('../models')
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
+from cifar10.resnet import ResNet18
 
 from nni.compression.pytorch.utils.counter import count_flops_params
 
@@ -115,6 +116,12 @@ def get_model_optimizer_scheduler(args, device, train_loader, test_loader, crite
                 optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
     elif args.model == 'vgg19':
         model = VGG(depth=19).to(device)
+        if args.pretrained_model_dir is None:
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+            scheduler = MultiStepLR(
+                optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+    elif args.model == 'resnet18':
+        model = ResNet18().to(device)
         if args.pretrained_model_dir is None:
             optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
             scheduler = MultiStepLR(
@@ -253,14 +260,19 @@ def main(args):
                 'sparsity': args.sparsity,
                 'op_types': ['BatchNorm2d'],
             }]
+        elif args.model == 'resnet18':
+            config_list = [{
+                'sparsity': args.sparsity,
+                'op_types': ['Conv2d']
+            }, {
+                'exclude': True,
+                'op_names': ['layer1.0.conv1', 'layer1.0.conv2']
+            }]
         else:
             config_list = [{
                 'sparsity': args.sparsity,
                 'op_types': ['Conv2d'],
-                'op_names': ['feature.0', 'feature.10', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
-            }, {
-                'exclude': True,
-                'op_names': ['feature.10']
+                'op_names': ['feature.0', 'feature.24', 'feature.27', 'feature.30', 'feature.34', 'feature.37']
             }]
 
     pruner = pruner_cls(model, config_list, **kw_args)

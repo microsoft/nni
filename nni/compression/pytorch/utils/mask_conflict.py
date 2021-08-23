@@ -39,9 +39,13 @@ def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
     if traced is None:
         assert model is not None and dummy_input is not None
         training = model.training
-        model.eval()
         # We need to trace the model in eval mode
-        traced = torch.jit.trace(model, dummy_input)
+        model.eval()
+        kw_args = {}
+        if torch.__version__ >= '1.6.0':
+            # only pytorch with version greater than 1.6.0 has the strict option
+            kw_args['strict'] = False
+        traced = torch.jit.trace(model, dummy_input, **kw_args)
         model.train(training)
 
     fix_group_mask = GroupMaskConflict(masks, model, dummy_input, traced)
