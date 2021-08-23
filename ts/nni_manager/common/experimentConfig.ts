@@ -119,7 +119,7 @@ export interface FrameworkControllerTaskRoleConfig {
     frameworkAttemptCompletionPolicy: {
         minFailedTaskCount: number;
         minSucceedTaskCount: number;
-    }
+    };
 }
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {

@@ -98,7 +98,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         const frameworkcontrollerJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
-        let command = this.generateCommandScript(this.config.taskRoles, environment.command);
+        const command = this.generateCommandScript(this.config.taskRoles, environment.command);
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), command, { encoding: 'utf8' });
 
         //upload script files to sotrage
