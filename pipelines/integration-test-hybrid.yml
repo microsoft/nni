@@ -85,14 +85,18 @@ jobs:
           --remote_pwd $(password_in_docker) \
           --remote_port $(docker_port) \
           --nni_manager_ip $(manager_ip) \
+          --subscription_id $(subscriptionId) \
+          --resource_group $(resourceGroup) \
+          --workspace_name $(workspaceName) \
+          --compute_target $(computeTarget) \
           --config_version v2
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts hybrid
     displayName: Integration test
 
-  # - task: SSH@0
-  #   inputs:
-  #     sshEndpoint: $(worker)
-  #     runOptions: commands
-  #     commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
-  #   condition: always()
-  #   displayName: Stop docker
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
+    condition: always()
+    displayName: Stop docker
