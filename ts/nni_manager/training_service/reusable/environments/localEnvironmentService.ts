@@ -10,6 +10,7 @@ import * as component from '../../../common/component';
 import { getLogger, Logger } from '../../../common/log';
 import { ExperimentConfig } from '../../../common/experimentConfig';
 import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
+import { powershellString } from '../../../common/shellUtils';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
@@ -80,7 +81,7 @@ export class LocalEnvironmentService extends EnvironmentService {
     private getScript(environment: EnvironmentInformation): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
-            script.push(`$env:PATH="${process.env.path}"`)
+            script.push(`$env:PATH=${powershellString(process.env.path!)}`)
             script.push(`cd $env:${this.experimentRootDir}`);
             script.push(`New-Item -ItemType "directory" -Path ${path.join(this.experimentRootDir, 'envs', environment.id)} -Force`);
             script.push(`cd envs\\${environment.id}`);

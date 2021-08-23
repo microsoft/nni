@@ -26,6 +26,6 @@ class Trainer(pl.Trainer):
         if use_cgo:
             if "accelerator" in trainer_kwargs:
                 raise ValueError("accelerator should not be set when cross-graph optimization is enabled.")
-            trainer_kwargs['accelerator'] = BypassAccelerator(device='cpu')
+            trainer_kwargs['accelerator'] = BypassAccelerator(device='cpu', **trainer_kwargs)
 
         super().__init__(**trainer_kwargs)
