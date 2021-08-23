@@ -6,6 +6,7 @@ References
 
     nnictl Commands <Tutorial/Nnictl>
     Experiment Configuration <reference/experiment_config>
+    Experiment Configuration (test) <reference/experiment_config_copy>
     Experiment Configuration (legacy) <Tutorial/ExperimentConfig>
     Search Space <Tutorial/SearchSpaceSpec>
     NNI Annotation <Tutorial/AnnotationSpec>
