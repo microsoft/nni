@@ -87,7 +87,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         self._stopped = False
         self._consumer_thread = threading.Thread(target=self._consume_models)
-        self._scheduler_thread = threading.Thread(target=self._scheduler_loop)
         self._consumer_thread.start()
 
     def join(self):
