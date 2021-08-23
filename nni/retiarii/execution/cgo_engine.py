@@ -19,7 +19,7 @@ from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 from .logical_optimizer.logical_plan import LogicalPlan, AbstractLogicalNode
 from .logical_optimizer.opt_dedup_input import DedupInputOptimizer
 from ..evaluator.pytorch.lightning import Lightning
-from ..evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule, _MultiModelSupervisedLearningModule
+from ..evaluator.pytorch.cgo.evaluator import _MultiModelSupervisedLearningModule
 
 from .base import BaseGraphData
 
@@ -110,7 +110,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._queue_lock.release()
 
     def _consume_models(self):
-        # a thread to monitor self._queuing_models to consume them in batch
+        # a thread to monitor self._models_to_retry and self._queuing_models to consume them in batch
         while not self._stopped:
             if len(self._models_to_retry) > 0:
                 self._queue_lock.acquire()
@@ -163,23 +163,6 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             self._trial_to_original_models[trial_id].append(m.model_id)
             if m not in self._history:
                 self._history.append(m)
-
-    # def _scheduler_loop(self):
-    #     while not self._stopped:
-    #         self._scheduler_lock.acquire()
-    #         if len(self._trial_queue) > 0:
-    #             for trial_sub in self._trial_queue:
-    #                 _, required_gpus = self._extract_placement_constaint(trial_sub.placement)
-    #                 _logger.info([m.gpu_id for m in required_gpus])
-    #                 self._queue_lock.acquire()
-    #                 is_runnable = all([ _ in self.available_devices for _ in required_gpus])
-    #                 if is_runnable:
-    #                     self._run_trial(trial_sub)
-    #                     self._trial_queue = self._trial_queue[1:]
-    #                 self._queue_lock.release()
-
-    #         self._scheduler_lock.release()
-    #         time.sleep(1)
 
     def _extract_placement_constaint(self, placement_mapping: Dict[Node, Device]):
         unique_gpus = sorted(list(set([e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
