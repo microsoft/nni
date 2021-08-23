@@ -257,4 +257,17 @@ export class KubernetesEnvironmentService extends EnvironmentService {
             return Promise.reject(errorMessage);
         }
     }
+
+    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
+        const resources: any = {
+            memory: `${memory}Mi`,
+            cpu: `${cpuNum}`
+        };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
+    }
 }

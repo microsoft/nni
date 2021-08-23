@@ -146,19 +146,6 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         return Promise.resolve(kubeflowJobConfig);
     }
 
-    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
-        const resources: any = {
-            memory: `${memory}Mi`,
-            cpu: `${cpuNum}`
-        };
-
-        if (gpuNum !== 0) {
-            resources['nvidia.com/gpu'] = `${gpuNum}`;
-        }
-
-        return resources;
-    }
-
     /**
      * Generate kubeflow resource config file
      * @param kubeflowJobName job name
