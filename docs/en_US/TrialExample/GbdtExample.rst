@@ -190,36 +190,27 @@ More support variable type you could reference `here <../Tutorial/SearchSpaceSpe
 In the config file, you could set some settings including:
 
 
-* Experiment setting: ``trialConcurrency``\ , ``maxExecDuration``\ , ``maxTrialNum``\ , ``trial gpuNum``\ , etc.
-* Platform setting: ``trainingServicePlatform``\ , etc.
-* Path seeting: ``searchSpacePath``\ , ``trial codeDir``\ , etc.
+* Experiment setting: ``trialConcurrency``\ , ``trialGpuNumber``\ , etc.
+* Platform setting: ``trainingService``\ , etc.
+* Path setting: ``searchSpaceFile``\ , ``trialCodeDirectory``\ , etc.
 * Algorithm setting: select ``tuner`` algorithm, ``tuner optimize_mode``\ , etc.
 
 An config.yml as follow:
 
 .. code-block:: yaml
 
-   authorName: default
-   experimentName: example_auto-gbdt
+   experimentName: auto-gbdt example
+   searchSpaceFile: search_space.json
+   trialCommand: python3 main.py
+   trialGpuNumber: 0
    trialConcurrency: 1
-   maxExecDuration: 10h
-   maxTrialNum: 10
-   #choice: local, remote, pai
-   trainingServicePlatform: local
-   searchSpacePath: search_space.json
-   #choice: true, false
-   useAnnotation: false
+   maxTrialNumber: 10
+   trainingService:
+     platform: local
    tuner:
-     #choice: TPE, Random, Anneal, Evolution, BatchTuner
-     #SMAC (SMAC should be installed through nnictl)
-     builtinTunerName: TPE
+     name: TPE  #choice: TPE, Random, Anneal, Evolution, BatchTuner, etc
      classArgs:
-       #choice: maximize, minimize
        optimize_mode: minimize
-   trial:
-     command: python3 main.py
-     codeDir: .
-     gpuNum: 0
 
 Run this experiment with command as follow:
 

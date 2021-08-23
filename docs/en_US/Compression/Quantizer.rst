@@ -8,6 +8,7 @@ Index of supported quantization algorithms
 * `QAT Quantizer <#qat-quantizer>`__
 * `DoReFa Quantizer <#dorefa-quantizer>`__
 * `BNN Quantizer <#bnn-quantizer>`__
+* `LSQ Quantizer <#lsq-quantizer>`__
 
 Naive Quantizer
 ---------------
@@ -81,10 +82,80 @@ configuration needed by this algorithm :
 disable quantization until model are run by certain number of steps, this allows the network to enter a more stable
 state where activation quantization ranges do not exclude a signiﬁcant fraction of values, default value is 0
 
-note
-^^^^
+Batch normalization folding
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-batch normalization folding is currently not supported.
+Batch normalization folding is supported in QAT quantizer. It can be easily enabled by passing an argument `dummy_input` to
+the quantizer, like:
+
+.. code-block:: python
+
+    # assume your model takes an input of shape (1, 1, 28, 28)
+    # and dummy_input must be on the same device as the model
+    dummy_input = torch.randn(1, 1, 28, 28)
+
+    # pass the dummy_input to the quantizer
+    quantizer = QAT_Quantizer(model, config_list, dummy_input=dummy_input)
+
+
+The quantizer will automatically detect Conv-BN patterns and simulate batch normalization folding process in the training
+graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
+`quantizer.export_model`.
+
+----
+
+LSQ Quantizer
+-------------
+
+In `LEARNED STEP SIZE QUANTIZATION <https://arxiv.org/pdf/1902.08153.pdf>`__\ , authors Steven K. Esser and Jeffrey L. McKinstry provide an algorithm to train the scales with gradients.
+
+..
+
+   The authors introduce a novel means to estimate and scale the task loss gradient at each weight and activation layer’s quantizer step size, such that it can be learned in conjunction with other network parameters.
+
+
+Usage
+^^^^^
+You can add codes below before your training codes. Three things must be done:
+
+
+1. configure which layer to be quantized and which tensor (input/output/weight) of that layer to be quantized.
+2. construct the lsq quantizer
+3. call the `compress` API
+
+
+PyTorch code
+
+.. code-block:: python
+
+    from nni.algorithms.compression.pytorch.quantization import LsqQuantizer
+    model = Mnist()
+
+    configure_list = [{
+            'quant_types': ['weight', 'input'],
+            'quant_bits': {
+                'weight': 8,
+                'input': 8,
+            },
+            'op_names': ['conv1']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output': 8,},
+            'op_names': ['relu1']
+    }]
+
+    quantizer = LsqQuantizer(model, configure_list, optimizer)
+    quantizer.compress()
+
+You can view example for more information. :githublink:`examples/model_compress/quantization/LSQ_torch_quantizer.py <examples/model_compress/quantization/LSQ_torch_quantizer.py>`
+
+User configuration for LSQ Quantizer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+
+configuration needed by this algorithm :
+
 
 ----
 
@@ -106,7 +177,7 @@ PyTorch code
    config_list = [{ 
        'quant_types': ['weight'],
        'quant_bits': 8, 
-       'op_types': 'default' 
+       'op_types': ['default'] 
    }]
    quantizer = DoReFaQuantizer(model, config_list)
    quantizer.compress()

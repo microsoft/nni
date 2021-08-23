@@ -102,7 +102,7 @@ class Trial implements TableObj {
     }
 
     get sortable(): boolean {
-        return this.metricsInitialized && this.finalAcc !== undefined && !isNaN(this.finalAcc);
+        return this.metricsInitialized && this.finalAcc !== undefined && isFinite(this.finalAcc);
     }
 
     get latestAccuracy(): number | undefined {
@@ -115,6 +115,7 @@ class Trial implements TableObj {
                     return undefined;
                 } else if (
                     typeof parseMetrics(temp.data) === 'object' &&
+                    // eslint-disable-next-line no-prototype-builtins
                     parseMetrics(temp.data).hasOwnProperty('default')
                 ) {
                     return parseMetrics(temp.data).default;

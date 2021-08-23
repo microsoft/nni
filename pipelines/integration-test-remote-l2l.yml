@@ -5,9 +5,6 @@ schedules:
   branches:
     include: [ master ]
 
-variables:
-  worker: remote_nni-ci-gpu-03
-
 # variables set on VSO: (for security concern)
 #   manager_ip
 #   worker_ip
@@ -87,6 +84,24 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts remote \
+          --remote_reuse true \
+          --remote_user nni \
+          --remote_host $(worker_ip) \
+          --remote_port $(docker_port) \
+          --remote_pwd $(password_in_docker) \
+          --nni_manager_ip $(manager_ip) \
+          --azurestoragetoken $(azureblob_token_test) \
+          --nfs_server $(NFS_IP) \
+          --local_mount_point $(LOCAL_MOUNT_POINT) \
+          --remote_mount_point $(REMOTE_MOUNT_POINT) \
+          --exported_directory $(Exported_Directory)
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
+    displayName: Integration test (reuse mode)
+
+  - script: |
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts remote \
           --remote_reuse false \
           --remote_user nni \
           --remote_host $(worker_ip) \
@@ -96,18 +111,6 @@ jobs:
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
     displayName: Integration test
 
-  - script: |
-      cd test
-      python3 nni_test/nnitest/generate_ts_config.py \
-          --ts remote \
-          --remote_reuse true \
-          --remote_user nni \
-          --remote_host $(worker_ip) \
-          --remote_port $(docker_port) \
-          --remote_pwd $(password_in_docker) \
-          --nni_manager_ip $(manager_ip)
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote
-    displayName: Integration test (reuse mode)
 
   - task: SSH@0
     inputs:

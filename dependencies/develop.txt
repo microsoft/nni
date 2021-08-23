@@ -6,5 +6,8 @@ sphinx-rtd-theme
 sphinxcontrib-websupport
 nbsphinx
 pytest
+pytest-cov
+pytest-azurepipelines
 coverage
 ipython
+jupyterlab

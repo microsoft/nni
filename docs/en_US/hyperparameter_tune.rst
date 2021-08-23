@@ -25,3 +25,4 @@ according to their needs.
     WebUI <Tutorial/WebUI>
     How to Debug <Tutorial/HowToDebug>
     Advanced <hpo_advanced>
+    HPO Benchmarks <hpo_benchmark>

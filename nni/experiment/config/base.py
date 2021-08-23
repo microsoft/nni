@@ -6,7 +6,7 @@ import dataclasses
 from pathlib import Path
 from typing import Any, Dict, Optional, Type, TypeVar
 
-import ruamel.yaml as yaml
+import yaml
 
 from . import util
 
@@ -72,7 +72,7 @@ class ConfigBase:
         Load config from YAML (or JSON) file.
         Keys in YAML file can either be camelCase or snake_case.
         """
-        data = yaml.load(open(path), Loader=yaml.SafeLoader)
+        data = yaml.safe_load(open(path))
         if not isinstance(data, dict):
             raise ValueError(f'Content of config file {path} is not a dict/object')
         return cls(**data, _base_path=Path(path).parent)
@@ -82,6 +82,7 @@ class ConfigBase:
         Convert config to JSON object.
         The keys of returned object will be camelCase.
         """
+        self.validate()
         return dataclasses.asdict(
             self.canonical(),
             dict_factory=lambda items: dict((util.camel_case(k), v) for k, v in items if v is not None)
@@ -101,6 +102,8 @@ class ConfigBase:
             elif isinstance(value, ConfigBase):
                 setattr(ret, key, value.canonical())
                 # value will be copied twice, should not be a performance issue anyway
+            elif isinstance(value, Path):
+                setattr(ret, key, str(value))
         return ret
 
     def validate(self) -> None:
@@ -121,7 +124,7 @@ class ConfigBase:
             type_name = str(field.type).replace('typing.', '')
             optional = any([
                 type_name.startswith('Optional['),
-                type_name.startswith('Union[') and 'NoneType' in type_name,
+                type_name.startswith('Union[') and 'None' in type_name,
                 type_name == 'Any'
             ])
             if value is None:

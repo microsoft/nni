@@ -16,6 +16,7 @@ from sklearn.gaussian_process.kernels import Matern
 from sklearn.gaussian_process import GaussianProcessRegressor
 
 from nni import ClassArgsValidator
+from nni.common.hpo_utils import validate_search_space
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 
@@ -103,6 +104,7 @@ class GPTuner(Tuner):
 
         Override of the abstract method in :class:`~nni.tuner.Tuner`.
         """
+        validate_search_space(search_space, ['choice', 'randint', 'uniform', 'quniform', 'loguniform', 'qloguniform'])
         self._space = TargetSpace(search_space, self._random_state)
 
     def generate_parameters(self, parameter_id, **kwargs):

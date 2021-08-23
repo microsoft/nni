@@ -6,7 +6,7 @@ import time
 
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 
-from .. import Sampler, submit_models, query_available_resources, is_stopped_exec
+from .. import Sampler, submit_models, query_available_resources, is_stopped_exec, budget_exhausted
 from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)
@@ -40,6 +40,18 @@ class TPESampler(Sampler):
 
 
 class TPEStrategy(BaseStrategy):
+    """
+    The Tree-structured Parzen Estimator (TPE) [bergstrahpo]_ is a sequential model-based optimization (SMBO) approach.
+    SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
+    and then subsequently choose new hyperparameters to test based on this model.
+
+    References
+    ----------
+
+    .. [bergstrahpo] Bergstra et al., "Algorithms for Hyper-Parameter Optimization".
+        https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf
+    """
+
     def __init__(self):
         self.tpe_sampler = TPESampler()
         self.model_id = 0
@@ -54,7 +66,7 @@ class TPEStrategy(BaseStrategy):
         self.tpe_sampler.update_sample_space(sample_space)
 
         _logger.info('TPE strategy has been started.')
-        while True:
+        while not budget_exhausted():
             avail_resource = query_available_resources()
             if avail_resource > 0:
                 model = base_model
@@ -70,13 +82,13 @@ class TPEStrategy(BaseStrategy):
             else:
                 time.sleep(2)
 
-            _logger.warning('num of running models: %d', len(self.running_models))
+            _logger.debug('num of running models: %d', len(self.running_models))
             to_be_deleted = []
             for _id, _model in self.running_models.items():
                 if is_stopped_exec(_model):
                     if _model.metric is not None:
                         self.tpe_sampler.receive_result(_id, _model.metric)
-                        _logger.warning('tpe receive results: %d, %s', _id, _model.metric)
+                        _logger.debug('tpe receive results: %d, %s', _id, _model.metric)
                     to_be_deleted.append(_id)
             for _id in to_be_deleted:
                 del self.running_models[_id]

@@ -13,7 +13,7 @@ Examples
 
 Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
 
-:githublink:`Example code <examples/nas/spos>`
+:githublink:`Example code <examples/nas/oneshot/spos>`
 
 Requirements
 ^^^^^^^^^^^^
@@ -98,14 +98,8 @@ Reference
 PyTorch
 ^^^^^^^
 
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSEvolution
-    :members:
-
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainer
-    :members:
-
-..  autoclass:: nni.algorithms.nas.pytorch.spos.SPOSSupernetTrainingMutator
-    :members:
+..  autoclass:: nni.retiarii.oneshot.pytorch.SinglePathTrainer
+    :noindex:
 
 Known Limitations
 -----------------

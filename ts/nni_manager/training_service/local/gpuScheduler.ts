@@ -24,7 +24,7 @@ class GPUScheduler {
 
     constructor() {
         this.stopping = false;
-        this.log = getLogger();
+        this.log = getLogger('GPUScheduler');
         this.gpuMetricCollectorScriptFolder = `${os.tmpdir()}/${os.userInfo().username}/nni/script`;
     }
 
@@ -43,7 +43,7 @@ class GPUScheduler {
         }
     }
 
-    public getAvailableGPUIndices(useActiveGpu: boolean, occupiedGpuIndexNumMap: Map<number, number>): number[] {
+    public getAvailableGPUIndices(useActiveGpu: boolean | undefined, occupiedGpuIndexNumMap: Map<number, number>): number[] {
         if (this.gpuSummary !== undefined) {
             if (process.platform === 'win32' || useActiveGpu) {
                 return this.gpuSummary.gpuInfos.map((info: GPUInfo) => info.index);

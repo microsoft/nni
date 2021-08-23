@@ -6,16 +6,14 @@ import os
 import sys
 import json
 import time
-import re
 import shutil
 import subprocess
 from functools import cmp_to_key
 import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
-from pyhdfs import HdfsClient
 from nni.tools.annotation import expand_annotations
-import nni_node  # pylint: disable=import-error
+import nni_node  # pylint: disable=wrong-import-order, import-error
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
@@ -78,13 +76,16 @@ def check_experiment_id(args, update=True):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                                      experiments_dict[key].get('experimentName', 'N/A'),
-                                                                      experiments_dict[key]['status'],
-                                                                      experiments_dict[key].get('port', 'N/A'),
-                                                                      experiments_dict[key].get('platform'),
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+                    key,
+                    experiments_dict[key].get('experimentName', 'N/A'),
+                    experiments_dict[key]['status'],
+                    experiments_dict[key].get('port', 'N/A'),
+                    experiments_dict[key].get('platform'),
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         elif not running_experiment_list:
@@ -138,13 +139,16 @@ def parse_ids(args):
             print_error('There are multiple experiments, please set the experiment id...')
             experiment_information = ""
             for key in running_experiment_list:
-                experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                                      experiments_dict[key].get('experimentName', 'N/A'),
-                                                                      experiments_dict[key]['status'],
-                                                                      experiments_dict[key].get('port', 'N/A'),
-                                                                      experiments_dict[key].get('platform'),
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                                      time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+                experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+                    key,
+                    experiments_dict[key].get('experimentName', 'N/A'),
+                    experiments_dict[key]['status'],
+                    experiments_dict[key].get('port', 'N/A'),
+                    experiments_dict[key].get('platform'),
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+                    time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                        if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
             print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
             exit(1)
         else:
@@ -224,14 +228,6 @@ def stop_experiment(args):
             rest_pid = experiments_dict.get(experiment_id).get('pid')
             if rest_pid:
                 kill_command(rest_pid)
-                tensorboard_pid_list = experiments_dict.get(experiment_id).get('tensorboardPidList')
-                if tensorboard_pid_list:
-                    for tensorboard_pid in tensorboard_pid_list:
-                        try:
-                            kill_command(tensorboard_pid)
-                        except Exception as exception:
-                            print_error(exception)
-                    experiments_config.update_experiment(experiment_id, 'tensorboardPidList', [])
             print_normal('Stop experiment success.')
 
 def trial_ls(args):
@@ -501,30 +497,6 @@ def remote_clean(machine_list, experiment_id=None):
         print_normal('removing folder {0}'.format(host + ':' + str(port) + remote_dir))
         remove_remote_directory(sftp, remote_dir)
 
-def hdfs_clean(host, user_name, output_dir, experiment_id=None):
-    '''clean up hdfs data'''
-    hdfs_client = HdfsClient(hosts='{0}:80'.format(host), user_name=user_name, webhdfs_path='/webhdfs/api/v1', timeout=5)
-    if experiment_id:
-        full_path = '/' + '/'.join([user_name, 'nni', 'experiments', experiment_id])
-    else:
-        full_path = '/' + '/'.join([user_name, 'nni', 'experiments'])
-    print_normal('removing folder {0} in hdfs'.format(full_path))
-    hdfs_client.delete(full_path, recursive=True)
-    if output_dir:
-        pattern = re.compile('hdfs://(?P<host>([0-9]{1,3}.){3}[0-9]{1,3})(:[0-9]{2,5})?(?P<baseDir>/.*)?')
-        match_result = pattern.match(output_dir)
-        if match_result:
-            output_host = match_result.group('host')
-            output_dir = match_result.group('baseDir')
-            #check if the host is valid
-            if output_host != host:
-                print_warning('The host in {0} is not consistent with {1}'.format(output_dir, host))
-            else:
-                if experiment_id:
-                    output_dir = output_dir + '/' + experiment_id
-                print_normal('removing folder {0} in hdfs'.format(output_dir))
-                hdfs_client.delete(output_dir, recursive=True)
-
 def experiment_clean(args):
     '''clean up the experiment data'''
     experiment_id_list = []
@@ -552,21 +524,16 @@ def experiment_clean(args):
     for experiment_id in experiment_id_list:
         experiment_id = get_config_filename(args)
         experiment_config = Config(experiment_id, Experiments().get_all_experiments()[experiment_id]['logDir']).get_config()
-        platform = experiment_config.get('trainingServicePlatform')
+        platform = experiment_config.get('trainingServicePlatform') or experiment_config.get('trainingService', {}).get('platform')
         if platform == 'remote':
             machine_list = experiment_config.get('machineList')
             remote_clean(machine_list, experiment_id)
-        elif platform == 'pai':
-            host = experiment_config.get('paiConfig').get('host')
-            user_name = experiment_config.get('paiConfig').get('userName')
-            output_dir = experiment_config.get('trial').get('outputDir')
-            hdfs_clean(host, user_name, output_dir, experiment_id)
         elif platform != 'local':
             # TODO: support all platforms
             print_warning('platform {0} clean up not supported yet.'.format(platform))
             exit(0)
         # clean local data
-        local_base_dir = experiments_config[experiment_id]['logDir']
+        local_base_dir = experiments_config.experiments[experiment_id]['logDir']
         if not local_base_dir:
             local_base_dir = NNI_HOME_DIR
         local_experiment_dir = os.path.join(local_base_dir, experiment_id)
@@ -632,11 +599,6 @@ def platform_clean(args):
     if platform == 'remote':
         machine_list = config_content.get('machineList')
         remote_clean(machine_list)
-    elif platform == 'pai':
-        host = config_content.get('paiConfig').get('host')
-        user_name = config_content.get('paiConfig').get('userName')
-        output_dir = config_content.get('trial').get('outputDir')
-        hdfs_clean(host, user_name, output_dir)
     print_normal('Done.')
 
 def experiment_list(args):
@@ -659,13 +621,16 @@ def experiment_list(args):
             print_warning('There is no experiment running...\nYou can use \'nnictl experiment list --all\' to list all experiments.')
     experiment_information = ""
     for key in experiment_id_list:
-        experiment_information += EXPERIMENT_DETAIL_FORMAT % (key,
-                                                              experiments_dict[key].get('experimentName', 'N/A'),
-                                                              experiments_dict[key]['status'],
-                                                              experiments_dict[key].get('port', 'N/A'),
-                                                              experiments_dict[key].get('platform'),
-                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
-                                                              time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
+        experiment_information += EXPERIMENT_DETAIL_FORMAT % (
+            key,
+            experiments_dict[key].get('experimentName', 'N/A'),
+            experiments_dict[key]['status'],
+            experiments_dict[key].get('port', 'N/A'),
+            experiments_dict[key].get('platform'),
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['endTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['endTime'], int) else experiments_dict[key]['endTime'])
     print(EXPERIMENT_INFORMATION_FORMAT % experiment_information)
     return experiment_id_list
 
@@ -700,9 +665,12 @@ def show_experiment_info():
         print_warning('There is no experiment running...')
         return
     for key in experiment_id_list:
-        print(EXPERIMENT_MONITOR_INFO % (key, experiments_dict[key]['status'], experiments_dict[key]['port'], \
-              experiments_dict[key].get('platform'), time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'], \
-              get_time_interval(experiments_dict[key]['startTime'], experiments_dict[key]['endTime'])))
+        print(EXPERIMENT_MONITOR_INFO % (
+            key, experiments_dict[key]['status'], experiments_dict[key]['port'],
+            experiments_dict[key].get('platform'),
+            time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(experiments_dict[key]['startTime'] / 1000)) \
+                if isinstance(experiments_dict[key]['startTime'], int) else experiments_dict[key]['startTime'],
+            get_time_interval(experiments_dict[key]['startTime'], experiments_dict[key]['endTime'])))
         print(TRIAL_MONITOR_HEAD)
         running, response = check_rest_server_quick(experiments_dict[key]['port'])
         if running:

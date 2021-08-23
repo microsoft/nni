@@ -45,13 +45,6 @@ testCases:
 - name: multi-thread
   configFile: test/config/multi_thread/config.yml
 
-- name: multi-phase-batch
-  configFile: test/config/multi_phase/batch.yml
-  config:
-    # for batch tuner, maxTrialNum can not exceed length of search space
-    maxTrialNum: 2
-    trialConcurrency: 2
-
 #########################################################################
 # nni assessor test
 #########################################################################

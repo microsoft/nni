@@ -5,7 +5,7 @@ import logging
 import os
 import random
 import string
-from typing import Dict, List
+from typing import Any, Dict, Iterable, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
@@ -13,6 +13,7 @@ from ..graph import Model, ModelStatus, MetricData, Evaluator
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
+
 
 class BaseGraphData:
     def __init__(self, model_script: str, evaluator: Evaluator) -> None:
@@ -53,13 +54,18 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         advisor.final_metric_callback = self._final_metric_callback
 
         self._running_models: Dict[int, Model] = dict()
+        self._history: List[Model] = []
 
         self.resources = 0
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
+            data = self.pack_model_data(model)
             self._running_models[send_trial(data.dump())] = model
+            self._history.append(model)
+
+    def list_models(self) -> Iterable[Model]:
+        return self._history
 
     def register_graph_listener(self, listener: AbstractGraphListener) -> None:
         self._listeners.append(listener)
@@ -98,6 +104,14 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def query_available_resource(self) -> int:
         return self.resources
+
+    def budget_exhausted(self) -> bool:
+        advisor = get_advisor()
+        return advisor.stopping
+
+    @classmethod
+    def pack_model_data(cls, model: Model) -> Any:
+        return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
 
     @classmethod
     def trial_execute_graph(cls) -> None:

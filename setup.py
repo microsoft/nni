@@ -9,6 +9,14 @@ You can use environment variable `NNI_RELEASE` to set release version.
 If release version is not set, default to a development build whose version string will be `999.dev0`.
 
 
+## Prepare Environment ##
+
+Install development dependencies:
+
+  $ pip install -U -r dependencies/setup.txt
+  $ pip install -r dependencies/develop.txt
+
+
 ## Development ##
 
 Build and install for development:
@@ -23,7 +31,7 @@ Remove generated files: (use "--all" to remove toolchain and built wheel)
 
   $ python setup.py clean [--all]
 
-Build TypeScript modules without install:
+Compile TypeScript modules without re-install:
 
   $ python setup.py build_ts
 
@@ -88,7 +96,8 @@ def _setup():
         extras_require = {
             'SMAC': _read_requirements_txt('dependencies/required_extra.txt', 'SMAC'),
             'BOHB': _read_requirements_txt('dependencies/required_extra.txt', 'BOHB'),
-            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner')
+            'PPOTuner': _read_requirements_txt('dependencies/required_extra.txt', 'PPOTuner'),
+            'DNGO': _read_requirements_txt('dependencies/required_extra.txt', 'DNGO'),
         },
         setup_requires = ['requests'],
 

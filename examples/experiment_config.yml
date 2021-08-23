@@ -9,13 +9,13 @@ searchSpacePath:
 #choice: true, false
 useAnnotation:
 tuner:
-  #choice: TPE, Random, Anneal, Evolution
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
   builtinTunerName:
   classArgs:
     #choice: maximize, minimize
     optimize_mode:
 assessor:
-  #choice: Medianstop
+  #choice: Medianstop, Curvefitting
   builtinAssessorName:
   classArgs:
     #choice: maximize, minimize

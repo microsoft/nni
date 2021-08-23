@@ -2,12 +2,9 @@
 # Licensed under the MIT license.
 
 import os
-import json
-import shutil
 import sqlite3
-import time
+import json_tricks
 from .constants import NNI_HOME_DIR
-from .command_utils import print_error
 from .common_utils import get_file_lock
 
 def config_v0_to_v1(config: dict) -> dict:
@@ -92,7 +89,7 @@ class Config:
         '''refresh to get latest config'''
         sql = 'select params from ExperimentProfile where id=? order by revision DESC'
         args = (self.experiment_id,)
-        self.config = config_v0_to_v1(json.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
+        self.config = config_v0_to_v1(json_tricks.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
 
     def get_config(self):
         '''get a value according to key'''
@@ -108,7 +105,7 @@ class Experiments:
             self.experiments = self.read_file()
 
     def add_experiment(self, expId, port, startTime, platform, experiment_name, endTime='N/A', status='INITIALIZED',
-                       tag=[], pid=None, webuiUrl=[], logDir=''):
+                       tag=[], pid=None, webuiUrl=[], logDir='', prefixUrl=None):
         '''set {key:value} pairs to self.experiment'''
         with self.lock:
             self.experiments = self.read_file()
@@ -123,7 +120,8 @@ class Experiments:
             self.experiments[expId]['tag'] = tag
             self.experiments[expId]['pid'] = pid
             self.experiments[expId]['webuiUrl'] = webuiUrl
-            self.experiments[expId]['logDir'] = logDir
+            self.experiments[expId]['logDir'] = str(logDir)
+            self.experiments[expId]['prefixUrl'] = prefixUrl
             self.write_file()
 
     def update_experiment(self, expId, key, value):
@@ -155,7 +153,7 @@ class Experiments:
         '''save config to local file'''
         try:
             with open(self.experiment_file, 'w') as file:
-                json.dump(self.experiments, file, indent=4)
+                json_tricks.dump(self.experiments, file, indent=4)
         except IOError as error:
             print('Error:', error)
             return ''
@@ -165,7 +163,7 @@ class Experiments:
         if os.path.exists(self.experiment_file):
             try:
                 with open(self.experiment_file, 'r') as file:
-                    return json.load(file)
+                    return json_tricks.load(file)
             except ValueError:
                 return {}
         return {}

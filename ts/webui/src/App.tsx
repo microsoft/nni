@@ -48,6 +48,8 @@ export const AppContext = React.createContext({
     // eslint-disable-next-line @typescript-eslint/no-empty-function
     updateOverviewPage: () => {},
     // eslint-disable-next-line @typescript-eslint/no-empty-function
+    updateDetailPage: () => {},
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     changeExpandRowIDs: (_val: string, _type?: string): void => {}
 });
 
@@ -133,6 +135,12 @@ class App extends React.Component<{}, AppState> {
         }));
     };
 
+    updateDetailPage = (): void => {
+        this.setState(state => ({
+            trialsUpdateBroadcast: state.trialsUpdateBroadcast + 1
+        }));
+    };
+
     shouldComponentUpdate(nextProps: any, nextState: AppState): boolean {
         if (!(nextState.isUpdate || nextState.isUpdate === undefined)) {
             nextState.isUpdate = true;
@@ -207,6 +215,7 @@ class App extends React.Component<{}, AppState> {
                                         bestTrialEntries,
                                         changeEntries: this.changeEntries,
                                         updateOverviewPage: this.updateOverviewPage,
+                                        updateDetailPage: this.updateDetailPage,
                                         expandRowIDs,
                                         changeExpandRowIDs: this.changeExpandRowIDs
                                     }}
@@ -237,7 +246,7 @@ class App extends React.Component<{}, AppState> {
         }
 
         // experiment status and /trial-jobs api's status could decide website update
-        if (['DONE', 'ERROR', 'STOPPED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
+        if (['DONE', 'ERROR', 'STOPPED', 'VIEWED'].includes(EXPERIMENT.status) || TRIALS.jobListError()) {
             // experiment finished, refresh once more to ensure consistency
             this.setState(() => ({ interval: 0, isUpdate: false }));
             return;

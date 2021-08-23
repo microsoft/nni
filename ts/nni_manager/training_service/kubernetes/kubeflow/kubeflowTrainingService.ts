@@ -19,6 +19,7 @@ import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
 import { validateCodeDir } from '../../common/util';
 import { NFSConfig } from '../kubernetesConfig';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
+import { KubernetesJobRestServer } from '../kubernetesJobRestServer';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { KubeflowOperatorClientFactory } from './kubeflowApiClient';
 import { KubeflowClusterConfig, KubeflowClusterConfigAzure, KubeflowClusterConfigFactory, KubeflowClusterConfigNFS,
@@ -46,7 +47,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
 
     public async run(): Promise<void> {
         this.log.info('Run Kubeflow training service.');
-        this.kubernetesJobRestServer = component.get(KubeflowJobRestServer);
+        this.kubernetesJobRestServer = new KubernetesJobRestServer(this);
         if (this.kubernetesJobRestServer === undefined) {
             throw new Error('kubernetesJobRestServer not initialized!');
         }
@@ -59,7 +60,6 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             await this.kubeflowJobInfoCollector.retrieveTrialStatus(this.kubernetesCRDClient);
             if (this.kubernetesJobRestServer.getErrorMessage !== undefined) {
                 throw new Error(this.kubernetesJobRestServer.getErrorMessage);
-                this.stopping = true;
             }
         }
         this.log.info('Kubeflow training service exit.');
@@ -202,8 +202,8 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             const azureKubeflowClusterConfig: KubeflowClusterConfigAzure = <KubeflowClusterConfigAzure>this.kubeflowClusterConfig;
             return await this.uploadFolderToAzureStorage(srcDirectory, destDirectory, azureKubeflowClusterConfig.uploadRetryCount);
         } else if (this.kubeflowClusterConfig.storage === 'nfs' || this.kubeflowClusterConfig.storage === undefined) {
-            await cpp.exec(`mkdir -p ${this.trialLocalNFSTempFolder}/${destDirectory}`);
-            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalNFSTempFolder}/${destDirectory}/.`);
+            await cpp.exec(`mkdir -p ${this.trialLocalTempFolder}/${destDirectory}`);
+            await cpp.exec(`cp -r ${srcDirectory}/* ${this.trialLocalTempFolder}/${destDirectory}/.`);
             const nfsKubeflowClusterConfig: KubeflowClusterConfigNFS = <KubeflowClusterConfigNFS>this.kubeflowClusterConfig;
             const nfsConfig: NFSConfig = nfsKubeflowClusterConfig.nfs;
             return `nfs://${nfsConfig.server}:${destDirectory}`;
@@ -426,7 +426,7 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
             }]);
         }
         // The config spec for container field
-        const containersSpecMap: Map<string, object> = new Map<string, object>(); 
+        const containersSpecMap: Map<string, object> = new Map<string, object>();
         containersSpecMap.set('containers', [
         {
                 // Kubeflow tensorflow operator requires that containers' name must be tensorflow
@@ -462,6 +462,10 @@ class KubeflowTrainingService extends KubernetesTrainingService implements Kuber
                 spec: spec
             }
         }
+    }
+
+    public async updateTrialJob(_1: any, _2: any): Promise<TrialJobDetail> {
+        throw new Error('not supported');
     }
 }
 export { KubeflowTrainingService };

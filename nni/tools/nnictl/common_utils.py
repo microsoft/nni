@@ -9,11 +9,11 @@ import time
 import socket
 import string
 import random
-import ruamel.yaml as yaml
-import psutil
-import filelock
 import glob
 from colorama import Fore
+import filelock
+import psutil
+import yaml
 
 from .constants import ERROR_INFO, NORMAL_INFO, WARNING_INFO
 
@@ -21,7 +21,7 @@ def get_yml_content(file_path):
     '''Load yaml file content'''
     try:
         with open(file_path, 'r') as file:
-            return yaml.load(file, Loader=yaml.SafeLoader)
+            return yaml.safe_load(file)
     except yaml.scanner.ScannerError as err:
         print_error('yaml file format error!')
         print_error(err)
@@ -80,14 +80,6 @@ def get_user():
         return os.environ['USERNAME']
     else:
         return os.environ['USER']
-
-def check_tensorboard_version():
-    try:
-        import tensorboard
-        return tensorboard.__version__
-    except:
-        print_error('import tensorboard error!')
-        exit(1)
 
 def generate_temp_dir():
     '''generate a temp folder'''

@@ -1,0 +1,20 @@
+searchSpaceFile: search_space.json
+trialCommand: python3 mnist.py
+trialGpuNumber: 0
+trialConcurrency: 1
+maxTrialNumber: 10
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: openpai
+  host: http://123.123.123.123
+  username: ${your user name}
+  token: ${your token}
+  dockerImage: msranni/nni
+  trialCpuNumber: 1
+  trialMemorySize: 8GB
+  storageConfigName: ${your storage config name}
+  localStorageMountPoint: ${NFS mount point on local machine}
+  containerStorageMountPoint: ${NFS mount point inside Docker container}

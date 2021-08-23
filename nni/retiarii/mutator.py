@@ -1,12 +1,12 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import (Any, Iterable, List, Optional)
+from typing import (Any, Iterable, List, Optional, Tuple)
 
-from .graph import Model
+from .graph import Model, Mutation, ModelStatus
 
 
-__all__ = ['Sampler', 'Mutator']
+__all__ = ['Sampler', 'Mutator', 'InvalidMutation']
 
 
 Choice = Any
@@ -40,10 +40,13 @@ class Mutator:
     and then use `Mutator.apply()` to mutate model.
     For certain mutator subclasses, strategy or sampler can use `Mutator.dry_run()` to predict choice candidates.
     # Method names are open for discussion.
+
+    If mutator has a label, in most cases, it means that this mutator is applied to nodes with this label.
     """
 
-    def __init__(self, sampler: Optional[Sampler] = None):
+    def __init__(self, sampler: Optional[Sampler] = None, label: Optional[str] = None):
         self.sampler: Optional[Sampler] = sampler
+        self.label: Optional[str] = label
         self._cur_model: Optional[Model] = None
         self._cur_choice_idx: Optional[int] = None
 
@@ -64,14 +67,17 @@ class Mutator:
         copy = model.fork()
         self._cur_model = copy
         self._cur_choice_idx = 0
+        self._cur_samples = []
         self.sampler.mutation_start(self, copy)
         self.mutate(copy)
         self.sampler.mutation_end(self, copy)
+        copy.history.append(Mutation(self, self._cur_samples, model, copy))
+        copy.status = ModelStatus.Frozen
         self._cur_model = None
         self._cur_choice_idx = None
         return copy
 
-    def dry_run(self, model: Model) -> List[List[Choice]]:
+    def dry_run(self, model: Model) -> Tuple[List[List[Choice]], Model]:
         """
         Dry run mutator on a model to collect choice candidates.
         If you invoke this method multiple times on same or different models,
@@ -97,6 +103,7 @@ class Mutator:
         """
         assert self.sampler is not None and self._cur_model is not None and self._cur_choice_idx is not None
         ret = self.sampler.choice(list(candidates), self, self._cur_model, self._cur_choice_idx)
+        self._cur_samples.append(ret)
         self._cur_choice_idx += 1
         return ret
 
@@ -108,3 +115,7 @@ class _RecorderSampler(Sampler):
     def choice(self, candidates: List[Choice], *args) -> Choice:
         self.recorded_candidates.append(candidates)
         return candidates[0]
+
+
+class InvalidMutation(Exception):
+    pass

@@ -5,10 +5,10 @@
 
         "nodes": {
             "stem": {"operation": {"type": "_cell", "cell_name": "stem"}},
-            "flatten": {"operation": {"type": "Flatten"}},
-            "fc1": {"operation": {"type": "Dense", "parameters": {"out_features": 256, "in_features": 1024}}},
-            "fc2": {"operation": {"type": "Dense", "parameters": {"out_features": 10, "in_features": 256}}},
-            "softmax": {"operation": {"type": "Softmax"}}
+            "flatten": {"operation": {"type": "__torch__.torch.nn.Flatten"}},
+            "fc1": {"operation": {"type": "__torch__.torch.nn.Linear", "parameters": {"out_features": 256, "in_features": 1024}}},
+            "fc2": {"operation": {"type": "__torch__.torch.nn.Linear", "parameters": {"out_features": 10, "in_features": 256}}},
+            "softmax": {"operation": {"type": "__torch__.torch.nn.Softmax"}}
         },
 
         "edges": [
@@ -23,10 +23,10 @@
 
     "stem": {
         "nodes": {
-            "conv1": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 32, "in_channels": 1, "kernel_size": 5}}},
-            "pool1": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}},
-            "conv2": {"operation": {"type": "__torch__.Conv2d", "parameters": {"out_channels": 64, "in_channels": 32, "kernel_size": 5}}},
-            "pool2": {"operation": {"type": "__torch__.MaxPool2d", "parameters": {"kernel_size": 2}}}
+            "conv1": {"operation": {"type": "__torch__.torch.nn.Conv2d", "parameters": {"out_channels": 32, "in_channels": 1, "kernel_size": 5}}},
+            "pool1": {"operation": {"type": "__torch__.torch.nn.MaxPool2d", "parameters": {"kernel_size": 2}}},
+            "conv2": {"operation": {"type": "__torch__.torch.nn.Conv2d", "parameters": {"out_channels": 64, "in_channels": 32, "kernel_size": 5}}},
+            "pool2": {"operation": {"type": "__torch__.torch.nn.MaxPool2d", "parameters": {"kernel_size": 2}}}
         },
 
         "edges": [
@@ -36,26 +36,5 @@
             {"head": ["conv2", null], "tail": ["pool2", null]},
             {"head": ["pool2", null], "tail": ["_outputs", 0]}
         ]
-    },
-
-    "_evaluator": {
-        "module": "nni.retiarii.trainer.PyTorchImageClassificationTrainer",
-        "kwargs": {
-            "dataset_cls": "MNIST",
-            "dataset_kwargs": {
-                "root": "data/mnist",
-                "download": true
-            },
-            "dataloader_kwargs": {
-                "batch_size": 32
-            },
-            "optimizer_cls" : "SGD",
-            "optimizer_kwargs": {
-                "lr": 1e-3
-            },
-            "trainer_kwargs": {
-                "max_epochs": 1
-            }
-        }
     }
 }

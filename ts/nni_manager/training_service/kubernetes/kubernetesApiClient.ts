@@ -4,24 +4,42 @@
 'use strict';
 
 // eslint-disable-next-line @typescript-eslint/camelcase
-import { Client1_10, config } from 'kubernetes-client';
-import { getLogger, Logger } from '../../common/log';
+import {Client1_10, config} from 'kubernetes-client';
+import {getLogger, Logger} from '../../common/log';
+
+/**
+ * This function uses the environment variable
+ * 'KUBERNETES_SERVICE_HOST' to determine whether
+ * the code is running from within a kubernetes container.
+ * If it is, it returns the in-cluster config
+ * instead of the kubeconfig.
+ */
+function getKubernetesConfig(): any {
+    if ('KUBERNETES_SERVICE_HOST' in process.env) {
+        return config.getInCluster();
+    } else {
+        return config.fromKubeconfig();
+    }
+}
 
 /**
  * Generic Kubernetes client, target version >= 1.9
  */
 class GeneralK8sClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('GeneralK8sClient');
     protected namespace: string = 'default';
 
     constructor() {
-        this.client = new Client1_10({ config: config.fromKubeconfig(), version: '1.9'});
+        this.client = new Client1_10({config: getKubernetesConfig(), version: '1.9'});
         this.client.loadSpec();
     }
 
     public set setNamespace(namespace: string) {
         this.namespace = namespace;
+    }
+    public get getNamespace(): string {
+        return this.namespace;
     }
 
     private matchStorageClass(response: any): string {
@@ -32,7 +50,7 @@ class GeneralK8sClient {
             new RegExp("\\b" + "efs" + "\\b")
         ]
         const templateLen = adlSupportedProvisioners.length,
-              responseLen = response.items.length
+            responseLen = response.items.length
         let i = 0,
             j = 0;
         for (; i < responseLen; i++) {
@@ -66,7 +84,7 @@ class GeneralK8sClient {
     public async createDeployment(deploymentManifest: any): Promise<string> {
         let result: Promise<string>;
         const response: any = await this.client.apis.apps.v1.namespaces(this.namespace)
-          .deployments.post({ body: deploymentManifest })
+            .deployments.post({body: deploymentManifest})
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body.metadata.uid);
         } else {
@@ -79,7 +97,7 @@ class GeneralK8sClient {
         let result: Promise<boolean>;
         // TODO: change this hard coded deployment name after demo
         const response: any = await this.client.apis.apps.v1.namespaces(this.namespace)
-          .deployment(deploymentName).delete();
+            .deployment(deploymentName).delete();
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -91,7 +109,7 @@ class GeneralK8sClient {
     public async createConfigMap(configMapManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces(this.namespace)
-          .configmaps.post({body: configMapManifest});
+            .configmaps.post({body: configMapManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -104,7 +122,7 @@ class GeneralK8sClient {
     public async createPersistentVolumeClaim(pvcManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces(this.namespace)
-          .persistentvolumeclaims.post({body: pvcManifest});
+            .persistentvolumeclaims.post({body: pvcManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -116,7 +134,7 @@ class GeneralK8sClient {
     public async createSecret(secretManifest: any): Promise<boolean> {
         let result: Promise<boolean>;
         const response: any = await this.client.api.v1.namespaces(this.namespace)
-          .secrets.post({body: secretManifest});
+            .secrets.post({body: secretManifest});
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(true);
         } else {
@@ -132,11 +150,11 @@ class GeneralK8sClient {
  */
 abstract class KubernetesCRDClient {
     protected readonly client: any;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('KubernetesCRDClient');
     protected crdSchema: any;
 
     constructor() {
-        this.client = new Client1_10({ config: config.fromKubeconfig() });
+        this.client = new Client1_10({config: getKubernetesConfig()});
         this.client.loadSpec();
     }
 
@@ -181,7 +199,7 @@ abstract class KubernetesCRDClient {
     public async getKubernetesJob(kubeflowJobName: string): Promise<any> {
         let result: Promise<any>;
         const response: any = await this.operator(kubeflowJobName)
-          .get();
+            .get();
         if (response.statusCode && (response.statusCode >= 200 && response.statusCode <= 299)) {
             result = Promise.resolve(response.body);
         } else {
@@ -195,16 +213,16 @@ abstract class KubernetesCRDClient {
         let result: Promise<boolean>;
         // construct match query from labels for deleting tfjob
         const matchQuery: string = Array.from(labels.keys())
-                                     .map((labelKey: string) => `${labelKey}=${labels.get(labelKey)}`)
-                                     .join(',');
+            .map((labelKey: string) => `${labelKey}=${labels.get(labelKey)}`)
+            .join(',');
         try {
             const deleteResult: any = await this.operator()
-              .delete({
-                 qs: {
-                      labelSelector: matchQuery,
-                      propagationPolicy: 'Background'
-                     }
-            });
+                .delete({
+                    qs: {
+                        labelSelector: matchQuery,
+                        propagationPolicy: 'Background'
+                    }
+                });
             if (deleteResult.statusCode && deleteResult.statusCode >= 200 && deleteResult.statusCode <= 299) {
                 result = Promise.resolve(true);
             } else {
@@ -219,4 +237,4 @@ abstract class KubernetesCRDClient {
     }
 }
 
-export { KubernetesCRDClient, GeneralK8sClient };
+export {KubernetesCRDClient, GeneralK8sClient};

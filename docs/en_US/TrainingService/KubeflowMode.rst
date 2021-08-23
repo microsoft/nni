@@ -253,3 +253,41 @@ version check
 NNI support version check feature in since version 0.6, `refer <PaiMode.rst>`__
 
 Any problems when using NNI in Kubeflow mode, please create issues on `NNI Github repo <https://github.com/Microsoft/nni>`__.
+
+
+Kubeflow reuse mode
+----------------------
+NNI support setting reuse mode for trial jobs. In reuse mode, NNI will submit a long-running trial runner process to occupy the container, and start trial jobs as the subprocess of the trial runner process, it means k8s do not need to schedule new container again, it just reuse old container.
+Currently, kubeflow reuse mode only support V2 config.
+Here is the example:
+
+.. code-block:: yaml
+
+   searchSpaceFile: search_space.json
+   trialCommand: python3 mnist.py
+   trialGpuNumber: 0
+   trialConcurrency: 4
+   maxTrialNumber: 20
+   tuner:
+     name: TPE
+     classArgs:
+       optimize_mode: maximize
+   trainingService:
+     reuseMode: true
+     platform: kubeflow
+     worker:
+       command: python3 mnist.py
+       code_directory: .
+       dockerImage: msranni/nni
+       cpuNumber: 1
+       gpuNumber: 0
+       memorySize: 8192
+       replicas: 1
+     operator: tf-operator
+     storage:
+       storageType: azureStorage
+       azureAccount: {your_account}
+       azureShare: {your_share}
+       keyVaultName: {your_valut_name}
+       keyVaultKey: {your_valut_key}
+     apiVersion: v1
