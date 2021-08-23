@@ -3,41 +3,38 @@
 
 import atexit
 import logging
+import os
+import socket
 import time
 from dataclasses import dataclass
-import os
 from pathlib import Path
-import socket
 from subprocess import Popen
 from threading import Thread
-import time
 from typing import Any, List, Optional, Union
 
 import colorama
 import psutil
-
 import torch
 import torch.nn as nn
 import nni.runtime.log
-from nni.experiment import Experiment, TrainingServiceConfig
-from nni.experiment import management, launcher, rest
+from nni.common.device import GPUDevice
+from nni.experiment import Experiment, TrainingServiceConfig, launcher, management, rest
 from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
-from nni.common.device import GPUDevice
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.python import get_mutation_dict
-from ..graph import Model, Evaluator
+from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
-from ..strategy import BaseStrategy
+from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
 from ..oneshot.interface import BaseOneShotTrainer
+from ..strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
 
@@ -70,7 +67,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(platform = training_service_platform)
+            self.training_service = util.training_service_config_factory(platform=training_service_platform)
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
 
     def __setattr__(self, key, value):
@@ -113,6 +110,7 @@ _validation_rules = {
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
+
 
 def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_input=None):
     # TODO: this logic might need to be refactored into execution engine
@@ -215,6 +213,7 @@ class RetiariiExperiment(Experiment):
             engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
+
             # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
             assert self.config.batch_waiting_time is not None
             devices = self._construct_devices()
@@ -272,7 +271,7 @@ class RetiariiExperiment(Experiment):
             for gpu_idx in self.config.training_service.gpu_indices:
                 devices.append(GPUDevice('local', gpu_idx))
         return devices
-    
+
     def _create_dispatcher(self):
         return self._dispatcher
 
