@@ -1,0 +1,52 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+# variables set on VSO: (mostly for security concern)
+#   manager_ip
+#   docker_hub_password
+
+jobs:
+- job: frameworkcontroller
+  pool: NNI CI KUBE CLI
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      echo "Working directory: ${PWD}"
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      python3 test/vso_tools/generate_nni_version.py
+      python3 -m pip install --upgrade pip setuptools
+    displayName: Prepare
+
+  - script: |
+      set -e
+      python3 test/vso_tools/install_nni.py $(NNI_RELEASE) SMAC,BOHB
+      cd examples/tuners/customized_tuner
+      python3 setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install NNI
+
+  - script: |
+      set -e
+      docker login -u nnidev -p $(docker_hub_password)
+      docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t nnidev/nni-nightly .
+      docker push nnidev/nni-nightly
+    displayName: Build and upload docker image
+
+  - script: |
+      set -e
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts frameworkcontroller \
+          --keyvault_vaultname NNIKeyVault \
+          --keyvault_name AzureStorageAccountKey \
+          --azs_account nniazurestorage \
+          --azs_share nni \
+          --nni_docker_image nnidev/nni-nightly \
+          --nni_manager_ip $(manager_ip)
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --exclude multi-phase
+    displayName: Integration test

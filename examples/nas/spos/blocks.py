@@ -10,7 +10,7 @@ class ShuffleNetBlock(nn.Module):
     When stride = 1, the block receives input with 2 * inp channels. Otherwise inp channels.
     """
 
-    def __init__(self, inp, oup, mid_channels, ksize, stride, sequence="pdp"):
+    def __init__(self, inp, oup, mid_channels, ksize, stride, sequence="pdp", affine=True):
         super().__init__()
         assert stride in [1, 2]
         assert ksize in [3, 5, 7]
@@ -22,6 +22,7 @@ class ShuffleNetBlock(nn.Module):
         self.stride = stride
         self.pad = ksize // 2
         self.oup_main = oup - self.channels
+        self._affine = affine
         assert self.oup_main > 0
 
         self.branch_main = nn.Sequential(*self._decode_point_depth_conv(sequence))
@@ -31,10 +32,10 @@ class ShuffleNetBlock(nn.Module):
                 # dw
                 nn.Conv2d(self.channels, self.channels, ksize, stride, self.pad,
                           groups=self.channels, bias=False),
-                nn.BatchNorm2d(self.channels, affine=False),
+                nn.BatchNorm2d(self.channels, affine=affine),
                 # pw-linear
                 nn.Conv2d(self.channels, self.channels, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(self.channels, affine=False),
+                nn.BatchNorm2d(self.channels, affine=affine),
                 nn.ReLU(inplace=True)
             )
 
@@ -61,12 +62,12 @@ class ShuffleNetBlock(nn.Module):
                 assert pc == c, "Depth-wise conv must not change channels."
                 result.append(nn.Conv2d(pc, c, self.ksize, self.stride if first_depth else 1, self.pad,
                                         groups=c, bias=False))
-                result.append(nn.BatchNorm2d(c, affine=False))
+                result.append(nn.BatchNorm2d(c, affine=self._affine))
                 first_depth = False
             elif token == "p":
                 # point-wise conv
                 result.append(nn.Conv2d(pc, c, 1, 1, 0, bias=False))
-                result.append(nn.BatchNorm2d(c, affine=False))
+                result.append(nn.BatchNorm2d(c, affine=self._affine))
                 result.append(nn.ReLU(inplace=True))
                 first_point = False
             else:
@@ -85,5 +86,5 @@ class ShuffleNetBlock(nn.Module):
 
 class ShuffleXceptionBlock(ShuffleNetBlock):
 
-    def __init__(self, inp, oup, mid_channels, stride):
-        super().__init__(inp, oup, mid_channels, 3, stride, "dpdpdp")
+    def __init__(self, inp, oup, mid_channels, stride, affine=True):
+        super().__init__(inp, oup, mid_channels, 3, stride, "dpdpdp", affine)

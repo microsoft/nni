@@ -1,0 +1,32 @@
+authorName: default
+experimentName: example_mnist
+trialConcurrency: 1
+maxExecDuration: 1h
+maxTrialNum: 10
+#choice: local, remote, pai
+trainingServicePlatform: remote
+searchSpacePath: search_space.json
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  command: python3 mnist.py
+  codeDir: .
+  gpuNum: 0
+#machineList can be empty if the platform is local
+machineList:
+  - ip: ${replace_to_your_remote_machine_ip}
+    username: ${replace_to_your_remote_machine_username}
+    sshKeyPath: ${replace_to_your_remote_machine_sshKeyPath}
+    # Below are examples of specifying python environment.
+    # pythonPath: /opt/python3.7/bin
+    # pythonPath: C:/Python37
+    # Below is an example of specifying python environment for windows anaconda user. Multiple paths separated by ';'. 
+    # pythonPath: C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin
+    pythonPath: ${replace_to_python_environment_path_in_your_remote_machine}

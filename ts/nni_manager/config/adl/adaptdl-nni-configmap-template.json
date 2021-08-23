@@ -1,0 +1,19 @@
+{
+    "apiVersion": "v1",
+    "kind": "ConfigMap",
+    "metadata": {
+        "name": "<name>",
+        "ownerReferences": [
+            {
+                "apiVersion": "adaptdl.petuum.com/v1",
+                "kind": "AdaptDLJob",
+                "name": "<adaptdljob_name>",
+                "uid": "<adaptdljob_uid>"
+            }
+        ]
+    },
+    "data": {
+        "run.sh": "<run_script>",
+        "cleanup.sh": "<clean_script>"
+    }
+}

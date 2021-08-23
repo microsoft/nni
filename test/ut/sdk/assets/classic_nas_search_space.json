@@ -1,0 +1,26 @@
+{
+  "first_conv": {
+    "_type": "layer_choice",
+    "_value": [
+      "conv5x5",
+      "conv3x3"
+    ]
+  },
+  "mid_conv": {
+    "_type": "layer_choice",
+    "_value": [
+      "0",
+      "1"
+    ]
+  },
+  "skip": {
+    "_type": "input_choice",
+    "_value": {
+      "candidates": [
+        "",
+        ""
+      ],
+      "n_chosen": 1
+    }
+  }
+}

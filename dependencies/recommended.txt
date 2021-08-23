@@ -1,0 +1,12 @@
+# Recommended because some non-commonly-used modules/examples depend on those packages.
+
+-f https://download.pytorch.org/whl/torch_stable.html
+tensorflow
+torch == 1.6.0+cpu ; sys_platform != "darwin"
+torch == 1.6.0 ; sys_platform == "darwin"
+torchvision == 0.7.0+cpu ; sys_platform != "darwin"
+torchvision == 0.7.0 ; sys_platform == "darwin"
+pytorch-lightning >= 1.1.1, < 1.2
+onnx
+peewee
+graphviz

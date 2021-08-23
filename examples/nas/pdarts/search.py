@@ -10,7 +10,7 @@ import torch
 import torch.nn as nn
 
 from nni.nas.pytorch.callbacks import ArchitectureCheckpoint
-from nni.nas.pytorch.pdarts import PdartsTrainer
+from nni.algorithms.nas.pytorch.pdarts import PdartsTrainer
 
 # prevent it to be reordered.
 if True:

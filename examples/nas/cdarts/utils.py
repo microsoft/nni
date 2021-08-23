@@ -14,7 +14,7 @@ import torch.nn as nn
 
 from genotypes import Genotype
 from ops import PRIMITIVES
-from nni.nas.pytorch.cdarts.utils import *
+from nni.algorithms.nas.pytorch.cdarts.utils import *
 
 
 def get_logger(file_path):

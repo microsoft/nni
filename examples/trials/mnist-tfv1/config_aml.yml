@@ -17,9 +17,9 @@ tuner:
 trial:
   command: python3 mnist.py
   codeDir: .
-  computeTarget: ${replace_to_your_computeTarget}
   image: msranni/nni
 amlConfig:
   subscriptionId: ${replace_to_your_subscriptionId}
   resourceGroup: ${replace_to_your_resourceGroup}
   workspaceName: ${replace_to_your_workspaceName}
+  computeTarget: ${replace_to_your_computeTarget}

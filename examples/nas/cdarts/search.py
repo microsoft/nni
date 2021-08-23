@@ -14,7 +14,7 @@ import utils
 from config import SearchConfig
 from datasets.cifar import get_search_datasets
 from model import Model
-from nni.nas.pytorch.cdarts import CdartsTrainer
+from nni.algorithms.nas.pytorch.cdarts import CdartsTrainer
 
 if __name__ == "__main__":
     config = SearchConfig()

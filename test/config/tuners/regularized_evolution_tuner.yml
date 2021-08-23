@@ -1,0 +1,20 @@
+authorName: nni
+experimentName: default_test
+maxExecDuration: 10m
+maxTrialNum: 1
+trialConcurrency: 1
+searchSpacePath: seach_space_classic_nas.json
+tuner:
+  builtinTunerName: RegularizedEvolutionTuner
+  classArgs:
+    optimize_mode: maximize
+trial:
+  codeDir: ../../../examples/nas/classic_nas
+  command: python3 mnist.py --epochs 1
+  gpuNum: 0
+
+useAnnotation: false
+multiPhase: false
+multiThread: false
+
+trainingServicePlatform: local

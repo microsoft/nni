@@ -1,5 +1,5 @@
-numpy==1.14.2
-tensorflow==1.15.2
+numpy==1.18.5
+tensorflow==1.15.4
 torchvision==0.2.1
 Keras==2.3.1
 torch==0.4.1

@@ -74,7 +74,7 @@ def run(X_train, X_test, y_train, y_test, model):
     model.fit(X_train, y_train)
     predict_y = model.predict(X_test)
     score = r2_score(y_test, predict_y)
-    LOG.debug('r2 score: %s' % score)
+    LOG.debug('r2 score: %s', score)
     nni.report_final_result(score)
 
 if __name__ == '__main__':

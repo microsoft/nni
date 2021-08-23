@@ -35,8 +35,7 @@ class SimpleTuner(Tuner):
                 'checksum': None,
                 'path': '',
             }
-            _logger.info('generate parameter for father trial %s' %
-                         parameter_id)
+            _logger.info('generate parameter for father trial %s', parameter_id)
             self.thread_lock.release()
             return {
                 'prev_id': 0,

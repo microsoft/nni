@@ -1,0 +1,62 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+# variables set on VSO: (mostly for security concern)
+#   manager_ip
+#   docker_hub_password
+
+jobs:
+- job: kubeflow
+  pool: NNI CI KUBE CLI
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+
+      echo "Working directory: ${PWD}"
+      echo "NNI version: ${NNI_RELEASE}"
+
+      python3 -m pip install --upgrade pip setuptools
+    displayName: Prepare
+
+  - script: |
+      set -e
+      python3 setup.py build_ts
+      python3 setup.py bdist_wheel -p manylinux1_x86_64
+      python3 -m pip install dist/nni-$(NNI_RELEASE)-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
+    displayName: Build and install NNI
+
+  - script: |
+      set -e
+      cd examples/tuners/customized_tuner
+      python3 setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install customized tuner
+
+  - script: |
+      set -e
+      docker login -u nnidev -p $(docker_hub_password)
+      docker build --build-arg NNI_RELEASE=$(NNI_RELEASE) -t nnidev/nni-nightly .
+      docker push nnidev/nni-nightly
+    displayName: Build and upload docker image
+
+  - script: |
+      set -e
+      cd test
+      python3 nni_test/nnitest/generate_ts_config.py \
+          --ts kubeflow \
+          --keyvault_vaultname NNIKeyVault \
+          --keyvault_name AzureStorageAccountKey \
+          --azs_account nniazurestorage \
+          --azs_share nni \
+          --nni_docker_image nnidev/nni-nightly \
+          --nni_manager_ip $(manager_ip)
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts kubeflow --exclude multi-phase
+    displayName: Integration test

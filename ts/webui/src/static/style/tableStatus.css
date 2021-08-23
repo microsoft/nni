@@ -1,0 +1,29 @@
+/* all table status font-color */
+.RUNNING,
+.USER_CANCELED {
+    color: #0071bc;
+}
+
+.FAILED {
+    color: #a4262c;
+}
+
+.SUCCEEDED {
+    color: #00ad56;
+}
+
+.UNKNOWN {
+    color: #ff8c00;
+}
+
+.SYS_CANCELED {
+    color: #eb0716;
+}
+
+.WAITING {
+    color: #d29200;
+}
+
+.EARLY_STOPPED {
+    color: #ffa500;
+}

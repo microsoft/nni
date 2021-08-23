@@ -1,0 +1,55 @@
+/* status: 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' */
+$running: #0071bc;
+$done: #00ad56;
+$error: #a4262c;
+
+/* status: 'TUNER_NO_MORE_TRIAL' | 'NO_MORE_TRIAL' */
+.RUNNING,
+.STOPPING,
+.INITIALIZED,
+.NO_MORE_TRIAL,
+.TUNER_NO_MORE_TRIAL {
+    /* specific status color */
+    color: $running;
+
+    /* progress- duration & trial numbers span */
+    .ms-ProgressIndicator-progressBar {
+        background-color: $running;
+    }
+}
+
+.DONE,
+.STOPPED {
+    color: $done;
+
+    .ms-ProgressIndicator-progressBar {
+        background-color: $done;
+    }
+}
+
+.ERROR {
+    color: $error;
+
+    .ms-ProgressIndicator-progressBar {
+        background-color: $error;
+    }
+}
+
+.bestMetric {
+    .DONE,
+    .STOPPED {
+        color: $done;
+    }
+
+    .ERROR {
+        color: $error;
+    }
+
+    .RUNNING,
+    .STOPPING,
+    .INITIALIZED,
+    .NO_MORE_TRIAL,
+    .TUNER_NO_MORE_TRIAL {
+        color: $running;
+    }
+}

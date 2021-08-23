@@ -1,0 +1,39 @@
+authorName: default
+experimentName: example_pytorch_cifar10
+trialConcurrency: 1
+maxExecDuration: 100h
+maxTrialNum: 10
+nniManagerIp: {replace_with_your_ip}
+trainingServicePlatform: adl
+searchSpacePath: search_space_adl.json
+logCollection: http
+#choice: true, false
+useAnnotation: false
+tuner:
+  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
+  #SMAC (SMAC should be installed through nnictl)
+  builtinTunerName: TPE
+  classArgs:
+    #choice: maximize, minimize
+    optimize_mode: maximize
+trial:
+  namespace: default
+  command: python3 /cifar10/main_adl.py
+  codeDir: /cifar10
+  gpuNum: 1
+  # the user needs to have a docker image built by the adl.Dockerfile
+  # the docker image should be pushed to a registry for the cluster to pull
+  # in our example we provide a docker image from our public docker hub
+  image: petuum/nni:cifar-example 
+  # optional: 
+  # the user needs to provide the secret if the image is pulled from a private registry
+  # imagePullSecrets:
+  #  - name: {secret}
+  adaptive: true
+  checkpoint:
+    # the user needs to determine the storageClass in Kubenetes
+    # For example, for MicroK8s, ‘microk8s-hostpath’ can be used
+    storageClass: microk8s-hostpath 
+    storageSize: 1Gi
+  cpuNum: 1
+  memorySize: 1Gi

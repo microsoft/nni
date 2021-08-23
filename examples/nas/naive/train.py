@@ -6,7 +6,7 @@ import torchvision
 import torchvision.transforms as transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.darts import DartsTrainer
+from nni.algorithms.nas.pytorch.darts import DartsTrainer
 
 
 class Net(nn.Module):

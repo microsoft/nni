@@ -1,0 +1,73 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+variables:
+  worker: remote_nni-ci-gpu-03
+
+# variables set on VSO:
+#   manager_ip
+#   worker_ip
+#   password_in_docker
+
+jobs:
+- job: remote_windows2linux
+  pool: NNI CI WINDOWS2
+  timeoutInMinutes: 120
+
+  steps:
+  - script:
+      python test/vso_tools/generate_nni_version.py
+      python -m pip install --upgrade pip setuptools
+      python setup.py clean --all
+    displayName: Prepare on Windows manager
+
+  - task: CopyFilesOverSSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      targetFolder: /tmp/nnitest/$(Build.BuildId)
+      overwrite: true
+    displayName: Copy source files to Linux worker
+    timeoutInMinutes: 10
+
+  - script: |
+      python test/vso_tools/install_nni.py $(NNI_RELEASE)
+
+      cd examples/tuners/customized_tuner
+      python setup.py develop --user
+      nnictl algo register --meta meta_file.yml
+    displayName: Install NNI on Windows manager
+
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      runOptions: commands
+      commands: |
+        python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/build_wheel.py $(NNI_RELEASE)
+        python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+      failOnStdErr: false
+    displayName: Install NNI and run docker on Linux worker
+
+  - powershell: |
+      cd test
+      python nni_test/nnitest/generate_ts_config.py `
+          --ts remote `
+          --remote_reuse false `
+          --remote_user nni `
+          --remote_host $(worker_ip) `
+          --remote_port $(docker_port) `
+          --remote_pwd $(password_in_docker) `
+          --nni_manager_ip $(manager_ip)
+      Get-Content config/training_service.yml
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts remote --exclude cifar10
+    displayName: Integration test
+
+  - task: SSH@0
+    inputs:
+      sshEndpoint: $(worker)
+      runOptions: commands
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/stop_docker.py $(Build.BuildId)
+    displayName: Stop docker

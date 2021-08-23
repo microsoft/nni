@@ -18,7 +18,7 @@ import torch.optim as optim
 from torchvision import datasets, transforms
 
 from nni.nas.pytorch.mutables import LayerChoice, InputChoice
-from nni.nas.pytorch.classic_nas import get_and_apply_next_architecture
+from nni.algorithms.nas.pytorch.classic_nas import get_and_apply_next_architecture
 
 
 logger = logging.getLogger('mnist_AutoML')

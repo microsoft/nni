@@ -1,0 +1,68 @@
+$buttonsMarginTop: 45px;
+$buttonsMarginBottom: 7px;
+$navBarHeight: 56px;
+$navBarMarginBottom: 18px;
+
+.download {
+    button,
+    button:active,
+    button:hover {
+        color: #fff;
+        border: none;
+    }
+}
+
+/* office-fabric-ui */
+.ms-Panel-main {
+    width: 55%;
+    background: #fff;
+
+    .ms-Panel-content {
+        padding: 0;
+    }
+
+    .ms-Pivot {
+        line-height: 56px;
+        padding: 0 38px;
+        background: #f2f2f2;
+
+        .ms-Pivot-linkContent:hover {
+            border-bottom: 2px solid #ccc;
+        }
+
+        .is-selected {
+            .ms-Pivot-linkContent:hover {
+                border: none;
+            }
+        }
+    }
+}
+
+.panel {
+    padding: 0 38px;
+}
+
+// for log panel editor
+.logMargin {
+    margin-top: 20px;
+}
+
+.panelName {
+    line-height: $navBarHeight;
+    font-size: 14px;
+    margin-bottom: $navBarMarginBottom;
+    font-weight: 500;
+}
+
+/* log drawer download & close button's row */
+.buttons {
+    margin: $buttonsMarginTop 0 $buttonsMarginBottom 0;
+
+    .close {
+        text-align: right;
+    }
+}
+
+.configClose {
+    margin: $buttonsMarginTop 0 $buttonsMarginBottom 0;
+}

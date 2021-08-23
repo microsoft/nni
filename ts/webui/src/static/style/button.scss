@@ -1,0 +1,29 @@
+$btnBgcolor: #0071bc;
+
+button.tableButton {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: $btnBgcolor;
+    border-color: $btnBgcolor;
+    height: 26px;
+    font-size: 14px;
+    margin-top: 4px;
+    border-radius: 0;
+}
+
+/* kill btn style: delete its own hover style */
+
+/* after button click the color not change */
+button.tableButton:hover,
+button.tableButton:focus {
+    background-color: $btnBgcolor;
+    border-color: $btnBgcolor;
+}
+
+button.changeBtu {
+    height: 32px;
+}
+
+.ant-input,
+.ant-select-selection {
+    border-radius: 0 !important;
+}

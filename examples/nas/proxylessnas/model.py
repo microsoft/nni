@@ -58,11 +58,9 @@ class SearchMobileNet(nn.Module):
                     # if it is not the first one
                     op_candidates += [ops.OPS['Zero'](input_channel, width, stride)]
                     conv_op = nas.mutables.LayerChoice(op_candidates,
-                                                       return_mask=True,
                                                        key="s{}_c{}".format(stage_cnt, i))
                 else:
                     conv_op = nas.mutables.LayerChoice(op_candidates,
-                                                       return_mask=True,
                                                        key="s{}_c{}".format(stage_cnt, i))
                 # shortcut
                 if stride == 1 and input_channel == width:

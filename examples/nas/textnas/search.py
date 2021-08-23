@@ -11,7 +11,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 
-from nni.nas.pytorch.enas import EnasMutator, EnasTrainer
+from nni.algorithms.nas.pytorch.enas import EnasMutator, EnasTrainer
 from nni.nas.pytorch.callbacks import LRSchedulerCallback
 
 from dataloader import read_data_sst

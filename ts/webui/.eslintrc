@@ -1,0 +1,48 @@
+{
+    "env": {
+        "browser": true,
+        "es6": true
+    },
+    "parser": "@typescript-eslint/parser",
+    "parserOptions": {
+        "ecmaVersion": 2018,
+        "sourceType": "module"
+    },
+    "plugins": [
+        "@typescript-eslint",
+        "eslint-plugin-prettier"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:react/recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended",
+        "prettier/react",
+        "prettier"
+    ],
+    "rules": {
+        "prettier/prettier": 2,
+        "@typescript-eslint/no-explicit-any": 0,
+        "@typescript-eslint/no-namespace": 0,
+        "@typescript-eslint/consistent-type-assertions": 0,
+        "@typescript-eslint/no-inferrable-types": 0,
+        "@typescript-eslint/no-use-before-define": [2, "nofunc"],
+        "@typescript-eslint/no-var-requires": 0,
+        "@typescript-eslint/no-unused-vars": [2, { "argsIgnorePattern": "^_" }],
+        "arrow-parens": [2, "as-needed"],
+        "no-inner-declarations": 0,
+        "no-empty": 2,
+        "no-multiple-empty-lines": [2, { "max": 1 }],
+        "react/display-name": 0
+    },
+    "settings": {
+        "react": {
+            "version": "detect"
+        },
+        "ignorePatterns": [
+            "node_modules/",
+            "build/",
+            "**/*.js"
+        ]
+    }
+}

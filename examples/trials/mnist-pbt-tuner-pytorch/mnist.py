@@ -112,7 +112,7 @@ def main(args):
 
     if os.path.isfile(load_checkpoint_path):
         model_state_dict = load_checkpoint(load_checkpoint_path)
-        logger.info("test : " + load_checkpoint_path)
+        logger.info("test : ", load_checkpoint_path)
         logger.info(type(model_state_dict))
         model.load_state_dict(model_state_dict)
 
