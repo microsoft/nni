@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+
 import logging
 import os
 import random
@@ -8,6 +9,7 @@ import string
 import time
 import threading
 from typing import Iterable, List, Dict, Tuple
+from dataclasses import dataclass
 
 from nni.common.device import GPUDevice, Device
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
@@ -22,6 +24,13 @@ from ..evaluator.pytorch.cgo.evaluator import MultiModelSupervisedLearningModule
 from .base import BaseGraphData
 
 _logger = logging.getLogger(__name__)
+
+
+@dataclass
+class TrialSubmission:
+    model: Model
+    placement: Dict[Node, Device]
+    grouped_models: List[Model]
 
 
 class CGOExecutionEngine(AbstractExecutionEngine):
@@ -64,7 +73,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         self._history: List[Model] = []
 
-        self._queuing_jobs: List[Model] = []
+        self._queuing_models: List[Model] = []
+        self._models_to_retry: List[Model] = []
         self._queue_lock = threading.Lock()
 
         # register advisor callbacks
@@ -76,7 +86,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         advisor.final_metric_callback = self._final_metric_callback
 
         self._stopped = False
-        self._consumer_thread = threading.Thread(target=self._consume_queue)
+        self._consumer_thread = threading.Thread(target=self._consume_models)
+        self._scheduler_thread = threading.Thread(target=self._scheduler_loop)
         self._consumer_thread.start()
 
     def join(self):
@@ -90,36 +101,99 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         curr_time = time.time()
         _logger.info('%d models are submitted', len(models))
         self._queue_lock.acquire()
-        self._queuing_jobs.extend([(curr_time, _) for _ in models])
+        self._queuing_models.extend([(curr_time, _) for _ in models])
         self._queue_lock.release()
 
-    def _consume_queue(self):
-        # a thread to monitor self.queuing_jobs to consume them in batch
+    def _submit_retry_models(self, models: List[Model]) -> None:
+        _logger.info('%d models are retried', len(models))
+        self._queue_lock.acquire()
+        self._models_to_retry.extend(models)
+        self._queue_lock.release()
+
+    def _consume_models(self):
+        # a thread to monitor self._queuing_models to consume them in batch
         while not self._stopped:
-            if len(self._queuing_jobs) > 0:
-                curr_time = time.time()
+            if len(self._models_to_retry) > 0:
                 self._queue_lock.acquire()
-                if (self.max_concurrency and len(self._queuing_jobs) >= self.max_concurrency):
-                    self._submit_models_in_batch(*[_[1] for _ in self._queuing_jobs[:self.max_concurrency]])
-                    self._queuing_jobs = self._queuing_jobs[self.max_concurrency:]
-                elif len(self.available_devices) <= len(self._queuing_jobs) or \
-                        (curr_time - self._queuing_jobs[0][0] > self._batch_waiting_time):
-                    self._submit_models_in_batch(*[_[1] for _ in self._queuing_jobs])
-                    self._queuing_jobs = []
+                # retrying jobs should be first scheduled.
+                for m in self._models_to_retry:
+                    if len(self.available_devices) > 0:
+                        self._submit_models_in_batch(m)  # submit the single model to avoid cross-graph optimization.
+                        self._models_to_retry = self._models_to_retry[1:]
+                self._queue_lock.release()
+
+            if len(self._queuing_models) > 0:
+                self._queue_lock.acquire()
+                curr_time = time.time()
+
+                num_models_to_submit = len(self.available_devices)
+                if self.max_concurrency:
+                    num_models_to_submit = min(num_models_to_submit, self.max_concurrency)
+
+                if curr_time - self._queuing_models[0][0] > self._batch_waiting_time:
+                    num_models_to_submit = min(num_models_to_submit, len(self._queuing_models))
+                if num_models_to_submit > 0:
+                    self._submit_models_in_batch(*[_[1] for _ in self._queuing_models[:num_models_to_submit]])
+                    self._queuing_models = self._queuing_models[num_models_to_submit:]
                 self._queue_lock.release()
             time.sleep(1)
+
+    def _run_trial(self, trial_sub: TrialSubmission):
+        placement_constraint, required_gpus = self._extract_placement_constaint(trial_sub.placement)
+        is_runnable = all([_ in self.available_devices for _ in required_gpus])
+        assert(is_runnable)
+        graph_data = BaseGraphData(codegen.model_to_pytorch_script(trial_sub.model,
+                                                                   placement=trial_sub.placement),
+                                   trial_sub.model.evaluator)
+        trial_id = send_trial(graph_data.dump(),
+                              placement_constraint=placement_constraint)
+
+        _logger.info("a trial of %d models is sent" % len(trial_sub.grouped_models))
+
+        self._trial_used_devices[trial_id] = required_gpus.copy()
+
+        for d in required_gpus:
+            self.available_devices.remove(d)
+
+        self._running_models[trial_id] = trial_sub.model
+
+        self._trial_to_original_models[trial_id] = []
+        for m in trial_sub.grouped_models:
+            self._original_models[m.model_id] = m
+            self._original_model_to_multi_model[m.model_id] = trial_sub.model
+            self._trial_to_original_models[trial_id].append(m.model_id)
+            if m not in self._history:
+                self._history.append(m)
+
+    # def _scheduler_loop(self):
+    #     while not self._stopped:
+    #         self._scheduler_lock.acquire()
+    #         if len(self._trial_queue) > 0:
+    #             for trial_sub in self._trial_queue:
+    #                 _, required_gpus = self._extract_placement_constaint(trial_sub.placement)
+    #                 _logger.info([m.gpu_id for m in required_gpus])
+    #                 self._queue_lock.acquire()
+    #                 is_runnable = all([ _ in self.available_devices for _ in required_gpus])
+    #                 if is_runnable:
+    #                     self._run_trial(trial_sub)
+    #                     self._trial_queue = self._trial_queue[1:]
+    #                 self._queue_lock.release()
+
+    #         self._scheduler_lock.release()
+    #         time.sleep(1)
 
     def _extract_placement_constaint(self, placement_mapping: Dict[Node, Device]):
         unique_gpus = sorted(list(set([e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
         placement_constraint = None
-        if len(unique_gpus) > 0:
-            placement_constraint = {}
-            placement_constraint['type'] = 'Device'
-            placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
-        return placement_constraint
+        assert len(unique_gpus) > 0  # each trial must use GPU
+        placement_constraint = {}
+        placement_constraint['type'] = 'Device'
+        placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
+        return placement_constraint, unique_gpus
 
     def _submit_models_in_batch(self, *models: List[Model]) -> None:
         _logger.info('%d models are submitted in batch', len(models))
+        _logger.info('model id: %s' % str([m.model_id for m in models]))
         logical = self._build_logical(models)
 
         for opt in self._optimizers:
@@ -127,23 +201,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
-            placement_constraint = self._extract_placement_constaint(placement)
-            trial_id = send_trial(data.dump(), placement_constraint=placement_constraint)
-            # unique non-cpu devices used by the trial
-            self._trial_used_devices[trial_id] = list(set([_ for _ in placement.values() if isinstance(_, GPUDevice)]))
-
-            # currently, it is impossible for search strategy to submit models more than the number of available devices
-            for used_device in self._trial_used_devices[trial_id]:
-                self.available_devices.remove(used_device)  # used_device must be in self.available_devices
-            self._running_models[trial_id] = model
-
-            self._trial_to_original_models[trial_id] = []
-            for m in grouped_models:
-                self._original_models[m.model_id] = m
-                self._original_model_to_multi_model[m.model_id] = model
-                self._trial_to_original_models[trial_id].append(m.model_id)
-                self._history.append(m)
+            self._run_trial(TrialSubmission(model, placement, grouped_models))
 
     def list_models(self) -> Iterable[Model]:
         return self._history
@@ -205,6 +263,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
             model.status = ModelStatus.Trained
         else:
             model.status = ModelStatus.Failed
+        models_to_retry = []
         for model_id in self._original_model_to_multi_model:
             if self._original_model_to_multi_model[model_id] == model:
                 original_model = self._original_models[model_id]
@@ -212,8 +271,15 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                     original_model.status = ModelStatus.Trained
                 else:
                     original_model.status = ModelStatus.Failed
+                    # the failed models in a multi-model will be retried one by one w/o CGO
+                    if len(self._trial_to_original_models[trial_id]) > 1:
+                        models_to_retry.append(original_model)
                 for listener in self._listeners:
                     listener.on_training_end(original_model, success)
+        
+        if len(models_to_retry) > 0:
+            self._submit_retry_models(models_to_retry)
+
         self.available_devices.extend(self._trial_used_devices[trial_id])
         self.available_devices = sorted(list(set(self.available_devices)))
         del self._running_models[trial_id]
@@ -242,8 +308,11 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                     listener.on_metric(self._original_models[model_id], merged_metrics[model_id])
 
     def query_available_resource(self) -> List[WorkerInfo]:
-        # the _queuing_jobs need to use available_devices first
-        return len(self.available_devices) - len(self._queuing_jobs)
+        # the _queuing_models need to use available_devices first
+        self._queue_lock.acquire()
+        available_for_more_models = len(self.available_devices) - len(self._queuing_models) - len(self._models_to_retry)
+        self._queue_lock.release()
+        return available_for_more_models
 
     def budget_exhausted(self) -> bool:
         advisor = get_advisor()
