@@ -24,7 +24,7 @@ describe('Unit Test for LocalTrainingService', () => {
     const config = <ExperimentConfig>{
         trialCommand: 'sleep 1h && echo hello',
         trialCodeDirectory: `${localCodeDir}`,
-        trialGpuNumber: 1,
+        trialGpuNumber: 0,  // TODO: add test case for gpu?
         trainingService: {
             platform: 'local'
         }

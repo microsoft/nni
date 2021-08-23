@@ -58,10 +58,10 @@ def post_training_quantization_example(train_loader, test_loader, device):
     model = NaiveModel()
 
     config = {
-        'conv1':{'weight_bit':8, 'activation_bit':8},
-        'conv2':{'weight_bit':32, 'activation_bit':32},
-        'fc1':{'weight_bit':16, 'activation_bit':16},
-        'fc2':{'weight_bit':8, 'activation_bit':8}
+        'conv1':{'weight_bits':8, 'output_bits':8},
+        'conv2':{'weight_bits':32, 'output_bits':32},
+        'fc1':{'weight_bits':16, 'output_bits':16},
+        'fc2':{'weight_bits':8, 'output_bits':8}
     }
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
@@ -102,8 +102,10 @@ def quantization_aware_training_example(train_loader, test_loader, device):
     ]
 
     # finetune the model by using QAT
+    # enable batchnorm folding mode
+    dummy_input = torch.randn(1, 1, 28, 28)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    quantizer = QAT_Quantizer(model, configure_list, optimizer)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer, dummy_input=dummy_input)
     quantizer.compress()
 
     model.to(device)

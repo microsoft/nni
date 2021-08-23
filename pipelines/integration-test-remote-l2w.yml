@@ -16,7 +16,7 @@ variables:
 
 jobs:
 - job: remote_linux2windows
-  pool: NNI CI REMOTE CLI
+  pool: NNI CI EAST US REMOTE CLI
   timeoutInMinutes: 120
 
   steps:

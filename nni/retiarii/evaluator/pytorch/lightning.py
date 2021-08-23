@@ -12,6 +12,12 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 
 import nni
+try:
+    from .cgo import trainer as cgo_trainer
+    cgo_import_failed = False
+except ImportError:
+    cgo_import_failed = True
+
 from ...graph import Evaluator
 from ...serializer import serialize_cls
 
@@ -35,7 +41,6 @@ class LightningModule(pl.LightningModule):
 
 Trainer = serialize_cls(pl.Trainer)
 DataLoader = serialize_cls(DataLoader)
-
 
 class Lightning(Evaluator):
     """
@@ -67,7 +72,11 @@ class Lightning(Evaluator):
                  train_dataloader: Optional[DataLoader] = None,
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
-        assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}.'
+        if cgo_import_failed:
+            assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}'
+        else:
+            assert isinstance(trainer, Trainer) or isinstance(trainer, cgo_trainer.Trainer), \
+                f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
         assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         self.module = lightning_module
@@ -91,7 +100,21 @@ class Lightning(Evaluator):
         return self.fit(model_cls)
 
     def __eq__(self, other):
-        return self.function == other.function and self.arguments == other.arguments
+        eq_func = False
+        eq_args = False
+        if other is None:
+            return False
+        if hasattr(self, "function") and hasattr(other, "function"):
+            eq_func = (self.function == other.function)
+        elif not (hasattr(self, "function") or hasattr(other, "function")):
+            eq_func = True
+
+        if hasattr(self, "arguments") and hasattr(other, "arguments"):
+            eq_args = (self.arguments == other.arguments)
+        elif not (hasattr(self, "arguments") or hasattr(other, "arguments")):
+            eq_args = True
+
+        return eq_func and eq_args
 
     def fit(self, model):
         """
@@ -155,7 +178,10 @@ class _SupervisedLearningModule(LightningModule):
         y_hat = self(x)
 
         if not self._already_exported:
-            self.to_onnx(self.export_onnx, x, export_params=True)
+            try:
+                self.to_onnx(self.export_onnx, x, export_params=True)
+            except RuntimeError as e:
+                warnings.warn(f'ONNX conversion failed. As a result, you might not be able to use visualization. Error message: {e}')
             self._already_exported = True
 
         self.log('val_loss', self.criterion(y_hat, y), prog_bar=True)

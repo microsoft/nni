@@ -410,7 +410,7 @@ class Graph:
         return self is other
 
     def _fork_to(self, model: Model, name_prefix='') -> 'Graph':
-        new_graph = Graph(model, self.id, name_prefix+self.name, _internal=True)._register()
+        new_graph = Graph(model, self.id, name_prefix + self.name, _internal=True)._register()
         # TODO: use node copy instead
         new_graph.input_node.operation.io_names = self.input_node.operation.io_names
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
@@ -457,6 +457,11 @@ class Graph:
     def _register(self) -> 'Graph':
         self.model.graphs[self.name] = self
         return self
+
+    def _rename_graph(self, old_name, new_name):
+        self.model.graphs[old_name].name = new_name
+        self.model.graphs[new_name] = self.model.graphs[old_name]
+        del self.model.graphs[old_name]
 
     @staticmethod
     def _load(model: Model, name: str, ir: Any) -> 'Graph':

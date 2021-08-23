@@ -25,8 +25,6 @@ sharedStorage:
   remoteMountPoint: ${your/remote/mount/point}
   storageAccountName: ${replace_to_your_storageAccountName}
   storageAccountKey: ${replace_to_your_storageAccountKey}
-  # If you did not set storageAccountKey, you need use `az login` with Azure CLI at first and set resourceGroupName.
-  # resourceGroupName: ${replace_to_your_resourceGroupName}
   containerName: ${replace_to_your_containerName}
   # usermount means you have already mount this storage on localMountPoint
   # nnimount means nni will try to mount this storage on localMountPoint

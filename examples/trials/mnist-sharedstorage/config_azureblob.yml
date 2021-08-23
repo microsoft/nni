@@ -24,12 +24,14 @@ trainingService:
                             #   C:/Users/USERNAME/.conda/envs/ENVNAME;C:/Users/USERNAME/.conda/envs/ENVNAME/Scripts;C:/Users/USERNAME/.conda/envs/ENVNAME/Library/bin
 sharedStorage:
   storageType: AzureBlob
+  # please set localMountPoint as absolute path and localMountPoint should outside the code directory
+  # because nni will copy user code to localMountPoint
   localMountPoint: ${your/local/mount/point}
+  # remoteMountPoint is the mount point on training service machine, it can be set as both absolute path and relative path
+  # make sure you have `sudo` permission without password on training service machine
   remoteMountPoint: ${your/remote/mount/point}
   storageAccountName: ${replace_to_your_storageAccountName}
   storageAccountKey: ${replace_to_your_storageAccountKey}
-  # If you did not set storageAccountKey, you need use `az login` with Azure CLI at first and set resourceGroupName.
-  # resourceGroupName: ${replace_to_your_resourceGroupName}
   containerName: ${replace_to_your_containerName}
   # usermount means you have already mount this storage on localMountPoint
   # nnimount means nni will try to mount this storage on localMountPoint

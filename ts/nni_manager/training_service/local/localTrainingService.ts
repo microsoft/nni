@@ -11,6 +11,7 @@ import * as tkill from 'tree-kill';
 import { NNIError, NNIErrorNames } from '../../common/errors';
 import { getExperimentId } from '../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../common/log';
+import { powershellString } from '../../common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
@@ -237,8 +238,10 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGTERM');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
+
         const startTime = Date.now();
-        while(await isAlive(trialJob.pid)) {    
+        while(await isAlive(trialJob.pid)) {
             if (Date.now() - startTime > 4999) {
                 tkill(trialJob.pid, 'SIGKILL', (err) => {
                     if (err) {
@@ -249,8 +252,6 @@ class LocalTrainingService implements TrainingService {
             }
             await delay(500);
         }
-
-        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
     }
@@ -446,7 +447,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         } else {
-            runScriptContent.push(`$env:PATH="${process.env.path}"`)
+            runScriptContent.push(`$env:PATH=${powershellString(process.env.path!)}`)
         }
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));

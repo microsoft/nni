@@ -27,7 +27,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.3 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
+* **New release**: [v2.4 is available](https://github.com/microsoft/nni/releases) - _released on June-15-2021_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
@@ -251,7 +251,7 @@ Note:
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v2.3 https://github.com/Microsoft/nni.git
+  git clone -b v2.4 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.
@@ -356,6 +356,7 @@ Targeting at openness and advancing state-of-art technology, [Microsoft Research
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller) : an open source general-purpose Kubernetes Pod Controller that orchestrate all kinds of applications on Kubernetes by a single controller.
 * [MMdnn](https://github.com/Microsoft/MMdnn) : A comprehensive, cross-framework solution to convert, visualize and diagnose deep neural network models. The "MM" in MMdnn stands for model management and "dnn" is an acronym for deep neural network.
 * [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) is an open source library for large scale vector approximate nearest neighbor search scenario.
+* [nn-Meter](https://github.com/microsoft/nn-Meter) : An accurate inference latency predictor for DNN models on diverse edge devices.
 
 We encourage researchers and students leverage these projects to accelerate the AI development and research.
 

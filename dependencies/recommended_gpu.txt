@@ -5,7 +5,7 @@ tensorflow
 keras == 2.4.3
 torch == 1.9.0+cu111
 torchvision == 0.10.0+cu111
-pytorch-lightning >= 1.1.1
+pytorch-lightning >= 1.2.8
 onnx
 peewee
 graphviz

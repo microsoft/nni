@@ -83,9 +83,10 @@ class Translatable(abc.ABC):
         pass
 
 
-def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=False):
+def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=False, stop_parsing=True):
     class wrapper(cls):
         def __init__(self, *args, **kwargs):
+            self._stop_parsing = stop_parsing
             if reset_mutation_uid:
                 reset_uid('mutation')
             if store_init_parameters:
@@ -163,4 +164,4 @@ def model_wrapper(cls):
         1. Capture the init parameters of python class so that it can be re-instantiated in another process.
         2. Reset uid in `mutation` namespace so that each model counts from zero. Can be useful in unittest and other multi-model scenarios.
     """
-    return _create_wrapper_cls(cls, reset_mutation_uid=True)
+    return _create_wrapper_cls(cls, reset_mutation_uid=True, stop_parsing=False)

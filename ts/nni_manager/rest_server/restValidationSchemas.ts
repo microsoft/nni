@@ -211,7 +211,6 @@ export namespace ValidationSchemas {
                 storageAccountName: joi.string(),
                 storageAccountKey: joi.string(),
                 containerName: joi.string(),
-                resourceGroupName: joi.string(),
                 localMounted: joi.string()
             })
         }
@@ -226,6 +225,7 @@ export namespace ValidationSchemas {
             trainingServicePlatform: joi.string(),
             searchSpace: joi.string().required(),
             maxExecDuration: joi.number().min(0).required(),
+            maxTrialDuration: joi.number().min(0).required(),
             multiPhase: joi.boolean(),
             multiThread: joi.boolean(),
             nniManagerIp: joi.string(),

@@ -179,10 +179,12 @@ stages:
         python -m pytest ut --cov-config=.coveragerc \
           --ignore=ut/sdk/test_pruners.py \
           --ignore=ut/sdk/test_compressor_tf.py \
-          --ignore=ut/sdk/test_compressor_torch.py
+          --ignore=ut/sdk/test_compressor_torch.py \
+          --ignore=ut/sdk/test_model_speedup.py
         python -m pytest ut/sdk/test_pruners.py --cov-config=.coveragerc --cov-append
         python -m pytest ut/sdk/test_compressor_tf.py --cov-config=.coveragerc --cov-append
         python -m pytest ut/sdk/test_compressor_torch.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/sdk/test_model_speedup.py --cov-config=.coveragerc --cov-append
       displayName: Python unit test
 
     - script: |
@@ -303,6 +305,7 @@ stages:
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+    timeoutInMinutes: 90  # macos test need extra time
 
     steps:
     - task: UsePythonVersion@0
@@ -352,7 +355,7 @@ stages:
     - script: |
         set -e
         export CI=true
-        (cd ts/nni_manager && yarn test)
+        (cd ts/nni_manager && yarn test --exclude test/core/nnimanager.test.ts)
         (cd ts/nasui && yarn test)
       displayName: TypeScript unit test
 

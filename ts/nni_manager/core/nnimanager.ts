@@ -19,7 +19,7 @@ import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/exp
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
-    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent
+    TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, TrialJobStatus, TrialCommandContent, PlacementConstraint
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
@@ -457,6 +457,9 @@ class NNIManager implements Manager {
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
             return new module_.LocalTrainingService(config);
+        } else if (platform === 'kubeflow') {
+            const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
+            return new module_.KubeflowTrainingService();
         } else if (platform === 'frameworkcontroller') {
             const module_ = await import('../training_service/kubernetes/frameworkcontroller/frameworkcontrollerTrainingService');
             return new module_.FrameworkControllerTrainingService();
@@ -544,14 +547,23 @@ class NNIManager implements Manager {
         }
     }
 
-    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
-        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-        if (undefined !== trialJobDetail &&
-            trialJobDetail.status === 'RUNNING' &&
-            trialJobDetail.startTime !== undefined) {
-            const isEarlyStopped = true;
-            await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
-            this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+    private async stopTrialIfOverMaxDurationLimit(): Promise<void> {
+        if(this.maxTrialDuration === Infinity){
+            return;
+        }
+
+        for (const trialJobId of Array.from(this.trialJobs.keys())) {
+            const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if(undefined !== trialJobDetail &&
+                trialJobDetail.status === 'RUNNING' &&
+                trialJobDetail.startTime !== undefined){
+                const currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
+                if(currentTrialDuration>this.maxTrialDuration) {
+                    const isEarlyStopped = true;
+                    await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                    this.log.info(`Trial job ${trialJobDetail.id} has been canceled because it is over max trial duration.`);
+                }
+            }
         }
     }
 
@@ -619,6 +631,8 @@ class NNIManager implements Manager {
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
+            await this.stopTrialIfOverMaxDurationLimit();
+
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 
@@ -635,8 +649,6 @@ class NNIManager implements Manager {
             } else {
                 this.trialConcurrencyChange = requestTrialNum;
             }
-
-            this.requestTrialJobs(requestTrialNum);
 
             // check maxtrialnum and maxduration here
             // NO_MORE_TRIAL is more like a subset of RUNNING, because during RUNNING tuner
@@ -662,6 +674,8 @@ class NNIManager implements Manager {
                     }
                 }
             } else {
+                this.requestTrialJobs(requestTrialNum);
+
                 if (this.status.status === 'DONE') {
                     delete this.experimentProfile.endTime;
                     await this.storeExperimentProfile();
@@ -678,7 +692,6 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);
@@ -801,13 +814,14 @@ class NNIManager implements Manager {
                     this.setStatus('RUNNING');
                 }
                 const trialRequestContent: TrialCommandContent = JSON.parse(content);
+                const noneConstraint: PlacementConstraint = {type: 'None', gpus: []};
                 const form: TrialJobApplicationForm = {
                     sequenceId: this.experimentProfile.nextSequenceId++,
                     hyperParameters: {
                         value: content,
                         index: 0
                     },
-                    placementConstraint: trialRequestContent.placement_constraint
+                    placementConstraint: trialRequestContent.placement_constraint? trialRequestContent.placement_constraint : noneConstraint
                 };
                 this.waitingTrials.push(form);
                 break;
