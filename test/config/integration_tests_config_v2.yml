@@ -17,9 +17,9 @@ testCases:
 - name: sklearn-regression
   configFile: test/config/examples/sklearn-regression-v2.yml
 
-- name: mnist-tensorflow
-  configFile: test/config/examples/mnist-tfv2-v2.yml
-  trainingService: local remote hybrid
+# - name: mnist-tensorflow
+#   configFile: test/config/examples/mnist-tfv2-v2.yml
+#   trainingService: local remote hybrid
 
 - name: mnist-pytorch-local
   configFile: test/config/examples/mnist-pytorch-v2.yml
