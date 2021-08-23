@@ -3,7 +3,6 @@
 
 from dataclasses import dataclass
 from abc import ABC, abstractmethod
-from os import stat
 
 try:
     from typing import Literal

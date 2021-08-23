@@ -49,7 +49,8 @@ class CompressorTestCase(TestCase):
         }]
 
         model.relu = torch.nn.ReLU()
-        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer)
         quantizer.compress()
         modules_to_compress = quantizer.get_modules_to_compress()
         modules_to_compress_name = [t[0].name for t in modules_to_compress]
@@ -317,7 +318,9 @@ class CompressorTestCase(TestCase):
             'op_types': ['ReLU']
         }]
         model.relu = torch.nn.ReLU()
-        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
+
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer)
         quantizer.compress()
 
         # test quantize
@@ -350,14 +353,14 @@ class CompressorTestCase(TestCase):
         eps = 1e-7
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_activation, 0, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_activation, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_output, 0, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_output, 0.002, abs_tol=eps)
 
         quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_activation, 0.002, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_activation, 0.00998, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_output, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_output, 0.00998, abs_tol=eps)
 
     def test_torch_quantizer_export(self):
         config_list_qat = [{
@@ -392,7 +395,8 @@ class CompressorTestCase(TestCase):
         for config, quantize_algorithm in zip(config_set, quantize_algorithm_set):
             model = TorchModel()
             model.relu = torch.nn.ReLU()
-            quantizer = quantize_algorithm(model, config)
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            quantizer = quantize_algorithm(model, config, optimizer)
             quantizer.compress()
 
             x = torch.rand((1, 1, 28, 28), requires_grad=True)
