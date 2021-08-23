@@ -1,0 +1,25 @@
+# working directory on DSW, please provie FULL path
+searchSpaceFile: search_space.json
+# the command on trial runner(or, DLC container), be aware of data_dir
+trialCommand: python mnist.py --data_dir /root/data/{your_data_dir}
+trialConcurrency: 1  # NOTE: please provide number <= 3 due to DLC system limit.
+maxTrialNumber: 10
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+# ref: https://help.aliyun.com/document_detail/203290.html?spm=a2c4g.11186623.6.727.6f9b5db6bzJh4x
+trainingService:
+  platform: dlc
+  type: Worker
+  image: registry-vpc.cn-beijing.aliyuncs.com/pai-dlc/pytorch-training:1.6.0-gpu-py37-cu101-ubuntu18.04
+  jobType: PyTorchJob                             # choices: [TFJob, PyTorchJob]
+  podCount: 1
+  ecsSpec: ecs.c6.large
+  region: cn-hangzhou
+  nasDataSourceId: ${your_nas_data_source_id}
+  accessKeyId: ${your_ak_id}
+  accessKeySecret: ${your_ak_key}
+  nasDataSourceId: ${your_nas_data_source_id}     # NAS datasource ID，e.g., datat56by9n1xt0a
+  localStorageMountPoint: /home/admin/workspace/  # default NAS path on DSW, MUST provide full path.
+  containerStorageMountPoint: /root/data/         # default NAS path on DLC container, change it according your setting

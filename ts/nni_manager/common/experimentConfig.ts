@@ -73,6 +73,25 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
+
+/*  Alibaba PAI DLC  */
+export interface DlcConfig extends TrainingServiceConfig {
+    platfrom: 'dlc';
+    type: string;
+    image: string;
+    jobType: string;
+    podCount: number;
+    ecsSpec: string;
+    region: string;
+    nasDataSourceId: string;
+    accessKeyId: string;
+    accessKeySecret: string;
+    localStorageMountPoint: string;
+    containerStorageMountPoint: string;
+}
+/* Kubeflow */
+
+// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
     storageType: string;
     maxTrialNumberPerGpu?: number;
