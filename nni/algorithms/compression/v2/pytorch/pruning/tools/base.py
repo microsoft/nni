@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field
 import logging
 from pathlib import Path
 import types
@@ -470,12 +470,28 @@ class TaskGenerator:
     """
     def __init__(self, origin_model: Module, origin_config_list: List[Dict] = [],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
+        """
+        Parameters
+        ----------
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
         assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
         self._log_dir_root = Path(log_dir).absolute()
         self._log_dir_root.mkdir(parents=True, exist_ok=True)
         self._save_result = save_result
 
+        # save the origin data under {log_dir}/origin/
         self._save_origin_data(origin_model, origin_config_list, origin_masks)
 
         self._task_id_candidate = 0
@@ -483,6 +499,9 @@ class TaskGenerator:
         self._pending_tasks: List[Task] = self._init_pending_tasks()
         self._best_score = None
         self._best_task_id = None
+
+        # dump self._tasks into {log_dir}/.tasks
+        self._dump_tasks_info()
 
     def _save_data(self, name: str, model: Module, config_list: List[Dict],
                    masks: Dict[str, Dict[str, Tensor]]):
@@ -535,6 +554,11 @@ class TaskGenerator:
         masks = torch.load(task.masks_path)
         return model, config_list, masks
 
+    def _dump_tasks_info(self):
+        tasks = {task_id: asdict(task) for task_id, task in self._tasks.items()}
+        with Path(self._log_dir_root, '.tasks').open('w') as f:
+            json_tricks.dump(tasks, f, indent=4)
+
     def _init_pending_tasks(self) -> List[Task]:
         raise NotImplementedError()
 
@@ -561,7 +585,9 @@ class TaskGenerator:
         assert task_id in self._tasks, 'Task {} does not exist.'.format(task_id)
         self._save_task_result(task_id, pruned_model, masks, score)
         self._tasks[task_id].status = 'Finished'
+        self._dump_tasks_info()
         self._pending_tasks.extend(self._generate_tasks(task_id, pruned_model, masks))
+        self._dump_tasks_info()
 
     def next(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
         """
@@ -578,4 +604,5 @@ class TaskGenerator:
             task = self._pending_tasks.pop(0)
             model, config_list, masks = self._load_task_data(task.task_id)
             task.status = 'Running'
+            self._dump_tasks_info()
             return task.task_id, model, config_list, masks
