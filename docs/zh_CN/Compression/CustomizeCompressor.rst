@@ -155,7 +155,7 @@
            grad_output : Tensor
                量化操作输出的梯度
            quant_type : QuantType
-               量化类型，可被定义为 `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+               量化类型，可被定义为 `QuantType.INPUT`, `QuantType.WEIGHT`, `QuantType.OUTPUT`,
                可为不同的类型定义不同的行为。
            Returns
            -------
@@ -164,7 +164,7 @@
            """
 
            # 对于 quant_output 函数，如果张量的绝对值大于 1，则将梯度设置为 0
-           if quant_type == QuantType.QUANT_OUTPUT: 
+           if quant_type == QuantType.OUTPUT:
                grad_output[torch.abs(tensor) > 1] = 0
            return grad_output
 
