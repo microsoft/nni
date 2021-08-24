@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+import 'app-module-path/register';
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';

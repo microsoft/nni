@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import ioc from 'typescript-ioc';
+import * as ioc from 'typescript-ioc';
 
 const Inject: (...args: any[]) => any = ioc.Inject;
 const Singleton: (target: Function) => void = ioc.Singleton;

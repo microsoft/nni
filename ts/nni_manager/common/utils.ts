@@ -11,7 +11,7 @@ import fs from 'fs';
 import net from 'net';
 import os from 'os';
 import path from 'path';
-import timersPromises from 'timers/promises';
+import * as timersPromises from 'timers/promises';
 import lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
