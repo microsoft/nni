@@ -147,7 +147,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         trial_id = send_trial(graph_data.dump(),
                               placement_constraint=placement_constraint)
 
-        _logger.info("a trial of %d models is sent" % len(trial_sub.grouped_models))
+        _logger.info("a trial of %d models is sent", len(trial_sub.grouped_models))
 
         self._trial_used_devices[trial_id] = required_gpus.copy()
 
@@ -175,7 +175,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     def _submit_models_in_batch(self, *models: List[Model]) -> None:
         _logger.info('%d models are submitted in batch', len(models))
-        _logger.info('model id: %s' % str([m.model_id for m in models]))
+        _logger.debug('model id: %s', str([m.model_id for m in models]))
         logical = self._build_logical(models)
 
         for opt in self._optimizers:
@@ -258,7 +258,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                         models_to_retry.append(original_model)
                 for listener in self._listeners:
                     listener.on_training_end(original_model, success)
-        
+
         if len(models_to_retry) > 0:
             self._submit_retry_models(models_to_retry)
 
