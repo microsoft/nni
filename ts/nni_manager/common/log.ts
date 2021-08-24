@@ -75,9 +75,8 @@ export class Logger {
             return;
         }
 
-        // `time.toLocaleString('sv')` trick does not work for Windows
-        const isoTime = new Date(new Date().toLocaleString() + ' UTC').toISOString();
-        const time = isoTime.slice(0, 10) + ' ' + isoTime.slice(11, 19);
+        const jsonTime = new Date().toJSON();
+        const time = jsonTime.slice(0, 10) + ' ' + jsonTime.slice(11, 19);
 
         const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
