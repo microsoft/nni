@@ -490,7 +490,18 @@ class GraphConverter:
 
         for node in sm_graph.nodes():
             handle_single_node(node)
-
+            
+        if node_index == {}:
+            # here is an example that the ir_graph is empty
+            # graph(%self : __torch__.torchmodels.googlenet.GoogLeNet,
+            # %x.1 : Tensor): return (%x.1)
+            # add a noop_identity node to handle this situation
+            self.global_seq += 1
+            ni_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
+            ir_graph.add_edge(head=(ir_graph.input_node, 0), tail=(ni_node, None))
+            ir_graph.add_edge(head=(ni_node, None), tail=(ir_graph.output_node, None))
+            for _output in sm_graph.outputs():
+                node_index[_output.node()] = ni_node
         return node_index
 
     def merge_aten_slices(self, ir_graph):
