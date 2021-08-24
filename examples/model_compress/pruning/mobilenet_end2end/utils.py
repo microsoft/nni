@@ -8,6 +8,8 @@ import torchvision.transforms as transforms
 import numpy as np
 from nni.compression.pytorch.utils.counter import count_flops_params
 
+import sys
+sys.path.append('../../models')
 from mobilenet import MobileNet
 from mobilenet_v2 import MobileNetV2
 
