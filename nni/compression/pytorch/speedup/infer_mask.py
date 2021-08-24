@@ -263,6 +263,8 @@ class AutoMaskInference:
         # C's output tensor).
         # Besides, updating the mask of C's output tensor equals to updating
         # the input mask of OP B and C.
+        # if 'bert.encoder.layer.11.attention.self.aten::view' in self.name or 'bert.encoder.layer.11.attention.output.dense' in self.name or 'bert.encoder.layer.11.attention.self.aten::contig' in self.name or 'bert.encoder.layer.11.attention.output.dropout' in self.name:
+
         if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
             # if output have gradient which means this node has successor
             # nodes and the successor nodes have already update their indirect
@@ -273,6 +275,8 @@ class AutoMaskInference:
             for batchid in range(self.output.size(0)):
                 # set the same mask value for the whole batche
                 self.output_mask[batchid][_grad_zero] = 0
+            # if torch.sum(_grad_zero) > 0:
+            #     import pdb; pdb.set_trace()
         elif isinstance(self.output, tuple) or isinstance(self.output, list):
             assert isinstance(self.output_mask, (tuple, list))
             for oid, tout in enumerate(self.output):
@@ -313,6 +317,8 @@ class AutoMaskInference:
 
     def update_direct_sparsity(self):
         # we don't need the gradient in the forward inference
+        # if 'bert.encoder.layer.11.attention.self.aten::view' in self.name  or 'bert.encoder.layer.11.attention.self.aten::contig' in self.name :
+        #     import pdb; pdb.set_trace()
         out_mask = None
         constant = None
         with torch.no_grad():

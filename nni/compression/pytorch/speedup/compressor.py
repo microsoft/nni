@@ -179,6 +179,7 @@ class ModelSpeedup:
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
             dummy_input.append(self.internal_result[_input].detach())
+            
             debugnames.append(_input)
 
         return dummy_input, debugnames
@@ -246,6 +247,8 @@ class ModelSpeedup:
         # update the parameter mask of the node
 
         self.masks[module_name] = _auto_infer.weight_mask
+        # if 'bert.encoder.layer.11.attention.self.aten::view' in module_name  or 'bert.encoder.layer.11.attention.self.aten::contig' in module_name :
+        #     import pdb; pdb.set_trace()
 
     def update_indirect_sparsity(self, node):
         """
@@ -265,6 +268,9 @@ class ModelSpeedup:
             The target node to update the indirect sparsity
         """
         unique_name = node.unique_name
+
+        # if 'bert.encoder.layer.11.attention.self.aten::view' in unique_name  or 'bert.encoder.layer.11.attention.self.aten::contig' in unique_name:
+        #     import pdb; pdb.set_trace()
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
             # directly update the previous one
@@ -276,13 +282,20 @@ class ModelSpeedup:
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
                 debug_name = auto_infer.input_debugname[in_id]
+                # print('######### debug_name', debug_name)
+                # if debug_name == 'context_layer':
+                #     import pdb; pdb.set_trace()
                 last_output = self.internal_result[debug_name]
                 # if isinstance(last_output, torch.Tensor):
                 # TODO what if last output is tuple/list of tensor
                 if last_output.grad is not None and tin.grad is not None:
                     last_output.grad.data += tin.grad.data
-                else:
+                elif last_output.grad is None:
                     last_output.grad = tin.grad
+                elif last_output is not None and tin.grad is None:
+                    # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
+                    # the size operation of tin will have no gradient
+                    continue
         else:
             _logger.warning(
                 'Note: %s does not have corresponding mask inference object', node.name)
@@ -413,6 +426,9 @@ class ModelSpeedup:
                 _new_forward_implementation = translate_jit_code(code)
                 setattr(self.bound_model, 'forward', types.MethodType(
                     _new_forward_implementation, self.bound_model))
+                # import pdb; pdb.set_trace()
+                import pdb; pdb.set_trace()
+                self.bound_model(self.dummy_input)
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """

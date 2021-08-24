@@ -204,7 +204,7 @@ def softmax_python(node, speedup):
 def contiguous_python(node, speedup):
     class contiguousModule(torch.nn.Module):
         def forward(self, x):
-            return x.contiguous()
+            return x.contiguous().clone()
     return contiguousModule()
 
 

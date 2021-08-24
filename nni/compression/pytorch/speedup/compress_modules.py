@@ -4,6 +4,7 @@
 import logging
 import torch
 import torch.nn as nn
+from functools import reduce
 from torch._C import ListType
 
 _logger = logging.getLogger(__name__)
@@ -539,16 +540,10 @@ def replace_layernorm(layernorm, masks):
     assert isinstance(layernorm, nn.LayerNorm)
     assert len(in_masks) == 1
     in_mask = in_masks[0]
-    dim_n = len(in_mask.size())
-    new_shape = []
-    for i in range(1, dim_n):
-        sum_dims = list(range(0, dim_n))
-        sum_dims.remove(i)
-        reduced = torch.sum(in_mask, sum_dims)
-        n_remained = torch.sum(reduced > 0)
-        new_shape.append(n_remained)
-
-    return nn.LayerNorm(tuple(new_shape), layernorm.eps, layernorm.elementwise_affine)
+    dense_shape = convert_dense_shape(in_mask)
+    norm_shape = layernorm.normalized_shape
+    dim_n = len(dense_shape) - len(norm_shape)
+    return nn.LayerNorm(dense_shape[dim_n:], layernorm.eps, layernorm.elementwise_affine)
 
 
 def replace_embedding(embedding, masks):
@@ -610,6 +605,12 @@ def replace_view(trace_model, cpp_node, masks):
 
     in_dense_shape = convert_dense_shape(in_masks[0])
     out_dense_shape = convert_dense_shape(out_mask)
+    # import pdb; pdb.set_trace()
+    in_count = reduce(lambda x, y: x*y, list(in_dense_shape))
+    out_count = reduce(lambda x, y: x*y, list(out_dense_shape))
+    if in_count != out_count:
+        import pdb; pdb.set_trace()
+    # assert in_count == out_count, "In shape:" + str(in_dense_shape) + ", Out shape:" + str(out_dense_shape)
     assert isinstance(trace_model, torch.jit._trace.TracedModule)
     assert isinstance(cpp_node, torch._C.Node)
     input_nodes = []
