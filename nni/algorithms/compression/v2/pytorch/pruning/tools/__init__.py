@@ -2,7 +2,9 @@ from .base import (
     HookCollectorInfo,
     DataCollector,
     MetricsCalculator,
-    SparsityAllocator
+    SparsityAllocator,
+    Task,
+    TaskGenerator
 )
 from .data_collector import (
     WeightDataCollector,
@@ -22,8 +24,6 @@ from .sparsity_allocator import (
     Conv2dDependencyAwareAllocator
 )
 from .task_generator import (
-    Task,
-    TaskGenerator,
     AGPTaskGenerator,
     LinearTaskGenerator
 )

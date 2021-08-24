@@ -87,6 +87,9 @@ def dedupe_config_list(config_list: List[Dict]) -> List[Dict]:
 
 
 def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
+    """
+    Compare origin model and compact model, return the sparsity of each layer mentioned in config list.
+    """
     compact2origin_sparsity = []
     for config in config_list:
         left_weight_num = 0
@@ -111,6 +114,9 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
 
 
 def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
+    """
+    Apply masks on masked model, return the sparsity of each layer mentioned in config list.
+    """
     mask2compact_sparsity = []
     for config in config_list:
         left_weight_num = 0
@@ -135,6 +141,14 @@ def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[st
 
 def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[str, Dict[str, Tensor]],
                      config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
+    """
+    The current model means the compact model applied the masks. The compact model is the origin model after speed up.
+
+    Returns
+    -------
+    Tuple[List[Dict], List[Dict], List[Dict]]
+        (current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity).
+    """
     compact2origin_sparsity = compute_sparsity_compact2origin(origin_model, compact_model, config_list)
     mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, masks, config_list)
     assert len(compact2origin_sparsity) == len(mask2compact_sparsity), 'Length mismatch.'
