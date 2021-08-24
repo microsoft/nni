@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "../../common/trainingService";
-import { GPUInfo } from "../../training_service/common/gpuData";
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from "common/trainingService";
+import { GPUInfo } from "training_service/common/gpuData";
 import { EnvironmentInformation, NodeInformation } from "./environment";
 
 export class TrialDetail implements TrialJobDetail {

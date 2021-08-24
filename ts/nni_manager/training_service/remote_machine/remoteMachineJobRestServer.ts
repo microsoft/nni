@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { RemoteMachineTrainingService } from './remoteMachineTrainingService';
 

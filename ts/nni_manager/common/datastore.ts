@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { ExperimentProfile, TrialJobStatistics } from './manager';
 import { TrialJobDetail, TrialJobStatus } from './trainingService';
 
