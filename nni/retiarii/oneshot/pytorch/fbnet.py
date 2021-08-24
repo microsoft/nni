@@ -11,7 +11,7 @@ from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
 _logger = logging.getLogger(__name__)
 
 
-class ArchGradientFunction(torch.autograd.Function):
+class MixedOp(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
@@ -35,9 +35,9 @@ class ArchGradientFunction(torch.autograd.Function):
         return grad_x[0], binary_grads, None, None
 
 
-class ProxylessLayerChoice(nn.Module):
+class FBNetLayerChoice(nn.Module):
     def __init__(self, ops):
-        super(ProxylessLayerChoice, self).__init__()
+        super(FBNetLayerChoice, self).__init__()
         self.ops = nn.ModuleList(ops)
         self.alpha = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
         self._binary_gates = nn.Parameter(torch.randn(len(self.ops)) * 1E-3)
@@ -65,7 +65,7 @@ class ProxylessLayerChoice(nn.Module):
 
         assert len(args) == 1
         x = args[0]
-        return ArchGradientFunction.apply(
+        return MixedOp.apply(
             x, self._binary_gates, run_function(self.ops, self.sampled),
             backward_function(self.ops, self.sampled, self._binary_gates)
         )
@@ -93,14 +93,14 @@ class ProxylessLayerChoice(nn.Module):
         return torch.argmax(self.alpha).item()
 
 
-class ProxylessInputChoice(nn.Module):
+class FBNetInputChoice(nn.Module):
     def __init__(self, *args, **kwargs):
-        raise NotImplementedError('Input choice is not supported for ProxylessNAS.')
+        raise NotImplementedError('Input choice is not supported for FBNetNAS.')
 
 
-class ProxylessTrainer(BaseOneShotTrainer):
+class FBNetTrainer(BaseOneShotTrainer):
     """
-    Proxyless trainer.
+    FBNet trainer.
     Parameters
     ----------
     model : nn.Module
@@ -147,8 +147,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.model.to(self.device)
 
         self.nas_modules = []
-        replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
-        replace_input_choice(self.model, ProxylessInputChoice, self.nas_modules)
+        replace_layer_choice(self.model, FBNetLayerChoice, self.nas_modules)
+        replace_input_choice(self.model, FBNetInputChoice, self.nas_modules)
         for _, module in self.nas_modules:
             module.to(self.device)
 
