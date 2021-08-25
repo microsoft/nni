@@ -643,3 +643,118 @@ class TaylorFOWeightPruner(OneShotPruner):
                 self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
+
+
+class ADMMPruner(OneShotPruner):
+    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
+                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int,
+                 training_epochs: int, mode: str = 'normal'):
+        """
+        Parameters
+        ----------
+        model
+            Model to be pruned
+        config_list
+            Supported keys:
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - row : Penalty parameters.
+                - op_types : Operation types to prune.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+        trainer
+            A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
+
+            Example::
+
+                def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                    training = model.training
+                    model.train(mode=True)
+                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                    for batch_idx, (data, target) in enumerate(train_loader):
+                        data, target = data.to(device), target.to(device)
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
+                        optimizer.step()
+                    model.train(mode=training)
+        optimizer
+            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
+            so do not use this optimizer in other places.
+        criterion
+            The criterion function used in trainer. Take model output and target value as input, and return the loss.
+        iterations
+            The total iteration number in admm pruning algorithm.
+        training_epochs
+            The epoch number for training model in each iteration.
+        mode
+            'normal' or 'dependency_aware'.
+            If prune the model in a dependency-aware way, this pruner will
+            prune the model according to the l2-norm of weights and the channel-dependency or
+            group-dependency of the model. In this way, the pruner will force the conv layers
+            that have dependencies to prune the same channels, so the speedup module can better
+            harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
+            , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
+            dependency between the conv layers.
+        """
+        self.trainer = trainer
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.iterations = iterations
+        self.training_epochs = training_epochs
+        self.mode = mode
+        super().__init__(model, config_list)
+
+        self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
+        self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
+
+    def criterion_patch(self, origin_criterion: Callable[[Tensor, Tensor], Tensor]):
+        def patched_criterion(output: Tensor, target: Tensor):
+            penalty = torch.tensor(0.0).to(output.device)
+            for name, wrapper in self.get_modules_wrapper().items():
+                row = wrapper.config['row']
+                penalty += (row / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
+            return origin_criterion(output, target) + penalty
+        return patched_criterion
+
+    def reset_tools(self):
+        if self.data_collector is None:
+            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+                                                                  self.training_epochs, criterion_patch=self.criterion_patch)
+        else:
+            self.data_collector.reset()
+        if self.metrics_calculator is None:
+            self.metrics_calculator = NormMetricsCalculator(dim=0, p=1)
+        if self.sparsity_allocator is None:
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
+            elif self.mode == 'dependency_aware':
+                self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            else:
+                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+
+    def compress(self) -> Tuple[Module, Dict]:
+        """
+        Returns
+        -------
+        Tuple[Module, Dict]
+            Return the wrapped model and mask.
+        """
+        for i in range(self.iterations):
+            _logger.debug('======= ADMM Iteration %d =======', i)
+            data = self.data_collector.collect()
+            _logger.debug('Collected Data:\n%s', data)
+            metrics = self.metrics_calculator.calculate_metrics(data)
+            _logger.debug('Metrics Calculate:\n%s', metrics)
+            masks = self.sparsity_allocator.generate_sparsity(metrics)
+            _logger.debug('Masks:\n%s', masks)
+            for name, mask in masks.items():
+                wrapper = self.get_modules_wrapper()[name]
+                wrapper.module.weight.data = wrapper.module.weight.data.mul(mask['weight_mask'])
+                if 'bias_mask' in mask:
+                    wrapper.module.bias.data = wrapper.module.bias.data.mul(mask['bias_mask'])
+        self.load_masks(masks)
+        return self.bound_model, masks
