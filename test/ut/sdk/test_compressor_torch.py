@@ -39,11 +39,12 @@ class CompressorTestCase(TestCase):
         model = TorchModel()
         config_list = [{
             'quant_types': ['weight'],
-            'quant_bits': 1,
+            'quant_bits': 8,
             'op_types': ['Conv2d', 'Linear']
         }, {
             'quant_types': ['output'],
-            'quant_bits': 1,
+            'quant_bits': 8,
+            'quant_start_step': 0,
             'op_types': ['ReLU']
         }]
 
