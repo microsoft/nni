@@ -529,13 +529,13 @@ class QuantizerModuleWrapper(torch.nn.Module):
             else:
                 self.module.register_parameter('old_weight', torch.nn.Parameter(self.module.weight))
                 delattr(self.module, 'weight')
-                self.module.register_buffer('weight', self.module.old_weight)
+                self.module.register_buffer('weight', self.module.old_weight.data)
 
                 # for batch normalization folding
                 if self.bn_module is not None:
                     if _check_bias(self.module):
                         self.module.register_parameter('old_bias', torch.nn.Parameter(self.module.bias))
-                        init_tensor = self.module.old_bias
+                        init_tensor = self.module.old_bias.data
                     else:
                         init_tensor = torch.zeros_like(self.bn_module.weight)
                     delattr(self.module, 'bias')

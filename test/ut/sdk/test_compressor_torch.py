@@ -39,12 +39,11 @@ class CompressorTestCase(TestCase):
         model = TorchModel()
         config_list = [{
             'quant_types': ['weight'],
-            'quant_bits': 8,
+            'quant_bits': 1,
             'op_types': ['Conv2d', 'Linear']
         }, {
             'quant_types': ['output'],
-            'quant_bits': 8,
-            'quant_start_step': 0,
+            'quant_bits': 1,
             'op_types': ['ReLU']
         }]
 
@@ -304,6 +303,33 @@ class CompressorTestCase(TestCase):
 
         self.assertTrue(calibration_config is not None)
         self.assertTrue(len(calibration_config) == 4)
+
+    def test_torch_quantizer_weight_type(self):
+        quantizer_list = [
+            torch_quantizer.QAT_Quantizer,
+            torch_quantizer.LsqQuantizer,
+            torch_quantizer.ObserverQuantizer,
+            torch_quantizer.NaiveQuantizer,
+            torch_quantizer.DoReFaQuantizer]
+        for quantizer_type in quantizer_list:
+            model = TorchModel().eval()
+            config_list = [{
+                'quant_types': ['weight'],
+                'quant_bits': 8,
+                'op_types': ['Conv2d', 'Linear']
+            }]
+
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            dummy = torch.randn(1, 1, 28, 28)
+            if quantizer_type == torch_quantizer.QAT_Quantizer:
+                quantizer_type(model, config_list, optimizer, dummy_input=dummy)
+            else:
+                quantizer_type(model, config_list, optimizer)
+
+            self.assertFalse(isinstance(model.conv1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.conv2.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc2.module.weight, torch.nn.Parameter))
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
