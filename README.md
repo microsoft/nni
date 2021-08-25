@@ -265,7 +265,7 @@ Note:
   Windows
 
   ```powershell
-  nnictl create --config nni\examples\trials\mnist-pytorch\config_windows.yml
+  nnictl create --config nni\examples\trials\mnist-pytorch\config.yml
   ```
 
 * Wait for the message `INFO: Successfully started experiment!` in the command line. This message indicates that your experiment has been successfully started. You can explore the experiment using the `Web UI url`.
