@@ -264,7 +264,7 @@ class RetiariiExperiment(Experiment):
     def _construct_devices(self):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
-            for machine_idx, machine in enumerate(self.config.training_service.machine_list):
+            for machine in self.config.training_service.machine_list:
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         else:
