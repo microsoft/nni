@@ -75,7 +75,7 @@ export class Logger {
             return;
         }
 
-        const zeroPad = (num: number) => num.toString().padStart(2, '0');
+        const zeroPad = (num: number): string => num.toString().padStart(2, '0');
         const now = new Date();
         const date = now.getFullYear() + '-' + zeroPad(now.getMonth() + 1) + '-' + zeroPad(now.getDate());
         const time = zeroPad(now.getHours()) + ':' + zeroPad(now.getMinutes()) + ':' + zeroPad(now.getSeconds());
