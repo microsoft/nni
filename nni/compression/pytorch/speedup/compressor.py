@@ -422,11 +422,17 @@ class ModelSpeedup:
                     _name = 'CONSTANTS.' + constant_name
                     # print(_name)
                     code = code.replace(_name, str(constants[constant_name]))
-
+                def forward_decorator(ori_func):
+                    def new_forward(*args, **kwargs):
+                        print('In the new forward')
+                        import pdb; pdb.set_trace()
+                        ori_func(*args, **kwargs)
+                    return new_forward
                 _new_forward_implementation = translate_jit_code(code)
-                setattr(self.bound_model, 'forward', types.MethodType(
-                    _new_forward_implementation, self.bound_model))
-                # import pdb; pdb.set_trace()
+                setattr(self.bound_model, '_nni_forward_imple', _new_forward_implementation)
+                new_forward = forward_decorator(self.bound_model._nni_forward_imple)
+                setattr(self.bound_model, 'forward', types.MethodType(new_forward, self.bound_model))
+
                 import pdb; pdb.set_trace()
                 self.bound_model(self.dummy_input)
 
