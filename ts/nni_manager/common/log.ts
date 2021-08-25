@@ -75,14 +75,17 @@ export class Logger {
             return;
         }
 
-        const jsonTime = new Date().toJSON();
-        const time = jsonTime.slice(0, 10) + ' ' + jsonTime.slice(11, 19);
+        const zeroPad = (num: number) => num.toString().padStart(2, '0');
+        const now = new Date();
+        const date = now.getFullYear() + '-' + zeroPad(now.getMonth() + 1) + '-' + zeroPad(now.getDate());
+        const time = zeroPad(now.getHours()) + ':' + zeroPad(now.getMinutes()) + ':' + zeroPad(now.getSeconds());
+        const datetime = date + ' ' + time;
 
         const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
         const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
-        const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
+        const record = `[${datetime}] ${levelName} (${this.name}) ${message}\n`;
 
         if (logFile === undefined) {
             console.log(record);
