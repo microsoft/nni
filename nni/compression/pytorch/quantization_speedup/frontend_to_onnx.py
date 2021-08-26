@@ -9,26 +9,26 @@ The main function of this page is to convert pytorch model to onnx model.
 Convertion from pytorch model to onnx model is primary so that a critical
 problem is caused that Layer name of pytorch model fail to convert to onnx
 layer name directly. To solve it, we wrap pytorch model in new wrapper which
-multiply bit number and input before computation of each op. Only in this
-way can onnx model get bit number of corresponded layer.
+multiply bits number and input before computation of each op. Only in this
+way can onnx model get bits number of corresponded layer.
 """
 
 class LayernameModuleWrapper(torch.nn.Module):
-    def __init__(self, module, module_bit) -> None:
+    def __init__(self, module, module_bits) -> None:
         """
         Parameters
         ----------
         module : torch.nn.Module
             Layer module of pytorch model
-        module_bit : int
-            Bit width setting for module
+        module_bits : int
+            Bits width setting for module
         """
         super().__init__()
         self.module = module
-        self.module_bit = module_bit
+        self.module_bits = module_bits
 
     def forward(self, inputs):
-        inputs = inputs*self.module_bit
+        inputs = inputs*self.module_bits
         inputs = self.module(inputs)
         return inputs
 
@@ -93,14 +93,14 @@ def unwrapper(model_onnx, index2name, config):
 
 def torch_to_onnx(model, config, input_shape, model_path, input_names, output_names):
     """
-    Convert torch model to onnx model and get layer bit config of onnx model.
+    Convert torch model to onnx model and get layer bits config of onnx model.
 
     Parameters
     ----------
     model : pytorch model
         The model to speed up by quantization
     config : dict
-        Config recording bit number and name of layers
+        Config recording bits number and name of layers
     input_shape : tuple
         The input shape of model, shall pass it to torch.onnx.export
     model_path : str
@@ -119,7 +119,7 @@ def torch_to_onnx(model, config, input_shape, model_path, input_names, output_na
     """
     # Support Gemm, Conv, Relu, Clip(Relu6) and MaxPool
     support_op = [torch.nn.Conv2d, torch.nn.Linear, torch.nn.ReLU, torch.nn.ReLU6, torch.nn.MaxPool2d]
-    # Transfer bit number to onnx layer by using wrapper
+    # Transfer bits number to onnx layer by using wrapper
     index2name = {}
     name2index = {}
     if config is not None:

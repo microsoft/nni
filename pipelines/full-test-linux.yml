@@ -46,7 +46,6 @@ jobs:
       export PATH=$PATH:$PWD/toolchain/yarn/bin
       export CI=true
       (cd ts/nni_manager && yarn test)
-      (cd ts/nasui && yarn test)
     displayName: Unit test
     continueOnError: true
 

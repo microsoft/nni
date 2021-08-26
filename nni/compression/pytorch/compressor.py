@@ -544,10 +544,12 @@ class QuantizerModuleWrapper(torch.nn.Module):
 
     def forward(self, *inputs):
         if 'input' in self.config['quant_types']:
-            inputs = self.quantizer.quant_grad(
-                inputs,
+            assert len(inputs) == 1, "Quantization of input only supports ops with single input."
+            new_inp = self.quantizer.quant_grad(
+                inputs[0],
                 QuantType.QUANT_INPUT,
                 self)
+            inputs = (new_inp,)
 
         if 'weight' in self.config['quant_types'] and _check_weight(self.module):
             if self.bn_module is not None:
@@ -557,6 +559,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.module.weight = new_weight
             else:
                 new_weight = self.module.old_weight
+                self.module.weight = new_weight.data
 
             self.quantizer.quant_grad(
                 new_weight,
@@ -640,7 +643,7 @@ class Quantizer(Compressor):
         """
         raise NotImplementedError('Quantizer must overload quantize_output()')
 
-    def quantize_input(self, *inputs, wrapper, **kwargs):
+    def quantize_input(self, inputs, wrapper, **kwargs):
         """
         quantize should overload this method to quantize input.
         This method is effectively hooked to :meth:`forward` of the model.
@@ -834,7 +837,7 @@ class QuantGrad(torch.autograd.Function):
     @classmethod
     def get_bits_length(cls, config, quant_type):
         """
-        Get bit for quantize config
+        Get bits for quantize config
         Parameters
         ----------
         config : Dict
@@ -912,7 +915,7 @@ def _check_bias(module):
 
 def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
     if quant_type == QuantType.QUANT_INPUT:
-        output = wrapper.quantizer.quantize_input(*tensor, wrapper=wrapper, **kwargs)
+        output = wrapper.quantizer.quantize_input(tensor, wrapper=wrapper, **kwargs)
     elif quant_type == QuantType.QUANT_WEIGHT:
         output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
     elif quant_type == QuantType.QUANT_OUTPUT:
