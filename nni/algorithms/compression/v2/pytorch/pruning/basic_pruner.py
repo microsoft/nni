@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from copy import deepcopy
 import logging
 from typing import List, Dict, Tuple, Callable, Optional
 
-from schema import And, Optional as SchemaOptional
+from schema import And, Or, Optional as SchemaOptional
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -12,7 +13,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils.config_validation import PrunerSchema
+from nni.algorithms.compression.v2.pytorch.utils.config_validation import CompressorSchema
+from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
 
 from .tools import (
     DataCollector,
@@ -43,26 +45,47 @@ _logger = logging.getLogger(__name__)
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
            'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
 
+NORMAL_SCHEMA = {
+    Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
+GLOBAL_SCHEMA = {
+    'total_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n <= 1),
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
+EXCLUDE_SCHEMA = {
+    'exclude': bool,
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
+INTERNAL_SCHEMA = {
+    'total_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('max_sparsity_per_layer'): {str: float},
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
 
 class OneShotPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
         self.sparsity_allocator: SparsityAllocator = None
-        self._convert_config_list(config_list)
 
         super().__init__(model, config_list)
 
-    def _convert_config_list(self, config_list: List[Dict]):
-        """
-        Convert `sparsity` in config to `sparsity_per_layer`.
-        """
-        for config in config_list:
-            if 'sparsity' in config:
-                if 'sparsity_per_layer' in config:
-                    raise ValueError("'sparsity' and 'sparsity_per_layer' have the same semantics, can not set both in one config.")
-                else:
-                    config['sparsity_per_layer'] = config.pop('sparsity')
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        self._validate_config_before_canonical(model, config_list)
+        self.config_list = config_list_canonical(model, config_list)
+
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        pass
 
     def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         super().reset(model=model, config_list=config_list)
@@ -115,14 +138,9 @@ class LevelPruner(OneShotPruner):
         self.mode = 'normal'
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): [str],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
-
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
 
     def reset_tools(self):
@@ -171,13 +189,11 @@ class NormPruner(OneShotPruner):
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -291,13 +307,11 @@ class FPGMPruner(OneShotPruner):
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -376,15 +390,15 @@ class SlimPruner(OneShotPruner):
         self._scale = scale
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['BatchNorm2d'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        if self.mode == 'global':
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
+        else:
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['BatchNorm2d']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -477,13 +491,11 @@ class ActivationPruner(OneShotPruner):
         self._activation = self._choose_activation(activation)
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -603,19 +615,19 @@ class TaylorFOWeightPruner(OneShotPruner):
         self.training_batches = training_batches
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        if self.mode == 'global':
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
+        else:
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
-    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Module, Tensor, Tensor], None]:
+    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
         def collect_taylor(grad: Tensor):
             if len(buffer) < self.training_batches:
                 buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
