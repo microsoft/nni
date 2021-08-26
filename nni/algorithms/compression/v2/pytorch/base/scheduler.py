@@ -1,13 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import List, Dict, Optional, Tuple
+from typing import List, Dict, Tuple
 
 from torch.nn import Module
 from torch.tensor import Tensor
 
 
-class PruningScheduler:
+class BasePruningScheduler:
     def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
         """
         Returns

@@ -8,13 +8,13 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, PruningScheduler
+from nni.algorithms.compression.v2.pytorch.base import Pruner, BasePruningScheduler
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from .tools import TaskGenerator
 
 
-class ToolBasedPruningScheduler(PruningScheduler):
+class PruningScheduler(BasePruningScheduler):
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
                  speed_up: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None):
         """

@@ -16,7 +16,7 @@ from .base import Task, TaskGenerator
 _logger = logging.getLogger(__name__)
 
 
-class ConsistentTaskGenerator(TaskGenerator):
+class FunctionBasedTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
         self.current_iteration = 0
@@ -67,7 +67,7 @@ class ConsistentTaskGenerator(TaskGenerator):
         raise NotImplementedError()
 
 
-class AGPTaskGenerator(ConsistentTaskGenerator):
+class AGPTaskGenerator(FunctionBasedTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
@@ -79,7 +79,7 @@ class AGPTaskGenerator(ConsistentTaskGenerator):
         return config_list
 
 
-class LinearTaskGenerator(ConsistentTaskGenerator):
+class LinearTaskGenerator(FunctionBasedTaskGenerator):
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
