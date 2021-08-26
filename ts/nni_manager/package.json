@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc",
-    "test": "nyc --reporter=cobertura --reporter=html --reporter=text --report-dir=./htmlcov mocha test/**/*.test.ts",
+    "test": "nyc --reporter=cobertura --reporter=text mocha test/**/*.test.ts",
     "start": "node dist/main.js",
     "watch": "tsc --watch",
     "eslint": "npx eslint ./ --ext .ts"
