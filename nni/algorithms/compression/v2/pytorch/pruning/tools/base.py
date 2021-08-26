@@ -1,10 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from copy import deepcopy
+from dataclasses import asdict, dataclass, field
 import logging
+from pathlib import Path
 import types
-from typing import List, Dict, Optional, Callable, Union
+from typing import List, Dict, Literal, Tuple, Optional, Callable, Union
 
+import json_tricks
 import torch
 from torch import Tensor
 from torch.nn import Module
@@ -440,3 +444,165 @@ class SparsityAllocator:
             mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
 
         return (mask != 0).type_as(mask)
+
+
+@dataclass
+class Task:
+    """
+    Task saves the related information about the task.
+    """
+    task_id: int
+    # the path of the model under pruning in this task
+    model_path: Path
+    # the config_list used in this task
+    config_list: List[Dict]
+    # the path of masks applying on the under pruning model in this task
+    masks_path: Path
+    status: Literal['Pending', 'Running', 'Finished'] = 'Pending'
+    score: Optional[float] = None
+    log_dir: Optional[Path] = None
+    state: dict = field(default_factory=dict)
+
+
+class TaskGenerator:
+    """
+    This class used to generate config list for pruner in each iteration.
+    """
+    def __init__(self, origin_model: Module, origin_config_list: List[Dict] = [],
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
+        """
+        Parameters
+        ----------
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
+        assert isinstance(origin_model, Module), 'Only support pytorch module.'
+
+        self._log_dir_root = Path(log_dir).absolute()
+        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+        self._save_result = save_result
+
+        # save the origin data under {log_dir}/origin/
+        self._save_origin_data(origin_model, origin_config_list, origin_masks)
+
+        self._task_id_candidate = 0
+        self._tasks: Dict[int, Task] = {}
+        self._pending_tasks: List[Task] = self._init_pending_tasks()
+        self._best_score = None
+        self._best_task_id = None
+
+        # dump self._tasks into {log_dir}/.tasks
+        self._dump_tasks_info()
+
+    def _save_data(self, name: str, model: Module, config_list: List[Dict],
+                   masks: Dict[str, Dict[str, Tensor]]):
+        save_dir = Path(self._log_dir_root, name)
+        save_dir.mkdir(parents=True, exist_ok=True)
+        torch.save(model, Path(save_dir, '{}_model.pth'.format(name)))
+        torch.save(masks, Path(save_dir, '{}_masks.pth'.format(name)))
+        with Path(save_dir, 'config_list.json').open('w') as f:
+            json_tricks.dump(config_list, f, indent=4)
+
+    def _load_data(self, name: str) -> Tuple[Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        save_dir = Path(self._log_dir_root, name)
+        model = torch.load(Path(save_dir, '{}_model.pth'.format(name)))
+        masks = torch.load(Path(save_dir, '{}_masks.pth'.format(name)))
+        with Path(save_dir, 'config_list.json').open('r') as f:
+            config_list = json_tricks.load(f)
+        return model, config_list, masks
+
+    def _save_origin_data(self, origin_model: Module, origin_config_list: List[Dict],
+                          origin_masks: Dict[str, Dict[str, Tensor]]):
+        self._save_data('origin', origin_model, origin_config_list, origin_masks)
+
+    def _load_origin_data(self) -> Tuple[Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        return self._load_data('origin')
+
+    def _save_best_result(self, best_model: Module, best_config_list: List[Dict],
+                          best_masks: Dict[str, Dict[str, Tensor]]):
+        self._save_data('best', best_model, best_config_list, best_masks)
+
+    def _load_best_result(self) -> Tuple[Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        return self._load_data('best')
+
+    def _save_task_result(self, task_id: int, model: Module, masks: Dict[str, Dict[str, Tensor]],
+                          score: Optional[float]):
+        task = self._tasks[task_id]
+        if score is not None:
+            task.score = score
+            if self._best_score is None or score > self._best_score:
+                self._best_score = score
+                self._best_task_id = task_id
+                self._save_best_result(model, task.config_list, masks)
+        if self._save_result:
+            torch.save(model, Path(task.log_dir, 'pruned_model.pth'))
+            torch.save(masks, Path(task.log_dir, 'pruned_masks.pth'))
+
+    def _load_task_data(self, task_id: int) -> Tuple[Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        task = self._tasks[task_id]
+        model = torch.load(task.model_path)
+        config_list = deepcopy(task.config_list)
+        masks = torch.load(task.masks_path)
+        return model, config_list, masks
+
+    def _dump_tasks_info(self):
+        tasks = {task_id: asdict(task) for task_id, task in self._tasks.items()}
+        with Path(self._log_dir_root, '.tasks').open('w') as f:
+            json_tricks.dump(tasks, f, indent=4)
+
+    def _init_pending_tasks(self) -> List[Task]:
+        raise NotImplementedError()
+
+    def _generate_tasks(self, received_task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]]) -> List[Task]:
+        raise NotImplementedError()
+
+    def receive_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
+                            score: Optional[float] = None):
+        """
+        Receive the compressed model, masks and score then save the task result.
+        Usually generate new task and put it into `self.pending_tasks` in this function.
+        Parameters
+        ----------
+        task_id
+            The id of the task registered in `self.tasks_map`.
+        pruned_model
+            The pruned model in the last iteration. It might be a sparsify model or a speed-up model.
+        masks
+            If masks is empty, the pruned model is a compact model after speed up.
+            If masks is not None, the pruned model is a sparsify model without speed up.
+        score
+            The score of the model, higher score means better performance.
+        """
+        assert task_id in self._tasks, 'Task {} does not exist.'.format(task_id)
+        self._save_task_result(task_id, pruned_model, masks, score)
+        self._tasks[task_id].status = 'Finished'
+        self._dump_tasks_info()
+        self._pending_tasks.extend(self._generate_tasks(task_id, pruned_model, masks))
+        self._dump_tasks_info()
+
+    def next(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+        """
+        Get the next task.
+
+        Returns
+        -------
+        Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]
+            The task id, model, config_list and masks.
+        """
+        if len(self._pending_tasks) == 0:
+            return None, None, None, None
+        else:
+            task = self._pending_tasks.pop(0)
+            model, config_list, masks = self._load_task_data(task.task_id)
+            task.status = 'Running'
+            self._dump_tasks_info()
+            return task.task_id, model, config_list, masks

@@ -18,7 +18,7 @@ class CompressorSchema:
         if not data_schema:
             return data_schema
 
-        for i, sub_schema in enumerate(data_schema):
+        for sub_schema in data_schema:
             for k, old_schema in sub_schema.items():
                 if k == 'op_types' or (isinstance(k, Schema) and k._schema == 'op_types'):
                     new_schema = And(old_schema, lambda n: validate_op_types(model, n, logger))
