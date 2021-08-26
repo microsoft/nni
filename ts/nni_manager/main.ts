@@ -63,7 +63,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid/dlc> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);
