@@ -3,7 +3,7 @@
 
 import os
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, DataLoader
 import torchvision.transforms as transforms
 import numpy as np
 from nni.compression.pytorch.utils.counter import count_flops_params
@@ -34,6 +34,15 @@ def create_model(model_type=None, n_classes=120, input_size=224, checkpoint=None
         model.load_state_dict(torch.load(checkpoint))
 
     return model
+
+
+def get_dataloader(dataset_type, data_path, batch_size=32, shuffle=True):
+    assert dataset_type in ['train', 'eval']
+    if dataset_type == 'train':
+        ds = TrainDataset(data_path)
+    else:
+        ds = EvalDataset(data_path)
+    return DataLoader(ds, batch_size, shuffle=shuffle)
 
 
 class TrainDataset(Dataset):

@@ -64,7 +64,7 @@ def main(root_dir):
                                                          [train_file_list, valid_file_list, test_file_list],
                                                          [train_annotation_list, valid_annotation_list, test_annotation_list],
                                                          [train_labels, valid_labels, test_labels]):
-        print('{}: {} cases'.format(split, len(file_list)))
+        print('Preprocessing {} set: {} cases'.format(split, len(file_list)))
         for cur_file, cur_annotation, cur_label in zip(file_list, annotation_list, labels):
             label_name = cur_file.split('/')[0].split('-')[-1].lower()
             if label_name not in label2idx:
