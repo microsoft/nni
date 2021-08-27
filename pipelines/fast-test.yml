@@ -165,6 +165,7 @@ stages:
 
     - script: |
         python setup.py develop
+        mkdir -p coverage
       displayName: Install NNI
 
     - script: |
@@ -185,12 +186,14 @@ stages:
         python -m pytest ut/sdk/test_compressor_tf.py --cov-config=.coveragerc --cov-append
         python -m pytest ut/sdk/test_compressor_torch.py --cov-config=.coveragerc --cov-append
         python -m pytest ut/sdk/test_model_speedup.py --cov-config=.coveragerc --cov-append
+        cp coverage.xml ../coverage/python.xml
       displayName: Python unit test
 
     - script: |
         set -e
         cd ts/nni_manager
         yarn test
+        cp coverage/cobertura-coverage.xml ../../coverage/typescript.xml
       displayName: TypeScript unit test
 
     - task: PublishTestResults@2
@@ -203,7 +206,7 @@ stages:
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+        summaryFileLocation: coverage/*
       displayName: Publish code coverage results
 
     - script: |

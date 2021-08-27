@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as bodyParser from 'body-parser';
-import * as express from 'express';
-import * as httpProxy from 'http-proxy';
-import * as path from 'path';
+import bodyParser from 'body-parser';
+import express from 'express';
+import httpProxy from 'http-proxy';
+import path from 'path';
 import * as component from '../common/component';
 import { RestServer } from '../common/restServer'
 import { getLogDir } from '../common/utils';
@@ -50,7 +48,7 @@ export class NNIRestServer extends RestServer {
                 target: 'https://netron.app'
             });
         });
-        this.app.get(`${getPrefixUrl()}/*`, (req: express.Request, res: express.Response) => {
+        this.app.get(`${getPrefixUrl()}/*`, (_req: express.Request, res: express.Response) => {
             res.sendFile(path.resolve('static/index.html'));
         });
     }

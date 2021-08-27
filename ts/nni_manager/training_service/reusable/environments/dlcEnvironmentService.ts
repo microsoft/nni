@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
-import { ExperimentConfig, DlcConfig, flattenConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
+import { ExperimentConfig, DlcConfig, flattenConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { DlcClient } from '../dlc/dlcClient';
 import { DlcEnvironmentInformation } from '../dlc/dlcConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';

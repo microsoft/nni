@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import assert from 'assert';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { Client, ClientChannel, ConnectConfig, SFTPWrapper } from 'ssh2';
-import * as stream from 'stream';
+import stream from 'stream';
 import { Deferred } from "ts-deferred";
-import { getLogger, Logger } from '../../common/log';
-import { uniqueString, randomInt } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { uniqueString, randomInt } from 'common/utils';
 import { execRemove, tarAdd } from '../common/util';
 import { LinuxCommands } from "./extends/linuxCommands";
 import { WindowsCommands } from './extends/windowsCommands';
 import { OsCommands } from "./osCommands";
 import { RemoteCommandResult, RemoteMachineMeta } from "./remoteMachineData";
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames } from 'common/errors';
 
 class ShellExecutor {
     public name: string = "";

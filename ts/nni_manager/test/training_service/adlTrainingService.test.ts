@@ -3,10 +3,10 @@
 
 'use strict';
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs';
-import * as tmp from 'tmp';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import fs from 'fs';
+import tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';

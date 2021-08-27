@@ -11,7 +11,7 @@ import { execCopydir, tarAdd, validateCodeDir } from '../../training_service/com
 
 const deleteFolderRecursive = (filePath: string) => {
     if (fs.existsSync(filePath)) {
-        fs.readdirSync(filePath).forEach((file, index) => {
+        fs.readdirSync(filePath).forEach((file, _index) => {
             const curPath = path.join(filePath, file);
             if (fs.lstatSync(curPath).isDirectory()) { // recurse
                 deleteFolderRecursive(curPath);

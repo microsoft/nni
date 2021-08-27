@@ -1,8 +1,9 @@
 # Build result
-dist/
+/dist
+/.tsbuildinfo
 
 # node modules
-node_modules/
+/node_modules
 
 # test files
 .experiment.test
