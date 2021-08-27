@@ -135,7 +135,6 @@ class LevelPruner(OneShotPruner):
                 - op_names : Operation names to prune.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         """
-        self.mode = 'normal'
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -720,6 +719,14 @@ class ADMMPruner(OneShotPruner):
 
         self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
         self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
+
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for schema in schema_list:
+            schema.update({SchemaOptional('row'): And(float, lambda n: n > 0)})
+        schema_list.append(deepcopy(EXCLUDE_SCHEMA))
+        schema = CompressorSchema(schema_list, model, _logger)
+        schema.validate(config_list)
 
     def criterion_patch(self, origin_criterion: Callable[[Tensor, Tensor], Tensor]):
         def patched_criterion(output: Tensor, target: Tensor):
