@@ -1,6 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+This script provides a more program-friendly representation of HPO search space.
+The format is considered internal helper and is not visible to end users.
+
+You will find this useful when you want to support nested search space.
+"""
+
 __all__ = [
     'ParameterSpec',
     'deformat_parameters',
@@ -11,29 +18,40 @@ import math
 from typing import Any, List, NamedTuple, Optional, Tuple
 
 class ParameterSpec(NamedTuple):
-    name: str
-    type: str
-    values: List[Any]
+    """
+    Specification (aka space / range) of one single parameter.
+    """
 
-    key: Tuple[str]
-    parent_index: Optional[int]
+    name: str                       # The object key in JSON
+    type: str                       # "_type" in JSON
+    values: List[Any]               # "_value" in JSON
 
-    categorical: bool
-    size: int = None
-    nested_choice: bool = False
+    key: Tuple[str]                 # The "path" of this parameter
+    parent_index: Optional[int]     # If the parameter is in a nested choice, this is its parent's index;
+                                    # if the parameter is at top level, this is `None`.
+
+    categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
+    size: int = None                # If it's categorical, how many canidiates it has
+
+    nested_choice: bool = False     # Used to restructure parameters dict, ugly, needs refactor
 
     # uniform distributed
-    low: float = None
-    high: float = None
+    low: float = None               # Lower bound of uniform parameter
+    high: float = None              # Upper bound of uniform parameter
 
-    normal_distributed: bool = None
-    mu: float = None
-    sigma: float = None
+    normal_distributed: bool = None # Whether this parameter is uniform or normal distrubuted
+    mu: float = None                # Mean of normal parameter
+    sigma: float = None             # Scale of normal parameter
 
-    q: Optional[float] = None
-    log_distributed: bool = None
+    q: Optional[float] = None       # If not `None`, the value should be an integer multiple of this
+    log_distributed: bool = None    # Whether this parameter is log distributed
 
     def is_activated(self, partial_parameters):
+        """
+        For nested search space, check whether this parameter should be skipped for current set of paremters.
+        This function works because the return value of `format_search_space()` is sorted in a way that
+        parents always appear before children.
+        """
         return self.parent_index is None or partial_parameters.get(self.key[:-1]) == self.parent_index
 
 def format_search_space(search_space, ordered_randint=False):
@@ -45,6 +63,10 @@ def format_search_space(search_space, ordered_randint=False):
     return {spec.key: spec for spec in formatted}
 
 def deformat_parameters(parameters, formatted_search_space):
+    """
+    `paramters` is a dict whose key is `ParamterSpec.key`, and value is integer index if the parameter is categorical.
+    Convert it to the format expected by end users.
+    """
     ret = {}
     for key, x in parameters.items():
         spec = formatted_search_space[key]
