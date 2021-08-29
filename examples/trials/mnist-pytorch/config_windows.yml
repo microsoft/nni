@@ -1,0 +1,14 @@
+# This is the minimal config file for an NNI experiment.
+# Use "nnictl create --config config.yml" to launch this experiment.
+# Afterwards, you can check "config_detailed.yml" for more explanation.
+
+searchSpaceFile: search_space.json
+trialCommand: python mnist.py
+trialGpuNumber: 0
+trialConcurrency: 1
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local
