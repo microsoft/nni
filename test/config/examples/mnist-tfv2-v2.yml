@@ -1,11 +1,11 @@
 experimentName: default_test
 searchSpaceFile: ./mnist_search_space.json
-trialCommand: python3 mnist.py
+trialCommand: python3 mnist.py --batch_num 10
 trialCodeDirectory: ../../../examples/trials/mnist-tfv2
 trialGpuNumber: 0
 trialConcurrency: 2
 maxExperimentDuration: 15m
-maxTrialNumber: 2
+maxTrialNumber: 4
 tuner:
   name: Random
 trainingService:
