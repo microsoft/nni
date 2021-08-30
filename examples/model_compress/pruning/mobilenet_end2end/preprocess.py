@@ -70,6 +70,7 @@ def main(root_dir):
             if label_name not in label2idx:
                 label2idx[label_name] = cur_label
             image = Image.open(root_dir + '/Images/' + cur_file)
+
             # cropping and reshape
             annotation_file = root_dir + '/Annotation/' + cur_annotation
             bounding_box = get_bounding_box(annotation_file)

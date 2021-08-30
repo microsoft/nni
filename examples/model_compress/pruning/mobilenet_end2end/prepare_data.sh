@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# download and preprocess the Stanford Dogs dataset
+
 mkdir -p data/stanford-dogs
 
 # download raw data (images, annotations, and train-test split)

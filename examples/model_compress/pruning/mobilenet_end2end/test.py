@@ -13,13 +13,14 @@ from utils import *
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-model_type = 'mobilenet_v2_torchhub'   # 'mobilenet_v1' 'mobilenet_v2' 'mobilenet_v2_torchhub'
-pretrained = True                      # load imagenet weight (only for 'mobilenet_v2_torchhub')
+model_type = 'mobilenet_v2_torchhub'    # 'mobilenet_v1' 'mobilenet_v2' 'mobilenet_v2_torchhub'
+pretrained = False                      # load imagenet weight (only for 'mobilenet_v2_torchhub')
 checkpoint_dir = './pretrained_{}/'.format(model_type)
-checkpoint = checkpoint_dir + '/checkpoint_best.pt'
+checkpoint = checkpoint_dir + '/checkpoint_best.pt'    # model checkpoint produced by pretrain.py
 input_size = 224
 n_classes = 120
 batch_size = 32
+
 
 def run_test():
     model = create_model(model_type=model_type, pretrained=pretrained, n_classes=n_classes,
