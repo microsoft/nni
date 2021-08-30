@@ -1,6 +1,6 @@
-from nni.common.hpo_utils import format_search_space
+from nni.common.hpo_utils import format_search_space, deformat_parameters
 
-orig_space = {
+user_space = {
     'dropout_rate': { '_type': 'uniform', '_value': [0.5, 0.9] },
     'conv_size': { '_type': 'choice', '_value': [2, 3, 5, 7] },
     'hidden_size': { '_type': 'qloguniform', '_value': [128, 1024, 1] },
@@ -38,7 +38,7 @@ orig_space = {
     },
 }
 
-expected_formatted_space = [
+internal_space_simple = [  # the full internal space is too long, omit None and False values here
     {'name':'dropout_rate', 'type':'uniform', 'values':[0.5,0.9], 'key':('dropout_rate',), 'low':0.5, 'high':0.9},
     {'name':'conv_size', 'type':'choice', 'values':[2,3,5,7], 'key':('conv_size',), 'categorical':True, 'size':4},
     {'name':'hidden_size', 'type':'qloguniform', 'values':[128,1024,1], 'key':('hidden_size',), 'low':128.0, 'high':1024.0, 'q':1.0, 'log_distributed':True},
@@ -54,8 +54,8 @@ expected_formatted_space = [
 ]
 
 def test_format_search_space():
-    formatted = format_search_space(orig_space)
-    for spec, expected in zip(formatted.values(), expected_formatted_space):
+    formatted = format_search_space(user_space)
+    for spec, expected in zip(formatted.values(), internal_space_simple):
         for key, value in spec._asdict().items():
             if key == 'values' and '_value_names' in expected:
                 assert [v['_name'] for v in value] == expected['_value_names']
@@ -64,5 +64,37 @@ def test_format_search_space():
             else:
                 assert value is None or value == False
 
+internal_parameters = {
+    ('dropout_rate',): 0.7,
+    ('conv_size',): 2,
+    ('hidden_size',): 200.0,
+    ('batch_size',): 3,
+    ('learning_rate',): 0.0345,
+    ('nested',): 1,
+    ('nested', 'xy'): 0,
+    ('nested', 'xy', 'x'): 0.123,
+}
+
+user_parameters = {
+    'dropout_rate': 0.7,
+    'conv_size': 5,
+    'hidden_size': 200.0,
+    'batch_size': 19,
+    'learning_rate': 0.0345,
+    'nested': {
+        '_name': 'double_nested',
+        'xy': {
+            '_name': 'x',
+            'x': 0.123,
+        },
+    },
+}
+
+def test_deformat_parameters():
+    space = format_search_space(user_space)
+    generated = deformat_parameters(internal_parameters, space)
+    assert generated == user_parameters
+
 if __name__ == '__main__':
     test_format_search_space()
+    test_deformat_parameters()
