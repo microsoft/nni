@@ -423,10 +423,14 @@ class ModelSpeedup:
                     # print(_name)
                     code = code.replace(_name, str(constants[constant_name]))
                 def forward_decorator(ori_func):
+                    # import here, avoid to add non-necessary dependency package for other path
+                    import inspect
+                    kw_args_spec = inspect.getfullargspec(ori_func).kwonlyargs
                     def new_forward(*args, **kwargs):
+                        filtered_kw = {key:kwargs[key] for key in kw_args_spec}
                         print('In the new forward')
-                        import pdb; pdb.set_trace()
-                        ori_func(*args, **kwargs)
+                        # import pdb; pdb.set_trace()
+                        return ori_func(*args, **filtered_kw)
                     return new_forward
                 _new_forward_implementation = translate_jit_code(code)
                 setattr(self.bound_model, '_nni_forward_imple', _new_forward_implementation)
