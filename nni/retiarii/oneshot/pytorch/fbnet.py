@@ -13,9 +13,9 @@ from .utils import AverageMeterGroup, replace_layer_choice, replace_input_choice
 _logger = logging.getLogger(__name__)
 
 
-class DartsLayerChoice(nn.Module):
+class FBNetLayerChoice(nn.Module):
     def __init__(self, layer_choice):
-        super(DartsLayerChoice, self).__init__()
+        super(FBNetLayerChoice, self).__init__()
         self.name = layer_choice.label
         self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
         self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
@@ -23,14 +23,14 @@ class DartsLayerChoice(nn.Module):
     def forward(self, *args, **kwargs):
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        return torch.sum(op_results * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+        return torch.sum(op_results * F.gumbel_softmax(self.alpha, -1).view(*alpha_shape), 0)
 
     def parameters(self):
         for _, p in self.named_parameters():
             yield p
 
     def named_parameters(self):
-        for name, p in super(DartsLayerChoice, self).named_parameters():
+        for name, p in super(FBNetLayerChoice, self).named_parameters():
             if name == 'alpha':
                 continue
             yield name, p
@@ -39,9 +39,9 @@ class DartsLayerChoice(nn.Module):
         return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
 
 
-class DartsInputChoice(nn.Module):
+class FBNetInputChoice(nn.Module):
     def __init__(self, input_choice):
-        super(DartsInputChoice, self).__init__()
+        super(FBNetInputChoice, self).__init__()
         self.name = input_choice.label
         self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
         self.n_chosen = input_choice.n_chosen or 1
@@ -49,14 +49,14 @@ class DartsInputChoice(nn.Module):
     def forward(self, inputs):
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
+        return torch.sum(inputs * F.gumbel_softmax(self.alpha, -1).view(*alpha_shape), 0)
 
     def parameters(self):
         for _, p in self.named_parameters():
             yield p
 
     def named_parameters(self):
-        for name, p in super(DartsInputChoice, self).named_parameters():
+        for name, p in super(FBNetInputChoice, self).named_parameters():
             if name == 'alpha':
                 continue
             yield name, p
@@ -65,9 +65,9 @@ class DartsInputChoice(nn.Module):
         return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
 
 
-class DartsTrainer(BaseOneShotTrainer):
+class FBNetTrainer(BaseOneShotTrainer):
     """
-    DARTS trainer.
+    FBNet trainer.
     Parameters
     ----------
     model : nn.Module
@@ -117,8 +117,8 @@ class DartsTrainer(BaseOneShotTrainer):
         self.model.to(self.device)
 
         self.nas_modules = []
-        replace_layer_choice(self.model, DartsLayerChoice, self.nas_modules)
-        replace_input_choice(self.model, DartsInputChoice, self.nas_modules)
+        replace_layer_choice(self.model, FBNetLayerChoice, self.nas_modules)
+        replace_input_choice(self.model, FBNetInputChoice, self.nas_modules)
         for _, module in self.nas_modules:
             module.to(self.device)
 
