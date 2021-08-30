@@ -437,6 +437,6 @@ class SparsityAllocator:
                 mask = mask.unfold(i, step, step)
                 ein_expression += lower_case_letters[i]
             ein_expression = '...{},{}'.format(ein_expression, ein_expression)
-            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size))
+            mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
 
         return (mask != 0).type_as(mask)

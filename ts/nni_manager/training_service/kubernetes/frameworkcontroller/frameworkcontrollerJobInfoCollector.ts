@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { KubernetesCRDClient } from '../kubernetesApiClient';
 import { KubernetesTrialJobDetail} from '../kubernetesData';
 import { KubernetesJobInfoCollector } from '../kubernetesJobInfoCollector';

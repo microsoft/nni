@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import copy
 from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
@@ -36,7 +35,7 @@ class NaiveQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
         self.layer_scale[wrapper.name] = scale
@@ -218,10 +217,8 @@ class ObserverQuantizer(Quantizer):
         # the Pseudo-quantized one. So there is no need to quantize it
         if self.compressed:
             return
-
-        module = wrapper.module
-        old_weight = module.weight
-        self.record(wrapper, 'weight', old_weight)
+        weight = wrapper.module.weight
+        self.record(wrapper, 'weight', weight)
 
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
@@ -474,8 +471,8 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
+        weight = module.weight
         input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
@@ -563,14 +560,13 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
                 # Recover weight/bias for batch normalization folding
+                actual_weight = getattr(module, 'old_weight', None)
+                if actual_weight is None:
+                    logger.warning("Can not recover weight for layer %s. "
+                                   "This may lead to a wrong accuracy performance on the backend.", name)
+                delattr(module, 'weight')
+                module.register_parameter('weight', actual_weight)
                 if hasattr(module, BN_FOLD_TAG):
-                    actual_weight = getattr(module, 'old_weight', None)
-                    if actual_weight is None:
-                        logger.warning("Can not recover weight for layer %s. "
-                                       "This may lead to a wrong accuracy performance on the backend.", name)
-                    delattr(module, 'weight')
-                    module.register_parameter('weight', actual_weight)
-
                     actual_bias = getattr(module, 'old_bias', None)
                     delattr(module, 'bias')
                     if actual_bias is not None:
@@ -676,7 +672,7 @@ class DoReFaQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
         weight = weight / (2 * weight.abs().max()) + 0.5
@@ -786,7 +782,7 @@ class BNNQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         weight = torch.sign(weight)
         # remove zeros
         weight[weight == 0] = 1
@@ -945,11 +941,11 @@ class LsqQuantizer(Quantizer):
 
     def quantize_weight(self, wrapper, **kwargs):
         module = wrapper.module
+        weight = wrapper.module.weight
 
         # todo: add support for quantize bias. If we use TensorRT as backend, there is no need to quantize
         # bias
-        old_weight = module.old_weight
-        weight = self.quantize(old_weight, module.weight_scale, module.weight_qmin, module.weight_qmax)
+        weight = self.quantize(weight, module.weight_scale, module.weight_qmin, module.weight_qmax)
         module.weight = weight
         return weight
 
