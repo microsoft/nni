@@ -475,7 +475,6 @@ class QAT_Quantizer(Quantizer):
         config = wrapper.config
         module = wrapper.module
         weight = module.weight
-        input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
@@ -500,7 +499,7 @@ class QAT_Quantizer(Quantizer):
         config = wrapper.config
         module = wrapper.module
         input_bits = get_bits_length(config, 'input')
-        module.input_bit = torch.Tensor([input_bits])
+        module.input_bits = torch.Tensor([input_bits])
         quant_start_step = config.get('quant_start_step', 0)
         assert input_bits >= 1, "quant bits length should be at least 1"
 
