@@ -13,7 +13,7 @@ assessor:
     optimize_mode: maximize
 trial:
   codeDir: ../../../examples/trials/mnist-tfv2
-  command: python3 mnist.py --batch_num 10
+  command: python3 mnist.py
 
 useAnnotation: false
 multiPhase: false
