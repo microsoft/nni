@@ -66,7 +66,7 @@ def run_eval(model, dataloader, device):
 
 
 def run_finetune(model, train_dataloader, valid_dataloader, device,
-                 n_epochs=2, learning_rate=1e-4, weight_decay=0.0):    
+                 n_epochs=2, learning_rate=1e-4, weight_decay=0.0, log=None):    
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
@@ -92,12 +92,17 @@ def run_finetune(model, train_dataloader, valid_dataloader, device,
         train_loss = np.array(loss_list).mean()
         print('Epoch {}: train loss {:.4f}, valid loss {:.4f}, valid acc {:.4f}'.format
               (epoch, train_loss, valid_loss, valid_acc))
+        if log is not None:
+            log.write('Epoch {}: train loss {:.4f}, valid loss {:.4f}, valid acc {:.4f}'.format
+                      (epoch, train_loss, valid_loss, valid_acc))
 
         if valid_acc > best_valid_acc:
             best_valid_acc = valid_acc
             best_model = copy.deepcopy(model).to(device)
 
     print("Best validation accuracy: {}".format(best_valid_acc))
+    if log is not None:
+        log.write("Best validation accuracy: {}".format(best_valid_acc))
     
     model = best_model
     return model
@@ -105,7 +110,7 @@ def run_finetune(model, train_dataloader, valid_dataloader, device,
 
 def run_finetune_distillation(student_model, teacher_model, train_dataloader, valid_dataloader, device,
                               alpha, temperature,
-                              n_epochs=2, learning_rate=1e-4, weight_decay=0.0):
+                              n_epochs=2, learning_rate=1e-4, weight_decay=0.0, log=None):
     optimizer = torch.optim.Adam(student_model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # optimizer = torch.optim.SGD(student_model.parameters(), lr=learning_rate, momentum=0.9)            
 
@@ -137,12 +142,17 @@ def run_finetune_distillation(student_model, teacher_model, train_dataloader, va
         train_loss = np.array(loss_list).mean()
         print('Epoch {}: train loss {:.4f}, valid loss {:.4f}, valid acc {:.4f}'.format
               (epoch, train_loss, valid_loss, valid_acc))
+        if log is not None:
+            log.write('Epoch {}: train loss {:.4f}, valid loss {:.4f}, valid acc {:.4f}'.format
+                      (epoch, train_loss, valid_loss, valid_acc))
         
         if valid_acc > best_valid_acc:
             best_valid_acc = valid_acc
             best_model = copy.deepcopy(student_model).to(device)
 
     print("Best validation accuracy: {}".format(best_valid_acc))
+    if log is not None:
+        log.write("Best validation accuracy: {}".format(best_valid_acc))
 
     student_model = best_model
     return student_model
@@ -322,13 +332,13 @@ def run_pruning(args):
     # pruning
     pruner = pruner_type_to_class[args.pruner_name](model, config_list, **kwargs)
     pruner.compress()
-    pruner.export_model('./model_temp.pth', './mask_temp.pth')
+    pruner.export_model(args.experiment_dir + '/model_temp.pth', args.experiment_dir + './mask_temp.pth')
     
     # model speedup
     pruner._unwrap_model()
     if args.speed_up:
         dummy_input = torch.rand(1,3,224,224).to(device)
-        ms = ModelSpeedup(model, dummy_input, './mask_temp.pth')
+        ms = ModelSpeedup(model, dummy_input, args.experiment_dir + './mask_temp.pth')
         ms.speedup_model()
         print(model)
         count_flops(model, log)
@@ -352,7 +362,7 @@ def run_pruning(args):
     log.write('After Pruning:\nLoss: {}\nAccuracy: {}'.format(final_loss, final_acc))
 
     # clean up
-    filePaths = ['./model_tmp.pth', './mask_tmp.pth']
+    filePaths = [args.experiment_dir + '/model_tmp.pth', args.experiment_dir + '/mask_tmp.pth']
     for f in filePaths:
         if os.path.exists(f):
             os.remove(f)
