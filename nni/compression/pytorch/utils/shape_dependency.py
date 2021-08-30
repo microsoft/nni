@@ -3,7 +3,9 @@
 
 import csv
 import logging
+import torch
 import numpy as np
+from .utils import get_module_by_name
 
 
 __all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency', 'AttentionWeightDependency']
@@ -45,6 +47,7 @@ class Dependency:
             # the model or a already traced model
             assert model is not None and dummy_input is not None
         self.graph = TorchModuleGraph(model, dummy_input, traced_model)
+        self.model = model
         self.dependency = dict()
         self.build_dependency()
 
@@ -85,7 +88,7 @@ def reshape_break_channel_dependency(op_node):
 
 
 class ChannelDependency(Dependency):
-    def __init__(self, model=None, dummy_input=None, traced_model=None, prune_type='Filter'):
+    def __init__(self, model, dummy_input, traced_model=None, prune_type='Filter'):
         """
         This model analyze the channel dependencies between the conv
         layers in a model.
@@ -261,7 +264,7 @@ class InputChannelDependency(ChannelDependency):
     If not, the input channel dependency will be passed to the following nodes.
     """
 
-    def __init__(self, model, dummy_input=None, traced_model=None):
+    def __init__(self, model, dummy_input, traced_model=None):
         """
         This model analyze the input channel dependencies between the conv
         layers in a model.
@@ -323,7 +326,7 @@ class InputChannelDependency(ChannelDependency):
 
 
 class GroupDependency(Dependency):
-    def __init__(self, model=None, dummy_input=None, traced_model=None):
+    def __init__(self, model, dummy_input, traced_model=None):
         """
         This model analyze the group dependencis between the conv
         layers in a model.
@@ -383,13 +386,14 @@ class GroupDependency(Dependency):
         group : int
             the number of the groups of the target conv layer.
         """
-        cpp_conv = list(filter(lambda x: x.kind() ==
-                               CONV_TYPE, node_group.node_cpps))
-        assert len(cpp_conv) == 1
-        cpp_conv = cpp_conv[0]
-        inputs = list(cpp_conv.inputs())
-        # get the number of the group from the input parameters
-        group = inputs[8].toIValue()
+        node_name = node_group.name
+        _, leaf_module = get_module_by_name(self.model, node_name)
+        assert isinstance(leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
+        group = leaf_module.groups
+        n_filter = leaf_module.out_channels
+        if n_filter == group:
+            # depthwise conv will not introduce extra group dependency
+            return 1
         return group
 
     def build_dependency(self):
