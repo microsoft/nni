@@ -677,7 +677,7 @@ class ADMMPruner(OneShotPruner):
             Supported keys:
                 - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
                 - sparsity_per_layer : Equals to sparsity.
-                - row : Penalty parameters.
+                - rho : Penalty parameters in ADMM algorithm.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
@@ -723,7 +723,7 @@ class ADMMPruner(OneShotPruner):
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
         schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
         for schema in schema_list:
-            schema.update({SchemaOptional('row'): And(float, lambda n: n > 0)})
+            schema.update({SchemaOptional('rho'): And(float, lambda n: n > 0)})
         schema_list.append(deepcopy(EXCLUDE_SCHEMA))
         schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
@@ -732,8 +732,8 @@ class ADMMPruner(OneShotPruner):
         def patched_criterion(output: Tensor, target: Tensor):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
-                row = wrapper.config['row']
-                penalty += (row / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
+                rho = wrapper.config['rho']
+                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
             return origin_criterion(output, target) + penalty
         return patched_criterion
 
