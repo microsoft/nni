@@ -25,5 +25,6 @@ from .sparsity_allocator import (
 )
 from .task_generator import (
     AGPTaskGenerator,
-    LinearTaskGenerator
+    LinearTaskGenerator,
+    SimulatedAnnealingTaskGenerator
 )
