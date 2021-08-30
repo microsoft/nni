@@ -33,8 +33,6 @@ class ParameterSpec(NamedTuple):
     categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
     size: int = None                # If it's categorical, how many canidiates it has
 
-    nested_choice: bool = False     # Used to restructure parameters dict, ugly, needs refactor
-
     # uniform distributed
     low: float = None               # Lower bound of uniform parameter
     high: float = None              # Upper bound of uniform parameter
@@ -70,16 +68,15 @@ def deformat_parameters(parameters, formatted_search_space):
     ret = {}
     for key, x in parameters.items():
         spec = formatted_search_space[key]
-        if spec.nested_choice:
-            _assign(ret, tuple([*key, '_name']), spec.values[x])
-        elif spec.categorical:
-            if spec.type == 'choice':
-                _assign(ret, key, spec.values[x])
-            else:
-                lower = min(math.ceil(float(x)) for x in spec.values)
-                _assign(ret, key, lower + x)
-        else:
+        if not spec.categorical:
             _assign(ret, key, x)
+        elif spec.type == 'randint':
+            lower = min(math.ceil(float(x)) for x in spec.values)
+            _assign(ret, key, lower + x)
+        elif _is_nested_choices(spec.values):
+            _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
+        else:
+            _assign(ret, key, spec.values[x])
     return ret
 
 def _format_search_space(parent_key, parent_index, space):
@@ -88,16 +85,13 @@ def _format_search_space(parent_key, parent_index, space):
         if name == '_name':
             continue
         key = tuple([*parent_key, name])
-        if spec['_type'] == 'choice' and _is_nested_choice(spec['_value']):
-            sub_space_names = [sub_space['_name'] for sub_space in spec['_value']]
-            formatted.append(_format_parameter(key, parent_index, 'choice', sub_space_names, True))
+        formatted.append(_format_parameter(key, parent_index, spec['_type'], spec['_value']))
+        if spec['_type'] == 'choice' and _is_nested_choices(spec['_value']):
             for index, sub_space in enumerate(spec['_value']):
                 formatted += _format_search_space(key, index, sub_space)
-        else:
-            formatted.append(_format_parameter(key, parent_index, spec['_type'], spec['_value']))
     return formatted
 
-def _format_parameter(key, parent_index, type_, values, nested_choice=False):
+def _format_parameter(key, parent_index, type_, values):
     spec = {}
     spec['name'] = key[-1]
     spec['type'] = type_
@@ -105,7 +99,6 @@ def _format_parameter(key, parent_index, type_, values, nested_choice=False):
 
     spec['key'] = key
     spec['parent_index'] = parent_index
-    spec['nested_choice'] = nested_choice
 
     if type_ in ['choice', 'randint']:
         spec['categorical'] = True
@@ -117,7 +110,7 @@ def _format_parameter(key, parent_index, type_, values, nested_choice=False):
 
     else:
         spec['categorical'] = False
-        if 'q' in type_:
+        if type_.startswith('q'):
             spec['q'] = float(values[2])
         spec['log_distributed'] = ('log' in type_)
 
@@ -151,7 +144,7 @@ def _format_ordered_randint(key, parent_index, values):
         log_distributed = False,
     )
 
-def _is_nested_choice(values):
+def _is_nested_choices(values):
     if not values:
         return False
     for value in values:

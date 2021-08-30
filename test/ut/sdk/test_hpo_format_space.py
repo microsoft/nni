@@ -44,8 +44,8 @@ expected_formatted_space = [
     {'name':'hidden_size', 'type':'qloguniform', 'values':[128,1024,1], 'key':('hidden_size',), 'low':128.0, 'high':1024.0, 'q':1.0, 'log_distributed':True},
     {'name':'batch_size', 'type':'randint', 'values':[16,32], 'key':('batch_size',), 'categorical':True, 'size':16},
     {'name':'learning_rate', 'type':'loguniform', 'values':[0.0001,0.1], 'key':('learning_rate',), 'low':0.0001, 'high':0.1, 'log_distributed':True},
-    {'name':'nested', 'type':'choice', 'values':['empty','double_nested','common'], 'key':('nested',), 'categorical':True, 'size':3, 'nested_choice':True},
-    {'name':'xy', 'type':'choice', 'values':['x','y'], 'key':('nested','xy'), 'parent_index':1, 'categorical':True, 'size':2, 'nested_choice':True},
+    {'name':'nested', 'type':'choice', '_value_names':['empty','double_nested','common'], 'key':('nested',), 'categorical':True, 'size':3, 'nested_choice':True},
+    {'name':'xy', 'type':'choice', '_value_names':['x','y'], 'key':('nested','xy'), 'parent_index':1, 'categorical':True, 'size':2, 'nested_choice':True},
     {'name':'x', 'type':'normal', 'values':[0,1.0], 'key':('nested','xy','x'), 'parent_index':0, 'normal_distributed':True, 'mu':0.0, 'sigma':1.0},
     {'name':'y', 'type':'qnormal', 'values':[0,1,0.5], 'key':('nested','xy','y'), 'parent_index':1, 'normal_distributed':True, 'mu':0.0, 'sigma':1.0, 'q':0.5},
     {'name':'z', 'type':'quniform', 'values':[-0.5,0.5,0.1], 'key':('nested','z'), 'parent_index':1, 'low':-0.5, 'high':0.5, 'q':0.1},
@@ -57,7 +57,9 @@ def test_format_search_space():
     formatted = format_search_space(orig_space)
     for spec, expected in zip(formatted.values(), expected_formatted_space):
         for key, value in spec._asdict().items():
-            if key in expected:
+            if key == 'values' and '_value_names' in expected:
+                assert [v['_name'] for v in value] == expected['_value_names']
+            elif key in expected:
                 assert value == expected[key]
             else:
                 assert value is None or value == False
