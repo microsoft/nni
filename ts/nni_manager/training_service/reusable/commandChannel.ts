@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { EventEmitter } from "events";
-import { getLogger, Logger } from "../../common/log";
-import { TRIAL_COMMANDS } from "../../core/commands";
-import { encodeCommand } from "../../core/ipcInterface";
+import { getLogger, Logger } from "common/log";
+import { TRIAL_COMMANDS } from "core/commands";
+import { encodeCommand } from "core/ipcInterface";
 import { Channel, EnvironmentInformation } from "./environment";
 
 const acceptedCommands: Set<string> = new Set<string>(TRIAL_COMMANDS);

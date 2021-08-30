@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 
 import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
 import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
@@ -73,6 +71,25 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
+
+/*  Alibaba PAI DLC  */
+export interface DlcConfig extends TrainingServiceConfig {
+    platfrom: 'dlc';
+    type: string;
+    image: string;
+    jobType: string;
+    podCount: number;
+    ecsSpec: string;
+    region: string;
+    nasDataSourceId: string;
+    accessKeyId: string;
+    accessKeySecret: string;
+    localStorageMountPoint: string;
+    containerStorageMountPoint: string;
+}
+/* Kubeflow */
+
+// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
     storageType: string;
     maxTrialNumberPerGpu?: number;

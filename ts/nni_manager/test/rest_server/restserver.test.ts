@@ -4,7 +4,7 @@
 'use strict';
 
 import { assert, expect } from 'chai';
-import * as request from 'request';
+import request from 'request';
 import { Container } from 'typescript-ioc';
 
 import * as component from '../../common/component';

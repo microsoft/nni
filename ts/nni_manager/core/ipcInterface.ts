@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
-import * as net from 'net';
+import net from 'net';
 import { Readable, Writable } from 'stream';
 import { NNIError } from '../common/errors';
 import { getLogger, Logger } from '../common/log';

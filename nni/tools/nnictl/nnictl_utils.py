@@ -13,7 +13,6 @@ import traceback
 from datetime import datetime, timezone
 from subprocess import Popen
 from nni.tools.annotation import expand_annotations
-import nni_node  # pylint: disable=wrong-import-order, import-error
 from .rest_utils import rest_get, rest_delete, check_rest_server_quick, check_response
 from .url_utils import trial_jobs_url, experiment_url, trial_job_id_url, export_data_url, metric_data_url
 from .config_utils import Config, Experiments
@@ -456,21 +455,6 @@ def webui_url(args):
     experiment_id = get_config_filename(args)
     experiments_dict = Experiments().get_all_experiments()
     print_normal('{0} {1}'.format('Web UI url:', ' '.join(experiments_dict[experiment_id].get('webuiUrl'))))
-
-def webui_nas(args):
-    '''launch nas ui'''
-    print_normal('Starting NAS UI...')
-    try:
-        entry_dir = nni_node.__path__[0]
-        entry_file = os.path.join(entry_dir, 'nasui', 'server.js')
-        if sys.platform == 'win32':
-            node_command = os.path.join(entry_dir, 'node.exe')
-        else:
-            node_command = os.path.join(entry_dir, 'node')
-        cmds = [node_command, '--max-old-space-size=4096', entry_file, '--port', str(args.port), '--logdir', args.logdir]
-        subprocess.run(cmds, cwd=entry_dir)
-    except KeyboardInterrupt:
-        pass
 
 def local_clean(directory):
     '''clean up local data'''
