@@ -8,7 +8,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 import numpy as np
 
-from utils import *
+from utils import create_model, EvalDataset, count_flops
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

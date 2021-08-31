@@ -39,11 +39,15 @@ def get_bounding_box(annotation_file):
 
 
 def main(root_dir):
-    os.mkdir(root_dir + 'Processed')
-    os.mkdir(root_dir + 'Processed/train')
-    os.mkdir(root_dir + 'Processed/valid')
-    os.mkdir(root_dir + 'Processed/test')
-
+    try:
+        os.mkdir(root_dir + 'Processed')
+        os.mkdir(root_dir + 'Processed/train')
+        os.mkdir(root_dir + 'Processed/valid')
+        os.mkdir(root_dir + 'Processed/test')
+    except:
+        print('Directory already exists. Nothing done.')
+        exit()
+        
     # load train test splits
     train_metadata = io.loadmat(root_dir + 'train_list.mat')
     train_valid_file_list = [x[0][0] for x in train_metadata['file_list']]
