@@ -103,7 +103,7 @@ class FBNetTrainer(BaseOneShotTrainer):
     def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, grad_clip=5.,
                  learning_rate=2.5E-3, batch_size=64, workers=4,
-                 device=None, log_frequency=None,lookup_table,
+                 device=None, log_frequency=None,
                  arc_learning_rate=3.0E-4, unrolled=False):
         self.model = model
         self.loss = loss
@@ -112,11 +112,6 @@ class FBNetTrainer(BaseOneShotTrainer):
         self.dataset = dataset
         self.batch_size = batch_size
         self.workers = workers
-        self.lookup_table = lookup_table
-        self.config = lookup_table.config
-        self.start_epoch = self.config.start_epoch
-        self.temp = self.config.init_temperature
-        self.exp_anneal_rate = self.config.exp_anneal_rate
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
         self.model.to(self.device)
