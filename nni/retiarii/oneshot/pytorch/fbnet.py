@@ -103,7 +103,7 @@ class FBNetTrainer(BaseOneShotTrainer):
     def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, grad_clip=5.,
                  learning_rate=2.5E-3, batch_size=64, workers=4,
-                 device=None, log_frequency=None,
+                 device=None, log_frequency=None,lookup_table,
                  arc_learning_rate=3.0E-4, unrolled=False):
         self.model = model
         self.loss = loss
@@ -112,6 +112,11 @@ class FBNetTrainer(BaseOneShotTrainer):
         self.dataset = dataset
         self.batch_size = batch_size
         self.workers = workers
+        self.lookup_table = lookup_table
+        self.config = lookup_table.config
+        self.start_epoch = self.config.start_epoch
+        self.temp = self.config.init_temperature
+        self.exp_anneal_rate = self.config.exp_anneal_rate
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
         self.model.to(self.device)
@@ -154,6 +159,7 @@ class FBNetTrainer(BaseOneShotTrainer):
                                                         num_workers=self.workers)
 
     def _train_one_epoch(self, epoch):
+        
         self.model.train()
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
@@ -169,6 +175,8 @@ class FBNetTrainer(BaseOneShotTrainer):
             self.ctrl_optim.step()
 
             # phase 2: child network step
+            # temperature annealing
+            self.temp = self.temp * self.exp_anneal_rate
             self.model_optim.zero_grad()
             logits, loss = self._logits_and_loss(trn_X, trn_y)
             loss.backward()
@@ -268,7 +276,7 @@ class FBNetTrainer(BaseOneShotTrainer):
         dalpha_pos, dalpha_neg = dalphas  # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         hessian = [(p - n) / (2. * eps) for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian
-
+         
     def fit(self):
         for i in range(self.num_epochs):
             self._train_one_epoch(i)
