@@ -3,9 +3,9 @@
 
 import csv
 import logging
-from nni.compression.pytorch.compressor import PrunerModuleWrapper
 import torch
 import numpy as np
+from nni.compression.pytorch.compressor import PrunerModuleWrapper
 from .utils import get_module_by_name
 
 
