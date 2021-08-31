@@ -49,7 +49,8 @@ class CompressorTestCase(TestCase):
         }]
 
         model.relu = torch.nn.ReLU()
-        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer)
         quantizer.compress()
         modules_to_compress = quantizer.get_modules_to_compress()
         modules_to_compress_name = [t[0].name for t in modules_to_compress]
@@ -307,7 +308,7 @@ class CompressorTestCase(TestCase):
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
         config_list = [{
-            'quant_types': ['weight'],
+            'quant_types': ['weight', 'input'],
             'quant_bits': 8,
             'op_types': ['Conv2d', 'Linear']
         }, {
@@ -317,30 +318,38 @@ class CompressorTestCase(TestCase):
             'op_types': ['ReLU']
         }]
         model.relu = torch.nn.ReLU()
-        quantizer = torch_quantizer.QAT_Quantizer(model, config_list)
+
+        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer)
         quantizer.compress()
 
         # test quantize
         # range not including 0
         eps = 1e-7
-        input = torch.tensor([[0, 4], [2, 1]]).float()
+        input = torch.tensor([[1, 4], [2, 1]])
         weight = torch.tensor([[1, 2], [3, 5]]).float()
-        model.conv2.module.old_weight.data = weight
+        model.conv2.module.weight.data = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.04 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
-        model.conv2.module.old_weight.data = weight
+        model.conv2.module.weight = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.0796 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # test value of weight and bias after quantization
         weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])
         bias = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
         bias_valid = torch.tensor([2.3432, 3.4342, 1.3414, 5.2341])
-        model.conv2.module.old_weight.data = weight
+        model.conv2.module.weight = weight
         model.conv2.module.bias.data = bias
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert torch.all(torch.isclose(model.conv2.module.weight.data, weight_valid, rtol=1e-4))
@@ -350,14 +359,14 @@ class CompressorTestCase(TestCase):
         eps = 1e-7
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_activation, 0, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_activation, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_output, 0, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_output, 0.002, abs_tol=eps)
 
         quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         out = model.relu(x)
-        assert math.isclose(model.relu.module.tracked_min_activation, 0.002, abs_tol=eps)
-        assert math.isclose(model.relu.module.tracked_max_activation, 0.00998, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_min_output, 0.002, abs_tol=eps)
+        assert math.isclose(model.relu.module.tracked_max_output, 0.00998, abs_tol=eps)
 
     def test_torch_quantizer_export(self):
         config_list_qat = [{
@@ -392,7 +401,8 @@ class CompressorTestCase(TestCase):
         for config, quantize_algorithm in zip(config_set, quantize_algorithm_set):
             model = TorchModel()
             model.relu = torch.nn.ReLU()
-            quantizer = quantize_algorithm(model, config)
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            quantizer = quantize_algorithm(model, config, optimizer)
             quantizer.compress()
 
             x = torch.rand((1, 1, 28, 28), requires_grad=True)

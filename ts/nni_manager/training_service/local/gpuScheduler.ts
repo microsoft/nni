@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as cpp from 'child-process-promise';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
-import { getLogger, Logger } from '../../common/log';
-import { delay } from '../../common/utils';
+import cpp from 'child-process-promise';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { getLogger, Logger } from 'common/log';
+import { delay } from 'common/utils';
 import { GPUInfo, GPUSummary } from '../common/gpuData';
 import { execKill, execMkdir, execRemove, execTail, runGpuMetricsCollector } from '../common/util';
 

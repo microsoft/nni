@@ -890,14 +890,7 @@ storageAccountKey
 
 Optional. String.
 
-Required if using AzureBlob storage and ``resourceGroupName`` not set. The azure storage account key.
-
-resourceGroupName
-^^^^^^^^^^^^^^^^^
-
-Optional. String.
-
-Required if using AzureBlob storage and ``storageAccountKey`` not set. The resource group that AzureBlob container belongs to.
+Required if using AzureBlob storage. The azure storage account key.
 
 containerName
 ^^^^^^^^^^^^^

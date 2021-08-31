@@ -409,6 +409,7 @@ One of the following:
 - `RemoteConfig`_
 - :ref:`OpenpaiConfig <openpai-class>`
 - `AmlConfig`_
+- `DlcConfig`_
 - `HybridConfig`_
 
 For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
@@ -797,6 +798,111 @@ AML compute cluster name.
 type: ``str``
 
 
+DlcConfig
+---------
+
+Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
+
+
+platform
+""""""""
+
+Constant string ``"dlc"``.
+
+
+type
+""""
+
+Job spec type.
+
+type: ``str``
+
+default: ``"worker"``
+
+
+image
+"""""
+
+Name and tag of docker image to run the trials.
+
+type: ``str``
+
+
+jobType
+"""""""
+
+PAI-DLC training job type, ``"TFJob"`` or ``"PyTorchJob"``.
+
+type: ``str``
+
+
+podCount
+""""""""
+
+Pod count to run a single training job.
+
+type: ``str``
+
+
+ecsSpec
+"""""""
+
+Training server config spec string.
+
+type: ``str``
+
+
+region
+""""""
+
+The region where PAI-DLC public-cluster locates.
+
+type: ``str``
+
+
+nasDataSourceId
+"""""""""""""""
+
+The NAS datasource id configurated in PAI-DLC side.
+
+type: ``str``
+
+
+
+accessKeyId
+"""""""""""
+
+The accessKeyId of your cloud account.
+
+type: ``str``
+
+
+
+accessKeySecret
+"""""""""""""""
+
+The accessKeySecret of your cloud account.
+
+type: ``str``
+
+
+
+localStorageMountPoint
+""""""""""""""""""""""
+
+The mount point of the NAS on PAI-DSW server, default is /home/admin/workspace/.
+
+type: ``str``
+
+
+containerStorageMountPoint
+""""""""""""""""""""""""""
+
+The mount point of the NAS on PAI-DLC side, default is /root/data/.
+
+type: ``str``
+
+
 HybridConfig
 ------------
 
@@ -926,17 +1032,6 @@ Azure storage account key.
 
 type: ``Optional[str]``
 
-When not set storageAccountKey, should use ``az login`` with Azure CLI at first and set `resourceGroupName`_.
-
-
-resourceGroupName
-"""""""""""""""""
-
-Resource group that AzureBlob container belongs to.
-
-type: ``Optional[str]``
-
-Required if ``storageAccountKey`` not set.
 
 containerName
 """""""""""""

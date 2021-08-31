@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
@@ -470,8 +468,6 @@ class NNIManager implements Manager {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
         }
-
-        throw new Error(`Unsupported training service platform "${platform}"`);
     }
 
     private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {
@@ -547,14 +543,23 @@ class NNIManager implements Manager {
         }
     }
 
-    private async stopTrialJobIfOverMaxDurationTimer(trialJobId: string): Promise<void> {
-        const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
-        if (undefined !== trialJobDetail &&
-            trialJobDetail.status === 'RUNNING' &&
-            trialJobDetail.startTime !== undefined) {
-            const isEarlyStopped = true;
-            await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
-            this.log.info(`Trial job ${trialJobId} has stoped because it is over maxTrialDuration.`);
+    private async stopTrialIfOverMaxDurationLimit(): Promise<void> {
+        if(this.maxTrialDuration === Infinity){
+            return;
+        }
+
+        for (const trialJobId of Array.from(this.trialJobs.keys())) {
+            const trialJobDetail: TrialJobDetail | undefined = this.trialJobs.get(trialJobId);
+            if(undefined !== trialJobDetail &&
+                trialJobDetail.status === 'RUNNING' &&
+                trialJobDetail.startTime !== undefined){
+                const currentTrialDuration = (new Date().getTime() - trialJobDetail.startTime) / 1000;
+                if(currentTrialDuration>this.maxTrialDuration) {
+                    const isEarlyStopped = true;
+                    await this.trainingService.cancelTrialJob(trialJobId, isEarlyStopped);
+                    this.log.info(`Trial job ${trialJobDetail.id} has been canceled because it is over max trial duration.`);
+                }
+            }
         }
     }
 
@@ -622,6 +627,8 @@ class NNIManager implements Manager {
         let allFinishedTrialJobNum: number = this.currSubmittedTrialNum;
         let waitSubmittedToFinish: number;
         while (!['ERROR', 'STOPPING', 'STOPPED'].includes(this.status.status)) {
+            await this.stopTrialIfOverMaxDurationLimit();
+
             const finishedTrialJobNum: number = await this.requestTrialJobsStatus();
             allFinishedTrialJobNum += finishedTrialJobNum;
 
@@ -681,7 +688,6 @@ class NNIManager implements Manager {
                     this.currSubmittedTrialNum++;
                     this.log.info('submitTrialJob: form:', form);
                     const trialJobDetail: TrialJobDetail = await this.trainingService.submitTrialJob(form);
-                    setTimeout(async () => this.stopTrialJobIfOverMaxDurationTimer(trialJobDetail.id), 1000 * this.maxTrialDuration);
                     const Snapshot: TrialJobDetail = Object.assign({}, trialJobDetail);
                     await this.storeExperimentProfile();
                     this.trialJobs.set(trialJobDetail.id, Snapshot);

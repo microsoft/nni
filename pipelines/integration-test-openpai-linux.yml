@@ -13,7 +13,7 @@ schedules:
 
 jobs:
 - job: pai
-  pool: NNI CI PAI CLI
+  pool: NNI CI PAI LINUX CLI
   timeoutInMinutes: 120
 
   steps:
@@ -64,10 +64,11 @@ jobs:
           --nni_docker_image nnidev/nni-nightly \
           --pai_storage_config_name confignfs-data \
           --pai_token $(pai_token) \
-          --nni_manager_nfs_mount_path /home/quzha/mnt-pai-ne/shinyang3 \
-          --container_nfs_mount_path /mnt/confignfs-data/shinyang3 \
+          --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) \
+          --container_nfs_mount_path $(container_nfs_mount_path) \
           --nni_manager_ip $(manager_ip) \
-          --vc nni
+          --vc nni \
+          --debug true
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai
     displayName: Integration test
 
@@ -82,8 +83,8 @@ jobs:
           --nni_docker_image nnidev/nni-nightly \
           --pai_storage_config_name confignfs-data \
           --pai_token $(pai_token) \
-          --nni_manager_nfs_mount_path /home/quzha/mnt-pai-ne/shinyang3 \
-          --container_nfs_mount_path /mnt/confignfs-data/shinyang3 \
+          --nni_manager_nfs_mount_path $(nni_manager_nfs_mount_path) \
+          --container_nfs_mount_path $(container_nfs_mount_path) \
           --nni_manager_ip $(manager_ip) \
           --vc nni
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts pai

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 const joi = require('joi');
 
 export namespace ValidationSchemas {
@@ -211,7 +209,6 @@ export namespace ValidationSchemas {
                 storageAccountName: joi.string(),
                 storageAccountKey: joi.string(),
                 containerName: joi.string(),
-                resourceGroupName: joi.string(),
                 localMounted: joi.string()
             })
         }

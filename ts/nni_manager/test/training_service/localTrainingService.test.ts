@@ -3,11 +3,11 @@
 
 'use strict';
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as tmp from 'tmp';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import fs from 'fs';
+import path from 'path';
+import tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail} from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest, getExperimentRootDir } from '../../common/utils';
@@ -24,7 +24,7 @@ describe('Unit Test for LocalTrainingService', () => {
     const config = <ExperimentConfig>{
         trialCommand: 'sleep 1h && echo hello',
         trialCodeDirectory: `${localCodeDir}`,
-        trialGpuNumber: 1,
+        trialGpuNumber: 0,  // TODO: add test case for gpu?
         trainingService: {
             platform: 'local'
         }

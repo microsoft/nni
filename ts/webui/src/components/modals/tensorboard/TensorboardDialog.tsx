@@ -17,36 +17,32 @@ function TensorboardDialog(props): any {
         onHideDialog();
     }
 
-    const startTensorboard = isReaptedStartTensorboard ? (
-        <div>
-            You had started this tensorBoard with these trials:
-            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
-            <div className='line-height'>
-                Its tensorBoard id: <span className='bold'>{item.id}</span>
-            </div>
-        </div>
-    ) : (
-        <div>
-            You are starting a new TensorBoard with trials:
-            <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
-            <div className='line-height'>
-                TensorBoard id: <span className='bold'>{item.id}</span>
-            </div>
-        </div>
-    );
-
     return (
         <Dialog hidden={false} dialogContentProps={dialogContentProps} modalProps={{ className: 'dialog' }}>
             {errorMessage.error ? (
                 <div>
-                    <span>Failed to start tensorBoard! Error message: {errorMessage.message}</span>.
+                    <span>Error message: {errorMessage.message}</span>
                 </div>
             ) : isShowTensorboardDetail ? (
                 <div>
                     This tensorBoard with trials: <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
                 </div>
+            ) : isReaptedStartTensorboard ? (
+                <div>
+                    You had started this tensorBoard with these trials:
+                    <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+                    <div className='line-height'>
+                        Its tensorBoard id: <span className='bold'>{item.id}</span>
+                    </div>
+                </div>
             ) : (
-                startTensorboard
+                <div>
+                    You are starting a new TensorBoard with trials:
+                    <span className='bold'>{item.trialJobIdList.join(', ')}</span>.
+                    <div className='line-height'>
+                        TensorBoard id: <span className='bold'>{item.id}</span>
+                    </div>
+                </div>
             )}
             {errorMessage.error ? (
                 <DialogFooter>

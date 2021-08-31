@@ -7,6 +7,7 @@ import torch.nn as nn
 from nni.retiarii.serializer import basic_unit
 
 from .api import LayerChoice
+from .utils import generate_new_label
 from ...utils import version_larger_equal
 
 __all__ = ['AutoActivation']
@@ -230,17 +231,22 @@ class AutoActivation(nn.Module):
     unit_num : int
         the number of core units
     """
-    def __init__(self, unit_num = 1):
+    def __init__(self, unit_num: int = 1, label: str = None):
         super().__init__()
+        self._label = generate_new_label(label)
         self.unaries = nn.ModuleList()
         self.binaries = nn.ModuleList()
-        self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules])
-        for _ in range(unit_num):
-            one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules])
+        self.first_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label = f'{self.label}__unary_0')
+        for i in range(unit_num):
+            one_unary = LayerChoice([eval('{}()'.format(unary)) for unary in unary_modules], label = f'{self.label}__unary_{i+1}')
             self.unaries.append(one_unary)
-        for _ in range(unit_num):
-            one_binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules])
+        for i in range(unit_num):
+            one_binary = LayerChoice([eval('{}()'.format(binary)) for binary in binary_modules], label = f'{self.label}__binary_{i}')
             self.binaries.append(one_binary)
+
+    @property
+    def label(self):
+        return self._label
 
     def forward(self, x):
         out = self.first_unary(x)

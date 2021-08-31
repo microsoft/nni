@@ -50,12 +50,13 @@ jobs:
   - script: |
       set -e
       cd test
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts kubeflow \
-          --keyvault_vaultname NNIKeyVault \
-          --keyvault_name AzureStorageAccountKey \
-          --azs_account nniazurestorage \
-          --azs_share nni \
+          --keyvault_vaultname $(keyvault_vaultname) \
+          --keyvault_name $(keyvault_name) \
+          --azs_account $(azs_account) \
+          --azs_share $(azs_share) \
           --nni_docker_image nnidev/nni-nightly \
           --nni_manager_ip $(manager_ip)
       python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts kubeflow --exclude multi-phase,multi-thread

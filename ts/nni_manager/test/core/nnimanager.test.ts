@@ -169,9 +169,9 @@ describe('Unit test for nnimanager', function () {
 
     it('test getTrialJob with invalid id', () => {
         //query a not exist id, and the function should throw error, and should not process then() method
-        return nniManager.getTrialJob('4567').then((jobid) => {
+        return nniManager.getTrialJob('4567').then((_jobid) => {
             assert.fail();
-        }).catch((error) => {
+        }).catch((_error) => {
             assert.isTrue(true);
         })
     })
@@ -252,9 +252,9 @@ describe('Unit test for nnimanager', function () {
 
     it('test getMetricData with invalid trialJobId', () => {
         //query an invalid trialJobId
-        return nniManager.getMetricData('43210', 'CUSTOM').then((metricData) => {
+        return nniManager.getMetricData('43210', 'CUSTOM').then((_metricData) => {
             assert.fail();
-        }).catch((error) => {
+        }).catch((_error) => {
         })
     })
 
@@ -289,8 +289,8 @@ describe('Unit test for nnimanager', function () {
         })
     })
 
-    it('test resumeExperiment', async () => {
+    //it('test resumeExperiment', async () => {
        //TODO: add resume experiment unit test
-    })
+    //})
 
 })

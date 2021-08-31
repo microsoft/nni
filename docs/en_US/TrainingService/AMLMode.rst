@@ -113,7 +113,7 @@ Run the following commands to start the example experiment:
 
    nnictl create --config config_aml.yml
 
-Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.3``.
+Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.4``.
 
 Monitor your code in the cloud by using the studio
 --------------------------------------------------

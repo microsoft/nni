@@ -1,0 +1,5 @@
+{
+    "color": true,
+    "require": "test/register.js",
+    "timeout": "15s"
+}

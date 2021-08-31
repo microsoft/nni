@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from '../../common/experimentConfig';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
-import { delay } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from 'common/experimentConfig';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from 'common/trainingService';
+import { delay } from 'common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
@@ -26,11 +24,11 @@ class RouterTrainingService implements TrainingService {
         const instance = new RouterTrainingService();
         instance.log = getLogger('RouterTrainingService');
         const platform = Array.isArray(config.trainingService) ? 'hybrid' : config.trainingService.platform;
-        if (platform === 'remote' && !(<RemoteConfig>config.trainingService).reuseMode) {
+        if (platform === 'remote' && (<RemoteConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new RemoteMachineTrainingService(config);
-        } else if (platform === 'openpai' && !(<OpenpaiConfig>config.trainingService).reuseMode) {
+        } else if (platform === 'openpai' && (<OpenpaiConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new PAITrainingService(config);
-        } else if (platform === 'kubeflow' && !(<KubeflowConfig>config.trainingService).reuseMode) {
+        } else if (platform === 'kubeflow' && (<KubeflowConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new KubeflowTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);

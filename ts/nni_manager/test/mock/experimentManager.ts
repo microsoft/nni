@@ -25,16 +25,16 @@ export class mockedeExperimentManager extends ExperimentManager {
                 "logDir": null
             }
         }));
-        return new Promise<JSON>((resolve, reject) => {
+        return new Promise<JSON>((resolve, _reject) => {
             resolve(expInfo);
         });
     }
 
-    public setExperimentPath(newPath: string): void {
+    public setExperimentPath(_newPath: string): void {
         return
     }
 
-    public setExperimentInfo(experimentId: string, key: string, value: any): void {
+    public setExperimentInfo(_experimentId: string, _key: string, _value: any): void {
         return
     }
 

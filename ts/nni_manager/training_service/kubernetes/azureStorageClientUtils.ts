@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as azureStorage from 'azure-storage';
-import * as fs from 'fs';
-import * as path from 'path';
+import azureStorage from 'azure-storage';
+import fs from 'fs';
+import path from 'path';
 import { Deferred } from 'ts-deferred';
 import { String } from 'typescript-string-operations';
-import { getLogger } from '../../common/log';
-import { mkDirP } from '../../common/utils';
+import { getLogger } from 'common/log';
+import { mkDirP } from 'common/utils';
 
 export namespace AzureStorageClientUtility {
 

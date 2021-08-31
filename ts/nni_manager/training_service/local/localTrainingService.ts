@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-import * as cp from 'child_process';
+import cp from 'child_process';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as ts from 'tail-stream';
-import * as tkill from 'tree-kill';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
+import fs from 'fs';
+import path from 'path';
+import ts from 'tail-stream';
+import tkill from 'tree-kill';
+import { NNIError, NNIErrorNames } from 'common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { powershellString } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
-} from '../../common/trainingService';
+} from 'common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
-} from '../../common/utils';
-import { ExperimentConfig, LocalConfig, flattenConfig } from '../../common/experimentConfig';
+} from 'common/utils';
+import { ExperimentConfig, LocalConfig, flattenConfig } from 'common/experimentConfig';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -237,8 +237,10 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGTERM');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
+
         const startTime = Date.now();
-        while(await isAlive(trialJob.pid)) {    
+        while(await isAlive(trialJob.pid)) {
             if (Date.now() - startTime > 4999) {
                 tkill(trialJob.pid, 'SIGKILL', (err) => {
                     if (err) {
@@ -249,8 +251,6 @@ class LocalTrainingService implements TrainingService {
             }
             await delay(500);
         }
-
-        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
     }
@@ -446,7 +446,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         } else {
-            runScriptContent.push(`$env:PATH="${process.env.path}"`)
+            runScriptContent.push(`$env:PATH=${powershellString(process.env['path']!)}`)
         }
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));
