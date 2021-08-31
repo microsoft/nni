@@ -17,9 +17,11 @@ class BasePruningScheduler:
         """
         raise NotImplementedError()
 
-    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float):
+    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
+                           origin_masks: Dict[str, Dict[str, Tensor]]):
         """
         Used to record the task result.
+
         Parameters
         ----------
         task_id
@@ -30,12 +32,16 @@ class BasePruningScheduler:
             The masks should be applied on the pruned model.
         score
             The score of the pruning performance in this task.
+        origin_masks
+            The masks applied on the under pruning model.
         """
         raise NotImplementedError()
 
-    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, Dict[str, Dict[str, Tensor]], float]:
+    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) \
+            -> Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]:
         """
         Pruning the model with config list.
+
         Parameters
         ----------
         model
@@ -44,16 +50,22 @@ class BasePruningScheduler:
             The config list usually identify the layers that want to prune.
         masks
             The masks should be applied on the under pruning model.
+
+        Returns
+        -------
+        Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]
+            Return the pruned model, the masks on pruned model, the score of the pruned model,
+            the masks on under pruning model.
         """
         raise NotImplementedError()
 
-    def get_best_result(self) -> Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]:
+    def get_best_result(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]], float]:
         """
         Returns
         -------
-        Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]
+        Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]], float]
             Return the task result that has the best performance,
-            inculde task id, the pruned model, the masks on the pruned model and score.
+            inculde task id, the pruned model, config list used in this task, the masks on the pruned model and score.
         """
         raise NotImplementedError()
 
@@ -70,8 +82,8 @@ class BasePruningScheduler:
         pruned_model, masks = None, None
 
         while task_id is not None:
-            pruned_model, masks, score = self.pruning_one_step(model, config_list, pre_masks)
-            self.record_task_result(task_id, pruned_model, masks, score)
+            pruned_model, masks, score, origin_masks = self.pruning_one_step(model, config_list, pre_masks)
+            self.record_task_result(task_id, pruned_model, masks, score, origin_masks)
             task_id, model, config_list, pre_masks = self.generate_task()
 
         return pruned_model, masks

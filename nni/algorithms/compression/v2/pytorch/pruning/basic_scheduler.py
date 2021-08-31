@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from copy import deepcopy
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 
@@ -44,31 +45,32 @@ class PruningScheduler(BasePruningScheduler):
     def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
         return self.task_generator.next()
 
-    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float):
-        self.task_generator.receive_task_result(task_id, pruned_model, masks, score)
+    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
+                           origin_masks: Dict[str, Dict[str, Tensor]]):
+        self.task_generator.receive_task_result(task_id, pruned_model, masks, score, origin_masks)
 
-    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) -> Tuple[Module, Dict[str, Dict[str, Tensor]], float]:
+    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) \
+            -> Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]:
         # pruning model
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
         model, masks = self.pruner.compress()
+        origin_masks = deepcopy(masks)
 
         # show the pruning effect
         self.pruner.show_pruned_weights()
-
-        # apply masks to sparsify model
         self.pruner._unwrap_model()
 
         # speed up
         # TODO: speed up only support mask file path as input, maybe we need also support masks directly.
-        tmp_masks = {}
-        for name, mask in masks.items():
-            tmp_masks[name] = {}
-            tmp_masks[name]['weight'] = mask.get('weight_mask')
-            if 'bias' in masks:
-                tmp_masks[name]['bias'] = mask.get('bias_mask')
-        torch.save(tmp_masks, Path('./temp_masks.pth'))
         if self.speed_up:
+            tmp_masks = {}
+            for name, mask in masks.items():
+                tmp_masks[name] = {}
+                tmp_masks[name]['weight'] = mask.get('weight_mask')
+                if 'bias' in masks:
+                    tmp_masks[name]['bias'] = mask.get('bias_mask')
+            torch.save(tmp_masks, Path('./temp_masks.pth'))
             ModelSpeedup(model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
             masks = {}
 
@@ -84,7 +86,7 @@ class PruningScheduler(BasePruningScheduler):
         # evaluate
         score = self.evaluator(model) if self.evaluator is not None else None
 
-        return model, masks, score
+        return model, masks, score, origin_masks
 
     def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]]:
         return self.task_generator.get_best_result()
