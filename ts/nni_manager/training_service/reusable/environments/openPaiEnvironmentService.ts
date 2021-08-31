@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as yaml from 'js-yaml';
-import * as request from 'request';
+import yaml from 'js-yaml';
+import request from 'request';
 import { Container, Scope } from 'typescript-ioc';
 import { Deferred } from 'ts-deferred';
-import * as component from '../../../common/component';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
-import { PAIClusterConfig } from '../../pai/paiConfig';
-import { NNIPAITrialConfig } from '../../pai/paiConfig';
+import * as component from 'common/component';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { PAIClusterConfig } from 'training_service/pai/paiConfig';
+import { NNIPAITrialConfig } from 'training_service/pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { SharedStorageService } from '../sharedStorage';
 import { MountedStorageService } from '../storages/mountedStorageService';

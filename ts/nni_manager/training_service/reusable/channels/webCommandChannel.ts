@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Server as SocketServer } from "ws";
-import { getBasePort, getExperimentId } from "../../../common/experimentStartupInfo";
-import { INITIALIZED } from '../../../core/commands';
+import { getBasePort, getExperimentId } from "common/experimentStartupInfo";
+import { INITIALIZED } from 'core/commands';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
 import { EventEmitter } from "events";

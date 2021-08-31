@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { getLogLevel } from '../../../common/utils';
-import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { execMkdir } from '../../common/util';
-import { ExecutorManager } from '../../remote_machine/remoteMachineData';
+import { getLogLevel } from 'common/utils';
+import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { execMkdir } from 'training_service/common/util';
+import { ExecutorManager } from 'training_service/remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 import { SharedStorageService } from '../sharedStorage'

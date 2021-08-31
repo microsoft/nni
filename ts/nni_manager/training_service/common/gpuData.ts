@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 export enum ScheduleResultType {
     // Schedule succeeded
     SUCCEED,
@@ -65,14 +63,15 @@ export class GPUSummary {
 
 
 export function parseGpuIndices(gpuIndices?: string): Set<number> | undefined {
-    if (gpuIndices !== undefined) {
-        const indices: number[] = gpuIndices.split(',')
-            .map((x: string) => parseInt(x, 10));
-        if (indices.length > 0) {
-            return new Set(indices);
-        } else {
-            throw new Error('gpuIndices can not be empty if specified.');
-        }
+    if (gpuIndices === undefined) {
+        return undefined;
+    }
+    const indices: number[] = gpuIndices.split(',')
+        .map((x: string) => parseInt(x, 10));
+    if (indices.length > 0) {
+        return new Set(indices);
+    } else {
+        throw new Error('gpuIndices can not be empty if specified.');
     }
 }
 
