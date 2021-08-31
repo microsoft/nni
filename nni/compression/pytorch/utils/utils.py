@@ -1,8 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 import torch
-import re
-import logging
 
 
 torch_float_dtype = [torch.float, torch.float16, torch.float32, torch.float64, torch.half, torch.double]
