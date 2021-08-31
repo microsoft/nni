@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
+import 'app-module-path/register';
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
@@ -30,7 +29,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
 }
 
-async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
+async function initContainer(foreground: boolean, _platformMode: string, logFileName?: string): Promise<void> {
     Container.bind(Manager)
         .to(NNIManager)
         .scope(Scope.Singleton);
@@ -63,7 +62,7 @@ async function initContainer(foreground: boolean, platformMode: string, logFileN
 
 function usage(): void {
     console.info('usage: node main.js --port <port> --mode \
-    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
+    <local/remote/pai/kubeflow/frameworkcontroller/aml/adl/hybrid/dlc> --start_mode <new/resume> --experiment_id <id> --foreground <true/false>');
 }
 
 const strPort: string = parseArg(['--port', '-p']);

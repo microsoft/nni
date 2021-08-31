@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { spawn } from 'child_process';
 import { Logger, getLogger } from './log';
 

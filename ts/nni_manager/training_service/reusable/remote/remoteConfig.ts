@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 import { EnvironmentInformation } from '../environment';
-import { RemoteMachineConfig } from '../../../common/experimentConfig';
+import { RemoteMachineConfig } from 'common/experimentConfig';
 
 /**
  * RemoteMachineEnvironmentInformation

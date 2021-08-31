@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 
 import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
 import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
@@ -58,6 +56,7 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
+    virtualCluster?: string;
 }
 
 /* AML */
@@ -72,6 +71,25 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
+
+/*  Alibaba PAI DLC  */
+export interface DlcConfig extends TrainingServiceConfig {
+    platfrom: 'dlc';
+    type: string;
+    image: string;
+    jobType: string;
+    podCount: number;
+    ecsSpec: string;
+    region: string;
+    nasDataSourceId: string;
+    accessKeyId: string;
+    accessKeySecret: string;
+    localStorageMountPoint: string;
+    containerStorageMountPoint: string;
+}
+/* Kubeflow */
+
+// FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
     storageType: string;
     maxTrialNumberPerGpu?: number;
@@ -147,7 +165,6 @@ export interface NfsConfig extends SharedStorageConfig {
 export interface AzureBlobConfig extends SharedStorageConfig {
     storageAccountName: string;
     storageAccountKey?: string;
-    resourceGroupName?: string;
     containerName: string;
 }
 
@@ -198,7 +215,7 @@ export function toSeconds(time: string): number {
     throw new Error(`Bad time string "${time}"`);
 }
 
-const sizeUnits = { tb: 1024 * 1024, gb: 1024 * 1024, mb: 1, kb: 1 / 1024 };
+const sizeUnits = { tb: 1024 * 1024, gb: 1024, mb: 1, kb: 1 / 1024 };
 
 export function toMegaBytes(size: string): number {
     for (const [unit, factor] of Object.entries(sizeUnits)) {

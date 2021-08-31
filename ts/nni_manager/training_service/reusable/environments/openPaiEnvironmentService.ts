@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as yaml from 'js-yaml';
-import * as request from 'request';
+import yaml from 'js-yaml';
+import request from 'request';
+import { Container, Scope } from 'typescript-ioc';
 import { Deferred } from 'ts-deferred';
-import * as component from '../../../common/component';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
-import { PAIClusterConfig } from '../../pai/paiConfig';
-import { NNIPAITrialConfig } from '../../pai/paiConfig';
+import * as component from 'common/component';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { PAIClusterConfig } from 'training_service/pai/paiConfig';
+import { NNIPAITrialConfig } from 'training_service/pai/paiConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { SharedStorageService } from '../sharedStorage';
 import { MountedStorageService } from '../storages/mountedStorageService';
+import { StorageService } from '../storageService';
 
 interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 
@@ -38,9 +38,10 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
         this.config = flattenConfig(config, 'openpai');
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
-
-        // FIXME: only support MountedStorageService
-        const storageService = new MountedStorageService();
+        Container.bind(StorageService)
+          .to(MountedStorageService)
+          .scope(Scope.Singleton);
+        const storageService = component.get<StorageService>(StorageService)
         const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, this.experimentId);
         storageService.initialize(this.config.localStorageMountPoint, remoteRoot);
     }
@@ -286,7 +287,7 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                         taskRetryCount: 0,
                         dockerImage: 'docker_image_0',
                         resourcePerInstance: {
-                            gpu: this.config.trialGpuNumber,
+                            gpu: this.config.trialGpuNumber === undefined? 0: this.config.trialGpuNumber,
                             cpu: this.config.trialCpuNumber,
                             memoryMB: toMegaBytes(this.config.trialMemorySize)
                         },
@@ -304,9 +305,9 @@ export class OpenPaiEnvironmentService extends EnvironmentService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+            if (this.config.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.config.deprecated.virtualCluster
+                    virtualCluster: this.config.virtualCluster
                 }
             }
         }

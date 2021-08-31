@@ -1,29 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as request from 'request';
-import * as component from '../../common/component';
+import fs from 'fs';
+import path from 'path';
+import request from 'request';
+import * as component from 'common/component';
 
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
-} from '../../common/trainingService';
-import { delay } from '../../common/utils';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../common/experimentConfig';
+} from 'common/trainingService';
+import { delay } from 'common/utils';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
 import { String } from 'typescript-string-operations';
-import { generateParamFileName, getIPV4Address, uniqueString } from '../../common/utils';
+import { generateParamFileName, getIPV4Address, uniqueString } from 'common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
@@ -70,6 +68,7 @@ class PAITrainingService implements TrainingService {
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.log.info('Construct paiBase training service.');
         this.config = flattenConfig(config, 'openpai');
+        this.versionCheck = !this.config.debug;
         this.paiJobRestServer = new PAIJobRestServer(this);
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
@@ -78,7 +77,7 @@ class PAITrainingService implements TrainingService {
 
     private async copyTrialCode(): Promise<void> {
         await validateCodeDir(this.config.trialCodeDirectory);
-        const nniManagerNFSExpCodeDir = path.join(this.config.trialCodeDirectory, this.experimentId, 'nni-code');
+        const nniManagerNFSExpCodeDir = path.join(this.config.localStorageMountPoint, this.experimentId, 'nni-code');
         await execMkdir(nniManagerNFSExpCodeDir);
         this.log.info(`Starting copy codeDir data from ${this.config.trialCodeDirectory} to ${nniManagerNFSExpCodeDir}`);
         await execCopydir(this.config.trialCodeDirectory, nniManagerNFSExpCodeDir);
@@ -409,9 +408,9 @@ class PAITrainingService implements TrainingService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+            if (this.config.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.config.deprecated.virtualCluster
+                    virtualCluster: this.config.virtualCluster
                 }
             }
         }

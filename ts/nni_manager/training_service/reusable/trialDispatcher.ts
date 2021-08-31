@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { Writable } from 'stream';
 import { Container, Scope } from 'typescript-ioc';
 import { String } from 'typescript-string-operations';
-import * as component from '../../common/component';
-import { NNIError, NNIErrorNames, MethodNotImplementedError } from '../../common/errors';
-import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from '../../common/trainingService';
-import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from '../../common/utils';
-import { ExperimentConfig, SharedStorageConfig } from '../../common/experimentConfig';
-import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from '../../core/commands';
-import { ScheduleResultType } from '../../training_service/common/gpuData';
+import * as component from 'common/component';
+import { NNIError, NNIErrorNames, MethodNotImplementedError } from 'common/errors';
+import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { TrainingService, TrialJobApplicationForm, TrialJobMetric, TrialJobStatus } from 'common/trainingService';
+import { delay, getExperimentRootDir, getIPV4Address, getLogLevel, getVersion, mkDirPSync, randomSelect, uniqueString } from 'common/utils';
+import { ExperimentConfig, SharedStorageConfig } from 'common/experimentConfig';
+import { GPU_INFO, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, REPORT_METRIC_DATA, SEND_TRIAL_JOB_PARAMETER, STDOUT, TRIAL_END, VERSION_CHECK } from 'core/commands';
+import { ScheduleResultType } from 'training_service/common/gpuData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT_FOR_WIN } from '../common/containerJobData';
 import { TrialConfig } from '../common/trialConfig';
