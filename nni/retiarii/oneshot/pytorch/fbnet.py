@@ -154,7 +154,6 @@ class FBNetTrainer(BaseOneShotTrainer):
                                                         num_workers=self.workers)
 
     def _train_one_epoch(self, epoch):
-        
         self.model.train()
         meters = AverageMeterGroup()
         for step, ((trn_X, trn_y), (val_X, val_y)) in enumerate(zip(self.train_loader, self.valid_loader)):
@@ -170,7 +169,6 @@ class FBNetTrainer(BaseOneShotTrainer):
             self.ctrl_optim.step()
 
             # phase 2: child network step
-       
             self.model_optim.zero_grad()
             logits, loss = self._logits_and_loss(trn_X, trn_y)
             loss.backward()
