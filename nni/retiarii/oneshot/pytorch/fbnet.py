@@ -268,7 +268,6 @@ class FBNetTrainer(BaseOneShotTrainer):
         dalpha_pos, dalpha_neg = dalphas  # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         hessian = [(p - n) / (2. * eps) for p, n in zip(dalpha_pos, dalpha_neg)]
         return hessian
-         
     def fit(self):
         for i in range(self.num_epochs):
             self._train_one_epoch(i)
