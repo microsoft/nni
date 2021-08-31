@@ -3,12 +3,14 @@
 
 import csv
 import logging
+from nni.compression.pytorch.compressor import PrunerModuleWrapper
 import torch
 import numpy as np
 from .utils import get_module_by_name
 
 
-__all__ = ['ChannelDependency', 'GroupDependency', 'InputChannelDependency', 'AttentionWeightDependency']
+__all__ = ['ChannelDependency', 'GroupDependency',
+           'InputChannelDependency', 'AttentionWeightDependency']
 
 
 CONV_TYPE = 'aten::_convolution'
@@ -388,7 +390,10 @@ class GroupDependency(Dependency):
         """
         node_name = node_group.name
         _, leaf_module = get_module_by_name(self.model, node_name)
-        assert isinstance(leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
+        if isinstance(leaf_module, PrunerModuleWrapper):
+            leaf_module = leaf_module.module
+        assert isinstance(
+            leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))
         group = leaf_module.groups
         n_filter = leaf_module.out_channels
         if n_filter == group:
@@ -716,4 +721,3 @@ class AttentionWeightDependency(Dependency):
                 group = self.dependency[name]
                 if len(group) > 0:
                     csv_w.writerow([name, group])
-
