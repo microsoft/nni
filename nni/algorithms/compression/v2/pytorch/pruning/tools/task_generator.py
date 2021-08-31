@@ -17,12 +17,37 @@ from .base import Task, TaskGenerator
 _logger = logging.getLogger(__name__)
 
 
+# TODO: The following three subclass can be refactor in this class.
 class FunctionBasedTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, reset_weight: bool = False,
+                 log_dir: str = '.', save_result: bool = True):
+        """
+        The base class of function based task generator.
+        The sparsity schedule in these kind of generator is only depend on iteration number and target sparsity.
+
+        Parameters
+        ----------
+        total_iteration
+            The total iteration number.
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        reset_weight
+            If reset the model weight in each iteration.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
         self.current_iteration = 0
         self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
         self.total_iteration = total_iteration
+        self.reset_weight = reset_weight
 
         super().__init__(origin_model, origin_config_list=self.target_sparsity, origin_masks=origin_masks,
                          log_dir=log_dir, save_result=save_result)
@@ -54,9 +79,11 @@ class FunctionBasedTaskGenerator(TaskGenerator):
             task_log_dir = None
 
         self._save_temp_data(pruned_model, config_list, masks)
+        model_path = Path(self._log_dir_root, 'temp', 'temp_model.pth')
+        model_path = Path(self._log_dir_root, 'origin', 'origin_model.pth') if self.reset_weight else model_path
+        masks_path = Path(self._log_dir_root, 'temp', 'temp_masks.pth')
 
-        task = Task(task_id, Path(self._log_dir_root, 'temp', 'temp_model.pth'), config_list,
-                    Path(self._log_dir_root, 'temp', 'temp_masks.pth'), log_dir=task_log_dir)
+        task = Task(task_id, model_path, config_list, masks_path, log_dir=task_log_dir)
         self._tasks[task_id] = task
 
         self._task_id_candidate += 1
@@ -69,6 +96,30 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
 
 class AGPTaskGenerator(FunctionBasedTaskGenerator):
+    def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
+        """
+        The sparsity schdule is (1 - (1 - curr_iteration / total_iteration) ** 3) * target_sparsity.
+
+        Parameters
+        ----------
+        total_iteration
+            The total iteration number.
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
+        super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks,
+                         reset_weight=False, log_dir=log_dir, save_result=save_result)
+
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
@@ -81,6 +132,30 @@ class AGPTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class LinearTaskGenerator(FunctionBasedTaskGenerator):
+    def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', save_result: bool = True):
+        """
+        The sparsity schdule is curr_iteration / total_iteration * target_sparsity.
+
+        Parameters
+        ----------
+        total_iteration
+            The total iteration number.
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
+        super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks,
+                         reset_weight=False, log_dir=log_dir, save_result=save_result)
+
     def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
@@ -92,11 +167,73 @@ class LinearTaskGenerator(FunctionBasedTaskGenerator):
         return config_list
 
 
+class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
+    def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, reset_weight: bool = True,
+                 log_dir: str = '.', save_result: bool = True):
+        """
+        The sparsity schdule is 1 - (1 - target_sparsity) ** (curr_iteration / total_iteration).
+
+        Parameters
+        ----------
+        total_iteration
+            The total iteration number.
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        reset_weight
+            If reset the model weight in each iteration. 
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
+        super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks,
+                         reset_weight=reset_weight, log_dir=log_dir, save_result=save_result)
+
+    def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+        config_list = []
+        for target, mo in zip(target_sparsity, model_based_sparsity):
+            ori_sparsity = 1 - (1 - target['total_sparsity']) ** (iteration / self.total_iteration)
+            sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
+            config_list.append(deepcopy(target))
+            config_list[-1]['total_sparsity'] = sparsity
+        return config_list
+
+
 class SimulatedAnnealingTaskGenerator(TaskGenerator):
     def __init__(self, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.',
-                 start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, save_result: bool = False):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, start_temperature: float = 100,
+                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
+                 log_dir: str = '.', save_result: bool = False):
+        """
+        Parameters
+        ----------
+        origin_model
+            The origin model under pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks apply on the origin model.
+        start_temperature
+            Start temperature of the simulated annealing process.
+        stop_temperature
+            Stop temperature of the simulated annealing process.
+        cool_down_rate
+            Cool down rate of the temperature.
+        perturbation_magnitude
+            Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+        log_dir
+            The log directory use to saving the task generator log.
+        save_result
+            If saving the intermediate result, including intermediate model and masks during each iteration.
+        """
         assert all(config.get('total_sparsity') is not None for config in origin_config_list), 'Only support total_sparsity in simulated annealing.'
 
         self.start_temperature = start_temperature
