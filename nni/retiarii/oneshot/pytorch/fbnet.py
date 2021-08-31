@@ -175,8 +175,7 @@ class FBNetTrainer(BaseOneShotTrainer):
             self.ctrl_optim.step()
 
             # phase 2: child network step
-            # temperature annealing
-            self.temp = self.temp * self.exp_anneal_rate
+       
             self.model_optim.zero_grad()
             logits, loss = self._logits_and_loss(trn_X, trn_y)
             loss.backward()
