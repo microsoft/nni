@@ -391,7 +391,7 @@ RemoteMachineConfig
     * - sshKeyFile
       - ``Optional[str]``
       - `Path`_ to ``sshKeyFile`` (identity file).
-        Only used when `password`_ is not specified.
+        Only used when ``password`` is not specified.
 
     * - sshPassphrase
       - ``Optional[str]``
