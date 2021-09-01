@@ -294,7 +294,6 @@ class ModelSpeedup:
                 elif last_output.grad is not None and tin.grad is None:
                     # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
                     # the size operation of tin will have no gradient
-                    import pdb; pdb.set_trace()
                     continue
         else:
             _logger.warning(
@@ -399,6 +398,8 @@ class ModelSpeedup:
         with torch.no_grad():
             for unique_name in self.auto_inferences:
                 self.replace_submodule(unique_name)
+            # the replaced model training state is set to True by default
+            self.bound_model.train(False)
             need_replace_forward = False
             # We separate the module replacement with the function replacement,
             # We will try to forward inference the model after the module
@@ -437,8 +438,8 @@ class ModelSpeedup:
                 new_forward = forward_decorator(self.bound_model._nni_forward_imple)
                 setattr(self.bound_model, 'forward', types.MethodType(new_forward, self.bound_model))
 
-                import pdb; pdb.set_trace()
-                self.bound_model(self.dummy_input)
+                # import pdb; pdb.set_trace()
+                # self.bound_model(self.dummy_input)
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
