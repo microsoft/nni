@@ -14,8 +14,6 @@ from .channel_pruning_env import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
-torch.backends.cudnn.deterministic = True
-
 _logger = logging.getLogger(__name__)
 
 class AMCPruner(Pruner):
@@ -207,7 +205,10 @@ class AMCPruner(Pruner):
 
 
     def compress(self):
+        _previous_cudnn_deterministic = torch.backends.cudnn.deterministic
+        torch.backends.cudnn.deterministic = True
         self.train(self.ddpg_args.train_episode, self.agent, self.env, self.output_dir)
+        torch.backends.cudnn.deterministic = _previous_cudnn_deterministic
 
     def train(self, num_episode, agent, env, output_dir):
         agent.is_training = True
