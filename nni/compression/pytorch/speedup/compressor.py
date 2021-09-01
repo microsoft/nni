@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from enum import unique
 import queue
 import logging
 import copy
@@ -292,9 +291,10 @@ class ModelSpeedup:
                     last_output.grad.data += tin.grad.data
                 elif last_output.grad is None:
                     last_output.grad = tin.grad
-                elif last_output is not None and tin.grad is None:
+                elif last_output.grad is not None and tin.grad is None:
                     # for example, tin.view(batch, tin.size(1)/2, tin.view(2)*2)
                     # the size operation of tin will have no gradient
+                    import pdb; pdb.set_trace()
                     continue
         else:
             _logger.warning(
@@ -412,7 +412,7 @@ class ModelSpeedup:
                 _logger.warning(
                     'Meet errors when try to run the forward inference after module replacement: %s', str(err))
             if need_replace_forward:
-                # import pdb; pdb.set_trace()
+                import pdb; pdb.set_trace()
                 _logger.info('Replace the function of the model')
                 for unique_name in self.auto_inferences:
                     self.replace_function(unique_name)
