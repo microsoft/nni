@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import copy
 from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
@@ -36,7 +35,7 @@ class NaiveQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         new_scale = weight.abs().max() / 127
         scale = max(self.layer_scale.get(wrapper.name, 0), new_scale)
         self.layer_scale[wrapper.name] = scale
@@ -218,10 +217,8 @@ class ObserverQuantizer(Quantizer):
         # the Pseudo-quantized one. So there is no need to quantize it
         if self.compressed:
             return
-
-        module = wrapper.module
-        old_weight = module.weight
-        self.record(wrapper, 'weight', old_weight)
+        weight = wrapper.module.weight
+        self.record(wrapper, 'weight', weight)
 
     def quantize_output(self, output, wrapper, **kwargs):
         if self.compressed:
@@ -383,8 +380,10 @@ class QAT_Quantizer(Quantizer):
             layer.module.register_buffer('ema_decay', torch.Tensor([0.99]))
             if "weight" in config.get("quant_types", []):
                 layer.module.register_buffer('weight_bits', torch.zeros(1))
+            if "input" in config.get("quant_types", []):
                 layer.module.register_buffer('tracked_min_input', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_input', torch.zeros(1))
+                layer.module.register_buffer('input_bits', torch.zeros(1))
             if "output" in config.get("quant_types", []):
                 layer.module.register_buffer('output_bits', torch.zeros(1))
                 layer.module.register_buffer('tracked_min_output', torch.zeros(1))
@@ -397,7 +396,7 @@ class QAT_Quantizer(Quantizer):
         """
         del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_output', 'tracked_max_output',
                          'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bits',
-                         'output_bits', 'BN_FOLD_TAG']
+                         'output_bits', 'BN_FOLD_TAG', 'input_bits']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
@@ -412,8 +411,9 @@ class QAT_Quantizer(Quantizer):
             List of configurations
         """
         schema = QuantizerSchema([{
-            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output']]),
+            Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
+                Optional('input'): And(int, lambda n: 0 < n < 32),
                 Optional('weight'): And(int, lambda n: 0 < n < 32),
                 Optional('output'): And(int, lambda n: 0 < n < 32),
             })),
@@ -474,25 +474,17 @@ class QAT_Quantizer(Quantizer):
     def quantize_weight(self, wrapper, **kwargs):
         config = wrapper.config
         module = wrapper.module
-        input = kwargs['input_tensor']  # pylint: disable=redefined-builtin
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = module.weight
         weight_bits = get_bits_length(config, 'weight')
         quant_start_step = config.get('quant_start_step', 0)
         assert weight_bits >= 1, "quant bits length should be at least 1"
 
         # we dont update weight in evaluation stage
         if quant_start_step > self.bound_model.steps:
-            module.tracked_min_input, module.tracked_max_input = torch.min(input), torch.max(input)
             return weight
 
         if not wrapper.training:
             return weight
-
-        current_min, current_max = torch.min(input), torch.max(input)
-        module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
-                                                                    module.ema_decay)
-        module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
-                                                                    module.ema_decay)
 
         # quantize weight
         rmin, rmax = torch.min(weight), torch.max(weight)
@@ -502,6 +494,31 @@ class QAT_Quantizer(Quantizer):
         module.weight_bits = torch.Tensor([weight_bits])
         wrapper.module.weight = weight
         return weight
+
+    def quantize_input(self, inputs, wrapper, **kwargs):
+        config = wrapper.config
+        module = wrapper.module
+        input_bits = get_bits_length(config, 'input')
+        module.input_bits = torch.Tensor([input_bits])
+        quant_start_step = config.get('quant_start_step', 0)
+        assert input_bits >= 1, "quant bits length should be at least 1"
+
+        if quant_start_step > self.bound_model.steps:
+            module.tracked_min_input, module.tracked_max_input = torch.min(inputs), torch.max(inputs)
+            return inputs
+
+        # we dont update output quantization parameters in evaluation stage
+        if wrapper.training:
+            current_min, current_max = torch.min(inputs), torch.max(inputs)
+            module.tracked_min_input = update_ema(module.tracked_min_input, current_min,
+                                                                       module.ema_decay)
+            module.tracked_max_input = update_ema(module.tracked_max_input, current_max,
+                                                                       module.ema_decay)
+        module.scale, module.zero_point = update_quantization_param(
+            input_bits, module.tracked_min_input, module.tracked_max_input)
+        inp = self._quantize(input_bits, module, inputs)
+        inp = self._dequantize(module, inp)
+        return inp
 
     def quantize_output(self, output, wrapper, **kwargs):
         config = wrapper.config
@@ -522,8 +539,9 @@ class QAT_Quantizer(Quantizer):
                                                                        module.ema_decay)
             module.tracked_max_output = update_ema(module.tracked_max_output, current_max,
                                                                        module.ema_decay)
-            module.scale, module.zero_point = update_quantization_param(
-                output_bits, module.tracked_min_output, module.tracked_max_output)
+        module.scale, module.zero_point = update_quantization_param(
+            output_bits, module.tracked_min_output, module.tracked_max_output)
+
         out = self._quantize(output_bits, module, output)
         out = self._dequantize(module, out)
         return out
@@ -559,24 +577,25 @@ class QAT_Quantizer(Quantizer):
                 calibration_config[name] = {}
             if hasattr(module, 'weight_bits'):
                 calibration_config[name]['weight_bits'] = int(module.weight_bits)
-                calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
-                calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
                 # Recover weight/bias for batch normalization folding
+                actual_weight = getattr(module, 'old_weight', None)
+                if actual_weight is None:
+                    logger.warning("Can not recover weight for layer %s. "
+                                   "This may lead to a wrong accuracy performance on the backend.", name)
+                delattr(module, 'weight')
+                module.register_parameter('weight', actual_weight)
                 if hasattr(module, BN_FOLD_TAG):
-                    actual_weight = getattr(module, 'old_weight', None)
-                    if actual_weight is None:
-                        logger.warning("Can not recover weight for layer %s. "
-                                       "This may lead to a wrong accuracy performance on the backend.", name)
-                    delattr(module, 'weight')
-                    module.register_parameter('weight', actual_weight)
-
                     actual_bias = getattr(module, 'old_bias', None)
                     delattr(module, 'bias')
                     if actual_bias is not None:
                         module.register_parameter('bias', actual_bias)
                     else:
                         setattr(module, 'bias', None)
+            if hasattr(module, 'input_bit'):
+                calibration_config[name]['input_bits'] = int(module.input_bit)
+                calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
+                calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
             if hasattr(module, 'output_bits'):
                 calibration_config[name]['output_bits'] = int(module.output_bits)
@@ -676,7 +695,7 @@ class DoReFaQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         weight_bits = get_bits_length(wrapper.config, 'weight')
         weight = weight.tanh()
         weight = weight / (2 * weight.abs().max()) + 0.5
@@ -786,7 +805,7 @@ class BNNQuantizer(Quantizer):
         schema.validate(config_list)
 
     def quantize_weight(self, wrapper, **kwargs):
-        weight = copy.deepcopy(wrapper.module.old_weight.data)
+        weight = wrapper.module.weight
         weight = torch.sign(weight)
         # remove zeros
         weight[weight == 0] = 1
@@ -945,11 +964,11 @@ class LsqQuantizer(Quantizer):
 
     def quantize_weight(self, wrapper, **kwargs):
         module = wrapper.module
+        weight = wrapper.module.weight
 
         # todo: add support for quantize bias. If we use TensorRT as backend, there is no need to quantize
         # bias
-        old_weight = module.old_weight
-        weight = self.quantize(old_weight, module.weight_scale, module.weight_qmin, module.weight_qmax)
+        weight = self.quantize(weight, module.weight_scale, module.weight_qmin, module.weight_qmax)
         module.weight = weight
         return weight
 

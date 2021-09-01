@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { randomBytes } from 'crypto';
-import * as cpp from 'child-process-promise';
-import * as cp from 'child_process';
+import cpp from 'child-process-promise';
+import cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
-import * as dgram from 'dgram';
-import * as fs from 'fs';
-import * as net from 'net';
-import * as os from 'os';
-import * as path from 'path';
+import dgram from 'dgram';
+import fs from 'fs';
+import net from 'net';
+import os from 'os';
+import path from 'path';
 import * as timersPromises from 'timers/promises';
-import * as lockfile from 'lockfile';
+import lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
-import * as glob from 'glob';
+import glob from 'glob';
 
 import { Database, DataStore } from './datastore';
 import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
@@ -243,7 +241,7 @@ function countFilesRecursively(directory: string): Promise<number> {
     const deferred: Deferred<number> = new Deferred<number>();
 
     let timeoutId: NodeJS.Timer
-    const delayTimeout: Promise<number> = new Promise((resolve: Function, reject: Function): void => {
+    const delayTimeout: Promise<number> = new Promise((_resolve: Function, reject: Function): void => {
         // Set timeout and reject the promise once reach timeout (5 seconds)
         timeoutId = setTimeout(() => {
             reject(new Error(`Timeout: path ${directory} has too many files`));
@@ -375,11 +373,11 @@ function unixPathJoin(...paths: any[]): string {
  */
 function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]: any}, ...args: any): any {
     const lockName = path.join(path.dirname(filePath), path.basename(filePath) + `.lock.${process.pid}`);
-    if (typeof lockOpts.stale === 'number'){
+    if (typeof lockOpts['stale'] === 'number'){
         const lockPath = path.join(path.dirname(filePath), path.basename(filePath) + '.lock.*');
         const lockFileNames: string[] = glob.sync(lockPath);
         const canLock: boolean = lockFileNames.map((fileName) => {
-            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs < lockOpts.stale;
+            return fs.existsSync(fileName) && Date.now() - fs.statSync(fileName).mtimeMs < lockOpts['stale'];
         }).filter(unexpired=>unexpired === true).length === 0;
         if (!canLock) {
             throw new Error('File has been locked.');

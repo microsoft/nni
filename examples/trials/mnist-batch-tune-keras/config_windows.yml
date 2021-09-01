@@ -1,0 +1,10 @@
+searchSpaceFile: search_space.json
+trialCommand: python mnist-keras.py
+trialGpuNumber: 0
+trialConcurrency: 1
+maxTrialNumber: 10
+maxExperimentDuration: 1h
+tuner:
+  name: BatchTuner
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as rx from 'rx';
+import rx from 'rx';
 import * as component from '../common/component';
 
 @component.Singleton
