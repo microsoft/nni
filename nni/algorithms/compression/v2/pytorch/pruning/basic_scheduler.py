@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
+import os
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 
@@ -72,6 +73,7 @@ class PruningScheduler(BasePruningScheduler):
                     tmp_masks[name]['bias'] = mask.get('bias_mask')
             torch.save(tmp_masks, Path('./temp_masks.pth'))
             ModelSpeedup(model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
+            os.remove('./temp_masks.pth')
             masks = {}
 
         # finetune
