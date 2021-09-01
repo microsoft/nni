@@ -548,7 +548,7 @@ class TaskGenerator:
         return None
 
     def _save_task_result(self, task_id: int, model: Module, masks: Dict[str, Dict[str, Tensor]],
-                          score: Optional[float], origin_masks: Dict[str, Dict[str, Tensor]]):
+                          score: Optional[float], up_model_masks: Dict[str, Dict[str, Tensor]]):
         task = self._tasks[task_id]
         if score is not None:
             task.score = score
@@ -561,7 +561,7 @@ class TaskGenerator:
             torch.save(masks, Path(task.log_dir, 'masks_on_pruned_model.pth'))
             under_pruning_model, _, _ = self._load_task_data(task_id)
             torch.save(under_pruning_model, Path(task.log_dir, 'under_pruning_model.pth'))
-            torch.save(origin_masks, Path(task.log_dir, 'masks_on_under_pruning_model.pth'))
+            torch.save(up_model_masks, Path(task.log_dir, 'masks_on_under_pruning_model.pth'))
 
     def _load_task_data(self, task_id: int) -> Tuple[Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
         task = self._tasks[task_id]
@@ -579,11 +579,11 @@ class TaskGenerator:
         raise NotImplementedError()
 
     def _generate_tasks(self, received_task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
-                        origin_masks: Dict[str, Dict[str, Tensor]]) -> List[Task]:
+                        up_model_masks: Dict[str, Dict[str, Tensor]]) -> List[Task]:
         raise NotImplementedError()
 
     def receive_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
-                            score: Optional[float], origin_masks: Dict[str, Dict[str, Tensor]]):
+                            score: Optional[float], up_model_masks: Dict[str, Dict[str, Tensor]]):
         """
         Receive the compressed model, masks and score then save the task result.
         Usually generate new task and put it into `self.pending_tasks` in this function.
@@ -598,15 +598,15 @@ class TaskGenerator:
             If masks is not None, the pruned model is a sparsify model without speed up.
         score
             The score of the model, higher score means better performance.
-        origin_masks
+        up_model_masks
             The masks should be apply on the under pruning model.
-            If the pruned model did not speed up, origin_masks is same as masks.
+            If the pruned model did not speed up, up_model_masks is same as masks.
         """
         assert task_id in self._tasks, 'Task {} does not exist.'.format(task_id)
-        self._save_task_result(task_id, pruned_model, masks, score, origin_masks)
+        self._save_task_result(task_id, pruned_model, masks, score, up_model_masks)
         self._tasks[task_id].status = 'Finished'
         self._dump_tasks_info()
-        self._pending_tasks.extend(self._generate_tasks(task_id, pruned_model, masks, origin_masks))
+        self._pending_tasks.extend(self._generate_tasks(task_id, pruned_model, masks, up_model_masks))
         self._dump_tasks_info()
 
     def next(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:

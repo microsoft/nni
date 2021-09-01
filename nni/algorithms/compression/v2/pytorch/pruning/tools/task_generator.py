@@ -38,7 +38,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         return self._generate_tasks(None, model, masks, None)
 
     def _generate_tasks(self, received_task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]],
-                        origin_masks: Dict[str, Dict[str, Tensor]]) -> List[Task]:
+                        up_model_masks: Dict[str, Dict[str, Tensor]]) -> List[Task]:
         origin_model, origin_config_list, _ = self._load_origin_data()
 
         real_sparsity, mo_sparsity, _ = compute_sparsity(origin_model, pruned_model, masks, origin_config_list)

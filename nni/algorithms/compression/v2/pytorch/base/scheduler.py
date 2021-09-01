@@ -18,7 +18,7 @@ class BasePruningScheduler:
         raise NotImplementedError()
 
     def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
-                           origin_masks: Dict[str, Dict[str, Tensor]]):
+                           up_model_masks: Dict[str, Dict[str, Tensor]]):
         """
         Used to record the task result.
 
@@ -32,7 +32,7 @@ class BasePruningScheduler:
             The masks should be applied on the pruned model.
         score
             The score of the pruning performance in this task.
-        origin_masks
+        up_model_masks
             The masks applied on the under pruning model.
         """
         raise NotImplementedError()
@@ -82,8 +82,8 @@ class BasePruningScheduler:
         pruned_model, masks = None, None
 
         while task_id is not None:
-            pruned_model, masks, score, origin_masks = self.pruning_one_step(model, config_list, pre_masks)
-            self.record_task_result(task_id, pruned_model, masks, score, origin_masks)
+            pruned_model, masks, score, up_model_masks = self.pruning_one_step(model, config_list, pre_masks)
+            self.record_task_result(task_id, pruned_model, masks, score, up_model_masks)
             task_id, model, config_list, pre_masks = self.generate_task()
 
         return pruned_model, masks

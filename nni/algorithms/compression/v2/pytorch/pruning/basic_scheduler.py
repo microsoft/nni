@@ -46,8 +46,8 @@ class PruningScheduler(BasePruningScheduler):
         return self.task_generator.next()
 
     def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
-                           origin_masks: Dict[str, Dict[str, Tensor]]):
-        self.task_generator.receive_task_result(task_id, pruned_model, masks, score, origin_masks)
+                           up_model_masks: Dict[str, Dict[str, Tensor]]):
+        self.task_generator.receive_task_result(task_id, pruned_model, masks, score, up_model_masks)
 
     def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) \
             -> Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]:
@@ -55,7 +55,7 @@ class PruningScheduler(BasePruningScheduler):
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
         model, masks = self.pruner.compress()
-        origin_masks = deepcopy(masks)
+        up_model_masks = deepcopy(masks)
 
         # show the pruning effect
         self.pruner.show_pruned_weights()
@@ -86,7 +86,7 @@ class PruningScheduler(BasePruningScheduler):
         # evaluate
         score = self.evaluator(model) if self.evaluator is not None else None
 
-        return model, masks, score, origin_masks
+        return model, masks, score, up_model_masks
 
     def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]]:
         return self.task_generator.get_best_result()
