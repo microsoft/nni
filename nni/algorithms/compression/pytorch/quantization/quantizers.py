@@ -388,10 +388,6 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('tracked_max_output', torch.zeros(1))
         self.bound_model.to(device)
 
-    def read_calibration_config(self, calibration_config: dict):
-        modules_to_compress = self.get_modules_to_compress()
-            
-
     def _del_simulated_attr(self, module):
         """
         delete redundant parameters in quantize module
