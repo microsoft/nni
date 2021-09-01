@@ -43,6 +43,10 @@ Build wheel package:
   $ NNI_RELEASE=2.0 python setup.py build_ts
   $ NNI_RELEASE=2.0 python setup.py bdist_wheel -p manylinux1_x86_64
 
+for jupyterlab 2.x package:
+  $ JUPYTER_LAB_VERSION=2.3.1 NNI_RELEASE=2.0 python setup.py build_ts
+  $ JUPYTER_LAB_VERSION=2.3.1 NNI_RELEASE=2.0 python setup.py bdist_wheel -p manylinux1_x86_64
+
 Where "2.0" is version string and "manylinux1_x86_64" is platform.
 The platform may also be "macosx_10_9_x86_64" or "win_amd64".
 
@@ -58,12 +62,24 @@ import os
 import shutil
 import sys
 
+import jupyterlab
 import setuptools
 from setuptools.command.develop import develop
 
 import setup_ts
 
 release = os.environ.get('NNI_RELEASE')
+
+jupyter_lab_version = jupyterlab.__version__.split('.')[0]
+
+def check_jupyter_lab_version():
+    environ_version = os.environ.get('JUPYTER_LAB_VERSION')
+
+    if environ_version:
+        if jupyterlab.__version__.split('.')[0] != environ_version.split('.')[0]:
+            sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyterlab.__version__}", current: {environ_version} ')
+    elif jupyterlab.__version__.split('.')[0] != '3':
+            sys.exit(f'ERROR: To build a jupyter lab extension, run "JUPYTER_LAB_VERSION={jupyterlab.__version__}" first for nondefault version(3.x)')
 
 def _setup():
     setuptools.setup(
@@ -91,6 +107,8 @@ def _setup():
             'nni_node': _find_node_files()  # note: this does not work before building
         },
 
+        data_files = _get_data_files(),
+
         python_requires = '>=3.6',
         install_requires = _read_requirements_txt('dependencies/required.txt'),
         extras_require = {
@@ -115,6 +133,12 @@ def _setup():
         }
     )
 
+def _get_data_files():
+    data_files = []
+    if jupyter_lab_version == '2':
+        extension_file = glob.glob("nni_node/jupyter-extension/extensions/nni-jupyter-extension*.tgz")
+        data_files = [('share/jupyter/lab/extensions', extension_file)]
+    return data_files
 
 def _find_python_packages():
     packages = []
@@ -178,12 +202,16 @@ class BuildTs(Command):
         pass
 
     def run(self):
+        check_jupyter_lab_version()
         setup_ts.build(release)
 
 class Build(build):
     def run(self):
         if not release:
             sys.exit('Please set environment variable "NNI_RELEASE=<release_version>"')
+
+        check_jupyter_lab_version()
+
         if os.path.islink('nni_node/main.js'):
             sys.exit('A development build already exists. Please uninstall NNI and run "python3 setup.py clean --all".')
         open('nni/version.py', 'w').write(f"__version__ = '{release}'")
