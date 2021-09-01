@@ -25,7 +25,6 @@
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
     "target": "ESNext",
-    "incremental": true,
-    "tsBuildInfoFile": "./.tsbuildinfo"
+    "incremental": false
   }
 }
