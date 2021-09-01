@@ -559,7 +559,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
                 self.module.weight = new_weight
             else:
                 new_weight = self.module.old_weight
-                self.module.weight = new_weight.data
+                self.module.weight.data = new_weight.data
 
             self.quantizer.quant_grad(
                 new_weight,
