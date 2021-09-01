@@ -252,8 +252,6 @@ class ObserverQuantizer(Quantizer):
                                             module.weight_zero_point,
                                             module.weight_qmin,
                                             module.weight_qmax)
-                delattr(module, 'weight')
-                module.register_parameter('weight', torch.nn.Parameter(quantized_weight))
             if "input" in config.get("quant_types", []):
                 scale, zero_point = self.calculate_qparams(layer.name, 'input')
                 module.register_buffer('input_scale', scale.to(self.device))
@@ -389,6 +387,10 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('tracked_min_output', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_output', torch.zeros(1))
         self.bound_model.to(device)
+
+    def read_calibration_config(self, calibration_config: dict):
+        modules_to_compress = self.get_modules_to_compress()
+            
 
     def _del_simulated_attr(self, module):
         """
