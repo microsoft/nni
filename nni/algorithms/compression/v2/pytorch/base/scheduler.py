@@ -25,7 +25,7 @@ class Task:
         task_id
             The unique id of task.
         model_path
-            The path of the pytorch model that will be pruned in this task.
+            The path of the unwrapped pytorch model that will be pruned in this task.
         masks_path
             The path of the masks that applied on the model before pruning.
         config_list_path
@@ -104,7 +104,7 @@ class TaskResult:
         task_id
             The unique id of task.
         compact_model
-            The compact pytorch model after pruning. If the compact model has speed up process during pruning,
+            The unwrapped compact pytorch model after pruning. If the compact model has speed up process during pruning,
             it will have a smaller structure compare with the model before pruning.
             If the compact model do not speed up, it will have the same structure with the model before pruning.
         compact_model_masks

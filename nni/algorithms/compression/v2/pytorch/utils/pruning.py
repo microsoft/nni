@@ -88,7 +88,11 @@ def dedupe_config_list(config_list: List[Dict]) -> List[Dict]:
 
 def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module, config_list: List[Dict]) -> List[Dict]:
     """
-    Compare origin model and compact model, return the sparsity of each layer mentioned in config list.
+    Compare origin model and compact model, return the sparsity of each group mentioned in config list.
+    A group means all layer mentioned in one config.
+    i.e., a linear named 'linear1' and its weight size is [100, 100] in origin model, but in compact model,
+    the layer weight size with same layer name is [100, 50],
+    then this function will return [{'op_names': 'linear1', 'total_sparsity': 0.5}].
     """
     compact2origin_sparsity = []
     for config in config_list:
@@ -115,7 +119,10 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
 
 def compute_sparsity_mask2compact(compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
     """
-    Apply masks on compact model, return the sparsity of each layer mentioned in config list.
+    Apply masks on compact model, return the sparsity of each group mentioned in config list.
+    A group means all layer mentioned in one config.
+    This function count all zero elements of the masks in one group,
+    then divide by the elements number of the weights in this group to compute sparsity.
     """
     mask2compact_sparsity = []
     for config in config_list:
