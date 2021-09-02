@@ -72,7 +72,7 @@ jobs:
     inputs:
       sshEndpoint: $(worker)
       runOptions: commands
-      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) $(password_in_docker)
+      commands: python3 /tmp/nnitest/$(Build.BuildId)/test/vso_tools/start_docker.py $(NNI_RELEASE) $(Build.BuildId) test
     displayName: Install NNI and run docker on Linux worker
 
   - script: |
@@ -82,7 +82,7 @@ jobs:
           --remote_reuse true \
           --remote_user nni \
           --remote_host $(worker_ip) \
-          --remote_pwd $(password_in_docker) \
+          --remote_pwd test \
           --remote_port $(docker_port) \
           --nni_manager_ip $(manager_ip) \
           --config_version v2
