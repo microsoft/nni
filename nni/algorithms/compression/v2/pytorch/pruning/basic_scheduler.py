@@ -10,7 +10,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, BasePruningScheduler
+from nni.algorithms.compression.v2.pytorch.base import Pruner, BasePruningScheduler, Task, TaskResult
 from nni.compression.pytorch.speedup import ModelSpeedup
 
 from .tools import TaskGenerator
@@ -35,6 +35,7 @@ class PruningScheduler(BasePruningScheduler):
             If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
         evaluator
             Evaluate the pruned model and give a score.
+            If evaluator is None, the best result refers to the latest result.
         """
         self.pruner = pruner
         self.task_generator = task_generator
@@ -43,20 +44,20 @@ class PruningScheduler(BasePruningScheduler):
         self.dummy_input = dummy_input
         self.evaluator = evaluator
 
-    def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
+    def generate_task(self) -> Optional[Task]:
         return self.task_generator.next()
 
-    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
-                           up_model_masks: Dict[str, Dict[str, Tensor]]):
-        self.task_generator.receive_task_result(task_id, pruned_model, masks, score, up_model_masks)
+    def record_task_result(self, task_result: TaskResult):
+        self.task_generator.receive_task_result(task_result)
 
-    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) \
-            -> Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]:
+    def pruning_one_step(self, task: Task) -> TaskResult:
+        model, masks, config_list = task.load_data()
+
         # pruning model
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
-        model, masks = self.pruner.compress()
-        up_model_masks = deepcopy(masks)
+        compact_model, old_structure_masks = self.pruner.compress()
+        compact_model_masks = deepcopy(old_structure_masks)
 
         # show the pruning effect
         self.pruner.show_pruned_weights()
@@ -65,30 +66,27 @@ class PruningScheduler(BasePruningScheduler):
         # speed up
         # TODO: speed up only support mask file path as input, maybe we need also support masks directly.
         if self.speed_up:
-            tmp_masks = {}
-            for name, mask in masks.items():
-                tmp_masks[name] = {}
-                tmp_masks[name]['weight'] = mask.get('weight_mask')
-                if 'bias' in masks:
-                    tmp_masks[name]['bias'] = mask.get('bias_mask')
-            torch.save(tmp_masks, Path('./temp_masks.pth'))
-            ModelSpeedup(model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
+            torch.save(old_structure_masks, Path('./temp_masks.pth'))
+            ModelSpeedup(compact_model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
             os.remove('./temp_masks.pth')
-            masks = {}
+            compact_model_masks = {}
 
         # finetune
         if self.finetuner is not None:
             if self.speed_up:
-                self.finetuner(model)
+                self.finetuner(compact_model)
             else:
                 self.pruner._wrap_model()
-                self.finetuner(model)
+                self.finetuner(compact_model)
                 self.pruner._unwrap_model()
 
         # evaluate
-        score = self.evaluator(model) if self.evaluator is not None else None
+        score = self.evaluator(compact_model) if self.evaluator is not None else None
 
-        return model, masks, score, up_model_masks
+        # clear model references
+        self.pruner.clear_model_references()
 
-    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float]]:
+        return TaskResult(task.task_id, compact_model, compact_model_masks, old_structure_masks, score)
+
+    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
         return self.task_generator.get_best_result()

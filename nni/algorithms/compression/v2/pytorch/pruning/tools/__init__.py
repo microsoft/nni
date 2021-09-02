@@ -3,7 +3,6 @@ from .base import (
     DataCollector,
     MetricsCalculator,
     SparsityAllocator,
-    Task,
     TaskGenerator
 )
 from .data_collector import (

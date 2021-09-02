@@ -1,89 +1,183 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from typing import List, Dict, Tuple
+import gc
+import logging
+import os
+from pathlib import Path
+from typing import List, Dict, Tuple, Literal, Optional
 
+import json_tricks
+import torch
 from torch.nn import Module
 from torch.tensor import Tensor
 
+_logger = logging.getLogger(__name__)
 
-class BasePruningScheduler:
-    def generate_task(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]:
-        """
-        Returns
-        -------
-        Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]]]
-            Return new task id, model under pruning, config list used in this task and pre-masks.
-        """
-        raise NotImplementedError()
 
-    def record_task_result(self, task_id: int, pruned_model: Module, masks: Dict[str, Dict[str, Tensor]], score: float,
-                           up_model_masks: Dict[str, Dict[str, Tensor]]):
-        """
-        Used to record the task result.
+class Task:
+    _reference_counter = {}
 
+    def __init__(self, task_id: int, model_path: str, masks_path: str, config_list_path: str) -> None:
+        """
         Parameters
         ----------
         task_id
-            The id of the finished task.
-        pruned_model
-            The pruned model after `pruning_one_step`.
-        masks
-            The masks should be applied on the pruned model.
+            The unique id of task.
+        model_path
+            The path of the pytorch model that will be pruned in this task.
+        masks_path
+            The path of the masks that applied on the model before pruning.
+        config_list_path
+            The path of the config list that used in this task.
+        """
+        self.task_id = task_id
+        self.model_path = model_path
+        self.masks_path = masks_path
+        self.config_list_path = config_list_path
+
+        self.status: Literal['Pending', 'Running', 'Finished'] = 'Pending'
+        self.score: Optional[float] = None
+
+        self.state = {}
+
+        for ref in self.referenced_paths():
+            self._reference_counter.setdefault(ref, 0)
+            self._reference_counter[ref] += 1
+
+        self._cleaned = False
+
+    def to_dict(self) -> Dict:
+        return {
+            'task_id': self.task_id,
+            'model_path': str(self.model_path),
+            'masks_path': str(self.masks_path),
+            'config_list_path': str(self.config_list_path),
+            'status': self.status,
+            'score': self.score,
+            'state': self.state
+        }
+
+    def load_data(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]], List[Dict]]:
+        """
+        Returns
+        -------
+        Tuple[Module, Dict[str, Dict[str, Tensor]], List[Dict]]
+            Return the model pruning in this task, the masks of the model before pruning,
+            the config list used in this task.
+        """
+        model = torch.load(self.model_path)
+        masks = torch.load(self.masks_path)
+        with Path(self.config_list_path).open('r') as f:
+            config_list = json_tricks.load(f)
+        return model, masks, config_list
+
+    def referenced_paths(self) -> List[str]:
+        """
+        Return the path list that need to count reference in this task.
+        """
+        return [self.model_path, self.masks_path, self.config_list_path]
+
+    def clean_up(self):
+        """
+        Counter of referenced file paths subtract 1. If the counter reach 0, then delete the file.
+        """
+        if not self._cleaned:
+            for ref in self.referenced_paths():
+                self._reference_counter[ref] -= 1
+                if self._reference_counter[ref] <= 0:
+                    os.remove(ref)
+                    if self._reference_counter[ref] < 0:
+                        _logger.warning('Referance counter error, the number of %s is %d',
+                                        ref, self._reference_counter[ref])
+            self._cleaned = True
+        else:
+            _logger.warning('Already clean up task %d', self.task_id)
+
+
+class TaskResult:
+    def __init__(self, task_id: int, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
+                 old_structure_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
+        """
+        Parameters
+        ----------
+        task_id
+            The unique id of task.
+        compact_model
+            The compact pytorch model after pruning. If the compact model has speed up process during pruning,
+            it will have a smaller structure compare with the model before pruning.
+            If the compact model do not speed up, it will have the same structure with the model before pruning.
+        compact_model_masks
+            The masks on the compact model. If the compact model has speed up process during pruning,
+            the `compact_model_masks` is always an empty dict. If the compact model do not speed up,
+            the `compact_model_masks` is same as `old_structure_masks`.
+        old_structure_masks
+            The masks that can apply on the model before pruning. It is always the output of `pruner.compress()`.
+            TODO: If the compact model has speed up, `old_structure_masks` should be the auto infer masks during speed up.
         score
-            The score of the pruning performance in this task.
-        up_model_masks
-            The masks applied on the under pruning model.
+            The score of the pruning effect. i.e., the accuracy or latency after pruning.
+        """
+        self.task_id = task_id
+        self.compact_model = compact_model
+        self.compact_model_masks = compact_model_masks
+        self.old_structure_masks = old_structure_masks
+        self.score = score
+
+
+class BasePruningScheduler:
+    def generate_task(self) -> Optional[Task]:
+        """
+        Returns
+        -------
+        Optional[Task]
+            Return the next pruning task.
         """
         raise NotImplementedError()
 
-    def pruning_one_step(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]]) \
-            -> Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]:
+    def record_task_result(self, task_result: TaskResult):
         """
-        Pruning the model with config list.
+        Parameters
+        ----------
+        task_result
+            The result of the task
+        """
+        raise NotImplementedError()
+
+    def pruning_one_step(self, task: Task) -> TaskResult:
+        """
+        Pruning the model defined in task.
 
         Parameters
         ----------
-        model
-            The model under pruning.
-        config_list
-            The config list usually identify the layers that want to prune.
-        masks
-            The masks should be applied on the under pruning model.
+        task
+            The pruning task in this step.
 
         Returns
         -------
-        Tuple[Module, Dict[str, Dict[str, Tensor]], float, Dict[str, Dict[str, Tensor]]]
-            Return the pruned model, the masks on pruned model, the score of the pruned model,
-            the masks on under pruning model.
+        TaskResult
+            Return the result of the task in this step.
         """
         raise NotImplementedError()
 
-    def get_best_result(self) -> Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]], float]:
+    def get_best_result(self) -> Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]:
         """
         Returns
         -------
-        Tuple[int, Module, List[Dict], Dict[str, Dict[str, Tensor]], float]
+        Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]
             Return the task result that has the best performance,
-            inculde task id, the pruned model, config list used in this task, the masks on the pruned model and score.
+            inculde task id, the compact model, the masks on the compact model, score and config list used in this task.
         """
         raise NotImplementedError()
 
-    def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
+    def compress(self):
         """
         The pruning schedule main loop.
-
-        Returns
-        -------
-        Tuple[Module, Dict[str, Dict[str, Tensor]]]
-            Return the pruned_model and the masks on it in the last iteration.
         """
-        task_id, model, config_list, pre_masks = self.generate_task()
-        pruned_model, masks = None, None
+        task = self.generate_task()
 
-        while task_id is not None:
-            pruned_model, masks, score, up_model_masks = self.pruning_one_step(model, config_list, pre_masks)
-            self.record_task_result(task_id, pruned_model, masks, score, up_model_masks)
-            task_id, model, config_list, pre_masks = self.generate_task()
-
-        return pruned_model, masks
+        while task is not None:
+            task_result = self.pruning_one_step(task)
+            self.record_task_result(task_result)
+            del task_result
+            gc.collect()
+            task = self.generate_task()

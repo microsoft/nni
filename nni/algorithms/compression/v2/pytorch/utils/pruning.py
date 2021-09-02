@@ -113,15 +113,15 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
     return compact2origin_sparsity
 
 
-def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
+def compute_sparsity_mask2compact(compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
     """
-    Apply masks on masked model, return the sparsity of each layer mentioned in config list.
+    Apply masks on compact model, return the sparsity of each layer mentioned in config list.
     """
     mask2compact_sparsity = []
     for config in config_list:
         left_weight_num = 0
         total_weight_num = 0
-        for module_name, module in masked_model.named_modules():
+        for module_name, module in compact_model.named_modules():
             module_type = type(module).__name__
             if 'op_types' in config and module_type not in config['op_types']:
                 continue
@@ -129,8 +129,8 @@ def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[st
                 continue
             module_weight_num = module.weight.data.numel()
             total_weight_num += module_weight_num
-            if module_name in masks:
-                weight_mask = masks[module_name]['weight_mask']
+            if module_name in compact_model_masks:
+                weight_mask = compact_model_masks[module_name]['weight']
                 left_weight_num += len(torch.nonzero(weight_mask, as_tuple=False))
             else:
                 left_weight_num += module_weight_num
@@ -139,7 +139,7 @@ def compute_sparsity_mask2compact(masked_model: Module, masks: Dict[str, Dict[st
     return mask2compact_sparsity
 
 
-def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[str, Dict[str, Tensor]],
+def compute_sparsity(origin_model: Module, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
                      config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """
     The current model means the compact model applied the masks. The compact model is the origin model after speed up.
@@ -150,12 +150,12 @@ def compute_sparsity(origin_model: Module, compact_model: Module, masks: Dict[st
         (current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity).
     """
     compact2origin_sparsity = compute_sparsity_compact2origin(origin_model, compact_model, config_list)
-    mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, masks, config_list)
+    mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, compact_model_masks, config_list)
     assert len(compact2origin_sparsity) == len(mask2compact_sparsity), 'Length mismatch.'
     current2origin_sparsity = []
-    for mo_sparsity, ms_sparsity, config in zip(compact2origin_sparsity, mask2compact_sparsity, config_list):
+    for c2o_sparsity, m2c_sparsity, config in zip(compact2origin_sparsity, mask2compact_sparsity, config_list):
         current2origin_sparsity.append(deepcopy(config))
-        current2origin_sparsity[-1]['total_sparsity'] = 1 - (1 - mo_sparsity['total_sparsity']) * (1 - ms_sparsity['total_sparsity'])
+        current2origin_sparsity[-1]['total_sparsity'] = 1 - (1 - c2o_sparsity['total_sparsity']) * (1 - m2c_sparsity['total_sparsity'])
     return current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity
 
 
@@ -173,8 +173,8 @@ def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[
                 continue
             if 'op_names' in config and module_name not in config['op_names']:
                 continue
-            if module_name in masks and isinstance(masks[module_name]['weight_mask'], Tensor):
-                weight_mask = masks[module_name]['weight_mask']
+            if module_name in masks and isinstance(masks[module_name]['weight'], Tensor):
+                weight_mask = masks[module_name]['weight']
                 masked_rate[module_name] = 1 - (weight_mask.sum().item() / weight_mask.numel())
                 model_weights_numel[module_name] = round(weight_mask.sum().item())
             else:
