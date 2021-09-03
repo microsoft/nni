@@ -139,16 +139,16 @@ def compile_ts(release):
     """
     Use yarn to download dependencies and compile TypeScript code.
     """
-    #_print('Building NNI manager')
-    #_yarn('ts/nni_manager')
-    #_yarn('ts/nni_manager', 'build')
-    ## todo: I don't think these should be here
-    #shutil.rmtree('ts/nni_manager/dist/config', ignore_errors=True)
-    #shutil.copytree('ts/nni_manager/config', 'ts/nni_manager/dist/config')
+    _print('Building NNI manager')
+    _yarn('ts/nni_manager')
+    _yarn('ts/nni_manager', 'build')
+    # todo: I don't think these should be here
+    shutil.rmtree('ts/nni_manager/dist/config', ignore_errors=True)
+    shutil.copytree('ts/nni_manager/config', 'ts/nni_manager/dist/config')
 
-    #_print('Building web UI')
-    #_yarn('ts/webui')
-    #_yarn('ts/webui', 'build')
+    _print('Building web UI')
+    _yarn('ts/webui')
+    _yarn('ts/webui', 'build')
 
     _print('Building JupyterLab extension')
     if release:
