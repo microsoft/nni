@@ -192,10 +192,10 @@ def copy_nni_node(version):
 
     # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
     for path in Path('ts/nni_manager/dist').iterdir():
-        if path.is_file() and path.name != 'nni_manager.tsbuildinfo':
-            shutil.copyfile(path, Path('nni_node', path.name))
-        else:
+        if path.is_dir():
             shutil.copytree(path, Path('nni_node', path.name))
+        elif path.name != 'nni_manager.tsbuildinfo':
+            shutil.copyfile(path, Path('nni_node', path.name))
 
     package_json = json.load(open('ts/nni_manager/package.json'))
     if version:
