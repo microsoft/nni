@@ -158,7 +158,7 @@ def compile_ts(release):
         try:
             _yarn('ts/jupyter_extension')
             _yarn('ts/jupyter_extension', 'build')
-        except Exception as e:
+        except Exception:
             _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
             _print(traceback.format_exc(), color='yellow')
 
