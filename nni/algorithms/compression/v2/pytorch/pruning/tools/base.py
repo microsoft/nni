@@ -1,9 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from datetime import datetime
 import logging
 from pathlib import Path
-from re import S
 import types
 from typing import List, Dict, Tuple, Optional, Callable, Union
 
@@ -466,7 +466,7 @@ class TaskGenerator:
         """
         assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
-        self._log_dir_root = Path(log_dir).absolute()
+        self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
         self._log_dir_root.mkdir(parents=True, exist_ok=True)
         self._keep_intermidiate_result = keep_intermidiate_result
         self._intermidiate_result_dir = Path(self._log_dir_root, 'intermidiate_result')
