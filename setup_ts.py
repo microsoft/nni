@@ -162,6 +162,7 @@ def compile_ts(release):
             _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
             _print(traceback.format_exc(), color='yellow')
 
+
 def symlink_nni_node():
     """
     Create symlinks to compiled JS files.
