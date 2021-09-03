@@ -1,6 +1,5 @@
 # Build result
 /dist
-/.tsbuildinfo
 
 # node modules
 /node_modules
