@@ -248,8 +248,8 @@ generated_files = [
 
     # unit test
     'ts/nni_manager/.nyc_output',
+    'ts/nni_manager/coverage',
     'ts/nni_manager/exp_profile.json',
-    'ts/nni_manager/htmlcov',
     'ts/nni_manager/metrics.json',
     'ts/nni_manager/trial_jobs.json',
 ]
