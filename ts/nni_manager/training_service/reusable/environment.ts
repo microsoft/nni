@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { getLogger, Logger } from "../../common/log";
-import { TrialJobStatus } from "../../common/trainingService";
-import { GPUInfo } from "../../training_service/common/gpuData";
+import { getLogger, Logger } from "common/log";
+import { TrialJobStatus } from "common/trainingService";
+import { GPUInfo } from "training_service/common/gpuData";
 import { CommandChannel } from "./commandChannel";
 import { WebCommandChannel } from './channels/webCommandChannel';
 import { EventEmitter } from "events";

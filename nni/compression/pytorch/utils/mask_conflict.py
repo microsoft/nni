@@ -10,7 +10,7 @@ from .utils import get_module_by_name
 _logger = logging.getLogger('FixMaskConflict')
 
 
-def fix_mask_conflict(masks, model=None, dummy_input=None, traced=None):
+def fix_mask_conflict(masks, model, dummy_input, traced=None):
     """
     MaskConflict fix the mask conflict for the channel dependencies
     and group dependency.
@@ -81,7 +81,7 @@ class MaskFix:
 
 
 class GroupMaskConflict(MaskFix):
-    def __init__(self, masks, model=None, dummy_input=None, traced=None):
+    def __init__(self, masks, model, dummy_input, traced=None):
         """
         GroupMaskConflict fix the mask conflict between the layers that
         has group dependecy with each other.
@@ -168,7 +168,7 @@ class GroupMaskConflict(MaskFix):
 
 
 class ChannelMaskConflict(MaskFix):
-    def __init__(self, masks, model=None, dummy_input=None, traced=None):
+    def __init__(self, masks, model, dummy_input, traced=None):
         """
         ChannelMaskConflict fix the mask conflict between the layers that
         has channel dependecy with each other.

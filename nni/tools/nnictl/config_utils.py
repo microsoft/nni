@@ -68,6 +68,12 @@ def _inverse_cluster_metadata(platform: str, metadata_config: list) -> dict:
                 inverse_config['amlConfig'] = kv['value']
             elif kv['key'] == 'trial_config':
                 inverse_config['trial'] = kv['value']
+    elif platform == 'dlc':
+        for kv in metadata_config:
+            if kv['key'] == 'dlc_config':
+                inverse_config['dlcConfig'] = kv['value']
+            elif kv['key'] == 'trial_config':
+                inverse_config['trial'] = kv['value']
     elif platform == 'adl':
         for kv in metadata_config:
             if kv['key'] == 'adl_config':

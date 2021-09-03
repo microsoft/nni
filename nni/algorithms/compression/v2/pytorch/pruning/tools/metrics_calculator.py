@@ -120,7 +120,7 @@ class DistMetricsCalculator(MetricsCalculator):
 
             metric = torch.ones(*reorder_tensor.size()[:len(keeped_dim)], device=reorder_tensor.device)
             across_dim = list(range(len(keeped_dim), len(reorder_dim)))
-            idxs = metric.nonzero()
+            idxs = metric.nonzero(as_tuple=False)
             for idx in idxs:
                 other = reorder_tensor
                 for i in idx:
@@ -161,7 +161,7 @@ class APoZRankMetricsCalculator(MetricsCalculator):
             for dim, dim_size in enumerate(_eq_zero.size()):
                 if dim not in keeped_dim:
                     total_size *= dim_size
-            _apoz = torch.sum(_eq_zero, dim=across_dim, dtype=torch.float64) / total_size
+            _apoz = torch.sum(_eq_zero, dim=across_dim).type_as(activations) / total_size
             # NOTE: the metric is (1 - apoz) because we assume the smaller metric value is more needed to be pruned.
             metrics[name] = torch.ones_like(_apoz) - _apoz
         return metrics

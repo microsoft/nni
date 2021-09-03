@@ -1,22 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
+import cpp from 'child-process-promise';
+import path from 'path';
 
-import * as cpp from 'child-process-promise';
-import * as path from 'path';
-
-import * as azureStorage from 'azure-storage';
+import azureStorage from 'azure-storage';
 import {EventEmitter} from 'events';
 import {Base64} from 'js-base64';
 import {String} from 'typescript-string-operations';
-import {getExperimentId} from '../../common/experimentStartupInfo';
-import {getLogger, Logger} from '../../common/log';
-import {MethodNotImplementedError} from '../../common/errors';
+import {getExperimentId} from 'common/experimentStartupInfo';
+import {getLogger, Logger} from 'common/log';
+import {MethodNotImplementedError} from 'common/errors';
 import {
     NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
-} from '../../common/trainingService';
-import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
+} from 'common/trainingService';
+import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from 'common/utils';
 import {AzureStorageClientUtility} from './azureStorageClientUtils';
 import {GeneralK8sClient, KubernetesCRDClient} from './kubernetesApiClient';
 import {KubernetesClusterConfig} from './kubernetesConfig';

@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as request from 'request';
+import request from 'request';
 import { Deferred } from 'ts-deferred';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getLogger, Logger } from '../../common/log';
-import { TrialJobStatus } from '../../common/trainingService';
-import { ExperimentConfig, OpenpaiConfig } from '../../common/experimentConfig';
+import { NNIError, NNIErrorNames } from 'common/errors';
+import { getLogger, Logger } from 'common/log';
+import { TrialJobStatus } from 'common/trainingService';
+import { ExperimentConfig, OpenpaiConfig } from 'common/experimentConfig';
 import { PAITrialJobDetail } from './paiConfig';
 
 interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
@@ -44,7 +42,7 @@ export class PAIJobInfoCollector {
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(protocol: string, paiTrialJob: PAITrialJobDetail, paiToken: string, config: FlattenOpenpaiConfig): Promise<void> {
+    private getSinglePAITrialJobInfo(_protocol: string, paiTrialJob: PAITrialJobDetail, paiToken: string, config: FlattenOpenpaiConfig): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
