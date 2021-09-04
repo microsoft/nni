@@ -8,7 +8,7 @@ from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad, QuantType
 
-from .observers import default_weight_observer, default_histogram_observer
+from .observers import default_weight_observer, default_histogram_observer, PerChannelMinMaxObserver
 
 __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer', 'LsqQuantizer', 'ObserverQuantizer']
 
@@ -301,6 +301,14 @@ class ObserverQuantizer(Quantizer):
                 calibration_config[name]['tracked_min_weight'] = -val
                 calibration_config[name]['tracked_qmin_weight'] = -127
                 calibration_config[name]['tracked_qmax_weight'] = 127
+                weight = module.weight
+                quantized_weight = self._quantize(weight,
+                                            module.weight_scale,
+                                            module.weight_zero_point,
+                                            module.weight_qmin,
+                                            module.weight_qmax)
+                delattr(module, 'weight')
+                module.register_parameter('weight', torch.nn.Parameter(quantized_weight))
             # refactor these magic numbers when customizations of dtype and qscheme are ready.
             if hasattr(module, 'input_scale'):
                 calibration_config[name]['input_bits'] = 8
@@ -389,6 +397,20 @@ class QAT_Quantizer(Quantizer):
                 layer.module.register_buffer('tracked_min_output', torch.zeros(1))
                 layer.module.register_buffer('tracked_max_output', torch.zeros(1))
         self.bound_model.to(device)
+
+    def load_calibration_config(self, calibration_config):
+        """
+        update quantization parameter by loading from calibration config
+        """
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            name = layer.name
+            if "input" in config.get("quant_types", []):
+                layer.module.tracked_min_input = calibration_config[name]['tracked_min_input']
+                layer.module.tracked_max_input = calibration_config[name]['tracked_max_input']
+            if "output" in config.get("quant_types", []):
+                layer.module.tracked_min_output = calibration_config[name]['tracked_min_output']
+                layer.module.tracked_max_output = calibration_config[name]['tracked_max_output']
 
     def _del_simulated_attr(self, module):
         """
@@ -928,6 +950,18 @@ class LsqQuantizer(Quantizer):
                 self.optimizer.add_param_group({"params": layer.module.input_scale})
 
         self.bound_model.to(device)
+
+    def load_calibration_config(self, calibration_config):
+        """
+        update quantization parameter by loading from calibration config
+        """
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            name = layer.name
+            if "weight" in config.get("quant_types", []):
+                layer.module.input_scale = calibration_config[name]['tracked_max_input'] / layer.module.input_qmax
+            if "output" in config.get("quant_types", []):
+                layer.module.output_scale = calibration_config[name]['tracked_max_output'] / layer.module.output_qmax
 
     @staticmethod
     def grad_scale(x, scale):
