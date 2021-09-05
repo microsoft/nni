@@ -299,7 +299,7 @@ def slice_python(node, speedup):
     slice_end = parse_constant(inputs[3], speedup)
     slice_step = parse_constant(inputs[4], speedup)
     slice_obj = slice(slice_start, slice_end, slice_step)
-    # import pdb; pdb.set_trace()
+
     slice_list = []
     for _ in range(slice_dim):
         slice_list.append(slice(None, None))
@@ -450,7 +450,7 @@ def constant_python(node, speedup):
             self.constant = constant
         def forward(self):
             return self.constant
-    # import pdb; pdb.set_trace()
+
     assert node.kind() == 'prim::Constant'
     pattern = '\[value=(.*?)\]'
     key_words = re.findall(pattern, str(node))
@@ -517,7 +517,6 @@ def typeas_python(node, speedup):
 
 
 def to_python(node, speedup):
-    # import pdb; pdb.set_trace()
     # for the time being, only device parameters are supported
     class ToModule(torch.nn.Module):
         def __init__(self, device, dtype):
@@ -621,7 +620,6 @@ def expand_python(node, speedup):
             self.new_size = copy.deepcopy(new_size)
 
         def forward(self, *args):
-            # import pdb; pdb.set_trace()
             return args[0].expand(self.new_size).clone()
 
     c_node = node.key_node

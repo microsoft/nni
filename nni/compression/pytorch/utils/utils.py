@@ -54,7 +54,7 @@ def rand_like_with_shape(shape, ori_t):
     require_grad = ori_t.requires_grad
     lower_bound = torch.min(ori_t)
     higher_bound = torch.max(ori_t)
-    # import pdb; pdb.set_trace()
+
     if dtype in [torch.uint8, torch.int16, torch.short, torch.int16, torch.long, torch.bool]:
         return torch.randint(lower_bound, higher_bound+1, shape, dtype=dtype, device=device)
     else:
@@ -120,10 +120,9 @@ def translate_jit_code(code):
                 replace['torch.'+full_name] = module_name + func
                 break
         # assert found == True, 'Cannot find the function call %s' % full_name
-    # import pdb; pdb.set_trace()
     for key, value in replace.items():
         code = code.replace(key, value)
-    # pdb.set_trace()
+
     # several function cannot find the coresponding function under the namespace
     # torch.Tensor and torch.(for example torch.slice), so we need to handle these
     # functions manually
@@ -157,7 +156,6 @@ def python_slice_replace(funcstr):
     """
     # parse the input parameters
     pattern = 'torch\.slice\((.*)\)'
-    # import pdb; pdb.set_trace()
     parameter_str = re.findall(pattern, funcstr)
     parameters = re.split(',', parameter_str[0])
     target_tensor = parameters[0]
@@ -167,6 +165,4 @@ def python_slice_replace(funcstr):
     print('%s[%s]' % (target_tensor, dim_str))
     new_str = funcstr.replace(
         'torch.slice(%s)' % parameter_str[0], '%s[%s]' % (target_tensor, dim_str))
-    # import pdb
-    # pdb.set_trace()
     return new_str

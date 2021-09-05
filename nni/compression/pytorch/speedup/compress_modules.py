@@ -109,6 +109,7 @@ def convert_dense_shape(mask):
         dense_shape.append(remained.size(0))
     return tuple(dense_shape)
 
+
 def no_replace(module, masks):
     """
     No need to replace
@@ -551,27 +552,26 @@ def replace_embedding(embedding, masks):
     Replace the embedding layer according the infered masks.
     We replace the embedding layer according the weight masks,
     """
-    # import pdb; pdb.set_trace()
     # currently we donnot support replace the embedding layer
     # because we donnot have the corressponding pruner
     return embedding
-    in_masks, out_masks, weight_masks = masks
-    w_mask = weight_masks['weight']
-    # weight size [num_embeddings, embeddings_dim]
-    # currently, only support the pruning on the embedding_dim
-    # dimension.
-    pruned_dim, remained_dim = convert_to_coarse_mask(w_mask, 1)
-    
-    n_remain_dim = remained_dim.size(0)
-    num_embeddings = embedding.num_embeddings
-    padding_idx = embedding.padding_idx
-    max_norm = embedding.max_norm
-    norm_type = embedding.norm_type
-    scale_grad_by_freq = embedding.scale_grad_by_freq
-    new_embedding = torch.nn.Embedding(num_embeddings, n_remain_dim, padding_idx=padding_idx,
-                                       max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
-    new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
-    return new_embedding
+    # in_masks, out_masks, weight_masks = masks
+    # w_mask = weight_masks['weight']
+    # # weight size [num_embeddings, embeddings_dim]
+    # # currently, only support the pruning on the embedding_dim
+    # # dimension.
+    # pruned_dim, remained_dim = convert_to_coarse_mask(w_mask, 1)
+
+    # n_remain_dim = remained_dim.size(0)
+    # num_embeddings = embedding.num_embeddings
+    # padding_idx = embedding.padding_idx
+    # max_norm = embedding.max_norm
+    # norm_type = embedding.norm_type
+    # scale_grad_by_freq = embedding.scale_grad_by_freq
+    # new_embedding = torch.nn.Embedding(num_embeddings, n_remain_dim, padding_idx=padding_idx,
+    #                                    max_norm=max_norm, norm_type=norm_type, scale_grad_by_freq=scale_grad_by_freq)
+    # new_embedding.weight.data = torch.index_select(embedding.weight.data, 1, remained_dim)
+    # return new_embedding
 
 
 def replace_view(trace_model, cpp_node, masks):
@@ -600,17 +600,16 @@ def replace_view(trace_model, cpp_node, masks):
         The new cpp node to be repalced with. If None then we donnot
         need to replace this function.
     """
-    # import pdb; pdb.set_trace()
+
     in_masks, out_mask, _ = masks
 
     in_dense_shape = convert_dense_shape(in_masks[0])
     out_dense_shape = convert_dense_shape(out_mask)
-    # import pdb; pdb.set_trace()
+
     in_count = reduce(lambda x, y: x*y, list(in_dense_shape))
     out_count = reduce(lambda x, y: x*y, list(out_dense_shape))
-    if in_count != out_count:
-        import pdb; pdb.set_trace()
-    # assert in_count == out_count, "In shape:" + str(in_dense_shape) + ", Out shape:" + str(out_dense_shape)
+
+    assert in_count == out_count, "In shape:" + str(in_dense_shape) + ", Out shape:" + str(out_dense_shape)
     assert isinstance(trace_model, torch.jit._trace.TracedModule)
     assert isinstance(cpp_node, torch._C.Node)
     input_nodes = []
@@ -618,13 +617,14 @@ def replace_view(trace_model, cpp_node, masks):
         _tmp_constant = trace_model.graph.insertConstant(_dim)
         _tmp_constant.node().moveBefore(cpp_node)
         input_nodes.append(_tmp_constant)
-    out_shape_list_node = trace_model.graph.create('prim::ListConstruct', input_nodes)
+    out_shape_list_node = trace_model.graph.create(
+        'prim::ListConstruct', input_nodes)
     trace_model.graph.insertNode(out_shape_list_node)
     out_shape_list_node.moveBefore(cpp_node)
 
     out_shape_list = list(out_shape_list_node.outputs())[0]
     out_shape_list.setType(ListType.ofInts())
-    # import pdb; pdb.set_trace()
+
     ori_inputs = list(cpp_node.inputs())
     cpp_node.replaceInputWith(ori_inputs[1], out_shape_list)
     return cpp_node

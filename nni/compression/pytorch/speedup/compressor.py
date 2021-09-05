@@ -178,7 +178,7 @@ class ModelSpeedup:
             # The detach operation here is for the in-place operation. We cannot
             # directly can the backward on the output tensor of an in-place operator.
             dummy_input.append(self.internal_result[_input].detach())
-            
+
             debugnames.append(_input)
 
         return dummy_input, debugnames
@@ -223,9 +223,7 @@ class ModelSpeedup:
                 state_dict=copy.deepcopy(module.state_dict()))
         self.auto_inferences[unique_name] = _auto_infer
         _auto_infer.name = node.unique_name
-        # if 'token_type_embeddings' in module_name:
-        #     import pdb
-        #     pdb.set_trace()
+
         _auto_infer.update_direct_sparsity()
         # also save the input debug names into the auto_infer
         _auto_infer.input_debugname = input_debugname
@@ -246,8 +244,6 @@ class ModelSpeedup:
         # update the parameter mask of the node
 
         self.masks[module_name] = _auto_infer.weight_mask
-        # if 'bert.encoder.layer.11.attention.self.aten::view' in module_name  or 'bert.encoder.layer.11.attention.self.aten::contig' in module_name :
-        #     import pdb; pdb.set_trace()
 
     def update_indirect_sparsity(self, node):
         """
@@ -268,8 +264,6 @@ class ModelSpeedup:
         """
         unique_name = node.unique_name
 
-        # if 'bert.encoder.layer.11.attention.self.aten::view' in unique_name  or 'bert.encoder.layer.11.attention.self.aten::contig' in unique_name:
-        #     import pdb; pdb.set_trace()
         if unique_name in self.auto_inferences and self.auto_inferences[unique_name] is not None:
             # if the auto inference object already in self.auto_inference, then
             # directly update the previous one
@@ -281,9 +275,7 @@ class ModelSpeedup:
             # pass the gradient to the predecessor nodes
             for in_id, tin in enumerate(auto_infer.dummy_input):
                 debug_name = auto_infer.input_debugname[in_id]
-                # print('######### debug_name', debug_name)
-                # if debug_name == 'context_layer':
-                #     import pdb; pdb.set_trace()
+
                 last_output = self.internal_result[debug_name]
                 # if isinstance(last_output, torch.Tensor):
                 # TODO what if last output is tuple/list of tensor
@@ -315,7 +307,6 @@ class ModelSpeedup:
                 # This small range is due to the ·ReLU6·, we will add
                 # the manual specific mask inference rule for several
                 # ops in the future, so that we can remove the constraint.
-                # import pdb; pdb.set_trace()
                 return torch.randint(0, 10, shape, device=self.device)
         else:
             value = c_node.toIValue()
@@ -413,7 +404,6 @@ class ModelSpeedup:
                 _logger.warning(
                     'Meet errors when try to run the forward inference after module replacement: %s', str(err))
             if need_replace_forward:
-                import pdb; pdb.set_trace()
                 _logger.info('Replace the function of the model')
                 for unique_name in self.auto_inferences:
                     self.replace_function(unique_name)
@@ -423,23 +413,25 @@ class ModelSpeedup:
                     _name = 'CONSTANTS.' + constant_name
                     # print(_name)
                     code = code.replace(_name, str(constants[constant_name]))
+
                 def forward_decorator(ori_func):
                     # import here, avoid to add non-necessary dependency package for other path
                     import inspect
                     kw_args_spec = inspect.getfullargspec(ori_func).kwonlyargs
+
                     def new_forward(*args, **kwargs):
-                        filtered_kw = {key:kwargs[key] for key in kw_args_spec}
-                        print('In the new forward')
-                        # import pdb; pdb.set_trace()
+                        filtered_kw = {key: kwargs[key]
+                                       for key in kw_args_spec}
+
                         return ori_func(*args, **filtered_kw)
                     return new_forward
                 _new_forward_implementation = translate_jit_code(code)
-                setattr(self.bound_model, '_nni_forward_imple', _new_forward_implementation)
-                new_forward = forward_decorator(self.bound_model._nni_forward_imple)
-                setattr(self.bound_model, 'forward', types.MethodType(new_forward, self.bound_model))
-
-                # import pdb; pdb.set_trace()
-                # self.bound_model(self.dummy_input)
+                setattr(self.bound_model, '_nni_forward_imple',
+                        _new_forward_implementation)
+                new_forward = forward_decorator(
+                    self.bound_model._nni_forward_imple)
+                setattr(self.bound_model, 'forward', types.MethodType(
+                    new_forward, self.bound_model))
 
     def replace_submodule(self, unique_name, reindex_dim=None, reindex=None):
         """
@@ -499,8 +491,7 @@ class ModelSpeedup:
                     "Has not supported replacing the module: `{}`".format(m_type))
             _logger.info("replace module (name: %s, op_type: %s)",
                          g_node.name, m_type)
-            # if 'query' in unique_name:
-            #     import pdb; pdb.set_trace()
+
             compressed_module = replace_module[m_type](
                 leaf_module, auto_infer.get_masks())
             new_submodule = compressed_module
@@ -527,15 +518,15 @@ class ModelSpeedup:
         if g_node.type == 'func':
             if g_node.op_type in replace_func:
                 _logger.info("replace (name: %s, op_type: %s) which is func type",
-                         unique_name, g_node.op_type)
+                             unique_name, g_node.op_type)
                 masks = auto_infer.get_masks()
                 traced = self.torch_graph.trace
                 cpp_func_node = g_node.key_node
-                # import pdb; pdb.set_trace()
+
                 replace_func[g_node.op_type](traced, cpp_func_node, masks)
             else:
                 _logger.warning("Cannot replace (name: %s, op_type: %s) which is func type",
-                         unique_name, g_node.op_type)
+                                unique_name, g_node.op_type)
             return None
 
     def initialize_speedup(self):
