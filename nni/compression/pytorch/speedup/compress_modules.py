@@ -2,9 +2,9 @@
 # Licensed under the MIT license.
 
 import logging
+from functools import reduce
 import torch
 import torch.nn as nn
-from functools import reduce
 from torch._C import ListType
 
 _logger = logging.getLogger(__name__)

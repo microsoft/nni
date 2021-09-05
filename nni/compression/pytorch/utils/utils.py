@@ -1,8 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-import torch
 import re
 import logging
+import torch
+
 
 torch_float_dtype = [torch.float, torch.float16,
                      torch.float32, torch.float64, torch.half, torch.double]
@@ -113,7 +114,7 @@ def translate_jit_code(code):
     code = 'import torch\nfrom torch import Tensor, tensor\nfrom typing import *\n' + code
     with open('nni_jit_tmp_forward.py', 'w') as f:
         f.write(code)
-    from nni_jit_tmp_forward import forward
+    from nni_jit_tmp_forward import forward # pylint: disable=import-error
     return forward
 
 

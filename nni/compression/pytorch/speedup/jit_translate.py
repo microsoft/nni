@@ -4,8 +4,8 @@
 import re
 import logging
 from functools import partial
-import torch
 import copy
+import torch
 
 
 logger = logging.getLogger(__name__)
