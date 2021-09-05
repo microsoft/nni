@@ -3,7 +3,6 @@
 import torch
 import re
 import logging
-from .shape_dependency import ReshapeDependency
 
 torch_float_dtype = [torch.float, torch.float16,
                      torch.float32, torch.float64, torch.half, torch.double]
@@ -77,27 +76,6 @@ def randomize_tensor(tensor, start=1, end=100):
         # Note: the tensor that with integer type cannot be randomize
         # with nn.init.uniform_
         torch.nn.init.uniform_(tensor.data, start, end)
-
-
-def not_safe_to_prune(model, dummy_input):
-    """
-    Get the layers that are not safe to prune(may bring the shape conflict).
-    For example, if the output tensor of a conv layer is directly followed by
-    a shape-dependent function(such as reshape/view), then this conv layer
-    may be not safe to be pruned. Pruning may change the output shape of
-    this conv layer and result in shape problems. This function find all the
-    layers that directly followed by the shape-dependent functions(view, reshape, etc).
-    If you run the inference after the speedup and run into a shape related error,
-    please exclude the layers returned by this function and try again.
-
-    Parameters
-    ----------
-    model: torch.nn.Module
-        The target model to prune.
-    dummy_input: torch.Tensor/list of torch.Tensor/tuple of Tensor
-    """
-    reshape_dset = ReshapeDependency(model, dummy_input)
-    return reshape_dset.dependency_sets
 
 
 jit_python_code_replacement = {
