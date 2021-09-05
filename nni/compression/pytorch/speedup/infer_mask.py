@@ -262,8 +262,6 @@ class AutoMaskInference:
         # C's output tensor).
         # Besides, updating the mask of C's output tensor equals to updating
         # the input mask of OP B and C.
-        # if 'bert.encoder.layer.11.attention.self.aten::view' in self.name or 'bert.encoder.layer.11.attention.output.dense' in self.name or 'bert.encoder.layer.11.attention.self.aten::contig' in self.name or 'bert.encoder.layer.11.attention.output.dropout' in self.name:
-
         if isinstance(self.output, torch.Tensor) and self.output.grad is not None:
             # if output have gradient which means this node has successor
             # nodes and the successor nodes have already update their indirect
