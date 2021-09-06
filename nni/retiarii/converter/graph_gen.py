@@ -490,7 +490,7 @@ class GraphConverter:
 
         for node in sm_graph.nodes():
             handle_single_node(node)
-            
+
         if node_index == {}:
             # here is an example that the ir_graph is empty
             # graph(%self : __torch__.torchmodels.googlenet.GoogLeNet,

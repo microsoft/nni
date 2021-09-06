@@ -3,7 +3,7 @@
 
 from enum import Enum
 
-# the MODULE_EXCEPT_LIST except the special case which can not treat as a basic module from pytorch
+# except the special case which can not treat as a basic module from pytorch
 MODULE_EXCEPT_LIST = ['Sequential']
 
 
