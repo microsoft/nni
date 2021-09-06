@@ -23,9 +23,9 @@ class BenchmarkGraphData:
     def __init__(self, mutation: Dict[str, Any], benchmark: str,
                  metric_name: Optional[str] = None,
                  db_path: Optional[str] = None) -> None:
-        self.mutation = mutation
-        self.benchmark = benchmark  # e.g., nasbench101, nasbench201, ...
-        self.db_path = db_path
+        self.mutation = mutation        # mutation dict. e.g., {'layer1': 'conv3x3', ...}
+        self.benchmark = benchmark      # e.g., nasbench101, nasbench201, ...
+        self.db_path = db_path          # path to directory of database
 
     def dump(self) -> dict:
         from nni.nas.benchmarks.constants import DATABASE_DIR
@@ -45,7 +45,8 @@ class BenchmarkExecutionEngine(BaseExecutionEngine):
     Execution engine that does not actually run any trial, but query the database for results.
 
     The database query is done on the trial end to make sure intermediate metrics are available.
-    It also supports an accelerated mode that returns metric immediately without even running into NNI manager.
+    It will also support an accelerated mode that returns metric immediately without even running into NNI manager
+    (not implemented yet).
     """
 
     def __init__(self, benchmark: Union[str, Callable[[BenchmarkGraphData], Tuple[float, List[float]]]], acceleration: bool = False):
@@ -56,6 +57,8 @@ class BenchmarkExecutionEngine(BaseExecutionEngine):
         self.acceleration = acceleration
 
     def pack_model_data(self, model: Model) -> Any:
+        # called when a new model is submitted to backend.
+        # convert a Model into a data that is acceptable by trial end.
         mutation = get_mutation_dict(model)
         graph_data = BenchmarkGraphData(mutation, self.benchmark)
 
@@ -135,6 +138,8 @@ def _flatten_architecture(mutation: Dict[str, Any], benchmark: Optional[str] = N
 
 
 def _convert_to_final_and_intermediates(benchmark_result: Iterable[Any], metric_name: str) -> Tuple[float, List[float]]:
+    # convert benchmark results from database to
+    # final result (float) and intermediate results (list of floats)
     benchmark_result = list(benchmark_result)
     assert len(benchmark_result) > 0, 'Invalid query. Results from benchmark is empty.'
     if len(benchmark_result) > 1:
