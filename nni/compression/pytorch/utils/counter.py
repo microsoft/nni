@@ -323,7 +323,10 @@ def count_flops_params(model, x, custom_ops=None, verbose=True, mode='default'):
     identify the mask on the module and take the pruned shape into consideration.
     Note that, for sturctured pruning, we only identify the remained filters
     according to its mask, and do not take the pruned input channels into consideration,
-    so the calculated FLOPs  will be larger than real number.
+    so the calculated FLOPs will be larger than real number.
+
+    The FLOPs is counted "per sample", which means that input has a batch size larger than 1,
+    the calculated FLOPs should not differ from batch size of 1.
 
     Parameters
     ---------
