@@ -17,7 +17,7 @@ Prerequisite for on-premises Kubernetes Service
 
     apt-get install nfs-common
 
-#. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
+7. Install **NNI**\ , follow the install guide `here <../Tutorial/QuickStart.rst>`__.
 
 Prerequisite for Azure Kubernetes Service
 -----------------------------------------
