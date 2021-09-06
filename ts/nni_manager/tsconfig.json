@@ -26,6 +26,6 @@
     "experimentalDecorators": true,
     "target": "ESNext",
     "incremental": true,
-    "tsBuildInfoFile": "./.tsbuildinfo"
+    "tsBuildInfoFile": "dist/nni_manager.tsbuildinfo"
   }
 }
