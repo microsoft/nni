@@ -607,40 +607,6 @@ class QAT_Quantizer(Quantizer):
 
         return calibration_config
 
-    def fold_bn(self, *inputs, wrapper):
-        """
-        Simulate batch normalization folding in the training graph. Folded weight and bias are
-        returned for the following operations.
-
-        Parameters
-        ----------
-        inputs : tuple of torch.Tensor
-            inputs for the module
-        wrapper : QuantizerModuleWrapper
-            the wrapper for origin module
-
-        Returns
-        -------
-        Tuple of torch.Tensor
-        """
-        module = wrapper.module
-        bn_module = wrapper.bn_module
-        with torch.no_grad():
-            output = module(*inputs)
-            _ = bn_module(output)
-        running_mean = bn_module.running_mean
-        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
-        bn_weight = bn_module.weight
-        bn_bias = bn_module.bias
-        dimensions = len(module.weight.shape)
-        shape = [-1] + [1] * (dimensions - 1)
-        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
-        if hasattr(module, 'old_bias'):
-            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
-        else:
-            new_bias = bn_bias - running_mean / running_var * bn_weight
-        return new_weight, new_bias
-
     def step_with_optimizer(self):
         """
         override `compressor` `step` method, quantization only happens after certain number of steps
@@ -1033,6 +999,12 @@ class LsqQuantizer(Quantizer):
                 abs_max_input = float(module.input_scale * module.input_qmax)
                 calibration_config[name]['tracked_min_input'] = -abs_max_input
                 calibration_config[name]['tracked_max_input'] = abs_max_input
+                actual_weight = getattr(module, 'old_weight', None)
+                if actual_weight is None:
+                    logger.warning("Can not recover weight for layer %s. "
+                                   "This may lead to a wrong accuracy performance on the backend.", name)
+                delattr(module, 'weight')
+                module.register_parameter('weight', actual_weight)
                 if hasattr(module, BN_FOLD_TAG):
                     actual_bias = getattr(module, 'old_bias', None)
                     delattr(module, 'bias')
@@ -1051,40 +1023,6 @@ class LsqQuantizer(Quantizer):
                                input_shape, device)
 
         return calibration_config
-
-    def fold_bn(self, *inputs, wrapper):
-        """
-        Simulate batch normalization folding in the training graph. Folded weight and bias are
-        returned for the following operations.
-
-        Parameters
-        ----------
-        inputs : tuple of torch.Tensor
-            inputs for the module
-        wrapper : QuantizerModuleWrapper
-            the wrapper for origin module
-
-        Returns
-        -------
-        Tuple of torch.Tensor
-        """
-        module = wrapper.module
-        bn_module = wrapper.bn_module
-        with torch.no_grad():
-            output = module(*inputs)
-            _ = bn_module(output)
-        running_mean = bn_module.running_mean
-        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
-        bn_weight = bn_module.weight
-        bn_bias = bn_module.bias
-        dimensions = len(module.weight.shape)
-        shape = [-1] + [1] * (dimensions - 1)
-        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
-        if hasattr(module, 'old_bias'):
-            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
-        else:
-            new_bias = bn_bias - running_mean / running_var * bn_weight
-        return new_weight, new_bias
 
     def _del_simulated_attr(self, module):
         """
