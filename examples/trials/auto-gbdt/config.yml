@@ -1,21 +1,10 @@
-authorName: default
-experimentName: example_auto-gbdt
+searchSpaceFile: search_space.json
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 10h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 10
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner, GPTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: minimize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

@@ -9,7 +9,7 @@ NAS Benchmarks
 Introduction
 ------------
 
-To imporve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as `NAS-Bench-101 <https://arxiv.org/abs/1902.09635>`__\ , `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__\ , `NDS <https://arxiv.org/abs/1905.13214>`__\ , etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
+To improve the reproducibility of NAS algorithms as well as reducing computing resource requirements, researchers proposed a series of NAS benchmarks such as `NAS-Bench-101 <https://arxiv.org/abs/1902.09635>`__\ , `NAS-Bench-201 <https://arxiv.org/abs/2001.00326>`__\ , `NDS <https://arxiv.org/abs/1905.13214>`__\ , etc. NNI provides a query interface for users to acquire these benchmarks. Within just a few lines of code, researcher are able to evaluate their NAS algorithms easily and fairly by utilizing these benchmarks.
 
 Prerequisites
 -------------
@@ -32,7 +32,7 @@ To avoid storage and legality issues, we do not provide any prepared databases. 
       git clone -b ${NNI_VERSION} https://github.com/microsoft/nni
       cd nni/examples/nas/benchmarks
 
-   Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.1``.
+   Replace ``${NNI_VERSION}`` with a released version name or branch name, e.g., ``v2.4``.
 
 #. 
    Install dependencies via ``pip3 install -r xxx.requirements.txt``. ``xxx`` can be ``nasbench101``\ , ``nasbench201`` or ``nds``.

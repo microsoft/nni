@@ -6,7 +6,7 @@ import importlib
 import os
 from pathlib import Path
 import sys
-import ruamel.yaml as yaml
+import yaml
 from nni.runtime.config import get_config_file
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
@@ -178,25 +178,24 @@ def create_customized_class_instance(class_params):
     ----------
     class_params: dict
         class_params should contains following keys:
-            codeDir: code directory
-            classFileName: python file name of the class
-            className: class name
+            codeDirectory: code directory
+            className: qualified class name
             classArgs (optional): kwargs pass to class constructor
+
     Returns: object
     -------
         Returns customized class instance.
     """
 
-    code_dir = class_params.get('codeDir')
-    class_filename = class_params.get('classFileName')
-    class_name = class_params.get('className')
+    code_dir = class_params.get('codeDirectory')
+    qualified_class_name = class_params.get('className')
     class_args = class_params.get('classArgs')
 
-    if not os.path.isfile(os.path.join(code_dir, class_filename)):
-        raise ValueError('Class file not found: {}'.format(
-            os.path.join(code_dir, class_filename)))
+    if code_dir and not os.path.isdir(code_dir):
+        raise ValueError(f'Directory not found: {code_dir}')
+
     sys.path.append(code_dir)
-    module_name = os.path.splitext(class_filename)[0]
+    module_name, class_name = qualified_class_name.rsplit('.', 1)
     class_module = importlib.import_module(module_name)
     class_constructor = getattr(class_module, class_name)
 
@@ -216,7 +215,7 @@ def read_registerd_algo_meta():
     config_file = get_registered_algo_config_path()
     if os.path.exists(config_file):
         with open(config_file, 'r') as f:
-            config = yaml.load(f, Loader=yaml.SafeLoader)
+            config = yaml.safe_load(f)
     else:
         config = defaultdict(list)
     for t in ALGO_TYPES:
@@ -227,4 +226,4 @@ def read_registerd_algo_meta():
 def write_registered_algo_meta(config):
     config_file = get_registered_algo_config_path()
     with open(config_file, 'w') as f:
-        f.write(yaml.dump(dict(config), default_flow_style=False))
+        f.write(yaml.safe_dump(dict(config), default_flow_style=False))

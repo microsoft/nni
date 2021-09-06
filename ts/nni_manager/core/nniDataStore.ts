@@ -11,7 +11,7 @@ import { Database, DataStore, MetricData, MetricDataRecord, MetricType,
     TrialJobEvent, TrialJobEventRecord, TrialJobInfo, HyperParameterFormat,
     ExportedDataFormat } from '../common/datastore';
 import { NNIError } from '../common/errors';
-import { getExperimentId, isNewExperiment } from '../common/experimentStartupInfo';
+import { isNewExperiment } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile,  TrialJobStatistics } from '../common/manager';
 import { TrialJobDetail, TrialJobStatus } from '../common/trainingService';
@@ -19,9 +19,8 @@ import { getDefaultDatabaseDir, mkDirP } from '../common/utils';
 
 class NNIDataStore implements DataStore {
     private db: Database = component.get(Database);
-    private log: Logger = getLogger();
+    private log: Logger = getLogger('NNIDataStore');
     private initTask!: Deferred<void>;
-    private multiPhase: boolean | undefined;
 
     public init(): Promise<void> {
         if (this.initTask !== undefined) {
@@ -72,7 +71,6 @@ class NNIDataStore implements DataStore {
 
     public storeTrialJobEvent(
         event: TrialJobEvent, trialJobId: string, hyperParameter?: string, jobDetail?: TrialJobDetail): Promise<void> {
-        this.log.debug(`storeTrialJobEvent: event: ${event}, data: ${hyperParameter}, jobDetail: ${JSON.stringify(jobDetail)}`);
 
         // Use the timestamp in jobDetail as TrialJobEvent timestamp for different events
         let timestamp: number | undefined;
@@ -241,39 +239,16 @@ class NNIDataStore implements DataStore {
         const map: Map<string, MetricDataRecord[]> = new Map();
         const metrics: MetricDataRecord[] = await this.getMetricData(trialJobId, 'FINAL');
 
-        const multiPhase: boolean = await this.isMultiPhase();
-
         for (const metric of metrics) {
             const existMetrics: MetricDataRecord[] | undefined = map.get(metric.trialJobId);
             if (existMetrics !== undefined) {
-                if (!multiPhase) {
-                    this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics: ${JSON.stringify(metrics)}`);
-                } else {
-                    existMetrics.push(metric);
-                }
+                this.log.error(`Found multiple FINAL results for trial job ${trialJobId}, metrics:`, metrics);
             } else {
                 map.set(metric.trialJobId, [metric]);
             }
         }
 
         return map;
-    }
-
-    private async isMultiPhase(): Promise<boolean> {
-        if (this.multiPhase === undefined) {
-            const expProfile: ExperimentProfile = await this.getExperimentProfile(getExperimentId());
-            if (expProfile !== undefined) {
-                this.multiPhase = expProfile.params.multiPhase;
-            } else {
-                return false;
-            }
-        }
-
-        if (this.multiPhase !== undefined) {
-            return this.multiPhase;
-        } else {
-            return false;
-        }
     }
 
     private getJobStatusByLatestEvent(oldStatus: TrialJobStatus, event: TrialJobEvent): TrialJobStatus {

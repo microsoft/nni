@@ -7,13 +7,13 @@ import json
 import time
 import subprocess
 
-from ..env_vars import trial_env_vars
 from nni.utils import to_json
+from ..env_vars import trial_env_vars
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
 if not os.path.exists(os.path.join(_sysdir, '.nni')):
     os.makedirs(os.path.join(_sysdir, '.nni'))
-_metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'wb')
+_metric_file = open(os.path.join(_sysdir, '.nni', 'metrics'), 'ab')
 
 _outputdir = trial_env_vars.NNI_OUTPUT_DIR
 if not os.path.exists(_outputdir):

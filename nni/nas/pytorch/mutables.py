@@ -72,7 +72,7 @@ class Mutable(nn.Module):
         """
         After the search space is parsed, it will be the module name of the mutable.
         """
-        return self._name if hasattr(self, "_name") else "_key"
+        return self._name if hasattr(self, "_name") else self._key
 
     @name.setter
     def name(self, name):

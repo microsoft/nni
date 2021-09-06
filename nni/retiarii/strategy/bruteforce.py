@@ -8,9 +8,9 @@ import random
 import time
 from typing import Any, Dict, List
 
-from .. import Sampler, submit_models, query_available_resources
+from .. import InvalidMutation, Sampler, submit_models, query_available_resources, budget_exhausted
 from .base import BaseStrategy
-from .utils import dry_run_for_search_space, get_targeted_model
+from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 
 _logger = logging.getLogger(__name__)
 
@@ -62,7 +62,9 @@ class GridSearch(BaseStrategy):
         search_space = dry_run_for_search_space(base_model, applied_mutators)
         for sample in grid_generator(search_space, shuffle=self.shuffle):
             _logger.debug('New model created. Waiting for resource. %s', str(sample))
-            if query_available_resources() <= 0:
+            while query_available_resources() <= 0:
+                if budget_exhausted():
+                    return
                 time.sleep(self._polling_interval)
             submit_models(get_targeted_model(base_model, applied_mutators, sample))
 
@@ -82,15 +84,18 @@ class Random(BaseStrategy):
         Do not dry run to get the full search space. Used when the search space has variational size or candidates. Default: false.
     dedup : bool
         Do not try the same configuration twice. When variational is true, deduplication is not supported. Default: true.
+    model_filter: Callable[[Model], bool]
+        Feed the model and return a bool. This will filter the models in search space and select which to submit.
     """
 
-    def __init__(self, variational=False, dedup=True):
+    def __init__(self, variational=False, dedup=True, model_filter=None):
         self.variational = variational
         self.dedup = dedup
         if variational and dedup:
             raise ValueError('Dedup is not supported in variational mode.')
         self.random_sampler = _RandomSampler()
         self._polling_interval = 2.
+        self.filter = model_filter
 
     def run(self, base_model, applied_mutators):
         if self.variational:
@@ -105,7 +110,10 @@ class Random(BaseStrategy):
                     for mutator in applied_mutators:
                         model = mutator.apply(model)
                     _logger.debug('New model created. Applied mutators are: %s', str(applied_mutators))
-                    submit_models(model)
+                    if filter_model(self.filter, model):
+                        submit_models(model)
+                elif budget_exhausted():
+                    break
                 else:
                     time.sleep(self._polling_interval)
         else:
@@ -113,6 +121,13 @@ class Random(BaseStrategy):
             search_space = dry_run_for_search_space(base_model, applied_mutators)
             for sample in random_generator(search_space, dedup=self.dedup):
                 _logger.debug('New model created. Waiting for resource. %s', str(sample))
-                if query_available_resources() <= 0:
+                while query_available_resources() <= 0:
+                    if budget_exhausted():
+                        return
                     time.sleep(self._polling_interval)
-                submit_models(get_targeted_model(base_model, applied_mutators, sample))
+                try:
+                    model = get_targeted_model(base_model, applied_mutators, sample)
+                    if filter_model(self.filter, model):
+                        submit_models(model)
+                except InvalidMutation as e:
+                    _logger.warning(f'Invalid mutation: {e}. Skip.')

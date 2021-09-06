@@ -1,0 +1,16 @@
+experimentName: default_test
+searchSpaceFile: ../../../examples/trials/sklearn/classification/search_space.json
+trialCommand: python3 main.py
+trialCodeDirectory: ../../../examples/trials/sklearn/classification
+trialGpuNumber: 0
+trialConcurrency: 4
+maxExperimentDuration: 15m
+maxTrialNumber: 2
+tuner:
+  name: demotuner
+trainingService:
+  platform: local
+assessor:
+  name: Medianstop
+  classArgs:
+    optimize_mode: maximize

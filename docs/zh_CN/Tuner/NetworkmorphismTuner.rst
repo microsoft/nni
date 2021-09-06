@@ -61,7 +61,7 @@ Network Morphism Tuner
 
    # 1. 使用 NNI API
    # 从 WebUI 获得最佳模型 ID
-   # or `nni-experiments/experiment_id/log/model_path/best_model.txt'
+   # 或者 ``nni-experiments/experiment_id/log/model_path/best_model.txt``
 
    # 从模型文件中读取 json 字符串，并用 NNI API 加载
    with open("best-model.json") as json_file:

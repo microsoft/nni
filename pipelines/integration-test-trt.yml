@@ -1,0 +1,37 @@
+trigger: none
+pr: none
+schedules:
+- cron: 0 16 * * *
+  branches:
+    include: [ master ]
+
+jobs:
+- job: trt
+  pool: NNI CI TENSORRT
+  timeoutInMinutes: 120
+
+  steps:
+  - script: |
+      export NNI_RELEASE=999.$(date -u +%Y%m%d%H%M%S)
+      echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/ENTER/bin"
+      echo "##vso[task.setvariable variable=NNI_RELEASE]${NNI_RELEASE}"
+
+      echo "Working directory: ${PWD}"
+      echo "NNI version: ${NNI_RELEASE}"
+
+      python3 -m pip install --upgrade pip setuptools
+    displayName: Prepare
+
+  - script: |
+      set -e
+      export PATH="$PATH:/home/nni-test/ENTER/bin"
+      python3 setup.py build_ts
+      python3 setup.py bdist_wheel -p manylinux1_x86_64
+      python3 -m pip install dist/nni-${NNI_RELEASE}-py3-none-manylinux1_x86_64.whl[SMAC,BOHB]
+    displayName: Build and install NNI
+
+  - script: |
+      set -e
+      cd test
+      python3 nni_test/nnitest/test_quantize_model_speedup.py
+    displayName: Quantize model speedup test

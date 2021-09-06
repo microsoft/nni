@@ -27,9 +27,9 @@ export const EditExperimentParam = (): any => {
     const hideSucceedInfo = useCallback(() => {
         setShowSucceedInfo(false);
     }, []);
-    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
-        EditExpeParamContext
-    );
+    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } =
+        useContext(EditExpeParamContext);
+    const originMaxDurationStr = EXPERIMENT.profile.params.maxExperimentDuration;
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);
     let defaultVal = '';
@@ -101,25 +101,21 @@ export const EditExperimentParam = (): any => {
         }
         if (isMaxDuration) {
             const maxDura = JSON.parse(editInputVal);
-            if (unit === 'm') {
-                newProfile.params[field] = maxDura * 60;
-            } else if (unit === 'h') {
-                newProfile.params[field] = maxDura * 3600;
-            } else {
-                newProfile.params[field] = maxDura * 24 * 60 * 60;
-            }
+            newProfile.params[field] = `${maxDura}${unit}`;
         } else {
             newProfile.params[field] = parseInt(editInputVal, 10);
         }
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                // eslint-disable-next-line @typescript-eslint/camelcase
                 params: { update_type: editType }
             });
             if (res.status === 200) {
+                if (isMaxDuration) {
+                    changeMaxDurationUnit(unit);
+                }
                 showMessageInfo(`Successfully updated experiment's ${field}`, 'success');
-                changeMaxDurationUnit(unit);
+                updateOverviewPage();
             }
         } catch (error) {
             if (error.response && error.response.data.error) {
@@ -132,9 +128,14 @@ export const EditExperimentParam = (): any => {
                 showMessageInfo(`Failed to update trial ${field}\nUnknown error`, 'error');
             }
             setEditValInput(defaultVal);
+            // confirm trial config panel val
+            if (isMaxDuration) {
+                newProfile.params[field] = originMaxDurationStr;
+            } else {
+                newProfile.params[field] = beforeParam;
+            }
         }
         showPencil();
-        updateOverviewPage();
     }
 
     function cancelEdit(): void {
@@ -162,7 +163,7 @@ export const EditExperimentParam = (): any => {
                     <EditExpeParamContext.Consumer>
                         {(value): React.ReactNode => {
                             let editClassName = '';
-                            if (value.field === 'maxExecDuration') {
+                            if (value.field === 'maxExperimentDuration') {
                                 editClassName = isShowPencil ? 'noEditDuration' : 'editDuration';
                             }
                             return (

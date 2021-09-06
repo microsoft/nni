@@ -8,13 +8,13 @@ networkmorphsim_tuner.py
 import logging
 import os
 from schema import Optional, Schema
+from nni import ClassArgsValidator
 from nni.tuner import Tuner
 from nni.utils import OptimizeMode, extract_scalar_reward
 from .bayesian import BayesianOptimizer
 from .nn import CnnGenerator, MlpGenerator
 from .utils import Constant
 from .graph import graph_to_json, json_to_graph
-from nni import ClassArgsValidator
 
 logger = logging.getLogger("NetworkMorphism_AutoML")
 
@@ -225,7 +225,7 @@ class NetworkMorphismTuner(Tuner):
         ----------
         other_info: any object
             In our case it is the father ID in the search tree.
-        graph: Graph
+        graph: graph.Graph
             An instance of Graph. The trained neural architecture.
         metric_value: float
             The final evaluated metric value.
@@ -284,7 +284,7 @@ class NetworkMorphismTuner(Tuner):
 
         Returns
         -------
-        load_model : Graph
+        load_model : graph.Graph
             the model graph representation
         """
 
@@ -300,7 +300,7 @@ class NetworkMorphismTuner(Tuner):
 
         Returns
         -------
-        load_model : Graph
+        load_model : graph.Graph
             the model graph representation
         """
         return self.load_model_by_id(self.get_best_model_id())

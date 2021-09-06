@@ -71,14 +71,14 @@ MNIST 示例
 
 此样例演示了 NNI 如何支持嵌套的搜索空间。 搜索空间文件示了如何定义嵌套的搜索空间。
 
-代码示例： :githublink:`mnist-nested-search-space/ <examples/trials/mnist-nested-search-space/>`
+代码示例： :githublink:`mnist-distributed/ <examples/trials/mnist-distributed/>`
 
 :raw-html:`<a name="mnist-kubeflow-tf"></a>`
 **用 Kubeflow 运行分布式的 MNIST (tensorflow)**
 
 此样例展示了如何通过 NNI 来在 Kubeflow 上运行分布式训练。 只需要简单的提供分布式训练代码，并在配置文件中指定 kubeflow 模式。 例如，运行 ps 和 worker 的命令行，以及各自需要的资源。 此样例使用了 Tensorflow 来实现，因而，需要使用 Kubeflow 的 tf-operator。
 
-代码示例： :githublink:`mnist-distributed/ <examples/trials/mnist-distributed/>`
+代码示例： :githublink:`mnist-distributed-pytorch/ <examples/trials/mnist-distributed-pytorch/>`
 
 :raw-html:`<a name="mnist-kubeflow-pytorch"></a>`
 **用 Kubeflow 运行分布式的 MNIST (PyTorch)**

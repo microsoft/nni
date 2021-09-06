@@ -30,12 +30,13 @@ class ShellExecutor {
     private readonly sshClient: Client;
     private readonly log: Logger;
     private tempPath: string = "";
-    private isWindows: boolean = false;
     private channelDefaultOutputs: string[] = [];
     private pythonPath: string | undefined;
 
+    public isWindows: boolean = false;
+
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('ShellExecutor');
         this.sshClient = new Client();
     }
 
@@ -43,24 +44,24 @@ class ShellExecutor {
         const deferred: Deferred<void> = new Deferred<void>();
 
         const connectConfig: ConnectConfig = {
-            host: rmMeta.ip,
-            port: rmMeta.port,
-            username: rmMeta.username,
+            host: rmMeta.config.host,
+            port: rmMeta.config.port,
+            username: rmMeta.config.user,
             tryKeyboard: true,
         };
-        this.pythonPath = rmMeta.pythonPath;
-        this.name = `${rmMeta.username}@${rmMeta.ip}:${rmMeta.port}`;
-        if (rmMeta.passwd !== undefined) {
-            connectConfig.password = rmMeta.passwd;
-        } else if (rmMeta.sshKeyPath !== undefined) {
-            if (!fs.existsSync(rmMeta.sshKeyPath)) {
+        this.pythonPath = rmMeta.config.pythonPath;
+        this.name = `${rmMeta.config.user}@${rmMeta.config.host}:${rmMeta.config.port}`;
+        if (rmMeta.config.password !== undefined) {
+            connectConfig.password = rmMeta.config.password;
+        } else if (rmMeta.config.sshKeyFile !== undefined) {
+            if (!fs.existsSync(rmMeta.config.sshKeyFile)) {
                 //SSh key path is not a valid file, reject
-                deferred.reject(new Error(`${rmMeta.sshKeyPath} does not exist.`));
+                deferred.reject(new Error(`${rmMeta.config.sshKeyFile} does not exist.`));
             }
-            const privateKey: string = fs.readFileSync(rmMeta.sshKeyPath, 'utf8');
+            const privateKey: string = fs.readFileSync(rmMeta.config.sshKeyFile, 'utf8');
 
             connectConfig.privateKey = privateKey;
-            connectConfig.passphrase = rmMeta.passphrase;
+            connectConfig.passphrase = rmMeta.config.sshPassphrase;
         } else {
             deferred.reject(new Error(`No valid passwd or sshKeyPath is configed.`));
         }
@@ -100,7 +101,7 @@ class ShellExecutor {
             // SSH connection error, reject with error message
             deferred.reject(new Error(err.message));
         }).on("keyboard-interactive", (_name, _instructions, _lang, _prompts, finish) => {
-            finish([rmMeta.passwd]);
+            finish([rmMeta.config.password || '']);
         }).connect(connectConfig);
 
         return deferred.promise;
@@ -166,6 +167,16 @@ class ShellExecutor {
             throw new Error("tempPath must be initialized!");
         }
         return this.tempPath;
+    }
+
+    public async getCurrentPath(): Promise<string> {
+        const commandText = this.osCommands && this.osCommands.getCurrentPath();
+        const commandResult = await this.execute(commandText);
+        if (commandResult.exitCode == 0) {
+            return commandResult.stdout;
+        } else {
+            throw Error(commandResult.stderr);
+        }
     }
 
     public getRemoteScriptsPath(experimentId: string): string {
@@ -266,7 +277,7 @@ class ShellExecutor {
         this.log.debug(`copyFileToRemote(${commandIndex}): localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
 
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
+        this.sshClient.sftp((err: Error | undefined, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 this.log.error(`copyFileToRemote(${commandIndex}): ${err}`);
                 deferred.reject(err);
@@ -317,7 +328,7 @@ class ShellExecutor {
         const commandIndex = randomInt(10000);
         this.log.debug(`getRemoteFileContent(${commandIndex}): filePath: ${filePath}`);
         const deferred: Deferred<string> = new Deferred<string>();
-        this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
+        this.sshClient.sftp((err: Error | undefined, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 this.log.error(`getRemoteFileContent(${commandIndex}) sftp: ${err}`);
                 deferred.reject(new Error(`SFTP error: ${err}`));
@@ -365,7 +376,7 @@ class ShellExecutor {
         // Windows always uses shell, and it needs to disable to get it works.
         useShell = useShell && !this.isWindows;
 
-        const callback = (err: Error, channel: ClientChannel): void => {
+        const callback = (err: Error | undefined, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
                 this.log.error(`remoteExeCommand(${commandIndex}): ${err.message}`);
                 deferred.reject(err);

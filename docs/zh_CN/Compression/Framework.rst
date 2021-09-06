@@ -29,7 +29,6 @@ Compressor 是 Pruner 和 Quantizer 的基类，提供了统一的接口，可�
        'op_types': ['Conv2d', 'Linear'],
    }]
 
-   optimizer = torch.optim.SGD(model.parameters(), lr=0.001, momentum=0.9, weight_decay=1e-4)
    pruner = LevelPruner(model, configure_list, optimizer)
    model = pruner.compress()
 
@@ -103,7 +102,7 @@ Compressor 是 Pruner 和 Quantizer 的基类，提供了统一的接口，可�
 Pruner
 ------
 
-Pruner 接收 ``模型``，``配置`` 和 ``优化器`` 作为参数。 通过往 ``optimizer.step()`` 上增加回调，在训练过程中根据 ``config_list`` 来对模型剪枝。
+Pruner 接收 ``模型``，``配置`` 和 ``优化器`` 作为参数。一些剪枝器，比如 ``TaylorFOWeightFilter Pruner`` 通过在 ``optimizer.step()`` 上添加一个钩子，在训练循环期间根据 ``config_list`` 修剪模型。
 
 Pruner 类是 Compressor 的子类，因此它包含了 Compressor 的所有功能，并添加了剪枝所需要的组件，包括：
 

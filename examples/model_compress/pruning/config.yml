@@ -15,4 +15,4 @@ trialCommand: python3 basic_pruners_torch.py --nni
 trialConcurrency: 1
 trialGpuNumber: 0
 tuner:
-  name: grid
+  name: GridSearch

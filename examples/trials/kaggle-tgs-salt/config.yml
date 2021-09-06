@@ -1,20 +1,11 @@
-authorName: default
-experimentName: example_tgs
-trialConcurrency: 2
-maxExecDuration: 10h
-maxTrialNum: 10
-#choice: local, remote, pai
-trainingServicePlatform: local
-#choice: true, false
 useAnnotation: true
+trialCommand: python3 train.py
+trialGpuNumber: 0
+trialConcurrency: 2
+maxTrialNumber: 10
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner
-  #SMAC (SMAC should be installed through nnictl)
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 train.py
-  codeDir: .
-  gpuNum: 1
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

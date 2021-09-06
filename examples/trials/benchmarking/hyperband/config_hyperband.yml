@@ -1,0 +1,20 @@
+advisor:
+  name: Hyperband
+  classArgs:
+    optimize_mode: maximize
+
+    #R: the maximum trial budget (could be the number of mini-batches or epochs) can be
+    #   allocated to a trial. Each trial should use trial budget to control how long it runs.
+    R: 60
+
+    #eta: proportion of discarded trials
+    eta: 3
+
+    #choice: serial, parallelism
+    exec_mode: serial
+
+searchSpaceFile: search_space.json
+trialCommand: python3 main.py
+trialConcurrency: 10
+trainingService:
+  platform: local

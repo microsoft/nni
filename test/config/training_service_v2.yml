@@ -1,0 +1,9 @@
+hybrid:
+  trainingService:
+  - platform: remote
+    machineList:
+      - host: 
+        user: 
+        password: 
+        port: 
+  - platform: local

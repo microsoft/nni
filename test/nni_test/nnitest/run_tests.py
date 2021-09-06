@@ -9,7 +9,7 @@ import subprocess
 import sys
 import time
 
-import ruamel.yaml as yaml
+import yaml
 
 import validators
 from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
@@ -23,7 +23,7 @@ from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
 it_variables = {}
 
 
-def update_training_service_config(config, training_service, config_file_path):
+def update_training_service_config(config, training_service, config_file_path, nni_source_dir):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
 
     # hack for kubeflow trial config
@@ -38,7 +38,7 @@ def update_training_service_config(config, training_service, config_file_path):
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
-    
+
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
         containerCodeDir = config['trial']['codeDir']
@@ -53,7 +53,23 @@ def update_training_service_config(config, training_service, config_file_path):
         it_ts_config[training_service]['trial']['codeDir'] = containerCodeDir
         it_ts_config[training_service]['trial']['command'] = 'cd {0} && {1}'.format(containerCodeDir, config['trial']['command'])
 
-    deep_update(config, it_ts_config['all'])
+    if training_service == 'remote':
+        testcase_config = get_yml_content(nni_source_dir + config_file_path)
+        sharedStorage = testcase_config.get('sharedStorage')
+        if sharedStorage is None:
+            it_ts_config[training_service].pop('sharedStorage')
+        elif str(sharedStorage.get('storageType')).lower() == 'nfs':
+            it_ts_config[training_service].get('sharedStorage').pop('storageAccountKey')
+        elif str(sharedStorage.get('storageType')).lower() == 'azureblob':
+            it_ts_config[training_service].get('sharedStorage').pop('nfsServer')
+            it_ts_config[training_service].get('sharedStorage').pop('exportedDirectory')
+        else:
+            it_ts_config[training_service].pop('sharedStorage')
+    
+    if training_service == 'hybrid':
+        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+    else:
+        deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
 
@@ -72,12 +88,12 @@ def prepare_config_file(test_case_config, it_config, args):
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
     # the hack for kubeflow should be applied at last step
-    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'])
+    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'], args.nni_source_dir)
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
     dump_yml_content(new_config_file, test_yml_config)
-    print(yaml.dump(test_yml_config, default_flow_style=False), flush=True)
+    print(yaml.safe_dump(test_yml_config, default_flow_style=False), flush=True)
 
     return new_config_file
 
@@ -123,7 +139,10 @@ def invoke_validator(test_case_config, nni_source_dir, training_service):
 
 def get_max_values(config_file):
     experiment_config = get_yml_content(config_file)
-    return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    if experiment_config.get('maxExecDuration'):
+        return parse_max_duration_time(experiment_config['maxExecDuration']), experiment_config['maxTrialNum']
+    else:
+        return parse_max_duration_time(experiment_config['maxExperimentDuration']), experiment_config['maxTrialNumber']
 
 
 def get_command(test_case_config, commandKey):
@@ -232,6 +251,15 @@ def match_training_service(test_case_config, cur_training_service):
         return True
     return False
 
+def match_remoteConfig(test_case_config, nni_source_dir):
+    trainingservice_config = get_yml_content(os.path.join('config', 'training_service.yml'))
+    trainingservice_config_reuse_value = str(trainingservice_config['remote']['remoteConfig']['reuse']).lower()
+    testcase_config = get_yml_content(nni_source_dir + test_case_config['configFile'])
+    if testcase_config.get('remoteConfig') is not None:
+        if testcase_config['remoteConfig'].get('reuse') is not None:
+            return str(testcase_config['remoteConfig']['reuse']).lower() == trainingservice_config_reuse_value
+    return True
+
 
 def run(args):
     it_config = get_yml_content(args.config)
@@ -258,8 +286,13 @@ def run(args):
             print('skipped {}, training service {} not match [{}]'.format(
                 name, args.ts, test_case_config['trainingService']))
             continue
+
         # remote mode need more time to cleanup 
-        if args.ts == 'remote':
+        if args.ts == 'remote' or args.ts == 'hybrid':
+            if args.ts == 'remote':
+                if not match_remoteConfig(test_case_config, args.nni_source_dir):
+                    print('skipped {}, remoteConfig not match.'.format(name))
+                    continue
             wait_for_port_available(8080, 240)
         else:
             wait_for_port_available(8080, 60)
@@ -281,7 +314,7 @@ if __name__ == '__main__':
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai',
-                                                   'kubeflow', 'frameworkcontroller', 'adl'], default='local')
+                                                   'kubeflow', 'frameworkcontroller', 'adl', 'aml', 'hybrid'], default='local')
     args = parser.parse_args()
 
     run(args)

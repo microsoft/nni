@@ -27,12 +27,12 @@ def register_advisor(advisor: 'RetiariiAdvisor'):
     _advisor = advisor
 
 
-def send_trial(parameters: dict) -> int:
+def send_trial(parameters: dict, placement_constraint=None) -> int:
     """
     Send a new trial. Executed on tuner end.
     Return a ID that is the unique identifier for this trial.
     """
-    return get_advisor().send_trial(parameters)
+    return get_advisor().send_trial(parameters, placement_constraint)
 
 
 def receive_trial_parameters() -> dict:

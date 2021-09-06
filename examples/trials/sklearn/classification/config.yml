@@ -1,20 +1,11 @@
-authorName: default
-experimentName: example_sklearn-classification
+searchSpaceFile: search_space.json
+trialCommand: python3 main.py
 trialConcurrency: 1
-maxExecDuration: 1h
-maxTrialNum: 100
-#choice: local, remote
-trainingServicePlatform: local
-searchSpacePath: search_space.json
-#choice: true, false
-useAnnotation: false
+maxTrialNumber: 100
+maxExperimentDuration: 1h
 tuner:
-  #choice: TPE, Random, Anneal, Evolution, BatchTuner, MetisTuner
-  builtinTunerName: TPE
+  name: TPE
   classArgs:
-    #choice: maximize, minimize
     optimize_mode: maximize
-trial:
-  command: python3 main.py
-  codeDir: .
-  gpuNum: 0
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

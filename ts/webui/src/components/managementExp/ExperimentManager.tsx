@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn } from '@fluentui/react';
+import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
 import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
@@ -17,6 +17,10 @@ import '../../static/style/nav/nav.scss';
 import '../../static/style/experiment/experiment.scss';
 import '../../static/style/overview/probar.scss';
 import '../../static/style/tableStatus.css';
+
+const expTokens: IStackTokens = {
+    childrenGap: 25
+};
 
 interface ExpListState {
     columns: IColumn[];
@@ -111,7 +115,11 @@ class Experiment extends React.Component<{}, ExpListState> {
                                     </DefaultButton>
                                 </div>
                             </Stack>
-                            <Stack className={`${hideFilter ? 'hidden' : ''} filter-condition`} horizontal gap={25}>
+                            <Stack
+                                className={`${hideFilter ? 'hidden' : ''} filter-condition`}
+                                horizontal
+                                tokens={expTokens}
+                            >
                                 <FilterBtns
                                     platform={platform}
                                     selectedStatus={selectedStatus}
@@ -354,14 +362,8 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     private getSelectedData(type: string, date: Date | null | undefined): void {
         if (date !== null && date !== undefined) {
-            const {
-                selectedStatus,
-                selectedPlatform,
-                selectedStartDate,
-                selectedEndDate,
-                searchSource,
-                sortInfo
-            } = this.state;
+            const { selectedStatus, selectedPlatform, selectedStartDate, selectedEndDate, searchSource, sortInfo } =
+                this.state;
             const hasPlatform = selectedPlatform === '' ? false : true;
 
             // filter status, platform

@@ -1,10 +1,16 @@
+import { getPrefix } from './function';
+
 // when there are more trials than this threshold, metrics will be updated in group of this size to avoid freezing
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
-const MANAGER_IP = `/api/v1/nni`;
+const prefix = getPrefix();
+const RESTAPI = '/api/v1/nni';
+const MANAGER_IP = prefix === undefined ? RESTAPI : `${prefix}${RESTAPI}`;
 const DOWNLOAD_IP = `/logs`;
+
 const WEBUIDOC = 'https://nni.readthedocs.io/en/latest/Tutorial/WebUI.html';
+
 const trialJobStatus = [
     'UNKNOWN',
     'WAITING',
@@ -21,6 +27,7 @@ const EXPERIMENTSTATUS = [
     'ERROR',
     'STOPPING',
     'STOPPED',
+    'VIEWED',
     'DONE',
     'NO_MORE_TRIAL',
     'TUNER_NO_MORE_TRIAL'

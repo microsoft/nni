@@ -5,6 +5,212 @@
 Change Log
 ==========
 
+Release 2.4 - 8/11/2021
+-----------------------
+
+Major Updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* NAS visualization: visualize model graph through Netron (#3878)
+* Support NAS bench 101/201 on Retiarii framework (#3871 #3920)
+* Support hypermodule AutoActivation (#3868)
+* Support PyTorch v1.8/v1.9 (#3937)
+* Support Hardware-aware NAS with nn-Meter (#3938)
+* Enable `fixed_arch` on Retiarii (#3972)
+
+Model Compression
+"""""""""""""""""
+
+* Refactor of ModelSpeedup: auto shape/mask inference (#3462)
+* Added more examples for ModelSpeedup (#3880)
+* Support global sort for Taylor pruning (#3896)
+* Support TransformerHeadPruner (#3884)
+* Support batch normalization folding in QAT quantizer (#3911, thanks the external contributor @chenbohua3)
+* Support post-training observer quantizer (#3915, thanks the external contributor @chenbohua3)
+* Support ModelSpeedup for Slim Pruner (#4008)
+* Support TensorRT 8.0.0 in ModelSpeedup (#3866)
+
+Hyper-parameter Tuning
+""""""""""""""""""""""
+
+* Improve HPO benchmarks (#3925)
+* Improve type validation of user defined search space (#3975)
+
+Training service & nnictl
+"""""""""""""""""""""""""
+
+* Support JupyterLab (#3668 #3954)
+* Support viewing experiment from experiment folder (#3870)
+* Support kubeflow in training service reuse framework (#3919)
+* Support viewing trial log on WebUI for an experiment launched in `view` mode (#3872)
+
+Minor Updates & Bug Fixes
+"""""""""""""""""""""""""
+
+* Fix the failure of the exit of Retiarii experiment (#3899)
+* Fix `exclude` not supported in some `config_list` cases (#3815)
+* Fix bug in remote training service on reuse mode (#3941)
+* Improve IP address detection in modern way (#3860)
+* Fix bug of the search box on WebUI (#3935)
+* Fix bug in url_prefix of WebUI (#4051)
+* Support dict format of intermediate on WebUI (#3895)
+* Fix bug in openpai training service induced by experiment config v2 (#4027 #4057)
+* Improved doc (#3861 #3885 #3966 #4004 #3955)
+* Improved the API `export_model` in model compression (#3968)
+* Supported `UnSqueeze` in ModelSpeedup (#3960)
+* Thanks other external contributors: @Markus92 (#3936), @thomasschmied (#3963), @twmht (#3842)
+
+
+Release 2.3 - 6/15/2021
+-----------------------
+
+Major Updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* Retiarii Framework (NNI NAS 2.0) Beta Release with new features:
+
+  * Support new high-level APIs: ``Repeat`` and ``Cell`` (#3481)
+  * Support pure-python execution engine (#3605)
+  * Support policy-based RL strategy (#3650)
+  * Support nested ModuleList (#3652)
+  * Improve documentation (#3785)
+
+  **Note**: there are more exciting features of Retiarii planned in the future releases, please refer to `Retiarii Roadmap <https://github.com/microsoft/nni/discussions/3744>`__  for more information.
+
+* Add new NAS algorithm: Blockwise DNAS FBNet (#3532, thanks the external contributor @alibaba-yiwuyao) 
+
+Model Compression
+"""""""""""""""""
+
+* Support Auto Compression Framework (#3631)
+* Support slim pruner in Tensorflow (#3614)
+* Support LSQ quantizer (#3503, thanks the external contributor @chenbohua3)
+* Improve APIs for iterative pruners (#3507 #3688)
+
+Training service & Rest
+"""""""""""""""""""""""
+
+* Support 3rd-party training service (#3662 #3726)
+* Support setting prefix URL (#3625 #3674 #3672 #3643)
+* Improve NNI manager logging (#3624)
+* Remove outdated TensorBoard code on nnictl (#3613)
+
+Hyper-Parameter Optimization
+""""""""""""""""""""""""""""
+
+* Add new tuner: DNGO (#3479 #3707)
+* Add benchmark for tuners (#3644 #3720 #3689)
+
+WebUI
+"""""
+
+* Improve search parameters on trial detail page (#3651 #3723 #3715)
+* Make selected trials consistent after auto-refresh in detail table (#3597)
+* Add trial stdout button on local mode (#3653 #3690)
+
+Examples & Documentation
+""""""""""""""""""""""""
+
+* Convert all trial examples' from config v1 to config v2 (#3721 #3733 #3711 #3600)
+* Add new jupyter notebook examples (#3599 #3700)
+
+Dev Excellent
+"""""""""""""
+
+* Upgrade dependencies in Dockerfile (#3713 #3722)
+* Substitute PyYAML for ``ruamel.yaml`` (#3702)
+* Add pipelines for AML and hybrid training service and experiment config V2 (#3477 #3648)
+* Add pipeline badge in README (#3589)
+* Update issue bug report template (#3501)
+
+
+Bug Fixes & Minor Updates
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* Fix syntax error on Windows (#3634)
+* Fix a logging related bug (#3705)
+* Fix a bug in GPU indices (#3721)
+* Fix a bug in FrameworkController (#3730)
+* Fix a bug in ``export_data_url format`` (#3665)
+* Report version check failure as a warning (#3654)
+* Fix bugs and lints in nnictl (#3712)
+* Fix bug of ``optimize_mode`` on WebUI (#3731)
+* Fix bug of ``useActiveGpu`` in AML v2 config (#3655)
+* Fix bug of ``experiment_working_directory`` in Retiarii config (#3607)
+* Fix a bug in mask conflict (#3629, thanks the external contributor @Davidxswang) 
+* Fix a bug in model speedup shape inference (#3588, thanks the external contributor @Davidxswang)
+* Fix a bug in multithread on Windows (#3604, thanks the external contributor @Ivanfangsc)
+* Delete redundant code in training service (#3526, thanks the external contributor @maxsuren)
+* Fix typo in DoReFa compression doc (#3693, thanks the external contributor @Erfandarzi)
+* Update docstring in model compression (#3647, thanks the external contributor @ichejun)
+* Fix a bug when using Kubernetes container (#3719, thanks the external contributor @rmfan)
+
+
+Release 2.2 - 4/26/2021
+-----------------------
+
+Major updates
+^^^^^^^^^^^^^
+
+Neural Architecture Search
+""""""""""""""""""""""""""
+
+* Improve NAS 2.0 (Retiarii) Framework (Alpha Release)
+
+  * Support local debug mode (#3476)
+  * Support nesting ``ValueChoice`` in ``LayerChoice`` (#3508)
+  * Support dict/list type in ``ValueChoice`` (#3508)
+  * Improve the format of export architectures (#3464)
+  * Refactor of NAS examples (#3513)
+  * Refer to `here <https://github.com/microsoft/nni/issues/3301>`__ for Retiarii Roadmap
+
+Model Compression
+"""""""""""""""""
+
+* Support speedup for mixed precision quantization model (Experimental) (#3488 #3512)
+* Support model export for quantization algorithm (#3458 #3473)
+* Support model export in model compression for TensorFlow (#3487)
+* Improve documentation (#3482)
+
+nnictl & nni.experiment
+"""""""""""""""""""""""
+
+* Add native support for experiment config V2 (#3466 #3540 #3552)
+* Add resume and view mode in Python API ``nni.experiment`` (#3490 #3524 #3545)
+
+Training Service
+""""""""""""""""
+
+* Support umount for shared storage in remote training service (#3456)
+* Support Windows as the remote training service in reuse mode (#3500)
+* Remove duplicated env folder in remote training service (#3472)
+* Add log information for GPU metric collector (#3506)
+* Enable optional Pod Spec for FrameworkController platform (#3379, thanks the external contributor @mbu93)
+
+WebUI
+"""""
+
+* Support launching TensorBoard on WebUI (#3454 #3361 #3531)
+* Upgrade echarts-for-react to v5 (#3457)
+* Add wrap for dispatcher/nnimanager log monaco editor (#3461)
+
+Bug Fixes
+^^^^^^^^^
+
+* Fix bug of FLOPs counter (#3497)
+* Fix bug of hyper-parameter Add/Remove axes and table Add/Remove columns button conflict (#3491)
+* Fix bug that monaco editor search text is not displayed completely (#3492)
+* Fix bug of Cream NAS (#3498, thanks the external contributor @AliCloud-PAI)
+* Fix typos in docs (#3448, thanks the external contributor @OliverShang)
+* Fix typo in NAS 1.0 (#3538, thanks the external contributor @ankitaggarwal23)
+
+
 Release 2.1 - 3/10/2021
 -----------------------
 
@@ -289,7 +495,7 @@ Documentation
 * Fix several typos and grammar mistakes in documentation (#2637 #2638, thanks @tomzx)
 * Improve AzureML training service documentation (#2631)
 * Improve CI of Chinese translation (#2654)
-* Improve OpenPAI training service documenation (#2685)
+* Improve OpenPAI training service documentation (#2685)
 * Improve documentation of community sharing (#2640)
 * Add tutorial of Colab support (#2700)
 * Improve documentation structure for model compression (#2676)

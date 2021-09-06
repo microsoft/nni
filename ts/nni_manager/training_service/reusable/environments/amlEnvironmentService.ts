@@ -6,18 +6,18 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
-import { getExperimentRootDir } from '../../../common/utils';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
 import { validateCodeDir } from '../../common/util';
 import { AMLClient } from '../aml/amlClient';
-import { AMLClusterConfig, AMLEnvironmentInformation, AMLTrialConfig } from '../aml/amlConfig';
+import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { EventEmitter } from "events";
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { SharedStorageService } from '../sharedStorage'
 
+interface FlattenAmlConfig extends ExperimentConfig, AmlConfig { }
 
 /**
  * Collector AML jobs info from AML cluster, and update aml job status locally
@@ -25,16 +25,17 @@ import { SharedStorageService } from '../sharedStorage'
 @component.Singleton
 export class AMLEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
-    public amlClusterConfig: AMLClusterConfig | undefined;
-    public amlTrialConfig: AMLTrialConfig | undefined;
+    private readonly log: Logger = getLogger('AMLEnvironmentService');
     private experimentId: string;
     private experimentRootDir: string;
+    private config: FlattenAmlConfig;
 
-    constructor() {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = getExperimentId();
-        this.experimentRootDir = getExperimentRootDir();
+        this.experimentId = info.experimentId;
+        this.experimentRootDir = info.logDir;
+        this.config = flattenConfig(config, 'aml');
+        validateCodeDir(this.config.trialCodeDirectory);
     }
 
     public get hasStorageService(): boolean {
@@ -51,27 +52,6 @@ export class AMLEnvironmentService extends EnvironmentService {
 
     public get getName(): string {
         return 'aml';
-    }
-
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.AML_CLUSTER_CONFIG:
-                this.amlClusterConfig = <AMLClusterConfig>JSON.parse(value);
-                break;
-
-            case TrialConfigMetadataKey.TRIAL_CONFIG: {
-                if (this.amlClusterConfig === undefined) {
-                    this.log.error('aml cluster config is not initialized');
-                    break;
-                }
-                this.amlTrialConfig = <AMLTrialConfig>JSON.parse(value);
-                // Validate to make sure codeDir doesn't have too many files
-                await validateCodeDir(this.amlTrialConfig.codeDir);
-                break;
-            }
-            default:
-                this.log.debug(`AML not proccessed metadata key: '${key}', value: '${value}'`);
-        }
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -107,12 +87,6 @@ export class AMLEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        if (this.amlClusterConfig === undefined) {
-            throw new Error('AML Cluster config is not initialized');
-        }
-        if (this.amlTrialConfig === undefined) {
-            throw new Error('AML trial config is not initialized');
-        }
         const amlEnvironment: AMLEnvironmentInformation = environment as AMLEnvironmentInformation;
         const environmentLocalTempFolder = path.join(this.experimentRootDir, "environment-temp");
         if (!fs.existsSync(environmentLocalTempFolder)) {
@@ -126,22 +100,26 @@ export class AMLEnvironmentService extends EnvironmentService {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        amlEnvironment.useActiveGpu = this.amlClusterConfig.useActiveGpu;
-        amlEnvironment.maxTrialNumberPerGpu = this.amlClusterConfig.maxTrialNumPerGpu;
+        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
+            amlEnvironment.useActiveGpu = this.config.deprecated.useActiveGpu;
+        }
+        amlEnvironment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
         const amlClient = new AMLClient(
-            this.amlClusterConfig.subscriptionId,
-            this.amlClusterConfig.resourceGroup,
-            this.amlClusterConfig.workspaceName,
+            this.config.subscriptionId,
+            this.config.resourceGroup,
+            this.config.workspaceName,
             this.experimentId,
-            this.amlClusterConfig.computeTarget,
-            this.amlTrialConfig.image,
+            this.config.computeTarget,
+            this.config.dockerImage,
             'nni_script.py',
             environmentLocalTempFolder
         );
         amlEnvironment.id = await amlClient.submit();
+        this.log.debug('aml: before getTrackingUrl');
         amlEnvironment.trackingUrl = await amlClient.getTrackingUrl();
+        this.log.debug('aml: after getTrackingUrl');
         amlEnvironment.amlClient = amlClient;
     }
 

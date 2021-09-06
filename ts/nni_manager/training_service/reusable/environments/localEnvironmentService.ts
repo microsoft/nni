@@ -7,27 +7,26 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tkill from 'tree-kill';
 import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
 import { getLogger, Logger } from '../../../common/log';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+import { ExperimentConfig } from '../../../common/experimentConfig';
+import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
+import { powershellString } from '../../../common/shellUtils';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { TrialConfig } from '../../common/trialConfig';
-import { getExperimentRootDir, isAlive, getNewLine } from '../../../common/utils';
+import { isAlive, getNewLine } from '../../../common/utils';
 import { execMkdir, runScript, getScriptName, execCopydir } from '../../common/util';
 import { SharedStorageService } from '../sharedStorage'
 
 @component.Singleton
 export class LocalEnvironmentService extends EnvironmentService {
 
-    private readonly log: Logger = getLogger();
-    private localTrialConfig: TrialConfig | undefined;
+    private readonly log: Logger = getLogger('LocalEnvironmentService');
     private experimentRootDir: string;
     private experimentId: string;
 
-    constructor() {
+    constructor(_config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = getExperimentId();
-        this.experimentRootDir = getExperimentRootDir();
+        this.experimentId = info.experimentId;
+        this.experimentRootDir = info.logDir;
     }
 
     public get environmentMaintenceLoopInterval(): number {
@@ -40,16 +39,6 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public get getName(): string {
         return 'local';
-    }
-
-    public async config(key: string, value: string): Promise<void> {
-        switch (key) {
-            case TrialConfigMetadataKey.TRIAL_CONFIG:
-                this.localTrialConfig = <TrialConfig>JSON.parse(value);
-                break;
-            default:
-                this.log.debug(`Local mode does not proccess metadata key: '${key}', value: '${value}'`);
-        }
     }
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
@@ -92,7 +81,7 @@ export class LocalEnvironmentService extends EnvironmentService {
     private getScript(environment: EnvironmentInformation): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
-            script.push(`$env:PATH="${process.env.path}"`)
+            script.push(`$env:PATH=${powershellString(process.env.path!)}`)
             script.push(`cd $env:${this.experimentRootDir}`);
             script.push(`New-Item -ItemType "directory" -Path ${path.join(this.experimentRootDir, 'envs', environment.id)} -Force`);
             script.push(`cd envs\\${environment.id}`);
@@ -118,15 +107,10 @@ export class LocalEnvironmentService extends EnvironmentService {
     }
 
     public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
-        if (this.localTrialConfig === undefined) {
-            throw new Error('Local trial config is not initialized');
-        }
         // Need refactor, this temp folder path is not appropriate, there are two expId in this path
         const sharedStorageService = component.get<SharedStorageService>(SharedStorageService);
         if (environment.useSharedStorage && sharedStorageService.canLocalMounted) {
             this.experimentRootDir = sharedStorageService.localWorkingRoot;
-        } else {
-            this.experimentRootDir = getExperimentRootDir();
         }
         const localEnvCodeFolder: string = path.join(this.experimentRootDir, "envs");
         if (environment.useSharedStorage && !sharedStorageService.canLocalMounted) {

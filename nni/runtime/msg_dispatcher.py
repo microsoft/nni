@@ -6,11 +6,12 @@ from collections import defaultdict
 import json_tricks
 
 from nni import NoMoreTrialError
-from .protocol import CommandType, send
-from .msg_dispatcher_base import MsgDispatcherBase
 from nni.assessor import AssessResult
+
 from .common import multi_thread_enabled, multi_phase_enabled
 from .env_vars import dispatcher_env_vars
+from .msg_dispatcher_base import MsgDispatcherBase
+from .protocol import CommandType, send
 from ..utils import MetricType, to_json
 
 _logger = logging.getLogger(__name__)

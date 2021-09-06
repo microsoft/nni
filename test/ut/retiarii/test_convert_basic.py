@@ -9,12 +9,13 @@ import torchvision
 
 import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import basic_unit
-from nni.retiarii.converter import convert_to_graph
+
+from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 from nni.retiarii.codegen import model_to_pytorch_script
 
 # following pytorch v1.7.1
 
-class TestConvert(unittest.TestCase):
+class TestConvert(unittest.TestCase, ConvertMixin):
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}
@@ -27,8 +28,7 @@ class TestConvert(unittest.TestCase):
         return result
 
     def checkExportImport(self, model, input, check_value=True):
-        script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model)
+        model_ir = self._convert_model(model, input)
         model_code = model_to_pytorch_script(model_ir)
         print(model_code)
 
@@ -188,7 +188,7 @@ class TestConvert(unittest.TestCase):
                 out2 = torch.addmv(x, y, z, beta=0.1, alpha=0.2)
                 return out1, out2
         self.checkExportImport(SimpleOp(), (torch.randn(2), torch.randn(2, 3), torch.randn(3), ))
-        
+
     def test_basic_addr(self):
         class SimpleOp(nn.Module):
             def forward(self, x, y, z):
@@ -204,7 +204,7 @@ class TestConvert(unittest.TestCase):
                 out2 = torch.allclose(x, y, rtol=1e-05, atol=1e-08, equal_nan=False)
                 return out1, out2
         self.checkExportImport(SimpleOp(), (torch.tensor([10000., 1e-07]), torch.tensor([10000.1, 1e-08]), ))
-        
+
     def test_basic_angle(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -229,7 +229,7 @@ class TestConvert(unittest.TestCase):
                 o4 = x.argmin(dim=1, keepdim=True)
                 return out1, out2, out3, out4, out5, o1, o2, o3, o4
         self.checkExportImport(SimpleOp(), (torch.randn(4, 4), ))
-        
+
     def test_basic_argsort(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -241,7 +241,7 @@ class TestConvert(unittest.TestCase):
         self.checkExportImport(SimpleOp(), (torch.randn(4, 4), ))
 
     # skip backward(gradient=None, retain_graph=None, create_graph=False)
-        
+
     def test_basic_bernoulli(self):
         class SimpleOp(nn.Module):
             def forward(self, x):
@@ -261,7 +261,7 @@ class TestConvert(unittest.TestCase):
                 out4 = x.bincount(weights=y, minlength=2)
                 return out1, out2, out3, out4
         self.checkExportImport(SimpleOp(), (torch.randint(0, 8, (5,), dtype=torch.int64), torch.linspace(0, 1, steps=5), ))
-        
+
     def test_basic_bitwise(self):
         class SimpleOp(nn.Module):
             def forward(self, x, y):
@@ -280,3 +280,7 @@ class TestConvert(unittest.TestCase):
                 out1 = x.ceil()
                 return out1
         self.checkExportImport(SimpleOp(), (torch.randn(4), ))
+
+
+class TestConvertWithShape(TestConvert, ConvertWithShapeMixin):
+    pass

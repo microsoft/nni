@@ -1,0 +1,20 @@
+{
+    "name": "nni-jupyter-extension",
+    "version": "999.0.0-developing",
+    "license": "MIT",
+    "scripts": {
+        "build": "tsc && jupyter labextension build ."
+    },
+    "dependencies": {
+        "@jupyterlab/application": "^3.0.11",
+        "@jupyterlab/launcher": "^3.0.9"
+    },
+    "devDependencies": {
+        "@jupyterlab/builder": "^3.0.9"
+    },
+    "jupyterlab": {
+        "extension": true,
+        "outputDir": "dist"
+    },
+    "main": "build/index.js"
+}

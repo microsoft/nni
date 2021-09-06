@@ -16,7 +16,6 @@ import { KubernetesTrainingService } from './kubernetesTrainingService';
 export class KubernetesJobRestServer extends ClusterJobRestServer {
     @Inject
     private readonly kubernetesTrainingService? : KubernetesTrainingService;
-
     /**
      * constructor to provide NNIRestServer's own rest property, e.g. port
      */

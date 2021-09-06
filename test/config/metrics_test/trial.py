@@ -19,6 +19,7 @@ if __name__ == '__main__':
     nni.get_next_parameter()
     with open(result_file, 'r') as f:
         m = json.load(f)
+    time.sleep(5)
     for v in m['intermediate_result']:
         time.sleep(1)
         print('report_intermediate_result:', v)

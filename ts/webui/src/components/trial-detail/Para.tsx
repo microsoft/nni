@@ -51,7 +51,11 @@ class Para extends React.Component<ParaProps, ParaState> {
             noChart: true,
             customizeColumnsDialogVisible: false,
             availableDimensions: [],
-            chosenDimensions: []
+            chosenDimensions:
+                localStorage.getItem('paraColumns') !== null
+                    ? // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+                      JSON.parse(localStorage.getItem('paraColumns')!)
+                    : []
         };
     }
 
@@ -85,13 +89,8 @@ class Para extends React.Component<ParaProps, ParaState> {
     }
 
     render(): React.ReactNode {
-        const {
-            selectedPercent,
-            noChart,
-            customizeColumnsDialogVisible,
-            availableDimensions,
-            chosenDimensions
-        } = this.state;
+        const { selectedPercent, noChart, customizeColumnsDialogVisible, availableDimensions, chosenDimensions } =
+            this.state;
 
         return (
             <div className='parameter'>
@@ -130,6 +129,7 @@ class Para extends React.Component<ParaProps, ParaState> {
                             this.setState({ customizeColumnsDialogVisible: false });
                         }}
                         minSelected={2}
+                        whichComponent='para'
                     />
                 )}
                 <div className='parcoords' style={this.chartMulineStyle} ref={this.paraRef} />
@@ -309,15 +309,9 @@ class Para extends React.Component<ParaProps, ParaState> {
         if (axis.scale === 'ordinal') {
             if (axis.nested) {
                 // TODO: handle nested entries
-                scaleInst = d3
-                    .scalePoint()
-                    .domain(Array.from(axis.domain.keys()))
-                    .padding(0.2);
+                scaleInst = d3.scalePoint().domain(Array.from(axis.domain.keys())).padding(0.2);
             } else {
-                scaleInst = d3
-                    .scalePoint()
-                    .domain(axis.domain)
-                    .padding(0.2);
+                scaleInst = d3.scalePoint().domain(axis.domain).padding(0.2);
             }
         } else if (axis.scale === 'log') {
             scaleInst = d3.scaleLog().domain(padLog(axis.domain));

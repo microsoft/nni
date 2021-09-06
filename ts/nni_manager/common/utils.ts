@@ -8,25 +8,25 @@ import { randomBytes } from 'crypto';
 import * as cpp from 'child-process-promise';
 import * as cp from 'child_process';
 import { ChildProcess, spawn, StdioOptions } from 'child_process';
+import * as dgram from 'dgram';
 import * as fs from 'fs';
+import * as net from 'net';
 import * as os from 'os';
 import * as path from 'path';
+import * as timersPromises from 'timers/promises';
 import * as lockfile from 'lockfile';
 import { Deferred } from 'ts-deferred';
 import { Container } from 'typescript-ioc';
-import * as util from 'util';
 import * as glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { ExperimentStartupInfo, getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
-import { ExperimentParams, Manager } from './manager';
+import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
-import { logLevelNameMap } from './log';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo()
-        .getLogDir();
+    return getExperimentStartupInfo().logDir;
 }
 
 function getLogDir(): string {
@@ -34,8 +34,7 @@ function getLogDir(): string {
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo()
-        .getLogLevel();
+    return getExperimentStartupInfo().logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
@@ -50,39 +49,15 @@ function getExperimentsInfoPath(): string {
     return path.join(os.homedir(), 'nni-experiments', '.experiment');
 }
 
-function mkDirP(dirPath: string): Promise<void> {
-    const deferred: Deferred<void> = new Deferred<void>();
-    fs.exists(dirPath, (exists: boolean) => {
-        if (exists) {
-            deferred.resolve();
-        } else {
-            const parent: string = path.dirname(dirPath);
-            mkDirP(parent).then(() => {
-                fs.mkdir(dirPath, (err: Error) => {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve();
-                    }
-                });
-            }).catch((err: Error) => {
-                deferred.reject(err);
-            });
-        }
-    });
-
-    return deferred.promise;
+async function mkDirP(dirPath: string): Promise<void> {
+    await fs.promises.mkdir(dirPath, { recursive: true });
 }
 
 function mkDirPSync(dirPath: string): void {
-    if (fs.existsSync(dirPath)) {
-        return;
-    }
-    mkDirPSync(path.dirname(dirPath));
-    fs.mkdirSync(dirPath);
+    fs.mkdirSync(dirPath, { recursive: true });
 }
 
-const delay: (ms: number) => Promise<void> = util.promisify(setTimeout);
+const delay = timersPromises.setTimeout;
 
 /**
  * Convert index to character
@@ -158,7 +133,7 @@ function getCmdPy(): string {
  * @param expParams: experiment startup parameters
  *
  */
-function getMsgDispatcherCommand(expParams: ExperimentParams): string {
+function getMsgDispatcherCommand(expParams: ExperimentConfig): string {
     const clonedParams = Object.assign({}, expParams);
     delete clonedParams.searchSpace;
     return `${getCmdPy()} -m nni --exp_params ${Buffer.from(JSON.stringify(clonedParams)).toString('base64')}`;
@@ -186,7 +161,6 @@ function generateParamFileName(hyperParameters: HyperParameters): string {
  * Must be paired with `cleanupUnitTest()`.
  */
 function prepareUnitTest(): void {
-    Container.snapshot(ExperimentStartupInfo);
     Container.snapshot(Database);
     Container.snapshot(DataStore);
     Container.snapshot(TrainingService);
@@ -194,9 +168,6 @@ function prepareUnitTest(): void {
     Container.snapshot(ExperimentManager);
 
     const logLevel: string = parseArg(['--log_level', '-ll']);
-    if (logLevel.length > 0 && !logLevelNameMap.has(logLevel)) {
-        console.log(`FATAL: invalid log_level: ${logLevel}`);
-    }
 
     setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     mkDirPSync(getLogDir());
@@ -218,32 +189,39 @@ function cleanupUnitTest(): void {
     Container.restore(TrainingService);
     Container.restore(DataStore);
     Container.restore(Database);
-    Container.restore(ExperimentStartupInfo);
     Container.restore(ExperimentManager);
+    const logLevel: string = parseArg(['--log_level', '-ll']);
+    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
-let cachedipv4Address: string = '';
+let cachedIpv4Address: string | null = null;
+
 /**
- * Get IPv4 address of current machine
+ * Get IPv4 address of current machine.
  */
-function getIPV4Address(): string {
-    if (cachedipv4Address && cachedipv4Address.length > 0) {
-        return cachedipv4Address;
+async function getIPV4Address(): Promise<string> {
+    if (cachedIpv4Address !== null) {
+        return cachedIpv4Address;
     }
 
-    const networkInterfaces = os.networkInterfaces();
-    if (networkInterfaces.eth0) {
-        for (const item of networkInterfaces.eth0) {
-            if (item.family === 'IPv4') {
-                cachedipv4Address = item.address;
-                return cachedipv4Address;
-            }
+    // creates "udp connection" to a non-exist target, and get local address of the connection.
+    // since udp is connectionless, this does not send actual packets.
+    const socket = dgram.createSocket('udp4');
+    socket.connect(1, '192.0.2.0');
+    for (let i = 0; i < 10; i++) {  // wait the system to initialize "connection"
+        await timersPromises.setTimeout(1);
+        try {
+            cachedIpv4Address = socket.address().address;
+            socket.close();
+            return cachedIpv4Address;
+        } catch (error) {
+            /* retry */
         }
-    } else {
-        throw Error(`getIPV4Address() failed because os.networkInterfaces().eth0 is undefined. Please specify NNI manager IP in config.`);
     }
 
-    throw Error('getIPV4Address() failed because no valid IPv4 address found.')
+    cachedIpv4Address = socket.address().address;  // if it still fails, throw the error
+    socket.close();
+    return cachedIpv4Address;
 }
 
 /**
@@ -290,40 +268,6 @@ function countFilesRecursively(directory: string): Promise<number> {
     });
 }
 
-export function validateFileName(fileName: string): boolean {
-    const pattern: string = '^[a-z0-9A-Z._-]+$';
-    const validateResult = fileName.match(pattern);
-    if (validateResult) {
-        return true;
-    }
-    return false;
-}
-
-async function validateFileNameRecursively(directory: string): Promise<boolean> {
-    if (!fs.existsSync(directory)) {
-        throw Error(`Direcotory ${directory} doesn't exist`);
-    }
-
-    const fileNameArray: string[] = fs.readdirSync(directory);
-    let result = true;
-    for (const name of fileNameArray) {
-        const fullFilePath: string = path.join(directory, name);
-        try {
-            // validate file names and directory names
-            result = validateFileName(name);
-            if (fs.lstatSync(fullFilePath).isDirectory()) {
-                result = result && await validateFileNameRecursively(fullFilePath);
-            }
-            if (!result) {
-                return Promise.reject(new Error(`file name in ${fullFilePath} is not valid!`));
-            }
-        } catch (error) {
-            return Promise.reject(error);
-        }
-    }
-    return Promise.resolve(result);
-}
-
 /**
  * get the version of current package
  */
@@ -331,8 +275,8 @@ async function getVersion(): Promise<string> {
     const deferred: Deferred<string> = new Deferred<string>();
     import(path.join(__dirname, '..', 'package.json')).then((pkg) => {
         deferred.resolve(pkg.version);
-    }).catch((error) => {
-        deferred.reject(error);
+    }).catch(() => {
+        deferred.resolve('999.0.0-developing');
     });
     return deferred.promise;
 }
@@ -340,11 +284,9 @@ async function getVersion(): Promise<string> {
 /**
  * run command as ChildProcess
  */
-function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any): ChildProcess {
+function getTunerProc(command: string, stdio: StdioOptions, newCwd: string, newEnv: any, newShell: boolean = true, isDetached: boolean = false): ChildProcess {
     let cmd: string = command;
     let arg: string[] = [];
-    let newShell: boolean = true;
-    let isDetached: boolean = false;
     if (process.platform === "win32") {
         cmd = command.split(" ", 1)[0];
         arg = command.substr(cmd.length + 1).split(" ");
@@ -449,8 +391,50 @@ function withLockSync(func: Function, filePath: string, lockOpts: {[key: string]
     return result;
 }
 
+async function isPortOpen(host: string, port: number): Promise<boolean> {
+    return new Promise<boolean>((resolve, reject) => {
+        try{
+            const stream = net.createConnection(port, host);
+            const id = setTimeout(() => {
+                stream.destroy();
+                resolve(false);
+            }, 1000);
+
+            stream.on('connect', () => {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(true);
+            });
+
+            stream.on('error', () => {
+                clearTimeout(id);
+                stream.destroy();
+                resolve(false);
+            });
+        } catch (error) {
+            reject(error);
+        }
+    });
+}
+
+async function getFreePort(host: string, start: number, end: number): Promise<number> {
+    if (start > end) {
+        throw new Error(`no more free port`);
+    }
+    if (await isPortOpen(host, start)) {
+        return await getFreePort(host, start + 1, end);
+    } else {
+        return start;
+    }
+}
+
+export function importModule(modulePath: string): any {
+    module.paths.unshift(path.dirname(modulePath));
+    return require(path.basename(modulePath));
+}
+
 export {
-    countFilesRecursively, validateFileNameRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
-    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync,
+    countFilesRecursively, generateParamFileName, getMsgDispatcherCommand, getCheckpointDir, getExperimentsInfoPath,
+    getLogDir, getExperimentRootDir, getJobCancelStatus, getDefaultDatabaseDir, getIPV4Address, unixPathJoin, withLockSync, getFreePort, isPortOpen,
     mkDirP, mkDirPSync, delay, prepareUnitTest, parseArg, cleanupUnitTest, uniqueString, randomInt, randomSelect, getLogLevel, getVersion, getCmdPy, getTunerProc, isAlive, killPid, getNewLine
 };

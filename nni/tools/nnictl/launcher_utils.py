@@ -100,11 +100,18 @@ def parse_path(experiment_config, config_path):
     if experiment_config['trial'].get('paiConfigPath'):
         parse_relative_path(root_path, experiment_config['trial'], 'paiConfigPath')
 
+    # For frameworkcontroller a custom configuration path may be specified
+    if experiment_config.get('frameworkcontrollerConfig'):
+        if experiment_config['frameworkcontrollerConfig'].get('configPath'):
+            parse_relative_path(root_path, experiment_config['frameworkcontrollerConfig'], 'configPath')
+
 def set_default_values(experiment_config):
     if experiment_config.get('maxExecDuration') is None:
         experiment_config['maxExecDuration'] = '999d'
     if experiment_config.get('maxTrialNum') is None:
         experiment_config['maxTrialNum'] = 99999
+    if experiment_config.get('maxTrialDuration') is None:
+        experiment_config['maxTrialDuration'] = '999d'
     if experiment_config['trainingServicePlatform'] == 'remote' or \
        experiment_config['trainingServicePlatform'] == 'hybrid' and \
        'remote' in experiment_config['hybridConfig']['trainingServicePlatforms']:
@@ -119,4 +126,5 @@ def validate_all_content(experiment_config, config_path):
 
     NNIConfigSchema().validate(experiment_config)
 
-    experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])
+    if 'maxExecDuration' in experiment_config:
+        experiment_config['maxExecDuration'] = parse_time(experiment_config['maxExecDuration'])

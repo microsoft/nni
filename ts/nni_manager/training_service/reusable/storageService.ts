@@ -16,21 +16,21 @@ export abstract class StorageService {
     protected logger: Logger;
 
     protected abstract internalConfig(key: string, value: string): void;
-    protected abstract async internalRemove(remotePath: string, isDirectory: boolean, isRecursive: boolean): Promise<void>;
-    protected abstract async internalRename(remotePath: string, newName: string): Promise<void>;
-    protected abstract async internalMkdir(remotePath: string): Promise<void>;
-    protected abstract async internalCopy(sourcePath: string, targetPath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
-    protected abstract async internalExists(remotePath: string): Promise<boolean>;
-    protected abstract async internalRead(remotePath: string, offset: number, length: number): Promise<string>;
-    protected abstract async internalList(remotePath: string): Promise<string[]>;
-    protected abstract async internalAttach(remotePath: string, content: string): Promise<boolean>;
+    protected abstract internalRemove(remotePath: string, isDirectory: boolean, isRecursive: boolean): Promise<void>;
+    protected abstract internalRename(remotePath: string, newName: string): Promise<void>;
+    protected abstract internalMkdir(remotePath: string): Promise<void>;
+    protected abstract internalCopy(sourcePath: string, targetPath: string, isDirectory: boolean, isFromRemote: boolean, isToRemote: boolean): Promise<string>;
+    protected abstract internalExists(remotePath: string): Promise<boolean>;
+    protected abstract internalRead(remotePath: string, offset: number, length: number): Promise<string>;
+    protected abstract internalList(remotePath: string): Promise<string[]>;
+    protected abstract internalAttach(remotePath: string, content: string): Promise<boolean>;
     protected abstract internalIsRelativePath(path: string): boolean;
     protected abstract internalJoin(...paths: string[]): string;
     protected abstract internalDirname(...paths: string[]): string;
     protected abstract internalBasename(...paths: string[]): string;
 
     constructor() {
-        this.logger = getLogger();
+        this.logger = getLogger('StorageService');
     }
 
     public initialize(localRoot: string, remoteRoot: string): void {
