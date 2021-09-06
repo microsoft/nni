@@ -380,7 +380,7 @@ class QAT_Quantizer(Quantizer):
             module.register_buffer("scale", torch.tensor([1.0]))
             module.register_buffer('ema_decay', torch.tensor([0.99]))
             if "weight" in config.get("quant_types", []):
-                layer.module.register_buffer('weight_bits', torch.zeros(1))
+                module.register_buffer('weight_bits', torch.zeros(1))
             if "input" in config.get("quant_types", []):
                 module.register_buffer('input_bits', torch.zeros(1))
                 module.register_buffer('tracked_min_input', torch.zeros(1))
@@ -553,7 +553,7 @@ class QAT_Quantizer(Quantizer):
             tracked_min_output = update_ema(module.tracked_min_output, current_min,
                                             module.ema_decay)
             tracked_max_output = update_ema(module.tracked_max_output, current_max,
-                       module.ema_decay)
+                                            module.ema_decay)
             module.tracked_min_output.copy_(tracked_min_output)
             module.tracked_max_output.copy_(tracked_max_output)
 
