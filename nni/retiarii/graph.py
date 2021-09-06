@@ -507,6 +507,8 @@ class Node:
         If two models have nodes with same ID, they are semantically the same node.
     name
         Mnemonic name. It should have an one-to-one mapping with ID.
+    python_name
+        The name of torch.nn.Module, should have one-to-one mapping with items in python model
     label
         Optional. If two nodes have the same label, they are considered same by the mutator.
     operation
@@ -528,6 +530,7 @@ class Node:
         self.graph: Graph = graph
         self.id: int = node_id
         self.name: str = name or f'_generated_{node_id}'
+        self.python_name: Optional[str] = None
         # TODO: the operation is likely to be considered editable by end-user and it will be hard to debug
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
