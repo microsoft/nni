@@ -546,6 +546,23 @@ class QAT_Quantizer(Quantizer):
         out = self._dequantize(module, out)
         return out
 
+    def load_calibration_config(self, calibration_config):
+        for name, module in self.bound_model.named_modules():
+            if name not in calibration_config:
+                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+                    logger.warning(f"Can not find module {name}'s parameter in input config.")
+                continue
+            if hasattr(module, 'weight_bits'):
+                assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
+            if hasattr(module, 'input_bits'):
+                assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
+                module.tracked_min_input = calibration_config[name]['tracked_min_input']
+                module.tracked_max_input = calibration_config[name]['tracked_max_input']
+            if hasattr(module, 'output_bits'):
+                assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
+                module.tracked_min_output = calibration_config[name]['tracked_min_output']
+                module.tracked_max_output = calibration_config[name]['tracked_max_output']
+
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
         Export quantized model weights and calibration parameters(optional)
@@ -592,8 +609,8 @@ class QAT_Quantizer(Quantizer):
                         module.register_parameter('bias', actual_bias)
                     else:
                         setattr(module, 'bias', None)
-            if hasattr(module, 'input_bit'):
-                calibration_config[name]['input_bits'] = int(module.input_bit)
+            if hasattr(module, 'input_bits'):
+                calibration_config[name]['input_bits'] = int(module.input_bits)
                 calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
@@ -994,6 +1011,22 @@ class LsqQuantizer(Quantizer):
 
         inputs = self.quantize(inputs, module.input_scale, module.input_qmin, module.input_qmax)
         return inputs
+
+    def load_calibration_config(self, calibration_config):
+        for name, module in self.bound_model.named_modules():
+            if name not in calibration_config:
+                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+                    logger.warning(f"Can not find module {name}'s parameter in input config.")
+                continue
+            if hasattr(module, 'weight_bits'):
+                assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
+            if hasattr(module, 'input_bits'):
+                assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
+                module.input_scale = float(calibration_config[name]['tracked_max_input'] / module.input_qmax)
+
+            if hasattr(module, 'output_bits'):
+                assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
+                module.output_scale = float(calibration_config[name]['tracked_max_output'] / module.output_qmax)
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
