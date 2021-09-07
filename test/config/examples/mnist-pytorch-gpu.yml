@@ -16,6 +16,7 @@ trial:
   command: python3 mnist.py  --epochs 1 --batch_num 10
   gpuNum: 1
 
+useActiveGpu: true
 useAnnotation: false
 multiPhase: false
 multiThread: false
