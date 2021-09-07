@@ -10,7 +10,7 @@ tuner:
   name: Random
 trainingService:
   platform: local
-  useActiveGpu: true
+  useActiveGpu: false
 assessor:
   name: Medianstop
   classArgs:
