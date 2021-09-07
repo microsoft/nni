@@ -1,5 +1,7 @@
 import torch
 import nni.retiarii.nn.pytorch as nn
+import json
+from nni.retiarii.nn.pytorch import LayerChoice
 
 class VGG(nn.Module):
 
@@ -47,9 +49,6 @@ def make_layers(cfg, batch_norm=False):
 
 cfgs = {
     'A': [64, 'M', 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'B': [64, 64, 'M', 128, 128, 'M', 256, 256, 'M', 512, 512, 'M', 512, 512, 'M'],
-    'D': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 'M', 512, 512, 512, 'M', 512, 512, 512, 'M'],
-    'E': [64, 64, 'M', 128, 128, 'M', 256, 256, 256, 256, 'M', 512, 512, 512, 512, 'M', 512, 512, 512, 512, 'M'],
 }
 
 
@@ -70,30 +69,58 @@ def vgg11(pretrained=False, progress=True, **kwargs):
 
 
 
+class TestLayerChoice(nn.Module):
+    def __init__(self):
+        super().__init__()
+        feature = LayerChoice([
+                nn.Conv2d(3, 1, kernel_size=3, padding=1),
+                nn.MaxPool2d(kernel_size=2, stride=2),
+                nn.BatchNorm2d(3),
+            ])
+        
+        self.features = nn.Sequential(feature)
+
+    def forward(self, x):
+        x = self.features(x)
+        return x
+
+    def _initialize_weights(self):
+        pass
+
+
+class Test(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = nn.Conv2d(3, 3, kernel_size=3, padding=1)
+        
+
+    def forward(self, x):
+        x = self.conv(x)
+        return torch.nn.functional.relu(x)
+
+    def _initialize_weights(self):
+        pass
+
+
 if __name__ == '__main__':
-    model = vgg11()
+    # model = vgg11()
+    # model = TestLayerChoice()
+    model = Test()
 
     model_script = torch.jit.script(model)
-    print(model_script)
-
-
-    sm_graph = model_script.graph
-    
-    
     def dfs(model_script, name):
         print(name)
         for k in model_script._modules.keys():
-            
             dfs(model_script._modules[k], name + "." + k)
-            
 
+    print("#----------#")  
+    print(model_script)
+    print(model_script.graph)
     dfs(model_script, model_script.original_name)
+    print("#----------#")  
 
-    from nn_meter.ir_converters.torch_converter import NNIBasedTorchConverter
-    input_shape=(1, 3, 224, 224)
+    input_shape=(1, 3, 5, 5)
     args = torch.randn(*input_shape)
-
-    from nni.retiarii.converter.graph_gen import GraphConverterWithShape
 
     from nni.retiarii.converter import convert_to_graph
     from nni.retiarii.converter.graph_gen import GraphConverterWithShape
@@ -102,7 +129,10 @@ if __name__ == '__main__':
     script_module = torch.jit.script(model)
     converter = GraphConverterWithShape()
     ir_model = convert_to_graph(
-        script_module, model, converter=converter, dummy_input=args
-    )
+        script_module, model, converter=converter, dummy_input=args)
 
-    
+    for k in ir_model.graphs:
+        print(f"##### Graph: {k}, {ir_model.graphs[k].python_name}")
+        nodes = ir_model.graphs[k].hidden_nodes
+        for item in ir_model.graphs[k].hidden_nodes:
+            print(f'{item.name}, {item.python_name}')
