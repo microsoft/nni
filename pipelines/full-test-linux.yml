@@ -51,7 +51,7 @@ jobs:
 
   - script: |
       cd test
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local --cases mnist-pytorch-local-gpu
     displayName: Integration test
     continueOnError: true
 
