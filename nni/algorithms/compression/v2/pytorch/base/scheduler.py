@@ -97,7 +97,7 @@ class Task:
 
 class TaskResult:
     def __init__(self, task_id: int, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
-                 old_structure_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
+                 pruner_generated_masks: Dict[str, Dict[str, Tensor]], score: Optional[float]) -> None:
         """
         Parameters
         ----------
@@ -110,17 +110,17 @@ class TaskResult:
         compact_model_masks
             The masks on the compact model. If the compact model has speed up process during pruning,
             the `compact_model_masks` is always an empty dict. If the compact model do not speed up,
-            the `compact_model_masks` is same as `old_structure_masks`.
-        old_structure_masks
-            The masks that can apply on the model before pruning. It is always the output of `pruner.compress()`.
-            TODO: If the compact model has speed up, `old_structure_masks` should be the auto infer masks during speed up.
+            the `compact_model_masks` is same as `pruner_generated_masks`.
+        pruner_generated_masks
+            The masks that can apply on the before pruning model. It is always the output of `pruner.compress()`.
+            TODO: If the compact model has speed up, the auto infer masks maybe also need.
         score
             The score of the pruning effect. i.e., the accuracy or latency after pruning.
         """
         self.task_id = task_id
         self.compact_model = compact_model
         self.compact_model_masks = compact_model_masks
-        self.old_structure_masks = old_structure_masks
+        self.pruner_generated_masks = pruner_generated_masks
         self.score = score
 
 

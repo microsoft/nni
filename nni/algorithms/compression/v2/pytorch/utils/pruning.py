@@ -90,7 +90,7 @@ def compute_sparsity_compact2origin(origin_model: Module, compact_model: Module,
     """
     Compare origin model and compact model, return the sparsity of each group mentioned in config list.
     A group means all layer mentioned in one config.
-    i.e., a linear named 'linear1' and its weight size is [100, 100] in origin model, but in compact model,
+    e.g., a linear named 'linear1' and its weight size is [100, 100] in origin model, but in compact model,
     the layer weight size with same layer name is [100, 50],
     then this function will return [{'op_names': 'linear1', 'total_sparsity': 0.5}].
     """
@@ -149,12 +149,19 @@ def compute_sparsity_mask2compact(compact_model: Module, compact_model_masks: Di
 def compute_sparsity(origin_model: Module, compact_model: Module, compact_model_masks: Dict[str, Dict[str, Tensor]],
                      config_list: List[Dict]) -> Tuple[List[Dict], List[Dict], List[Dict]]:
     """
-    The current model means the compact model applied the masks. The compact model is the origin model after speed up.
+    This function computes how much the origin model has been compressed in the current state.
+    The current state means `compact_model` + `compact_model_masks`
+    (i.e., `compact_model_masks` applied on `compact_model`).
+    The compact model is the origin model after pruning,
+    and it may have different structure with origin_model cause of speed up.
 
     Returns
     -------
     Tuple[List[Dict], List[Dict], List[Dict]]
         (current2origin_sparsity, compact2origin_sparsity, mask2compact_sparsity).
+        current2origin_sparsity is how much the origin model has been compressed in the current state.
+        compact2origin_sparsity is the sparsity obtained by comparing the structure of origin model and compact model.
+        mask2compact_sparsity is the sparsity computed by count the zero value in the mask.
     """
     compact2origin_sparsity = compute_sparsity_compact2origin(origin_model, compact_model, config_list)
     mask2compact_sparsity = compute_sparsity_mask2compact(compact_model, compact_model_masks, config_list)

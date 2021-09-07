@@ -128,3 +128,41 @@ class Pruner(Compressor):
                 sum_idx.remove(dim)
                 index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=False).tolist()
             _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
+
+    def export_model(self, model_path: str, mask_path: Optional[str] = None):
+        """
+        Export pruned model weights, masks and onnx model(optional)
+
+        Parameters
+        ----------
+        model_path
+            Path to save pruned model state_dict. The weight and bias have already multiplied the masks.
+        mask_path
+            Path to save mask dict.
+        """
+        assert self.bound_model is not None, 'The bound model reference has been cleared.'
+        assert model_path is not None, 'model_path must be specified.'
+        mask_dict = {}
+        self._unwrap_model()
+
+        for name, wrapper in self.get_modules_wrapper().items():
+            weight_mask = wrapper.weight_mask
+            bias_mask = wrapper.bias_mask
+            if weight_mask is not None:
+                mask_sum = weight_mask.sum().item()
+                mask_num = weight_mask.numel()
+                _logger.debug('Layer: %s  Sparsity: %.4f', name, 1 - mask_sum / mask_num)
+                wrapper.module.weight.data = wrapper.module.weight.data.mul(weight_mask)
+            if bias_mask is not None:
+                wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
+            # save mask to dict
+            mask_dict[name] = {"weight": weight_mask, "bias": bias_mask}
+
+        torch.save(self.bound_model.state_dict(), model_path)
+        _logger.info('Model state_dict saved to %s', model_path)
+
+        if mask_path is not None:
+            torch.save(mask_dict, mask_path)
+            _logger.info('Mask dict saved to %s', mask_path)
+
+        self._wrap_model()

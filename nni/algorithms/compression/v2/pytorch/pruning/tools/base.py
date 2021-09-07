@@ -410,6 +410,10 @@ class SparsityAllocator:
 
     def _compress_mask(self, mask: Tensor) -> Tensor:
         """
+        This function will reduce the mask with `self.dim` and `self.block_sparse_size`.
+        e.g., a mask tensor with size [50, 60, 70], self.dim is (0, 1), self.block_sparse_size is [10, 10].
+        Then, the reduced mask size is [50 / 10, 60 / 10] => [5, 6].
+
         Parameters
         ----------
         name
@@ -420,7 +424,7 @@ class SparsityAllocator:
         Returns
         -------
         Tensor
-            Reduce the mask with `self.dim` and `self.block_sparse_size`.
+            Reduced mask.
         """
         if self.dim is None or len(mask.size()) == 1:
             mask = mask.clone()
@@ -472,7 +476,7 @@ class TaskGenerator:
         self._intermidiate_result_dir = Path(self._log_dir_root, 'intermidiate_result')
         self._intermidiate_result_dir.mkdir(parents=True, exist_ok=True)
 
-        # save origin data in {log_dir}/intermidiate_model
+        # save origin data in {log_dir}/origin
         self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
         self._origin_masks_path = Path(self._log_dir_root, 'origin', 'masks.pth')
         self._origin_config_list_path = Path(self._log_dir_root, 'origin', 'config_list.json')

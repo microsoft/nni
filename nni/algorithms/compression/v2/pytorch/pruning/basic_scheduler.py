@@ -2,11 +2,8 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-import os
-from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional
 
-import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -56,19 +53,16 @@ class PruningScheduler(BasePruningScheduler):
         # pruning model
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
-        compact_model, old_structure_masks = self.pruner.compress()
-        compact_model_masks = deepcopy(old_structure_masks)
+        compact_model, pruner_generated_masks = self.pruner.compress()
+        compact_model_masks = deepcopy(pruner_generated_masks)
 
         # show the pruning effect
         self.pruner.show_pruned_weights()
         self.pruner._unwrap_model()
 
         # speed up
-        # TODO: speed up only support mask file path as input, maybe we need also support masks directly.
         if self.speed_up:
-            torch.save(old_structure_masks, Path('./temp_masks.pth'))
-            ModelSpeedup(compact_model, self.dummy_input, Path('./temp_masks.pth')).speedup_model()
-            os.remove('./temp_masks.pth')
+            ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
 
         # finetune
@@ -86,7 +80,7 @@ class PruningScheduler(BasePruningScheduler):
         # clear model references
         self.pruner.clear_model_references()
 
-        return TaskResult(task.task_id, compact_model, compact_model_masks, old_structure_masks, score)
+        return TaskResult(task.task_id, compact_model, compact_model_masks, pruner_generated_masks, score)
 
     def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
         return self.task_generator.get_best_result()
