@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus  } from 'common/trainingService';
 
 /**
  * KubeflowTrialJobDetail

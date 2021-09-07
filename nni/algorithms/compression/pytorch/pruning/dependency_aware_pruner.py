@@ -44,9 +44,8 @@ class DependencyAwarePruner(Pruner):
             self._unwrap_model()
             self.graph = TorchModuleGraph(model, dummy_input)
             self._wrap_model()
-            self.channel_depen = ChannelDependency(
-                traced_model=self.graph.trace)
-            self.group_depen = GroupDependency(traced_model=self.graph.trace)
+            self.channel_depen = ChannelDependency(model, dummy_input, traced_model=self.graph.trace)
+            self.group_depen = GroupDependency(model, dummy_input, traced_model=self.graph.trace)
             self.channel_depen = self.channel_depen.dependency_sets
             self.channel_depen = {
                 name: sets for sets in self.channel_depen for name in sets}

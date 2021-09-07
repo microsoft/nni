@@ -174,10 +174,18 @@ def prune_model_l1(model):
 
 
 def generate_random_sparsity(model):
+    _start = 0.5
+    _end = 0.99
+    if isinstance(model, models.mobilenet.MobileNetV2):
+        # mobilenet models have great propagation characteristics
+        # so we use smaller sparsity ratio to avoid pruning the whole
+        # layer out
+        _start = 0.01
+        _end = 0.3
     cfg_list = []
     for name, module in model.named_modules():
         if isinstance(module, nn.Conv2d):
-            sparsity = np.random.uniform(0.5, 0.99)
+            sparsity = np.random.uniform(_start, _end)
             cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
                              'sparsity': sparsity})
     return cfg_list
@@ -187,11 +195,19 @@ def generate_random_sparsity_v2(model):
     """
     Only select 50% layers to prune.
     """
+    _start = 0.5
+    _end = 0.99
+    if isinstance(model, models.mobilenet.MobileNetV2):
+        # mobilenet models have great propagation characteristics
+        # so we use smaller sparsity ratio to avoid pruning the whole
+        # layer out
+        _start = 0.01
+        _end = 0.3
     cfg_list = []
     for name, module in model.named_modules():
         if isinstance(module, nn.Conv2d):
             if np.random.uniform(0, 1.0) > 0.5:
-                sparsity = np.random.uniform(0.5, 0.99)
+                sparsity = np.random.uniform(_start, _end)
                 cfg_list.append({'op_types': ['Conv2d'], 'op_names': [name],
                                  'sparsity': sparsity})
     return cfg_list

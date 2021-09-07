@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from '../../common/trainingService';
-import { RemoteMachineConfig } from '../../common/experimentConfig';
+import { TrialJobApplicationForm, TrialJobDetail, TrialJobStatus } from 'common/trainingService';
+import { RemoteMachineConfig } from 'common/experimentConfig';
 import { GPUInfo, GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { ShellExecutor } from './shellExecutor';
 
