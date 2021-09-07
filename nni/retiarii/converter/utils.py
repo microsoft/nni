@@ -14,8 +14,18 @@ def build_full_name(prefix, name, seq=None):
         return '{}__{}{}'.format(prefix, name, str(seq))
 
 
+def build_python_name(prefix, name):
+    if isinstance(name, list):
+        name = '.'.join(name)
+    return '{}.{}'.format(prefix, name)
+
+
 def build_cand_name(name, label):
     return f'layerchoice_{label}_{name}'
+
+
+def build_cand_python_name(name, label):
+    return f'layerchoice.{label}.{name}'
 
 
 def _convert_name(name: str) -> str:

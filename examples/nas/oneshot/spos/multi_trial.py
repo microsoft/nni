@@ -130,7 +130,7 @@ class ShuffleNetV2(nn.Module):
 class LatencyFilter:
     def __init__(self, threshold, predictor, predictor_version=None, reverse=False):
         """
-        Filter the models according to predcted latency.
+        Filter the models according to predicted latency.
 
         Parameters
         ----------
@@ -140,7 +140,7 @@ class LatencyFilter:
             determine the targeted device
         reverse: `bool`
             if reverse is `False`, then the model returns `True` when `latency < threshold`,
-            else otherwisse
+            else otherwise
         """
         self.predictors = load_latency_predictor(predictor, predictor_version)
         self.threshold = threshold

@@ -106,6 +106,7 @@ class Model:
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
         self.python_class: Optional[Type] = None
+        self.python_name: Optional[str] = None
         self.python_init_params: Optional[Dict[str, Any]] = None
 
         self.status: ModelStatus = ModelStatus.Mutating
@@ -122,7 +123,7 @@ class Model:
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
             f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics}, ' + \
-            f'python_class={self.python_class})'
+            f'python_class={self.python_class}, python_name={self.python_name})'
 
     @property
     def root_graph(self) -> 'Graph':
@@ -211,6 +212,26 @@ class Model:
             return matched_nodes[0]
         else:
             return None
+    
+    def get_node_by_python_name(self, python_name: str) -> 'Node':
+        """
+        Traverse all the nodes to find the matched node with the given python_name.
+        """
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = graph.get_nodes_by_python_name(python_name)
+            matched_nodes.extend(nodes)
+        # assert len(matched_nodes) <= 1
+        if matched_nodes:
+            return matched_nodes[0]
+        else:
+            return None
+    
+    def set_python_name(self, python_name: str):
+        """
+        Set python name
+        """
+        self.python_name = python_name
 
 
 class ModelStatus(Enum):
@@ -275,6 +296,7 @@ class Graph:
         self.model: Model = model
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
+        self.python_name: Optional[str] = None
 
         self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _IOPseudoOperation('_inputs'), _internal=True)
         self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _IOPseudoOperation('_outputs'), _internal=True)
@@ -341,11 +363,24 @@ class Graph:
     def del_edge(self, edge: 'Edge') -> None:
         self.edges.remove(edge)
 
+    def set_python_name(self, python_name: str):
+        """
+        Set python name
+        """
+        self.python_name = python_name
+        
     def get_node_by_name(self, name: str) -> Optional['Node']:
         """
         Returns the node which has specified name; or returns `None` if no node has this name.
         """
         found = [node for node in self.nodes if node.name == name]
+        return found[0] if found else None
+    
+    def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
+        """
+        Returns the node which has specified python_name; or returns `None` if no node has this python_name.
+        """
+        found = [node for node in self.nodes if node.python_name == python_name]
         return found[0] if found else None
 
     def get_nodes_by_type(self, operation_type: str) -> List['Node']:
@@ -366,6 +401,9 @@ class Graph:
 
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
+    
+    def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
+        return [node for node in self.nodes if node.python_name == python_name]
 
     def topo_sort(self) -> List['Node']:
         node_to_fanin = {}
@@ -537,7 +575,7 @@ class Node:
         self.label: Optional[str] = None
 
     def __repr__(self):
-        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
+        return f'Node(id={self.id}, name={self.name}, python_name={self.python_name}, label={self.label}, operation={self.operation})'
 
     @property
     def predecessors(self) -> List['Node']:
@@ -620,7 +658,15 @@ class Node:
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:
             ret['label'] = self.label
+        if self.python_name is not None:
+            ret['python_name'] = self.python_name
         return ret
+    
+    def set_python_name(self, python_name: str):
+        """
+        Set python name
+        """
+        self.python_name = python_name
 
 
 class Edge:
