@@ -15,8 +15,11 @@ trial:
   codeDir: ../../../examples/trials/mnist-pytorch
   command: python3 mnist.py  --epochs 1 --batch_num 10
   gpuNum: 1
+localConfig:
+  useActiveGpu: true
+  #gpuIndices: "0"
+  maxTrialNumPerGpu: 2
 
-useActiveGpu: false
 useAnnotation: false
 multiPhase: false
 multiThread: false
