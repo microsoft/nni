@@ -77,7 +77,7 @@ testCases:
   trainingService: local
 
 - name: mnist-pytorch-local-gpu
-  configFile: test/config/examples/mnist-pytorch-gpu.yml
+  configFile: test/config/examples/mnist-pytorch-v2-gpu.yml
   # download data first, to prevent concurrent issue.
   launchCommand: python3 ../examples/trials/mnist-pytorch/mnist.py --epochs 1 --batch_num 0 --data_dir ../examples/trials/mnist-pytorch/data && nnictl create --config $configFile --debug
   trainingService: local
