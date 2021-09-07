@@ -770,7 +770,7 @@ class Quantizer(Compressor):
     def load_calibration_config(self, calibration_config):
         """
         This function aims to help quantizer set quantization parameters by
-        loading from a calibration_config which is exported by other quantizer 
+        loading from a calibration_config which is exported by other quantizer
         or itself. The main usage of this function is helping quantize aware training
         quantizer set appropriate initial parameters so that the training process will
         be much more flexible and converges quickly. What's more, it can also enable
@@ -780,7 +780,7 @@ class Quantizer(Compressor):
         ----------
         calibration_config : dict
             dict which saves quantization parameters, quantizer can export itself
-            calibration config. 
+            calibration config.
             eg, calibration_config = quantizer.export_model(model_path, calibration_path)
         """
         raise NotImplementedError('Quantizer must overload export_model()')
