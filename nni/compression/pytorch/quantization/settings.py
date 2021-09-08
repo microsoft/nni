@@ -34,7 +34,7 @@ class TensorQuantSetting(object):
             self._fields[name] = val
 
     def __getattr__(self, name):
-        if name not in self._fields:
+        if name == "_fields" or name not in self._fields:
             raise AttributeError("Cannot find {} in TensorQuantSetting!".format(name))
         return self._fields[name]
 
@@ -74,11 +74,9 @@ class LayerQuantSetting(object):
             self._extra_layer_setting[name] = val
 
     def __getattr__(self, name):
-
-        if name in self._extra_layer_setting:
-            return self._extra_layer_setting[name]
-        else:
-            raise AttributeError("Cannot find {} in TensorQuantSetting!".format(name))
+        if name == "_extra_layer_setting" or name not in self._extra_layer_setting:
+            raise AttributeError("Cannot find {} in LayerQuantSetting!".format(name))
+        return self._extra_layer_setting[name]
 
     @staticmethod
     def parse_optional_config(config, quant_type, target):
@@ -86,12 +84,12 @@ class LayerQuantSetting(object):
             if not config.get(target):
                 return None
 
-            if isinstance(config[target], str):
-                return config[target]
-            else:
+            if isinstance(config[target], dict):
                 return config[target].get(quant_type)
+            else:
+                return config[target]
 
-        default_val = quant_default_settings[quant_type][target]
+        default_val = quant_default_settings[quant_type].get(target, None)
         config_val = get_config(config, quant_type, target)
         val = config_val if config_val else default_val
         return val
