@@ -818,12 +818,10 @@ class GraphConverterWithShape(GraphConverter):
                         graph.del_edge(out_edge)
                         for output_node_edge in node_graph.output_node.incoming_edges:
                             if output_node_edge.head_slot == out_edge.tail_slot:
-                                try:
-                                    graph.add_edge(
-                                        head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
-                                        tail=(out_edge.tail, out_edge.tail_slot))
-                                except:
-                                    import pdb; pdb.set_trace()
+                                graph.add_edge(
+                                    head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
+                                    tail=(out_edge.tail, out_edge.tail_slot))
+
 
                     for edge in node_graph.edges:
                         if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
