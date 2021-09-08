@@ -357,8 +357,10 @@ class GraphConverter:
                     # example: {"name": "conv2", "operation": {"type": "shared", "parameters": {"reference": "conv1"}}}
                     self.global_seq += 1
                     shared_node_name = build_full_name(submodule_full_name, '', self.global_seq)
+                    shared_node_python_name = build_python_name(submodule_python_name, self.global_seq)
                     shared_type_operation = Operation.new('shared', {'reference': submodule_full_name})
                     subcell = ir_graph.add_node(shared_node_name, shared_type_operation)
+                    subcell.set_python_name(shared_node_python_name)
                 else:
                     # this module is processed for the first time, build cell for it
                     if subgraph is None:
@@ -445,6 +447,8 @@ class GraphConverter:
                 self.global_seq += 1
                 func_node = ir_graph.add_node(build_full_name(module_name, func_name, self.global_seq),
                                               '{}.{}'.format(func_type_str, func_name))
+                func_python_name = build_python_name(module_python_name, func_name)
+                func_node.set_python_name(func_python_name)
                 node_index[node] = func_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, func_node, output_remap, ignore_first=True)
             elif node.kind() == 'prim::Constant':
@@ -486,7 +490,10 @@ class GraphConverter:
                 # handle aten::XXX
                 self.global_seq += 1
                 aten_op_name = node.kind().replace('::', '__')
+                aten_op_python_name = node.kind().replace('aten::', '')
                 aten_node = ir_graph.add_node(build_full_name(module_name, aten_op_name, self.global_seq), node.kind())
+                aten_python_name = build_python_name(module_python_name, aten_op_python_name)
+                aten_node.set_python_name(aten_python_name)
                 node_index[node] = aten_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             else:
