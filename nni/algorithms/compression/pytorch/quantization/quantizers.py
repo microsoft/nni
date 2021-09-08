@@ -401,6 +401,7 @@ class QAT_Quantizer(Quantizer):
         for layer, config in modules_to_compress:
             module = layer.module
             name = layer.name
+            # TODO: may relax this limitation?
             assert name in self.all_shapes, "Could not found shapes for layer {}".format(name)
             input_shape, output_shape = self.all_shapes[name]
             layer_quant_setting = LayerQuantSetting(config)
@@ -434,8 +435,9 @@ class QAT_Quantizer(Quantizer):
         delete redundant parameters in quantize module
         """
         del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_output', 'tracked_max_output',
-                         'tracked_min_input', 'tracked_max_input', 'scale', 'zero_point', 'weight_bits',
-                         'output_bits', 'BN_FOLD_TAG', 'input_bits']
+                         'tracked_min_input', 'tracked_max_input', 'weight_bits', 'output_bits', 'BN_FOLD_TAG',
+                         'input_bits', 'weight_scale', 'weight_zero_point', 'input_scale', 'input_zero_point',
+                         'output_scale', 'output_zero_point', 'layer_quant_setting']
         for attr in del_attr_list:
             if hasattr(module, attr):
                 delattr(module, attr)
