@@ -602,6 +602,8 @@ class Quantizer(Compressor):
     """
 
     def __init__(self, model, config_list, optimizer=None, dummy_input=None):
+        if isinstance(model, torch.nn.DataParallel):
+            model = model.module
         self.identity_wrappers = []
         self.conv_bn_patterns = {}
         self.find_conv_bn_patterns(model, dummy_input)
@@ -892,12 +894,21 @@ class QuantGrad(torch.autograd.Function):
             zero_point = wrapper.module.zero_point
         else:
             scale, zero_point = None, None
-        ctx.save_for_backward(tensor, torch.Tensor([quant_type]), scale, zero_point, qmin, qmax)
+        ctx.save_for_backward(tensor)
+        # Only tensors have gradients flowing back needs to be saved by save_for_backward.
+        # Others should directly assign to ctx.
+        ctx.scale = scale
+        ctx.zero_point = zero_point
+        ctx.quant_type = quant_type
+        ctx.qmin, ctx.qmax = qmin, qmax
         return output
 
     @classmethod
     def backward(cls, ctx, grad_output):
-        tensor, quant_type, scale, zero_point, qmin, qmax = ctx.saved_variables
+        tensor = ctx.saved_variables[0]
+        scale, zero_point = ctx.scale, ctx.zero_point
+        qmin, qmax = ctx.qmin, ctx.qmax
+        quant_type = ctx.quant_type
         output = cls.quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax)
         return output, None, None, None
 
