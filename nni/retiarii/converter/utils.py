@@ -25,6 +25,7 @@ def build_cand_name(name, label):
 
 
 def build_cand_python_name(name, label):
+    label = label.replace('_mutation_', 'mutation')
     return f'layerchoice.{label}.{name}'
 
 

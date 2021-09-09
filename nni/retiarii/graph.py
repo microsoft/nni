@@ -454,9 +454,11 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
+        new_graph.set_python_name(self.python_name)
 
         for node in self.hidden_nodes:
             new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
+            new_node.set_python_name(node.python_name)
             new_node.update_label(node.label)
             new_node._register()
 
@@ -477,11 +479,13 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
+        new_graph.set_python_name(self.python_name)
 
         id_to_new_node = {}  # old node ID -> new node object
 
         for old_node in self.hidden_nodes:
             new_node = Node(new_graph, uid(), None, old_node.operation, _internal=True)._register()
+            new_node.set_python_name(old_node.python_name)
             new_node.update_label(old_node.label)
             id_to_new_node[old_node.id] = new_node
 
