@@ -37,6 +37,7 @@ jobs:
       echo "TODO: TypeScript UT"
     displayName: Unit test
     continueOnError: true
+
   - script: |
       cd test
       python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
