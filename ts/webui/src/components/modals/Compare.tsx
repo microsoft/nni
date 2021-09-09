@@ -55,6 +55,7 @@ interface CompareProps {
     trials: TableObj[];
     title: string;
     showDetails: boolean;
+    intermediateKeyList?: string[];
     onHideDialog: () => void;
     changeSelectTrialIds?: () => void;
 }
@@ -68,6 +69,7 @@ class Compare extends React.Component<CompareProps, CompareState> {
         super(props);
 
         this.state = {
+            // 这里一进来默认了trial intermediate是有default Key的，但实际人家可以没有这个值
             intermediateKey: 'default'
         };
     }
@@ -226,9 +228,9 @@ class Compare extends React.Component<CompareProps, CompareState> {
     };
 
     render(): React.ReactNode {
-        const { trials, title, showDetails } = this.props;
+        const { trials, title, showDetails, intermediateKeyList } = this.props;
         const { intermediateKey } = this.state;
-        let intermediateAllKeysList: string[] = [];
+        const intermediateAllKeysList: string[] = intermediateKeyList !== undefined ? intermediateKeyList : [];
 
         const flatten = (m: Map<SingleAxis, any>): Map<string, any> => {
             return new Map(Array.from(m).map(([key, value]) => [key.baseName, value]));
@@ -243,19 +245,19 @@ class Compare extends React.Component<CompareProps, CompareState> {
             intermediates: _parseIntermediates(trial, intermediateKey)
         }));
 
-        if (trials[0].intermediates !== undefined && trials[0].intermediates[0]) {
-            const parsedMetric = parseMetrics(trials[0].intermediates[0].data);
-            if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
-                const allIntermediateKeys: string[] = [];
-                // just add type=number keys
-                for (const key in parsedMetric) {
-                    if (typeof parsedMetric[key] === 'number') {
-                        allIntermediateKeys.push(key);
-                    }
-                }
-                intermediateAllKeysList = allIntermediateKeys;
-            }
-        }
+        // if (trials[0].intermediates !== undefined && trials[0].intermediates[0]) {
+        //     const parsedMetric = parseMetrics(trials[0].intermediates[0].data);
+        //     if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+        //         const allIntermediateKeys: string[] = [];
+        //         // just add type=number keys
+        //         for (const key in parsedMetric) {
+        //             if (typeof parsedMetric[key] === 'number') {
+        //                 allIntermediateKeys.push(key);
+        //             }
+        //         }
+        //         intermediateAllKeysList = allIntermediateKeys;
+        //     }
+        // }
 
         return (
             <Modal

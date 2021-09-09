@@ -12,7 +12,7 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
-import { convertDuration, formatTimestamp, copyAndSort, parametersType } from '../../static/function';
+import { convertDuration, formatTimestamp, copyAndSort, parametersType, parseMetrics } from '../../static/function';
 import { TableObj, SortInfo, SearchItems } from '../../static/interface';
 import { getTrialsBySearchFilters } from './search/searchFunction';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
@@ -469,6 +469,25 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }));
     };
 
+    private ccc = (): string[] => {
+        const { intermediateDialogTrial } = this.state;
+        let intermediateAllKeysList: string[] = [];
+        if (intermediateDialogTrial![0].intermediates !== undefined && intermediateDialogTrial![0].intermediates[0]) {
+            const parsedMetric = parseMetrics(intermediateDialogTrial![0].intermediates[0].data);
+            if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+                const allIntermediateKeys: string[] = [];
+                // just add type=number keys
+                for (const key in parsedMetric) {
+                    if (typeof parsedMetric[key] === 'number') {
+                        allIntermediateKeys.push(key);
+                    }
+                }
+                intermediateAllKeysList = allIntermediateKeys;
+            }
+        }
+        return intermediateAllKeysList;
+    };
+
     componentDidUpdate(prevProps: TableListProps): void {
         if (this.props.tableSource !== prevProps.tableSource) {
             this._updateTableSource();
@@ -564,6 +583,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title='Intermediate results'
                         showDetails={false}
                         trials={[intermediateDialogTrial]}
+                        intermediateKeyList={this.ccc()}
                         onHideDialog={(): void => {
                             this.setState({ intermediateDialogTrial: undefined });
                         }}
