@@ -547,21 +547,26 @@ class QAT_Quantizer(Quantizer):
         return out
 
     def load_calibration_config(self, calibration_config):
-        for name, module in self.bound_model.named_modules():
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            name, module = layer.name, layer.module
             if name not in calibration_config:
                 if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if hasattr(module, 'weight_bits'):
-                assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
+                weight_bits = get_bits_length(config, 'weight')
+                assert calibration_config[name]['weight_bits'] == weight_bits, f"weight bits of module {name} fail to match"
             if hasattr(module, 'input_bits'):
-                assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
-                module.tracked_min_input = calibration_config[name]['tracked_min_input']
-                module.tracked_max_input = calibration_config[name]['tracked_max_input']
+                input_bits = get_bits_length(config, 'input')
+                assert calibration_config[name]['input_bits'] == input_bits, f"input bits of module {name} fail to match"
+                module.tracked_min_input.data = torch.Tensor([calibration_config[name]['tracked_min_input']])
+                module.tracked_max_input.data = torch.Tensor([calibration_config[name]['tracked_max_input']])
             if hasattr(module, 'output_bits'):
-                assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
-                module.tracked_min_output = calibration_config[name]['tracked_min_output']
-                module.tracked_max_output = calibration_config[name]['tracked_max_output']
+                output_bits = get_bits_length(config, 'output')
+                assert calibration_config[name]['output_bits'] == output_bits, f"output bits of module {name} fail to match"
+                module.tracked_min_output.data = torch.Tensor([calibration_config[name]['tracked_min_output']])
+                module.tracked_max_output.data = torch.Tensor([calibration_config[name]['tracked_max_output']])
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
@@ -1013,20 +1018,25 @@ class LsqQuantizer(Quantizer):
         return inputs
 
     def load_calibration_config(self, calibration_config):
-        for name, module in self.bound_model.named_modules():
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, config in modules_to_compress:
+            name, module = layer.name, layer.module
             if name not in calibration_config:
                 if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if hasattr(module, 'weight_bits'):
-                assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
+                weight_bits = get_bits_length(config, 'weight')
+                assert calibration_config[name]['weight_bits'] == weight_bits, f"weight bits of module {name} fail to match"
             if hasattr(module, 'input_bits'):
-                assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
-                module.input_scale = float(calibration_config[name]['tracked_max_input'] / module.input_qmax)
+                input_bits = get_bits_length(config, 'input')
+                assert calibration_config[name]['input_bits'] == input_bits, f"input bits of module {name} fail to match"
+                module.input_scale.data = torch.Tensor([float(calibration_config[name]['tracked_max_input'] / module.input_qmax)])
 
             if hasattr(module, 'output_bits'):
-                assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
-                module.output_scale = float(calibration_config[name]['tracked_max_output'] / module.output_qmax)
+                output_bits = get_bits_length(config, 'output')
+                assert calibration_config[name]['output_bits'] == output_bits, f"output bits of module {name} fail to match"
+                module.output_scale.data = torch.Tensor([float(calibration_config[name]['tracked_max_output'] / module.output_qmax)])
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
