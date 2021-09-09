@@ -31,14 +31,14 @@ jobs:
       nnictl algo register --meta meta_file.yml
     displayName: Install example customized tuner
 
-#  - script: |
-#      cd test
-#      python -m pytest ut
-#      echo "TODO: TypeScript UT"
-#    displayName: Unit test
-#    continueOnError: true
+  - script: |
+      cd test
+      python -m pytest ut
+      echo "TODO: TypeScript UT"
+    displayName: Unit test
+    continueOnError: true
 
   - script: |
       cd test
-      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local --cases mnist-pytorch-local-gpu
+      python nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts local
     displayName: Integration test

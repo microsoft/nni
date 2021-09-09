@@ -17,7 +17,6 @@ trial:
   gpuNum: 1
 localConfig:
   useActiveGpu: true
-  #gpuIndices: "0"
   maxTrialNumPerGpu: 2
 
 useAnnotation: false
