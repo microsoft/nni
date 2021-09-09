@@ -16,6 +16,7 @@ _logger = logging.getLogger(__name__)
 
 
 class Task:
+    # NOTE: If we want to support multi-thread, this part need to refactor, maybe use file and lock to sync.
     _reference_counter = {}
 
     def __init__(self, task_id: int, model_path: str, masks_path: str, config_list_path: str) -> None:
