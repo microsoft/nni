@@ -26,6 +26,14 @@ from zipfile import ZipFile
 node_version = 'v16.3.0'
 yarn_version = 'v1.22.10'
 
+def _get_jupyter_lab_version():
+    try:
+        import jupyterlab
+        return jupyterlab.__version__
+    except ImportError:
+        return '3.x'
+
+jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
 
 def build(release):
     """
@@ -40,11 +48,13 @@ def build(release):
     if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
     prepare_nni_node()
+    update_package()
     compile_ts(release)
     if release or sys.platform == 'win32':
         copy_nni_node(release)
     else:
         symlink_nni_node()
+    restore_package()
 
 def clean(clean_all=False):
     """
@@ -120,6 +130,25 @@ def download_toolchain():
     shutil.rmtree('toolchain/yarn', ignore_errors=True)
     Path(f'toolchain/yarn-{yarn_version}').rename('toolchain/yarn')
 
+def update_package():
+    if jupyter_lab_major_version == '2':
+        package_json = json.load(open('ts/jupyter_extension/package.json'))
+        json.dump(package_json, open('ts/jupyter_extension/.package_default.json', 'w'), indent=2)
+
+        package_json['scripts']['build'] = 'tsc && jupyter labextension link .'
+        package_json['dependencies']['@jupyterlab/application'] = '^2.3.0'
+        package_json['dependencies']['@jupyterlab/launcher'] = '^2.3.0'
+
+        package_json['jupyterlab']['outputDir'] = 'build'
+        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+        print(f'updated package.json with {json.dumps(package_json, indent=2)}')
+
+def restore_package():
+    if jupyter_lab_major_version == '2':
+        package_json = json.load(open('ts/jupyter_extension/.package_default.json'))
+        print(f'stored package.json with {json.dumps(package_json, indent=2)}')
+        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+        os.remove('ts/jupyter_extension/.package_default.json')
 
 def prepare_nni_node():
     """
@@ -177,7 +206,10 @@ def symlink_nni_node():
 
     _symlink('ts/webui/build', 'nni_node/static')
 
-    if Path('ts/jupyter_extension/dist').exists():
+    if jupyter_lab_major_version == '2':
+        _symlink('ts/jupyter_extension/build', 'nni_node/jupyter-extension')
+        _symlink(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    elif Path('ts/jupyter_extension/dist').exists():
         _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
@@ -209,7 +241,10 @@ def copy_nni_node(version):
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
 
-    if version or Path('ts/jupyter_extension/dist').exists():
+    if jupyter_lab_major_version == '2':
+        shutil.copytree('ts/jupyter_extension/build', 'nni_node/jupyter-extension/build')
+        shutil.copytree(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    elif version or Path('ts/jupyter_extension/dist').exists():
         shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
