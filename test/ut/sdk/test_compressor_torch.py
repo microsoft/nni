@@ -426,11 +426,7 @@ class CompressorTestCase(TestCase):
         }, {
             'quant_types': ['output', 'weight', 'input'],
             'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
-            'op_names': ['fc1'],
-        }, {
-            'quant_types': ['output', 'weight', 'input'],
-            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
-            'op_names': ['fc2'],
+            'op_names': ['fc1', 'fc2'],
         }]
         quantize_algorithm_set = [torch_quantizer.ObserverQuantizer, torch_quantizer.QAT_Quantizer, torch_quantizer.LsqQuantizer]
         calibration_config = None
