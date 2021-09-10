@@ -366,8 +366,9 @@ def replace_conv2d(conv, masks):
             assert len(current_output_index) == 0
             continue
         # check if the number of remained channel of each group are the same
-        assert len(current_input_index) == new_inchannel_step
-        assert len(current_output_index) == new_outchannel_step
+        if len(current_input_index) != new_inchannel_step or len(current_output_index) != new_outchannel_step:
+            raise UnBalancedGroupError()
+
         # copy the weight into tmp_weight
         new_out_start = new_outchannel_step * new_groups
         new_out_end = new_out_start + new_outchannel_step
@@ -423,7 +424,8 @@ def replace_convtranspose2d(convtrans, masks):
     """
     in_masks, output_mask, weight_masks = masks
     assert isinstance(convtrans, torch.nn.ConvTranspose2d)
-    assert len(in_masks) == 1
+    if len(in_masks) != 1:
+        raise InputsNumberError()
     in_mask = in_masks[0]
 
     weight_mask = weight_masks['weight']
@@ -433,8 +435,9 @@ def replace_convtranspose2d(convtrans, masks):
     n_remained_in = weight_mask.size(0) - pruned_in.size(0)
     n_remained_out = weight_mask.size(
         1) * convtrans.groups - pruned_out.size(0)
-    assert n_remained_in == remained_in.size(0)
-    assert n_remained_out == remained_out.size(0)
+    if n_remained_in != remained_in.size(0) or n_remained_out != remained_out.size(0):
+        raise ShapeMisMatchError()
+
     k_size1, k_size2 = convtrans.kernel_size
     # Note: we should resolve the group dependency of the convtrans layers before
     # run into this function
@@ -461,8 +464,10 @@ def replace_convtranspose2d(convtrans, masks):
         n_remained_in, new_outchannel_step, k_size1, k_size2)
     tmp_weight = tmp_weight.to(convtrans.weight.device)
 
-    assert n_remained_in % new_inchannel_step == 0
-    assert n_remained_out % new_outchannel_step == 0
+    if new_inchannel_step == 0 or new_outchannel_step == 0:
+        raise EmptyLayerError()
+    if n_remained_in % new_inchannel_step != 0 or n_remained_out % new_outchannel_step != 0:
+        raise UnBalancedGroupError()
 
     new_groups = 0
     for groupid in range(convtrans.groups):
@@ -484,8 +489,9 @@ def replace_convtranspose2d(convtrans, masks):
             assert len(current_output_index) == 0
             continue
         # check if the number of remained channel of each group are the same
-        assert len(current_input_index) == new_inchannel_step
-        assert len(current_output_index) == new_outchannel_step
+        if len(current_input_index) != new_inchannel_step or len(current_output_index) != new_outchannel_step:
+            raise UnBalancedGroupError()
+
         # copy the weight into tmp_weight
         new_in_start = new_inchannel_step * new_groups
         new_in_end = new_in_start + new_inchannel_step
@@ -518,7 +524,8 @@ def replace_convtranspose2d(convtrans, masks):
 def replace_layernorm(layernorm, masks):
     in_masks, _, _ = masks
     assert isinstance(layernorm, nn.LayerNorm)
-    assert len(in_masks) == 1
+    if len(in_masks) != 1:
+        raise InputsNumberError()
     in_mask = in_masks[0]
     dim_n = len(in_mask.size())
     new_shape = []
