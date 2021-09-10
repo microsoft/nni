@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { SharedStorageConfig } from '../../common/experimentConfig';
+import { SharedStorageConfig } from 'common/experimentConfig';
 import { StorageService } from './storageService'
 
 export type SharedStorageType = 'NFS' | 'AzureBlob'

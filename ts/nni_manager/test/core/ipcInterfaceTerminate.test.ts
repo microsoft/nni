@@ -43,7 +43,7 @@ function startProcess(): void {
         }
     );
     const proc: ChildProcess = getTunerProc(dispatcherCmd, stdio,  'core/test', process.env);
-    proc.on('error', (error: Error): void => {
+    proc.on('error', (_error: Error): void => {
         procExit = true;
         procError = true;
     });

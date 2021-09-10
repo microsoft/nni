@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Deferred } from 'ts-deferred';
 import { PythonShell } from 'python-shell';
 

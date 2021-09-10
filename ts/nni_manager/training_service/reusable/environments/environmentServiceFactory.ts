@@ -4,10 +4,10 @@ import { LocalEnvironmentService } from './localEnvironmentService';
 import { RemoteEnvironmentService } from './remoteEnvironmentService';
 import { KubeflowEnvironmentService } from './kubernetes/kubeflowEnvironmentService';
 import { EnvironmentService } from '../environment';
-import { ExperimentConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { getCustomEnvironmentServiceConfig } from '../../../common/nniConfig';
-import { importModule } from '../../../common/utils';
+import { ExperimentConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { getCustomEnvironmentServiceConfig } from 'common/nniConfig';
+import { importModule } from 'common/utils';
 import { DlcEnvironmentService } from './dlcEnvironmentService';
 
 export async function createEnvironmentService(name: string, config: ExperimentConfig): Promise<EnvironmentService> {

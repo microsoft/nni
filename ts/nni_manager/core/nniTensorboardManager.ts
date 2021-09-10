@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as cp from 'child_process';
-import * as path from 'path';
+import fs from 'fs';
+import cp from 'child_process';
+import path from 'path';
 import { ChildProcess } from 'child_process';
 
 import * as component from '../common/component';
