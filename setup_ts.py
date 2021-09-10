@@ -19,6 +19,7 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import traceback
 from zipfile import ZipFile
 
 
@@ -39,7 +40,7 @@ def build(release):
     if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
     prepare_nni_node()
-    compile_ts()
+    compile_ts(release)
     if release or sys.platform == 'win32':
         copy_nni_node(release)
     else:
@@ -134,7 +135,7 @@ def prepare_nni_node():
     shutil.copy(node_src, node_dst)
 
 
-def compile_ts():
+def compile_ts(release):
     """
     Use yarn to download dependencies and compile TypeScript code.
     """
@@ -150,8 +151,16 @@ def compile_ts():
     _yarn('ts/webui', 'build')
 
     _print('Building JupyterLab extension')
-    _yarn('ts/jupyter_extension')
-    _yarn('ts/jupyter_extension', 'build')
+    if release:
+        _yarn('ts/jupyter_extension')
+        _yarn('ts/jupyter_extension', 'build')
+    else:
+        try:
+            _yarn('ts/jupyter_extension')
+            _yarn('ts/jupyter_extension', 'build')
+        except Exception:
+            _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
+            _print(traceback.format_exc(), color='yellow')
 
 
 def symlink_nni_node():
@@ -168,7 +177,8 @@ def symlink_nni_node():
 
     _symlink('ts/webui/build', 'nni_node/static')
 
-    _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    if Path('ts/jupyter_extension/dist').exists():
+        _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 def copy_nni_node(version):
@@ -182,10 +192,10 @@ def copy_nni_node(version):
 
     # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
     for path in Path('ts/nni_manager/dist').iterdir():
-        if path.is_file():
-            shutil.copyfile(path, Path('nni_node', path.name))
-        else:
+        if path.is_dir():
             shutil.copytree(path, Path('nni_node', path.name))
+        elif path.name != 'nni_manager.tsbuildinfo':
+            shutil.copyfile(path, Path('nni_node', path.name))
 
     package_json = json.load(open('ts/nni_manager/package.json'))
     if version:
@@ -199,7 +209,8 @@ def copy_nni_node(version):
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
 
-    shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    if version or Path('ts/jupyter_extension/dist').exists():
+        shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 _yarn_env = dict(os.environ)
@@ -221,11 +232,12 @@ def _symlink(target_file, link_location):
     link.symlink_to(relative, target.is_dir())
 
 
-def _print(*args):
+def _print(*args, color='cyan'):
+    color_code = {'yellow': 33, 'cyan': 36}[color]
     if sys.platform == 'win32':
         print(*args, flush=True)
     else:
-        print('\033[1;36m#', *args, '\033[0m', flush=True)
+        print(f'\033[1;{color_code}m#', *args, '\033[0m', flush=True)
 
 
 generated_files = [
@@ -236,8 +248,8 @@ generated_files = [
 
     # unit test
     'ts/nni_manager/.nyc_output',
+    'ts/nni_manager/coverage',
     'ts/nni_manager/exp_profile.json',
-    'ts/nni_manager/htmlcov',
     'ts/nni_manager/metrics.json',
     'ts/nni_manager/trial_jobs.json',
 ]
