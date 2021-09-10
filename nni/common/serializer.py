@@ -1,9 +1,79 @@
-
-import json_tricks
+import functools
+import inspect
 
 from .utils import get_importable_name, get_module_name, import_, reset_uid
 
-def trace()
+def trace(cls_or_func):
+
+    return wrapper
+
+
+class SerializableObject:
+    """
+    Serializable object is a wrapper of existing python objects, that supports dump and load easily.
+    Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
+    """
+
+    def __init__(self, symbol, args):
+        self._symbol = symbol
+        self._args = args
+
+    def dump(self):
+        return {
+            'symbol': self._symbol,
+            'args': self._args
+        }
+
+
+class SerializableFunctionCall(SerializableObject):
+    """
+    Serializable function call. Can be created via:
+
+    .. code-block:: python
+
+        @nni.trace
+        def foo(bar):
+            pass
+
+    Then call ``foo(1)`` will return a object with this type and need to call foo(1).get() to get the actual result.
+    """
+
+    def get(self):
+        return self.symbol(self.args)()
+
+
+def _trace_cls(base):
+    class wrapper(SerializableObject, base):
+        def __init__(self, *args, **kwargs):
+            # assign magic attributes like __module__, __qualname__, __doc__
+            for attr in WRAPPER_ASSIGNMENTS:
+                setattr(self, attr, WRAPPER_ASSIGNMENTS)
+
+            # store a copy of initial parameters
+            argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
+            full_args = {}
+            full_args.update(kwargs)
+
+            assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
+            for argname, value in zip(argname_list, args):
+                full_args[argname] = value
+
+            self.symbol = 
+            else:
+                self._init_parameters = {}
+
+            super().__init__(*args, **kwargs)
+
+    _MISSING = '_missing'
+    for k in functools.WRAPPER_ASSIGNMENTS:
+        v = getattr(base, k, _MISSING)
+        if v is not _MISSING:
+            try:
+                setattr(wrapper, k, v)
+            except AttributeError:
+                pass
+
+    return wrapper
 
 
 def get_init_parameters_or_fail(obj, silently=False):
