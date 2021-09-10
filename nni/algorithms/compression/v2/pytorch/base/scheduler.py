@@ -105,16 +105,16 @@ class TaskResult:
         task_id
             The unique id of task.
         compact_model
-            The unwrapped compact pytorch model after pruning. If the compact model has speed up process during pruning,
+            The unwrapped compact pytorch model after pruning. If the compact model has been speeduped during the pruning process,
             it will have a smaller structure compare with the model before pruning.
-            If the compact model do not speed up, it will have the same structure with the model before pruning.
+            If the compact model has not been speeduped, it will have the same structure with the model before pruning.
         compact_model_masks
-            The masks on the compact model. If the compact model has speed up process during pruning,
-            the `compact_model_masks` is always an empty dict. If the compact model do not speed up,
+            The masks on the compact model. If the compact model has been speeduped during the pruning process,
+            the `compact_model_masks` is always an empty dict. If the compact model has not been speeduped,
             the `compact_model_masks` is same as `pruner_generated_masks`.
         pruner_generated_masks
             The masks that can apply on the before pruning model. It is always the output of `pruner.compress()`.
-            TODO: If the compact model has speed up, the auto infer masks maybe also need.
+            TODO: If the compact model has been speeduped, the auto infer masks maybe also need.
         score
             The score of the pruning effect. i.e., the accuracy or latency after pruning.
         """
