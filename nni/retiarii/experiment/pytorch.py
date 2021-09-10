@@ -66,6 +66,9 @@ class RetiariiExeConfig(ConfigBase):
     # input used in GraphConverterWithShape. Currently support shape tuple only.
     dummy_input: Optional[List[int]] = None
 
+    # input used for benchmark engine.
+    benchmark: Optional[str] = None
+
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
@@ -82,7 +85,7 @@ class RetiariiExeConfig(ConfigBase):
         if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
-            assert value in ['base', 'py', 'cgo'], f'The specified execution engine "{value}" is not supported.'
+            assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
             self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
@@ -186,8 +189,10 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py',
-            dummy_input=self.config.dummy_input)
+            self.base_model, self.trainer, self.applied_mutators,
+            full_ir=self.config.execution_engine not in ['py', 'benchmark'],
+            dummy_input=self.config.dummy_input
+        )
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
@@ -224,6 +229,9 @@ class RetiariiExperiment(Experiment):
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
+        elif self.config.execution_engine == 'benchmark':
+            from ..execution.benchmark import BenchmarkExecutionEngine
+            engine = BenchmarkExecutionEngine(self.config.benchmark)
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
