@@ -548,10 +548,10 @@ class QAT_Quantizer(Quantizer):
 
     def load_calibration_config(self, calibration_config):
         modules_to_compress = self.get_modules_to_compress()
-        for layer, config in modules_to_compress:
+        for layer, _ in modules_to_compress:
             name, module = layer.name, layer.module
             if name not in calibration_config:
-                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits') or hasattr(module, 'input_bits'):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if hasattr(module, 'weight_bits'):
@@ -1017,10 +1017,10 @@ class LsqQuantizer(Quantizer):
 
     def load_calibration_config(self, calibration_config):
         modules_to_compress = self.get_modules_to_compress()
-        for layer, config in modules_to_compress:
+        for layer, _ in modules_to_compress:
             name, module = layer.name, layer.module
             if name not in calibration_config:
-                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits') or hasattr(module, 'input_bits'):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if hasattr(module, 'weight_bits'):
