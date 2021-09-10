@@ -393,8 +393,6 @@ def permute_python(node, speedup):
             super(PermuteModule, self).__init__()
             # deepcopy the values here, because the following randomize operation
             # will change the value of the dimlist
-            print('################')
-            print(dimlist)
             self.dimlist = copy.deepcopy(dimlist)
 
         def forward(self, x):

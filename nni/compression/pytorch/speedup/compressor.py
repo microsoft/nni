@@ -411,7 +411,6 @@ class ModelSpeedup:
                 constants = self.torch_graph.trace.code_with_constants[1].const_mapping
                 for constant_name in constants:
                     _name = 'CONSTANTS.' + constant_name
-                    # print(_name)
                     code = code.replace(_name, str(constants[constant_name]))
 
                 def forward_decorator(ori_func):
