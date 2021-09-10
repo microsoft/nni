@@ -656,7 +656,7 @@ class TaylorFOWeightPruner(BasicPruner):
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
 
 
-class ADMMPruner(OneShotPruner):
+class ADMMPruner(BasicPruner):
     """
     ADMM (Alternating Direction Method of Multipliers) Pruner is a kind of mathematical optimization technique.
     The metric used in this pruner is the absolute value of the weight.
@@ -765,7 +765,7 @@ class ADMMPruner(OneShotPruner):
             masks = self.sparsity_allocator.generate_sparsity(metrics)
 
             for name, mask in masks.items():
-                self.Z[name] = self.Z[name].mul(mask['weight_mask'])
+                self.Z[name] = self.Z[name].mul(mask['weight'])
                 self.U[name] = self.U[name] + data[name] - self.Z[name]
 
         metrics = self.metrics_calculator.calculate_metrics(data)
