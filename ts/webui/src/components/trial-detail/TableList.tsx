@@ -87,6 +87,7 @@ interface TableListState {
     sortInfo: SortInfo;
     searchItems: Array<SearchItems>;
     relation: Map<string, string>;
+    intermediateKeyList: string[];
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -112,7 +113,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
             searchItems: [],
-            relation: parametersType()
+            relation: parametersType(),
+            intermediateKeyList: []
         };
 
         this._expandedTrialIds = new Set<string>();
@@ -437,7 +439,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     onClick={(): void => {
                         const { tableSource } = this.props;
                         const trial = tableSource.find(trial => trial.id === record.id) as TableObj;
-                        this.setState({ intermediateDialogTrial: trial });
+                        const intermediateKeyListResult = this.getIntermediateAllKeys(trial);
+                        this.setState({
+                            intermediateDialogTrial: trial,
+                            intermediateKeyList: intermediateKeyListResult
+                        });
                     }}
                 >
                     {LineChart}
@@ -469,11 +475,13 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }));
     };
 
-    private ccc = (): string[] => {
-        const { intermediateDialogTrial } = this.state;
+    private getIntermediateAllKeys = (intermediateDialogTrial: any): string[] => {
         let intermediateAllKeysList: string[] = [];
-        if (intermediateDialogTrial![0].intermediates !== undefined && intermediateDialogTrial![0].intermediates[0]) {
-            const parsedMetric = parseMetrics(intermediateDialogTrial![0].intermediates[0].data);
+        if (
+            intermediateDialogTrial!.intermediateMetrics !== undefined &&
+            intermediateDialogTrial!.intermediateMetrics[0]
+        ) {
+            const parsedMetric = parseMetrics(intermediateDialogTrial!.intermediateMetrics[0].data);
             if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
                 const allIntermediateKeys: string[] = [];
                 // just add type=number keys
@@ -485,6 +493,12 @@ class TableList extends React.Component<TableListProps, TableListState> {
                 intermediateAllKeysList = allIntermediateKeys;
             }
         }
+
+        if (intermediateAllKeysList.includes('default') && intermediateAllKeysList[0] !== 'default') {
+            intermediateAllKeysList = intermediateAllKeysList.filter(item => item !== 'default');
+            intermediateAllKeysList.unshift('default');
+        }
+
         return intermediateAllKeysList;
     };
 
@@ -508,7 +522,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowIds,
             intermediateDialogTrial,
             copiedTrialId,
-            searchItems
+            searchItems,
+            intermediateKeyList
         } = this.state;
 
         return (
@@ -583,7 +598,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title='Intermediate results'
                         showDetails={false}
                         trials={[intermediateDialogTrial]}
-                        intermediateKeyList={this.ccc()}
+                        intermediateKeyList={intermediateKeyList}
                         onHideDialog={(): void => {
                             this.setState({ intermediateDialogTrial: undefined });
                         }}
