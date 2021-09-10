@@ -3,9 +3,29 @@ import inspect
 
 from .utils import get_importable_name, get_module_name, import_, reset_uid
 
-def trace(cls_or_func):
 
+__all__ = ['trace', 'dump', 'load', 'SerializableObject']
+
+def trace(cls_or_func):
+    """
+    Annotate a function or a class if you want to preserve where it comes from.
+    This is usually used in the following scenarios:
+
+    1) Care more about execution configuration rather than results, which is usually the case in AutoML.
+    2) Repeat execution is not an issue (e.g., reproducible, execution is fast without side effects).
+
+    When a class/function is annotated, all the instances/calls will return a object as it normally will.
+    Also it records extra information about where this object comes from. That's why it's called "trace".
+    When call ``nni.dump``, the information will be used, by default.
+    """
     return wrapper
+
+
+def dump(obj, f=None, use_trace=True): ...
+
+
+def load(string=None, f=None): ...
+
 
 
 class SerializableObject:
