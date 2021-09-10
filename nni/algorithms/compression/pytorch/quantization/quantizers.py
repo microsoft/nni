@@ -1017,7 +1017,7 @@ class LsqQuantizer(Quantizer):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if hasattr(module, 'weight_bits'):
-                assert calibration_config[name]['weight_bits'] == int(module.weight_bits), f"weight bits of module {name} fail to match, calibration_config:{calibration_config[name]['weight_bits']}, weight_bits:{weight_bits}"
+                assert calibration_config[name]['weight_bits'] == int(module.weight_bits), f"weight bits of module {name} fail to match"
             if hasattr(module, 'input_bits'):
                 assert calibration_config[name]['input_bits'] == int(module.input_bits), f"input bits of module {name} fail to match"
                 module.input_scale.data = torch.Tensor([float(calibration_config[name]['tracked_max_input'] / module.input_qmax)])
