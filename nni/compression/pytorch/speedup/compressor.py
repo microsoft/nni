@@ -14,7 +14,7 @@ from .compress_modules import replace_module
 from .infer_mask import AutoMaskInference
 from .jit_translate import jit_to_python_function
 from ..utils import rand_like_with_shape
-from .error_code import *
+
 
 _logger = logging.getLogger(__name__)
 _logger.setLevel(logging.INFO)

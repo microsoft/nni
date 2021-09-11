@@ -4,7 +4,7 @@
 import logging
 import torch
 import torch.nn as nn
-from .error_code import *
+from .error_code import EmptyLayerError, ShapeMisMatchError, InputsNumberError, OutputTypeError, UnBalancedGroupError
 
 _logger = logging.getLogger(__name__)
 
