@@ -71,7 +71,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
             self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
 
         # if reach the total_iteration, no more task will be generated
-        if self.current_iteration >= self.total_iteration:
+        if self.current_iteration > self.total_iteration:
             return []
 
         task_id = self._task_id_candidate
@@ -118,9 +118,15 @@ class LinearTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
-    def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+    def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermidiate_result: bool = False):
+        super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks, log_dir=log_dir,
+                         keep_intermidiate_result=keep_intermidiate_result)
+        self.current_iteration = 1
+
+    def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
-        for target, mo in zip(target_sparsity, model_based_sparsity):
+        for target, mo in zip(target_sparsity, compact2origin_sparsity):
             # NOTE: The ori_sparsity calculation formula in compression v1 is as follow, it is different from the paper.
             # But the formula in paper will cause numerical problems, so keep the formula in compression v1.
             ori_sparsity = 1 - (1 - target['total_sparsity']) ** (iteration / self.total_iteration)

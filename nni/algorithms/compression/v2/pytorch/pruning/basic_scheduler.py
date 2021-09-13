@@ -95,7 +95,7 @@ class PruningScheduler(BasePruningScheduler):
         finetune -> generate masks -> reset weight -> speed up -> evaluate
         """
         model, masks, config_list = task.load_data()
-        checkpoint = model.state_dict()
+        checkpoint = deepcopy(model.state_dict())
         self.pruner.reset(model, config_list)
         self.pruner.load_masks(masks)
 
