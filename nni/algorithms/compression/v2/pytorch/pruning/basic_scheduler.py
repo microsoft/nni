@@ -83,7 +83,15 @@ class PruningScheduler(BasePruningScheduler):
                 self.pruner._unwrap_model()
 
         # evaluate
-        score = self.evaluator(compact_model) if self.evaluator is not None else None
+        if self.evaluator is not None:
+            if self.speed_up:
+                score = self.evaluator(compact_model)
+            else:
+                self.pruner._wrap_model()
+                score = self.evaluator(compact_model)
+                self.pruner._unwrap_model()
+        else:
+            score = None
 
         # clear model references
         self.pruner.clear_model_references()
@@ -120,7 +128,15 @@ class PruningScheduler(BasePruningScheduler):
             compact_model_masks = {}
 
         # evaluate
-        score = self.evaluator(compact_model) if self.evaluator is not None else None
+        if self.evaluator is not None:
+            if self.speed_up:
+                score = self.evaluator(compact_model)
+            else:
+                self.pruner._wrap_model()
+                score = self.evaluator(compact_model)
+                self.pruner._unwrap_model()
+        else:
+            score = None
 
         # clear model references
         self.pruner.clear_model_references()
