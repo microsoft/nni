@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from os import replace
 import re
 
 import torch
@@ -15,7 +16,7 @@ from .utils import (
     _convert_name, build_full_name, _without_shape_info,
     _extract_info_from_trace_node, get_full_name_by_scope_name,
     is_layerchoice_node, match_node, build_cand_name, 
-    build_python_name, build_cand_python_name
+    build_python_name
 )
 
 
@@ -607,7 +608,7 @@ class GraphConverter:
                 cand = module[cand_name]
                 script_cand = script_module._modules[cand_name]
                 cand_full_name = build_cand_name(cand_name, module.label)
-                cand_python_name = build_cand_python_name(cand_name, module.label)
+                cand_python_name = build_python_name(module_python_name, cand_name)
                 candidate_name_list.append(cand_full_name)
                 subgraph, attrs = self._convert_module(script_cand, cand, cand_full_name, cand_python_name, ir_model)
                 if subgraph is not None:
@@ -860,6 +861,13 @@ class GraphConverterWithShape(GraphConverter):
 
         # remove subgraphs
         ir_model.graphs = {ir_model._root_graph_name: ir_model.root_graph}
+        with open("./data/ir_model_name.txt", "w+") as fp:
+            for item in ir_model.root_graph.hidden_nodes:
+                if item.python_name != None:
+                    if item.operation.type.startswith("__torch__.torch.nn.modules"):
+                        fp.write(f'{item.python_name},\t{item.operation.type.replace("__torch__.torch.nn.modules", "")}\n')
+                    else:
+                        fp.write(f'{item.python_name}\n')
 
     def _trace(self, module, dummy_input):
         traced_module = torch.jit.trace(module, dummy_input)
@@ -902,7 +910,6 @@ def convert_to_graph(script_module, module, converter=None, **kwargs):
     """
 
     model = Model(_internal=True)
-    model.set_python_name(script_module.original_name)
     module_name = '_model'
     if converter is None:
         converter = GraphConverter()

@@ -106,7 +106,7 @@ class Model:
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
         self.python_class: Optional[Type] = None
-        self.python_name: Optional[str] = None
+        self.python_name: str = 'module'
         self.python_init_params: Optional[Dict[str, Any]] = None
 
         self.status: ModelStatus = ModelStatus.Mutating

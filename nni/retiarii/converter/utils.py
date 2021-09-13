@@ -24,11 +24,6 @@ def build_cand_name(name, label):
     return f'layerchoice_{label}_{name}'
 
 
-def build_cand_python_name(name, label):
-    label = label.replace('_mutation_', 'mutation')
-    return f'layerchoice.{label}.{name}'
-
-
 def _convert_name(name: str) -> str:
     """
     Convert the names using separator '.' to valid variable name in code
