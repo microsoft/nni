@@ -21,6 +21,23 @@ _logger = logging.getLogger(__name__)
 class FunctionBasedTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermidiate_result: bool = False):
+        """
+        Parameters
+        ----------
+        total_iteration
+            The total iteration number.
+        origin_model
+            The origin unwrapped pytorch model to be pruned.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        origin_masks
+            The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
+        log_dir
+            The log directory use to saving the task generator log.
+        keep_intermidiate_result
+            If keeping the intermediate result, including intermediate model and masks during each iteration.
+        """
         self.current_iteration = 0
         self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
         self.total_iteration = total_iteration
@@ -77,9 +94,9 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
 
 class AGPTaskGenerator(FunctionBasedTaskGenerator):
-    def generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+    def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
-        for target, mo in zip(target_sparsity, model_based_sparsity):
+        for target, mo in zip(target_sparsity, compact2origin_sparsity):
             ori_sparsity = (1 - (1 - iteration / self.total_iteration) ** 3) * target['total_sparsity']
             sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
             assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
@@ -89,10 +106,26 @@ class AGPTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class LinearTaskGenerator(FunctionBasedTaskGenerator):
-    def generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
+    def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
+        config_list = []
+        for target, mo in zip(target_sparsity, compact2origin_sparsity):
+            ori_sparsity = iteration / self.total_iteration * target['total_sparsity']
+            sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
+            assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
+            config_list.append(deepcopy(target))
+            config_list[-1]['total_sparsity'] = sparsity
+        return config_list
+
+
+class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
+    def _generate_config_list(self, target_sparsity: List[Dict], iteration: int, model_based_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
         for target, mo in zip(target_sparsity, model_based_sparsity):
-            ori_sparsity = iteration / self.total_iteration * target['total_sparsity']
+            # NOTE: The ori_sparsity calculation formula in compression v1 is as follow, it is different from the paper.
+            # But the formula in paper will cause numerical problems, so keep the formula in compression v1.
+            ori_sparsity = 1 - (1 - target['total_sparsity']) ** (iteration / self.total_iteration)
+            # The following is the formula in paper.
+            # ori_sparsity = (target['total_sparsity'] * 100) ** (iteration / self.total_iteration) / 100
             sparsity = max(0.0, (ori_sparsity - mo['total_sparsity']) / (1 - mo['total_sparsity']))
             assert 0 <= sparsity <= 1, 'sparsity: {}, ori_sparsity: {}, model_sparsity: {}'.format(sparsity, ori_sparsity, mo['total_sparsity'])
             config_list.append(deepcopy(target))
