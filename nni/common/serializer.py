@@ -21,8 +21,19 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
     To get the original object, you should use ``obj.get()`` to retrieve. The retrieved object can be used
     like the original one, but there are still subtle differences in implementation.
 
+    Note that when using the result from a trace in another trace-able function/class, ``.get()`` is automatically
+    called, so that you don't have to worry about type-converting.
+
     Also it records extra information about where this object comes from. That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
+
+    Example:
+
+    .. code-block:: python
+
+        @nni.trace
+        def foo(bar):
+            pass
     """
 
     if isinstance(cls_or_func, type):
@@ -43,45 +54,41 @@ class SerializableObject:
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
     """
 
-    def __init__(self, nni_symbol: Union[Type, Callable], nni_args: Dict[str, Any], _internal: bool = False, **kwargs):
+    def __init__(self, nni_symbol: Union[Type, Callable], nni_args: Dict[str, Any], _self_contained: bool = False, **kwargs):
         self._nni_symbol = nni_symbol
         self._nni_args = nni_args
 
-        # kwargs is used to init the full object.
-        if not _internal:
+        self._self_contained = _self_contained
+
+        if not _self_contained:
             assert not kwargs, 'kwargs cannot be set for non-internal usage.'
-        super().__init__(**kwargs)
+        else:
+            # this is for internal usage only.
+            # kwargs is used to init the full object in the same object as this one, for simpler implementation.
+            super().__init__(**kwargs)
 
     def get(self) -> Any:
         """
         Get the original object.
         """
-        return self  # for class cases
+        if self._self_contained:
+            return self
+        if not hasattr(self, '_nni_cache'):
+            self._nni_cache = self.symbol(self.args)()
+        return self._nni_cache
+
+    def copy(self) -> 'SerializableObject':
+        """
+        Perform a shallow copy. Will throw away the self-contain property for classes (refer to implementation).
+        This is the one that should be used when you want to "mutate" a serializable object.
+        """
+        return SerializableObject(self._nni_symbol, self._nni_args)
 
     def dump(self):
         return {
             'symbol': self._nni_symbol,
             'args': self._nni_args
         }
-
-
-class SerializableFunctionCall(SerializableObject):
-    """
-    Serializable function call. Can be created via:
-
-    .. code-block:: python
-
-        @nni.trace
-        def foo(bar):
-            pass
-
-    Then call ``foo(1)`` will return a object with this type and need to call foo(1).get() to get the actual result.
-    """
-
-    def get(self):
-        if not hasattr(self, '_nni_func_cache'):
-            self._nni_func_cache = self.symbol(self.args)()
-        return self._nni_func_cache
 
 
 def _trace_cls(base):
@@ -95,7 +102,7 @@ def _trace_cls(base):
             full_args = _get_arguments_as_dict(base.__init__, args, kwargs)
 
             # calling serializable object init to initialize the full object
-            super().__init__(nni_symbol=base, nni_args=full_args, _internal=True, **full_args)
+            super().__init__(nni_symbol=base, nni_args=full_args, _self_contained=True, **full_args)
 
     _MISSING = '_missing'
     for k in functools.WRAPPER_ASSIGNMENTS:
@@ -115,7 +122,7 @@ def _trace_func(func):
     def wrapper(*args, **kwargs):
         # similar to class, store parameters here
         full_args = _get_arguments_as_dict(func, args, kwargs)
-        return SerializableFunctionCall(func, full_args)
+        return SerializableObject(func, full_args)
 
     return wrapper
 
@@ -131,5 +138,8 @@ def _get_arguments_as_dict(func, args, kwargs):
     assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
     for argname, value in zip(argname_list, args):
         full_args[argname] = value
+
+    # auto-call get() to prevent type-converting in downstreaming functions
+    kwargs = {k: v.get() if isinstance(v, SerializableObject) else v for k, v in kwargs.items()}
 
     return full_args
