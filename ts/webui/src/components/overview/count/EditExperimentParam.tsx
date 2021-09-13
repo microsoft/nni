@@ -81,7 +81,7 @@ export const EditExperimentParam = (): any => {
             if (toSeconds(`${editInputVal}${unit}`) < EXPERIMENT.profile.execDuration) {
                 // maxDuration should > current run time(execDuration)
                 promptErrorMessage(
-                    'Current duration is more than the number you input, please input effective value',
+                    'Please input a valid value. (Current duration is more than the number you input.)',
                     'error',
                     defaultVal
                 );
