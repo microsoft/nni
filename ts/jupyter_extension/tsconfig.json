@@ -9,6 +9,7 @@
         "target": "es2017"
     },
     "include": [
-        "src/*"
+        "src/*",
+        "style/*"
     ]
 }

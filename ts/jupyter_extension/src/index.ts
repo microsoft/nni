@@ -2,6 +2,7 @@ import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application'
 import { ICommandPalette, IFrame } from '@jupyterlab/apputils';
 import { PageConfig } from '@jupyterlab/coreutils';
 import { ILauncher } from '@jupyterlab/launcher';
+import { logoIcon } from './icon';
 
 class NniWidget extends IFrame {
     constructor() {
@@ -27,6 +28,7 @@ async function activate(app: JupyterFrontEnd, palette: ICommandPalette, launcher
     commands.addCommand(command, {
         label: 'NNI',
         caption: 'NNI',
+        icon: logoIcon,
         iconClass: (args) => (args.isPalette ? null : 'jp-Launcher-kernelIcon'),
         execute: () => {
             shell.add(new NniWidget(), 'main');
@@ -39,7 +41,6 @@ async function activate(app: JupyterFrontEnd, palette: ICommandPalette, launcher
         launcher.add({
             command,
             category,
-            kernelIconUrl: '/nni/icon.png'  // FIXME: this field only works for "Notebook" category
         });
     }
 }
