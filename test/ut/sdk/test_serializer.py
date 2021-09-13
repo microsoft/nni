@@ -13,3 +13,5 @@ def test_simple_class():
     instance = SimpleClass(1, 2)
     assert instance._a == 1
     assert instance._b == 2
+
+    nni.dump(instance)
