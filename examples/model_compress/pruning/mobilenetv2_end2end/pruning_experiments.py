@@ -113,7 +113,7 @@ def run_finetune_distillation(student_model, teacher_model, train_dataloader, va
                               n_epochs=2, learning_rate=1e-4, weight_decay=0.0, log=None):
     optimizer = torch.optim.Adam(student_model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     # optimizer = torch.optim.SGD(student_model.parameters(), lr=learning_rate, momentum=0.9)            
-
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=n_epochs)
     best_valid_acc = 0.0
     best_model = None
     for epoch in range(n_epochs):
@@ -149,7 +149,8 @@ def run_finetune_distillation(student_model, teacher_model, train_dataloader, va
         if valid_acc > best_valid_acc:
             best_valid_acc = valid_acc
             best_model = copy.deepcopy(student_model).to(device)
-
+        scheduler.step()
+        print("Current Learning rate", scheduler.get_last_lr())
     print("Best validation accuracy: {}".format(best_valid_acc))
     if log is not None:
         log.write("Best validation accuracy: {}".format(best_valid_acc))
@@ -332,13 +333,13 @@ def run_pruning(args):
     # pruning
     pruner = pruner_type_to_class[args.pruner_name](model, config_list, **kwargs)
     pruner.compress()
-    pruner.export_model(args.experiment_dir + '/model_temp.pth', args.experiment_dir + './mask_temp.pth')
+    pruner.export_model(os.path.join(args.experiment_dir, 'model_temp.pth'), os.path.join(args.experiment_dir, 'mask_temp.pth'))
     
     # model speedup
     pruner._unwrap_model()
     if args.speed_up:
         dummy_input = torch.rand(1,3,224,224).to(device)
-        ms = ModelSpeedup(model, dummy_input, args.experiment_dir + './mask_temp.pth')
+        ms = ModelSpeedup(model, dummy_input, os.path.join(args.experiment_dir, 'mask_temp.pth'))
         ms.speedup_model()
         print(model)
         count_flops(model, log)
@@ -362,11 +363,8 @@ def run_pruning(args):
     log.write('After Pruning:\nLoss: {}\nAccuracy: {}'.format(final_loss, final_acc))
 
     # clean up
-    filePaths = [args.experiment_dir + '/model_tmp.pth', args.experiment_dir + '/mask_tmp.pth']
-    for f in filePaths:
-        if os.path.exists(f):
-            os.remove(f)
-
+    import pdb; pdb.set_trace()
+    torch.save(model.state_dict(), os.path.join(args.experiment_dir, 'finetune_weights.pth'))
     log.close()
     
     
