@@ -445,6 +445,35 @@ class CompressorTestCase(TestCase):
             calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
             assert calibration_config is not None
 
+    def test_quantizer_load_calibration_config(self):
+        configure_list = [{
+            'quant_types': ['weight', 'input'],
+            'quant_bits': {'weight': 8, 'input': 8},
+            'op_names': ['conv1', 'conv2']
+        }, {
+            'quant_types': ['output', 'weight', 'input'],
+            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
+            'op_names': ['fc1', 'fc2'],
+        }]
+        quantize_algorithm_set = [torch_quantizer.ObserverQuantizer, torch_quantizer.QAT_Quantizer, torch_quantizer.LsqQuantizer]
+        calibration_config = None
+        for quantize_algorithm in quantize_algorithm_set:
+            model = TorchModel().eval()
+            model.relu = torch.nn.ReLU()
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            quantizer = quantize_algorithm(model, configure_list, optimizer)
+            quantizer.compress()
+            if calibration_config is not None:
+                quantizer.load_calibration_config(calibration_config)
+
+            model_path = "test_model.pth"
+            calibration_path = "test_calibration.pth"
+            onnx_path = "test_model.onnx"
+            input_shape = (1, 1, 28, 28)
+            device = torch.device("cpu")
+
+            calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
+
     def test_torch_pruner_validation(self):
         # test bad configuraiton
         pruner_classes = [torch_pruner.__dict__[x] for x in \
