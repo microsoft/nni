@@ -298,11 +298,11 @@ class NasBench101Cell(nn.Module):
             label, selected = get_fixed_dict(label)
             op_candidates = cls._make_dict(op_candidates)
             num_nodes = selected[f'{label}/num_nodes']
-            adjacency_list = [make_list(selected[f'{label}/input_{i}']) for i in range(1, num_nodes)]
+            adjacency_list = [make_list(selected[f'{label}/input{i}']) for i in range(1, num_nodes)]
             if sum([len(e) for e in adjacency_list]) > max_num_edges:
                 raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
             return _NasBench101CellFixed(
-                [op_candidates[selected[f'{label}/op_{i}']] for i in range(1, num_nodes - 1)],
+                [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
                 adjacency_list, in_features, out_features, num_nodes, projection)
         except NoContextError:
             return super().__new__(cls)
@@ -334,8 +334,8 @@ class NasBench101Cell(nn.Module):
         for i in range(1, max_num_nodes):
             if i < max_num_nodes - 1:
                 self.ops.append(LayerChoice(OrderedDict([(k, op(self.hidden_features)) for k, op in op_candidates.items()]),
-                                            label=f'{self._label}/op_{i}'))
-            self.inputs.append(InputChoice(i, None, label=f'{self._label}/input_{i}'))
+                                            label=f'{self._label}/op{i}'))
+            self.inputs.append(InputChoice(i, None, label=f'{self._label}/input{i}'))
 
     @property
     def label(self):
@@ -380,11 +380,22 @@ class NasBench101Mutator(Mutator):
             break
         mutation_dict = {mut.mutator.label: mut.samples for mut in model.history}
         num_nodes = mutation_dict[f'{self.label}/num_nodes'][0]
-        adjacency_list = [mutation_dict[f'{self.label}/input_{i}'] for i in range(1, num_nodes)]
+        adjacency_list = [mutation_dict[f'{self.label}/input{i}'] for i in range(1, num_nodes)]
         if sum([len(e) for e in adjacency_list]) > max_num_edges:
             raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
         matrix = _NasBench101CellFixed.build_connection_matrix(adjacency_list, num_nodes)
-        prune(matrix, [None] * len(matrix))  # dummy ops, possible to raise InvalidMutation inside
+
+        operations = ['IN'] + [mutation_dict[f'{self.label}/op{i}'][0] for i in range(1, num_nodes - 1)] + ['OUT']
+        assert len(operations) == len(matrix)
+        matrix, operations = prune(matrix, operations)  # possible to raise InvalidMutation inside
+
+        # NOTE: a hack to maintain a clean copy of what nasbench101 cell looks like
+        self._cur_samples = {}
+        for i in range(1, len(matrix)):
+            if i + 1 < len(matrix):
+                self._cur_samples[f'op{i}'] = operations[i]
+            self._cur_samples[f'input{i}'] = [k for k in range(i) if matrix[k, i]]
+        self._cur_samples = [self._cur_samples]  # by design, _cur_samples is a list of samples
 
     def dry_run(self, model):
         return [], model

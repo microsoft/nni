@@ -210,7 +210,7 @@ class NasBench201Cell(nn.Module):
                 inp = in_features if j == 0 else out_features
                 op_choices = OrderedDict([(key, cls(inp, out_features))
                                           for key, cls in op_candidates.items()])
-                node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))
+                node_ops.append(LayerChoice(op_choices, label=f'{self._label}__{j}_{tid}'))  # put __ here to be compatible with base engine
             self.layers.append(node_ops)
 
     def forward(self, inputs):

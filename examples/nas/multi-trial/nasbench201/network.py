@@ -118,7 +118,8 @@ class NasBench201TrainingModule(pl.LightningModule):
 @click.option('--epochs', default=12, help='Training length.')
 @click.option('--batch_size', default=256, help='Batch size.')
 @click.option('--port', default=8081, help='On which port the experiment is run.')
-def _multi_trial_test(epochs, batch_size, port):
+@click.option('--benchmark', is_flag=True, default=False)
+def _multi_trial_test(epochs, batch_size, port, benchmark):
     # initalize dataset. Note that 50k+10k is used. It's a little different from paper
     transf = [
         transforms.RandomCrop(32, padding=4),
@@ -154,6 +155,10 @@ def _multi_trial_test(epochs, batch_size, port):
     exp_config.max_trial_number = 20
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
+
+    if benchmark:
+        exp_config.benchmark = 'nasbench201-cifar100'
+        exp_config.execution_engine = 'benchmark'
 
     exp.run(exp_config, port)
 
