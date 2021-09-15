@@ -164,7 +164,7 @@
            """
 
            # 对于 quant_output 函数，如果张量的绝对值大于 1，则将梯度设置为 0
-           if quant_type == QuantType.QUANT_OUTPUT:
+           if quant_type == QuantType.QUANT_OUTPUT: 
                grad_output[torch.abs(tensor) > 1] = 0
            return grad_output
 
