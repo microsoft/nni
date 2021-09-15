@@ -2,7 +2,7 @@ import functools
 import inspect
 from typing import Any, Callable, Union, Type, Dict
 
-from .utils import get_importable_name, get_module_name, import_, reset_uid
+import orjson  # use orjson as serializer backend
 
 
 __all__ = ['trace', 'dump', 'load', 'SerializableObject']
