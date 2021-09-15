@@ -2,7 +2,7 @@ import functools
 import inspect
 from typing import Any, Callable, Union, Type, Dict
 
-import orjson  # use orjson as serializer backend
+import json_tricks  # use json_tricks as serializer backend
 
 
 __all__ = ['trace', 'dump', 'load', 'SerializableObject']
@@ -42,7 +42,15 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
         return _trace_func(cls_or_func)
 
 
-def dump(obj, f=None, use_trace=True): ...
+def dump(obj, f=None, use_trace=True, indent=2, sort_keys=False) -> str:
+    assert indent in [0, 2], 'Indent only supports 0 and 2.'
+    option = 0
+    if indent == 2:
+        option |= orjson.OPT_INDENT_2
+    if sort_keys:
+        option |= orjson.OPT_SORT_KEYS
+
+    orjson.dumps(data, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY)
 
 
 def load(string=None, f=None): ...
