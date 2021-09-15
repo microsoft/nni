@@ -44,12 +44,15 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
         return _trace_func(cls_or_func)
 
 
-def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, **json_tricks_kwargs) -> Union[str, bytes]:
+def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size_limit: int = 4096,
+         **json_tricks_kwargs) -> Union[str, bytes]:
     """
     Parameters
     ----------
     fp : file handler or path
         File to write to. Keep it none if you want to dump a string.
+    pickle_size_limit : int
+        This is set to avoid too long serialization result. Set to -1 to disable size check.
     json_tricks_kwargs : dict
         Other keyword arguments passed to json tricks (backend), e.g., indent=2.
 
@@ -69,7 +72,9 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, **json_tric
         json_tricks.json_complex_encode,
         json_tricks.json_set_encode,
         json_tricks.numeric_types_encode,
-        functools.partial(serializable_object_encode, use_trace=use_trace),
+        functools.partial(_json_tricks_serializable_object_encode, use_trace=use_trace),
+        functools.partial(_json_tricks_func_or_cls_encode, pickle_size_limit=pickle_size_limit),
+        functools.partial(_json_tricks_any_object_encode, pickle_size_limit=pickle_size_limit),
     ]
 
     if fp is not None:
@@ -78,9 +83,16 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, **json_tric
         return json_tricks.dumps(obj, **json_tricks_kwargs)
 
 
-def load(string=None, f=None):
+def load(string: str = None, fp: Optional[Any] = None):
+    """
+    At least one of string or fp has to be not none.
+
+    Parameters
+    ----------
+    """
+    assert string is not None or fp is not None
     # see encoders for explanation
-    hook = [
+    hooks = [
         json_tricks.pathlib_hook,
         json_tricks.pandas_hook,
         json_tricks.json_numpy_obj_hook,
@@ -89,8 +101,15 @@ def load(string=None, f=None):
         json_tricks.json_complex_hook,
         json_tricks.json_set_hook,
         json_tricks.numeric_types_hook,
-        class_hook,
+        _json_tricks_serializable_object_decode,
+        _json_tricks_func_or_cls_decode,
+        _json_tricks_any_object_decode
     ]
+
+    if string is not None:
+        return json_tricks.loads(string, obj_pairs_hooks=hooks)
+    else:
+        return json_tricks.load(fp, obj_pairs_hooks=hooks)
 
 
 class SerializableObject:
@@ -129,7 +148,7 @@ class SerializableObject:
         """
         return SerializableObject(self._nni_symbol, self._nni_args)
 
-    def dump(self):
+    def __json_encode__(self):
         return {
             '__symbol__': self._nni_symbol,
             '__args__': self._nni_args
@@ -214,12 +233,16 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
     return module_name
 
 
-def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False) -> str:
+def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> str:
     try:
         name = _get_cls_or_func_name(cls_or_func)
+        # import success, use a path format
         return 'nni-type:path:' + name
     except ImportError:
         b = cloudpickle.dumps(cls_or_func)
+        if len(b) > pickle_size_limit:
+            raise ValueError(f'Pickle too large when trying to dump {cls_or_func}')
+        # fallback to cloudpickle
         return 'nni-type:bytes:' + base64.b64encode(b).decode()
 
 
@@ -233,54 +256,38 @@ def _json_tricks_func_or_cls_decode(s: str) -> Any:
     return s
 
 
-def _json_tricks_serializable_object_encode(obj, primitives=False, use_trace=True):
+def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, use_trace: bool = True) -> Dict[str, Any]:
     # Encodes a serializable object instance to json.
     # If primitives, the representation is simplified and cannot be recovered!
 
-    # do nothing to instance that is not a serializable object
-    if not isinstance(obj, SerializableObject):
+    # do nothing to instance that is not a serializable object and do not use trace
+    if not use_trace or not isinstance(obj, SerializableObject):
         return obj
 
+    return obj.__json_encode__()
 
+
+def _json_tricks_serializable_object_decode(obj: Dict[str, Any]) -> Any:
+    if isinstance(obj, dict) and '__symbol__' in obj and '__args__' in obj:
+        return SerializableObject(obj['__symbol__'], obj['__args__'])
+    return obj
+
+
+def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> Any:
+    # We want to use this to replace the class instance encode in json-tricks.
+    # Therefore the coverage should be roughly same.
+    if isinstance(obj, list) or isinstance(obj, dict):
+        return obj
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
-        if not hasattr(obj, '__new__'):
-            raise TypeError('class "{0:s}" does not have a __new__ method; '.format(obj.__class__) +
-                ('perhaps it is an old-style class not derived from `object`; add `object` as a base class to encode it.'
-                    if (version[:2] == '2.') else 'this should not happen in Python3'))
-        if type(obj) == type(lambda: 0):
-            raise TypeError('instance "{0:}" of class "{1:}" cannot be encoded because it appears to be a lambda or function.'
-                .format(obj, obj.__class__))
-        try:
-            obj.__new__(obj.__class__)
-        except TypeError:
-            raise TypeError(('instance "{0:}" of class "{1:}" cannot be encoded, perhaps because it\'s __new__ method '
-                'cannot be called because it requires extra parameters').format(obj, obj.__class__))
-        mod = get_module_name_from_object(obj)
-        if mod == 'threading':
-            # In Python2, threading objects get serialized, which is probably unsafe
-            return obj
-        name = obj.__class__.__name__
-        if hasattr(obj, '__json_encode__'):
-            attrs = obj.__json_encode__()
-            if primitives:
-                return attrs
-            else:
-                return hashodict((('__instance_type__', (mod, name)), ('attributes', attrs)))
-        dct = hashodict([('__instance_type__',(mod, name))])
-        if hasattr(obj, '__slots__'):
-            slots = obj.__slots__
-            if isinstance(slots, str):
-                slots = [slots]
-            slots = list(item for item in slots if item != '__dict__')
-            dct['slots'] = hashodict([])
-            for s in slots:
-                dct['slots'][s] = getattr(obj, s)
-        if hasattr(obj, '__dict__'):
-            dct['attributes'] = hashodict(obj.__dict__)
-        if primitives:
-            attrs = dct.get('attributes',{})
-            attrs.update(dct.get('slots',{}))
-            return attrs
-        else:
-            return dct
+        b = cloudpickle.dumps(obj)
+        if len(b) > pickle_size_limit:
+            raise ValueError(f'Pickle too large when trying to dump {obj}')
+        return 'nni-obj:bytes:' + base64.b64encode(b).decode()
+    return obj
+
+
+def _json_tricks_any_object_decode(obj: str) -> Any:
+    if isinstance(obj, str) and obj.startswith('nni-obj:bytes:'):
+        b = base64.b64decode(obj.split(':', 2)[-1])
+        return cloudpickle.loads(b)
     return obj
