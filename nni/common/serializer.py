@@ -1,8 +1,9 @@
 import functools
 import inspect
-from typing import Any, Callable, Union, Type, Dict
+from typing import Any, Callable, Union, Type, Dict, Optional
 
 import json_tricks  # use json_tricks as serializer backend
+import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 
 
 __all__ = ['trace', 'dump', 'load', 'SerializableObject']
@@ -42,15 +43,19 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
         return _trace_func(cls_or_func)
 
 
-def dump(obj, f=None, use_trace=True, indent=2, sort_keys=False) -> str:
-    assert indent in [0, 2], 'Indent only supports 0 and 2.'
-    option = 0
-    if indent == 2:
-        option |= orjson.OPT_INDENT_2
-    if sort_keys:
-        option |= orjson.OPT_SORT_KEYS
-
-    orjson.dumps(data, option=orjson.OPT_NAIVE_UTC | orjson.OPT_SERIALIZE_NUMPY)
+def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, **json_tricks_kwargs) -> str:
+    """
+    Parameters
+    ----------
+    fp : file handler or path
+        File to write to. Keep it none if you want to dump a string.
+    json_tricks_kwargs : dict
+        Other keyword arguments passed to json tricks (backend), e.g., indent=2.
+    """
+    if fp is not None:
+        return json_tricks.dump(obj, fp, **json_tricks_kwargs)
+    else:
+        return json_tricks.dumps(obj, **json_tricks_kwargs)
 
 
 def load(string=None, f=None): ...
