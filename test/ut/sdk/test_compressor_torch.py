@@ -359,20 +359,20 @@ class CompressorTestCase(TestCase):
         weight = torch.tensor([[1, 2], [3, 5]]).float()
         model.conv2.module.weight.data = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
-        assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
-        assert model.conv2.module.zero_point == 0
+        assert math.isclose(model.conv2.module.weight_scale, 5 / 255, abs_tol=eps)
+        assert model.conv2.module.weight_zero_point == 0
         quantizer.quantize_input(input, model.conv2)
-        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.04 / 255])))
-        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
+        self.assertTrue(torch.allclose(model.conv2.module.input_scale, torch.tensor([4. / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor(0.)))
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         model.conv2.module.weight = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
-        assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
-        assert model.conv2.module.zero_point in (42, 43)
+        assert math.isclose(model.conv2.module.weight_scale, 6 / 255, abs_tol=eps)
+        assert model.conv2.module.weight_zero_point in (42, 43)
         quantizer.quantize_input(input, model.conv2)
-        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.0796 / 255])))
-        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
+        self.assertTrue(torch.allclose(model.conv2.module.input_scale, torch.tensor([4. / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor(0.)))
         # test value of weight and bias after quantization
         weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])

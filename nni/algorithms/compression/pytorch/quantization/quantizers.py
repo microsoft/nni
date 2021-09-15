@@ -600,14 +600,6 @@ class QAT_Quantizer(Quantizer):
         if quant_start_step > int(self.bound_model.steps):
             return inputs
 
-        tracked_min_input = update_ema(module.tracked_min_input, current_min, ema_decay)
-        tracked_max_input = update_ema(module.tracked_max_input, current_max, ema_decay)
-        module.tracked_min_input.copy_(tracked_min_input)
-        module.tracked_max_input.copy_(tracked_max_input)
-
-        if quant_start_step > int(self.bound_model.steps):
-            return inputs
-
         scale, zero_point = update_quantization_param(
             bits, module.tracked_min_input, module.tracked_max_input, dtype, scheme)
         module.input_scale.copy_(scale)
