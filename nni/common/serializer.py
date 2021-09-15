@@ -47,6 +47,11 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
 def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size_limit: int = 4096,
          **json_tricks_kwargs) -> Union[str, bytes]:
     """
+    Convert a nested data structure to a json string. Save to file if fp is specified.
+    Use json-tricks as main backend. For unhandled cases in json-tricks, use cloudpickle.
+    The serializer is not designed for long-term storage use, but rather to copy data between processes.
+    The format is also subject to change between NNI releases.
+
     Parameters
     ----------
     fp : file handler or path
@@ -83,8 +88,9 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size
         return json_tricks.dumps(obj, **json_tricks_kwargs)
 
 
-def load(string: str = None, fp: Optional[Any] = None):
+def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> Any:
     """
+    Load the string or from file, and convert it to a complex data structure.
     At least one of string or fp has to be not none.
 
     Parameters
@@ -107,9 +113,9 @@ def load(string: str = None, fp: Optional[Any] = None):
     ]
 
     if string is not None:
-        return json_tricks.loads(string, obj_pairs_hooks=hooks)
+        return json_tricks.loads(string, obj_pairs_hooks=hooks, **json_tricks_kwargs)
     else:
-        return json_tricks.load(fp, obj_pairs_hooks=hooks)
+        return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
 class SerializableObject:
@@ -282,6 +288,7 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
         b = cloudpickle.dumps(obj)
         if len(b) > pickle_size_limit:
             raise ValueError(f'Pickle too large when trying to dump {obj}')
+        # use base64 to dump a bytes array
         return 'nni-obj:bytes:' + base64.b64encode(b).decode()
     return obj
 
