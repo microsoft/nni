@@ -6,7 +6,6 @@ bohb_advisor.py
 '''
 
 import sys
-import os
 import math
 import logging
 import json_tricks
@@ -476,7 +475,8 @@ class BOHB(MsgDispatcherBase):
         cs = None
         logger.debug(f'Received data: {data}')
         if self.config_space:
-            logger.debug(f'Got a ConfigSpace file path, parsing the search space directly from {self.config_space}. The NNI search space is ignored.')
+            logger.debug(f'Got a ConfigSpace file path, parsing the search space directly from {self.config_space}.\
+             The NNI search space is ignored.')
             with open(self.config_space, 'r') as fh:
                 cs = pcs_new.read(fh)
         else:
