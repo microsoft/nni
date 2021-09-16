@@ -31,6 +31,7 @@ from utils import *
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 model_type = 'mobilenet_v2_torchhub'
+model_type = 'mobilenet_v1'
 input_size = 224
 n_classes = 120
 
