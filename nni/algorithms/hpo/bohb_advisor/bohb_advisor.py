@@ -246,6 +246,7 @@ class BOHBClassArgsValidator(ClassArgsValidator):
             Optional('random_fraction'): self.range('random_fraction', float, 0, 9999),
             Optional('bandwidth_factor'): self.range('bandwidth_factor', float, 0, 9999),
             Optional('min_bandwidth'): self.range('min_bandwidth', float, 0, 9999),
+            Optional('config_space'): self.keyType('config_space', str)
         }).validate(kwargs)
 
 class BOHB(MsgDispatcherBase):
@@ -299,7 +300,8 @@ class BOHB(MsgDispatcherBase):
                  num_samples=64,
                  random_fraction=1/3,
                  bandwidth_factor=3,
-                 min_bandwidth=1e-3):
+                 min_bandwidth=1e-3,
+                 config_space=None):
         super(BOHB, self).__init__()
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.min_budget = min_budget
@@ -311,6 +313,7 @@ class BOHB(MsgDispatcherBase):
         self.random_fraction = random_fraction
         self.bandwidth_factor = bandwidth_factor
         self.min_bandwidth = min_bandwidth
+        self.config_space = config_space
 
         # all the configs waiting for run
         self.generated_hyper_configs = []
@@ -472,11 +475,9 @@ class BOHB(MsgDispatcherBase):
         search_space = data
         cs = None
         logger.debug(f'Received data: {data}')
-        if len(search_space) == 1 and 'ConfigSpace' in search_space.keys():
-            configFileName = search_space["ConfigSpace"]["_value"][0]
-            logger.debug(f'We have a ConfigSpace file, parsing it directly from {configFileName}')
-            logger.debug(f'Current directory: {os.getcwd()}')
-            with open(configFileName, 'r') as fh:
+        if self.config_space:
+            logger.debug(f'Got a ConfigSpace file path, parsing the search space directly from {self.config_space}. The NNI search space is ignored.')
+            with open(self.config_space, 'r') as fh:
                 cs = pcs_new.read(fh)
         else:
             cs = CS.ConfigurationSpace()

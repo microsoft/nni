@@ -305,3 +305,6 @@ class ClassArgsValidator(object):
             And(keyType, error='%s should be %s type!' % (key, keyType.__name__)),
             And(lambda n: start <= n <= end, error='%s should be in range of (%s, %s)!' % (key, start, end))
         )
+
+    def keyType(self, key, keyType):
+        return And(keyType, error='%s should be %s type!' % (key, keyType.__name__))
