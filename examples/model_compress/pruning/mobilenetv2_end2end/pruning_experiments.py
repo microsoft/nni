@@ -276,40 +276,42 @@ def run_pruning(args):
     log.write('Before Pruning:\nLoss: {}\nAccuracy: {}\n'.format(initial_loss, initial_acc))
 
     # set up config list and pruner
-    config_list = []
-    if 'conv0' in args.pruning_mode or args.pruning_mode == 'all':
-        if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
-            config_list.append({
-                'op_names': ['features.{}.conv.0.1'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
-        else:
-            config_list.append({
-                'op_names': ['features.{}.conv.0.0'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
-    if 'conv1' in args.pruning_mode or args.pruning_mode == 'all':
-        if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
-            config_list.append({
-                'op_names': ['features.{}.conv.1.1'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
-        else:
-            config_list.append({
-                'op_names': ['features.{}.conv.1.0'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
-    if 'conv2' in args.pruning_mode or args.pruning_mode == 'all':
-        if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
-            config_list.append({
-                'op_names': ['features.{}.conv.3'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
-        else:
-            config_list.append({
-                'op_names': ['features.{}.conv.2'.format(x) for x in range(2, 18)],
-                'sparsity': args.sparsity
-            })
+    config_list = [{'op_types':['Conv2d'], 'sparsity':args.sparsity}]
+    if 'mobilenet_v2' in model_type:
+        config_list = []
+        if 'conv0' in args.pruning_mode or args.pruning_mode == 'all':
+            if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
+                config_list.append({
+                    'op_names': ['features.{}.conv.0.1'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
+            else:
+                config_list.append({
+                    'op_names': ['features.{}.conv.0.0'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
+        if 'conv1' in args.pruning_mode or args.pruning_mode == 'all':
+            if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
+                config_list.append({
+                    'op_names': ['features.{}.conv.1.1'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
+            else:
+                config_list.append({
+                    'op_names': ['features.{}.conv.1.0'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
+        if 'conv2' in args.pruning_mode or args.pruning_mode == 'all':
+            if args.pruner_name == 'slim' or (args.pruner_name == 'agp' and args.agp_pruning_alg == 'slim'):
+                config_list.append({
+                    'op_names': ['features.{}.conv.3'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
+            else:
+                config_list.append({
+                    'op_names': ['features.{}.conv.2'.format(x) for x in range(2, 18)],
+                    'sparsity': args.sparsity
+                })
     print(config_list)
 
     kwargs = {}
