@@ -330,7 +330,7 @@ def run_pruning(args):
             kwargs['epochs_per_iteration'] = args.agp_n_epochs_per_iter
         if args.pruner_name == 'slim':
             kwargs['sparsifying_training_epochs'] = 10
-
+    import pdb; pdb.set_trace()
     # pruning
     pruner = pruner_type_to_class[args.pruner_name](model, config_list, **kwargs)
     pruner.compress()
