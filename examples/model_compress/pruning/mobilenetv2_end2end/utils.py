@@ -16,7 +16,16 @@ from mobilenet_v2 import MobileNetV2
 
 def create_model(model_type=None, n_classes=120, input_size=224, checkpoint=None, pretrained=False, width_mult=1.):
     if model_type == 'mobilenet_v1':
-        model = MobileNet(n_class=n_classes, profile='normal')
+        assert checkpoint is not None
+        model = MobileNet(n_class=1000, profile='normal')
+        state_dict = torch.load(checkpoint)
+        if 'state_dict' in state_dict:
+            state_dict = state_dict['state_dict']
+        model.load_state_dict(state_dict)
+        feature_size = model.classifier[0].weight.size(1)
+        new_linear = torch.nn.Linear(feature_size, n_classes)
+        model.classifier[0] = new_linear
+        return model
     elif model_type == 'mobilenet_v2':
         model = MobileNetV2(n_class=n_classes, input_size=input_size, width_mult=width_mult)
     elif model_type == 'mobilenet_v2_torchhub':

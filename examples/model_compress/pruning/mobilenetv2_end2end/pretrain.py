@@ -40,18 +40,17 @@ def run_pretrain(args):
     print(args)
     torch.set_num_threads(args.n_workers)
     
-    model_type = 'mobilenet_v2_torchhub'   
+    model_type = 'mobilenet_v1'
     pretrained = True                      # load imagenet weight
     experiment_dir = 'pretrained_{}'.format(model_type) if args.experiment_dir is None else args.experiment_dir
     os.mkdir(experiment_dir)
-    checkpoint = None
     input_size = 224
     n_classes = 120
     
     log = open(experiment_dir + '/pretrain.log', 'w')
     
     model = create_model(model_type=model_type, pretrained=pretrained, n_classes=n_classes,
-                         input_size=input_size, checkpoint=checkpoint)
+                         input_size=input_size, checkpoint=args.checkpoint_name)
     model = model.to(device)
     print(model)
     # count_flops(model, device=device)
@@ -63,6 +62,7 @@ def run_pretrain(args):
 
     criterion = nn.CrossEntropyLoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate, momentum=0.9, weight_decay=args.weight_decay)
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.n_epochs)
 
     best_valid_acc = 0.0
     for epoch in range(args.n_epochs):
@@ -92,7 +92,8 @@ def run_pretrain(args):
         if valid_acc > best_valid_acc:
             best_valid_acc = valid_acc
             torch.save(model.state_dict(), experiment_dir + '/checkpoint_best.pt')
-
+        scheduler.step()
+        print('Learning rate:', scheduler.get_last_lr())
     log.close()
 
 
