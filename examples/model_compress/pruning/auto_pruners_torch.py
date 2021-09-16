@@ -19,6 +19,7 @@ from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 import sys
+sys.path.append('../models')
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
 from cifar10.resnet import ResNet18, ResNet50
