@@ -43,7 +43,7 @@ def run_pretrain(args):
     model_type = 'mobilenet_v1'
     pretrained = True                      # load imagenet weight
     experiment_dir = 'pretrained_{}'.format(model_type) if args.experiment_dir is None else args.experiment_dir
-    os.mkdir(experiment_dir)
+    os.makedirs(experiment_dir, exist_ok=True)
     input_size = 224
     n_classes = 120
     
