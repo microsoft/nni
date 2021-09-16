@@ -71,8 +71,7 @@ INTERNAL_SCHEMA = {
     'total_sparsity': And(float, lambda n: 0 <= n < 1),
     SchemaOptional('max_sparsity_per_layer'): {str: float},
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str],
-    SchemaOptional('op_partial_names'): [str]
+    SchemaOptional('op_names'): [str]
 }
 
 
