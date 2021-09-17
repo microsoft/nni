@@ -251,6 +251,15 @@ class GraphConverter:
                     return f'({left} < {right})'
                 elif tensor.node().kind() == 'prim::If':
                     raise RuntimeError('Have not supported `if A and/or B`, please use two `if` statements instead.')
+                elif tensor.node().kind() == 'aten::abs':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'(torch.abs({value}))'
+                elif tensor.node().kind() == 'aten::sum':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'(torch.sum({value}))'
+                elif tensor.node().kind() == 'aten::item':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'({value}.item())'
                 else:
                     raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition, '
                                         'you are suggested to decorate the corresponding class with "@basic_unit".')
@@ -342,7 +351,7 @@ class GraphConverter:
                         assert predecessor.hasAttribute('name')
                         module_name_space.append(predecessor.s('name'))
                         submodule_full_name = build_full_name(module_name, list(reversed(module_name_space)))
-                        submodule_python_name = build_python_name(module_name, list(reversed(module_name_space)))
+                        submodule_python_name = build_python_name(module_python_name, list(reversed(module_name_space)))
                         submodule_obj = module
                         script_submodule = script_module
                         for each_name in list(reversed(module_name_space)):
@@ -696,7 +705,7 @@ class GraphConverter:
         dict
             the input arguments of this module
         """
-        return self._convert_module(script_module, module, module_name, ir_model.python_name, ir_model)
+        return self._convert_module(script_module, module, module_name, None, ir_model)
 
 
 class GraphConverterWithShape(GraphConverter):
@@ -715,7 +724,7 @@ class GraphConverterWithShape(GraphConverter):
     def convert_module(self, script_module, module, module_name, ir_model, dummy_input):
         module.eval()
 
-        ir_graph, attrs = self._convert_module(script_module, module, module_name, ir_model.python_name, ir_model)
+        ir_graph, attrs = self._convert_module(script_module, module, module_name, None, ir_model)
         self.remove_dummy_nodes(ir_model)
         self._initialize_parameters(ir_model)
         self._trace_module(module, module_name, ir_model, dummy_input)

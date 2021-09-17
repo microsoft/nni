@@ -106,7 +106,6 @@ class Model:
         assert _internal, '`Model()` is private, use `model.fork()` instead'
         self.model_id: int = uid('model')
         self.python_class: Optional[Type] = None
-        self.python_name: str = 'module'
         self.python_init_params: Optional[Dict[str, Any]] = None
 
         self.status: ModelStatus = ModelStatus.Mutating
@@ -123,7 +122,7 @@ class Model:
     def __repr__(self):
         return f'Model(model_id={self.model_id}, status={self.status}, graphs={list(self.graphs.keys())}, ' + \
             f'evaluator={self.evaluator}, metric={self.metric}, intermediate_metrics={self.intermediate_metrics}, ' + \
-            f'python_class={self.python_class}, python_name={self.python_name})'
+            f'python_class={self.python_class})'
 
     @property
     def root_graph(self) -> 'Graph':
@@ -181,7 +180,7 @@ class Model:
         There could be multiple nodes with the same label. Name space name can uniquely
         identify a graph or node.
 
-        NOTE: the implementation does not support the class abstration
+        NOTE: the implementation does not support the class abstraction
         """
         matched_nodes = []
         for graph in self.graphs.values():
@@ -226,12 +225,6 @@ class Model:
             return matched_nodes[0]
         else:
             return None
-    
-    def set_python_name(self, python_name: str):
-        """
-        Set python name
-        """
-        self.python_name = python_name
 
 
 class ModelStatus(Enum):

@@ -17,7 +17,10 @@ def build_full_name(prefix, name, seq=None):
 def build_python_name(prefix, name):
     if isinstance(name, list):
         name = '.'.join(name)
-    return '{}.{}'.format(prefix, name)
+    if prefix:
+        return '{}.{}'.format(prefix, name)
+    else: # predix could be None
+        return name
 
 
 def build_cand_name(name, label):
