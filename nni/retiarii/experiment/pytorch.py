@@ -310,8 +310,6 @@ class RetiariiExperiment(Experiment):
                     status = self.get_status()
                 else:
                     return False
-                print('Debug status', status)
-                print(self.get_job_statistics())
                 if status == 'DONE' or status == 'STOPPED':
                     return True
                 if status == 'ERROR':
