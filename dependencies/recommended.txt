@@ -14,3 +14,4 @@ peewee
 graphviz
 gym
 tianshou >= 0.4.1
+typing-extensions >= 3.10  # pylint requires newer typing extension. Override requirements in tensorflow
