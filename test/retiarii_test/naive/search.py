@@ -97,7 +97,7 @@ if __name__ == '__main__':
     exp_config.trial_concurrency = 2
     exp_config.max_trial_number = args.budget
     exp_config.trial_gpu_number = 1
-    exp_config.training_service.use_active_gpu = False
+    exp_config.training_service.use_active_gpu = True  # Integration test GPU has a Xorg running
     export_formatter = 'dict'
 
     if args.exec == 'graph':
