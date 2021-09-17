@@ -6,6 +6,7 @@ import functools
 from enum import Enum, unique
 import json_tricks
 from schema import And
+from pathlib import Path
 
 from . import parameter_expressions
 
@@ -306,5 +307,8 @@ class ClassArgsValidator(object):
             And(lambda n: start <= n <= end, error='%s should be in range of (%s, %s)!' % (key, start, end))
         )
 
-    def keyType(self, key, keyType):
-        return And(keyType, error='%s should be %s type!' % (key, keyType.__name__))
+    def path(self, key):
+        return And(
+            And(str, error='%s should be a string!' % key),
+            And(lambda p: Path(p).exists(), error='%s path does not exist!' % (key))
+        )

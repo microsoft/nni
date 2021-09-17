@@ -4,7 +4,6 @@
 '''
 bohb_advisor.py
 '''
-
 import sys
 import math
 import logging
@@ -245,7 +244,7 @@ class BOHBClassArgsValidator(ClassArgsValidator):
             Optional('random_fraction'): self.range('random_fraction', float, 0, 9999),
             Optional('bandwidth_factor'): self.range('bandwidth_factor', float, 0, 9999),
             Optional('min_bandwidth'): self.range('min_bandwidth', float, 0, 9999),
-            Optional('config_space'): self.keyType('config_space', str)
+            Optional('config_space'): self.path('config_space')
         }).validate(kwargs)
 
 class BOHB(MsgDispatcherBase):
