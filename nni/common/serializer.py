@@ -1,7 +1,7 @@
 import base64
 import functools
 import inspect
-from typing import Any, Callable, Union, Type, Dict, Optional
+from typing import Any, Callable, Union, Type, Dict, Optional, List, TypeVar
 
 import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
@@ -10,7 +10,75 @@ import cloudpickle  # use cloudpickle as backend for unserializable types and in
 __all__ = ['trace', 'dump', 'load', 'SerializableObject']
 
 
-def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
+T = TypeVar('T')
+
+
+class SerializableObject:
+    """
+    Serializable object is a wrapper of existing python objects, that supports dump and load easily.
+    Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
+    """
+
+    def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any],
+                 _self_contained: bool = False):
+        # use dict to avoid conflicts with user's getattr and setattr
+        self.__dict__['_nni_symbol'] = symbol
+        self.__dict__['_nni_args'] = args
+        self.__dict__['_nni_kwargs'] = kwargs
+
+        self.__dict__['_nni_self_contained'] = _self_contained
+
+        if _self_contained:
+            # this is for internal usage only.
+            # kwargs is used to init the full object in the same object as this one, for simpler implementation.
+            super().__init__(*args, **kwargs)
+
+    def get(self) -> Any:
+        """
+        Get the original object.
+        """
+        if self._get_nni_attr('self_contained'):
+            return self
+        if '_nni_cache' not in self.__dict__:
+            self.__dict__['_nni_cache'] = self._get_nni_attr('symbol')(
+                *self._get_nni_attr('args'), **self._get_nni_attr('kwargs')
+            )
+        return self.__dict__['_nni_cache']
+
+    def copy(self) -> Union[T, 'SerializableObject']:
+        """
+        Perform a shallow copy. Will throw away the self-contain property for classes (refer to implementation).
+        This is the one that should be used when you want to "mutate" a serializable object.
+        """
+        return SerializableObject(
+            self._get_nni_attr('symbol'),
+            self._get_nni_attr('args'),
+            self._get_nni_attr('kwargs')
+        )
+
+    def __json_encode__(self):
+        ret = {'__symbol__': _get_hybrid_cls_or_func_name(self._get_nni_attr('symbol'))}
+        if self._get_nni_attr('args'):
+            ret['__args__'] = self._get_nni_attr('args')
+        ret['__kwargs__'] = self._get_nni_attr('kwargs')
+        return ret
+
+    def _get_nni_attr(self, name):
+        return self.__dict__['_nni_' + name]
+
+    def __repr__(self):
+        if self._get_nni_attr('self_contained'):
+            return repr(self)
+        if '_nni_cache' in self.__dict__:
+            return repr(self._get_nni_attr('cache'))
+        return 'SerializableObject(' + \
+            ', '.join(['type=' + self._get_nni_attr('symbol').__name__] +
+                      [repr(d) for d in self._get_nni_attr('args')] +
+                      [k + '=' + repr(v) for k, v in self._get_nni_attr('kwargs').items()]) + \
+            ')'
+
+
+def trace(cls_or_func: T = None, /, *, kw_only: bool = True) -> Union[T, SerializableObject]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -29,6 +97,9 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
     Also it records extra information about where this object comes from. That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
 
+    If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspect the argument
+    list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
+
     Example:
 
     .. code-block:: python
@@ -38,10 +109,18 @@ def trace(cls_or_func: Union[Type, Callable]) -> Union[Type, Callable]:
             pass
     """
 
-    if isinstance(cls_or_func, type):
-        return _trace_cls(cls_or_func)
-    else:
-        return _trace_func(cls_or_func)
+    def wrap(cls_or_func):
+        if isinstance(cls_or_func, type):
+            return _trace_cls(cls_or_func, kw_only)
+        else:
+            return _trace_func(cls_or_func, kw_only)
+
+    # if we're being called as @trace()
+    if cls_or_func is None:
+        return wrap
+
+    # if we are called without parentheses
+    return wrap(cls_or_func)
 
 
 def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size_limit: int = 4096,
@@ -85,7 +164,7 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size
     if fp is not None:
         return json_tricks.dump(obj, fp, obj_encoders=encoders, **json_tricks_kwargs)
     else:
-        return json_tricks.dumps(obj, **json_tricks_kwargs)
+        return json_tricks.dumps(obj, obj_encoders=encoders, **json_tricks_kwargs)
 
 
 def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> Any:
@@ -107,8 +186,8 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         json_tricks.json_complex_hook,
         json_tricks.json_set_hook,
         json_tricks.numeric_types_hook,
-        _json_tricks_serializable_object_decode,
         _json_tricks_func_or_cls_decode,
+        _json_tricks_serializable_object_decode,
         _json_tricks_any_object_decode
     ]
 
@@ -118,61 +197,18 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-class SerializableObject:
-    """
-    Serializable object is a wrapper of existing python objects, that supports dump and load easily.
-    Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
-    """
-
-    def __init__(self, nni_symbol: Union[Type, Callable], nni_args: Dict[str, Any], _self_contained: bool = False, **kwargs):
-        self._nni_symbol = nni_symbol
-        self._nni_args = nni_args
-
-        self._self_contained = _self_contained
-
-        if not _self_contained:
-            assert not kwargs, 'kwargs cannot be set for non-internal usage.'
-        else:
-            # this is for internal usage only.
-            # kwargs is used to init the full object in the same object as this one, for simpler implementation.
-            super().__init__(**kwargs)
-
-    def get(self) -> Any:
-        """
-        Get the original object.
-        """
-        if self._self_contained:
-            return self
-        if not hasattr(self, '_nni_cache'):
-            self._nni_cache = self.symbol(self.args)()
-        return self._nni_cache
-
-    def copy(self) -> 'SerializableObject':
-        """
-        Perform a shallow copy. Will throw away the self-contain property for classes (refer to implementation).
-        This is the one that should be used when you want to "mutate" a serializable object.
-        """
-        return SerializableObject(self._nni_symbol, self._nni_args)
-
-    def __json_encode__(self):
-        return {
-            '__symbol__': self._nni_symbol,
-            '__args__': self._nni_args
-        }
-
-
-def _trace_cls(base):
+def _trace_cls(base, kw_only):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
     class wrapper(SerializableObject, base):
-
         def __init__(self, *args, **kwargs):
-            # store a copy of initial parameters
-            full_args = _get_arguments_as_dict(base.__init__, args, kwargs)
+            if kw_only:
+                # store a copy of initial parameters
+                args, kwargs = [], _get_arguments_as_dict(base.__init__, args, kwargs)
 
             # calling serializable object init to initialize the full object
-            super().__init__(nni_symbol=base, nni_args=full_args, _self_contained=True, **full_args)
+            super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True)
 
     _MISSING = '_missing'
     for k in functools.WRAPPER_ASSIGNMENTS:
@@ -187,12 +223,13 @@ def _trace_cls(base):
     return wrapper
 
 
-def _trace_func(func):
+def _trace_func(func, kw_only):
     @functools.wraps
     def wrapper(*args, **kwargs):
-        # similar to class, store parameters here
-        full_args = _get_arguments_as_dict(func, args, kwargs)
-        return SerializableObject(func, full_args)
+        if kw_only:
+            # similar to class, store parameters here
+            args, kwargs = [], _get_arguments_as_dict(func, args, kwargs)
+        return SerializableObject(func, args, kwargs)
 
     return wrapper
 
@@ -239,26 +276,43 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
     return module_name
 
 
-def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> str:
+def _get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:
     try:
         name = _get_cls_or_func_name(cls_or_func)
         # import success, use a path format
-        return 'nni-type:path:' + name
+        return 'path:' + name
     except ImportError:
         b = cloudpickle.dumps(cls_or_func)
         if len(b) > pickle_size_limit:
-            raise ValueError(f'Pickle too large when trying to dump {cls_or_func}')
+            raise ValueError(f'Pickle too large when trying to dump {cls_or_func}. '
+                             'Please try to raise pickle_size_limit if you insist.')
         # fallback to cloudpickle
-        return 'nni-type:bytes:' + base64.b64encode(b).decode()
+        return 'bytes:' + base64.b64encode(b).decode()
 
 
-def _json_tricks_func_or_cls_decode(s: str) -> Any:
-    if isinstance(s, str):
-        if s.startswith('nni-type:path:'):
-            return _import_cls_or_func_from_name(s.split(':', 2)[-1])
-        elif s.startswith('nni-type:bytes:'):
-            b = base64.b64decode(s.split(':', 2)[-1])
-            return cloudpickle.loads(b)
+def _import_cls_or_func_from_hybrid_name(s: str) -> Any:
+    if s.startswith('bytes:'):
+        b = base64.b64decode(s.split(':', 1)[-1])
+        return cloudpickle.loads(b)
+    if s.startswith('path:'):
+        s = s.split(':', 1)[-1]
+    return _import_cls_or_func_from_name(s)
+
+
+def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> str:
+    if not isinstance(cls_or_func, type) and not callable(cls_or_func):
+        # not a function or class, continue
+        return cls_or_func
+
+    return {
+        '__nni_type__': _get_hybrid_cls_or_func_name(cls_or_func, pickle_size_limit)
+    }
+
+
+def _json_tricks_func_or_cls_decode(s: Dict[str, Any]) -> Any:
+    if isinstance(s, dict) and '__nni_type__' in s:
+        s = s['__nni_type__']
+        return _import_cls_or_func_from_hybrid_name(s)
     return s
 
 
@@ -274,8 +328,12 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
 
 
 def _json_tricks_serializable_object_decode(obj: Dict[str, Any]) -> Any:
-    if isinstance(obj, dict) and '__symbol__' in obj and '__args__' in obj:
-        return SerializableObject(obj['__symbol__'], obj['__args__'])
+    if isinstance(obj, dict) and '__symbol__' in obj and '__kwargs__' in obj:
+        return SerializableObject(
+            _import_cls_or_func_from_hybrid_name(obj['__symbol__']),
+            getattr(obj, '__args__', []),
+            obj['__kwargs__']
+        )
     return obj
 
 
@@ -287,14 +345,18 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
         if len(b) > pickle_size_limit:
-            raise ValueError(f'Pickle too large when trying to dump {obj}')
+            raise ValueError(f'Pickle too large when trying to dump {obj}. '
+                             'Please try to raise pickle_size_limit if you insist.')
         # use base64 to dump a bytes array
-        return 'nni-obj:bytes:' + base64.b64encode(b).decode()
+        return {
+            '__nni_obj__': base64.b64encode(b).decode()
+        }
     return obj
 
 
-def _json_tricks_any_object_decode(obj: str) -> Any:
-    if isinstance(obj, str) and obj.startswith('nni-obj:bytes:'):
-        b = base64.b64decode(obj.split(':', 2)[-1])
+def _json_tricks_any_object_decode(obj: Dict[str, Any]) -> Any:
+    if isinstance(obj, dict) and '__nni_obj__' in obj:
+        obj = obj['__nni_obj__']
+        b = base64.b64decode(obj)
         return cloudpickle.loads(b)
     return obj
