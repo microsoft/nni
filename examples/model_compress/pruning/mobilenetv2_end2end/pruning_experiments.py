@@ -353,11 +353,11 @@ def run_pruning(args):
 
     # finetuning
     if args.kd:
-        model = run_finetune_distillation(model, teacher_model, train_dataloader, valid_dataloader, device,
+        model = run_finetune_distillation(model, teacher_model, train_dataloader, test_dataloader, device,
                                           args.alpha, args.temp, n_epochs=args.finetune_epochs,
                                           learning_rate=args.learning_rate, weight_decay=args.weight_decay)
     else:
-        model = run_finetune(model, train_dataloader, valid_dataloader, device, n_epochs=args.finetune_epochs,
+        model = run_finetune(model, train_dataloader, test_dataloader, device, n_epochs=args.finetune_epochs,
                              learning_rate=args.learning_rate, weight_decay=args.weight_decay)
         
     # final evaluation
