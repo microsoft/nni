@@ -1,7 +1,7 @@
 import base64
 import functools
 import inspect
-from typing import Any, Callable, Union, Type, Dict, Optional, List, TypeVar
+from typing import Any, Union, Dict, Optional, List, TypeVar
 
 import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
@@ -31,7 +31,7 @@ class SerializableObject:
         if _self_contained:
             # this is for internal usage only.
             # kwargs is used to init the full object in the same object as this one, for simpler implementation.
-            super().__init__(*args, **kwargs)
+            super().__init__(*self._recursive_init(args), **self._recursive_init(kwargs))
 
     def get(self) -> Any:
         """
@@ -41,7 +41,8 @@ class SerializableObject:
             return self
         if '_nni_cache' not in self.__dict__:
             self.__dict__['_nni_cache'] = self._get_nni_attr('symbol')(
-                *self._get_nni_attr('args'), **self._get_nni_attr('kwargs')
+                *self._recursive_init(self._get_nni_attr('args')),
+                **self._recursive_init(self._get_nni_attr('kwargs'))
             )
         return self.__dict__['_nni_cache']
 
@@ -76,6 +77,14 @@ class SerializableObject:
                       [repr(d) for d in self._get_nni_attr('args')] +
                       [k + '=' + repr(v) for k, v in self._get_nni_attr('kwargs').items()]) + \
             ')'
+
+    @staticmethod
+    def _recursive_init(d):
+        # auto-call get() to prevent type-converting in downstreaming functions
+        if isinstance(d, dict):
+            return {k: v.get() if isinstance(v, SerializableObject) else v for k, v in d.items()}
+        else:
+            return [v.get() if isinstance(v, SerializableObject) else v for v in d]
 
 
 def trace(cls_or_func: T = None, /, *, kw_only: bool = True) -> Union[T, SerializableObject]:
@@ -186,8 +195,8 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         json_tricks.json_complex_hook,
         json_tricks.json_set_hook,
         json_tricks.numeric_types_hook,
-        _json_tricks_func_or_cls_decode,
         _json_tricks_serializable_object_decode,
+        _json_tricks_func_or_cls_decode,
         _json_tricks_any_object_decode
     ]
 
@@ -203,9 +212,8 @@ def _trace_cls(base, kw_only):
 
     class wrapper(SerializableObject, base):
         def __init__(self, *args, **kwargs):
-            if kw_only:
-                # store a copy of initial parameters
-                args, kwargs = [], _get_arguments_as_dict(base.__init__, args, kwargs)
+            # store a copy of initial parameters
+            args, kwargs = _get_arguments_as_dict(base.__init__, args, kwargs, kw_only)
 
             # calling serializable object init to initialize the full object
             super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True)
@@ -226,30 +234,29 @@ def _trace_cls(base, kw_only):
 def _trace_func(func, kw_only):
     @functools.wraps
     def wrapper(*args, **kwargs):
-        if kw_only:
-            # similar to class, store parameters here
-            args, kwargs = [], _get_arguments_as_dict(func, args, kwargs)
+        # similar to class, store parameters here
+        args, kwargs = _get_arguments_as_dict(func, args, kwargs, kw_only)
         return SerializableObject(func, args, kwargs)
 
     return wrapper
 
 
-def _get_arguments_as_dict(func, args, kwargs):
-    # get arguments passed to a function, and save it as a dict
-    argname_list = list(inspect.signature(func).parameters.keys())[1:]
-    full_args = {}
-    full_args.update(kwargs)
+def _get_arguments_as_dict(func, args, kwargs, kw_only):
+    if kw_only:
+        # get arguments passed to a function, and save it as a dict
+        argname_list = list(inspect.signature(func).parameters.keys())[1:]
+        full_args = {}
+        full_args.update(kwargs)
 
-    # match arguments with given arguments
-    # args should be longer than given list, because args can be used in a kwargs way
-    assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
-    for argname, value in zip(argname_list, args):
-        full_args[argname] = value
+        # match arguments with given arguments
+        # args should be longer than given list, because args can be used in a kwargs way
+        assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
+        for argname, value in zip(argname_list, args):
+            full_args[argname] = value
 
-    # auto-call get() to prevent type-converting in downstreaming functions
-    kwargs = {k: v.get() if isinstance(v, SerializableObject) else v for k, v in kwargs.items()}
+        args, kwargs = [], full_args
 
-    return full_args
+    return args, kwargs
 
 
 def _import_cls_or_func_from_name(target: str) -> Any:
@@ -273,7 +280,7 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
     except ImportError:
         raise ImportError(f'Import {cls_or_func.__name__} from "{module_name}" failed.')
 
-    return module_name
+    return full_name
 
 
 def _get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:

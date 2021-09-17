@@ -9,7 +9,6 @@ class SimpleClass:
         self._b = b
 
 
-
 def test_simple_class():
     instance = SimpleClass(1, 2)
     assert instance._a == 1
@@ -36,12 +35,24 @@ def test_external_class():
     assert conv.out_channels == 16
     assert conv.kernel_size == (3, 3)
     assert nni.dump(conv) == \
-        r'{"__symbol__": "path:torch.nn.modules.conv", ' \
+        r'{"__symbol__": "path:torch.nn.modules.conv.Conv2d", ' \
         r'"__kwargs__": {"in_channels": 3, "out_channels": 16, "kernel_size": 3}}'
 
-    print(nni.load(nni.dump(conv)))
+    conv = nni.load(nni.dump(conv))
+    assert conv.get().kernel_size == (3, 3)
+
+
+def test_nested_class():
+    a = SimpleClass(1, 2)
+    b = SimpleClass(a)
+    assert b._a._a == 1
+    dump_str = nni.dump(b)
+    b = nni.load(dump_str)
+    assert repr(b) == 'SerializableObject(type=SimpleClass, a=SerializableObject(type=SimpleClass, a=1, b=2))'
+    assert b.get()._a._a == 1
 
 
 if __name__ == '__main__':
     test_simple_class()
     test_external_class()
+    test_nested_class()
