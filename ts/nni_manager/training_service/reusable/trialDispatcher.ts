@@ -656,6 +656,10 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async requestEnvironment(environmentService: EnvironmentService): Promise<void> {
+        if (this.stopping) {
+            this.log.info(`Experiment is stopping, stop creating new environment`);
+            return;
+        }
         const envId = uniqueString(5);
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = environmentService.createEnvironmentInformation(envId, envName);
