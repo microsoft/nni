@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as cpp from 'child-process-promise';
-import * as cp from 'child_process';
-import * as fs from 'fs';
+import cpp from 'child-process-promise';
+import cp from 'child_process';
+import fs from 'fs';
 import ignore from 'ignore';
-import * as path from 'path';
-import * as tar from 'tar';
-import { getLogger } from '../../common/log';
+import path from 'path';
+import tar from 'tar';
+import { getLogger } from 'common/log';
 import { String } from 'typescript-string-operations';
 import { GPU_INFO_COLLECTOR_FORMAT_WINDOWS } from './gpuData';
 

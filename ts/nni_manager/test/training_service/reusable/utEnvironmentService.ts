@@ -58,7 +58,7 @@ export class UtEnvironmentService extends EnvironmentService {
         // do nothing
     }
 
-    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+    public async refreshEnvironmentsStatus(_environments: EnvironmentInformation[]): Promise<void> {
         // do nothing
     }
 

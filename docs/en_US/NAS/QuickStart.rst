@@ -4,15 +4,15 @@ Quick Start of Retiarii on NNI
 
 .. contents::
 
-In this quick start tutorial, we use multi-trial NAS as an example to show how to construct and explore a model space. There are mainly three crucial components for a neural architecture search task, namely,
+In this quick start, we use multi-trial NAS as an example to show how to construct and explore a model space. There are mainly three crucial components for a neural architecture search task, namely,
 
-* Model search space that defines the set of models to explore.
-* A proper strategy as the method to explore this search space.
-* A model evaluator that reports the performance of a given model.
+* Model search space that defines a set of models to explore.
+* A proper strategy as the method to explore this model space.
+* A model evaluator that reports the performance of every model in the space.
 
-One-shot NAS tutorial can be found `here <./OneshotTrainer.rst>`__.
+The tutorial for One-shot NAS can be found `here <./OneshotTrainer.rst>`__.
 
-.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested with **PyTorch 1.6 to 1.9**. This documentation assumes PyTorch context but it should also apply to other frameworks, that is in our future plan.
+.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.6 to 1.9**. This documentation assumes PyTorch context but it should also apply to other frameworks, which is in our future plan.
 
 Define your Model Space
 -----------------------
@@ -24,97 +24,90 @@ Define Base Model
 
 Defining a base model is almost the same as defining a PyTorch (or TensorFlow) model. Usually, you only need to replace the code ``import torch.nn as nn`` with ``import nni.retiarii.nn.pytorch as nn`` to use our wrapped PyTorch modules.
 
-Below is a very simple example of defining a base model, it is almost the same as defining a PyTorch model.
+Below is a very simple example of defining a base model.
 
 .. code-block:: python
 
+  import torch
   import torch.nn.functional as F
   import nni.retiarii.nn.pytorch as nn
   from nni.retiarii import model_wrapper
 
-  class BasicBlock(nn.Module):
-    def __init__(self, const):
-      self.const = const
-    def forward(self, x):
-      return x + self.const
-
-  class ConvPool(nn.Module):
+  @model_wrapper      # this decorator should be put on the out most
+  class Net(nn.Module):
     def __init__(self):
       super().__init__()
-      self.conv = nn.Conv2d(32, 1, 5)  # possibly mutate this conv
-      self.pool = nn.MaxPool2d(kernel_size=2)
-    def forward(self, x):
-      return self.pool(self.conv(x))
+      self.conv1 = nn.Conv2d(1, 32, 3, 1)
+      self.conv2 = nn.Conv2d(32, 64, 3, 1)
+      self.dropout1 = nn.Dropout(0.25)
+      self.dropout2 = nn.Dropout(0.5)
+      self.fc1 = nn.Linear(9216, 128)
+      self.fc2 = nn.Linear(128, 10)
 
-  @model_wrapper      # this decorator should be put on the out most PyTorch module
-  class Model(nn.Module):
-    def __init__(self):
-      super().__init__()
-      self.convpool = ConvPool()
-      self.mymodule = BasicBlock(2.)
     def forward(self, x):
-      return F.relu(self.convpool(self.mymodule(x)))
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(self.conv2(x), 2)
+      x = torch.flatten(self.dropout1(x), 1)
+      x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+      output = F.log_softmax(x, dim=1)
+      return output
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
 
-A base model is only one concrete model not a model space. We provide APIs and primitives for users to express how the base model can be mutated, i.e., a model space which includes many models.
+A base model is only one concrete model not a model space. We provide `APIs and primitives <./MutationPrimitives.rst>`__ for users to express how the base model can be mutated. That is, to build a model space which includes many models.
 
-We provide some APIs as shown below for users to easily express possible mutations after defining a base model. The APIs can be used just like PyTorch module. This approach is also called inline mutations.
+Based on the above base model, we can define a model space as below. 
 
-* ``nn.LayerChoice``. It allows users to put several candidate operations (e.g., PyTorch modules), one of them is chosen in each explored model.
+.. code-block:: diff
 
-  .. code-block:: python
+  import torch
+  import torch.nn.functional as F
+  import nni.retiarii.nn.pytorch as nn
+  from nni.retiarii import model_wrapper
 
-    # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
-    self.layer = nn.LayerChoice([
-      ops.PoolBN('max', channels, 3, stride, 1),
-      ops.SepConv(channels, channels, 3, stride, 1),
-      nn.Identity()
-    ]))
-    # invoked in `forward` method
-    out = self.layer(x)
+  @model_wrapper
+  class Net(nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.conv1 = nn.Conv2d(1, 32, 3, 1)
+  -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
+  +   self.conv2 = nn.LayerChoice([
+  +       nn.Conv2d(32, 64, 3, 1),
+  +       DepthwiseSeparableConv(32, 64)
+  +   ])
+  -   self.dropout1 = nn.Dropout(0.25)
+  +   self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
+      self.dropout2 = nn.Dropout(0.5)
+  -   self.fc1 = nn.Linear(9216, 128)
+  -   self.fc2 = nn.Linear(128, 10)
+  +   feature = nn.ValueChoice([64, 128, 256])
+  +   self.fc1 = nn.Linear(9216, feature)
+  +   self.fc2 = nn.Linear(feature, 10)
 
-* ``nn.InputChoice``. It is mainly for choosing (or trying) different connections. It takes several tensors and chooses ``n_chosen`` tensors from them.
+    def forward(self, x):
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(self.conv2(x), 2)
+      x = torch.flatten(self.dropout1(x), 1)
+      x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+      output = F.log_softmax(x, dim=1)
+      return output
 
-  .. code-block:: python
+This example uses two mutation APIs, ``nn.LayerChoice`` and ``nn.ValueChoice``. ``nn.LayerChoice`` takes a list of candidate modules (two in this example), one will be chosen for each sampled model. It can be used like normal PyTorch module. ``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
 
-    # import nni.retiarii.nn.pytorch as nn
-    # declared in `__init__` method
-    self.input_switch = nn.InputChoice(n_chosen=1)
-    # invoked in `forward` method, choose one from the three
-    out = self.input_switch([tensor1, tensor2, tensor3])
+More detailed API description and usage can be found `here <./construct_space.rst>`__\.
 
-* ``nn.ValueChoice``. It is for choosing one value from some candidate values. It can only be used as input argument of basic units, that is, modules in ``nni.retiarii.nn.pytorch`` and user-defined modules decorated with ``@basic_unit``.
-
-  .. code-block:: python
-
-    # import nni.retiarii.nn.pytorch as nn
-    # used in `__init__` method
-    self.conv = nn.Conv2d(XX, XX, kernel_size=nn.ValueChoice([1, 3, 5])
-    self.op = MyOp(nn.ValueChoice([0, 1]), nn.ValueChoice([-1, 1]))
-
-All the APIs have an optional argument called ``label``, mutations with the same label will share the same choice. A typical example is,
-
-  .. code-block:: python
-
-    self.net = nn.Sequential(
-        nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim'),
-        nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
-    )
-
-Detailed API description and usage can be found `here <./ApiReference.rst>`__\. Example of using these APIs can be found in :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`. We are actively enriching the set of inline mutation APIs, to make it easier to express a new search space. Please refer to `here <./construct_space.rst>`__ for more tutorials about how to express complex model spaces.
+.. note:: We are actively enriching the mutation APIs, to facilitate easy construction of model space. If the currently supported mutation APIs cannot express your model space, please refer to `this doc <./Mutators.rst>`__ for customizing mutators.
 
 Explore the Defined Model Space
 -------------------------------
 
-There are basically two exploration approaches: (1) search by evaluating each sampled model independently and (2) one-shot weight-sharing based search. We demonstrate the first approach below in this tutorial. Users can refer to `here <./OneshotTrainer.rst>`__ for the second approach.
+There are basically two exploration approaches: (1) search by evaluating each sampled model independently, which is the search approach in multi-trial NAS and (2) one-shot weight-sharing based search, which is used in one-shot NAS. We demonstrate the first approach in this tutorial. Users can refer to `here <./OneshotTrainer.rst>`__ for the second approach.
 
-Users can choose a proper exploration strategy to explore the model space, and use a chosen or user-defined model evaluator to evaluate the performance of each sampled model.
+First, users need to pick a proper exploration strategy to explore the defined model space. Second, users need to pick or customize a model evaluator to evaluate the performance of each explored model.
 
-Pick a search strategy
-^^^^^^^^^^^^^^^^^^^^^^^^
+Pick an exploration strategy
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Retiarii supports many `exploration strategies <./ExplorationStrategies.rst>`__.
 
@@ -126,14 +119,14 @@ Simply choosing (i.e., instantiate) an exploration strategy as below.
 
   search_strategy = strategy.Random(dedup=True)  # dedup=False if deduplication is not wanted
 
-Pick or write a model evaluator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Pick or customize a model evaluator
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-In the NAS process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model. The obtained performance of a generated model is collected and sent to the exploration strategy for generating better models.
+In the exploration process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model to obtain the model's performance. The performance is sent to the exploration strategy for the strategy to generate better models.
 
-In the context of PyTorch, Retiarii has provided two built-in model evaluators, designed for simple use cases: classification and regression. These two evaluators are built upon the awesome library PyTorch-Lightning.
+Retiarii has provided two built-in model evaluators, designed for simple use cases: classification and regression. These two evaluators are built upon the awesome library PyTorch-Lightning.
 
-An example here creates a simple evaluator that runs on MNIST dataset, trains for 10 epochs, and reports its validation accuracy.
+An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
 .. code-block:: python
 
@@ -141,22 +134,20 @@ An example here creates a simple evaluator that runs on MNIST dataset, trains fo
   from nni.retiarii import serialize
   from torchvision import transforms
 
-  transform = serialize(transforms.Compose, [serialize(transforms.ToTensor()), serialize(transforms.Normalize, (0.1307,), (0.3081,))])
+  transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
   train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
   test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-  evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                max_epochs=10)
+  trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                              max_epochs=2)
 
-As the model evaluator is running in another process (possibly in some remote machines), the defined evaluator, along with all its parameters, needs to be correctly serialized. For example, users should use the dataloader that has been already wrapped as a serializable class defined in ``nni.retiarii.evaluator.pytorch.lightning``. For the arguments used in dataloader, recursive serialization needs to be done, until the arguments are simple types like int, str, float.
+``serialize`` is for serializing the objects to make model evaluator executable on another process or another machine (e.g., on remote training service). Retiarii provided model evaluators and other classes are already serializable. Other objects should be applied ``serialize``, for example, ``MNIST`` in the above example.
 
 Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
 
 If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new model evaluator <./WriteTrainer.rst>`__ .
 
-.. note:: In case you want to run the model evaluator locally for debug purpose, you can directly run the evaluator via ``evaluator._execute(Net)`` (note that it has to be ``Net``, not ``Net()``). However, this API is currently internal and subject to change.
-
-.. warning:: Mutations on the parameters of model evaluator (known as hyper-parameter tuning) is currently not supported but will be supported in the future.
+.. warning:: Mutations on the parameters of model evaluator is currently not supported but will be supported in the future.
 
 Launch an Experiment
 --------------------
@@ -165,15 +156,15 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, None, simple_strategy)
+  exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
   exp_config = RetiariiExeConfig('local')
-  exp_config.experiment_name = 'mnasnet_search'
+  exp_config.experiment_name = 'mnist_search'
   exp_config.trial_concurrency = 2
-  exp_config.max_trial_number = 10
+  exp_config.max_trial_number = 20
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
 
-The complete code of a simple MNIST example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`. Users can also run Retiarii Experiment on `different training services <../training_services.rst>`__ besides ``local`` training service.
+The complete code of this example can be found :githublink:`here <examples/nas/multi-trial/mnist/search.py>`. Users can also run Retiarii Experiment with `different training services <../training_services.rst>`__ besides ``local`` training service.
 
 Visualize the Experiment
 ------------------------
@@ -191,3 +182,10 @@ Users can export top models after the exploration is done using ``export_top_mod
 
   for model_code in exp.export_top_models(formatter='dict'):
     print(model_code)
+
+The output is `json` object which records the mutation actions of the top model. If users want to output source code of the top model, they can use graph-based execution engine for the experiment, by simply adding the following two lines.
+
+.. code-block:: python
+
+  exp_config.execution_engine = 'base'
+  export_formatter = 'code'

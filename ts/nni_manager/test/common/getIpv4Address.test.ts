@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import * as assert from 'assert';
+import assert from 'assert';
 import { getIPV4Address } from '../../common/utils';
 
 it('getIpv4Address', async () => {

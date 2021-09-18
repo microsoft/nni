@@ -105,252 +105,139 @@ Reference
 ExperimentConfig
 ^^^^^^^^^^^^^^^^
 
-experimentName
---------------
-
-Mnemonic name of the experiment, which will be shown in WebUI and nnictl.
-
-type: ``Optional[str]``
-
-
-searchSpaceFile
----------------
-
-Path_ to the JSON file containing the search space.
-
-type: ``Optional[str]``
-
-Search space format is determined by tuner. The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
-
-Mutually exclusive to `searchSpace`_.
-
-
-searchSpace
------------
-
-Search space object.
-
-type: ``Optional[JSON]``
-
-The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.rst>`__.
-
-Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
-
-Mutually exclusive to `searchSpaceFile`_.
-
-
-trialCommand
-------------
-
-Command to launch trial.
-
-type: ``str``
-
-The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
-
-Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
-
-
-trialCodeDirectory
-------------------
-
-`Path`_ to the directory containing trial source files.
-
-type: ``str``
-
-default: ``"."``
-
-All files in this directory will be sent to the training machine, unless in the ``.nniignore`` file.
-(See :ref:`nniignore <nniignore>` for details.)
-
-
-trialConcurrency
-----------------
-
-Specify how many trials should be run concurrently.
-
-type: ``int``
-
-The real concurrency also depends on hardware resources and may be less than this value.
-
-
-trialGpuNumber
---------------
-
-Number of GPUs used by each trial.
-
-type: ``Optional[int]``
-
-This field might have slightly different meanings for various training services,
-especially when set to ``0`` or ``None``.
-See `training service's document <../training_services.rst>`__ for details.
-
-In local mode, setting the field to ``0`` will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
-And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
-but they can still use all GPU resources if they want.
-
-
-maxExperimentDuration
----------------------
-
-Limit the duration of this experiment if specified.
-
-type: ``Optional[str]``
-
-format: ``number + s|m|h|d``
-
-examples: ``"10m"``, ``"0.5h"``
-
-When time runs out, the experiment will stop creating trials but continue to serve WebUI.
-
-
-maxTrialNumber
---------------
-
-Limit the number of trials to create if specified.
-
-type: ``Optional[int]``
-
-When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
-
-
-maxTrialDuration
----------------------
-
-Limit the duration of trial job if specified.
-
-type: ``Optional[str]``
-
-format: ``number + s|m|h|d``
-
-examples: ``"10m"``, ``"0.5h"``
-
-When time runs out, the current trial job will stop.
-
-
-nniManagerIp
-------------
-
-IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
-
-type: ``Optional[str]``
-
-If not specified, IPv4 address of ``eth0`` will be used.
-
-Except for the local mode, it is highly recommended to set this field manually.
-
-
-useAnnotation
--------------
-
-Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
-
-type: ``bool``
-
-default: ``False``
-
-When using annotation, `searchSpace`_ and `searchSpaceFile`_ should not be specified manually.
-
-
-debug
------
-
-Enable debug mode.
-
-type: ``bool``
-
-default: ``False``
-
-When enabled, logging will be more verbose and some internal validation will be loosened.
-
-
-logLevel
---------
-
-Set log level of the whole system.
-
-type: ``Optional[str]``
-
-values: ``"trace"``, ``"debug"``, ``"info"``, ``"warning"``, ``"error"``, ``"fatal"``
-
-Defaults to "info" or "debug", depending on `debug`_ option. When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
-
-Most modules of NNI will be affected by this value, including NNI manager, tuner, training service, etc.
-
-The exception is trial, whose logging level is directly managed by trial code.
-
-For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``logging.CRITICAL``.
-
-
-experimentWorkingDirectory
---------------------------
-
-Specify the :ref:`directory <path>` to place log, checkpoint, metadata, and other run-time stuff.
-
-type: ``Optional[str]``
-
-By default uses ``~/nni-experiments``.
-
-NNI will create a subdirectory named by experiment ID, so it is safe to use the same directory for multiple experiments.
-
-
-tunerGpuIndices
----------------
-
-Limit the GPUs visible to tuner, assessor, and advisor.
-
-type: ``Optional[list[int] | str | int]``
-
-This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
-
-Because tuner, assessor, and advisor run in the same process, this option will affect them all.
-
-
-tuner
------
-
-Specify the tuner. 
-
-type: Optional `AlgorithmConfig`_
-
-The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
-
-
-assessor
---------
-
-Specify the assessor. 
-
-type: Optional `AlgorithmConfig`_
-
-The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
-
-
-advisor
--------
-
-Specify the advisor. 
-
-type: Optional `AlgorithmConfig`_
-
-NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
-
-
-trainingService
----------------
-
-Specify the `training service <../TrainingService/Overview.rst>`__.
-
-type: `TrainingServiceConfig`_
-
-
-sharedStorage
--------------
-
-Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
-
-type: Optional `SharedStorageConfig`_
-
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
+
+    * - Field Name
+      - Type
+      - Description
+    
+    * - experimentName
+      - ``Optional[str]``
+      - Mnemonic name of the experiment, which will be shown in WebUI and nnictl.
+
+    * - searchSpaceFile
+      - ``Optional[str]``
+      - Path_ to the JSON file containing the search space.
+        Search space format is determined by tuner. The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
+        Mutually exclusive to ``searchSpace``.
+
+    * - searchSpace
+      - ``Optional[JSON]``
+      - Search space object.
+        The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.rst>`__.
+        Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
+        Mutually exclusive to ``searchSpaceFile``.
+
+    * - trialCommand
+      - ``str``
+      - Command to launch trial.
+        The command will be executed in bash on Linux and macOS, and in PowerShell on Windows.
+        Note that using ``python3`` on Linux and macOS, and using ``python`` on Windows.
+
+    * - trialCodeDirectory
+      - ``str``
+      - `Path`_ to the directory containing trial source files.
+        default: ``"."``.
+        All files in this directory will be sent to the training machine, unless in the ``.nniignore`` file.
+        (See :ref:`nniignore <nniignore>` for details.)
+
+    * - trialConcurrency
+      - ``int``
+      - Specify how many trials should be run concurrently.
+        The real concurrency also depends on hardware resources and may be less than this value.
+
+    * - trialGpuNumber
+      - ``Optional[int]``
+      - This field might have slightly different meanings for various training services,
+        especially when set to ``0`` or ``None``.
+        See `training service's document <../training_services.rst>`__ for details.
+
+        In local mode, setting the field to ``0`` will prevent trials from accessing GPU (by empty ``CUDA_VISIBLE_DEVICES``).
+        And when set to ``None``, trials will be created and scheduled as if they did not use GPU,
+        but they can still use all GPU resources if they want.
+
+    * - maxExperimentDuration
+      - ``Optional[str]``
+      - Limit the duration of this experiment if specified.
+        format: ``number + s|m|h|d``
+        examples: ``"10m"``, ``"0.5h"``
+        When time runs out, the experiment will stop creating trials but continue to serve WebUI.
+
+    * - maxTrialNumber
+      - ``Optional[int]``
+      - Limit the number of trials to create if specified.
+        When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
+
+    * - maxTrialDuration
+      - ``Optional[str]``
+      - Limit the duration of trial job if specified.
+        format: ``number + s|m|h|d``
+        examples: ``"10m"``, ``"0.5h"``
+        When time runs out, the current trial job will stop.
+
+    * - nniManagerIp
+      - ``Optional[str]``
+      - IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
+        If not specified, IPv4 address of ``eth0`` will be used.
+        Except for the local mode, it is highly recommended to set this field manually.
+
+    * - useAnnotation
+      - ``bool``
+      - Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
+        default: ``False``.
+        When using annotation, ``searchSpace`` and ``searchSpaceFile`` should not be specified manually.
+
+    * - debug
+      - ``bool``
+      - Enable debug mode.
+        default: ``False``
+        When enabled, logging will be more verbose and some internal validation will be loosened.
+
+    * - logLevel
+      - ``Optional[str]``
+      - Set log level of the whole system.
+        values: ``"trace"``, ``"debug"``, ``"info"``, ``"warning"``, ``"error"``, ``"fatal"``
+        Defaults to "info" or "debug", depending on ``debug`` option. When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
+        Most modules of NNI will be affected by this value, including NNI manager, tuner, training service, etc.
+        The exception is trial, whose logging level is directly managed by trial code.
+        For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``logging.CRITICAL``.
+
+    * - experimentWorkingDirectory
+      - ``Optional[str]``
+      - Specify the :ref:`directory <path>` to place log, checkpoint, metadata, and other run-time stuff.
+        By default uses ``~/nni-experiments``.
+        NNI will create a subdirectory named by experiment ID, so it is safe to use the same directory for multiple experiments.
+
+    * - tunerGpuIndices
+      - ``Optional[list[int] | str | int]``
+      - Limit the GPUs visible to tuner, assessor, and advisor.
+        This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
+        Because tuner, assessor, and advisor run in the same process, this option will affect them all.
+
+    * - tuner
+      - ``Optional[AlgorithmConfig]``
+      - Specify the tuner.
+        The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
+
+    * - assessor
+      - ``Optional[AlgorithmConfig]``
+      - Specify the assessor.
+        The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
+
+    * - advisor
+      - ``Optional[AlgorithmConfig]``
+      - Specify the advisor.
+        NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
+
+    * - trainingService
+      - ``TrainingServiceConfig``
+      - Specify the `training service <../TrainingService/Overview.rst>`__.
+
+    * - sharedStorage
+      - ``Optional[SharedStorageConfig]``
+      - Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
 
 AlgorithmConfig
 ^^^^^^^^^^^^^^^
@@ -363,42 +250,34 @@ For customized algorithms, there are two ways to describe them:
 
   2. Specify code directory and class name directly.
 
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-name
-----
+    * - Field Name
+      - Type
+      - Description
+    
+    * - name
+      - ``Optional[str]``
+      - Name of the built-in or registered algorithm.
+        ``str`` for the built-in and registered algorithm, ``None`` for other customized algorithms.
 
-Name of the built-in or registered algorithm.
+    * - className
+      - ``Optional[str]``
+      - Qualified class name of not registered customized algorithm.
+        ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
+        example: ``"my_tuner.MyTuner"``
 
-type: ``str`` for the built-in and registered algorithm, ``None`` for other customized algorithms.
+    * - codeDirectory
+      - ``Optional[str]``
+      - `Path`_ to the directory containing the customized algorithm class.
+        ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
 
-
-className
----------
-
-Qualified class name of not registered customized algorithm.
-
-type: ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
-
-example: ``"my_tuner.MyTuner"``
-
-
-codeDirectory
--------------
-
-`Path`_ to the directory containing the customized algorithm class.
-
-type: ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
-
-
-classArgs
----------
-
-Keyword arguments passed to algorithm class' constructor.
-
-type: ``Optional[dict[str, Any]]``
-
-See algorithm's document for supported value.
-
+    * - classArgs
+      - ``Optional[dict[str, Any]]``
+      - Keyword arguments passed to algorithm class' constructor.
+        See algorithm's document for supported value.
 
 TrainingServiceConfig
 ^^^^^^^^^^^^^^^^^^^^^
@@ -407,529 +286,421 @@ One of the following:
 
 - `LocalConfig`_
 - `RemoteConfig`_
-- :ref:`OpenpaiConfig <openpai-class>`
+- `OpenpaiConfig`_
 - `AmlConfig`_
+- `DlcConfig`_
 - `HybridConfig`_
 
 For `Kubeflow <../TrainingService/KubeflowMode.rst>`_, `FrameworkController <../TrainingService/FrameworkControllerMode.rst>`_, and `AdaptDL <../TrainingService/AdaptDLMode.rst>`_ training platforms, it is suggested to use `v1 config schema <../Tutorial/ExperimentConfig.rst>`_ for now.
-
 
 LocalConfig
 -----------
 
 Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
 
-platform
-""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Constant string ``"local"``.
+    * - Field Name
+      - Type
+      - Description
 
+    * - platform
+      - ``"local"``
+      -
+    
+    * - useActiveGpu
+      - ``Optional[bool]``
+      - Specify whether NNI should submit trials to GPUs occupied by other tasks.
+        Must be set when ``trialGpuNumber`` greater than zero.
+        Following processes can make GPU "active":
 
-useActiveGpu
-""""""""""""
+          - non-NNI CUDA programs
+          - graphical desktop
+          - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
+          - other users' CUDA programs, if you are using a shared server
+          
+        If you are using a graphical OS like Windows 10 or Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+        When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
 
-Specify whether NNI should submit trials to GPUs occupied by other tasks.
+    * - maxTrialNumberPerGpu
+      - ``int``
+      - Specify how many trials can share one GPU.
+        default: ``1``
 
-type: ``Optional[bool]``
-
-Must be set when `trialGpuNumber`_ greater than zero.
-
-Following processes can make GPU "active":
-
-  - non-NNI CUDA programs
-  - graphical desktop
-  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
-  - other users' CUDA programs, if you are using a shared server
-  
-If you are using a graphical OS like Windows 10 or Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
-
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
-
-
-maxTrialNumberPerGpu
-""""""""""""""""""""
-
-Specify how many trials can share one GPU.
-
-type: ``int``
-
-default: ``1``
-
-
-gpuIndices
-""""""""""
-
-Limit the GPUs visible to trial processes.
-
-type: ``Optional[list[int] | str | int]``
-
-If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
-
-This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
-
+    * - gpuIndices
+      - ``Optional[list[int] | str | int]``
+      - Limit the GPUs visible to trial processes.
+        If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
+        This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
 RemoteConfig
 ------------
 
 Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
 
-platform
-""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Constant string ``"remote"``.
+    * - Field Name
+      - Type
+      - Description
 
+    * - platform
+      - ``"remote"``
+      -
 
-machineList
-"""""""""""
+    * - machineList
+      - ``List[RemoteMachineConfig]``
+      - List of training machines.
 
-List of training machines.
-
-type: list of `RemoteMachineConfig`_
-
-
-reuseMode
-"""""""""
-
-Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
-
-type: ``bool``
-
+    * - reuseMode
+      - ``bool``
+      - Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
 
 RemoteMachineConfig
 """""""""""""""""""
 
-host
-****
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-IP or hostname (domain name) of the machine.
+    * - Field Name
+      - Type
+      - Description
 
-type: ``str``
+    * - host
+      - ``str``
+      - IP or hostname (domain name) of the machine.
 
+    * - port
+      - ``int``
+      - SSH service port.
+        default: ``22``
 
-port
-****
+    * - user
+      - ``str``
+      - Login user name.
 
-SSH service port.
+    * - password
+      - ``Optional[str]``
+      - If not specified, ``sshKeyFile`` will be used instead.
+    
+    * - sshKeyFile
+      - ``Optional[str]``
+      - `Path`_ to ``sshKeyFile`` (identity file).
+        Only used when ``password`` is not specified.
 
-type: ``int``
+    * - sshPassphrase
+      - ``Optional[str]``
+      - Passphrase of SSH identity file.
 
-default: ``22``
+    * - useActiveGpu
+      - ``bool``
+      - Specify whether NNI should submit trials to GPUs occupied by other tasks.
+        default: ``False``
+        Must be set when ``trialGpuNumber`` greater than zero.
+        Following processes can make GPU "active":
 
-
-user
-****
-
-Login user name.
-
-type: ``str``
-
-
-password
-********
-
-Login password.
-
-type: ``Optional[str]``
-
-If not specified, `sshKeyFile`_ will be used instead.
-
-
-sshKeyFile
-**********
-
-`Path`_ to sshKeyFile (identity file).
-
-type: ``Optional[str]``
-
-Only used when `password`_ is not specified.
-
-
-sshPassphrase
-*************
-
-Passphrase of SSH identity file.
-
-type: ``Optional[str]``
-
-
-useActiveGpu
-************
-
-Specify whether NNI should submit trials to GPUs occupied by other tasks.
-
-type: ``bool``
-
-default: ``False``
-
-Must be set when `trialGpuNumber`_ greater than zero.
-
-Following processes can make GPU "active":
-
-  - non-NNI CUDA programs
-  - graphical desktop
-  - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
-  - other users' CUDA programs, if you are using a shared server
+          - non-NNI CUDA programs
+          - graphical desktop
+          - trials submitted by other NNI instances, if you have more than one NNI experiments running at same time
+          - other users' CUDA programs, if you are using a shared server
   
-If your remote machine is a graphical OS like Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+        If your remote machine is a graphical OS like Ubuntu desktop, set this field to ``True``, otherwise, the GUI will prevent NNI from launching any trial.
+        When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
 
-When you create multiple NNI experiments and ``useActiveGpu`` is set to ``True``, they will submit multiple trials to the same GPU(s) simultaneously.
+    * - maxTrialNumberPerGpu
+      - ``int``
+      - Specify how many trials can share one GPU.
+        default: ``1``
 
+    * - gpuIndices
+      - ``Optional[list[int] | str | int]``
+      - Limit the GPUs visible to trial processes.
+        If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
+        This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
-maxTrialNumberPerGpu
-********************
+    * - pythonPath
+      - ``Optional[str]``
+      - Specify a Python environment.
+        This path will be inserted at the front of PATH. Here are some examples: 
 
-Specify how many trials can share one GPU.
+          - (linux) pythonPath: ``/opt/python3.7/bin``
+          - (windows) pythonPath: ``C:/Python37``
 
-type: ``int``
+        If you are working on Anaconda, there is some difference. On Windows, you also have to add ``../script`` and ``../Library/bin`` separated by ``;``. Examples are as below:
 
-default: ``1``
+          - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
+          - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
 
-
-gpuIndices
-**********
-
-Limit the GPUs visible to trial processes.
-
-type: ``Optional[list[int] | str | int]``
-
-If `trialGpuNumber`_ is less than the length of this value, only a subset will be visible to each trial.
-
-This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
-
-
-pythonPath
-**********
-
-Specify a Python environment.
-
-type: ``Optional[str]``
-
-This path will be inserted at the front of PATH. Here are some examples: 
-
-    - (linux) pythonPath: ``/opt/python3.7/bin``
-    - (windows) pythonPath: ``C:/Python37``
-
-If you are working on Anaconda, there is some difference. On Windows, you also have to add ``../script`` and ``../Library/bin`` separated by ``;``. Examples are as below:
-
-    - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
-    - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
-
-This is useful if preparing steps vary for different machines.
-
-.. _openpai-class:
+        This is useful if preparing steps vary for different machines.
 
 OpenpaiConfig
 -------------
 
 Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 
-platform
-""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Constant string ``"openpai"``.
+    * - Field Name
+      - Type
+      - Description
 
+    * - platform
+      - ``"openpai"``
+      -
+    
+    * - host
+      - ``str``
+      - Hostname of OpenPAI service.
+        This may include ``https://`` or ``http://`` prefix.
+        HTTPS will be used by default.
 
-host
-""""
+    * - username
+      - ``str``
+      - OpenPAI user name.
 
-Hostname of OpenPAI service.
+    * - token
+      - ``str``
+      - OpenPAI user token.
+        This can be found in your OpenPAI user settings page.
 
-type: ``str``
+    * - trialCpuNumber
+      - ``int``
+      - Specify the CPU number of each trial to be used in OpenPAI container.
 
-This may include ``https://`` or ``http://`` prefix.
+    * - trialMemorySize
+      - ``str``
+      - Specify the memory size of each trial to be used in OpenPAI container.
+        format: ``number + tb|gb|mb|kb``.
+        examples: ``"8gb"``, ``"8192mb"``.
 
-HTTPS will be used by default.
+    * - storageConfigName
+      - ``str``
+      - Specify the storage name used in OpenPAI.
 
+    * - dockerImage
+      - ``str``
+      - Name and tag of docker image to run the trials.
+        default: ``"msranni/nni:latest"``.
 
-username
-""""""""
+    * - localStorageMountPoint
+      - ``str``
+      - :ref:`Mount point <path>` of storage service (typically NFS) on the local machine.
 
-OpenPAI user name.
+    * - containerStorageMountPoint
+      - ``str``
+      - Mount point of storage service (typically NFS) in docker container.
+        This must be an absolute path.
 
-type: ``str``
+    * - reuseMode
+      - ``bool``
+      - Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+        default: ``False``.
 
+    * - openpaiConfig
+      - ``Optional[JSON]``
+      - Embedded OpenPAI config file.
 
-token
-"""""
-
-OpenPAI user token.
-
-type: ``str``
-
-This can be found in your OpenPAI user settings page.
-
-
-trialCpuNumber
-""""""""""""""
-
-Specify the CPU number of each trial to be used in OpenPAI container.
-
-type: ``int``
-
-
-trialMemorySize
-"""""""""""""""
-
-Specify the memory size of each trial to be used in OpenPAI container.
-
-type: ``str``
-
-format: ``number + tb|gb|mb|kb``
-
-examples: ``"8gb"``, ``"8192mb"``
-
-
-storageConfigName
-"""""""""""""""""
-
-Specify the storage name used in OpenPAI.
-
-type: ``str``
-
-
-dockerImage
-"""""""""""
-
-Name and tag of docker image to run the trials.
-
-type: ``str``
-
-default: ``"msranni/nni:latest"``
-
-
-localStorageMountPoint
-""""""""""""""""""""""
-
-:ref:`Mount point <path>` of storage service (typically NFS) on the local machine.
-
-type: ``str``
-
-
-containerStorageMountPoint
-""""""""""""""""""""""""""
-
-Mount point of storage service (typically NFS) in docker container.
-
-type: ``str``
-
-This must be an absolute path.
-
-
-reuseMode
-"""""""""
-
-Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
-
-type: ``bool``
-
-default: ``False``
-
-
-openpaiConfig
-"""""""""""""
-
-Embedded OpenPAI config file.
-
-type: ``Optional[JSON]``
-
-
-openpaiConfigFile
-"""""""""""""""""
-
-`Path`_ to OpenPAI config file.
-
-type: ``Optional[str]``
-
-An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__.
-
+    * - openpaiConfigFile
+      - ``Optional[str]``
+      - `Path`_ to OpenPAI config file.
+        An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__.
 
 AmlConfig
 ---------
 
 Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
 
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-platform
-""""""""
+    * - Field Name
+      - Type
+      - Description
 
-Constant string ``"aml"``.
+    * - platform
+      - ``"aml"``
+      -
+    
+    * - dockerImage
+      - ``str``
+      - Name and tag of docker image to run the trials.
+        default: ``"msranni/nni:latest"``
 
+    * - subscriptionId
+      - ``str``
+      - Azure subscription ID.
 
-dockerImage
-"""""""""""
+    * - resourceGroup
+      - ``str``
+      - Azure resource group name.
 
-Name and tag of docker image to run the trials.
+    * - workspaceName
+      - ``str``
+      - Azure workspace name.
 
-type: ``str``
+    * - computeTarget
+      - ``str``
+      - AML compute cluster name.
 
-default: ``"msranni/nni:latest"``
+DlcConfig
+---------
 
+Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
 
-subscriptionId
-""""""""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Azure subscription ID.
+    * - Field Name
+      - Type
+      - Description
 
-type: ``str``
+    * - platform
+      - ``"dlc"``
+      -
+    
+    * - type
+      - ``str``
+      - Job spec type.
+        default: ``"worker"``.
 
+    * - image
+      - ``str``
+      - Name and tag of docker image to run the trials.
 
-resourceGroup
-"""""""""""""
+    * - jobType
+      - ``str``
+      - PAI-DLC training job type, ``"TFJob"`` or ``"PyTorchJob"``.
 
-Azure resource group name.
+    * - podCount
+      - ``str``
+      - Pod count to run a single training job.
 
-type: ``str``
+    * - ecsSpec
+      - ``str``
+      - Training server config spec string.
 
+    * - region
+      - ``str``
+      - The region where PAI-DLC public-cluster locates.
 
-workspaceName
-"""""""""""""
+    * - nasDataSourceId
+      - ``str``
+      - The NAS datasource id configurated in PAI-DLC side.
 
-Azure workspace name.
+    * - accessKeyId
+      - ``str``
+      - The accessKeyId of your cloud account.
 
-type: ``str``
+    * - accessKeySecret
+      - ``str``
+      - The accessKeySecret of your cloud account.
 
+    * - localStorageMountPoint
+      - ``str``
+      - The mount point of the NAS on PAI-DSW server, default is /home/admin/workspace/.
 
-computeTarget
-"""""""""""""
-
-AML compute cluster name.
-
-type: ``str``
-
+    * - containerStorageMountPoint
+      - ``str``
+      - The mount point of the NAS on PAI-DLC side, default is /root/data/.
 
 HybridConfig
 ------------
 
-Currently only support `LocalConfig`_, `RemoteConfig`_, :ref:`OpenpaiConfig <openpai-class>` and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
-
-type: list of `TrainingServiceConfig`_
-
+Currently only support `LocalConfig`_, `RemoteConfig`_, `OpenpaiConfig`_ and `AmlConfig`_ . Detailed usage can be found `here <../TrainingService/HybridMode.rst>`__.
 
 SharedStorageConfig
 ^^^^^^^^^^^^^^^^^^^
 
 Detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
 
-
 nfsConfig
 ---------
 
-storageType
-"""""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Constant string ``"NFS"``.
+    * - Field Name
+      - Type
+      - Description
 
+    * - storageType
+      - ``"NFS"``
+      -
 
-localMountPoint
-"""""""""""""""
+    * - localMountPoint
+      - ``str``
+      - The path that the storage has been or will be mounted in the local machine.
+        If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
 
-The path that the storage has been or will be mounted in the local machine.
+    * - remoteMountPoint
+      - ``str``
+      - The path that the storage will be mounted in the remote machine.
+        If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
 
-type: ``str``
+    * - localMounted
+      - ``str``
+      - Specify the object and status to mount the shared storage.
+        values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
+        ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
 
-If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
+    * - nfsServer
+      - ``str``
+      - NFS server host.
 
-
-remoteMountPoint
-""""""""""""""""
-
-The path that the storage will be mounted in the remote machine.
-
-type: ``str``
-
-If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
-
-
-localMounted
-""""""""""""
-
-Specify the object and status to mount the shared storage.
-
-type: ``str``
-
-values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
-
-``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
-
-
-nfsServer
-"""""""""
-
-NFS server host.
-
-type: ``str``
-
-
-exportedDirectory
-"""""""""""""""""
-
-Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
-
-type: ``str``
-
+    * - exportedDirectory
+      - ``str``
+      - Exported directory of NFS server, detailed `here <https://www.ibm.com/docs/en/aix/7.2?topic=system-nfs-exporting-mounting>`_.
 
 azureBlobConfig
 ---------------
 
-storageType
-"""""""""""
+.. list-table::
+    :widths: 10 10 80
+    :header-rows: 1
 
-Constant string ``"AzureBlob"``.
+    * - Field Name
+      - Type
+      - Description
 
+    * - storageType
+      - ``"AzureBlob"``
+      -
 
-localMountPoint
-"""""""""""""""
+    * - localMountPoint
+      - ``str``
+      - The path that the storage has been or will be mounted in the local machine.
+        If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
 
-The path that the storage has been or will be mounted in the local machine.
+    * - remoteMountPoint
+      - ``str``
+      - The path that the storage will be mounted in the remote machine.
+        If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
+        Note that the directory must be empty when using AzureBlob.
 
-type: ``str``
+    * - localMounted
+      - ``str``
+      - Specify the object and status to mount the shared storage.
+        values: ``"usermount"``, ``"nnimount"``, ``"nomount"``.
+        ``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
 
-If the path does not exist, it will be created automatically. Recommended to use an absolute path, i.e. ``/tmp/nni-shared-storage``.
+    * - storageAccountName
+      - ``str``
+      - Azure storage account name.
 
+    * - storageAccountKey
+      - ``Optional[str]``
+      - Azure storage account key.
 
-remoteMountPoint
-""""""""""""""""
-
-The path that the storage will be mounted in the remote machine.
-
-type: ``str``
-
-If the path does not exist, it will be created automatically. Recommended to use a relative path. i.e. ``./nni-shared-storage``.
-
-Note that the directory must be empty when using AzureBlob. 
-
-
-localMounted
-""""""""""""
-
-Specify the object and status to mount the shared storage.
-
-type: ``str``
-
-values: ``"usermount"``, ``"nnimount"``, ``"nomount"``
-
-``usermount`` means the user has already mounted this storage on localMountPoint. ``nnimount`` means NNI will try to mount this storage on localMountPoint. ``nomount`` means storage will not mount in the local machine, will support partial storages in the future.
-
-
-storageAccountName
-""""""""""""""""""
-
-Azure storage account name.
-
-type: ``str``
-
-
-storageAccountKey
-"""""""""""""""""
-
-Azure storage account key.
-
-type: ``Optional[str]``
-
-
-containerName
-"""""""""""""
-
-AzureBlob container name.
-
-type: ``str``
+    * - containerName
+      - ``str``
+      - AzureBlob container name.

@@ -11,4 +11,5 @@ Introduction to NNI Training Services
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
     AML<./TrainingService/AMLMode>
+    PAI-DLC<./TrainingService/DLCMode>
     Hybrid<./TrainingService/HybridMode>

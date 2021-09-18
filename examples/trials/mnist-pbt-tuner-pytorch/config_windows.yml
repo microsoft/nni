@@ -1,0 +1,14 @@
+searchSpaceFile: search_space.json
+trialCommand: python mnist.py
+trialGpuNumber: 1
+trialConcurrency: 3
+maxTrialNumber: 100
+maxExperimentDuration: 2h
+tuner:
+  name: PBTTuner
+  classArgs:
+    optimize_mode: maximize
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local
+  useActiveGpu: false  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+                       # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu

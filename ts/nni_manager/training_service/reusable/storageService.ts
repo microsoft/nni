@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
-import { getLogger, Logger } from '../../common/log';
-import { uniqueString } from '../../common/utils';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
+import { getLogger, Logger } from 'common/log';
+import { uniqueString } from 'common/utils';
 import { tarAdd } from '../common/util';
 
 export abstract class StorageService {
