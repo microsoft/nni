@@ -182,7 +182,7 @@ class PruningToolsTestCase(unittest.TestCase):
         }
         sparsity_allocator = NormalSparsityAllocator(pruner)
         masks = sparsity_allocator.generate_sparsity(metrics)
-        assert all(v['weight_mask'].sum() / v['weight_mask'].numel() == 0.2 for k, v in masks.items())
+        assert all(v['weight'].sum() / v['weight'].numel() == 0.2 for k, v in masks.items())
 
         # Test GlobalSparsityAllocator
         model = TorchModel()
@@ -192,8 +192,8 @@ class PruningToolsTestCase(unittest.TestCase):
         masks = sparsity_allocator.generate_sparsity(metrics)
         total_elements, total_masked_elements = 0, 0
         for t in masks.values():
-            total_elements += t['weight_mask'].numel()
-            total_masked_elements += t['weight_mask'].sum().item()
+            total_elements += t['weight'].numel()
+            total_masked_elements += t['weight'].sum().item()
         assert total_masked_elements / total_elements == 0.2
 
 
