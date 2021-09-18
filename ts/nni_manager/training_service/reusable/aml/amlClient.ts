@@ -71,7 +71,7 @@ export class AMLClient {
             const stopResult = this.parseContent('stop_result', result);
             if (stopResult === 'success') {
                 deferred.resolve(true);
-            } else {
+            } else if (stopResult === 'failed') {
                 deferred.resolve(false);
             }
         });

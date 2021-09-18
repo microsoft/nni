@@ -321,7 +321,7 @@ class TrialDispatcher implements TrainingService {
         for (let index = 0; index < environments.length; index++) {
             stopEnvironmentPromise.push(this.stopEnvironment(environments[index]));
         }
-        Promise.all(stopEnvironmentPromise);
+        await Promise.all(stopEnvironmentPromise);
         this.commandEmitter.off("command", this.handleCommand);
         for (const commandChannel of this.commandChannelSet) {
             await commandChannel.stop();
