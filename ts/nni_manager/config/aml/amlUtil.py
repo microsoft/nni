@@ -46,7 +46,7 @@ if __name__ == "__main__":
         elif line == 'stop':
             run.cancel()
             with open('/home/core/aml_script_result.log', 'a+') as out_file:
-                out_file.write(run_id + " send stop request")
+                out_file.write(run_id + " send stop request\n")
             loop_count = 0
             status = run.get_status()
             while status != 'Canceled':
