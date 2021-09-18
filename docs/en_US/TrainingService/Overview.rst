@@ -6,7 +6,7 @@ What is Training Service?
 
 NNI training service is designed to allow users to focus on AutoML itself, agnostic to the underlying computing infrastructure where the trials are actually run. When migrating from one cluster to another (e.g., local machine to Kubeflow), users only need to tweak several configurations, and the experiment can be easily scaled.
 
-Users can use training service provided by NNI, to run trial jobs on `local machine <./LocalMode.rst>`__\ , `remote machines <./RemoteMachineMode.rst>`__\ , and on clusters like `PAI <./PaiMode.rst>`__\ , `Kubeflow <./KubeflowMode.rst>`__\ , `AdaptDL <./AdaptDLMode.rst>`__\ , `FrameworkController <./FrameworkControllerMode.rst>`__\ , `DLTS <./DLTSMode.rst>`__ and `AML <./AMLMode.rst>`__. These are called *built-in training services*.
+Users can use training service provided by NNI, to run trial jobs on `local machine <./LocalMode.rst>`__\ , `remote machines <./RemoteMachineMode.rst>`__\ , and on clusters like `PAI <./PaiMode.rst>`__\ , `Kubeflow <./KubeflowMode.rst>`__\ , `AdaptDL <./AdaptDLMode.rst>`__\ , `FrameworkController <./FrameworkControllerMode.rst>`__\ , `DLTS <./DLTSMode.rst>`__, `AML <./AMLMode.rst>`__ and `DLC <./DLCMode.rst>`__. These are called *built-in training services*.
 
 If the computing resource customers try to use is not listed above, NNI provides interface that allows users to build their own training service easily. Please refer to `how to implement training service <./HowToImplementTrainingService.rst>`__ for details.
 
@@ -44,6 +44,8 @@ Built-in Training Services
      - NNI supports running experiment using `DLTS <https://github.com/microsoft/DLWorkspace.git>`__\ , which is an open source toolkit, developed by Microsoft, that allows AI scientists to spin up an AI cluster in turn-key fashion.
    * - `AML <./AMLMode.rst>`__
      - NNI supports running an experiment on `AML <https://azure.microsoft.com/en-us/services/machine-learning/>`__ , called aml mode.
+   * - `DLC <./DLCMode.rst>`__
+     - NNI supports running an experiment on `PAI-DLC <https://help.aliyun.com/document_detail/165137.html>`__ , called dlc mode.
 
 
 What does Training Service do?
@@ -68,3 +70,13 @@ Step 2. **Submit the first trial.** To initiate a trial, usually (in non-reuse m
 .. Warning:: The working directory of trial command has exactly the same content as ``codeDir``, but can have different paths (even on different machines) Local mode is the only training service that shares one ``codeDir`` across all trials. Other training services copies a ``codeDir`` from the shared copy prepared in step 1 and each trial has an independent working directory. We strongly advise users not to rely on the shared behavior in local mode, as it will make your experiments difficult to scale to other training services.
 
 Step 3. **Collect metrics.**  NNI then monitors the status of trial, updates the status (e.g., from ``WAITING`` to ``RUNNING``\ , ``RUNNING`` to ``SUCCEEDED``\ ) recorded, and also collects the metrics. Currently, most training services are implemented in an "active" way, i.e., training service will call the RESTful API on NNI manager to update the metrics. Note that this usually requires the machine that runs NNI manager to be at least accessible to the worker node.
+
+
+Training Service Under Reuse Mode
+---------------------------------
+
+When reuse mode is enabled, a cluster, such as a remote machine or a computer instance on AML, will launch a long-running environment, so that NNI will submit trials to these environments iteratively, which saves the time to create new jobs. For instance, using OpenPAI training platform under reuse mode can avoid the overhead of pulling docker images, creating containers, and downloading data repeatedly.
+
+In the reuse mode, user needs to make sure each trial can run independently in the same job (e.g., avoid loading checkpoints from previous trials).
+
+.. note:: Currently, only `Local <./LocalMode.rst>`__, `Remote <./RemoteMachineMode.rst>`__, `OpenPAI <./PaiMode.rst>`__, `AML <./AMLMode.rst>`__ and `DLC <./DLCMode.rst>`__ training services support resue mode. For Remote and OpenPAI training platforms, you can enable reuse mode according to `here <../reference/experiment_config.rst>`__ manually. AML is implemented under reuse mode, so the default mode is reuse mode, no need to manually enable.

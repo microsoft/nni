@@ -110,6 +110,8 @@ def set_default_values(experiment_config):
         experiment_config['maxExecDuration'] = '999d'
     if experiment_config.get('maxTrialNum') is None:
         experiment_config['maxTrialNum'] = 99999
+    if experiment_config.get('maxTrialDuration') is None:
+        experiment_config['maxTrialDuration'] = '999d'
     if experiment_config['trainingServicePlatform'] == 'remote' or \
        experiment_config['trainingServicePlatform'] == 'hybrid' and \
        'remote' in experiment_config['hybridConfig']['trainingServicePlatforms']:

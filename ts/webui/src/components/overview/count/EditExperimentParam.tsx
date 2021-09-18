@@ -2,6 +2,7 @@ import React, { useState, useCallback, useContext } from 'react';
 import axios from 'axios';
 import { Dropdown } from '@fluentui/react';
 import { EXPERIMENT } from '../../../static/datamodel';
+import { toSeconds } from '../../../static/experimentConfig';
 import { AppContext } from '../../../App';
 import { EditExpeParamContext } from './context';
 import { durationUnit } from '../overviewConst';
@@ -27,9 +28,8 @@ export const EditExperimentParam = (): any => {
     const hideSucceedInfo = useCallback(() => {
         setShowSucceedInfo(false);
     }, []);
-    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } = useContext(
-        EditExpeParamContext
-    );
+    const { title, field, editType, maxExecDuration, maxTrialNum, trialConcurrency, updateOverviewPage } =
+        useContext(EditExpeParamContext);
     const originMaxDurationStr = EXPERIMENT.profile.params.maxExperimentDuration;
     const { maxDurationUnit, changeMaxDurationUnit } = useContext(AppContext);
     const [unit, setUnit] = useState(maxDurationUnit);
@@ -64,20 +64,32 @@ export const EditExperimentParam = (): any => {
         }
     }
 
+    function promptErrorMessage(mess: string, type: string, value: string): void {
+        showMessageInfo(mess, type);
+        setEditValInput(value);
+    }
+
     async function confirmEdit(): Promise<void> {
         const isMaxDuration = title === 'Max duration';
         const newProfile = Object.assign({}, EXPERIMENT.profile);
         let beforeParam = '';
         if (isMaxDuration) {
             if (!editInputVal.match(/^\d+(?=\.{0,1}\d+$|$)/)) {
-                showMessageInfo('Please enter a number!', 'error');
-                setEditValInput(defaultVal);
+                promptErrorMessage('Please enter a number!', 'error', defaultVal);
+                return;
+            }
+            if (toSeconds(`${editInputVal}${unit}`) < EXPERIMENT.profile.execDuration) {
+                // maxDuration should > current run time(execDuration)
+                promptErrorMessage(
+                    'Please input a valid value. (Current duration is more than the number you input.)',
+                    'error',
+                    defaultVal
+                );
                 return;
             }
         } else {
             if (!editInputVal.match(/^[1-9]\d*$/)) {
-                showMessageInfo('Please enter a positive integer!', 'error');
-                setEditValInput(defaultVal);
+                promptErrorMessage('Please enter a positive integer!', 'error', defaultVal);
                 return;
             }
         }
@@ -109,7 +121,6 @@ export const EditExperimentParam = (): any => {
         // rest api, modify trial concurrency value
         try {
             const res = await axios.put(`${MANAGER_IP}/experiment`, newProfile, {
-                // eslint-disable-next-line @typescript-eslint/camelcase
                 params: { update_type: editType }
             });
             if (res.status === 200) {

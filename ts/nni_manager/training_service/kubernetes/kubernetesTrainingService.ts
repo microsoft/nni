@@ -1,22 +1,20 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
+import cpp from 'child-process-promise';
+import path from 'path';
 
-import * as cpp from 'child-process-promise';
-import * as path from 'path';
-
-import * as azureStorage from 'azure-storage';
+import azureStorage from 'azure-storage';
 import {EventEmitter} from 'events';
 import {Base64} from 'js-base64';
 import {String} from 'typescript-string-operations';
-import {getExperimentId} from '../../common/experimentStartupInfo';
-import {getLogger, Logger} from '../../common/log';
-import {MethodNotImplementedError} from '../../common/errors';
+import {getExperimentId} from 'common/experimentStartupInfo';
+import {getLogger, Logger} from 'common/log';
+import {MethodNotImplementedError} from 'common/errors';
 import {
-    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric, LogType
-} from '../../common/trainingService';
-import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from '../../common/utils';
+    NNIManagerIpConfig, TrialJobDetail, TrialJobMetric
+} from 'common/trainingService';
+import {delay, getExperimentRootDir, getIPV4Address, getJobCancelStatus, getVersion, uniqueString} from 'common/utils';
 import {AzureStorageClientUtility} from './azureStorageClientUtils';
 import {GeneralK8sClient, KubernetesCRDClient} from './kubernetesApiClient';
 import {KubernetesClusterConfig} from './kubernetesConfig';
@@ -54,7 +52,7 @@ abstract class KubernetesTrainingService {
     protected expContainerCodeFolder: string;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('KubernetesTrainingService');
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, KubernetesTrialJobDetail>();
         this.trialLocalTempFolder = path.join(getExperimentRootDir(), 'trials-nfs-tmp');
@@ -99,7 +97,7 @@ abstract class KubernetesTrainingService {
         return Promise.resolve(kubernetesTrialJob);
     }
 
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _filename: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 
@@ -277,7 +275,7 @@ abstract class KubernetesTrainingService {
         if (gpuNum === 0) {
             nvidiaScript = 'export CUDA_VISIBLE_DEVICES=';
         }
-        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : getIPV4Address();
+        const nniManagerIp: string = this.nniManagerIpConfig ? this.nniManagerIpConfig.nniManagerIp : await getIPV4Address();
         const version: string = this.versionCheck ? await getVersion() : '';
         const runScript: string = String.Format(
             kubernetesScriptFormat,

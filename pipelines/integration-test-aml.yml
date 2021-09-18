@@ -50,6 +50,7 @@ jobs:
   - script: |
       set -e
       cd test
+      az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts aml \
           --subscription_id $(subscriptionId) \

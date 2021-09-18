@@ -1,20 +1,31 @@
 {
+  "include": [
+      "common/**/*",
+      "core/**/*",
+      "rest_server/**/*",
+      "training_service/**/*",
+      "main.ts"
+  ],
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "CommonJS",
-    "removeComments": true,
+    "allowUnreachableCode": false,
+    "noImplicitReturns": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "noUnusedParameters": true,
     "strict": true,
-    "noImplicitAny": true,
     "baseUrl": ".",
-    "outDir": "dist",
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
+    "module": "CommonJS",
     "typeRoots": [
       "node_modules/@types",
       "types"
-    ]
-  },
-  "exclude": [
-    "node_modules"
-  ]
+    ],
+    "outDir": "dist",
+    "removeComments": true,
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "target": "ESNext",
+    "incremental": true,
+    "tsBuildInfoFile": "dist/nni_manager.tsbuildinfo"
+  }
 }

@@ -6,17 +6,9 @@ echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
 
-echo "testing nnictl ss_gen (classic nas)..."
-cd $EXAMPLE_DIR/legacy/classic_nas
-SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
-if [ -f $SEARCH_SPACE_JSON ]; then
-    rm $SEARCH_SPACE_JSON
-fi
-nnictl ss_gen -t "python3 mnist.py"
-if [ ! -f $SEARCH_SPACE_JSON ]; then
-    echo "Search space file not found!"
-    exit 1
-fi
+echo "testing mnist..."
+cd $EXAMPLE_DIR/multi-trial/mnist
+python3 search.py
 
 echo "testing darts..."
 cd $EXAMPLE_DIR/oneshot/darts
@@ -33,6 +25,6 @@ python3 search.py --search-for micro --epochs 1
 #cd $EXAMPLE_DIR/naive
 #python3 train.py
 
-echo "testing pdarts..."
-cd $EXAMPLE_DIR/legacy/pdarts
-python3 search.py --epochs 1 --channels 4 --nodes 2 --log-frequency 10 --add_layers 0 --add_layers 1 --dropped_ops 3 --dropped_ops 3
+#echo "testing pdarts..."
+#cd $EXAMPLE_DIR/legacy/pdarts
+#python3 search.py --epochs 1 --channels 4 --nodes 2 --log-frequency 10 --add_layers 0 --add_layers 1 --dropped_ops 3 --dropped_ops 3

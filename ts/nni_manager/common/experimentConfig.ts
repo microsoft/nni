@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
+import assert from 'assert';
 
-import * as assert from 'assert';
+import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
+import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
 
 export interface TrainingServiceConfig {
     platform: string;
@@ -13,6 +14,7 @@ export interface TrainingServiceConfig {
 
 export interface LocalConfig extends TrainingServiceConfig {
     platform: 'local';
+    reuseMode: boolean;
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
@@ -54,6 +56,7 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
+    virtualCluster?: string;
 }
 
 /* AML */
@@ -68,35 +71,57 @@ export interface AmlConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
 }
 
+
+/*  Alibaba PAI DLC  */
+export interface DlcConfig extends TrainingServiceConfig {
+    platfrom: 'dlc';
+    type: string;
+    image: string;
+    jobType: string;
+    podCount: number;
+    ecsSpec: string;
+    region: string;
+    nasDataSourceId: string;
+    accessKeyId: string;
+    accessKeySecret: string;
+    localStorageMountPoint: string;
+    containerStorageMountPoint: string;
+}
 /* Kubeflow */
 
 // FIXME: merge with shared storage config
 export interface KubeflowStorageConfig {
-    storage: string;
+    storageType: string;
+    maxTrialNumberPerGpu?: number;
     server?: string;
     path?: string;
     azureAccount?: string;
     azureShare?: string;
-    keyVault?: string;
-    keyVaultSecret?: string;
+    keyVaultName?: string;
+    keyVaultKey?: string;
 }
 
 export interface KubeflowRoleConfig {
     replicas: number;
+    codeDirectory: string;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: string;
+    memorySize: number;
     dockerImage: string;
+    privateRegistryAuthPath?: string;
 }
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
-    operator: string;
-    apiVersion: string;
+    ps?: KubeflowRoleConfig;
+    master?: KubeflowRoleConfig;
+    worker?: KubeflowRoleConfig;
+    maxTrialNumberPerGpu: number;
+    operator: KubeflowOperator;
+    apiVersion: OperatorApiVersion;
     storage: KubeflowStorageConfig;
-    worker: KubeflowRoleConfig;
-    parameterServer?: KubeflowRoleConfig;
+    reuseMode: boolean;
 }
 
 /* FrameworkController */
@@ -140,7 +165,6 @@ export interface NfsConfig extends SharedStorageConfig {
 export interface AzureBlobConfig extends SharedStorageConfig {
     storageAccountName: string;
     storageAccountKey?: string;
-    resourceGroupName?: string;
     containerName: string;
 }
 
@@ -161,6 +185,7 @@ export interface ExperimentConfig {
     trialConcurrency: number;
     trialGpuNumber?: number;
     maxExperimentDuration?: string;
+    maxTrialDuration?: string;
     maxTrialNumber?: number;
     nniManagerIp?: string;
     //useAnnotation: boolean;  // dealed inside nnictl
@@ -190,7 +215,7 @@ export function toSeconds(time: string): number {
     throw new Error(`Bad time string "${time}"`);
 }
 
-const sizeUnits = { tb: 1024 * 1024, gb: 1024 * 1024, mb: 1, kb: 1 / 1024 };
+const sizeUnits = { tb: 1024 * 1024, gb: 1024, mb: 1, kb: 1 / 1024 };
 
 export function toMegaBytes(size: string): number {
     for (const [unit, factor] of Object.entries(sizeUnits)) {

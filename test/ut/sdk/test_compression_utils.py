@@ -116,7 +116,7 @@ class AnalysisUtilsTest(TestCase):
             pruner.export_model(ck_file, mask_file)
             pruner._unwrap_model()
             # Fix the mask conflict
-            fixed_mask, _ = fix_mask_conflict(mask_file, net, dummy_input)
+            fixed_mask = fix_mask_conflict(mask_file, net, dummy_input)
 
             # use the channel dependency groud truth to check if
             # fix the mask conflict successfully
@@ -138,6 +138,7 @@ class AnalysisUtilsTest(TestCase):
                         assert b_index1 == b_index2
 
 
+class FlopsCounterTest(TestCase):
     def test_flops_params(self):
         class Model1(nn.Module):
             def __init__(self):
@@ -170,16 +171,17 @@ class AnalysisUtilsTest(TestCase):
                 for _ in range(5):
                     x = self.conv2(x)
                 return x
-        
-        flops, params, results = count_flops_params(Model1(), (1, 3, 2, 2), mode='full', verbose=False)
-        assert (flops, params)  == (610, 240)
 
-        flops, params, results = count_flops_params(Model2(), (1, 3, 2, 2), verbose=False)
-        assert (flops, params)  == (560, 50)
+        for bs in [1, 2]:
+            flops, params, results = count_flops_params(Model1(), (bs, 3, 2, 2), mode='full', verbose=False)
+            assert (flops, params) == (610, 240)
 
-        from torchvision.models import resnet50
-        flops, params, results = count_flops_params(resnet50(), (1, 3, 224, 224), verbose=False)
-        assert (flops, params) == (4089184256, 25503912)
+            flops, params, results = count_flops_params(Model2(), (bs, 3, 2, 2), verbose=False)
+            assert (flops, params) == (560, 50)
+
+            from torchvision.models import resnet50
+            flops, params, results = count_flops_params(resnet50(), (bs, 3, 224, 224), verbose=False)
+            assert (flops, params) == (4089184256, 25503912)
 
 
 if __name__ == '__main__':

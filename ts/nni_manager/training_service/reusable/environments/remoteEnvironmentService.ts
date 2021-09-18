@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../common/log';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
-import { getExperimentRootDir, getLogLevel } from '../../../common/utils';
-import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from '../../../common/experimentConfig';
-import { execMkdir } from '../../common/util';
-import { ExecutorManager } from '../../remote_machine/remoteMachineData';
+import { getLogLevel } from 'common/utils';
+import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { execMkdir } from 'training_service/common/util';
+import { ExecutorManager } from 'training_service/remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 import { SharedStorageService } from '../sharedStorage'
@@ -33,15 +31,14 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private experimentId: string;
     private config: FlattenRemoteConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
         super();
-        this.experimentId = getExperimentId();
+        this.experimentId = info.experimentId;
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
         this.machineExecutorManagerMap = new Map<RemoteMachineConfig, ExecutorManager>();
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
-        this.experimentRootDir = getExperimentRootDir();
-        this.experimentId = getExperimentId();
-        this.log = getLogger();
+        this.experimentRootDir = info.logDir;
+        this.log = getLogger('RemoteEnvironmentService');
         this.config = flattenConfig(config, 'remote');
 
         // codeDir is not a valid directory, throw Error
@@ -103,10 +100,10 @@ export class RemoteEnvironmentService extends EnvironmentService {
 
         // Create root working directory after executor is ready
         const nniRootDir: string = executor.joinPath(executor.getTempPath(), 'nni-experiments');
-        await executor.createFolder(executor.getRemoteExperimentRootDir(getExperimentId()));
+        await executor.createFolder(executor.getRemoteExperimentRootDir(this.experimentId));
 
         // the directory to store temp scripts in remote machine
-        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath(getExperimentId());
+        const remoteGpuScriptCollectorDir: string = executor.getRemoteScriptsPath(this.experimentId);
 
         // clean up previous result.
         await executor.createFolder(remoteGpuScriptCollectorDir, true);
@@ -245,10 +242,11 @@ export class RemoteEnvironmentService extends EnvironmentService {
                     throw new Error(`Mount shared storage on remote machine failed.\n ERROR: ${result.stderr}`);
                 }
             } else {
-                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(getExperimentId());
+                this.remoteExperimentRootDir = executor.getRemoteExperimentRootDir(this.experimentId);
             }
 
             environment.command = await this.getScript(environment);
+            environment.useActiveGpu = rmMachineMeta.useActiveGpu;
             return Promise.resolve(true);
         }
     }

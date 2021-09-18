@@ -115,7 +115,7 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
-                    node_codes.append(f"{node_code}.to('{placement[node].device}')")
+                    node_codes.append(f"{node_code}.to('{placement[node].device_repr()}')")
                 else:
                     node_codes.append(node_code)
 
@@ -161,6 +161,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+
+import nni.retiarii.nn.pytorch
 
 {}
 

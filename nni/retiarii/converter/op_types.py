@@ -3,6 +3,7 @@
 
 from enum import Enum
 
+# except the special case which can not treat as a basic module from pytorch
 MODULE_EXCEPT_LIST = ['Sequential']
 
 
@@ -17,3 +18,5 @@ class OpTypeName(str, Enum):
     ValueChoice = 'ValueChoice'
     Placeholder = 'Placeholder'
     MergedSlice = 'MergedSlice'
+    Repeat = 'Repeat'
+    Cell = 'Cell'

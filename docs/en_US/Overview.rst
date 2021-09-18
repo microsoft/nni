@@ -54,7 +54,7 @@ For each experiment, the user only needs to define a search space and update a f
 
    Step 2: `Update model codes <TrialExample/Trials.rst>`__
 
-   Step 3: `Define Experiment <Tutorial/ExperimentConfig.rst>`__
+   Step 3: `Define Experiment <reference/experiment_config.rst>`__
 
 
 

@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as cp from 'child_process';
-import * as path from 'path';
+import fs from 'fs';
+import cp from 'child_process';
+import path from 'path';
 import { ChildProcess } from 'child_process';
 
 import * as component from '../common/component';
@@ -37,7 +35,7 @@ class NNITensorboardManager implements TensorboardManager {
     private nniManager: Manager;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('NNITensorboardManager');
         this.tensorboardTaskMap = new Map<string, TensorboardTaskDetail>();
         this.setTensorboardVersion();
         this.nniManager = component.get(Manager);
@@ -70,7 +68,7 @@ class NNITensorboardManager implements TensorboardManager {
             this.log.error(error);
             const alive: boolean = await isAlive(tensorboardProc.pid);
             if (alive) {
-                process.kill(-tensorboardProc.pid);
+                process.kill(-tensorboardProc.pid!);
             }
             this.setTensorboardTaskStatus(tensorboardTask, 'ERROR');
         });
@@ -114,9 +112,9 @@ class NNITensorboardManager implements TensorboardManager {
     }
 
     private setTensorboardVersion(): void {
-        let command = `python3 -c 'import tensorboard ; print(tensorboard.__version__)'`;
+        let command = `python3 -c 'import tensorboard ; print(tensorboard.__version__)' 2>&1`;
         if (process.platform === 'win32') {
-            command = `python -c 'import tensorboard ; print(tensorboard.__version__)'`;
+            command = `python -c "import tensorboard ; print(tensorboard.__version__)" 2>&1`;
         }
         try {
             const tensorboardVersion = cp.execSync(command).toString();

@@ -5,7 +5,7 @@ import logging
 import os
 import random
 import string
-from typing import Dict, Iterable, List
+from typing import Any, Dict, Iterable, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
@@ -13,6 +13,7 @@ from ..graph import Model, ModelStatus, MetricData, Evaluator
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 
 _logger = logging.getLogger(__name__)
+
 
 class BaseGraphData:
     def __init__(self, model_script: str, evaluator: Evaluator) -> None:
@@ -59,7 +60,7 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
+            data = self.pack_model_data(model)
             self._running_models[send_trial(data.dump())] = model
             self._history.append(model)
 
@@ -107,6 +108,10 @@ class BaseExecutionEngine(AbstractExecutionEngine):
     def budget_exhausted(self) -> bool:
         advisor = get_advisor()
         return advisor.stopping
+
+    @classmethod
+    def pack_model_data(cls, model: Model) -> Any:
+        return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
 
     @classmethod
     def trial_execute_graph(cls) -> None:

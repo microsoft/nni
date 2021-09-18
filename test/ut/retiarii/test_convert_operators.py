@@ -15,13 +15,14 @@ import torch.nn.functional as F
 import torchvision
 
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
+
+from .convert_mixin import ConvertMixin, ConvertWithShapeMixin
 
 # following pytorch v1.7.1
 
 
-class TestOperators(unittest.TestCase):
+class TestOperators(unittest.TestCase, ConvertMixin):
     @staticmethod
     def _match_state_dict(current_values, expected_format):
         result = {}
@@ -34,8 +35,7 @@ class TestOperators(unittest.TestCase):
         return result
 
     def checkExportImport(self, model, input, check_value=True):
-        script_module = torch.jit.script(model)
-        model_ir = convert_to_graph(script_module, model)
+        model_ir = self._convert_model(model, input)
         model_code = model_to_pytorch_script(model_ir)
         #print(model_code)
 
@@ -1042,7 +1042,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.tensor([[[[0.0, 1.0, 1.0, 1.0], [2.0, 3.0, 7.0, 7.0]]]], requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_batchnorm(self):
         class SimpleOp(nn.Module):
@@ -1056,7 +1056,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.ones(2, 2, 2, 2, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_batchnorm_1d(self):
         class SimpleOp(nn.Module):
@@ -1084,7 +1084,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.ones(20, 16, 50, 40, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
     def test_conv_onnx_irv4_opset8(self):
         # This test point checks that for opset 8 (or lower), even if
         # keep_initializers_as_inputs is set to False, it is ignored,
@@ -1129,7 +1129,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(20, 16, 50)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_maxpool_dilations(self):
         class SimpleOp(nn.Module):
@@ -1143,7 +1143,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(20, 16, 50)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_avg_pool2d(self):
         class SimpleOp(nn.Module):
@@ -1157,7 +1157,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(20, 16, 50, 32)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
     @unittest.skip('jit error: "Return value was annotated as having type Tensor but is actually of type Tuple[Tensor, Tensor]"')
     def test_basic_maxpool_indices(self):
         class SimpleOp(nn.Module):
@@ -1200,7 +1200,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(1, 2, 3, 4, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_elu(self):
         class SimpleOp(nn.Module):
@@ -1214,7 +1214,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(1, 2, 3, 4, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_selu(self):
         class SimpleOp(nn.Module):
@@ -1261,7 +1261,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(128, 128, 1, 1, requires_grad=True)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
     def test_embedding_bags(self):
         class SimpleOp(nn.Module):
             def __init__(self):
@@ -1288,7 +1288,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(1, 2, 3, 4)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_prelu(self):
         class SimpleOp(nn.Module):
@@ -1302,7 +1302,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(1, 2, 3, 4)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_log_sigmoid(self):
         class SimpleOp(nn.Module):
@@ -1316,7 +1316,7 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(1, 2, 3, 4)
         self.checkExportImport(SimpleOp(), (x, ))
-    
+
 
     def test_basic_linear(self):
         class SimpleOp(nn.Module):
@@ -1386,3 +1386,6 @@ class TestOperators(unittest.TestCase):
 
         x = torch.randn(20, 5, 10, 10)
         self.checkExportImport(SimpleOp(), (x, ))
+
+class TestOperatorsWithShape(TestOperators, ConvertWithShapeMixin):
+    pass

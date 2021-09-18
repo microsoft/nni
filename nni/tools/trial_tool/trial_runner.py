@@ -103,7 +103,7 @@ def trial_runner_help_info(*args):
 def check_version(args):
     try:
         trial_runner_version = pkg_resources.get_distribution('nni').version
-    except pkg_resources.ResolutionError as err:
+    except pkg_resources.ResolutionError:
         # package nni does not exist, try nni-tool package
         nni_log(LogType.Error, 'Package nni does not exist!')
         os._exit(1)
@@ -119,7 +119,7 @@ def check_version(args):
             nni_log(LogType.Info, '{0}: nni_manager_version is {1}'.format(args.node_id, nni_manager_version))
             log_entry = {}
             if trial_runner_version != nni_manager_version:
-                nni_log(LogType.Error, '{0}: Version does not match!'.format(args.node_id))
+                nni_log(LogType.Warning, '{0}: Version does not match!'.format(args.node_id))
                 error_message = '{0}: NNIManager version is {1}, Trial runner version is {2}, NNI version does not match!'.format(
                     args.node_id, nni_manager_version, trial_runner_version)
                 log_entry['tag'] = 'VCFail'
@@ -127,7 +127,6 @@ def check_version(args):
                 command_channel.send(CommandType.VersionCheck, log_entry)
                 while not command_channel.sent():
                     time.sleep(1)
-                os._exit(1)
             else:
                 nni_log(LogType.Info, '{0}: Version match!'.format(args.node_id))
                 log_entry['tag'] = 'VCSuccess'

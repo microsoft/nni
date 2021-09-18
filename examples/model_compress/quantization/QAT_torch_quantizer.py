@@ -3,30 +3,11 @@ import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 
+import sys
+sys.path.append('../models')
+from mnist.naive import NaiveModel
 
-class Mnist(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
-        self.relu1 = torch.nn.ReLU6()
-        self.relu2 = torch.nn.ReLU6()
-        self.relu3 = torch.nn.ReLU6()
-
-    def forward(self, x):
-        x = self.relu1(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = self.relu2(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 50)
-        x = self.relu3(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
-
-
-def train(model, quantizer, device, train_loader, optimizer):
+def train(model, device, train_loader, optimizer):
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
         data, target = data.to(device), target.to(device)
@@ -37,6 +18,7 @@ def train(model, quantizer, device, train_loader, optimizer):
         optimizer.step()
         if batch_idx % 100 == 0:
             print('{:2.0f}%  Loss {}'.format(100 * batch_idx / len(train_loader), loss.item()))
+
 
 def test(model, device, test_loader):
     model.eval()
@@ -66,30 +48,45 @@ def main():
         datasets.MNIST('data', train=False, transform=trans),
         batch_size=1000, shuffle=True)
 
-    model = Mnist()
-    '''you can change this to DoReFaQuantizer to implement it
-    DoReFaQuantizer(configure_list).compress(model)
-    '''
+    # Two things should be kept in mind when set this configure_list:
+    # 1. When deploying model on backend, some layers will be fused into one layer. For example, the consecutive
+    # conv + bn + relu layers will be fused into one big layer. If we want to execute the big layer in quantization
+    # mode, we should tell the backend the quantization information of the input, output, and the weight tensor of
+    # the big layer, which correspond to conv's input, conv's weight and relu's output.
+    # 2. Same tensor should be quantized only once. For example, if a tensor is the output of layer A and the input
+    # of the layer B, you should configure either {'quant_types': ['output'], 'op_names': ['a']} or
+    # {'quant_types': ['input'], 'op_names': ['b']} in the configure_list.
+
     configure_list = [{
-        'quant_types': ['weight'],
-        'quant_bits': {
-            'weight': 8,
-        }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
-        'op_types':['Conv2d', 'Linear']
-    }, {
-        'quant_types': ['output'],
-        'quant_bits': 8,
-        'quant_start_step': 1000,
-        'op_types':['ReLU6']
-    }]
+            'quant_types': ['weight', 'input'],
+            'quant_bits': {'weight': 8, 'input': 8},
+            'op_names': ['conv1', 'conv2']
+        }, {
+            'quant_types': ['output'],
+            'quant_bits': {'output': 8, },
+            'op_names': ['relu1', 'relu2']
+        }, {
+            'quant_types': ['output', 'weight', 'input'],
+            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
+            'op_names': ['fc1'],
+        }, {
+            'quant_types': ['output', 'weight', 'input'],
+            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
+            'op_names': ['fc2'],
+        }]
+
+    model = NaiveModel().to(device)
+    dummy_input = torch.randn(1, 1, 28, 28).to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    quantizer = QAT_Quantizer(model, configure_list, optimizer)
+    # To enable batch normalization folding in the training process, you should
+    # pass dummy_input to the QAT_Quantizer.
+    quantizer = QAT_Quantizer(model, configure_list, optimizer, dummy_input=dummy_input)
     quantizer.compress()
 
     model.to(device)
     for epoch in range(40):
         print('# Epoch {} #'.format(epoch))
-        train(model, quantizer, device, train_loader, optimizer)
+        train(model, device, train_loader, optimizer)
         test(model, device, test_loader)
 
     model_path = "mnist_model.pth"

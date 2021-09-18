@@ -5,10 +5,14 @@
 Miscellaneous utility functions.
 """
 
+import importlib
+import json
 import math
 import os.path
 from pathlib import Path
 from typing import Any, Dict, Optional, Union, List
+
+import nni.runtime.config
 
 PathLike = Union[Path, str]
 
@@ -34,6 +38,14 @@ def training_service_config_factory(
         config: Union[List, Dict] = None,
         base_path: Optional[Path] = None): # -> TrainingServiceConfig
     from .common import TrainingServiceConfig
+
+    # import all custom config classes so they can be found in TrainingServiceConfig.__subclasses__()
+    custom_ts_config_path = nni.runtime.config.get_config_file('training_services.json')
+    custom_ts_config = json.load(custom_ts_config_path.open())
+    for custom_ts_pkg in custom_ts_config.keys():
+        pkg = importlib.import_module(custom_ts_pkg)
+        _config_class = pkg.nni_training_service_info.config_class
+
     ts_configs = []
     if platform is not None:
         assert config is None
@@ -42,7 +54,8 @@ def training_service_config_factory(
             if cls.platform in platforms:
                 ts_configs.append(cls())
         if len(ts_configs) < len(platforms):
-            raise RuntimeError('There is unrecognized platform!')
+            bad = ', '.join(set(platforms) - set(ts_configs))
+            raise RuntimeError(f'Bad training service platform: {bad}')
     else:
         assert config is not None
         supported_platforms = {cls.platform: cls for cls in TrainingServiceConfig.__subclasses__()}
@@ -79,3 +92,10 @@ def _parse_unit(string, target_unit, all_units):
             value = float(number) * factor
             return math.ceil(value / all_units[target_unit])
     raise ValueError(f'Unsupported unit in "{string}"')
+
+def canonical_gpu_indices(indices: Union[List[int], str, int, None]) -> Optional[List[int]]:
+    if isinstance(indices, str):
+        return [int(idx) for idx in indices.split(',')]
+    if isinstance(indices, int):
+        return [indices]
+    return indices

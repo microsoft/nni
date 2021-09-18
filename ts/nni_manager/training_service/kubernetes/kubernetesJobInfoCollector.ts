@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
-import { getLogger, Logger } from '../../common/log';
-import { TrialJobStatus } from '../../common/trainingService';
+import assert from 'assert';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from 'common/errors';
+import { getLogger, Logger } from 'common/log';
+import { TrialJobStatus } from 'common/trainingService';
 import { KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 
@@ -15,7 +13,7 @@ import { KubernetesTrialJobDetail } from './kubernetesData';
  */
 export class KubernetesJobInfoCollector {
     protected readonly trialJobsMap: Map<string, KubernetesTrialJobDetail>;
-    protected readonly log: Logger = getLogger();
+    protected readonly log: Logger = getLogger('KubernetesJobInfoCollector');
     protected readonly statusesNeedToCheck: TrialJobStatus[];
 
     constructor(jobMap: Map<string, KubernetesTrialJobDetail>) {

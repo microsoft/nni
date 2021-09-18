@@ -16,7 +16,9 @@ _logger = logging.getLogger(__name__)
 def to_v2(v1) -> ExperimentConfig:
     v1 = copy.deepcopy(v1)
     platform = v1.pop('trainingServicePlatform')
-    assert platform in ['local', 'remote', 'openpai', 'aml']
+    assert platform in ['local', 'remote', 'pai', 'aml']
+    if platform == 'pai':
+        platform = 'openpai'
     v2 = ExperimentConfig(platform)
 
     _drop_field(v1, 'authorName')
@@ -27,6 +29,9 @@ def to_v2(v1) -> ExperimentConfig:
     if isinstance(v2.max_experiment_duration, (int, float)):
         v2.max_experiment_duration = str(v2.max_experiment_duration) + 's'
     _move_field(v1, v2, 'maxTrialNum', 'max_trial_number')
+    _move_field(v1, v2, 'maxTrialDuration', 'max_trial_duration')
+    if isinstance(v2.max_trial_duration, (int, float)):
+        v2.max_trial_duration = str(v2.max_trial_duration) + 's'
     _move_field(v1, v2, 'searchSpacePath', 'search_space_file')
     assert not v1.pop('multiPhase', None), 'Multi-phase is no longer supported'
     _deprecate(v1, v2, 'multiThread')
@@ -85,7 +90,7 @@ def to_v2(v1) -> ExperimentConfig:
         if 'memoryMB' in v1_trial:
             ts.trial_memory_size = str(v1_trial.pop('memoryMB')) + 'mb'
         _move_field(v1_trial, ts, 'image', 'docker_image')
-        _deprecate(v1_trial, v2, 'virtualCluster')
+        _move_field(v1_trial, ts, 'virtualCluster', 'virtual_cluster')
         _move_field(v1_trial, ts, 'paiStorageConfigName', 'storage_config_name')
         _move_field(v1_trial, ts, 'paiConfigPath', 'openpaiConfigFile')
 
@@ -249,13 +254,13 @@ def convert_algo(algo_type, v1, v2):
         v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
 
     else:
-        class_directory = util.canonical_path(v1_algo.pop('codeDir'))
+        code_directory = util.canonical_path(v1_algo.pop('codeDir'))
         class_file_name = v1_algo.pop('classFileName')
         assert class_file_name.endswith('.py')
         class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
         v2_algo = CustomAlgorithmConfig(
             class_name=class_name,
-            class_directory=class_directory,
+            code_directory=code_directory,
             class_args=class_args
         )
 

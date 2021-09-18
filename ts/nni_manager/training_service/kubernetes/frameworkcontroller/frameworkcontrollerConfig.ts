@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 
 import {
     AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
@@ -27,7 +25,7 @@ export class FrameworkControllerTrialConfigTemplate extends KubernetesTrialConfi
     public readonly frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy;
     public readonly name: string;
     public readonly taskNum: number;
-    constructor(taskNum: number, command: string, gpuNum: number,
+    constructor(name: string, taskNum: number, command: string, gpuNum: number,
         cpuNum: number, memoryMB: number, image: string,
         frameworkAttemptCompletionPolicy: FrameworkAttemptCompletionPolicy, privateRegistryFilePath?: string | undefined) {
         super(command, gpuNum, cpuNum, memoryMB, image, privateRegistryFilePath);
@@ -49,7 +47,7 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig {
 
 export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     public readonly serviceAccountName: string;
-    constructor(apiVersion: string, serviceAccountName: string, configPath?: string, namespace?: string) {
+    constructor(apiVersion: string, serviceAccountName: string, _configPath?: string, namespace?: string) {
         super(apiVersion, undefined, namespace);
         this.serviceAccountName = serviceAccountName;
     }

@@ -166,6 +166,10 @@ nnictl resume
      - False
      - 
      - set foreground mode, print log content to terminal
+   * - --experiment_dir, -e
+     - False
+     - 
+     - Resume experiment from external folder, specify the full path of experiment folder
 
 
 
@@ -218,6 +222,10 @@ nnictl view
      - False
      - 
      - Rest port of the experiment you want to view
+   * - --experiment_dir, -e
+     - False
+     - 
+     - View experiment from external folder, specify the full path of experiment folder
 
 
 

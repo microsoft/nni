@@ -1,4 +1,5 @@
 from collections import OrderedDict
+from nni.retiarii.serializer import model_wrapper
 from typing import (List, Optional)
 
 import torch
@@ -7,7 +8,7 @@ import torch.nn as torch_nn
 
 import ops
 import nni.retiarii.nn.pytorch as nn
-from nni.retiarii import basic_unit
+from nni.retiarii import basic_unit, model_wrapper
 
 @basic_unit
 class AuxiliaryHead(nn.Module):
@@ -98,6 +99,7 @@ class Cell(nn.Module):
         output = torch.cat(new_tensors, dim=1)
         return output
 
+@model_wrapper
 class CNN(nn.Module):
 
     def __init__(self, input_size, in_channels, channels, n_classes, n_layers, n_nodes=4,

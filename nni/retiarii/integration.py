@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-import os
 from typing import Any, Callable
 
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
@@ -10,9 +9,6 @@ from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
 
 from .graph import MetricData
-from .execution.base import BaseExecutionEngine
-from .execution.cgo_engine import CGOExecutionEngine
-from .execution.api import set_execution_engine
 from .integration_api import register_advisor
 from .serializer import json_dumps, json_loads
 
@@ -62,15 +58,6 @@ class RetiariiAdvisor(MsgDispatcherBase):
 
         self.parameters_count = 0
 
-        engine = self._create_execution_engine()
-        set_execution_engine(engine)
-
-    def _create_execution_engine(self):
-        if os.environ.get('CGO') == 'true':
-            return CGOExecutionEngine()
-        else:
-            return BaseExecutionEngine()
-
     def handle_initialize(self, data):
         """callback for initializing the advisor
         Parameters
@@ -81,7 +68,27 @@ class RetiariiAdvisor(MsgDispatcherBase):
         self.handle_update_search_space(data)
         send(CommandType.Initialized, '')
 
-    def send_trial(self, parameters):
+    def _validate_placement_constraint(self, placement_constraint):
+        if placement_constraint is None:
+            raise ValueError('placement_constraint is None')
+        if not 'type' in placement_constraint:
+            raise ValueError('placement_constraint must have `type`')
+        if not 'gpus' in placement_constraint:
+            raise ValueError('placement_constraint must have `gpus`')
+        if placement_constraint['type'] not in ['None', 'GPUNumber', 'Device']:
+            raise ValueError('placement_constraint.type must be either `None`,. `GPUNumber` or `Device`')
+        if placement_constraint['type'] == 'None' and len(placement_constraint['gpus']) > 0:
+            raise ValueError('placement_constraint.gpus must be an empty list when type == None')
+        if placement_constraint['type'] == 'Device' and len(placement_constraint['gpus']) != 1:
+            raise ValueError('placement_constraint.gpus must be a list of number (currently only support one host)')
+        if placement_constraint['type'] == 'Device':
+            for e in placement_constraint['gpus']:
+                if not isinstance(e, tuple):
+                    raise ValueError('placement_constraint.gpus must be a list of tuple when type == Device')
+                if not (len(e) == 2 and isinstance(e[0], str) and isinstance(e[1], int)):
+                    raise ValueError('placement_constraint.gpus`s tuple must be (str, int)')
+
+    def send_trial(self, parameters, placement_constraint=None):
         """
         Send parameters to NNI.
 
@@ -97,10 +104,17 @@ class RetiariiAdvisor(MsgDispatcherBase):
             which will be used for identification in future.
         """
         self.parameters_count += 1
+        if placement_constraint is None:
+            placement_constraint = {
+                'type': 'None',
+                'gpus': []
+            }
+        self._validate_placement_constraint(placement_constraint)
         new_trial = {
             'parameter_id': self.parameters_count,
             'parameters': parameters,
-            'parameter_source': 'algorithm'
+            'parameter_source': 'algorithm',
+            'placement_constraint': placement_constraint
         }
         _logger.debug('New trial sent: %s', new_trial)
         send(CommandType.NewTrialJob, json_dumps(new_trial))

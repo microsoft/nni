@@ -5,28 +5,9 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 from nni.compression.pytorch.quantization_speedup import ModelSpeedupTensorRT
 
-class Mnist(torch.nn.Module):
-    def __init__(self):
-        super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = torch.nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = torch.nn.Linear(4 * 4 * 50, 500)
-        self.fc2 = torch.nn.Linear(500, 10)
-        self.relu1 = torch.nn.ReLU6()
-        self.relu2 = torch.nn.ReLU6()
-        self.relu3 = torch.nn.ReLU6()
-        self.max_pool1 = torch.nn.MaxPool2d(2, 2)
-        self.max_pool2 = torch.nn.MaxPool2d(2, 2)
-
-    def forward(self, x):
-        x = self.relu1(self.conv1(x))
-        x = self.max_pool1(x)
-        x = self.relu2(self.conv2(x))
-        x = self.max_pool2(x)
-        x = x.view(-1, 4 * 4 * 50)
-        x = self.relu3(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
+import sys
+sys.path.append('../models')
+from mnist.naive import NaiveModel
 
 
 def train(model, device, train_loader, optimizer):
@@ -74,13 +55,13 @@ def test_trt(engine, test_loader):
     print("Inference elapsed_time (whole dataset): {}s".format(time_elasped))
 
 def post_training_quantization_example(train_loader, test_loader, device):
-    model = Mnist()
+    model = NaiveModel()
 
     config = {
-        'conv1':{'weight_bit':8, 'activation_bit':8},
-        'conv2':{'weight_bit':32, 'activation_bit':32},
-        'fc1':{'weight_bit':16, 'activation_bit':16},
-        'fc2':{'weight_bit':8, 'activation_bit':8}
+        'conv1':{'weight_bits':8, 'output_bits':8},
+        'conv2':{'weight_bits':32, 'output_bits':32},
+        'fc1':{'weight_bits':16, 'output_bits':16},
+        'fc2':{'weight_bits':8, 'output_bits':8}
     }
 
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
@@ -99,7 +80,7 @@ def post_training_quantization_example(train_loader, test_loader, device):
     test_trt(engine, test_loader)
 
 def quantization_aware_training_example(train_loader, test_loader, device):
-    model = Mnist()
+    model = NaiveModel()
 
     configure_list = [{
             'quant_types': ['weight', 'output'],
@@ -121,8 +102,10 @@ def quantization_aware_training_example(train_loader, test_loader, device):
     ]
 
     # finetune the model by using QAT
+    # enable batchnorm folding mode
+    dummy_input = torch.randn(1, 1, 28, 28)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-    quantizer = QAT_Quantizer(model, configure_list, optimizer)
+    quantizer = QAT_Quantizer(model, configure_list, optimizer, dummy_input=dummy_input)
     quantizer.compress()
 
     model.to(device)

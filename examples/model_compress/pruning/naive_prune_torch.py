@@ -10,15 +10,16 @@ import logging
 
 import argparse
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import StepLR
-from models.mnist.lenet import LeNet
+
 from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
-import nni
+import sys
+sys.path.append('../models')
+from mnist.lenet import LeNet
 
 _logger = logging.getLogger('mnist_example')
 _logger.setLevel(logging.INFO)
@@ -108,7 +109,7 @@ def main(args):
         'op_types': ['default'],
     }]
 
-    pruner = LevelPruner(model, prune_config, optimizer_finetune)
+    pruner = LevelPruner(model, prune_config)
     model = pruner.compress()
 
     # fine-tuning
@@ -148,6 +149,5 @@ if __name__ == '__main__':
     parser.add_argument('--sparsity', type=float, default=0.5,
                         help='target overall target sparsity')
     args = parser.parse_args()
-
 
     main(args)

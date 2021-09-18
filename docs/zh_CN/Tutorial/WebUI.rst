@@ -1,5 +1,5 @@
 Web 界面
-===============
+==================
 
 Experiment 管理
 -----------------------
@@ -144,7 +144,7 @@ Experiment 管理
 查看超参
 --------------------
 
-点击 ``Hyper Parameter`` 标签查看图像。
+单击 ``Intermediate Result`` 标签查看折线图。
 
 
 * 可以 ``添加/删除`` 轴，或者拖动以交换图表上的轴。
@@ -195,7 +195,7 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 查看 Trial 状态
 ------------------
 
-点击 ``Trials Detail`` 标签查看所有 Trial 的状态。 特别是：
+点击 ``Trials Detail`` 标签查看所有 Trial 的状态。 特别是： 特别是：
 
 
 * Trial 详情：Trial 的 id，持续时间，开始时间，结束时间，状态，精度和搜索空间文件。
@@ -207,7 +207,44 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 
 
-* ``Add column`` 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 可选择 ``Intermediate count`` 列来查看 Trial 进度。
+* 支持通过 id，状态，Trial 编号， 以及参数来搜索。  
+
+1. Trial id： 
+
+.. image:: ../../img/webui-img/search-trial.png
+   :target: ../../img/webui-img/search-trial.png
+   :alt: searchTrial
+
+
+2. Trial No.： 
+
+.. image:: ../../img/webui-img/detail/searchNo.png
+   :target: ../../img/webui-img/detail/searchNo.png
+   :alt: searchTrialNo.
+
+
+3. Trial 状态：
+
+.. image:: ../../img/webui-img/detail/searchStatus.png
+   :target: ../../img/webui-img/detail/searchStatus.png
+   :alt: searchStatus
+
+4. Trial 参数：
+
+(1) 类型为 choice 的参数：
+
+.. image:: ../../img/webui-img/detail/searchParameterChoice.png
+   :target: ../../img/webui-img/detail/searchParameterChoice.png
+   :alt: searchParameterChoice
+
+(2) 类型不是 choice 的参数：
+
+.. image:: ../../img/webui-img/detail/searchParameterRange.png
+   :target: ../../img/webui-img/detail/searchParameterRange.png
+   :alt: searchParameterRange
+
+
+* ``Add column`` 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 * ``Add column`` 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。 可选择 ``Intermediate count`` 列来查看 Trial 进度。
 
 
 .. image:: ../../img/webui-img/addColumn.png
@@ -229,13 +266,7 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
    :alt: compareTrialsGraph
 
 
-
-* 支持通过 id，状态，Trial 编号， 以及参数来搜索。
-
-
-.. image:: ../../img/webui-img/search-trial.png
-   :target: ../../img/webui-img/search-trial.png
-   :alt: searchTrial
+* ``Tensorboard`` 请参考 `此文档 <Tensorboard.rst>`__。
 
 
 
@@ -248,13 +279,20 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
 
 
 
-* 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
+* 您可以在 ``Log`` 选项卡上看到 Trial 日志。 在本地模式下有 ``View trial log``, ``View trial error`` 和 ``View trial stdout`` 三个按钮。 * 如果在 OpenPAI 或 Kubeflow 平台上运行，还可以看到 hdfsLog。
 
+1. 本机模式
+
+.. image:: ../../img/webui-img/detail/log-local.png
+   :target: ../../img/webui-img/detail/log-local.png
+   :alt: logOnLocal
+
+
+2. OpenPAI、Kubeflow 等模式：
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
    :alt: detailPai
-
 
 
 * 中间结果图：可在此图中通过点击 intermediate 按钮来查看默认指标。
@@ -273,3 +311,16 @@ Trial 可能在训练过程中有大量中间结果。 为了更清楚的理解�
    :target: ../../img/webui-img/kill-running.png
    :alt: killTrial
 
+
+
+* 自定义 Trial：您可以更改此 Trial 参数，然后将其提交给 Experiment。 如果您想重新运行失败的 Trial ，您可以向 Experiment 提交相同的参数。
+
+.. image:: ../../img/webui-img/detail/customizedTrialButton.png
+   :target: ../../img/webui-img/detail/customizedTrialButton.png
+   :alt: customizedTrialButton
+
+
+
+.. image:: ../../img/webui-img/detail/customizedTrial.png
+   :target: ../../img/webui-img/detail/customizedTrial.png
+   :alt: customizedTrial

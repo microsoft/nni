@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
+import fs from 'fs';
 import { Writable } from 'stream';
+import util from 'util';
 
 /* log level constants */
 
@@ -28,7 +27,6 @@ const levelNames = new Map<number, string>([
 
 /* global_ states */
 
-let logFile: Writable | null = null;
 let logLevel: number = 0;
 const loggers = new Map<string, Logger>();
 
@@ -70,33 +68,28 @@ export class Logger {
     }
 
     private log(level: number, args: any[]): void {
-        if (level < logLevel || logFile === null) {
+        const logFile: Writable | undefined = (global as any).logFile;
+        if (level < logLevel) {
             return;
         }
 
-        // `time.toLocaleString('sv')` trick does not work for Windows
-        const isoTime = new Date(new Date().toLocaleString() + ' UTC').toISOString();
-        const time = isoTime.slice(0, 10) + ' ' + isoTime.slice(11, 19);
+        const zeroPad = (num: number): string => num.toString().padStart(2, '0');
+        const now = new Date();
+        const date = now.getFullYear() + '-' + zeroPad(now.getMonth() + 1) + '-' + zeroPad(now.getDate());
+        const time = zeroPad(now.getHours()) + ':' + zeroPad(now.getMinutes()) + ':' + zeroPad(now.getSeconds());
+        const datetime = date + ' ' + time;
 
         const levelName = levelNames.has(level) ? levelNames.get(level) : level.toString();
 
-        const words = [];
-        for (const arg of args) {
-            if (arg === undefined) {
-                words.push('undefined');
-            } else if (arg === null) {
-                words.push('null');
-            } else if (typeof arg === 'object') {
-                const json = JSON.stringify(arg);
-                words.push(json === undefined ? arg : json);
-            } else {
-                words.push(arg);
-            }
-        }
-        const message = words.join(' ');
+        const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
-        const record = `[${time}] ${levelName} (${this.name}) ${message}\n`;
-        logFile.write(record);
+        const record = `[${datetime}] ${levelName} (${this.name}) ${message}\n`;
+
+        if (logFile === undefined) {
+            console.log(record);
+        } else {
+            logFile.write(record);
+        }
     }
 }
 
@@ -124,7 +117,7 @@ export function setLogLevel(levelName: string): void {
 }
 
 export function startLogging(logPath: string): void {
-    logFile = fs.createWriteStream(logPath, {
+    (global as any).logFile = fs.createWriteStream(logPath, {
         flags: 'a+',
         encoding: 'utf8',
         autoClose: true
@@ -132,8 +125,8 @@ export function startLogging(logPath: string): void {
 }
 
 export function stopLogging(): void {
-    if (logFile !== null) {
-        logFile.end();
-        logFile = null;
+    if ((global as any).logFile !== undefined) {
+        (global as any).logFile.end();
+        (global as any).logFile = undefined;
     }
 }

@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
-import { TrialJobStatus, LogType } from './trainingService';
+import { TrialJobStatus } from './trainingService';
 import { ExperimentConfig } from './experimentConfig';
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
@@ -59,7 +57,7 @@ abstract class Manager {
     public abstract getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]>;
     public abstract getLatestMetricData(): Promise<MetricDataRecord[]>;
 
-    public abstract getTrialLog(trialJobId: string, logType: LogType): Promise<string>;
+    public abstract getTrialFile(trialJobId: string, fileName: string): Promise<Buffer | string>;
 
     public abstract getTrialJobStatistics(): Promise<TrialJobStatistics[]>;
     public abstract getStatus(): NNIManagerStatus;

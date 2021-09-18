@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import { getLogger, Logger } from '../../common/log';
-import { randomSelect } from '../../common/utils';
-import { RemoteMachineConfig } from '../../common/experimentConfig';
+import assert from 'assert';
+import { getLogger, Logger } from 'common/log';
+import { randomSelect } from 'common/utils';
+import { RemoteMachineConfig } from 'common/experimentConfig';
 import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { ExecutorManager, RemoteMachineMeta, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail } from './remoteMachineData';
 
@@ -18,7 +16,7 @@ type SCHEDULE_POLICY_NAME = 'random' | 'round-robin';
 export class GPUScheduler {
 
     private readonly machineExecutorMap: Map<RemoteMachineConfig, ExecutorManager>;
-    private readonly log: Logger = getLogger();
+    private readonly log: Logger = getLogger('GPUScheduler');
     private readonly policyName: SCHEDULE_POLICY_NAME = 'round-robin';
     private roundRobinIndex: number = 0;
     private configuredRMs: RemoteMachineMeta[] = [];
@@ -123,6 +121,7 @@ export class GPUScheduler {
                 assert(false, 'gpuInfos is undefined');
             }
         }
+        return undefined;
     }
 
     /**

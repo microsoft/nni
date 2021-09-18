@@ -1,32 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as request from 'request';
-import * as component from '../../common/component';
+import fs from 'fs';
+import path from 'path';
+import request from 'request';
+import * as component from 'common/component';
 
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
-    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric, LogType
-} from '../../common/trainingService';
-import { delay } from '../../common/utils';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../common/experimentConfig';
+    TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
+} from 'common/trainingService';
+import { delay } from 'common/utils';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
 import { String } from 'typescript-string-operations';
-import {
-    generateParamFileName,
-    getIPV4Address, uniqueString
-} from '../../common/utils';
+import { generateParamFileName, getIPV4Address, uniqueString } from 'common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
@@ -63,7 +58,7 @@ class PAITrainingService implements TrainingService {
     private config: FlattenOpenpaiConfig;
 
     constructor(config: ExperimentConfig) {
-        this.log = getLogger();
+        this.log = getLogger('PAITrainingService');
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
         this.jobQueue = [];
@@ -73,6 +68,7 @@ class PAITrainingService implements TrainingService {
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.log.info('Construct paiBase training service.');
         this.config = flattenConfig(config, 'openpai');
+        this.versionCheck = !this.config.debug;
         this.paiJobRestServer = new PAIJobRestServer(this);
         this.paiToken = this.config.token;
         this.protocol = this.config.host.toLowerCase().startsWith('https://') ? 'https' : 'http';
@@ -81,7 +77,7 @@ class PAITrainingService implements TrainingService {
 
     private async copyTrialCode(): Promise<void> {
         await validateCodeDir(this.config.trialCodeDirectory);
-        const nniManagerNFSExpCodeDir = path.join(this.config.trialCodeDirectory, this.experimentId, 'nni-code');
+        const nniManagerNFSExpCodeDir = path.join(this.config.localStorageMountPoint, this.experimentId, 'nni-code');
         await execMkdir(nniManagerNFSExpCodeDir);
         this.log.info(`Starting copy codeDir data from ${this.config.trialCodeDirectory} to ${nniManagerNFSExpCodeDir}`);
         await execCopydir(this.config.trialCodeDirectory, nniManagerNFSExpCodeDir);
@@ -127,7 +123,7 @@ class PAITrainingService implements TrainingService {
         return jobs;
     }
 
-    public async getTrialLog(_trialJobId: string, _logType: LogType): Promise<string> {
+    public async getTrialFile(_trialJobId: string, _fileName: string): Promise<string | Buffer> {
         throw new MethodNotImplementedError();
     }
 
@@ -308,7 +304,7 @@ class PAITrainingService implements TrainingService {
     }
 
     public async submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
-        this.log.info(`submitTrialJob: form: ${JSON.stringify(form)}`);
+        this.log.info('submitTrialJob: form:',  form);
 
         const trialJobId: string = uniqueString(5);
         //TODO: use HDFS working folder instead
@@ -332,7 +328,7 @@ class PAITrainingService implements TrainingService {
         return trialJobDetail;
     }
 
-    private generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string): string {
+    private async generateNNITrialCommand(trialJobDetail: PAITrialJobDetail, command: string): Promise<string> {
         const containerNFSExpCodeDir = `${this.config.containerStorageMountPoint}/${this.experimentId}/nni-code`;
         const containerWorkingDir: string = `${this.config.containerStorageMountPoint}/${this.experimentId}/${trialJobDetail.id}`;
         const nniPaiTrialCommand: string = String.Format(
@@ -345,7 +341,7 @@ class PAITrainingService implements TrainingService {
             false,  // multi-phase
             containerNFSExpCodeDir,
             command,
-            this.config.nniManagerIp || getIPV4Address(),
+            this.config.nniManagerIp || await getIPV4Address(),
             this.paiRestServerPort,
             this.nniVersion,
             this.logCollection
@@ -356,7 +352,7 @@ class PAITrainingService implements TrainingService {
 
     }
 
-    private generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail): any {
+    private async generateJobConfigInYamlFormat(trialJobDetail: PAITrialJobDetail): Promise<any> {
         const jobName = `nni_exp_${this.experimentId}_trial_${trialJobDetail.id}`
 
         let nniJobConfig: any = undefined;
@@ -367,7 +363,7 @@ class PAITrainingService implements TrainingService {
             // Each command will be formatted to NNI style
             for (const taskRoleIndex in nniJobConfig.taskRoles) {
                 const commands = nniJobConfig.taskRoles[taskRoleIndex].commands
-                const nniTrialCommand = this.generateNNITrialCommand(trialJobDetail, commands.join(" && ").replace(/(["'$`\\])/g, '\\$1'));
+                const nniTrialCommand = await this.generateNNITrialCommand(trialJobDetail, commands.join(" && ").replace(/(["'$`\\])/g, '\\$1'));
                 nniJobConfig.taskRoles[taskRoleIndex].commands = [nniTrialCommand]
             }
 
@@ -399,7 +395,7 @@ class PAITrainingService implements TrainingService {
                             memoryMB: toMegaBytes(this.config.trialMemorySize)
                         },
                         commands: [
-                            this.generateNNITrialCommand(trialJobDetail, this.config.trialCommand)
+                            await this.generateNNITrialCommand(trialJobDetail, this.config.trialCommand)
                         ]
                     }
                 },
@@ -412,9 +408,9 @@ class PAITrainingService implements TrainingService {
                     submitFrom: 'submit-job-v2'
                 }
             }
-            if (this.config.deprecated && this.config.deprecated.virtualCluster) {
+            if (this.config.virtualCluster) {
                 nniJobConfig.defaults = {
-                    virtualCluster: this.config.deprecated.virtualCluster
+                    virtualCluster: this.config.virtualCluster
                 }
             }
         }
@@ -456,7 +452,7 @@ class PAITrainingService implements TrainingService {
         }
 
         //Generate Job Configuration in yaml format
-        const paiJobConfig = this.generateJobConfigInYamlFormat(trialJobDetail);
+        const paiJobConfig = await this.generateJobConfigInYamlFormat(trialJobDetail);
         this.log.debug(paiJobConfig);
         // Step 2. Submit PAI job via Rest call
         // Refer https://github.com/Microsoft/pai/blob/master/docs/rest-server/API.md for more detail about PAI Rest API

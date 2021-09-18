@@ -136,7 +136,7 @@ def trial_keeper_help_info(*args):
 def check_version(args):
     try:
         trial_keeper_version = pkg_resources.get_distribution('nni').version
-    except pkg_resources.ResolutionError as err:
+    except pkg_resources.ResolutionError:
         # package nni does not exist, try nni-tool package
         nni_log(LogType.Error, 'Package nni does not exist!')
         os._exit(1)
@@ -151,14 +151,13 @@ def check_version(args):
             nni_log(LogType.Info, 'nni_manager_version is {0}'.format(nni_manager_version))
             log_entry = {}
             if trial_keeper_version != nni_manager_version:
-                nni_log(LogType.Error, 'Version does not match!')
+                nni_log(LogType.Warning, 'Version does not match!')
                 error_message = 'NNIManager version is {0}, TrialKeeper version is {1}, NNI version does not match!'.format(
                     nni_manager_version, trial_keeper_version)
                 log_entry['tag'] = 'VCFail'
                 log_entry['msg'] = error_message
                 rest_post(gen_send_version_url(args.nnimanager_ip, args.nnimanager_port), json.dumps(log_entry), 10,
                           False)
-                os._exit(1)
             else:
                 nni_log(LogType.Info, 'Version match!')
                 log_entry['tag'] = 'VCSuccess'

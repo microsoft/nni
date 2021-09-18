@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { TrialJobStatus  } from '../../common/trainingService';
+import { TrialJobStatus  } from 'common/trainingService';
 
 /**
  * Trial job metrics class

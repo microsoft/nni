@@ -1,0 +1,14 @@
+hybrid:
+  trainingService:
+  - platform: remote
+    machineList:
+      - host: 
+        user: 
+        password: 
+        port: 
+  - platform: local
+  - platform: aml
+    subscriptionId:
+    resourceGroup:
+    workspaceName:
+    computeTarget:

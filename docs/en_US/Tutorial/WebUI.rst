@@ -207,6 +207,43 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
+* Support searching for a specific trial by its id, status, Trial No. and trial parameters.
+
+1. Trial id: 
+
+.. image:: ../../img/webui-img/detail/searchId.png
+   :target: ../../img/webui-img/detail/searchId.png
+   :alt: searchTrialId
+
+
+2. Trial No.: 
+
+.. image:: ../../img/webui-img/detail/searchNo.png
+   :target: ../../img/webui-img/detail/searchNo.png
+   :alt: searchTrialNo.
+
+
+3. Trial status:
+
+.. image:: ../../img/webui-img/detail/searchStatus.png
+   :target: ../../img/webui-img/detail/searchStatus.png
+   :alt: searchStatus
+
+4. Trial parameters:
+
+(1) parameters whose type is choice:
+
+.. image:: ../../img/webui-img/detail/searchParameterChoice.png
+   :target: ../../img/webui-img/detail/searchParameterChoice.png
+   :alt: searchParameterChoice
+
+(2) parameters whose type is not choice:
+
+.. image:: ../../img/webui-img/detail/searchParameterRange.png
+   :target: ../../img/webui-img/detail/searchParameterRange.png
+   :alt: searchParameterRange
+
+
 * The button named ``Add column`` can select which column to show on the table. If you run an experiment whose final result is a dict, you can see other keys in the table. You can choose the column ``Intermediate count`` to watch the trial's progress.
 
 
@@ -229,14 +266,7 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :alt: compareTrialsGraph
 
 
-
-* Support to search for a specific trial by it's id, status, Trial No. and parameters.
-
-
-.. image:: ../../img/webui-img/search-trial.png
-   :target: ../../img/webui-img/search-trial.png
-   :alt: searchTrial
-
+* ``Tensorboard`` please refer `doc <Tensorboard.rst>`__.
 
 
 * You can use the button named ``Copy as python`` to copy the trial's parameters.
@@ -248,13 +278,20 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
 
 
 
-* If you run on the OpenPAI or Kubeflow platform, you can also see the nfs log.
+* You could see trial logs on the tab of ``Log``. There are three buttons ``View trial log``, ``View trial error`` and ``View trial stdout`` on local mode. If you run on the OpenPAI or Kubeflow platform, you could see trial stdout and nfs log.
 
+1. local mode:
+
+.. image:: ../../img/webui-img/detail/log-local.png
+   :target: ../../img/webui-img/detail/log-local.png
+   :alt: logOnLocal
+
+
+2. OpenPAI, Kubeflow and other mode:
 
 .. image:: ../../img/webui-img/detail-pai.png
    :target: ../../img/webui-img/detail-pai.png
    :alt: detailPai
-
 
 
 * Intermediate Result Graph: you can see the default metric in this graph by clicking the intermediate button.
@@ -273,3 +310,16 @@ Click the tab ``Trials Detail`` to see the status of all trials. Specifically:
    :target: ../../img/webui-img/kill-running.png
    :alt: killTrial
 
+
+
+* Customized trial: you can change this trial parameters and then submit it to the experiment. If you want to rerun a failed trial you could submit the same parameters to the experiment.
+
+.. image:: ../../img/webui-img/detail/customizedTrialButton.png
+   :target: ../../img/webui-img/detail/customizedTrialButton.png
+   :alt: customizedTrialButton
+
+
+
+.. image:: ../../img/webui-img/detail/customizedTrial.png
+   :target: ../../img/webui-img/detail/customizedTrial.png
+   :alt: customizedTrial

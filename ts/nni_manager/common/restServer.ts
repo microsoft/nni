@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as express from 'express';
-import * as http from 'http';
+import assert from 'assert';
+import express from 'express';
+import http from 'http';
 import { Deferred } from 'ts-deferred';
 import { getLogger, Logger } from './log';
 import { getBasePort } from './experimentStartupInfo';
@@ -25,7 +23,7 @@ export abstract class RestServer {
     protected hostName: string = '0.0.0.0';
     protected port?: number;
     protected app: express.Application = express();
-    protected log: Logger = getLogger();
+    protected log: Logger = getLogger('RestServer');
     protected basePort?: number;
 
     constructor() {

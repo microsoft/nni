@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as sqlite3 from 'sqlite3';
+import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
+import sqlite3 from 'sqlite3';
 import { Deferred } from 'ts-deferred';
 
 import {
@@ -80,7 +78,7 @@ function loadMetricData(row: any): MetricDataRecord {
 
 class SqlDB implements Database {
     private db!: sqlite3.Database;
-    private log: Logger = getLogger();
+    private log: Logger = getLogger('SqlDB');
     private initTask!: Deferred<void>;
 
     public init(createNew: boolean, dbDir: string): Promise<void> {
@@ -130,7 +128,7 @@ class SqlDB implements Database {
             exp.nextSequenceId,
             exp.revision
         ];
-        this.log.trace(`storeExperimentProfile: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`storeExperimentProfile: SQL: ${sql}, args:`, args);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -147,7 +145,7 @@ class SqlDB implements Database {
             sql = 'select * from ExperimentProfile where id=? and revision=?';
             args = [experimentId, revision];
         }
-        this.log.trace(`queryExperimentProfile: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`queryExperimentProfile: SQL: ${sql}, args:`, args);
         const deferred: Deferred<ExperimentProfile[]> = new Deferred<ExperimentProfile[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadExperimentProfile);
@@ -170,7 +168,7 @@ class SqlDB implements Database {
         const message: string | undefined = jobDetail === undefined ? undefined : jobDetail.message;
         const args: any[] = [timestamp, trialJobId, event, hyperParameter, logPath, sequenceId, message];
 
-        this.log.trace(`storeTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`storeTrialJobEvent: SQL: ${sql}, args:`, args);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -193,7 +191,7 @@ class SqlDB implements Database {
             args = [trialJobId, event];
         }
 
-        this.log.trace(`queryTrialJobEvent: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`queryTrialJobEvent: SQL: ${sql}, args:`, args);
         const deferred: Deferred<TrialJobEventRecord[]> = new Deferred<TrialJobEventRecord[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadTrialJobEvent);
@@ -202,12 +200,12 @@ class SqlDB implements Database {
         return deferred.promise;
     }
 
-    public storeMetricData(trialJobId: string, data: string): Promise<void> {
+    public storeMetricData(_trialJobId: string, data: string): Promise<void> {
         const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
         const json: MetricDataRecord = JSON.parse(data);
         const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];
 
-        this.log.trace(`storeMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`storeMetricData: SQL: ${sql}, args:`, args);
         const deferred: Deferred<void> = new Deferred<void>();
         this.db.run(sql, args, (err: Error | null) => { this.resolve(deferred, err); });
 
@@ -230,7 +228,7 @@ class SqlDB implements Database {
             args = [trialJobId, metricType];
         }
 
-        this.log.trace(`queryMetricData: SQL: ${sql}, args: ${JSON.stringify(args)}`);
+        this.log.trace(`queryMetricData: SQL: ${sql}, args:`, args);
         const deferred: Deferred<MetricDataRecord[]> = new Deferred<MetricDataRecord[]>();
         this.db.all(sql, args, (err: Error | null, rows: any[]) => {
             this.resolve(deferred, err, rows, loadMetricData);
@@ -259,7 +257,7 @@ class SqlDB implements Database {
             for (const row of (<any[]>rows)) {
                 data.push(rowLoader(row));
             }
-            this.log.trace(`sql query result: ${JSON.stringify(data)}`);
+            this.log.trace(`sql query result:`, data);
             (<Deferred<T[]>>deferred).resolve(data);
         }
     }

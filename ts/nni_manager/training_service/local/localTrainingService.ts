@@ -1,24 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-import * as cp from 'child_process';
+import cp from 'child_process';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as ts from 'tail-stream';
-import * as tkill from 'tree-kill';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
+import fs from 'fs';
+import path from 'path';
+import ts from 'tail-stream';
+import tkill from 'tree-kill';
+import { NNIError, NNIErrorNames } from 'common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { powershellString } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
-    TrialJobDetail, TrialJobMetric, TrialJobStatus, LogType
-} from '../../common/trainingService';
+    TrialJobDetail, TrialJobMetric, TrialJobStatus
+} from 'common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
-} from '../../common/utils';
-import { ExperimentConfig, LocalConfig, flattenConfig } from '../../common/experimentConfig';
+} from 'common/utils';
+import { ExperimentConfig, LocalConfig, flattenConfig } from 'common/experimentConfig';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -98,7 +98,7 @@ class LocalTrainingService implements TrainingService {
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];
         this.stopping = false;
-        this.log = getLogger();
+        this.log = getLogger('LocalTrainingService');
         this.experimentId = getExperimentId();
         this.jobStreamMap = new Map<string, ts.Stream>();
         this.log.info('Construct local machine training service.');
@@ -170,16 +170,20 @@ class LocalTrainingService implements TrainingService {
         return trialJob;
     }
 
-    public async getTrialLog(trialJobId: string, logType: LogType): Promise<string> {
-        let logPath: string;
-        if (logType === 'TRIAL_LOG') {
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'trial.log');
-        } else if (logType === 'TRIAL_ERROR') {
-            logPath = path.join(this.rootDir, 'trials', trialJobId, 'stderr');
-        } else {
-            throw new Error('unexpected log type');
+    public async getTrialFile(trialJobId: string, fileName: string): Promise<string | Buffer> {
+        // check filename here for security
+        if (!['trial.log', 'stderr', 'model.onnx', 'stdout'].includes(fileName)) {
+            throw new Error(`File unaccessible: ${fileName}`);
         }
-        return fs.promises.readFile(logPath, 'utf8');
+        let encoding: string | null = null;
+        if (!fileName.includes('.') || fileName.match(/.*\.(txt|log)/g)) {
+            encoding = 'utf8';
+        }
+        const logPath = path.join(this.rootDir, 'trials', trialJobId, fileName);
+        if (!fs.existsSync(logPath)) {
+            throw new Error(`File not found: ${logPath}`);
+        }
+        return fs.promises.readFile(logPath, {encoding: encoding as any});
     }
 
     public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
@@ -202,7 +206,7 @@ class LocalTrainingService implements TrainingService {
         this.jobQueue.push(trialJobId);
         this.jobMap.set(trialJobId, trialJobDetail);
 
-        this.log.debug(`submitTrialJob: return: ${JSON.stringify(trialJobDetail)} `);
+        this.log.debug('submitTrialJob: return:',  trialJobDetail);
 
         return Promise.resolve(trialJobDetail);
     }
@@ -233,8 +237,10 @@ class LocalTrainingService implements TrainingService {
             return Promise.resolve();
         }
         tkill(trialJob.pid, 'SIGTERM');
+        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
+
         const startTime = Date.now();
-        while(await isAlive(trialJob.pid)) {    
+        while(await isAlive(trialJob.pid)) {
             if (Date.now() - startTime > 4999) {
                 tkill(trialJob.pid, 'SIGKILL', (err) => {
                     if (err) {
@@ -245,8 +251,6 @@ class LocalTrainingService implements TrainingService {
             }
             await delay(500);
         }
-
-        this.setTrialJobStatus(trialJob, getJobCancelStatus(isEarlyStopped));
 
         return Promise.resolve();
     }
@@ -412,15 +416,16 @@ class LocalTrainingService implements TrainingService {
     private getScript(workingDirectory: string): string[] {
         const script: string[] = [];
         if (process.platform === 'win32') {
+            script.push(`$PSDefaultParameterValues = @{'Out-File:Encoding' = 'utf8'}`);
             script.push(`cd $env:NNI_CODE_DIR`);
             script.push(
-                `cmd.exe /c ${this.config.trialCommand} 2>&1 | Out-File "${path.join(workingDirectory, 'stderr')}" -encoding utf8`,
+                `cmd.exe /c ${this.config.trialCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`,
                 `$NOW_DATE = [int64](([datetime]::UtcNow)-(get-date "1/1/1970")).TotalSeconds`,
                 `$NOW_DATE = "$NOW_DATE" + (Get-Date -Format fff).ToString()`,
                 `Write $LASTEXITCODE " " $NOW_DATE  | Out-File "${path.join(workingDirectory, '.nni', 'state')}" -NoNewline -encoding utf8`);
         } else {
             script.push(`cd $NNI_CODE_DIR`);
-            script.push(`eval ${this.config.trialCommand} 2>"${path.join(workingDirectory, 'stderr')}"`);
+            script.push(`eval ${this.config.trialCommand} 1>${path.join(workingDirectory, 'stdout')} 2>${path.join(workingDirectory, 'stderr')}`);
             if (process.platform === 'darwin') {
                 // https://superuser.com/questions/599072/how-to-get-bash-execution-time-in-milliseconds-under-mac-os-x
                 // Considering the worst case, write 999 to avoid negative duration
@@ -441,7 +446,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         } else {
-            runScriptContent.push(`$env:PATH="${process.env.path}"`)
+            runScriptContent.push(`$env:PATH=${powershellString(process.env['path']!)}`)
         }
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));

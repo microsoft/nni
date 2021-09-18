@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { getLogger, Logger } from "../../common/log";
-import { TrialJobStatus } from "../../common/trainingService";
-import { GPUInfo } from "../../training_service/common/gpuData";
+import { getLogger, Logger } from "common/log";
+import { TrialJobStatus } from "common/trainingService";
+import { GPUInfo } from "training_service/common/gpuData";
 import { CommandChannel } from "./commandChannel";
 import { WebCommandChannel } from './channels/webCommandChannel';
 import { EventEmitter } from "events";
@@ -82,7 +80,7 @@ export class EnvironmentInformation {
     public useSharedStorage?: boolean;
 
     constructor(id: string, name: string, envId?: string) {
-        this.log = getLogger();
+        this.log = getLogger('EnvironmentInformation');
         this.id = id;
         this.name = name;
         this.envId = envId ? envId : name;
@@ -116,7 +114,7 @@ export class EnvironmentInformation {
         const gpuSummary = this.gpuSummaries.get(this.defaultNodeId);
         if (gpuSummary === undefined) {
             if (false === this.isNoGpuWarned) {
-                this.log.warning(`EnvironmentInformation: ${this.envId} no default gpu found. current gpu info ${JSON.stringify(this.gpuSummaries)}`);
+                this.log.warning(`EnvironmentInformation: ${this.envId} no default gpu found. current gpu info`,  this.gpuSummaries);
                 this.isNoGpuWarned = true;
             }
         } else {

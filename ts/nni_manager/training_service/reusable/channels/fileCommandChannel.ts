@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as component from "../../../common/component";
-import { delay } from "../../../common/utils";
+import * as component from "common/component";
+import { delay } from "common/utils";
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";
 import { StorageService } from "../storageService";

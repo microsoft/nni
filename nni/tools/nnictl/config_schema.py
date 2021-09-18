@@ -5,13 +5,12 @@ import json
 import logging
 import os
 
-import netifaces
+from schema import And, Optional, Or, Regex, Schema, SchemaError
 from nni.tools.package_utils import (
     create_validator_instance,
     get_all_builtin_names,
     get_registered_algo_meta,
 )
-from schema import And, Optional, Or, Regex, Schema, SchemaError
 
 from .common_utils import get_yml_content, print_warning
 from .constants import SCHEMA_PATH_ERROR, SCHEMA_RANGE_ERROR, SCHEMA_TYPE_ERROR
@@ -128,6 +127,7 @@ common_schema = {
     Optional('description'): setType('description', str),
     'trialConcurrency': setNumberRange('trialConcurrency', int, 1, 99999),
     Optional('maxExecDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxExecDuration format is [digit]{s,m,h,d}')),
+    Optional('maxTrialDuration'): And(Regex(r'^[1-9][0-9]*[s|m|h|d]$', error='ERROR: maxTrialDuration format is [digit]{s,m,h,d}')),
     Optional('maxTrialNum'): setNumberRange('maxTrialNum', int, 1, 99999),
     'trainingServicePlatform': setChoice(
         'trainingServicePlatform', 'remote', 'local', 'pai', 'kubeflow', 'frameworkcontroller', 'dlts', 'aml', 'adl', 'hybrid'),
@@ -158,7 +158,6 @@ common_schema = {
         Optional('storageAccountName'): setType('storageAccountName', str),
         Optional('storageAccountKey'): setType('storageAccountKey', str),
         Optional('containerName'): setType('containerName', str),
-        Optional('resourceGroupName'): setType('resourceGroupName', str),
         Optional('localMounted'): setChoice('localMounted', 'usermount', 'nnimount', 'nomount')
     }
 }
@@ -493,7 +492,6 @@ class NNIConfigSchema:
         self.validate_tuner_adivosr_assessor(experiment_config)
         self.validate_pai_trial_conifg(experiment_config)
         self.validate_kubeflow_operators(experiment_config)
-        self.validate_eth0_device(experiment_config)
         self.validate_hybrid_platforms(experiment_config)
         self.validate_frameworkcontroller_trial_config(experiment_config)
 
@@ -599,13 +597,6 @@ class NNIConfigSchema:
                 print_warning(warning_information.format('outputDir'))
             self.validate_pai_config_path(experiment_config)
 
-    def validate_eth0_device(self, experiment_config):
-        '''validate whether the machine has eth0 device'''
-        if experiment_config.get('trainingServicePlatform') not in ['local'] \
-                and not experiment_config.get('nniManagerIp') \
-                and 'eth0' not in netifaces.interfaces():
-            raise SchemaError('This machine does not contain eth0 network device, please set nniManagerIp in config file!')
-
     def validate_hybrid_platforms(self, experiment_config):
         required_config_name_map = {
             'remote': 'machineList',
@@ -625,7 +616,7 @@ class NNIConfigSchema:
                     raise SchemaError("""If no taskRoles are specified a valid custom frameworkcontroller config should
                                          be set using the configPath attribute in frameworkcontrollerConfig!""")
                 config_content = get_yml_content(experiment_config.get('frameworkcontrollerConfig').get('configPath'))
-                if not config_content.get('spec').get('taskRoles') or not len(config_content.get('spec').get('taskRoles')):
+                if not config_content.get('spec').get('taskRoles') or not config_content.get('spec').get('taskRoles'):
                     raise SchemaError('Invalid frameworkcontroller config! No taskRoles were specified!')
                 if not config_content.get('spec').get('taskRoles')[0].get('task'):
                     raise SchemaError('Invalid frameworkcontroller config! No task was specified for taskRole!')

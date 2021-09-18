@@ -1,23 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as fs from 'fs';
-import * as os from 'os';
-import * as path from 'path';
+import assert from 'assert';
+import fs from 'fs';
+import os from 'os';
+import path from 'path';
 import { Client, ClientChannel, ConnectConfig, SFTPWrapper } from 'ssh2';
-import * as stream from 'stream';
+import stream from 'stream';
 import { Deferred } from "ts-deferred";
-import { getLogger, Logger } from '../../common/log';
-import { uniqueString, randomInt } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { uniqueString, randomInt } from 'common/utils';
 import { execRemove, tarAdd } from '../common/util';
 import { LinuxCommands } from "./extends/linuxCommands";
 import { WindowsCommands } from './extends/windowsCommands';
 import { OsCommands } from "./osCommands";
 import { RemoteCommandResult, RemoteMachineMeta } from "./remoteMachineData";
-import { NNIError, NNIErrorNames } from '../../common/errors';
+import { NNIError, NNIErrorNames } from 'common/errors';
 
 class ShellExecutor {
     public name: string = "";
@@ -36,7 +34,7 @@ class ShellExecutor {
     public isWindows: boolean = false;
 
     constructor() {
-        this.log = getLogger();
+        this.log = getLogger('ShellExecutor');
         this.sshClient = new Client();
     }
 
@@ -277,7 +275,7 @@ class ShellExecutor {
         this.log.debug(`copyFileToRemote(${commandIndex}): localFilePath: ${localFilePath}, remoteFilePath: ${remoteFilePath}`);
 
         const deferred: Deferred<boolean> = new Deferred<boolean>();
-        this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
+        this.sshClient.sftp((err: Error | undefined, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 this.log.error(`copyFileToRemote(${commandIndex}): ${err}`);
                 deferred.reject(err);
@@ -328,7 +326,7 @@ class ShellExecutor {
         const commandIndex = randomInt(10000);
         this.log.debug(`getRemoteFileContent(${commandIndex}): filePath: ${filePath}`);
         const deferred: Deferred<string> = new Deferred<string>();
-        this.sshClient.sftp((err: Error, sftp: SFTPWrapper) => {
+        this.sshClient.sftp((err: Error | undefined, sftp: SFTPWrapper) => {
             if (err !== undefined && err !== null) {
                 this.log.error(`getRemoteFileContent(${commandIndex}) sftp: ${err}`);
                 deferred.reject(new Error(`SFTP error: ${err}`));
@@ -376,7 +374,7 @@ class ShellExecutor {
         // Windows always uses shell, and it needs to disable to get it works.
         useShell = useShell && !this.isWindows;
 
-        const callback = (err: Error, channel: ClientChannel): void => {
+        const callback = (err: Error | undefined, channel: ClientChannel): void => {
             if (err !== undefined && err !== null) {
                 this.log.error(`remoteExeCommand(${commandIndex}): ${err.message}`);
                 deferred.reject(err);
