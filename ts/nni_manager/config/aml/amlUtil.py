@@ -45,7 +45,7 @@ if __name__ == "__main__":
             print('tracking_url:' + run.get_portal_url())
         elif line == 'stop':
             run.cancel()
-            with open('~/aml_script_result.log', 'a') as out_file:
+            with open('/home/core/aml_script_result.log', 'a+') as out_file:
                 out_file.write(run_id + " send stop request")
             loop_count = 0
             status = run.get_status()
