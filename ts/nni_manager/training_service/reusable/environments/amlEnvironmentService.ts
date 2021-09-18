@@ -129,6 +129,11 @@ export class AMLEnvironmentService extends EnvironmentService {
         if (!amlClient) {
             throw new Error('AML client not initialized!');
         }
-        amlClient.stop();
+        const result = await amlClient.stop();
+        if (result) {
+            this.log.info(`Stop ${environment.id} success!`);
+        } else {
+            this.log.info(`Stop ${environment.id} failed!`);
+        }
     }
 }
