@@ -1,29 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as request from 'request';
-import * as component from '../../common/component';
+import fs from 'fs';
+import path from 'path';
+import request from 'request';
+import * as component from 'common/component';
 
 import { EventEmitter } from 'events';
 import { Deferred } from 'ts-deferred';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
 import {
     HyperParameters, NNIManagerIpConfig, TrainingService,
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
-} from '../../common/trainingService';
-import { delay } from '../../common/utils';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from '../../common/experimentConfig';
+} from 'common/trainingService';
+import { delay } from 'common/utils';
+import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
 import { String } from 'typescript-string-operations';
-import { generateParamFileName, getIPV4Address, uniqueString } from '../../common/utils';
+import { generateParamFileName, getIPV4Address, uniqueString } from 'common/utils';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 

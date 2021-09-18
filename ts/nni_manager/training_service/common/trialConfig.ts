@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 /**
  * Trial job configuration class
  * Representing trial job configurable properties

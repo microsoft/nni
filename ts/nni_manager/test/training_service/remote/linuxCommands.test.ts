@@ -3,8 +3,8 @@
 
 'use strict';
 
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
 import * as component from '../../../common/component';
 import { cleanupUnitTest, prepareUnitTest } from '../../../common/utils';
 import { LinuxCommands } from '../../../training_service/remote_machine/extends/linuxCommands';

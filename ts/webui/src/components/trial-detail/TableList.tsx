@@ -12,7 +12,7 @@ import {
 } from '@fluentui/react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { TOOLTIP_BACKGROUND_COLOR } from '../../static/const';
-import { convertDuration, formatTimestamp, copyAndSort, parametersType } from '../../static/function';
+import { convertDuration, formatTimestamp, copyAndSort, parametersType, parseMetrics } from '../../static/function';
 import { TableObj, SortInfo, SearchItems } from '../../static/interface';
 import { getTrialsBySearchFilters } from './search/searchFunction';
 import { blocked, copy, LineChart, tableListIcon } from '../buttons/Icon';
@@ -87,6 +87,7 @@ interface TableListState {
     sortInfo: SortInfo;
     searchItems: Array<SearchItems>;
     relation: Map<string, string>;
+    intermediateKeyList: string[];
 }
 
 class TableList extends React.Component<TableListProps, TableListState> {
@@ -112,7 +113,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             copiedTrialId: undefined,
             sortInfo: { field: '', isDescend: true },
             searchItems: [],
-            relation: parametersType()
+            relation: parametersType(),
+            intermediateKeyList: []
         };
 
         this._expandedTrialIds = new Set<string>();
@@ -437,7 +439,11 @@ class TableList extends React.Component<TableListProps, TableListState> {
                     onClick={(): void => {
                         const { tableSource } = this.props;
                         const trial = tableSource.find(trial => trial.id === record.id) as TableObj;
-                        this.setState({ intermediateDialogTrial: trial });
+                        const intermediateKeyListResult = this.getIntermediateAllKeys(trial);
+                        this.setState({
+                            intermediateDialogTrial: trial,
+                            intermediateKeyList: intermediateKeyListResult
+                        });
                     }}
                 >
                     {LineChart}
@@ -469,6 +475,33 @@ class TableList extends React.Component<TableListProps, TableListState> {
         }));
     };
 
+    private getIntermediateAllKeys = (intermediateDialogTrial: any): string[] => {
+        let intermediateAllKeysList: string[] = [];
+        if (
+            intermediateDialogTrial!.intermediateMetrics !== undefined &&
+            intermediateDialogTrial!.intermediateMetrics[0]
+        ) {
+            const parsedMetric = parseMetrics(intermediateDialogTrial!.intermediateMetrics[0].data);
+            if (parsedMetric !== undefined && typeof parsedMetric === 'object') {
+                const allIntermediateKeys: string[] = [];
+                // just add type=number keys
+                for (const key in parsedMetric) {
+                    if (typeof parsedMetric[key] === 'number') {
+                        allIntermediateKeys.push(key);
+                    }
+                }
+                intermediateAllKeysList = allIntermediateKeys;
+            }
+        }
+
+        if (intermediateAllKeysList.includes('default') && intermediateAllKeysList[0] !== 'default') {
+            intermediateAllKeysList = intermediateAllKeysList.filter(item => item !== 'default');
+            intermediateAllKeysList.unshift('default');
+        }
+
+        return intermediateAllKeysList;
+    };
+
     componentDidUpdate(prevProps: TableListProps): void {
         if (this.props.tableSource !== prevProps.tableSource) {
             this._updateTableSource();
@@ -489,7 +522,8 @@ class TableList extends React.Component<TableListProps, TableListState> {
             selectedRowIds,
             intermediateDialogTrial,
             copiedTrialId,
-            searchItems
+            searchItems,
+            intermediateKeyList
         } = this.state;
 
         return (
@@ -564,6 +598,7 @@ class TableList extends React.Component<TableListProps, TableListState> {
                         title='Intermediate results'
                         showDetails={false}
                         trials={[intermediateDialogTrial]}
+                        intermediateKeyList={intermediateKeyList}
                         onHideDialog={(): void => {
                             this.setState({ intermediateDialogTrial: undefined });
                         }}

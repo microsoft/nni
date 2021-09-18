@@ -19,12 +19,21 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import traceback
 from zipfile import ZipFile
 
 
 node_version = 'v16.3.0'
 yarn_version = 'v1.22.10'
 
+def _get_jupyter_lab_version():
+    try:
+        import jupyterlab
+        return jupyterlab.__version__
+    except ImportError:
+        return '3.x'
+
+jupyter_lab_major_version = _get_jupyter_lab_version().split('.')[0]
 
 def build(release):
     """
@@ -39,11 +48,13 @@ def build(release):
     if release or not os.environ.get('GLOBAL_TOOLCHAIN'):
         download_toolchain()
     prepare_nni_node()
-    compile_ts()
+    update_package()
+    compile_ts(release)
     if release or sys.platform == 'win32':
         copy_nni_node(release)
     else:
         symlink_nni_node()
+    restore_package()
 
 def clean(clean_all=False):
     """
@@ -119,6 +130,25 @@ def download_toolchain():
     shutil.rmtree('toolchain/yarn', ignore_errors=True)
     Path(f'toolchain/yarn-{yarn_version}').rename('toolchain/yarn')
 
+def update_package():
+    if jupyter_lab_major_version == '2':
+        package_json = json.load(open('ts/jupyter_extension/package.json'))
+        json.dump(package_json, open('ts/jupyter_extension/.package_default.json', 'w'), indent=2)
+
+        package_json['scripts']['build'] = 'tsc && jupyter labextension link .'
+        package_json['dependencies']['@jupyterlab/application'] = '^2.3.0'
+        package_json['dependencies']['@jupyterlab/launcher'] = '^2.3.0'
+
+        package_json['jupyterlab']['outputDir'] = 'build'
+        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+        print(f'updated package.json with {json.dumps(package_json, indent=2)}')
+
+def restore_package():
+    if jupyter_lab_major_version == '2':
+        package_json = json.load(open('ts/jupyter_extension/.package_default.json'))
+        print(f'stored package.json with {json.dumps(package_json, indent=2)}')
+        json.dump(package_json, open('ts/jupyter_extension/package.json', 'w'), indent=2)
+        os.remove('ts/jupyter_extension/.package_default.json')
 
 def prepare_nni_node():
     """
@@ -134,7 +164,7 @@ def prepare_nni_node():
     shutil.copy(node_src, node_dst)
 
 
-def compile_ts():
+def compile_ts(release):
     """
     Use yarn to download dependencies and compile TypeScript code.
     """
@@ -149,13 +179,17 @@ def compile_ts():
     _yarn('ts/webui')
     _yarn('ts/webui', 'build')
 
-    _print('Building NAS UI')
-    _yarn('ts/nasui')
-    _yarn('ts/nasui', 'build')
-
     _print('Building JupyterLab extension')
-    _yarn('ts/jupyter_extension')
-    _yarn('ts/jupyter_extension', 'build')
+    if release:
+        _yarn('ts/jupyter_extension')
+        _yarn('ts/jupyter_extension', 'build')
+    else:
+        try:
+            _yarn('ts/jupyter_extension')
+            _yarn('ts/jupyter_extension', 'build')
+        except Exception:
+            _print('Failed to build JupyterLab extension, skip for develop mode', color='yellow')
+            _print(traceback.format_exc(), color='yellow')
 
 
 def symlink_nni_node():
@@ -172,11 +206,11 @@ def symlink_nni_node():
 
     _symlink('ts/webui/build', 'nni_node/static')
 
-    Path('nni_node/nasui').mkdir(exist_ok=True)
-    _symlink('ts/nasui/build', 'nni_node/nasui/build')
-    _symlink('ts/nasui/server.js', 'nni_node/nasui/server.js')
-
-    _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    if jupyter_lab_major_version == '2':
+        _symlink('ts/jupyter_extension/build', 'nni_node/jupyter-extension')
+        _symlink(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    elif Path('ts/jupyter_extension/dist').exists():
+        _symlink('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 def copy_nni_node(version):
@@ -190,10 +224,10 @@ def copy_nni_node(version):
 
     # copytree(..., dirs_exist_ok=True) is not supported by Python 3.6
     for path in Path('ts/nni_manager/dist').iterdir():
-        if path.is_file():
-            shutil.copyfile(path, Path('nni_node', path.name))
-        else:
+        if path.is_dir():
             shutil.copytree(path, Path('nni_node', path.name))
+        elif path.name != 'nni_manager.tsbuildinfo':
+            shutil.copyfile(path, Path('nni_node', path.name))
 
     package_json = json.load(open('ts/nni_manager/package.json'))
     if version:
@@ -207,11 +241,11 @@ def copy_nni_node(version):
 
     shutil.copytree('ts/webui/build', 'nni_node/static')
 
-    Path('nni_node/nasui').mkdir(exist_ok=True)
-    shutil.copytree('ts/nasui/build', 'nni_node/nasui/build')
-    shutil.copyfile('ts/nasui/server.js', 'nni_node/nasui/server.js')
-
-    shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
+    if jupyter_lab_major_version == '2':
+        shutil.copytree('ts/jupyter_extension/build', 'nni_node/jupyter-extension/build')
+        shutil.copytree(os.path.join(sys.exec_prefix, 'share/jupyter/lab/extensions'), 'nni_node/jupyter-extension/extensions')
+    elif version or Path('ts/jupyter_extension/dist').exists():
+        shutil.copytree('ts/jupyter_extension/dist', 'nni_node/jupyter-extension')
 
 
 _yarn_env = dict(os.environ)
@@ -233,11 +267,12 @@ def _symlink(target_file, link_location):
     link.symlink_to(relative, target.is_dir())
 
 
-def _print(*args):
+def _print(*args, color='cyan'):
+    color_code = {'yellow': 33, 'cyan': 36}[color]
     if sys.platform == 'win32':
         print(*args, flush=True)
     else:
-        print('\033[1;36m#', *args, '\033[0m', flush=True)
+        print(f'\033[1;{color_code}m#', *args, '\033[0m', flush=True)
 
 
 generated_files = [
@@ -245,13 +280,11 @@ generated_files = [
     'ts/nni_manager/node_modules',
     'ts/webui/build',
     'ts/webui/node_modules',
-    'ts/nasui/build',
-    'ts/nasui/node_modules',
 
     # unit test
     'ts/nni_manager/.nyc_output',
+    'ts/nni_manager/coverage',
     'ts/nni_manager/exp_profile.json',
-    'ts/nni_manager/htmlcov',
     'ts/nni_manager/metrics.json',
     'ts/nni_manager/trial_jobs.json',
 ]

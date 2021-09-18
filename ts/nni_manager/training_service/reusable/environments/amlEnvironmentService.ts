@@ -1,15 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
-import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { validateCodeDir } from '../../common/util';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
+import { ExperimentConfig, AmlConfig, flattenConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { validateCodeDir } from 'training_service/common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';

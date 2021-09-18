@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 import { ExperimentConfig } from './experimentConfig';
