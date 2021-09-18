@@ -305,10 +305,37 @@ class CompressorTestCase(TestCase):
         self.assertTrue(calibration_config is not None)
         self.assertTrue(len(calibration_config) == 4)
 
+    def test_torch_quantizer_weight_type(self):
+        quantizer_list = [
+            torch_quantizer.QAT_Quantizer,
+            torch_quantizer.LsqQuantizer,
+            torch_quantizer.ObserverQuantizer,
+            torch_quantizer.NaiveQuantizer,
+            torch_quantizer.DoReFaQuantizer]
+        for quantizer_type in quantizer_list:
+            model = TorchModel().eval()
+            config_list = [{
+                'quant_types': ['weight'],
+                'quant_bits': 8,
+                'op_types': ['Conv2d', 'Linear']
+            }]
+
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            dummy = torch.randn(1, 1, 28, 28)
+            if quantizer_type == torch_quantizer.QAT_Quantizer:
+                quantizer_type(model, config_list, optimizer, dummy_input=dummy)
+            else:
+                quantizer_type(model, config_list, optimizer)
+
+            self.assertFalse(isinstance(model.conv1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.conv2.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc2.module.weight, torch.nn.Parameter))
+
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
         config_list = [{
-            'quant_types': ['weight'],
+            'quant_types': ['weight', 'input'],
             'quant_bits': 8,
             'op_types': ['Conv2d', 'Linear']
         }, {
@@ -326,18 +353,24 @@ class CompressorTestCase(TestCase):
         # test quantize
         # range not including 0
         eps = 1e-7
-        input = torch.tensor([[0, 4], [2, 1]]).float()
+        input = torch.tensor([[1, 4], [2, 1]])
         weight = torch.tensor([[1, 2], [3, 5]]).float()
         model.conv2.module.weight.data = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.04 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         model.conv2.module.weight = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.0796 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # test value of weight and bias after quantization
         weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])

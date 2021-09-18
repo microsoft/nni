@@ -13,7 +13,7 @@ To make users easily express a model space within their PyTorch/TensorFlow model
       ops.PoolBN('max', channels, 3, stride, 1),
       ops.SepConv(channels, channels, 3, stride, 1),
       nn.Identity()
-    ]))
+    ])
     # invoked in `forward` method
     out = self.layer(x)
 
@@ -39,3 +39,13 @@ To make users easily express a model space within their PyTorch/TensorFlow model
 * `nn.Repeat <./ApiReference.rst#nni.retiarii.nn.pytorch.Repeat>`__. Repeat a block by a variable number of times.
 
 * `nn.Cell <./ApiReference.rst#nni.retiarii.nn.pytorch.Cell>`__. `This cell structure is popularly used in NAS literature <https://arxiv.org/abs/1611.01578>`__. Specifically, the cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from user specified candidates, and takes one input from previous nodes and predecessors. Predecessor means the input of cell. The output of cell is the concatenation of some of the nodes in the cell (currently all the nodes).
+
+
+All the APIs have an optional argument called ``label``, mutations with the same label will share the same choice. A typical example is,
+
+  .. code-block:: python
+
+    self.net = nn.Sequential(
+        nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim'),
+        nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
+    )

@@ -41,7 +41,7 @@ if version_larger_equal(torch.__version__, '1.7.0'):
 
 Module = nn.Module
 
-Sequential = transparent_serialize(nn.Sequential)
+Sequential = nn.Sequential
 ModuleList = transparent_serialize(nn.ModuleList)
 
 Identity = basic_unit(nn.Identity)
