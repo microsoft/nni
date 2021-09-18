@@ -71,6 +71,7 @@ stages:
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -r dependencies/required_extra.txt
+        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
       displayName: Install requirements
     - script: python -m pylint --rcfile pylintrc nni
       displayName: pylint
