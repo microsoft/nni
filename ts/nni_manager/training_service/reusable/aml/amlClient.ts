@@ -67,7 +67,6 @@ export class AMLClient {
         const deferred: Deferred<boolean> = new Deferred<boolean>();
         this.pythonShellClient.send('stop');
         this.pythonShellClient.on('message', (result: any) => {
-            console.log('------get result: ' + result)
             const stopResult = this.parseContent('stop_result', result);
             if (stopResult === 'success') {
                 deferred.resolve(true);

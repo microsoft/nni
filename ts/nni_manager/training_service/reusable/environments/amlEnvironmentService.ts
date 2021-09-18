@@ -129,9 +129,9 @@ export class AMLEnvironmentService extends EnvironmentService {
         }
         const result = await amlClient.stop();
         if (result) {
-            this.log.info(`Stop ${environment.id} success!`);
+            this.log.info(`Stop aml run ${environment.id} success!`);
         } else {
-            this.log.info(`Stop ${environment.id} failed!`);
+            this.log.info(`Stop aml run ${environment.id} failed!`);
         }
     }
 }
