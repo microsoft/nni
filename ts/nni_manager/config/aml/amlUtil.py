@@ -35,6 +35,7 @@ if __name__ == "__main__":
     run_config.node_count = 1
     config = ScriptRunConfig(source_directory=args.script_dir, script=args.script_name, run_config=run_config)
     run = experiment.submit(config)
+    run_id = run.get_details()["runId"]
     print(run.get_details()["runId"])
     while True:
         line = sys.stdin.readline().rstrip()
@@ -44,7 +45,17 @@ if __name__ == "__main__":
             print('tracking_url:' + run.get_portal_url())
         elif line == 'stop':
             run.cancel()
-            exit(0)
+            with open('~/aml_script_result.log', 'a') as out_file:
+                out_file.write(run_id + " send stop request")
+            loop_count = 0
+            status = run.get_status()
+            while status != 'Canceled':
+                if loop_count > 5:
+                    print('stop_result:failed')
+                    exit(0)
+                loop_count += 1
+                time.sleep(500)
+            print('stop_result:success')
         elif line == 'receive':
             print('receive:' + json.dumps(run.get_metrics()))
         elif line:
