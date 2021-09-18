@@ -399,17 +399,8 @@ class GraphConverter:
 
                 # step #1: generate graph ir for this method
                 method_ir_graph = Graph(model=ir_model, graph_id=-100, name='temp_graph', _internal=True)
-                method_node_index = self.handle_graph_nodes(script_module, script_method.graph, module,
-                                                    module_name, module_python_name, ir_model, method_ir_graph, shared_module_index)
-                for _output in script_method.graph.outputs():
-                    method_ir_graph._add_output(_convert_name(_output.debugName()))
-                    predecessor_node_outputs = [o for o in _output.node().outputs()]
-                    if len(predecessor_node_outputs) == 1:
-                        src_node_idx = None
-                    else:
-                        src_node_idx = predecessor_node_outputs.index(_output)
-                    method_ir_graph.add_edge(head=(method_node_index[_output.node()], src_node_idx),
-                                    tail=(method_ir_graph.output_node, None))
+                self.handle_graph_nodes(script_module, script_method.graph, module,
+                                        module_name, module_python_name, ir_model, method_ir_graph, shared_module_index)
                 self.refine_graph(method_ir_graph)
 
                 # step #2: merge this graph to its module graph
@@ -514,18 +505,24 @@ class GraphConverter:
         for node in sm_graph.nodes():
             handle_single_node(node)
             
-        if node_index == {}:
-            # here is an example that the ir_graph is empty
+        if node_index != {}:
+            for _output in sm_graph.outputs():
+                ir_graph._add_output(_convert_name(_output.debugName()))
+                predecessor_node_outputs = [o for o in _output.node().outputs()]
+                if len(predecessor_node_outputs) == 1:
+                    src_node_idx = None
+                else:
+                    src_node_idx = predecessor_node_outputs.index(_output)
+                
+                ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
+                                  tail=(ir_graph.output_node, None))
+        else:
+            # here is an example that the ir_graph and node_index is empty
             # graph(%self : __torch__.torchmodels.googlenet.GoogLeNet,
             # %x.1 : Tensor): return (%x.1)
-            # add a noop_identity node to handle this situation
-            self.global_seq += 1
-            ni_node = ir_graph.add_node(build_full_name(module_name, 'noop_identity', self.global_seq), 'noop_identity')
-            ir_graph.add_edge(head=(ir_graph.input_node, 0), tail=(ni_node, None))
-            ir_graph.add_edge(head=(ni_node, None), tail=(ir_graph.output_node, None))
-            for _output in sm_graph.outputs():
-                node_index[_output.node()] = ni_node
-        return node_index
+            # add an edge from head to tail to handle this situation
+            ir_graph.add_edge(head=(ir_graph.input_node, 0), tail=(ir_graph.output_node, None))
+
 
     def merge_aten_slices(self, ir_graph):
         """
@@ -653,20 +650,8 @@ class GraphConverter:
         ir_graph.set_python_name(module_python_name)
 
         # handle graph nodes
-        node_index = self.handle_graph_nodes(script_module, sm_graph, module,
-                                             module_name, module_python_name, ir_model, ir_graph)
-
-        # handle graph outputs
-        for _output in sm_graph.outputs():
-            ir_graph._add_output(_convert_name(_output.debugName()))
-            predecessor_node_outputs = [o for o in _output.node().outputs()]
-            if len(predecessor_node_outputs) == 1:
-                src_node_idx = None
-            else:
-                src_node_idx = predecessor_node_outputs.index(_output)
-            ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
-                              tail=(ir_graph.output_node, None))
-
+        self.handle_graph_nodes(script_module, sm_graph, module,
+                                module_name, module_python_name, ir_model, ir_graph)
         self.refine_graph(ir_graph)
 
         ir_graph._register()
