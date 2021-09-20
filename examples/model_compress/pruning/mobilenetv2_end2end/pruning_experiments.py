@@ -212,7 +212,7 @@ def parse_args():
     # for agp only
     parser.add_argument('--agp_pruning_alg', default='l1',
                         choices=['l1', 'l2', 'slim', 'fpgm',
-                                 'mean_activation', 'apoz', 'taylorfo'],
+                                 'mean_activation', 'apoz', 'taylorfo', 'level'],
                         help='pruner to use for agp')
     parser.add_argument('--agp_n_iters', type=int, default=64,
                         help='number of iterations for agp')
