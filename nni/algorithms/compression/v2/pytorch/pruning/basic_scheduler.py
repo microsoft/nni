@@ -35,8 +35,7 @@ class PruningScheduler(BasePruningScheduler):
             Evaluate the pruned model and give a score.
             If evaluator is None, the best result refers to the latest result.
         reset_weight
-            Reset model weight to the begining before return in one step.
-            If set True, means the final compressed model weight is same as the corresponding position in the origin model.
+            If set True, the model weight will reset to the origin model weight at the end of each iteration step.
         """
         self.pruner = pruner
         self.task_generator = task_generator

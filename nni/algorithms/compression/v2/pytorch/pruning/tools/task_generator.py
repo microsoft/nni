@@ -275,7 +275,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
     def _recover_real_sparsity(self, config_list: List[Dict]) -> List[Dict]:
         """
-        Recover the generated config_list if origin_masks is not empty.
+        If the origin masks is not None, then the sparsity in new generated config_list need to be rescaled.
         """
         for config in config_list:
             assert len(config['op_names']) == 1
