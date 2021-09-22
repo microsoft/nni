@@ -59,8 +59,7 @@ def validate_op_types_op_names(data):
     if not ('op_types' in data or 'op_names' in data or 'op_partial_names' in data):
             raise SchemaError('At least one of the followings must be specified: op_types, op_names or op_partial_names.')
 
-    if 'op_partial_names' in data:
-        if 'op_names' in data:
-            raise ValueError("'op_partial_names' and 'op_names' have almost the same semantics, avoid setting both in one config.")        
+    if 'op_names' in data and 'op_partial_names' in data:
+        raise ValueError("'op_partial_names' and 'op_names' have almost the same semantics, avoid setting both in one config.")        
         
     return True
