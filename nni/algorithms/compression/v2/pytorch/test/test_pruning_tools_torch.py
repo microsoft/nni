@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
 import unittest
 
 import torch
@@ -24,7 +23,8 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     NormalSparsityAllocator,
     GlobalSparsityAllocator
 )
-from nni.compression.pytorch.utils import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
+from nni.algorithms.compression.v2.pytorch.utils.pruning import get_module_by_name
 
 
 class TorchModel(torch.nn.Module):
