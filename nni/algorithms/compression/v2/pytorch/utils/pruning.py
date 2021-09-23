@@ -33,7 +33,7 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                 config['op_names'] = list(set(config['op_names']))
             else:
                 config['op_names'] = op_names
-        config.pop('op_partial_names')
+            config.pop('op_partial_names')
 
     config_list = dedupe_config_list(unfold_config_list(model, config_list))
     new_config_list = []
