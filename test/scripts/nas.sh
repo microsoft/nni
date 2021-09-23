@@ -5,18 +5,15 @@ CWD=${PWD}
 echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
+RETIARII_TEST_DIR=${CWD}/retiarii_test
 
-echo "testing nnictl ss_gen (classic nas)..."
-cd $EXAMPLE_DIR/legacy/classic_nas
-SEARCH_SPACE_JSON=nni_auto_gen_search_space.json
-if [ -f $SEARCH_SPACE_JSON ]; then
-    rm $SEARCH_SPACE_JSON
-fi
-nnictl ss_gen -t "python3 mnist.py"
-if [ ! -f $SEARCH_SPACE_JSON ]; then
-    echo "Search space file not found!"
-    exit 1
-fi
+cd $RETIARII_TEST_DIR/naive
+for net in "simple" "complex"; do
+    for exec in "python" "graph"; do
+        echo "testing multi-trial example on ${net}, ${exec}..."
+        python3 search.py --net $net --exec $exec
+    done
+done
 
 echo "testing darts..."
 cd $EXAMPLE_DIR/oneshot/darts

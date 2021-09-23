@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 const joi = require('joi');
 
 export namespace ValidationSchemas {

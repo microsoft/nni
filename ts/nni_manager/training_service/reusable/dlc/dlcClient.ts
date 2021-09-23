@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Deferred } from 'ts-deferred';
 import { PythonShell } from 'python-shell';
-import { getLogger, Logger } from '../../../common/log';
+import { getLogger, Logger } from 'common/log';
 
 export class DlcClient {
     private log: Logger;

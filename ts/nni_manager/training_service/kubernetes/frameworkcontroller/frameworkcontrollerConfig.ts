@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 
 import {
     AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
@@ -49,7 +47,7 @@ export class FrameworkControllerTrialConfig extends KubernetesTrialConfig {
 
 export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     public readonly serviceAccountName: string;
-    constructor(apiVersion: string, serviceAccountName: string, configPath?: string, namespace?: string) {
+    constructor(apiVersion: string, serviceAccountName: string, _configPath?: string, namespace?: string) {
         super(apiVersion, undefined, namespace);
         this.serviceAccountName = serviceAccountName;
     }

@@ -1,19 +1,17 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as bodyParser from 'body-parser';
+import assert from 'assert';
+import bodyParser from 'body-parser';
 import { Request, Response, Router } from 'express';
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { Writable } from 'stream';
 import { String } from 'typescript-string-operations';
-import * as component from '../../common/component';
-import { getBasePort, getExperimentId } from '../../common/experimentStartupInfo';
-import { RestServer } from '../../common/restServer';
-import { getExperimentRootDir, mkDirPSync } from '../../common/utils';
+import * as component from 'common/component';
+import { getBasePort, getExperimentId } from 'common/experimentStartupInfo';
+import { RestServer } from 'common/restServer';
+import { getExperimentRootDir, mkDirPSync } from 'common/utils';
 
 /**
  * Cluster Job Training service Rest server, provides rest API to support Cluster job metrics update
@@ -108,7 +106,7 @@ export abstract class ClusterJobRestServer extends RestServer {
 
         router.post(`/update-metrics/${this.expId}/:trialId`, (req: Request, res: Response) => {
             try {
-                this.log.info(`Get update-metrics request, trial job id is ${req.params.trialId}`);
+                this.log.info(`Get update-metrics request, trial job id is ${req.params['trialId']}`);
                 this.log.info('update-metrics body is', req.body);
 
                 this.handleTrialMetrics(req.body.jobId, req.body.metrics);
@@ -127,7 +125,7 @@ export abstract class ClusterJobRestServer extends RestServer {
                 this.errorMessage = `Version check failed, didn't get version check response from trialKeeper,`
                  + ` please check your NNI version in NNIManager and TrialKeeper!`;
             }
-            const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', req.params.trialId);
+            const trialLogDir: string = path.join(getExperimentRootDir(), 'trials', req.params['trialId']);
             mkDirPSync(trialLogDir);
             const trialLogPath: string = path.join(trialLogDir, 'stdout_log_collection.log');
             try {
@@ -136,7 +134,7 @@ export abstract class ClusterJobRestServer extends RestServer {
                     const metricsContent: any = req.body.msg.match(this.NNI_METRICS_PATTERN);
                     if (metricsContent && metricsContent.groups) {
                         const key: string = 'metrics';
-                        this.handleTrialMetrics(req.params.trialId, [metricsContent.groups[key]]);
+                        this.handleTrialMetrics(req.params['trialId'], [metricsContent.groups[key]]);
                         skipLogging = true;
                     }
                 }
