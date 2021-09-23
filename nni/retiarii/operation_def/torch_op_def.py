@@ -499,6 +499,11 @@ class ToDevice(PyTorchOperation):
         self.dst = parameters['dst']
 
     def override_device_repr(self, device_repr):
+        # CUDA GPUDevice may remap GPU physical ID to CUDA ID. The device repr is different from GPUDevice.device_repr()
+        # override_device_repr will be called in pytorch.graph_to_pytorch_model to replace device_repr with the correct
+        # CUDA ID, e.g., when a job uses Physical GPU-1,2, its CUDA ID should be "cuda:0" and "cuda:1".
+        # self.device.device_repr() would return "cuda:1" and "cuda:2", but override_device_repr should be "cuda:0" and
+        # "cuda:1"
         self.overridden_device_repr = device_repr
 
     def __repr__(self):
