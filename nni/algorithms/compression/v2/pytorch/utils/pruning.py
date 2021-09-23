@@ -29,12 +29,12 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                     if partial_name in name:
                         op_names.append(name)
             if 'op_names' in config:
-                config.pop('op_partial_names')
                 config['op_names'].extend(op_names)
                 config['op_names'] = list(set(config['op_names']))
             else:
-                config['op_names'] = config.pop('op_partial_names')
                 config['op_names'] = op_names
+        config.pop('op_partial_names')
+    print(config_list)
 
     config_list = dedupe_config_list(unfold_config_list(model, config_list))
     new_config_list = []
