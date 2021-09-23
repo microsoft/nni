@@ -17,6 +17,24 @@ class AbstractLogicalNode(Node):
         self.related_models = []
 
     def assemble(self, multi_model_placement: Dict[Model, Device]) -> Tuple[Node, Device]:
+        """
+        Given a set of models to be formed in a physical model and their device placement,
+        this function replaces the logical node with an executable physical node for the physical model.
+
+        Parameters
+        ----------
+        multi_model_placement : dict
+            a dict of models and device placement.
+            These models will be assembled into the same physical model to run.
+
+        Returns
+        -------
+        node : Node
+            the physical node to replace the logical node in the physical model
+        placement : Device
+            the device placement of the returned physical node
+        """
+
         raise NotImplementedError
 
     def _fork_to(self, graph: Graph):
@@ -76,6 +94,11 @@ class LogicalGraph(Graph):
 
 
 class OriginNode(AbstractLogicalNode):
+    """
+    This is logical node representing the original node without any modification.
+    In assemble, just return the original node along with the physical placement given by multi_model_placement.
+    """
+
     def __init__(self, logical_graph: LogicalGraph,
                  original_graph: Graph, original_node: Node,
                  name: str, operation, _internal=False):
@@ -131,6 +154,25 @@ class LogicalPlan:
 
     def assemble(self, multi_model_placement: Dict[Model, Device]) \
             -> Tuple[Model, Dict[Node, Device]]:
+        """
+        Given a set of models to be formed in a physical model and their device placement,
+        this function replaces all the logical node in this LogicalPlan with executable physical nodes
+        for the physical model.
+
+        Parameters
+        ----------
+        multi_model_placement : dict
+            a dict of models and device placement.
+            These models will be assembled into the same physical model to run.
+
+        Returns
+        -------
+        phy_model : Model
+            the physical model formed by models in `multi_model_placement`
+            all logical node are replaced by physical nodes
+        node_placements : dict
+            the device placement of the nodes in `phy_model`
+        """
         phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
         phy_graph._rename_graph(phy_graph.name, "_model")
