@@ -226,6 +226,14 @@ class Model:
         else:
             return None
 
+    def get_layerchoice_nodes(self) -> List['Node']:
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = graph.get_layerchoice_nodes()
+            matched_nodes.extend(nodes)
+        # assert len(matched_nodes) <= 1
+        return matched_nodes
+
 
 class ModelStatus(Enum):
     """
@@ -397,6 +405,11 @@ class Graph:
     
     def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
         return [node for node in self.nodes if node.python_name == python_name]
+
+    def get_layerchoice_nodes(self) -> List['Node']:
+        return [node for node in self.nodes if isinstance(node.operation, Cell) and \
+                                               'mutation' in node.operation.parameters and \
+                                               node.operation.parameters['mutation'] == 'layerchoice']
 
     def topo_sort(self) -> List['Node']:
         node_to_fanin = {}

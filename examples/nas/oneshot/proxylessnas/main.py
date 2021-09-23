@@ -26,6 +26,12 @@ if __name__ == "__main__":
     parser.add_argument("--bn_eps", default=1e-3, type=float)
     parser.add_argument("--dropout_rate", default=0, type=float)
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
+    parser.add_argument('--grad_reg_loss_type', default='mul#log', type=str, choices=['add#linear', 'mul#log'])
+    parser.add_argument('--grad_reg_loss_lambda', default=1e-1, type=float)  # grad_reg_loss_params
+    parser.add_argument('--grad_reg_loss_alpha', default=0.2, type=float)  # grad_reg_loss_params
+    parser.add_argument('--grad_reg_loss_beta',  default=0.3, type=float)  # grad_reg_loss_params
+    parser.add_argument("--applied_hardware", default='cortexA76cpu_tflite21', type=str)
+    parser.add_argument("--reference_latency", default=65.0, type=float)
     # configurations of imagenet dataset
     parser.add_argument("--data_path", default='/data/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)
@@ -63,15 +69,15 @@ if __name__ == "__main__":
     else:
         device = torch.device('cpu')
 
-    logger.info('Creating data provider...')
-    data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
-                                                  train_batch_size=args.train_batch_size,
-                                                  test_batch_size=args.test_batch_size,
-                                                  valid_size=None,
-                                                  n_worker=args.n_worker,
-                                                  resize_scale=args.resize_scale,
-                                                  distort_color=args.distort_color)
-    logger.info('Creating data provider done')
+    # logger.info('Creating data provider...')
+    # data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
+    #                                               train_batch_size=args.train_batch_size,
+    #                                               test_batch_size=args.test_batch_size,
+    #                                               valid_size=None,
+    #                                               n_worker=args.n_worker,
+    #                                               resize_scale=args.resize_scale,
+    #                                               distort_color=args.distort_color)
+    # logger.info('Creating data provider done')
 
     if args.no_decay_keys:
         keys = args.no_decay_keys
@@ -81,14 +87,32 @@ if __name__ == "__main__":
             {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
         ], lr=0.05, momentum=momentum, nesterov=nesterov)
     else:
+        momentum, nesterov = 0.9, True
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
+
+    latency_predictor = None
+    if args.applied_hardware:
+        try:
+            import nn_meter; latency_predictor = nn_meter.load_latency_predictor(args.applied_hardware)
+        except:
+            logger.error(f'Load latency predictor for {args.applied_hardware} failed.')
+
+    if args.grad_reg_loss_type == 'add#linear':
+        grad_reg_loss_params = {'lambda': args.grad_reg_loss_lambda}
+    elif args.grad_reg_loss_type == 'mul#log':
+        grad_reg_loss_params = {
+            'alpha': args.grad_reg_loss_alpha,
+            'beta': args.grad_reg_loss_beta,
+        }
+    else:
+        args.grad_reg_loss_params = None
 
     if args.train_mode == 'search':
         from nni.retiarii.oneshot.pytorch import ProxylessTrainer
-        from torchvision.datasets import ImageNet
+        from torchvision.datasets import CIFAR10
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
-        dataset = ImageNet(args.data_path, transform=transforms.Compose([
+        dataset = CIFAR10('~/working/data/', transform=transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
@@ -100,7 +124,11 @@ if __name__ == "__main__":
                                    optimizer=optimizer,
                                    metrics=lambda output, target: accuracy(output, target, topk=(1, 5,)),
                                    num_epochs=120,
-                                   log_frequency=10)
+                                   log_frequency=10,
+                                   grad_reg_loss_type=args.grad_reg_loss_type, 
+                                   grad_reg_loss_params=grad_reg_loss_params, 
+                                   latency_predictor=latency_predictor, dummy_input=(1, 3, 224, 224),
+                                   ref_latency=args.reference_latency)
         trainer.fit()
         print('Final architecture:', trainer.export())
         json.dump(trainer.export(), open('checkpoint.json', 'w'))
