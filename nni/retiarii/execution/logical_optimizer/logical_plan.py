@@ -5,22 +5,10 @@ import copy
 from typing import Dict, Tuple, Any
 
 from nni.retiarii.utils import uid
-from nni.common.device import Device
+from nni.common.device import Device, CPUDevice
 
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
-
-
-class CPUDevice(Device):
-    def __init__(self, node_id):
-        self.node_id = node_id
-        self.device = 'cpu'
-
-    def __repr__(self) -> str:
-        return "{CPU Device, NodeID %s, Status %s}" % (self.node_id, self.status)
-
-    def device_repr(self):
-        return "cpu"
 
 
 class AbstractLogicalNode(Node):
@@ -225,6 +213,7 @@ class LogicalPlan:
                 node.remove()
 
         # If two nodes are placed on different devices, use ToDevice op to copy the node
+        # TODO: when copying one node to multiple devices, broadcast is more efficient than P2P communication
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
         copied_op: Dict[Tuple(Node, Device), Node] = {}

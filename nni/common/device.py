@@ -16,7 +16,7 @@ class Device(ABC):
     status: Literal['idle', 'busy', 'unknown'] = 'idle'
 
     def __eq__(self, o) -> bool:
-        if type(self) == type(o):
+        if isinstance(self, type(o)):
             return self.node_id == o.node_id
         else:
             return False
@@ -68,3 +68,16 @@ class GPUDevice(Device):
 
     def device_repr(self,):
         return f"cuda:{self.gpu_id}"
+
+
+@dataclass
+class CPUDevice(Device):
+    def __init__(self, node_id):
+        self.node_id = node_id
+        self.device = 'cpu'
+
+    def __repr__(self) -> str:
+        return "{CPU Device, NodeID %s, Status %s}" % (self.node_id, self.status)
+
+    def device_repr(self):
+        return "cpu"
