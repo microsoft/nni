@@ -5,10 +5,15 @@ CWD=${PWD}
 echo ""
 echo "===========================Testing: NAS==========================="
 EXAMPLE_DIR=${CWD}/../examples/nas
+RETIARII_TEST_DIR=${CWD}/retiarii_test
 
-echo "testing mnist..."
-cd $EXAMPLE_DIR/multi-trial/mnist
-python3 search.py
+cd $RETIARII_TEST_DIR/naive
+for net in "simple" "complex"; do
+    for exec in "python" "graph"; do
+        echo "testing multi-trial example on ${net}, ${exec}..."
+        python3 search.py --net $net --exec $exec
+    done
+done
 
 echo "testing darts..."
 cd $EXAMPLE_DIR/oneshot/darts
