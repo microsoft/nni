@@ -23,15 +23,18 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
 
     for config in config_list:
         if 'op_partial_names' in config:
-            if 'op_names' in config:
-                raise ValueError("'op_partial_names' and 'op_names' have almost the same semantics, avoid setting both in one config.")
             op_names = []
             for partial_name in config['op_partial_names']:
                 for name, _ in model.named_modules():
                     if partial_name in name:
                         op_names.append(name)
-            config['op_names'] = config.pop('op_partial_names')
-            config['op_names'] = op_names
+            if 'op_names' in config:
+                config.pop('op_partial_names')
+                config['op_names'].extend(op_names)
+                config['op_names'] = list(set(config['op_names']))
+            else:
+                config['op_names'] = config.pop('op_partial_names')
+                config['op_names'] = op_names
 
     config_list = dedupe_config_list(unfold_config_list(model, config_list))
     new_config_list = []
