@@ -30,8 +30,8 @@ if __name__ == "__main__":
     parser.add_argument('--grad_reg_loss_lambda', default=1e-1, type=float)  # grad_reg_loss_params
     parser.add_argument('--grad_reg_loss_alpha', default=0.2, type=float)  # grad_reg_loss_params
     parser.add_argument('--grad_reg_loss_beta',  default=0.3, type=float)  # grad_reg_loss_params
-    parser.add_argument("--applied_hardware", default='cortexA76cpu_tflite21', type=str)
-    parser.add_argument("--reference_latency", default=65.0, type=float)
+    parser.add_argument("--applied_hardware", default=None, type=str, help='the hardware to predict model latency')
+    parser.add_argument("--reference_latency", default=None, type=float, help='the reference latency in specified hardware')
     # configurations of imagenet dataset
     parser.add_argument("--data_path", default='/data/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)

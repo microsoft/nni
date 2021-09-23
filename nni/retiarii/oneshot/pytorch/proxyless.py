@@ -202,7 +202,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 for _, module in self.nas_modules:
                     module.resample()
                 self.ctrl_optim.zero_grad()
-                logits, loss = self._logits_and_loss(val_X, val_y)
+                logits, loss = self._logits_and_loss_for_arch_update(val_X, val_y)
                 loss.backward()
                 for _, module in self.nas_modules:
                     module.finalize_grad()
@@ -212,7 +212,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
             for _, module in self.nas_modules:
                 module.resample()
             self.optimizer.zero_grad()
-            logits, loss = self._logits_and_loss(trn_X, trn_y)
+            logits, loss = self._logits_and_loss_for_weight_update(trn_X, trn_y)
             loss.backward()
             self.optimizer.step()
             metrics = self.metrics(logits, trn_y)
@@ -265,28 +265,39 @@ class ProxylessTrainer(BaseOneShotTrainer):
                                 for i in range(len(probs))]))
         return lat
 
-    def _logits_and_loss(self, X, y):
+    def _logits_and_loss_for_arch_update(self, X, y): 
+        ''' return logits and loss for architecture parameter update '''
         logits = self.model(X)
         ce_loss = self.loss(logits, y)
         if not self.block_latency_table:
             return logits, ce_loss
-
+        # import time; since=time.time()
         expected_latency = self._cal_expected_latency()
+        # print(f'_cal_expected_latency: {time.time() - since}')
+        
         if self.reg_loss_type == 'mul#log':
             import math
             alpha = self.reg_loss_params.get('alpha', 1)
             beta = self.reg_loss_params.get('beta', 0.6)
             # noinspection PyUnresolvedReferences
             reg_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
+            # print(f"expected_latency: {expected_latency}, reg_loss[mul#log]: {reg_loss}")
             return logits, alpha * ce_loss * reg_loss
         elif self.reg_loss_type == 'add#linear':
             reg_lambda = self.reg_loss_params.get('lambda', 2e-1)
             reg_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
+            # print(f"expected_latency: {expected_latency}, reg_loss[add#linear]: {reg_loss}")
             return logits, ce_loss + reg_loss
         elif self.reg_loss_type is None:
             return logits, ce_loss
         else:
-            raise ValueError(f'Do not support: {self.reg_loss_type}')            
+            raise ValueError(f'Do not support: {self.reg_loss_type}')
+    
+    def _logits_and_loss_for_weight_update(self, X, y):
+        ''' return logits and loss for weight parameter update '''
+        logits = self.model(X)
+        loss = self.loss(logits, y)
+        return logits, loss  
 
     def fit(self):
         for i in range(self.num_epochs):
