@@ -87,14 +87,17 @@ class Pruner(Compressor):
         Parameters
         ----------
         masks
-            The masks dict with format {'op_name': {'weight_mask': mask, 'bias_mask': mask}}.
+            The masks dict with format {'op_name': {'weight': mask, 'bias': mask}}.
         """
         wrappers = self.get_modules_wrapper()
         for name, layer_mask in masks.items():
             assert name in wrappers, '{} is not in wrappers of this pruner, can not apply the mask.'.format(name)
-            for mask_type, mask in layer_mask.items():
-                assert hasattr(wrappers[name], mask_type), 'there is no attribute {} in wrapper'.format(mask_type)
-                setattr(wrappers[name], mask_type, mask)
+            if layer_mask.get('weight') is not None:
+                assert hasattr(wrappers[name], 'weight_mask'), 'There is no attribute weight_mask in wrapper.'
+                setattr(wrappers[name], 'weight_mask', layer_mask.get('weight'))
+            if layer_mask.get('bias') is not None:
+                assert hasattr(wrappers[name], 'bias_mask'), 'There is no attribute bias_mask in wrapper.'
+                setattr(wrappers[name], 'bias_mask', layer_mask.get('bias'))
 
     def compress(self) -> Tuple[Module, Dict[str, Dict[str, Tensor]]]:
         """
@@ -126,27 +129,21 @@ class Pruner(Compressor):
                 index = torch.nonzero(weight_mask.abs().sum(sum_idx) != 0, as_tuple=False).tolist()
             _logger.info(f'simulated prune {wrapper.name} remain/total: {len(index)}/{weight_mask.size(dim)}')
 
-    def export_model(self, model_path, mask_path=None, onnx_path=None, input_shape=None, device=None):
+    def export_model(self, model_path: str, mask_path: Optional[str] = None):
         """
         Export pruned model weights, masks and onnx model(optional)
 
         Parameters
         ----------
         model_path
-            Path to save pruned model state_dict.
+            Path to save pruned model state_dict. The weight and bias have already multiplied the masks.
         mask_path
-            (optional) path to save mask dict.
-        onnx_path
-            (optional) path to save onnx model.
-        input_shape
-            Input shape to onnx model.
-        device
-            Device of the model, used to place the dummy input tensor for exporting onnx file.
-            The tensor is placed on cpu if ```device``` is None.
+            Path to save mask dict.
         """
-        assert model_path is not None, 'model_path must be specified'
+        assert self.bound_model is not None, 'The bound model reference has been cleared.'
+        assert model_path is not None, 'model_path must be specified.'
         mask_dict = {}
-        self._unwrap_model()  # used for generating correct state_dict name without wrapper state
+        self._unwrap_model()
 
         for name, wrapper in self.get_modules_wrapper().items():
             weight_mask = wrapper.weight_mask
@@ -159,20 +156,13 @@ class Pruner(Compressor):
             if bias_mask is not None:
                 wrapper.module.bias.data = wrapper.module.bias.data.mul(bias_mask)
             # save mask to dict
-            mask_dict[name] = {"weight_mask": weight_mask, "bias_mask": bias_mask}
+            mask_dict[name] = {"weight": weight_mask, "bias": bias_mask}
 
         torch.save(self.bound_model.state_dict(), model_path)
         _logger.info('Model state_dict saved to %s', model_path)
+
         if mask_path is not None:
             torch.save(mask_dict, mask_path)
             _logger.info('Mask dict saved to %s', mask_path)
-        if onnx_path is not None:
-            assert input_shape is not None, 'input_shape must be specified to export onnx model'
-            # input info needed
-            if device is None:
-                device = torch.device('cpu')
-            input_data = torch.Tensor(*input_shape)
-            torch.onnx.export(self.bound_model, input_data.to(device), onnx_path)
-            _logger.info('Model in onnx with input shape %s saved to %s', input_data.shape, onnx_path)
 
         self._wrap_model()

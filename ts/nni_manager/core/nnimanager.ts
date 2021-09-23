@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
@@ -470,8 +468,6 @@ class NNIManager implements Manager {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
         }
-
-        throw new Error(`Unsupported training service platform "${platform}"`);
     }
 
     private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {

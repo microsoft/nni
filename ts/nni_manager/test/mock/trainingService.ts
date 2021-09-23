@@ -63,7 +63,7 @@ class MockedTrainingService extends TrainingService {
         return deferred.promise;
     }
 
-    public getTrialFile(trialJobId: string, fileName: string): Promise<string> {
+    public getTrialFile(_trialJobId: string, _fileName: string): Promise<string> {
         throw new MethodNotImplementedError();
     }
 
@@ -71,18 +71,18 @@ class MockedTrainingService extends TrainingService {
 
     }
 
-    public addTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
+    public addTrialJobMetricListener(_listener: (_metric: TrialJobMetric) => void): void {
     }
 
-    public removeTrialJobMetricListener(listener: (metric: TrialJobMetric) => void): void {
+    public removeTrialJobMetricListener(_listener: (_metric: TrialJobMetric) => void): void {
     }
 
-    public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+    public submitTrialJob(_form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const deferred = new Deferred<TrialJobDetail>();
         return deferred.promise;
     }
 
-    public updateTrialJob(trialJobId: string, form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+    public updateTrialJob(_trialJobId: string, _form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         throw new MethodNotImplementedError();
     }
 
@@ -90,7 +90,7 @@ class MockedTrainingService extends TrainingService {
         return false;
     }
 
-    public cancelTrialJob(trialJobId: string, isEarlyStopped: boolean = false): Promise<void> {
+    public cancelTrialJob(trialJobId: string, _isEarlyStopped: boolean = false): Promise<void> {
         const deferred = new Deferred<void>();
         if(trialJobId === '1234' || trialJobId === '3456'){
             deferred.resolve();

@@ -14,8 +14,6 @@ from .channel_pruning_env import ChannelPruningEnv
 from .lib.agent import DDPG
 from .lib.utils import get_output_folder
 
-torch.backends.cudnn.deterministic = True
-
 _logger = logging.getLogger(__name__)
 
 class AMCPruner(Pruner):

@@ -28,6 +28,16 @@ class PythonGraphData:
 
 
 class PurePythonExecutionEngine(BaseExecutionEngine):
+    """
+    This is the execution engine that doesn't rely on Python-IR converter.
+
+    We didn't explicitly state this independency for now. Front-end needs to decide which converter / no converter
+    to use depending on the execution type. In the future, that logic may be moved into this execution engine.
+
+    The execution engine needs to store the class path of base model, and init parameters to re-initialize the model
+    with the mutation dict in the context, so that the mutable modules are created to be the fixed instance on the fly.
+    """
+
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation = get_mutation_dict(model)

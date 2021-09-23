@@ -1,0 +1,11 @@
+useAnnotation: true
+trialCommand: python train.py
+trialGpuNumber: 0
+trialConcurrency: 2
+maxTrialNumber: 10
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

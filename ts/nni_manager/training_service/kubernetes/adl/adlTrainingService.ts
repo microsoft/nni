@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as component from '../../../common/component';
+import fs from 'fs';
+import * as component from 'common/component';
 
 import { String } from 'typescript-string-operations';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
+import { getExperimentId } from 'common/experimentStartupInfo';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
-} from '../../../common/trainingService';
-import { delay, generateParamFileName, getVersion, uniqueString } from '../../../common/utils';
-import { TrialConfigMetadataKey } from '../../common/trialConfigMetadataKey';
+} from 'common/trainingService';
+import { delay, generateParamFileName, getVersion, uniqueString } from 'common/utils';
+import { TrialConfigMetadataKey } from 'training_service/common/trialConfigMetadataKey';
 import { KubernetesTrialJobDetail } from '../kubernetesData';
 import { KubernetesTrainingService } from '../kubernetesTrainingService';
 import { AdlClientFactory } from './adlApiClient'

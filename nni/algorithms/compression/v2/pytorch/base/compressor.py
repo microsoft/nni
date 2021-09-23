@@ -84,6 +84,17 @@ class Compressor:
 
         self._wrap_model()
 
+    def clear_model_references(self):
+        """
+        Clear all references to the model in this compressor. Just to free up memory.
+        Need reset first before the next time call compressor function.
+        """
+        self._unwrap_model()
+        self.bound_model = None
+        self.config_list = None
+        self.modules_wrapper = None
+        self._modules_to_compress = None
+
     def _detect_modules_to_compress(self) -> List[Tuple[LayerInfo, Dict]]:
         """
         Detect all modules should be compressed, and save the result in `self._modules_to_compress`.
