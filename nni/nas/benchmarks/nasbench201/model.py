@@ -1,7 +1,9 @@
-from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
+from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
 from playhouse.sqlite_ext import JSONField
 
-from nni.nas.benchmarks.utils import json_dumps, load_benchmark
+from nni.nas.benchmarks.utils import json_dumps
+
+proxy = Proxy()
 
 
 class Nb201TrialConfig(Model):
@@ -43,7 +45,7 @@ class Nb201TrialConfig(Model):
     ])
 
     class Meta:
-        database = load_benchmark('nasbench201')
+        database = proxy
 
 
 class Nb201TrialStats(Model):
@@ -108,7 +110,7 @@ class Nb201TrialStats(Model):
     ori_test_evaluation_time = FloatField()
 
     class Meta:
-        database = load_benchmark('nasbench201')
+        database = proxy
 
 
 class Nb201IntermediateStats(Model):
@@ -152,4 +154,4 @@ class Nb201IntermediateStats(Model):
     ori_test_loss = FloatField(null=True)
 
     class Meta:
-        database = load_benchmark('nasbench201')
+        database = proxy

@@ -88,7 +88,7 @@ def load_benchmark(benchmark: str) -> SqliteExtDatabase:
     local_path = os.path.join(DATABASE_DIR, os.path.basename(url))
     load_or_download_file(local_path, url)
     _loaded_benchmarks[benchmark] = SqliteExtDatabase(local_path, autoconnect=True)
-    return _loaded_benchmarks
+    return _loaded_benchmarks[benchmark]
 
 
 def download_benchmark(benchmark: str, progress: bool = True):

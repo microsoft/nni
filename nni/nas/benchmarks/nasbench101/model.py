@@ -1,7 +1,9 @@
-from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
+from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
 from playhouse.sqlite_ext import JSONField
 
-from nni.nas.benchmarks.utils import json_dumps, load_benchmark
+from nni.nas.benchmarks.utils import json_dumps
+
+proxy = Proxy()
 
 
 class Nb101TrialConfig(Model):
@@ -30,7 +32,7 @@ class Nb101TrialConfig(Model):
     num_epochs = IntegerField(index=True)
 
     class Meta:
-        database = load_benchmark('nasbench101')
+        database = proxy
 
 
 class Nb101TrialStats(Model):
@@ -63,7 +65,7 @@ class Nb101TrialStats(Model):
     training_time = FloatField()
 
     class Meta:
-        database = load_benchmark('nasbench101')
+        database = proxy
 
 
 class Nb101IntermediateStats(Model):
@@ -94,4 +96,4 @@ class Nb101IntermediateStats(Model):
     training_time = FloatField()
 
     class Meta:
-        database = load_benchmark('nasbench101')
+        database = proxy
