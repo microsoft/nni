@@ -92,7 +92,8 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Serializab
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
 
-    1) Care more about execution configuration rather than results, which is usually the case in AutoML.
+    1) Care more about execution configuration rather than results, which is usually the case in AutoML. For example,
+       you want to mutate the parameters of a function.
     2) Repeat execution is not an issue (e.g., reproducible, execution is fast without side effects).
 
     When a class/function is annotated, all the instances/calls will return a object as it normally will.

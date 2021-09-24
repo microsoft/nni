@@ -9,6 +9,11 @@ class SimpleClass:
         self._b = b
 
 
+class UnserializableSimpleClass:
+    def __init__(self):
+        self._a = 1
+
+
 def test_simple_class():
     instance = SimpleClass(1, 2)
     assert instance._a == 1
@@ -52,7 +57,15 @@ def test_nested_class():
     assert b.get()._a._a == 1
 
 
+def test_unserializable():
+    a = UnserializableSimpleClass()
+    dump_str = nni.dump(a)
+    a = nni.load(dump_str)
+    assert a._a == 1
+
+
 if __name__ == '__main__':
     test_simple_class()
     test_external_class()
     test_nested_class()
+    test_unserializable()
