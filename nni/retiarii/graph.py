@@ -420,6 +420,8 @@ class Graph:
         for node in self.hidden_nodes:
             new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
             new_node.update_label(node.label)
+            new_node.input_shape = node.input_shape
+            new_node.output_shape = node.output_shape
             new_node._register()
 
         id_to_new_node = {node.id: node for node in new_graph.nodes}
@@ -445,6 +447,8 @@ class Graph:
         for old_node in self.hidden_nodes:
             new_node = Node(new_graph, uid(), None, old_node.operation, _internal=True)._register()
             new_node.update_label(old_node.label)
+            new_node.input_shape = old_node.input_shape
+            new_node.output_shape = old_node.output_shape
             id_to_new_node[old_node.id] = new_node
 
         for edge in self.edges:
@@ -532,9 +536,12 @@ class Node:
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
         self.label: Optional[str] = None
+        self.input_shape: Optional[list] = None
+        self.output_shape: Optional[list] = None
 
     def __repr__(self):
-        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
+        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation}, \
+                input_shape={self.input_shape}, output_shape={self.output_shape})'
 
     @property
     def predecessors(self) -> List['Node']:
@@ -609,6 +616,8 @@ class Node:
         node = Node(graph, uid(), name, op)
         if 'label' in ir:
             node.update_label(ir['label'])
+        node.input_shape = ir['input_shape']
+        node.output_shape = ir['output_shape']
         return node
 
     def _dump(self) -> Any:
@@ -617,6 +626,9 @@ class Node:
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:
             ret['label'] = self.label
+        if self.input_shape or self.output_shape:
+            ret['input_shape'] = self.input_shape
+            ret['output_shape'] = self.output_shape
         return ret
 
 
