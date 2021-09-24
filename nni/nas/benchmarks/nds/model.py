@@ -3,8 +3,6 @@ from playhouse.sqlite_ext import JSONField
 
 from nni.nas.benchmarks.utils import json_dumps, load_benchmark
 
-db = load_benchmark('nds')
-
 
 class NdsTrialConfig(Model):
     """
@@ -64,7 +62,7 @@ class NdsTrialConfig(Model):
     num_epochs = IntegerField()
 
     class Meta:
-        database = db
+        database = load_benchmark('nds')
 
 
 class NdsTrialStats(Model):
@@ -109,7 +107,7 @@ class NdsTrialStats(Model):
     iter_time = FloatField()
 
     class Meta:
-        database = db
+        database = load_benchmark('nds')
 
 
 class NdsIntermediateStats(Model):
@@ -137,4 +135,4 @@ class NdsIntermediateStats(Model):
     test_acc = FloatField()
 
     class Meta:
-        database = db
+        database = load_benchmark('nds')

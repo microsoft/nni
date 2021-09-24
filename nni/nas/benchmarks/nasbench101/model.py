@@ -3,8 +3,6 @@ from playhouse.sqlite_ext import JSONField
 
 from nni.nas.benchmarks.utils import json_dumps, load_benchmark
 
-db = load_benchmark('nasbench101')
-
 
 class Nb101TrialConfig(Model):
     """
@@ -32,7 +30,7 @@ class Nb101TrialConfig(Model):
     num_epochs = IntegerField(index=True)
 
     class Meta:
-        database = db
+        database = load_benchmark('nasbench101')
 
 
 class Nb101TrialStats(Model):
@@ -65,7 +63,7 @@ class Nb101TrialStats(Model):
     training_time = FloatField()
 
     class Meta:
-        database = db
+        database = load_benchmark('nasbench101')
 
 
 class Nb101IntermediateStats(Model):
@@ -96,4 +94,4 @@ class Nb101IntermediateStats(Model):
     training_time = FloatField()
 
     class Meta:
-        database = db
+        database = load_benchmark('nasbench101')

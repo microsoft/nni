@@ -16,6 +16,9 @@ from .constants import DB_URLS, DATABASE_DIR
 
 json_dumps = functools.partial(json.dumps, sort_keys=True)
 
+# to prevent repetitive loading of benchmarks
+_loaded_benchmarks = {}
+
 
 def load_or_download_file(local_path: str, download_url: str, download: bool = False, progress: bool = True):
     f = None
@@ -55,7 +58,7 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
                     pbar.update(len(chunk))
                     f.flush()
         else:
-            raise FileNotFoundError('Download is not enabled, but file not exist: {}'.format(local_path))
+            raise FileNotFoundError('Download is not enabled, but file still does not exist: {}'.format(local_path))
 
         digest = sha256.hexdigest()
         if digest[:len(hash_prefix)] != hash_prefix:
@@ -79,10 +82,13 @@ def load_benchmark(benchmark: str) -> SqliteExtDatabase:
     benchmark : str
         Benchmark name like nasbench201.
     """
+    if benchmark in _loaded_benchmarks:
+        return _loaded_benchmarks[benchmark]
     url = DB_URLS[benchmark]
     local_path = os.path.join(DATABASE_DIR, os.path.basename(url))
     load_or_download_file(local_path, url)
-    return SqliteExtDatabase(local_path, autoconnect=True)
+    _loaded_benchmarks[benchmark] = SqliteExtDatabase(local_path, autoconnect=True)
+    return _loaded_benchmarks
 
 
 def download_benchmark(benchmark: str, progress: bool = True):
