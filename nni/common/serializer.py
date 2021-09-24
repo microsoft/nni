@@ -87,7 +87,7 @@ class SerializableObject:
             return [v.get() if isinstance(v, SerializableObject) else v for v in d]
 
 
-def trace(cls_or_func: T = None, /, *, kw_only: bool = True) -> Union[T, SerializableObject]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, SerializableObject]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
