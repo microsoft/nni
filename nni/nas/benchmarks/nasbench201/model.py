@@ -1,12 +1,9 @@
-import os
-
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
-from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
+from playhouse.sqlite_ext import JSONField
 
-from nni.nas.benchmarks.constants import DATABASE_DIR
-from nni.nas.benchmarks.utils import json_dumps
+from nni.nas.benchmarks.utils import json_dumps, load_benchmark
 
-db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench201.db'), autoconnect=True)
+db = load_benchmark('nasbench201.db')
 
 
 class Nb201TrialConfig(Model):

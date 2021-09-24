@@ -1,9 +1,9 @@
 from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
 from playhouse.sqlite_ext import JSONField
 
-from nni.nas.benchmarks.utils import json_dumps, load_or_download_db
+from nni.nas.benchmarks.utils import json_dumps, load_benchmark
 
-db = load_or_download_db('nasbench101')
+db = load_benchmark('nasbench101')
 
 
 class Nb101TrialConfig(Model):
