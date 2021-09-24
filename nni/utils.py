@@ -4,9 +4,9 @@
 import copy
 import functools
 from enum import Enum, unique
+from pathlib import Path
 import json_tricks
 from schema import And
-from pathlib import Path
 
 from . import parameter_expressions
 
