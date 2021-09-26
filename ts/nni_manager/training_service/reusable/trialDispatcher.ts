@@ -299,6 +299,16 @@ class TrialDispatcher implements TrainingService {
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }
     public async getClusterMetadata(_key: string): Promise<string> { return ""; }
 
+    public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
+        if (environment.environmentService === undefined) {
+            throw new Error(`${environment.id} do not have environmentService!`);
+        }
+        this.log.info(`stopping environment ${environment.id}...`);
+        await environment.environmentService.stopEnvironment(environment);
+        this.log.info(`stopped environment ${environment.id}.`);
+        return;
+    }
+
     public async cleanUp(): Promise<void> {
         if (this.commandEmitter === undefined) {
             throw new Error(`TrialDispatcher: commandEmitter shouldn't be undefined in cleanUp.`);
@@ -306,16 +316,12 @@ class TrialDispatcher implements TrainingService {
         this.stopping = true;
         this.shouldUpdateTrials = true;
         const environments = [...this.environments.values()];
-
+        
+        const stopEnvironmentPromise: Promise<void>[] = []; 
         for (let index = 0; index < environments.length; index++) {
-            const environment = environments[index];
-            this.log.info(`stopping environment ${environment.id}...`);
-            if (environment.environmentService === undefined) {
-                throw new Error(`${environment.id} do not have environmentService!`);
-            }
-            await environment.environmentService.stopEnvironment(environment);
-            this.log.info(`stopped environment ${environment.id}.`);
+            stopEnvironmentPromise.push(this.stopEnvironment(environments[index]));
         }
+        await Promise.all(stopEnvironmentPromise);
         this.commandEmitter.off("command", this.handleCommand);
         for (const commandChannel of this.commandChannelSet) {
             await commandChannel.stop();
@@ -650,6 +656,10 @@ class TrialDispatcher implements TrainingService {
     }
 
     private async requestEnvironment(environmentService: EnvironmentService): Promise<void> {
+        if (this.stopping) {
+            this.log.info(`Experiment is stopping, stop creating new environment`);
+            return;
+        }
         const envId = uniqueString(5);
         const envName = `nni_exp_${this.experimentId}_env_${envId}`;
         const environment = environmentService.createEnvironmentInformation(envId, envName);
