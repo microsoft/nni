@@ -131,6 +131,7 @@ class LatencyFilter:
     def __init__(self, threshold, predictor, predictor_version=None, reverse=False):
         """
         Filter the models according to predcted latency.
+
         Parameters
         ----------
         threshold: `float`
