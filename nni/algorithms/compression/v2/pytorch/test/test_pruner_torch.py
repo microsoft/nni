@@ -14,8 +14,10 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     FPGMPruner,
     ActivationAPoZRankPruner,
     ActivationMeanRankPruner,
-    TaylorFOWeightPruner
+    TaylorFOWeightPruner,
+    ADMMPruner
 )
+from nni.algorithms.compression.v2.pytorch.utils.pruning import compute_sparsity_mask2compact
 
 
 class TorchModel(torch.nn.Module):
@@ -63,7 +65,9 @@ class PrunerTestCase(unittest.TestCase):
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = LevelPruner(model=model, config_list=config_list)
         pruned_model, masks = pruner.compress()
-        # TODO: validate masks sparsity
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_l1_norm_pruner(self):
         model = TorchModel()
@@ -71,6 +75,9 @@ class PrunerTestCase(unittest.TestCase):
         pruner = L1NormPruner(model=model, config_list=config_list, mode='dependency_aware',
                               dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_l2_norm_pruner(self):
         model = TorchModel()
@@ -78,6 +85,9 @@ class PrunerTestCase(unittest.TestCase):
         pruner = L2NormPruner(model=model, config_list=config_list, mode='dependency_aware',
                               dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_fpgm_pruner(self):
         model = TorchModel()
@@ -85,6 +95,9 @@ class PrunerTestCase(unittest.TestCase):
         pruner = FPGMPruner(model=model, config_list=config_list, mode='dependency_aware',
                             dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_slim_pruner(self):
         model = TorchModel()
@@ -92,6 +105,9 @@ class PrunerTestCase(unittest.TestCase):
         pruner = SlimPruner(model=model, config_list=config_list, trainer=trainer, optimizer=get_optimizer(model),
                             criterion=criterion, training_epochs=1, scale=0.001, mode='global')
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_activation_apoz_rank_pruner(self):
         model = TorchModel()
@@ -101,6 +117,9 @@ class PrunerTestCase(unittest.TestCase):
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_activation_mean_rank_pruner(self):
         model = TorchModel()
@@ -110,6 +129,9 @@ class PrunerTestCase(unittest.TestCase):
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
     def test_taylor_fo_pruner(self):
         model = TorchModel()
@@ -118,7 +140,19 @@ class PrunerTestCase(unittest.TestCase):
                                       optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
                                       mode='dependency_aware', dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
+    def test_admm_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8, 'rho': 1e-3}]
+        pruner = ADMMPruner(model=model, config_list=config_list, trainer=trainer, optimizer=get_optimizer(model),
+                            criterion=criterion, iterations=2, training_epochs=1)
+        pruned_model, masks = pruner.compress()
+        pruner._unwrap_model()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0.79 < sparsity_list[0]['total_sparsity'] < 0.81
 
 if __name__ == '__main__':
     unittest.main()

@@ -43,7 +43,7 @@ from .tools import (
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
-           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner']
 
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
@@ -677,7 +677,7 @@ class ADMMPruner(BasicPruner):
             Supported keys:
                 - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
                 - sparsity_per_layer : Equals to sparsity.
-                - rho : Penalty parameters in ADMM algorithm.
+                - rho : Penalty parameters in ADMM algorithm. Default: 1e-4.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
@@ -732,7 +732,7 @@ class ADMMPruner(BasicPruner):
         def patched_criterion(output: Tensor, target: Tensor):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
-                rho = wrapper.config['rho']
+                rho = wrapper.config.get('rho', 1e-4)
                 penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
             return origin_criterion(output, target) + penalty
         return patched_criterion
