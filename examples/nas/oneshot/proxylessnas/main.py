@@ -69,15 +69,15 @@ if __name__ == "__main__":
     else:
         device = torch.device('cpu')
 
-    # logger.info('Creating data provider...')
-    # data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
-    #                                               train_batch_size=args.train_batch_size,
-    #                                               test_batch_size=args.test_batch_size,
-    #                                               valid_size=None,
-    #                                               n_worker=args.n_worker,
-    #                                               resize_scale=args.resize_scale,
-    #                                               distort_color=args.distort_color)
-    # logger.info('Creating data provider done')
+    logger.info('Creating data provider...')
+    data_provider = datasets.ImagenetDataProvider(save_path=args.data_path,
+                                                  train_batch_size=args.train_batch_size,
+                                                  test_batch_size=args.test_batch_size,
+                                                  valid_size=None,
+                                                  n_worker=args.n_worker,
+                                                  resize_scale=args.resize_scale,
+                                                  distort_color=args.distort_color)
+    logger.info('Creating data provider done')
 
     if args.no_decay_keys:
         keys = args.no_decay_keys
@@ -109,10 +109,10 @@ if __name__ == "__main__":
 
     if args.train_mode == 'search':
         from nni.retiarii.oneshot.pytorch import ProxylessTrainer
-        from torchvision.datasets import CIFAR10
+        from torchvision.datasets import ImageNet
         normalize = transforms.Normalize(mean=[0.485, 0.456, 0.406],
                                          std=[0.229, 0.224, 0.225])
-        dataset = CIFAR10('~/working/data/', transform=transforms.Compose([
+        dataset = ImageNet(args.data_path, transform=transforms.Compose([
             transforms.RandomResizedCrop(224),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),

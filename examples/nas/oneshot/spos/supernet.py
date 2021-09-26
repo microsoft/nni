@@ -8,7 +8,9 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from nni.retiarii.oneshot.pytorch import SinglePathTrainer
+from nni.nas.pytorch.callbacks import LRSchedulerCallback
+from nni.nas.pytorch.callbacks import ModelCheckpoint
+from nni.algorithms.nas.pytorch.spos import SPOSSupernetTrainingMutator, SPOSSupernetTrainer
 
 from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
@@ -51,6 +53,8 @@ if __name__ == "__main__":
     model.cuda()
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
+    mutator = SPOSSupernetTrainingMutator(model, flops_func=flops_func,
+                                          flops_lb=290E6, flops_ub=360E6)
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
     optimizer = torch.optim.SGD(model.parameters(), lr=args.learning_rate,
                                 momentum=args.momentum, weight_decay=args.weight_decay)
@@ -62,8 +66,10 @@ if __name__ == "__main__":
                                           spos_preprocessing=args.spos_preprocessing)
     valid_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
                                           spos_preprocessing=args.spos_preprocessing)
-    trainer = SinglePathTrainer(model, criterion, accuracy, optimizer,
-                                args.epochs, train_loader, valid_loader,
-                                batch_size=args.batch_size,
-                                log_frequency=args.log_frequency, workers=args.workers)
+    trainer = SPOSSupernetTrainer(model, criterion, accuracy, optimizer,
+                                  args.epochs, train_loader, valid_loader,
+                                  mutator=mutator, batch_size=args.batch_size,
+                                  log_frequency=args.log_frequency, workers=args.workers,
+                                  callbacks=[LRSchedulerCallback(scheduler),
+                                             ModelCheckpoint("./checkpoints")])
     trainer.train()

@@ -297,7 +297,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
         ''' return logits and loss for weight parameter update '''
         logits = self.model(X)
         loss = self.loss(logits, y)
-        return logits, loss  
+        return logits, loss
 
     def fit(self):
         for i in range(self.num_epochs):

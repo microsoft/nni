@@ -4,19 +4,15 @@ import click
 import nni.retiarii.evaluator.pytorch as pl
 import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
-from nni.retiarii.strategy.local_debug_strategy import _LocalDebugStrategy
 import torch
 from nni.retiarii import serialize
 from nni.retiarii.nn.pytorch import LayerChoice
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from nni.retiarii.evaluator import FunctionalEvaluator
-from nni import report_final_result
-import nni
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
-from network import ShuffleNetV2OneShot
+
 from nn_meter import load_latency_predictor
 
 
@@ -134,8 +130,7 @@ class ShuffleNetV2(nn.Module):
 class LatencyFilter:
     def __init__(self, threshold, predictor, predictor_version=None, reverse=False):
         """
-        Filter the models according to predicted latency.
-
+        Filter the models according to predcted latency.
         Parameters
         ----------
         threshold: `float`
@@ -144,7 +139,7 @@ class LatencyFilter:
             determine the targeted device
         reverse: `bool`
             if reverse is `False`, then the model returns `True` when `latency < threshold`,
-            else otherwise
+            else otherwisse
         """
         self.predictors = load_latency_predictor(predictor, predictor_version)
         self.threshold = threshold
@@ -152,14 +147,6 @@ class LatencyFilter:
     def __call__(self, ir_model):
         latency = self.predictors.predict(ir_model, 'nni-ir')
         return latency < self.threshold
-
-def load_weight_trainer(model_cls):
-    model = model_cls()
-    model.eval()
-    # for i, batch in enumerate(train_dataloader):
-    #     img_fake = model(batch)
-    # acc = test(model, dataloader)
-    nni.report_final_result(0.99)
 
 
 @click.command()
@@ -180,10 +167,10 @@ def _main(port):
 
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=64),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
-                                max_epochs=2)
+                                max_epochs=2, gpus=1)
 
-    # simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
-    simple_strategy = _LocalDebugStrategy()
+    simple_strategy = strategy.Random(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
+
     exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
