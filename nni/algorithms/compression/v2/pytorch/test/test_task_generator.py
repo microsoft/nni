@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from typing import List
 import unittest
 
 import torch
@@ -9,7 +10,9 @@ import torch.nn.functional as F
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
 from nni.algorithms.compression.v2.pytorch.pruning import (
     AGPTaskGenerator,
-    LinearTaskGenerator
+    LinearTaskGenerator,
+    LotteryTicketTaskGenerator,
+    SimulatedAnnealingTaskGenerator
 )
 
 
@@ -34,26 +37,56 @@ class TorchModel(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
+def test_task_generator(task_generator_type):
+    model = TorchModel()
+    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+
+    if task_generator_type == 'agp':
+        task_generator = AGPTaskGenerator(5, model, config_list)
+    elif task_generator_type == 'linear':
+        task_generator = LinearTaskGenerator(5, model, config_list)
+    elif task_generator_type == 'lottery_ticket':
+        task_generator = LotteryTicketTaskGenerator(5, model, config_list)
+    elif task_generator_type == 'simulated_annealing':
+        task_generator = SimulatedAnnealingTaskGenerator(model, config_list)
+
+    count = run_task_generator(task_generator)
+
+    if task_generator_type == 'agp':
+        assert count == 6
+    elif task_generator_type == 'linear':
+        assert count == 6
+    elif task_generator_type == 'lottery_ticket':
+        assert count == 6
+    elif task_generator_type == 'simulated_annealing':
+        assert count == 17
+
+
+def run_task_generator(task_generator):
+    task = task_generator.next()
+    factor = 0.9
+    count = 0
+    while task is not None:
+        factor = factor ** 2
+        count += 1
+        task_result = TaskResult(task.task_id, TorchModel(), {}, {}, 1 - factor)
+        task_generator.receive_task_result(task_result)
+        task = task_generator.next()
+    return count
+
+
 class TaskGenerator(unittest.TestCase):
     def test_agp_task_generator(self):
-        model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-
-        task_generator = AGPTaskGenerator(1, model, config_list)
-        tasks = task_generator.generate_tasks()
-
-        # TODO: wait for pr 4178
-        pass
+        test_task_generator('agp')
 
     def test_linear_task_generator(self):
-        model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        test_task_generator('linear')
 
-        task_generator = LinearTaskGenerator(1, model, config_list)
-        tasks = task_generator.generate_tasks()
+    def test_lottery_ticket_task_generator(self):
+        test_task_generator('lottery_ticket')
 
-        # TODO: wait for pr 4178
-        pass
+    def test_simulated_annealing_task_generator(self):
+        test_task_generator('simulated_annealing')
 
 
 if __name__ == '__main__':
