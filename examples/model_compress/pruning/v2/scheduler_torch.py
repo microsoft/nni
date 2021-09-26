@@ -61,19 +61,37 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
 
+    # pre-train the model
     for i in range(5):
         trainer(model, optimizer, criterion, i)
 
+    # the finetuner used in the scheduler should only have model as input
     finetuner = functools.partial(trainer,
                                   optimizer=torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4),
                                   criterion=criterion,
                                   epoch='PF')
 
     config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-    task_generator = AGPTaskGenerator(10, model, config_list, keep_intermidiate_result=True)
+
+    # Make sure initialize task generator at first, this because the model pass to the generator should be an unwrapped model.
+    # If you want to initialize pruner at first, you can use the follow code.
+
+    # pruner = L1NormPruner(model, config_list)
+    # pruner._unwrap_model()
+    # task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermidiate_result=True)
+    # pruner._wrap_model()
+
+    # you can specify the log_dir, all intermidiate results and best result will save under this folder.
+    # if you don't want to keep intermidiate results, you can set `keep_intermidiate_result=False`.
+    task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermidiate_result=True)
     pruner = L1NormPruner(model, config_list)
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
+
+    # if you just want to keep the final result as the best result, you can pass evaluator as None.
+    # or the result with the highest score (given by evaluator) will be the best result.
+
+    # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None)
 
     scheduler.compress()

@@ -506,16 +506,15 @@ class TaskGenerator:
 
     def update_best_result(self, task_result: TaskResult):
         score = task_result.score
-        if score is not None:
-            task_id = task_result.task_id
-            task = self._tasks[task_id]
-            task.score = score
-            if self._best_score is None or score > self._best_score:
-                self._best_score = score
-                self._best_task_id = task_id
-                with Path(task.config_list_path).open('r') as fr:
-                    best_config_list = json_tricks.load(fr)
-                self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
+        task_id = task_result.task_id
+        task = self._tasks[task_id]
+        task.score = score
+        if self._best_score is None or score > self._best_score:
+            self._best_score = score
+            self._best_task_id = task_id
+            with Path(task.config_list_path).open('r') as fr:
+                best_config_list = json_tricks.load(fr)
+            self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
 
     def init_pending_tasks(self) -> List[Task]:
         raise NotImplementedError()
