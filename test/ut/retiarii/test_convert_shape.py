@@ -75,5 +75,5 @@ class TestShape(unittest.TestCase, ConvertWithShapeMixin):
 
         # check shape info of each candidates
         conv_nodes = model_ir.get_nodes_by_type('__torch__.torch.nn.modules.conv.Conv2d')
-        self.assertEqual(conv_nodes[0].operation.parameters.get('output_shape'), [[1, 1, 222, 222]])
-        self.assertEqual(conv_nodes[1].operation.parameters.get('output_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(conv_nodes[0].output_shape, [[1, 1, 222, 222]])
+        self.assertEqual(conv_nodes[1].output_shape, [[1, 1, 222, 222]])
