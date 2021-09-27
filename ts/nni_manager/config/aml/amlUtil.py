@@ -44,6 +44,16 @@ if __name__ == "__main__":
             print('tracking_url:' + run.get_portal_url())
         elif line == 'stop':
             run.cancel()
+            loop_count = 0
+            status = run.get_status()
+            # wait until the run is canceled
+            while status != 'Canceled':
+                if loop_count > 5:
+                    print('stop_result:failed')
+                    exit(0)
+                loop_count += 1
+                time.sleep(500)
+            print('stop_result:success')
             exit(0)
         elif line == 'receive':
             print('receive:' + json.dumps(run.get_metrics()))
