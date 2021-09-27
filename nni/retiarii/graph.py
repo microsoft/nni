@@ -536,8 +536,8 @@ class Node:
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
         self.label: Optional[str] = None
-        self.input_shape: Optional[list] = None
-        self.output_shape: Optional[list] = None
+        self.input_shape: Optional[List[int]] = None
+        self.output_shape: Optional[List[int]] = None
 
     def __repr__(self):
         return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation}, \
