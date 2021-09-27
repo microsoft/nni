@@ -3,7 +3,7 @@
 
 import collections
 import logging
-from typing import List, Dict, Optional, OrderedDict, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any
 
 import torch
 from torch.nn import Module
@@ -149,7 +149,7 @@ class Compressor:
             return None
         return ret
 
-    def get_modules_wrapper(self) -> OrderedDict[str, Module]:
+    def get_modules_wrapper(self) -> Dict[str, Module]:
         """
         Returns
         -------
