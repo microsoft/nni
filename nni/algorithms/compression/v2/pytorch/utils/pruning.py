@@ -21,6 +21,20 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
             else:
                 config['sparsity_per_layer'] = config.pop('sparsity')
 
+    for config in config_list:
+        if 'op_partial_names' in config:
+            op_names = []
+            for partial_name in config['op_partial_names']:
+                for name, _ in model.named_modules():
+                    if partial_name in name:
+                        op_names.append(name)
+            if 'op_names' in config:
+                config['op_names'].extend(op_names)
+                config['op_names'] = list(set(config['op_names']))
+            else:
+                config['op_names'] = op_names
+            config.pop('op_partial_names')
+
     config_list = dedupe_config_list(unfold_config_list(model, config_list))
     new_config_list = []
 

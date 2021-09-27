@@ -48,20 +48,23 @@ __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPru
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 GLOBAL_SCHEMA = {
     'total_sparsity': And(float, lambda n: 0 <= n < 1),
     SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n <= 1),
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 EXCLUDE_SCHEMA = {
     'exclude': bool,
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 INTERNAL_SCHEMA = {
