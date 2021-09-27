@@ -30,7 +30,7 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
         sha256 = hashlib.sha256()
 
         if Path(local_path).exists():
-            _logger.info('"{}" already exists. Checking hash.'.format(local_path))
+            _logger.info('"%s" already exists. Checking hash.', local_path)
             with Path(local_path).open('rb') as fr:
                 while True:
                     chunk = fr.read(8192)
@@ -38,7 +38,7 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
                         break
                     sha256.update(chunk)
         elif download:
-            _logger.info('"{}" does not exist. Downloading "{}"'.format(local_path, download_url))
+            _logger.info('"%s" does not exist. Downloading "%s"', local_path, download_url)
 
             # Follow download implementation in torchvision:
             # We deliberately save it in a temp file and move it after
