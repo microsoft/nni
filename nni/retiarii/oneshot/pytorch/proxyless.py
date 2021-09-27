@@ -234,7 +234,9 @@ class ProxylessTrainer(BaseOneShotTrainer):
 
         # form the latency of layerchoice blocks for the latency table
         temp_ir_model = base_model_ir.fork()
-        layerchoice_nodes = base_model_ir.get_layerchoice_nodes()
+        cell_nodes = base_model_ir.get_cell_nodes()
+        layerchoice_nodes = [node for node in cell_nodes if 'mutation' in node.operation.parameters and \
+                                      node.operation.parameters['mutation'] == 'layerchoice']
         for lc_node in layerchoice_nodes:
             cand_lat = {}
             for candidate in lc_node.operation.parameters['candidates']:
