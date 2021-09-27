@@ -9,8 +9,8 @@ from typing import List, Dict, Tuple, Literal, Optional
 
 import json_tricks
 import torch
+from torch import Tensor
 from torch.nn import Module
-from torch.tensor import Tensor
 
 _logger = logging.getLogger(__name__)
 
