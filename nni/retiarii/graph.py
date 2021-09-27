@@ -211,7 +211,7 @@ class Model:
             return matched_nodes[0]
         else:
             return None
-    
+
     def get_node_by_python_name(self, python_name: str) -> 'Node':
         """
         Traverse all the nodes to find the matched node with the given python_name.
@@ -369,14 +369,14 @@ class Graph:
         Set python name
         """
         self.python_name = python_name
-        
+
     def get_node_by_name(self, name: str) -> Optional['Node']:
         """
         Returns the node which has specified name; or returns `None` if no node has this name.
         """
         found = [node for node in self.nodes if node.name == name]
         return found[0] if found else None
-    
+
     def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
         """
         Returns the node which has specified python_name; or returns `None` if no node has this python_name.
@@ -402,7 +402,7 @@ class Graph:
 
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
-    
+
     def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
         return [node for node in self.nodes if node.python_name == python_name]
 
@@ -671,7 +671,7 @@ class Node:
         if self.python_name is not None:
             ret['python_name'] = self.python_name
         return ret
-    
+
     def set_python_name(self, python_name: str):
         """
         Set python name

@@ -139,8 +139,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
     def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, warmup_epochs=0,
                  batch_size=64, workers=4, device=None, log_frequency=None,
-                 arc_learning_rate=1.0E-3, 
-                 grad_reg_loss_type=None, grad_reg_loss_params=None, 
+                 arc_learning_rate=1.0E-3,
+                 grad_reg_loss_type=None, grad_reg_loss_params=None,
                  latency_predictor=None, dummy_input=(1, 3, 224, 224),
                  ref_latency=65):
         self.model = model
@@ -229,7 +229,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
         from nni.retiarii.converter.graph_gen import GraphConverterWithShape
         script_module = torch.jit.script(self.model)
         converter = GraphConverterWithShape()
-        base_model_ir = convert_to_graph(script_module, self.model, 
+        base_model_ir = convert_to_graph(script_module, self.model,
                                          converter=converter, dummy_input=torch.randn(*dummy_input))
 
         # form the latency of layerchoice blocks for the latency table
@@ -243,17 +243,17 @@ class ProxylessTrainer(BaseOneShotTrainer):
                     temp_ir_model._root_graph_name = node_graph.name
                     latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
                 else:
-                    logging.Logger.warning(f"Could not found graph for layerchoice candidate {candidate}")
+                    _logger.warning(f"Could not found graph for layerchoice candidate {candidate}")
                     latency = 0
                 cand_lat[candidate.split('_')[-1]] = latency
             latency_table[lc_node.operation.parameters['label']] = cand_lat
-        
+
         # form the latency of the stationary block in the latency table
         temp_ir_model._root_graph_name = base_model_ir._root_graph_name
         GraphConverterWithShape().flatten_without_layerchoice(temp_ir_model)
         latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
         latency_table['stationary_block'] = {'root': latency}
-        
+
         return latency_table
 
     def _cal_expected_latency(self):
@@ -261,38 +261,34 @@ class ProxylessTrainer(BaseOneShotTrainer):
         for module_name, module in self.nas_modules:
             probs = module.export_prob()
             assert len(probs) == len(self.block_latency_table[module_name])
-            lat += torch.sum(torch.tensor([probs[i] * self.block_latency_table[module_name][str(i)] 
+            lat += torch.sum(torch.tensor([probs[i] * self.block_latency_table[module_name][str(i)]
                                 for i in range(len(probs))]))
         return lat
 
-    def _logits_and_loss_for_arch_update(self, X, y): 
+    def _logits_and_loss_for_arch_update(self, X, y):
         ''' return logits and loss for architecture parameter update '''
         logits = self.model(X)
         ce_loss = self.loss(logits, y)
         if not self.block_latency_table:
             return logits, ce_loss
-        # import time; since=time.time()
         expected_latency = self._cal_expected_latency()
-        # print(f'_cal_expected_latency: {time.time() - since}')
-        
+
         if self.reg_loss_type == 'mul#log':
             import math
             alpha = self.reg_loss_params.get('alpha', 1)
             beta = self.reg_loss_params.get('beta', 0.6)
             # noinspection PyUnresolvedReferences
             reg_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
-            # print(f"expected_latency: {expected_latency}, reg_loss[mul#log]: {reg_loss}")
             return logits, alpha * ce_loss * reg_loss
         elif self.reg_loss_type == 'add#linear':
             reg_lambda = self.reg_loss_params.get('lambda', 2e-1)
             reg_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
-            # print(f"expected_latency: {expected_latency}, reg_loss[add#linear]: {reg_loss}")
             return logits, ce_loss + reg_loss
         elif self.reg_loss_type is None:
             return logits, ce_loss
         else:
             raise ValueError(f'Do not support: {self.reg_loss_type}')
-    
+
     def _logits_and_loss_for_weight_update(self, X, y):
         ''' return logits and loss for weight parameter update '''
         logits = self.model(X)

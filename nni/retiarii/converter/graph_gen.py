@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from os import replace
 import re
 
 import torch
@@ -15,7 +14,7 @@ from .op_types import MODULE_EXCEPT_LIST, OpTypeName
 from .utils import (
     _convert_name, build_full_name, _without_shape_info,
     _extract_info_from_trace_node, get_full_name_by_scope_name,
-    is_layerchoice_node, match_node, build_cand_name, 
+    is_layerchoice_node, match_node, build_cand_name,
     build_python_name
 )
 
@@ -323,7 +322,7 @@ class GraphConverter:
                     submodule_obj = getattr(module, submodule_name)
                     subgraph, sub_m_attrs = self._convert_module(script_module._modules[submodule_name],
                                                                  submodule_obj,
-                                                                 submodule_full_name, submodule_python_name, 
+                                                                 submodule_full_name, submodule_python_name,
                                                                  ir_model)
                 else:
                     # %8 : __torch__.nni.retiarii.model_apis.nn.___torch_mangle_37.ModuleList = prim::GetAttr[name="cells"](%self)
@@ -357,7 +356,8 @@ class GraphConverter:
                         for each_name in list(reversed(module_name_space)):
                             submodule_obj = getattr(submodule_obj, each_name)
                             script_submodule = script_submodule._modules[each_name]
-                        subgraph, sub_m_attrs = self._convert_module(script_submodule, submodule_obj, submodule_full_name, submodule_python_name, ir_model)
+                        subgraph, sub_m_attrs = self._convert_module(script_submodule, submodule_obj, submodule_full_name, 
+                                                                     submodule_python_name, ir_model)
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
 
@@ -504,7 +504,7 @@ class GraphConverter:
 
         for node in sm_graph.nodes():
             handle_single_node(node)
-            
+
         if node_index != {}:
             for _output in sm_graph.outputs():
                 ir_graph._add_output(_convert_name(_output.debugName()))
@@ -513,7 +513,7 @@ class GraphConverter:
                     src_node_idx = None
                 else:
                     src_node_idx = predecessor_node_outputs.index(_output)
-                
+
                 ir_graph.add_edge(head=(node_index[_output.node()], src_node_idx),
                                   tail=(ir_graph.output_node, None))
         else:
