@@ -356,7 +356,7 @@ class GraphConverter:
                         for each_name in list(reversed(module_name_space)):
                             submodule_obj = getattr(submodule_obj, each_name)
                             script_submodule = script_submodule._modules[each_name]
-                        subgraph, sub_m_attrs = self._convert_module(script_submodule, submodule_obj, submodule_full_name, 
+                        subgraph, sub_m_attrs = self._convert_module(script_submodule, submodule_obj, submodule_full_name,
                                                                      submodule_python_name, ir_model)
                     else:
                         raise RuntimeError('Unsupported module case: {}'.format(submodule.inputsAt(0).type().str()))
