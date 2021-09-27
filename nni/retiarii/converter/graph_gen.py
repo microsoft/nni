@@ -370,13 +370,13 @@ class GraphConverter:
                     shared_node_python_name = build_python_name(submodule_python_name, self.global_seq)
                     shared_type_operation = Operation.new('shared', {'reference': submodule_full_name})
                     subcell = ir_graph.add_node(shared_node_name, shared_type_operation)
-                    subcell.set_python_name(shared_node_python_name)
+                    subcell.python_name = shared_node_python_name
                 else:
                     # this module is processed for the first time, build cell for it
                     if subgraph is None:
                         # if we do not parse this module's graph, we create Node for this module
                         subcell = ir_graph.add_node(submodule_full_name, submodule_type_str, sub_m_attrs)
-                        subcell.set_python_name(submodule_python_name)
+                        subcell.python_name = submodule_python_name
                         if isinstance(submodule_obj, Placeholder):
                             subcell.update_label(submodule_obj.label)
                         elif isinstance(submodule_obj, InputChoice):
@@ -385,7 +385,7 @@ class GraphConverter:
                         # Graph already created, create Cell for it
                         new_cell = Cell(cell_name=submodule_full_name, parameters=sub_m_attrs)
                         subcell = ir_graph.add_node(submodule_full_name, new_cell)
-                        subcell.set_python_name(submodule_python_name)
+                        subcell.python_name = submodule_python_name
                     shared_module_index[submodule_full_name] = subcell
                 node_index[node] = subcell
                 # connect the cell into graph
@@ -449,7 +449,7 @@ class GraphConverter:
                 func_node = ir_graph.add_node(build_full_name(module_name, func_name, self.global_seq),
                                               '{}.{}'.format(func_type_str, func_name))
                 func_python_name = build_python_name(module_python_name, func_name)
-                func_node.set_python_name(func_python_name)
+                func_node.python_name = func_python_name
                 node_index[node] = func_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, func_node, output_remap, ignore_first=True)
             elif node.kind() == 'prim::Constant':
@@ -494,7 +494,7 @@ class GraphConverter:
                 aten_op_python_name = node.kind().replace('aten::', '')
                 aten_node = ir_graph.add_node(build_full_name(module_name, aten_op_name, self.global_seq), node.kind())
                 aten_python_name = build_python_name(module_python_name, aten_op_python_name)
-                aten_node.set_python_name(aten_python_name)
+                aten_node.python_name = aten_python_name
                 node_index[node] = aten_node
                 self._add_edge(ir_graph, node, graph_inputs, node_index, aten_node, output_remap)
             else:
@@ -608,7 +608,7 @@ class GraphConverter:
         m_attrs = None
         if original_type_name == OpTypeName.LayerChoice:
             graph = Graph(ir_model, -100, module_name, _internal=True)  # graph_id is not used now
-            graph.set_python_name(module_python_name)
+            graph.python_name = module_python_name
             candidate_name_list = []
             for cand_name in module.names:
                 cand = module[cand_name]
@@ -619,11 +619,11 @@ class GraphConverter:
                 subgraph, attrs = self._convert_module(script_cand, cand, cand_full_name, cand_python_name, ir_model)
                 if subgraph is not None:
                     cand_node = graph.add_node(subgraph.name, Cell(cell_name=subgraph.name, parameters=attrs))
-                    cand_node.set_python_name(cand_python_name)
+                    cand_node.python_name = cand_python_name
                 else:
                     cand_type = '__torch__.' + get_importable_name(cand.__class__)
                     cand_node = graph.add_node(cand_full_name, cand_type, attrs)
-                    cand_node.set_python_name(cand_python_name)
+                    cand_node.python_name = cand_python_name
             graph._register()
             return graph, {'mutation': 'layerchoice', 'label': module.label, 'candidates': candidate_name_list}
         elif original_type_name == OpTypeName.InputChoice:
@@ -647,7 +647,7 @@ class GraphConverter:
         sm_graph = script_module.graph
         self.global_graph_id += 1
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
-        ir_graph.set_python_name(module_python_name)
+        ir_graph.python_name = module_python_name
 
         # handle graph nodes
         self.handle_graph_nodes(script_module, sm_graph, module,
@@ -813,7 +813,7 @@ class GraphConverterWithShape(GraphConverter):
                     id_to_new_node = {}
                     for node_graph_node in node_graph.hidden_nodes:
                         new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
-                        new_node.set_python_name(node_graph_node.python_name)
+                        new_node.python_name = node_graph_node.python_name
                         new_node.update_label(node_graph_node.label)
                         new_node._register()
                         id_to_new_node[new_node.id] = new_node
@@ -884,7 +884,7 @@ class GraphConverterWithShape(GraphConverter):
                     id_to_new_node = {}
                     for node_graph_node in node_graph.hidden_nodes:
                         new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
-                        new_node.set_python_name(node_graph_node.python_name)
+                        new_node.python_name = node_graph_node.python_name
                         new_node.update_label(node_graph_node.label)
                         new_node._register()
                         id_to_new_node[new_node.id] = new_node
