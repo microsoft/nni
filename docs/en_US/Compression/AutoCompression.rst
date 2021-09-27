@@ -13,7 +13,7 @@ The main differences are as follows:
 * No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressionExperiment`` input.
 
 .. note::
-    Auto compression only support TPE Tuner, Random Search Tuner, Anneal Tuner, Evolution Tuner right now.
+    Auto compression only supports TPE Tuner, Random Search Tuner, Anneal Tuner, Evolution Tuner right now.
 
 Generate search space
 ---------------------

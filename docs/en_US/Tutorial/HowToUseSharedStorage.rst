@@ -15,7 +15,7 @@ And we will develop more practical features in the future based on shared storag
 
 .. note::
     What is the difference between training service native storage and shared storage? Training service native storage is usually provided by the specific training service.
-    e.g., the local storage on remote machine in remote mode, the provided storage in openpai mode. These storages might not easy to use, e.g., users have to upload datasets to all remote machines to train the model.
+    E.g., the local storage on remote machine in remote mode, the provided storage in openpai mode. These storages might not easy to use, e.g., users have to upload datasets to all remote machines to train the model.
     In these cases, shared storage can automatically mount to the machine in the training platform. Users can directly save and load data from the shared storage. All the data/log used/generated in one experiment can be placed under the same place.
     After the experiment is finished, shared storage will automatically unmount from the training platform.
 
