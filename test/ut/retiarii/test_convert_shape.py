@@ -24,12 +24,12 @@ class TestShape(unittest.TestCase, ConvertWithShapeMixin):
         conv_node = model_ir.get_nodes_by_type('__torch__.torch.nn.modules.conv.Conv2d')[0]
         relu_node = model_ir.get_nodes_by_type('__torch__.torch.nn.modules.activation.ReLU')[0]
         pool_node = model_ir.get_nodes_by_type('__torch__.torch.nn.modules.pooling.MaxPool2d')[0]
-        self.assertEqual(conv_node.operation.attr['input_shape'], [[1, 3, 224, 224]])
-        self.assertEqual(conv_node.operation.attr['output_shape'], [[1, 1, 222, 222]])
-        self.assertEqual(relu_node.operation.attr['input_shape'], [[1, 1, 222, 222]])
-        self.assertEqual(relu_node.operation.attr['output_shape'], [[1, 1, 222, 222]])
-        self.assertEqual(pool_node.operation.attr['input_shape'], [[1, 1, 222, 222]])
-        self.assertEqual(pool_node.operation.attr['output_shape'], [[1, 1, 111, 111]])
+        self.assertEqual(conv_node.operation.attr.get('input_shape'), [[1, 3, 224, 224]])
+        self.assertEqual(conv_node.operation.attr.get('output_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(relu_node.operation.attr.get('input_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(relu_node.operation.attr.get('output_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(pool_node.operation.attr.get('input_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(pool_node.operation.attr.get('output_shape'), [[1, 1, 111, 111]])
 
     def test_nested_module(self):
         class ConvRelu(nn.Module):
@@ -75,5 +75,5 @@ class TestShape(unittest.TestCase, ConvertWithShapeMixin):
 
         # check shape info of each candidates
         conv_nodes = model_ir.get_nodes_by_type('__torch__.torch.nn.modules.conv.Conv2d')
-        self.assertEqual(conv_nodes[0].operation.attr['output_shape'], [[1, 1, 222, 222]])
-        self.assertEqual(conv_nodes[1].operation.attr['output_shape'], [[1, 1, 222, 222]])
+        self.assertEqual(conv_nodes[0].operation.attr.get('output_shape'), [[1, 1, 222, 222]])
+        self.assertEqual(conv_nodes[1].operation.attr.get('output_shape'), [[1, 1, 222, 222]])

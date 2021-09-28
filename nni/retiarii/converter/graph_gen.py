@@ -804,8 +804,6 @@ class GraphConverterWithShape(GraphConverter):
                     for node_graph_node in node_graph.hidden_nodes:
                         new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
                         new_node.update_label(node_graph_node.label)
-                        new_node.operation.attr['input_shape'] = node_graph_node.operation.attr['input_shape']
-                        new_node.operation.attr['output_shape'] = node_graph_node.operation.attr['output_shape']
                         new_node._register()
                         id_to_new_node[new_node.id] = new_node
 
