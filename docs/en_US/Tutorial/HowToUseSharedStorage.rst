@@ -13,6 +13,12 @@ And we will develop more practical features in the future based on shared storag
     Shared storage is currently in the experimental stage. We suggest use AzureBlob under Ubuntu/CentOS/RHEL, and NFS under Ubuntu/CentOS/RHEL/Fedora/Debian for remote.
     And make sure your local machine can mount NFS or fuse AzureBlob and the machine used in training service has ``sudo`` permission without password. We only support shared storage under training service with reuse mode for now.
 
+.. note::
+    What is the difference between training service native storage and shared storage? Training service native storage is usually provided by the specific training service.
+    E.g., the local storage on remote machine in remote mode, the provided storage in openpai mode. These storages might not easy to use, e.g., users have to upload datasets to all remote machines to train the model.
+    In these cases, shared storage can automatically mount to the machine in the training platform. Users can directly save and load data from the shared storage. All the data/log used/generated in one experiment can be placed under the same place.
+    After the experiment is finished, shared storage will automatically unmount from the training platform.
+
 Example
 -------
 If you want to use AzureBlob, add below to your config. Full config file see :githublink:`mnist-sharedstorage/config_azureblob.yml <examples/trials/mnist-sharedstorage/config_azureblob.yml>`.
