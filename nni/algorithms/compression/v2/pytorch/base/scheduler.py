@@ -5,7 +5,7 @@ import gc
 import logging
 import os
 from pathlib import Path
-from typing import List, Dict, Tuple, Literal, Optional
+from typing import List, Dict, Tuple, Optional
 
 import json_tricks
 import torch
@@ -37,7 +37,7 @@ class Task:
         self.masks_path = masks_path
         self.config_list_path = config_list_path
 
-        self.status: Literal['Pending', 'Running', 'Finished'] = 'Pending'
+        self.status = 'Pending'
         self.score: Optional[float] = None
 
         self.state = {}
