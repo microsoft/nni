@@ -247,7 +247,6 @@ class L1NormPruner(NormPruner):
             should on the same device with the model.
         """
         super().__init__(model, config_list, 1, mode, dummy_input)
-        print(config_list)
 
 
 class L2NormPruner(NormPruner):
