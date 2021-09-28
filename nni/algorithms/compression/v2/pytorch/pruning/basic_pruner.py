@@ -136,6 +136,7 @@ class LevelPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         """
         super().__init__(model, config_list)
@@ -170,6 +171,7 @@ class NormPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         p
             The order of norm.
@@ -229,6 +231,7 @@ class L1NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L1NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -244,6 +247,7 @@ class L1NormPruner(NormPruner):
             should on the same device with the model.
         """
         super().__init__(model, config_list, 1, mode, dummy_input)
+        print(config_list)
 
 
 class L2NormPruner(NormPruner):
@@ -260,6 +264,7 @@ class L2NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L2NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -291,6 +296,7 @@ class FPGMPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in FPGMPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
