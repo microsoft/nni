@@ -2,6 +2,23 @@
 <img src="docs/img/nni_logo.png" width="300"/>
 </p>
 
+<table>
+  <tr>
+    <td><img src="./docs/img/icons/icons/1.png"></td>
+    <td><img src="./docs/img/icons/icons/2.png"></td>
+    <td><img src="./docs/img/icons/icons/3.png"></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/img/icons/icons/4.png"></td>
+    <td><img src="./docs/img/icons/icons/5.png"></td>
+    <td><img src="./docs/img/icons/icons/6.png"></td>
+  </tr>
+  <tr>
+    <td><img src="./docs/img/icons/icons/7.png"></td>
+    <td><img src="./docs/img/icons/icons/8.png"></td>
+    <td><img src="./docs/img/icons/icons/9.png"></td>
+  </tr>
+</table>
 -----------
 
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
