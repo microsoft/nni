@@ -1,3 +1,8 @@
+###############################################################
+# This demo is adapted from PyTorch Transformer tutorial <https://pytorch.org/tutorials/beginner/transformer_tutorial.html>
+# Here we show how we use functions provided by retiarii to tune Transformer's hyper-parameters,
+# in order to achieve better performance.
+# This demo is tested with PyTorch 1.9, torchtext == 0.10, and nni == 2.4
 import torch
 import torch.nn.functional as F
 import nni.retiarii.nn.pytorch as nn
@@ -34,7 +39,14 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0)]
         return self.dropout(x)
 
-@model_wrapper
+###############################################################
+# PyTorch has already provided modules for Transformer: nn.TransformerEncoderLayer and nn.TransformerEncoder,
+# so we can use them directly, but note that to enable retiarii functions, we need to replace "import torch.nn as nn"
+# with "import nni.retiarii.nn.pytorch as nn".
+#
+# We use nn.ValueChoice to make the number of encoder layers (the default is 6) and the dropout rate mutable. 
+# For other hyper-parameters, we follow the setting in the original paper "Attention is All You Need".
+@model_wrapper # This decorator should be put on the top level module.
 class Transformer(nn.Module):
     
     def __init__(self, n_token: int, n_head: int = 8,
@@ -66,6 +78,11 @@ class Transformer(nn.Module):
         output = self.decoder(output)
         return output
 
+###############################################################
+# We wrap the whole training procedure in the fit function.
+# This function takes one positional argument model_cls which represents one exploration (i.e., one trial).
+# model_cls is automatically generated and passed in by retiarii, and we should instantiate model_cls
+# through model = model_cls()
 def fit(model_cls):
     
     train_iter = WikiText2(split='train')
@@ -162,7 +179,7 @@ def fit(model_cls):
         scheduler.step()
     
     best_val_ppl = math.exp(best_val_loss)
-    nni.report_final_result(best_val_ppl)
+    nni.report_final_result(best_val_ppl) # reports best validation ppl to nni as final result of one trial
 
 if __name__ == "__main__":
     
@@ -177,8 +194,8 @@ if __name__ == "__main__":
     evaluator = FunctionalEvaluator(fit)
     exp = RetiariiExperiment(base_model, evaluator, [], strategy.Random())
     exp_config = RetiariiExeConfig('local')
-    exp_config.experiment_name = 'Transformer HPO'
-    exp_config.trial_concurrency = 3
+    exp_config.experiment_name = 'transformer tuning'
+    exp_config.trial_concurrency = 3 # please change configurations accordingly
     exp_config.max_trial_number = 25
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
