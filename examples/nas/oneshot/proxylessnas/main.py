@@ -90,13 +90,6 @@ if __name__ == "__main__":
         momentum, nesterov = 0.9, True
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
 
-    latency_predictor = None
-    if args.applied_hardware:
-        try:
-            import nn_meter; latency_predictor = nn_meter.load_latency_predictor(args.applied_hardware)
-        except:
-            logger.error(f'Load latency predictor for {args.applied_hardware} failed.')
-
     if args.grad_reg_loss_type == 'add#linear':
         grad_reg_loss_params = {'lambda': args.grad_reg_loss_lambda}
     elif args.grad_reg_loss_type == 'mul#log':
@@ -127,7 +120,7 @@ if __name__ == "__main__":
                                    log_frequency=10,
                                    grad_reg_loss_type=args.grad_reg_loss_type, 
                                    grad_reg_loss_params=grad_reg_loss_params, 
-                                   latency_predictor=latency_predictor, dummy_input=(1, 3, 224, 224),
+                                   applied_hardware=args.applied_hardware, dummy_input=(1, 3, 224, 224),
                                    ref_latency=args.reference_latency)
         trainer.fit()
         print('Final architecture:', trainer.export())
