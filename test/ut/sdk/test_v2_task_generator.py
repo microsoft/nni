@@ -37,7 +37,7 @@ class TorchModel(torch.nn.Module):
         return F.log_softmax(x, dim=1)
 
 
-def test_task_generator(task_generator_type):
+def run_task_generator(task_generator_type):
     model = TorchModel()
     config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
 
@@ -50,7 +50,7 @@ def test_task_generator(task_generator_type):
     elif task_generator_type == 'simulated_annealing':
         task_generator = SimulatedAnnealingTaskGenerator(model, config_list)
 
-    count = run_task_generator(task_generator)
+    count = run_task_generator_(task_generator)
 
     if task_generator_type == 'agp':
         assert count == 6
@@ -62,7 +62,7 @@ def test_task_generator(task_generator_type):
         assert count == 17
 
 
-def run_task_generator(task_generator):
+def run_task_generator_(task_generator):
     task = task_generator.next()
     factor = 0.9
     count = 0
@@ -77,16 +77,16 @@ def run_task_generator(task_generator):
 
 class TaskGenerator(unittest.TestCase):
     def test_agp_task_generator(self):
-        test_task_generator('agp')
+        run_task_generator('agp')
 
     def test_linear_task_generator(self):
-        test_task_generator('linear')
+        run_task_generator('linear')
 
     def test_lottery_ticket_task_generator(self):
-        test_task_generator('lottery_ticket')
+        run_task_generator('lottery_ticket')
 
     def test_simulated_annealing_task_generator(self):
-        test_task_generator('simulated_annealing')
+        run_task_generator('simulated_annealing')
 
 
 if __name__ == '__main__':
