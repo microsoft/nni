@@ -707,8 +707,8 @@ class GraphConverterWithShape(GraphConverter):
         for ir_node in ir_model.get_nodes():
             if ir_node.operation.parameters is None:
                 ir_node.operation.parameters = {}
-            ir_node.input_shape = []
-            ir_node.output_shape = []
+            ir_node.operation.attr.setdefault('input_shape', [])
+            ir_node.operation.attr.setdefault('output_shape', [])
 
     def _trace_module(self, module, module_name, ir_model: 'Model', dummy_input):
         # First, trace the whole graph
@@ -719,8 +719,7 @@ class GraphConverterWithShape(GraphConverter):
             # '__module.convpool/__module.convpool.1/__module.convpool.1.conv'
             ir_node = match_node(ir_model, node, module_name)
             if ir_node is not None:
-                ir_node.input_shape = shape_parameters['input_shape']
-                ir_node.output_shape = shape_parameters['output_shape']
+                ir_node.operation.attr.update(shape_parameters)
                 if parameters:
                     ir_node.operation.parameters.update(parameters)
 
@@ -738,7 +737,7 @@ class GraphConverterWithShape(GraphConverter):
                     cand_name = build_cand_name(cand_name, submodule.label)
                     # TODO: Feed the exact input tensor if user provides input,
                     # in case the path changes according to input data.
-                    lc_inputs = [torch.randn(shape) for shape in lc_node.input_shape]
+                    lc_inputs = [torch.randn(shape) for shape in lc_node.operation.attr['input_shape']]
                     self._trace_module(cand, cand_name, ir_model, lc_inputs)
 
     def propagate_shape(self, ir_model: 'Model'):
@@ -756,8 +755,8 @@ class GraphConverterWithShape(GraphConverter):
                 cand_node = ir_model.get_node_by_name(cand_name)
                 if _without_shape_info(cand_node):
                     propagate_shape_for_graph(ir_model.graphs[cand_name])
-                graph_node.input_shape = cand_node.input_shape
-                graph_node.output_shape = cand_node.output_shape
+                graph_node.operation.attr['input_shape'] = cand_node.operation.attr['input_shape']
+                graph_node.operation.attr['output_shape'] = cand_node.operation.attr['output_shape']
             else:
                 input_shape = [[]] * len(graph.input_node.operation.io_names or [])
                 output_shape = [[]] * len(graph.output_node.operation.io_names or [])
@@ -766,17 +765,17 @@ class GraphConverterWithShape(GraphConverter):
                     if _without_shape_info(node):
                         if node.name in ir_model.graphs:
                             propagate_shape_for_graph(ir_model.graphs[node.name])
-                    if node.input_shape:
-                        input_shape[edge.head_slot or 0] = node.input_shape[edge.tail_slot or 0]
-                graph_node.input_shape = input_shape
+                    if node.operation.attr['input_shape']:
+                        input_shape[edge.head_slot or 0] = node.operation.attr['input_shape'][edge.tail_slot or 0]
+                graph_node.operation.attr['input_shape'] = input_shape
                 for edge in graph.output_node.incoming_edges:
                     node = edge.head
                     if _without_shape_info(node):
                         if node.name in ir_model.graphs:
                             propagate_shape_for_graph(ir_model.graphs[node.name])
-                    if node.output_shape:
-                        output_shape[edge.tail_slot or 0] = node.output_shape[edge.head_slot or 0]
-                graph_node.output_shape = output_shape
+                    if node.operation.attr['output_shape']:
+                        output_shape[edge.tail_slot or 0] = node.operation.attr['output_shape'][edge.head_slot or 0]
+                graph_node.operation.attr['output_shape'] = output_shape
 
             propagate_shape_for_graph(graph_node.graph)
 
@@ -805,8 +804,8 @@ class GraphConverterWithShape(GraphConverter):
                     for node_graph_node in node_graph.hidden_nodes:
                         new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
                         new_node.update_label(node_graph_node.label)
-                        new_node.input_shape = node_graph_node.input_shape
-                        new_node.output_shape = node_graph_node.output_shape
+                        new_node.operation.attr['input_shape'] = node_graph_node.operation.attr['input_shape']
+                        new_node.operation.attr['output_shape'] = node_graph_node.operation.attr['output_shape']
                         new_node._register()
                         id_to_new_node[new_node.id] = new_node
 

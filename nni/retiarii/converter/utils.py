@@ -101,7 +101,7 @@ def match_node(ir_model: Model, torch_node, prefix=''):
     graph = ir_model.graphs.get(full_name)
     if graph is not None:
         for node in graph.get_nodes_by_type(torch_node.kind()):
-            if not node.input_shape:
+            if not node.operation.attr['input_shape']:
                 return node
         return None
     else:
@@ -109,4 +109,4 @@ def match_node(ir_model: Model, torch_node, prefix=''):
 
 
 def _without_shape_info(node: Node):
-    return not node.input_shape and not node.output_shape
+    return not node.operation.attr['input_shape'] and not node.operation.attr['output_shape']
