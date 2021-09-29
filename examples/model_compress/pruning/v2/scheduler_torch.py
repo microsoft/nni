@@ -42,6 +42,18 @@ def trainer(model, optimizer, criterion, epoch):
         loss.backward()
         optimizer.step()
 
+def finetuner(model):
+    model.train()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    criterion = torch.nn.CrossEntropyLoss()
+    for data, target in tqdm(iterable=train_loader, desc='Epoch PFs'):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+
 def evaluator(model):
     model.eval()
     correct = 0
@@ -64,12 +76,6 @@ if __name__ == '__main__':
     # pre-train the model
     for i in range(5):
         trainer(model, optimizer, criterion, i)
-
-    # the finetuner used in the scheduler should only have model as input
-    finetuner = functools.partial(trainer,
-                                  optimizer=torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4),
-                                  criterion=criterion,
-                                  epoch='PF')
 
     config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
 
