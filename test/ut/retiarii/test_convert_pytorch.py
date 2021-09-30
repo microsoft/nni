@@ -1232,5 +1232,32 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
         x = torch.randn(5, 3, 2)
         self.run_test(SizeModel(10, 5), (x, ))
 
+    def test_python_name(self):
+        import imported.torchmodels as models
+        torchvision_model_zoo = {
+            'resnet18': models.resnet18(),
+            'alexnet': models.alexnet(),
+            'vgg16': models.vgg16(),
+            'squeezenet': models.squeezenet1_0(),
+            # 'densenet161': models.densenet161(), # meet error with jit.script
+            'inception_v3': models.inception_v3(),
+            'googlenet': models.googlenet(), 
+            'shufflenet_v2': models.shufflenet_v2_x1_0(),
+            'mobilenet_v2': models.mobilenet_v2(),
+            'resnext50_32x4d': models.resnext50_32x4d(),
+            'wide_resnet50_2': models.wide_resnet50_2(),
+            'mnasnet': models.mnasnet1_0(),
+        }
+        dummy_input=torch.randn(1, 3, 224, 224)
+        for model in torchvision_model_zoo.values():
+            model_ir = self._convert_model(model, dummy_input)
+            current_name = [node.python_name for node in model_ir.get_nodes() if node.python_name]
+            mentioned = set()
+            for k in model.state_dict():
+                k = ".".join(k.split(".")[:-1])
+                if k not in mentioned:
+                    assert k in current_name, f'{k} not in state_name'
+                    mentioned.add(k)
+
 class TestPytorchWithShape(TestPytorch, ConvertWithShapeMixin):
     pass
