@@ -61,7 +61,7 @@ NNI 中有不同的错误类型。 根据严重程度，可分为三类。 当 N
 
 这是最严重的错误。 发生这种错误时，整个 Experiment 都会失败，Trial 也不会运行。 这通常是由安装问题导致的。
 
-先检查 ``nnictl`` 的错误输出文件 ``stderr`` (运行 nnictl log stderr)，然后检查 ``nnimanager`` 的日志来看看是否由任何错误。
+先检查 ``nnictl`` 的错误输出文件 ``stderr`` (运行 nnictl log stderr)，然后检查 ``nnimanager`` 的日志来看看是否有任何错误。
 
 Dispatcher 失败
 ^^^^^^^^^^^^^^^^^^^^^^^^
