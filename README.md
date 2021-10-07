@@ -4,12 +4,14 @@
 
 <table style="border:none">
   <tr style="border:none">
-    <td style="border:none"><img style="width:787; height:432;border:1px solid red" src="./docs/img/icons/icons/1.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/2.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/3.png"></td>
+    <td>
+      <div style="border:1px solid grey;margin:15;">
+        <img style="width:300; height:400;" src="./docs/img/icons/icons/1.png">
+      </div>
+    </td>
   </tr>
   <tr style="border:none">
-    <td style="border:none;textAlign:center">icon1</td>
+    <td align="center" style="border:none;">icon1</td>
     <td style="border:none">icon12</td>
     <td style="border:none">icon123</td>
   </tr>
