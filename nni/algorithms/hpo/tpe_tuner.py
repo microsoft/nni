@@ -132,9 +132,9 @@ class TpeTuner(Tuner):
 
 def suggest(args, rng, space, history):
     params = {}
-    for spec in space.values():
-        if spec.is_activated(params):  # nested search space is chosen
-            params[spec.key] = suggest_parameter(args, rng, spec, history[spec.key])
+    for key, spec in space.items():
+        if spec.is_activated_in(params):  # nested search space is chosen
+            params[key] = suggest_parameter(args, rng, spec, history[key])
     return params
 
 def suggest_parameter(args, rng, spec, parameter_history):
