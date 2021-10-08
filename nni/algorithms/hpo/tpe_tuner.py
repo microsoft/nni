@@ -54,8 +54,9 @@ class TpeArguments(NamedTuple):
         This controls how many iterations it takes for a trial to start decay.
 
     prior_weight: float (default: 1.0)
-        TPE uses history trials plus the search space itself (called "prior") to generate parameters.
-        For prior weight 1.0, the search space is treated as one good trial.
+        TPE uses history trials plus the search space itself (called "prior") to choose parameters.
+        With prior weight 1.0, the search space is treated as one good trial.
+        For example, "normal(0, 1)" effectly equals to a trial with x = 0 which has yielded good result.
 
     gamma: float (default: 0.25)
         Controls how many trials are considered "good".
@@ -145,6 +146,8 @@ def suggest_parameter(args, rng, spec, parameter_history):
         sigma = spec.sigma
         clip = None
     else:
+        # TPE does not support uniform distribution natively
+        # they are converted to normal((low + high) / 2, high - low)
         mu = (spec.low + spec.high) * 0.5
         sigma = spec.high - spec.low
         clip = (spec.low, spec.high)
@@ -257,26 +260,26 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     The "Adaptive Parzen Estimator" described in paper section 4.2, for normal distribution.
 
     Because TPE internally only supports categorical and normal distributed space (domain),
-    this function is used for everything other than "choice".
+    this function is used for everything other than "choice" and "randint".
 
     Parameters
     ==========
     args: TpeArguments
-        Directly used: prior_weight
+        Algorithm arguments.
     history_mus: 1-d array of float
         Parameter values evaluated in history.
         These are the "observations" in paper section 4.2. ("placing density in the vicinity of K observations")
     prior_mu: float
-        µ (mean, loc) value provided by user.
+        µ value of normal search space.
     piror_sigma: float
-        σ (standard deviation, scale) value provided by user.
+        σ value of normal search space.
 
     Returns
     =======
     Tuple of three 1-d float arrays: (weight, µ, σ).
 
-    The tuple represents n+1 "vicinity of observations" and each one's weight,
-    calculated from "n" history and "1" user provided prior.
+    The tuple represents N+1 "vicinity of observations" and each one's weight,
+    calculated from "N" history and "1" user provided prior.
 
     The result is sorted by µ.
     """
