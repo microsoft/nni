@@ -149,7 +149,6 @@ class HardwareLatencyEstimator():
             import yaml
             with open(dump_lat_table, 'w') as fp:
                 yaml.dump(latency_table, fp)
-            import os
         _logger.info("Latency lookup table form done")
 
         return latency_table
