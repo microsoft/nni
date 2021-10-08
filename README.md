@@ -30,6 +30,9 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
 * **New emoicons release：**: [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
+<p align="center">
+  <a href="#nni-spider"><img src="docs/img/icons/icons/overview.svg" /></a>
+</p>
 
 ## **NNI capabilities in a glance**
 
