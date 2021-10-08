@@ -2,32 +2,6 @@
 <img src="docs/img/nni_logo.png" width="300"/>
 </p>
 
-<table style="border:none">
-  <tr style="border:none">
-    <td>
-      <div style="border:1px solid grey;margin:15;">
-        <img style="width:300; height:400;" src="./docs/img/icons/icons/1.png">
-      </div>
-    </td>
-  </tr>
-  <tr style="border:none">
-    <td align="center" style="border:none;">icon1</td>
-    <td style="border:none">icon12</td>
-    <td style="border:none">icon123</td>
-  </tr>
-  <tr style="border:none">
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/4.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/5.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/6.png"></td>
-  </tr>
-  <tr style="border:none">
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/7.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/8.png"></td>
-    <td style="border:none"><img style="width:787; height:432" src="./docs/img/icons/icons/9.png"></td>
-  </tr>
-</table>
------------
-
 [![MIT licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg)](LICENSE)
 [![Build Status](https://msrasrg.visualstudio.com/NNIOpenSource/_apis/build/status/full%20test%20-%20linux?branchName=master)](https://msrasrg.visualstudio.com/NNIOpenSource/_build/latest?definitionId=62&branchName=master)
 [![Issues](https://img.shields.io/github/issues-raw/Microsoft/nni.svg)](https://github.com/Microsoft/nni/issues?q=is%3Aissue+is%3Aopen)
@@ -55,6 +29,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
+* **New emoicons release：**: [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
 
 ## **NNI capabilities in a glance**
 
