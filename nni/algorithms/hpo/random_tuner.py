@@ -37,9 +37,9 @@ class RandomClassArgsValidator(ClassArgsValidator):
 
 def suggest(rng, space):
     params = {}
-    for spec in space.values():
+    for key, spec in space.items():
         if spec.is_activated_in(params):
-            params[spec.key] = suggest_parameter(rng, spec)
+            params[key] = suggest_parameter(rng, spec)
     return params
 
 def suggest_parameter(rng, spec):
