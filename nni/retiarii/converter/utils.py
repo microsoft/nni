@@ -120,11 +120,11 @@ def _without_shape_info(node: Node):
     return not node.operation.parameters['input_shape'] and not node.operation.parameters['output_shape']
 
 
-def flatten_model_graph(ir_model: 'Model'):
+def flatten_model_graph(ir_model: Model):
     """
     Flatten the subgraph into root graph.
     """
-    def _flatten(graph: 'Graph'):
+    def _flatten(graph: Graph):
         """
         flatten this graph
         """
@@ -183,11 +183,11 @@ def flatten_model_graph(ir_model: 'Model'):
     return new_ir_model
 
 
-def flatten_model_graph_without_layerchoice(ir_model: 'Model'):
+def flatten_model_graph_without_layerchoice(ir_model: Model):
     """
     Flatten the subgraph into root graph and jump all layerchoice
     """
-    def _flatten_without_layerchoice(graph: 'Graph'):
+    def _flatten_without_layerchoice(graph: Graph):
         """
         flatten this graph
         """

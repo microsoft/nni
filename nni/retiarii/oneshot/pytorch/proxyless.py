@@ -106,7 +106,7 @@ class ProxylessInputChoice(nn.Module):
 
 class HardwareLatencyEstimator():
     def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224), dump_lat_table='data/latency_table.yaml'):
-        import nn_meter
+        import nn_meter  # pylint: disable=import-error
         _logger.info(f'Load latency predictor for applied hardware: {applied_hardware}.')
         self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
         self.block_latency_table = self._form_latency_table(model, dummy_input, dump_lat_table=dump_lat_table)
