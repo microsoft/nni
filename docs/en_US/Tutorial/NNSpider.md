@@ -119,7 +119,7 @@
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
+          padding: 30px;
         " src="../../img/icons/icons/7.png">
       </div>
     </td>
@@ -132,7 +132,7 @@
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
+          padding: 30px;
         " src="../../img/icons/icons/8.png">
       </div>  
     </td>
@@ -145,7 +145,7 @@
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
+          padding: 30px;
         " src="../../img/icons/icons/9.png">
       </div>  
     </td>
