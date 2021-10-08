@@ -40,7 +40,6 @@ spec_names = ['pool', 'kernel', 'D', 'dropout', 'hidden', 'U_lr', 'U_batch', 'dr
 spec_types = ['choice', 'randint', 'choice', 'uniform', 'quniform', 'loguniform', 'qloguniform', 'normal', 'qnormal', 'lognormal', 'qlognormal', 'choice']
 spec_values = [['max','min','avg'], [2,8], user_space['D']['_value'], [0.5,0.9], [100.0,1000.0,3.0], [0.0001,0.1], [16.0,128.0,0.725], [0.7,0.2], [500.0,200.0,3.0], [-6.0,3.0], [3.5,1.2,0.725], [{'x':0,'y':0},{'x':1,'y':2}]]
 spec_keys = [('pool',), ('kernel',), ('D',), ('D',0,'dropout'), ('D',0,'hidden'), ('D',0,'U_lr'), ('D',0,'U_batch'), ('D',1,'dropout'), ('D',1,'hidden'), ('D',1,'N_lr'), ('D',1,'N_batch'), ('not_nested',)]
-spec_parents = [None, None, None, 0, 0, 0, 0, 1, 1, 1, 1, None]
 spec_categoricals = [True, True, True, False, False, False, False, False, False, False, False, True]
 spec_sizes = [3, 6, 3, None, None, None, None, None, None, None, None, 2]
 spec_lows = [None, None, None, 0.5, 100.0, log(0.0001), log(16.0), None, None, None, None, None]
@@ -60,7 +59,6 @@ def test_formatting():
     assert spec_types == [spec.type for spec in specs]
     assert spec_values == [spec.values for spec in specs]
     assert spec_keys == [spec.key for spec in specs]
-    #assert spec_parents == [spec.parent_index for spec in specs]
     assert spec_categoricals == [spec.categorical for spec in specs]
     assert spec_sizes == [spec.size for spec in specs]
     assert spec_lows == [spec.low for spec in specs]
@@ -147,21 +145,21 @@ def test_deformatting():
 def test_activate():
     internal_space = format_search_space(user_space)
 
-    assert internal_space[('pool',)].is_activated({})
+    assert internal_space[('pool',)].is_activated_in({})
 
     partial = { ('pool',): 1, ('kernel',): 1, ('D',): 0 }
-    assert internal_space[('D', 0, 'dropout')].is_activated(partial)
-    assert internal_space[('D', 0, 'U_lr')].is_activated(partial)
-    assert not internal_space[('D', 1, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 1, 'N_lr')].is_activated(partial)
+    assert internal_space[('D', 0, 'dropout')].is_activated_in(partial)
+    assert internal_space[('D', 0, 'U_lr')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'N_lr')].is_activated_in(partial)
 
     partial = { ('pool',): 1, ('kernel',): 1, ('D',): 2 }
-    assert not internal_space[('D', 0, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 0, 'U_lr')].is_activated(partial)
-    assert not internal_space[('D', 1, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 1, 'N_lr')].is_activated(partial)
+    assert not internal_space[('D', 0, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 0, 'U_lr')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'N_lr')].is_activated_in(partial)
 
-    assert internal_space[('not_nested',)].is_activated(partial)
+    assert internal_space[('not_nested',)].is_activated_in(partial)
 
 
 if __name__ == '__main__':
