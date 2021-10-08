@@ -466,7 +466,11 @@ class CompressorTestCase(TestCase):
             model = TorchModel().eval()
             model.relu = torch.nn.ReLU()
             optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-            quantizer = quantize_algorithm(model, configure_list, optimizer)
+            if quantize_algorithm == torch_quantizer.QAT_Quantizer:
+                dummy = torch.randn(1, 1, 28, 28)
+                quantizer = quantize_algorithm(model, configure_list, optimizer, dummy_input=dummy)
+            else:
+                quantizer = quantize_algorithm(model, configure_list, optimizer)
             quantizer.compress()
             if calibration_config is not None:
                 quantizer.load_calibration_config(calibration_config)
