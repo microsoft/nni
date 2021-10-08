@@ -19,42 +19,28 @@
 <table>
   <tr>
     <td>
-      <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+      <div>
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
-        " src="../../img/icons/icons/1.png">
+        "
+        src="../../img/emoicons/1.png"/>
       </div>
     </td>
     <td>
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
-        " src="../../img/icons/icons/2.png">
+        " src="../../img/emoicons/2.png"/>
       </div>  
     </td>
     <td>
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
-          margin: 20px;
-        " src="../../img/icons/icons/3.png">
+        " src="../../img/emoicons/3.png"/>
       </div>  
     </td>
   </tr>
@@ -65,42 +51,30 @@
   </tr>
   <tr>
     <td>
-      <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+      <div>
         <img style="
           width: 300px;
           height: 165px;
           margin: 20px;
-        " src="../../img/icons/icons/4.png">
+        " src="../../img/emoicons/4.png"/>
       </div>
     </td>
     <td >
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
           margin: 20px;
-        " src="../../img/icons/icons/5.png">
+        " src="../../img/emoicons/5.png"/>
       </div>  
     </td>
     <td>
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
           margin: 20px;
-        " src="../../img/icons/icons/6.png">
+        " src="../../img/emoicons/6.png"/>
       </div>  
     </td>
   </tr>
@@ -111,42 +85,30 @@
   </tr>
   <tr>
     <td>
-      <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+      <div>
         <img style="
           width: 300px;
           height: 165px;
           padding: 30px;
-        " src="../../img/icons/icons/7.png">
+        " src="../../img/emoicons/7.png"/>
       </div>
     </td>
     <td>
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
           padding: 30px;
-        " src="../../img/icons/icons/8.png">
+        " src="../../img/emoicons/8.png"/>
       </div>  
     </td>
     <td>
-        <div style="width: 300px;
-        height: 200px;
-        border: 1px solid grey;
-        background: #ccc;
-        box-sizing: border-box;">
+        <div>
         <img style="
           width: 300px;
           height: 165px;
           padding: 30px;
-        " src="../../img/icons/icons/9.png">
+        " src="../../img/emoicons/9.png"/>
       </div>  
     </td>
   </tr>
@@ -154,5 +116,23 @@
     <td align="center">icon7</td>
     <td align="center">icon8</td>
     <td align="center">icon9</td>
+  </tr>
+  <tr>
+    <td>
+      <div>
+        <img style="
+          width: 300px;
+          height: 165px;
+          padding: 30px;
+        " src="../../img/emoicons/10.png"/>
+      </div>
+    </td>
+    <td></td>
+    <td></td>
+  </tr>
+  <tr>
+    <td align="center">icon7</td>
+    <td align="center"></td>
+    <td align="center"></td>
   </tr>
 </table>
