@@ -60,7 +60,7 @@ class TpeArguments(NamedTuple):
 
     gamma: float (default: 0.25)
         Controls how many trials are considered "good".
-        The number is calculated as "gamma * sqrt(N)".
+        The number is calculated as "min(gamma * sqrt(N), linear_forgetting)".
 
     eps: float (default: 1e-12)
         Used to limit minimal σ of internal normal distributions.
@@ -255,7 +255,7 @@ def suggest_normal(args, rng, param_history, prior_mu, prior_sigma, clip):
 
 def split_history(args, param_history):
     """
-    Divide trials into good ones and bad ones.
+    Divide trials into good ones (below) and bad ones (above).
     """
     n_below = math.ceil(args.gamma * math.sqrt(len(param_history)))
     n_below = min(n_below, args.linear_forgetting)
