@@ -30,14 +30,14 @@
         <div>
         <img style="
           width: 300px;
-        " src="../../img/emoicons/7.png"/>
+        " src="../../img/emoicons/10.png"/>
       </div>  
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-        " src="../../img/emoicons/10.png"/>
+        " src="../../img/emoicons/4.png"/>
       </div>  
     </td>
   </tr>
