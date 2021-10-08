@@ -22,25 +22,22 @@
       <div>
         <img style="
           width: 300px;
-          height: 165px;
         "
-        src="../../img/emoicons/1.png"/>
+        src="../../img/emoicons/3.png"/>
       </div>
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-        " src="../../img/emoicons/2.png"/>
+        " src="../../img/emoicons/7.png"/>
       </div>  
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-        " src="../../img/emoicons/3.png"/>
+        " src="../../img/emoicons/10.png"/>
       </div>  
     </td>
   </tr>
@@ -54,27 +51,21 @@
       <div>
         <img style="
           width: 300px;
-          height: 165px;
-          margin: 20px;
-        " src="../../img/emoicons/4.png"/>
+        " src="../../img/emoicons/6.png"/>
       </div>
     </td>
     <td >
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-          margin: 20px;
-        " src="../../img/emoicons/5.png"/>
+        " src="../../img/emoicons/7.png"/>
       </div>  
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-          margin: 20px;
-        " src="../../img/emoicons/6.png"/>
+        " src="../../img/emoicons/9.png"/>
       </div>  
     </td>
   </tr>
@@ -88,17 +79,13 @@
       <div>
         <img style="
           width: 300px;
-          height: 165px;
-          padding: 30px;
-        " src="../../img/emoicons/7.png"/>
+        " src="../../img/emoicons/5.png"/>
       </div>
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-          padding: 30px;
         " src="../../img/emoicons/8.png"/>
       </div>  
     </td>
@@ -106,9 +93,7 @@
         <div>
         <img style="
           width: 300px;
-          height: 165px;
-          padding: 30px;
-        " src="../../img/emoicons/9.png"/>
+        " src="../../img/emoicons/2.png"/>
       </div>  
     </td>
   </tr>
@@ -122,9 +107,7 @@
       <div>
         <img style="
           width: 300px;
-          height: 165px;
-          padding: 30px;
-        " src="../../img/emoicons/10.png"/>
+        " src="../../img/emoicons/1.png"/>
       </div>
     </td>
     <td></td>
