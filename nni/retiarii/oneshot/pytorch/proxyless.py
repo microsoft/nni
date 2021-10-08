@@ -105,13 +105,13 @@ class ProxylessInputChoice(nn.Module):
 
 
 class HardwareLatencyEstimator():
-    def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224)):
+    def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224), dump_lat_table='data/latency_table.yaml'):
         import nn_meter
         _logger.info(f'Load latency predictor for applied hardware: {applied_hardware}.')
         self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
-        self.block_latency_table = self._form_latency_table(model, dummy_input)
+        self.block_latency_table = self._form_latency_table(model, dummy_input, dump_lat_table=dump_lat_table)
 
-    def _form_latency_table(self, model, dummy_input):
+    def _form_latency_table(self, model, dummy_input, dump_lat_table):
         latency_table = {}
 
         from nni.retiarii.converter import convert_to_graph
@@ -135,14 +135,22 @@ class HardwareLatencyEstimator():
                 else:
                     _logger.warning(f"Could not found graph for layerchoice candidate {candidate}")
                     latency = 0
-                cand_lat[candidate.split('_')[-1]] = latency
+                cand_lat[candidate.split('_')[-1]] = float(latency)
             latency_table[lc_node.operation.parameters['label']] = cand_lat
 
         # form the latency of the stationary block in the latency table
         temp_ir_model._root_graph_name = base_model_ir._root_graph_name
         temp_ir_model = flatten_model_graph_without_layerchoice(temp_ir_model)
         latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
-        latency_table['stationary_block'] = {'root': latency}
+        latency_table['stationary_block'] = {'root': float(latency)}
+
+        # save latency table
+        if dump_lat_table:
+            import yaml
+            with open(dump_lat_table, 'w') as fp:
+                yaml.dump(latency_table, fp)
+            import os
+        _logger.info("Latency lookup table form done")
 
         return latency_table
 
