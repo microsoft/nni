@@ -43,9 +43,9 @@
     </td>
   </tr>
   <tr>
-    <td align="center">icon1</td>
-    <td align="center">icon2</td>
-    <td align="center">icon3</td>
+    <td align="center">No bug</td>
+    <td align="center">Holiday</td>
+    <td align="center">Error</td>
   </tr>
   <tr>
     <td>
@@ -72,9 +72,9 @@
     </td>
   </tr>
   <tr>
-    <td align="center" >icon4</td>
-    <td align="center" >icon5</td>
-    <td align="center" >icon6</td>
+    <td align="center" >Working</td>
+    <td align="center" >Sign</td>
+    <td align="center" >Crying</td>
   </tr>
   <tr>
     <td>
@@ -101,9 +101,9 @@
     </td>
   </tr>
   <tr>
-    <td align="center">icon7</td>
-    <td align="center">icon8</td>
-    <td align="center">icon9</td>
+    <td align="center">Cut</td>
+    <td align="center">Weaving</td>
+    <td align="center">Comfort</td>
   </tr>
   <tr>
     <td>
@@ -117,7 +117,7 @@
     <td></td>
   </tr>
   <tr>
-    <td align="center">icon7</td>
+    <td align="center">Sweat</td>
     <td align="center"></td>
     <td align="center"></td>
   </tr>
