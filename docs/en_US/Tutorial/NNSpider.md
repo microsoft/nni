@@ -37,6 +37,7 @@
         <div>
         <img style="
           width: 300px;
+          height: 180px;
         " src="../../img/emoicons/4.png"/>
       </div>  
     </td>
@@ -51,6 +52,7 @@
       <div>
         <img style="
           width: 300px;
+          height: 210px;
         " src="../../img/emoicons/6.png"/>
       </div>
     </td>
@@ -58,14 +60,14 @@
         <div>
         <img style="
           width: 300px;
-        " src="../../img/emoicons/7.png"/>
+        " src="../../img/emoicons/9.png"/>
       </div>  
     </td>
     <td>
         <div>
         <img style="
           width: 300px;
-        " src="../../img/emoicons/9.png"/>
+        " src="../../img/emoicons/7.png"/>
       </div>  
     </td>
   </tr>
@@ -79,6 +81,7 @@
       <div>
         <img style="
           width: 300px;
+          height: 190px;
         " src="../../img/emoicons/5.png"/>
       </div>
     </td>
