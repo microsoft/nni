@@ -17,7 +17,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     TaylorFOWeightPruner,
     ADMMPruner
 )
-from nni.algorithms.compression.v2.pytorch.utils.pruning import compute_sparsity_mask2compact
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
 
 
 class TorchModel(torch.nn.Module):

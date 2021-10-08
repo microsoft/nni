@@ -13,8 +13,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils.config_validation import CompressorSchema
-from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical
 
 from .tools import (
     DataCollector,

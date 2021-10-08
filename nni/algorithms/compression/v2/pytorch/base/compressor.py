@@ -9,7 +9,7 @@ import torch
 from torch.nn import Module
 
 from nni.common.graph_utils import TorchModuleGraph
-from nni.algorithms.compression.v2.pytorch.utils.pruning import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
 
 _logger = logging.getLogger(__name__)
 
