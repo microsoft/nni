@@ -13,6 +13,21 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
     '''
     Split the config by op_names if 'sparsity' or 'sparsity_per_layer' in config,
     and set the sub_config['total_sparsity'] = config['sparsity_per_layer'].
+    And every item in 'op_partial_names' will match corresponding 'op_names' in model,
+    then transfer 'op_partial_names' to 'op_names' in config.
+
+    Example::
+        model = models.resnet18()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8, 'op_partial_names': ['conv1']}]
+        pruner = L1NormPruner(model, config_list)
+        pruner.compress()
+
+    In this process, the config_list will be like the following at last:
+
+    [{'op_types': ['Conv2d'], 'sparsity_per_layer': 0.8,
+        'op_names': ['conv1', 'layer1.0.conv1', 'layer1.1.conv1',
+        'layer2.0.conv1', 'layer2.1.conv1', 'layer3.0.conv1', 'layer3.1.conv1',
+        'layer4.0.conv1', 'layer4.1.conv1']}]
     '''
     for config in config_list:
         if 'sparsity' in config:
@@ -34,6 +49,7 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
             else:
                 config['op_names'] = op_names
             config.pop('op_partial_names')
+    print(config_list)
 
     config_list = dedupe_config_list(unfold_config_list(model, config_list))
     new_config_list = []
