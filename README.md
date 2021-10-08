@@ -31,7 +31,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
 * **New emoicons release**: [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
 <p align="center">
-  <a href="#nni-spider"><img width="100%" src="docs/img/icons/icons/home.svg" /></a>
+  <a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
 </p>
 
 ## **NNI capabilities in a glance**
