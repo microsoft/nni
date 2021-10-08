@@ -34,7 +34,7 @@ class Operation:
         Arbitrary key-value parameters (e.g. kernel_size).
     """
 
-    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False, attr: Dict[str, Any] = {}):
+    def __init__(self, type_name: str, parameters: Dict[str, Any] = {}, _internal: bool = False, attr: Dict[str, Any] = {}):
         assert _internal, '`Operation()` is private, use `Operation.new()` instead'
         self.type: str = type_name
         self.parameters: Dict[str, Any] = parameters
