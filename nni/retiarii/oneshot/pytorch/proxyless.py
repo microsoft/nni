@@ -116,6 +116,7 @@ class HardwareLatencyEstimator():
 
         from nni.retiarii.converter import convert_to_graph
         from nni.retiarii.converter.graph_gen import GraphConverterWithShape
+        from nni.retiarii.converter.utils import flatten_model_graph_without_layerchoice, is_layerchoice_node
         script_module = torch.jit.script(model)
         base_model_ir = convert_to_graph(script_module, model,
                                          converter=GraphConverterWithShape(), dummy_input=torch.randn(*dummy_input))
@@ -123,8 +124,7 @@ class HardwareLatencyEstimator():
         # form the latency of layerchoice blocks for the latency table
         temp_ir_model = base_model_ir.fork()
         cell_nodes = base_model_ir.get_cell_nodes()
-        layerchoice_nodes = [node for node in cell_nodes if 'mutation' in node.operation.parameters and \
-                                      node.operation.parameters['mutation'] == 'layerchoice']
+        layerchoice_nodes = [node for node in cell_nodes if is_layerchoice_node(node)]
         for lc_node in layerchoice_nodes:
             cand_lat = {}
             for candidate in lc_node.operation.parameters['candidates']:
@@ -140,7 +140,7 @@ class HardwareLatencyEstimator():
 
         # form the latency of the stationary block in the latency table
         temp_ir_model._root_graph_name = base_model_ir._root_graph_name
-        GraphConverterWithShape().flatten_without_layerchoice(temp_ir_model)
+        temp_ir_model = flatten_model_graph_without_layerchoice(temp_ir_model)
         latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
         latency_table['stationary_block'] = {'root': latency}
 
@@ -260,6 +260,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 for _, module in self.nas_modules:
                     module.finalize_grad()
                 self.ctrl_optim.step()
+                # export current architecture
+                # ref latency
 
             # 2) train model parameters
             for _, module in self.nas_modules:

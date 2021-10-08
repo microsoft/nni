@@ -183,7 +183,7 @@ def flatten_model_graph(ir_model: 'Model'):
     return new_ir_model
 
 
-def flatten_model_graph_without_layerchoice(self, ir_model: 'Model'):
+def flatten_model_graph_without_layerchoice(ir_model: 'Model'):
     """
     Flatten the subgraph into root graph and jump all layerchoice
     """
