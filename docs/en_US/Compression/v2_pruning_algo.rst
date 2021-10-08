@@ -30,14 +30,109 @@ Level Pruner
 ------------
 
 This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
+
 It will mask the weight in each specified layer with smaller absolute value by a ratio configured in the config list.
 
 Useage
 ^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+   pruner = LevelPruner(model, config_list)
+   masked_model, masks = pruner.compress()
 
 User configuration for Level Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
 
-..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LevelPruner
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LevelPruner
+
+L1 Norm Pruner
+--------------
+
+L1 norm pruner compute the l1 norm of the layer weight on the first dimension,
+then prune the weight blocks on this dimension with smaller l1 norm values.
+i.e., compute the l1 norm of the filters in convolution layer as metric values,
+compute the l1 norm of the weight by rows in linear layer as metric values.
+
+For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https://arxiv.org/abs/1608.08710>`__\.
+
+In addition, L1 norm pruner also supports dependency-aware mode.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = L1NormPruner(model, config_list)
+   masked_model, masks = pruner.compress()
+
+User configuration for Level Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L1NormPruner
+
+L2 Norm Pruner
+--------------
+
+L2 norm pruner is a variant of L1 norm pruner. It uses l2 norm as metric to determine which weight elements should be pruned.
+
+L2 norm pruner also supports dependency-aware mode.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import L2NormPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = L2NormPruner(model, config_list)
+   masked_model, masks = pruner.compress()
+
+User configuration for Level Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L2NormPruner
+
+FPGM Pruner
+-----------
+
+FPGM pruner prunes the blocks of the weight on the first dimension with the smallest geometric median.
+FPGM chooses the weight blocks with the most replaceable contribution.
+
+For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
+
+FPGM pruner also supports dependency-aware mode.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import FPGMPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = FPGMPruner(model, config_list)
+   masked_model, masks = pruner.compress()
+
+User configuration for Level Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.FPGMPruner
+
+Slim Pruner
+-----------
+
+Slim pruner
+
+For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
