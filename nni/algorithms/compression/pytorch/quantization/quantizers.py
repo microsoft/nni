@@ -666,12 +666,12 @@ class QAT_Quantizer(Quantizer):
                 assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
             if hasattr(module, 'input_bits'):
                 assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
-                module.tracked_min_input.data = torch.Tensor([calibration_config[name]['tracked_min_input']])
-                module.tracked_max_input.data = torch.Tensor([calibration_config[name]['tracked_max_input']])
+                module.tracked_min_input.data = torch.tensor([calibration_config[name]['tracked_min_input']])
+                module.tracked_max_input.data = torch.tensor([calibration_config[name]['tracked_max_input']])
             if hasattr(module, 'output_bits'):
                 assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
-                module.tracked_min_output.data = torch.Tensor([calibration_config[name]['tracked_min_output']])
-                module.tracked_max_output.data = torch.Tensor([calibration_config[name]['tracked_max_output']])
+                module.tracked_min_output.data = torch.tensor([calibration_config[name]['tracked_min_output']])
+                module.tracked_max_output.data = torch.tensor([calibration_config[name]['tracked_max_output']])
 
     def export_model(self, model_path, calibration_path=None, onnx_path=None, input_shape=None, device=None):
         """
