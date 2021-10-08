@@ -147,21 +147,21 @@ def test_deformatting():
 def test_activate():
     internal_space = format_search_space(user_space)
 
-    assert internal_space[('pool',)].is_activated({})
+    assert internal_space[('pool',)].is_activated_in({})
 
     partial = { ('pool',): 1, ('kernel',): 1, ('D',): 0 }
-    assert internal_space[('D', 0, 'dropout')].is_activated(partial)
-    assert internal_space[('D', 0, 'U_lr')].is_activated(partial)
-    assert not internal_space[('D', 1, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 1, 'N_lr')].is_activated(partial)
+    assert internal_space[('D', 0, 'dropout')].is_activated_in(partial)
+    assert internal_space[('D', 0, 'U_lr')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'N_lr')].is_activated_in(partial)
 
     partial = { ('pool',): 1, ('kernel',): 1, ('D',): 2 }
-    assert not internal_space[('D', 0, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 0, 'U_lr')].is_activated(partial)
-    assert not internal_space[('D', 1, 'dropout')].is_activated(partial)
-    assert not internal_space[('D', 1, 'N_lr')].is_activated(partial)
+    assert not internal_space[('D', 0, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 0, 'U_lr')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'dropout')].is_activated_in(partial)
+    assert not internal_space[('D', 1, 'N_lr')].is_activated_in(partial)
 
-    assert internal_space[('not_nested',)].is_activated(partial)
+    assert internal_space[('not_nested',)].is_activated_in(partial)
 
 
 if __name__ == '__main__':

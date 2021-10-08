@@ -31,14 +31,14 @@ class RandomTuner(Tuner):
     def receive_trial_result(self, *args, **kwargs):
         pass
 
-class RandomClassArgsValidator(ClassArgsValidator):  # FIXME: seems not working
+class RandomClassArgsValidator(ClassArgsValidator):
     def validate_class_args(self, **kwargs):
         schema.Schema({schema.Optional('seed'): int}).validate(kwargs)
 
 def suggest(rng, space):
     params = {}
     for spec in space.values():
-        if spec.is_activated(params):
+        if spec.is_activated_in(params):
             params[spec.key] = suggest_parameter(rng, spec)
     return params
 

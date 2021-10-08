@@ -52,7 +52,7 @@ class ParameterSpec(NamedTuple):
     log_distributed: bool = None    # Whether this parameter is log distributed
                                     # When true, low/high/mu/sigma describes log of parameter value (like np.lognormal)
 
-    def is_activated(self, partial_parameters):
+    def is_activated_in(self, partial_parameters):
         """
         For nested search space, check whether this parameter should be skipped for current set of paremters.
         This function must be used in a pattern similar to random tuner. Otherwise it will misbehave.
