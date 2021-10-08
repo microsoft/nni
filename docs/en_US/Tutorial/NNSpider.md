@@ -19,14 +19,13 @@
 <table style="border: none;">
   <tr style="border: none;">
     <td style="border: none;">
-      <div style="width: 300px;
-        height: 200px;
+      <div style="
         border: 1px solid grey;
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/1.png">
       </div>
@@ -38,8 +37,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/2.png">
       </div>  
@@ -51,8 +50,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/3.png">
       </div>  
@@ -71,8 +70,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/4.png">
       </div>
@@ -84,8 +83,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/5.png">
       </div>  
@@ -97,8 +96,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/6.png">
       </div>  
@@ -117,8 +116,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/7.png">
       </div>
@@ -130,8 +129,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/8.png">
       </div>  
@@ -143,8 +142,8 @@
         background: #ccc;
         box-sizing: border-box;">
         <img style="
-          width: 260px;
-          height: 160px;
+          width: 280px;
+          height: 180px;
           margin: 20px;
         " src="../../img/icons/icons/9.png">
       </div>  
