@@ -136,7 +136,7 @@ class LevelPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         """
         super().__init__(model, config_list)
@@ -171,7 +171,7 @@ class NormPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in NormPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         p
             The order of norm.
@@ -231,7 +231,7 @@ class L1NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L1NormPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -263,7 +263,7 @@ class L2NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L2NormPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -295,7 +295,7 @@ class FPGMPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in FPGMPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -356,7 +356,7 @@ class SlimPruner(BasicPruner):
                 - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
                 - op_types : Only BatchNorm2d is supported in SlimPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -450,7 +450,7 @@ class ActivationPruner(BasicPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in ActivationPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -571,7 +571,7 @@ class TaylorFOWeightPruner(BasicPruner):
                 - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
                 - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -691,7 +691,7 @@ class ADMMPruner(BasicPruner):
                 - rho : Penalty parameters in ADMM algorithm.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
-                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will transfer to op_names.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
