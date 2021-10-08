@@ -74,27 +74,30 @@ class TpeArguments(NamedTuple):
     eps: float = 1e-12
 
 class TpeTuner(Tuner):
+    """
+    Parameters
+    ==========
+    optimze_mode: 'minimize' | 'maximize' (default: 'minimize')
+        Whether optimize to minimize or maximize trial result.
+    seed: int | None
+        The random seed.
+    tpe_args: dict[string, Any] | None
+        Advanced users can use this to customize TPE tuner.
+        See `TpeArguments` for details.
+    """
+
     def __init__(self, optimize_mode='minimize', seed=None, tpe_args=None):
-        """
-        Parameters
-        ==========
-        optimze_mode: 'minimize' | 'maximize' (default: 'minimize')
-            Whether optimize to minimize or maximize trial result.
-        seed: int | None
-            The random seed.
-        tpe_args: dict[string, Any] | None
-            Advanced users can use this to customize TPE tuner.
-            See `TpeArguments` for details.
-        """
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.args = TpeArguments(**(tpe_args or {}))
         self.space = None
+        # concurrent generate_parameters() calls are likely to yield similar result, because they use same history
+        # the liar solves this problem by adding fake results to history
         self.liar = create_liar(self.args.constant_liar_type)
         self.rng = np.random.default_rng(seed)
 
-        self._params = {}
-        self._running_params = {}
-        self._history = defaultdict(list)
+        self._params = {}                   # parameter_id -> parameters (in internal format)
+        self._running_params = {}           # subset of above
+        self._history = defaultdict(list)   # parameter key -> list of loss
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
@@ -152,7 +155,7 @@ def suggest_parameter(args, rng, spec, parameter_history):
         sigma = spec.high - spec.low
         clip = (spec.low, spec.high)
 
-    return suggest_numerical(args, rng, parameter_history, mu, sigma, clip)
+    return suggest_normal(args, rng, parameter_history, mu, sigma, clip)
 
 ## Public API part end ##
 
@@ -162,27 +165,31 @@ class Record(NamedTuple):
     param: Union[int, float]
     loss: float
 
-class BestLiar:
+class BestLiar:  # assume running parameters have best result, it accelerates "converging"
     def __init__(self):
-        self._best = math.inf
+        self._best = None
 
     def update(self, loss):
-        self._best = min(self._best, loss)
+        if self._best is None or loss < self._best:
+            self._best = loss
 
     def lie(self):
-        return self._best
+        # when there is no real result, all of history is the same lie, so the value does not matter
+        # in this case, return 0 instead of infinity to prevent potential calculation error
+        return 0.0 if self._best is None else self._best
 
-class WorstLiar:
+class WorstLiar:  # assume running parameters have worst result, it helps to jump out of local minimum
     def __init__(self):
-        self._worst = -math.inf
+        self._worst = None
 
     def update(self, loss):
-        self._worst = max(self._worst, loss)
+        if self._worst is None or loss > self._worst:
+            self._worst = loss
 
     def lie(self):
-        return self._worst
+        return 0.0 if self._worst is None else self._worst
 
-class MeanLiar:
+class MeanLiar:  # assume running parameters have average result
     def __init__(self):
         self._sum = 0.0
         self._n = 0
@@ -192,9 +199,7 @@ class MeanLiar:
         self._n += 1
 
     def lie(self):
-        if self._n == 0:    # when there is no real result, all of history is the same lie
-            return 0.0      # so the value doesn't matter
-        return self._sum / self._n
+        return 0.0 if self._n == 0 else (self._sum / self._n)
 
 def create_liar(liar_type):
     if liar_type is None or liar_type.lower == 'none':
@@ -210,35 +215,48 @@ def create_liar(liar_type):
 
 ## Algorithm part ##
 
+# the algorithm is implemented in process-oriented style because I find it's easier to be understood in this way,
+# you know exactly what data each step is processing.
+
 def suggest_categorical(args, rng, param_history, size):
-    below, above = split_history(args, param_history)
+    """
+    Suggest a categorical ("choice" or "randint") parameter.
+    """
+    below, above = split_history(args, param_history)  # split history into good ones and bad ones
 
     weights = linear_forgetting_weights(args, len(below))
     counts = np.bincount(below, weights, size)
-    p = (counts + args.prior_weight) / sum(counts + args.prior_weight)
-    samples = rng.choice(size, args.n_ei_candidates, p=p)
-    below_llik = np.log(p[samples])  # llik means log-likelyhood
+    p = (counts + args.prior_weight) / sum(counts + args.prior_weight)  # calculate weight of good choices
+    samples = rng.choice(size, args.n_ei_candidates, p=p)  # sample N EIs using the weights
+    below_llik = np.log(p[samples])  # the probablity of these samples to be good (llik means log-likelyhood)
 
     weights = linear_forgetting_weights(args, len(above))
     counts = np.bincount(above, weights, size)
-    p = (counts + args.prior_weight) / sum(counts + args.prior_weight)
-    above_llik = np.log(p[samples])
+    p = (counts + args.prior_weight) / sum(counts + args.prior_weight)  # calculate weight of bad choices
+    above_llik = np.log(p[samples])  # the probablity of above samples to be bad
 
-    return samples[np.argmax(below_llik - above_llik)]
+    return samples[np.argmax(below_llik - above_llik)]  # which one has best probability to be good
 
-def suggest_numerical(args, rng, param_history, prior_mu, prior_sigma, clip):
-    below, above = split_history(args, param_history)
+def suggest_normal(args, rng, param_history, prior_mu, prior_sigma, clip):
+    """
+    Suggest a normal distributed parameter.
+    Uniform has been converted to normal in the caller function; log and q will be handled by "deformat_parameters".
+    """
+    below, above = split_history(args, param_history)  # split history into good ones and bad ones
 
-    weights, mus, sigmas = adaptive_parzen_normal(args, below, prior_mu, prior_sigma)
-    samples = gmm1(args, rng, weights, mus, sigmas, clip)
-    below_llik = gmm1_lpdf(args, samples, weights, mus, sigmas, clip)  # llik means log-likelyhood
+    weights, mus, sigmas = adaptive_parzen_normal(args, below, prior_mu, prior_sigma)  # calculate weight of good segments
+    samples = gmm1(args, rng, weights, mus, sigmas, clip)  # sample N EIs using the weights
+    below_llik = gmm1_lpdf(args, samples, weights, mus, sigmas, clip)  # the probability of these samples to be good
 
-    weights, mus, sigmas = adaptive_parzen_normal(args, above, prior_mu, prior_sigma)
-    above_llik = gmm1_lpdf(args, samples, weights, mus, sigmas, clip)
+    weights, mus, sigmas = adaptive_parzen_normal(args, above, prior_mu, prior_sigma)  # calculate weight of bad segments
+    above_llik = gmm1_lpdf(args, samples, weights, mus, sigmas, clip)  # the probability of above samples to be bad
 
-    return samples[np.argmax(below_llik - above_llik)]
+    return samples[np.argmax(below_llik - above_llik)]  # which one has best probability to be good
 
 def split_history(args, param_history):
+    """
+    Divide trials into good ones and bad ones.
+    """
     n_below = math.ceil(args.gamma * math.sqrt(len(param_history)))
     n_below = min(n_below, args.linear_forgetting)
     order = sorted(range(len(param_history)), key=(lambda i: param_history[i].loss))  # argsort by loss
@@ -247,6 +265,9 @@ def split_history(args, param_history):
     return np.asarray(below), np.asarray(above)
 
 def linear_forgetting_weights(args, n):
+    """
+    Calculate decayed weights of N trials.
+    """
     lf = args.linear_forgetting
     if n < lf:
         return np.ones(n)
