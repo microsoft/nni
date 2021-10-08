@@ -108,4 +108,4 @@ A common example of this would be run the mnist example without installing tenso
 
 As it shows, every trial has a log path, where you can find trial's log and stderr.
 
-In addition to experiment level debug, NNI also provides the capability for debugging a single trial without the need to start the entire experiment. Refer to `standalone mode <../TrialExample/Trials#standalone-mode-for-debugging>`__ for more information about debug single trial code.
+In addition to experiment level debug, NNI also provides the capability for debugging a single trial without the need to start the entire experiment. Refer to `standalone mode <../TrialExample/Trials.rst#standalone-mode-for-debugging>`__ for more information about debug single trial code.
