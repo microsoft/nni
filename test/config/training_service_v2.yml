@@ -7,3 +7,8 @@ hybrid:
         password: 
         port: 
   - platform: local
+  - platform: aml
+    subscriptionId:
+    resourceGroup:
+    workspaceName:
+    computeTarget:

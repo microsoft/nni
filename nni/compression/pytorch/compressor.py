@@ -529,13 +529,13 @@ class QuantizerModuleWrapper(torch.nn.Module):
             else:
                 self.module.register_parameter('old_weight', torch.nn.Parameter(self.module.weight))
                 delattr(self.module, 'weight')
-                self.module.register_buffer('weight', self.module.old_weight)
+                self.module.register_buffer('weight', self.module.old_weight.data)
 
                 # for batch normalization folding
                 if self.bn_module is not None:
                     if _check_bias(self.module):
                         self.module.register_parameter('old_bias', torch.nn.Parameter(self.module.bias))
-                        init_tensor = self.module.old_bias
+                        init_tensor = self.module.old_bias.data
                     else:
                         init_tensor = torch.zeros_like(self.bn_module.weight)
                     delattr(self.module, 'bias')
@@ -602,6 +602,8 @@ class Quantizer(Compressor):
     """
 
     def __init__(self, model, config_list, optimizer=None, dummy_input=None):
+        if isinstance(model, torch.nn.DataParallel):
+            model = model.module
         self.identity_wrappers = []
         self.conv_bn_patterns = {}
         self.find_conv_bn_patterns(model, dummy_input)
@@ -655,6 +657,40 @@ class Quantizer(Compressor):
             the wrapper for origin module
         """
         raise NotImplementedError('Quantizer must overload quantize_input()')
+
+    def fold_bn(self, *inputs, wrapper):
+        """
+        Simulate batch normalization folding in the training graph. Folded weight and bias are
+        returned for the following operations.
+
+        Parameters
+        ----------
+        inputs : tuple of torch.Tensor
+            inputs for the module
+        wrapper : QuantizerModuleWrapper
+            the wrapper for origin module
+
+        Returns
+        -------
+        Tuple of torch.Tensor
+        """
+        module = wrapper.module
+        bn_module = wrapper.bn_module
+        with torch.no_grad():
+            output = module(*inputs)
+            _ = bn_module(output)
+        running_mean = bn_module.running_mean
+        running_var = torch.sqrt(bn_module.running_var + bn_module.eps)
+        bn_weight = bn_module.weight
+        bn_bias = bn_module.bias
+        dimensions = len(module.weight.shape)
+        shape = [-1] + [1] * (dimensions - 1)
+        new_weight = module.old_weight * bn_weight.reshape(shape) / running_var.reshape(shape)
+        if hasattr(module, 'old_bias'):
+            new_bias = bn_bias + (module.old_bias - running_mean) / running_var * bn_weight
+        else:
+            new_bias = bn_bias - running_mean / running_var * bn_weight
+        return new_weight, new_bias
 
     def _wrap_modules(self, layer, config):
         """
@@ -764,6 +800,24 @@ class Quantizer(Compressor):
         Returns
         -------
         Dict
+        """
+        raise NotImplementedError('Quantizer must overload export_model()')
+
+    def load_calibration_config(self, calibration_config):
+        """
+        This function aims to help quantizer set quantization parameters by
+        loading from a calibration_config which is exported by other quantizer
+        or itself. The main usage of this function is helping quantize aware training
+        quantizer set appropriate initial parameters so that the training process will
+        be much more flexible and converges quickly. What's more, it can also enable
+        quantizer resume quantization model by loading parameters from config.
+
+        Parameters
+        ----------
+        calibration_config : dict
+            dict which saves quantization parameters, quantizer can export itself
+            calibration config.
+            eg, calibration_config = quantizer.export_model(model_path, calibration_path)
         """
         raise NotImplementedError('Quantizer must overload export_model()')
 
@@ -892,12 +946,21 @@ class QuantGrad(torch.autograd.Function):
             zero_point = wrapper.module.zero_point
         else:
             scale, zero_point = None, None
-        ctx.save_for_backward(tensor, torch.Tensor([quant_type]), scale, zero_point, qmin, qmax)
+        ctx.save_for_backward(tensor)
+        # Only tensors have gradients flowing back needs to be saved by save_for_backward.
+        # Others should directly assign to ctx.
+        ctx.scale = scale
+        ctx.zero_point = zero_point
+        ctx.quant_type = quant_type
+        ctx.qmin, ctx.qmax = qmin, qmax
         return output
 
     @classmethod
     def backward(cls, ctx, grad_output):
-        tensor, quant_type, scale, zero_point, qmin, qmax = ctx.saved_variables
+        tensor = ctx.saved_variables[0]
+        scale, zero_point = ctx.scale, ctx.zero_point
+        qmin, qmax = ctx.qmin, ctx.qmax
+        quant_type = ctx.quant_type
         output = cls.quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax)
         return output, None, None, None
 

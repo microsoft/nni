@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { getLogger, Logger } from '../../common/log';
-import { MethodNotImplementedError } from '../../common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from '../../common/experimentConfig';
-import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from '../../common/trainingService';
-import { delay } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { MethodNotImplementedError } from 'common/errors';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from 'common/experimentConfig';
+import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from 'common/trainingService';
+import { delay } from 'common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';

@@ -19,7 +19,7 @@ testCases:
 
 - name: mnist-tensorflow
   configFile: test/config/examples/mnist-tfv2-v2.yml
-  trainingService: local remote hybrid
+  trainingService: local remote
 
 - name: mnist-pytorch-local
   configFile: test/config/examples/mnist-pytorch-v2.yml

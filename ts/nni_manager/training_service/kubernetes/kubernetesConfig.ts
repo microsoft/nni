@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 export type KubernetesStorageKind = 'nfs' | 'azureStorage' | 'pvc';
-import {MethodNotImplementedError} from '../../common/errors';
+import {MethodNotImplementedError} from 'common/errors';
 
 export abstract class KubernetesClusterConfig {
     public readonly storage?: KubernetesStorageKind;
