@@ -249,7 +249,7 @@ by decomposing the original nonconvex problem into two subproblems that can be s
 In weight pruning problem, these two subproblems are solved via 1) gradient descent algorithm and 2) Euclidean projection respectively. 
 
 During the process of solving these two subproblems, the weights of the original model will be changed.
-An one-shot pruner will then be applied to prune the model according to the config list given.
+Then a fine-grained pruning will be applied to prune the model according to the config list given.
 
 This solution framework applies both to non-structured and different variations of structured pruning schemes.
 
@@ -262,7 +262,7 @@ Useage
 
    from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-   pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
+   pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
 
 User configuration for ADMM Pruner
