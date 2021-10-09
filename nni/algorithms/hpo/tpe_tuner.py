@@ -312,7 +312,7 @@ def adaptive_parzen_normal(args, history_mus, prior_mu, prior_sigma):
     if len(mus) == 1:
         sigmas = np.asarray([prior_sigma])
     elif len(mus) == 2:
-        sigmas = np.asarray([prior_simga * 0.5, prior_sigma * 0.5])
+        sigmas = np.asarray([prior_sigma * 0.5, prior_sigma * 0.5])
         sigmas[prior_index] = prior_sigma
     else:
         l_delta = mus[1:-1] - mus[:-2]
