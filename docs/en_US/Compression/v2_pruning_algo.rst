@@ -7,7 +7,7 @@ or easily use a component of their own implementation to replace a step in the o
 
 Right now, pruning algorithms with how to generate masks in one step are implemented as pruners, and how to schedule sparsity in each iteration are implemented as task generators.
 
-** Pruner **
+**Pruner**
 
 * `Level Pruner <#level-pruner>`__
 * `L1 Norm Pruner <#l1-norm-pruner>`__
@@ -19,7 +19,7 @@ Right now, pruning algorithms with how to generate masks in one step are impleme
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
 
-** Task Generator **
+**Task Generator**
 
 * `Linear Task Generator <#linear-task-generator>`__
 * `AGP Task Generator <#agp-task-generator>`__
