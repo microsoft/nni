@@ -108,6 +108,7 @@ class HardwareLatencyEstimator():
     def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224), dump_lat_table='data/latency_table.yaml'):
         import nn_meter  # pylint: disable=import-error
         _logger.info(f'Load latency predictor for applied hardware: {applied_hardware}.')
+        self.predictor_name = applied_hardware
         self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
         self.block_latency_table = self._form_latency_table(model, dummy_input, dump_lat_table=dump_lat_table)
 
@@ -146,19 +147,29 @@ class HardwareLatencyEstimator():
 
         # save latency table
         if dump_lat_table:
-            import yaml
+            import os, yaml
+            os.makedirs(os.path.dirname(dump_lat_table), exist_ok=True)
             with open(dump_lat_table, 'w') as fp:
-                yaml.dump(latency_table, fp)
+                yaml.dump({
+                    "applied_hardware": self.predictor_name,
+                    'latency_table': latency_table
+                    }, fp)
         _logger.info("Latency lookup table form done")
 
         return latency_table
 
-    def cal_expected_latency(self, current_architecture):
+    def cal_expected_latency(self, current_architecture_prob):
         lat = self.block_latency_table['stationary_block']['root']
-        for module_name, probs in current_architecture.items():
+        for module_name, probs in current_architecture_prob.items():
             assert len(probs) == len(self.block_latency_table[module_name])
             lat += torch.sum(torch.tensor([probs[i] * self.block_latency_table[module_name][str(i)]
                                 for i in range(len(probs))]))
+        return lat
+
+    def export_latency(self, current_architecture):
+        lat = self.block_latency_table['stationary_block']['root']
+        for module_name, selected_module in current_architecture.items():
+            lat += self.block_latency_table[module_name][str(selected_module)]
         return lat
 
 
@@ -212,7 +223,6 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
-        self.model.to(self.device)
 
         # latency predictor
         if applied_hardware:
@@ -223,6 +233,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.reg_loss_params = {} if grad_reg_loss_params is None else grad_reg_loss_params
         self.ref_latency = ref_latency
 
+        self.model.to(self.device)
         self.nas_modules = []
         replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
         replace_input_choice(self.model, ProxylessInputChoice, self.nas_modules)
@@ -279,6 +290,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
             self.optimizer.step()
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
+            if self.latency_estimator:
+                metrics["latency"] = self._export_latency()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 _logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
@@ -291,11 +304,11 @@ class ProxylessTrainer(BaseOneShotTrainer):
         if not self.latency_estimator:
             return logits, ce_loss
 
-        current_architecture = {}
+        current_architecture_prob = {}
         for module_name, module in self.nas_modules:
             probs = module.export_prob()
-            current_architecture[module_name] = probs
-        expected_latency = self.latency_estimator.cal_expected_latency(current_architecture)
+            current_architecture_prob[module_name] = probs
+        expected_latency = self.latency_estimator.cal_expected_latency(current_architecture_prob)
 
         if self.reg_loss_type == 'mul#log':
             import math
@@ -318,6 +331,13 @@ class ProxylessTrainer(BaseOneShotTrainer):
         logits = self.model(X)
         loss = self.loss(logits, y)
         return logits, loss
+    
+    def _export_latency(self):
+        current_architecture = {}
+        for module_name, module in self.nas_modules:
+            selected_module = module.export()
+            current_architecture[module_name] = selected_module
+        return self.latency_estimator.export_latency(current_architecture)
 
     def fit(self):
         for i in range(self.num_epochs):
