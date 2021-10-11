@@ -61,8 +61,8 @@ def load_or_download_file(local_path: str, download_url: str, download: bool = F
             raise FileNotFoundError('Download is not enabled, but file still does not exist: {}'.format(local_path))
 
         digest = sha256.hexdigest()
-        if digest[:len(hash_prefix)] != hash_prefix:
-            raise RuntimeError('invalid hash value (expected "{}", got "{}")'.format(hash_prefix, digest))
+        if not digest.startswith(hash_prefix):
+            raise RuntimeError('Invalid hash value (expected "{}", got "{}")'.format(hash_prefix, digest))
 
         if f is not None:
             shutil.move(f.name, local_path)
