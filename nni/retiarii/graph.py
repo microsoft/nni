@@ -605,7 +605,9 @@ class Node:
         if ir['operation']['type'] == '_cell':
             op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}), attributes=ir['operation'].get('attributes', {}))
         else:
-            op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}), attributes=ir['operation'].get('attributes', {}))
+            op = Operation.new(ir['operation']['type'],
+                               ir['operation'].get('parameters', {}),
+                               attributes=ir['operation'].get('attributes', {}))
         node = Node(graph, uid(), name, op)
         if 'label' in ir:
             node.update_label(ir['label'])
