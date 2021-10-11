@@ -5,7 +5,7 @@ import re
 
 import torch
 
-from ..graph import Graph, Model, Node, Edge
+from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, Placeholder, LayerChoice
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
@@ -631,7 +631,7 @@ class GraphConverter:
         ir_graph = Graph(model=ir_model, graph_id=self.global_graph_id, name=module_name, _internal=True)
 
         # handle graph nodes
-        node_index = self.handle_graph_nodes(script_module, sm_graph, module,
+        self.handle_graph_nodes(script_module, sm_graph, module,
                                              module_name, ir_model, ir_graph)
         self.refine_graph(ir_graph)
 
