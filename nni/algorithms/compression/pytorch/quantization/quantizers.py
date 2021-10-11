@@ -435,8 +435,8 @@ class QAT_Quantizer(Quantizer):
         delete redundant parameters in quantize module
         """
         del_attr_list = ['old_weight', 'old_bias', 'ema_decay', 'tracked_min_output', 'tracked_max_output',
-                         'tracked_min_input', 'tracked_max_input', 'weight_bits', 'output_bits', 'BN_FOLD_TAG',
-                         'input_bits', 'weight_scale', 'weight_zero_point', 'input_scale', 'input_zero_point',
+                         'tracked_min_input', 'tracked_max_input', 'BN_FOLD_TAG',
+                         'weight_scale', 'weight_zero_point', 'input_scale', 'input_zero_point',
                          'output_scale', 'output_zero_point', 'layer_quant_setting']
         for attr in del_attr_list:
             if hasattr(module, attr):
