@@ -4,11 +4,11 @@
         "outputs": ["metric"],
 
         "nodes": {
-            "stem": {"operation": {"type": "_cell", "parameters": {}, "cell_name": "stem"}},
-            "flatten": {"operation": {"type": "Flatten", "parameters": {}}},
-            "fc1": {"operation": {"type": "Dense", "parameters": {"units": 1024, "activation": "relu"}}},
-            "fc2": {"operation": {"type": "Dense", "parameters": {"units": 10}}},
-            "softmax": {"operation": {"type": "Softmax", "parameters": {}}}
+            "stem": {"operation": {"type": "_cell", "parameters": {}, "attributes": {}, "cell_name": "stem"}},
+            "flatten": {"operation": {"type": "Flatten", "parameters": {}, "attributes": {}}},
+            "fc1": {"operation": {"type": "Dense", "parameters": {"units": 1024, "activation": "relu"}, "attributes": {}}},
+            "fc2": {"operation": {"type": "Dense", "parameters": {"units": 10}, "attributes": {}}},
+            "softmax": {"operation": {"type": "Softmax", "parameters": {}, "attributes": {}}}
         },
 
         "edges": [
@@ -23,10 +23,10 @@
 
     "stem": {
         "nodes": {
-            "conv1": {"operation": {"type": "Conv2D", "parameters": {"filters": 32, "kernel_size": 5, "activation": "relu"}}},
-            "pool1": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}}},
-            "conv2": {"operation": {"type": "Conv2D", "parameters": {"filters": 64, "kernel_size": 5, "activation": "relu"}}},
-            "pool2": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}}}
+            "conv1": {"operation": {"type": "Conv2D", "parameters": {"filters": 32, "kernel_size": 5, "activation": "relu"}, "attributes": {}}},
+            "pool1": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}, "attributes": {}}},
+            "conv2": {"operation": {"type": "Conv2D", "parameters": {"filters": 64, "kernel_size": 5, "activation": "relu"}, "attributes": {}}},
+            "pool2": {"operation": {"type": "MaxPool2D", "parameters": {"pool_size": 2}, "attributes": {}}}
         },
 
         "edges": [
