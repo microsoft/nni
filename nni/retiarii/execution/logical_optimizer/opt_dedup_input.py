@@ -17,6 +17,13 @@ _supported_evaluators = [MultiModelSupervisedLearningModule]
 
 
 class DedupInputNode(AbstractLogicalNode):
+    """
+    This is logical node representing the node for deduplication.
+    In assemble, just return one copy of the original node when multiple models are assembled.
+    These models will share the result of once calculation.
+    """
+
+
     def __init__(self, logical_graph: LogicalGraph, node_id: int,
                  nodes_to_dedup: List[Node], _internal=False):
         super().__init__(logical_graph, node_id,

@@ -9,7 +9,7 @@ import time
 import threading
 from typing import Iterable, List, Dict, Tuple
 
-from nni.common.device import GPUDevice
+from nni.common.device import GPUDevice, Device
 from .interface import AbstractExecutionEngine, AbstractGraphListener, WorkerInfo
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Node
@@ -33,9 +33,8 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
     Parameters
     ----------
-    devices : List[str] or List[GPUDevice]
+    devices : List[Device]
         Available devices for execution.
-        If a list of str is provided, it will build a list of GPUDevice in a server named ``single_server``
     max_concurrency : int
         The maximum number of trials to run concurrently.
     batch_waiting_time: int
@@ -43,14 +42,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         The trials within one batch could apply cross-graph optimization.
     """
 
-    def __init__(self, devices: List[GPUDevice] = None,
+    def __init__(self, devices: List[Device] = None,
                  max_concurrency: int = None,
                  batch_waiting_time: int = 60,
                  ) -> None:
         self._listeners: List[AbstractGraphListener] = []
         self._running_models: Dict[int, Model] = dict()
         self.logical_plan_counter = 0
-        self.available_devices: List[GPUDevice] = []
+        self.available_devices: List[Device] = []
         self.max_concurrency: int = max_concurrency
         for device in devices:
             self.available_devices.append(device)
@@ -61,7 +60,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         self._original_models = {}
         self._original_model_to_multi_model = {}
         self._trial_to_original_models = {}
-        self._trial_used_devices: Dict[int, List[GPUDevice]] = {}
+        self._trial_used_devices: Dict[int, List[Device]] = {}
 
         self._history: List[Model] = []
 
@@ -110,6 +109,15 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 self._queue_lock.release()
             time.sleep(1)
 
+    def _extract_placement_constaint(self, placement_mapping: Dict[Node, Device]):
+        unique_gpus = sorted(list(set([ e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
+        placement_constraint = None
+        if len(unique_gpus) > 0:
+            placement_constraint = {}
+            placement_constraint['type'] = 'Device'
+            placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
+        return placement_constraint
+
     def _submit_models_in_batch(self, *models: List[Model]) -> None:
         _logger.info('%d models are submitted in batch', len(models))
         logical = self._build_logical(models)
@@ -120,9 +128,10 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
             data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
-            trial_id = send_trial(data.dump())
+            placement_constraint = self._extract_placement_constaint(placement)
+            trial_id = send_trial(data.dump(), placement_constraint=placement_constraint)
             # unique non-cpu devices used by the trial
-            self._trial_used_devices[trial_id] = list([_ for _ in set(placement.values()) if isinstance(_, GPUDevice)])
+            self._trial_used_devices[trial_id] = list(set([_ for _ in placement.values() if isinstance(_, GPUDevice)]))
 
             # currently, it is impossible for search strategy to submit models more than the number of available devices
             for used_device in self._trial_used_devices[trial_id]:
@@ -139,14 +148,18 @@ class CGOExecutionEngine(AbstractExecutionEngine):
     def list_models(self) -> Iterable[Model]:
         return self._history
 
-    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, Dict[Node, GPUDevice], List[Model]]]:
+    def _assemble(self, logical_plan: LogicalPlan) -> List[Tuple[Model, Dict[Node, Device], List[Model]]]:
+        """
+        Return the assembled models as a list of tuple.
+        Each tuple contains the assembled model, the device placement of graph nodes, and the original models.
+        """
         # try to use the available_devices first so that it can be launched as early as possible
         # if free devices are not enough to assemble all models in one trial, try all devices
         if len(self.available_devices) > 0:
-            grouped_models: List[Dict[Model, GPUDevice]] = AssemblePolicy().group(logical_plan, self.available_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.available_devices)
 
         if len(self.available_devices) == 0 or len(grouped_models) > 1:
-            grouped_models: List[Dict[Model, GPUDevice]] = AssemblePolicy().group(logical_plan, self.all_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.all_devices)
 
         phy_models_and_placements = []
         for multi_model in grouped_models:
@@ -256,17 +269,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         os.remove(file_name)
 
 
-def _remap_cuda_device(group_model: Dict[Model, GPUDevice]):
-    used_devices = {}
-    for m in group_model:
-        if group_model[m].node_id not in used_devices:
-            used_devices[group_model[m].node_id] = {}
-        if isinstance(group_model[m], GPUDevice):
-            if group_model[m].gpu_id not in used_devices[group_model[m].node_id]:
-                n_used_gpu_in_server = len(used_devices[group_model[m].node_id])
-                used_devices[group_model[m].node_id][group_model[m].gpu_id] = n_used_gpu_in_server
-            group_model[m].gpu_id = used_devices[group_model[m].node_id][group_model[m].gpu_id]
-    return group_model
+
 
 
 class AssemblePolicy:
@@ -282,7 +285,7 @@ class AssemblePolicy:
 
     @staticmethod
     def _check_graph_connectivity(model: Model,
-                                  group_model: Dict[Model, GPUDevice],
+                                  group_model: Dict[Model, Device],
                                   logical_plan: LogicalPlan) -> bool:
         for edge in logical_plan.logical_graph.edges:
             if AssemblePolicy._is_related_node(model, edge.head) or \
@@ -294,7 +297,7 @@ class AssemblePolicy:
         return False
 
     @staticmethod
-    def _check_evaluator(new_model: Model, group_model: Dict[Model, GPUDevice]) -> bool:
+    def _check_evaluator(new_model: Model, group_model: Dict[Model, Device]) -> bool:
         if not (isinstance(new_model.evaluator, Lightning)
                 and isinstance(new_model.evaluator.module, MultiModelSupervisedLearningModule)):
             return False
@@ -318,11 +321,11 @@ class AssemblePolicy:
             if len(group_model) > 0 and \
                 (AssemblePolicy._check_graph_connectivity(m, group_model, logical_plan) == False or
                     AssemblePolicy._check_evaluator(m, group_model) == False):
-                all_grouped_models.append(_remap_cuda_device(group_model))
+                all_grouped_models.append(group_model)
                 group_model = {}
             group_model[m] = available_devices[idx % len(available_devices)]
             if len(group_model) == len(available_devices) or \
                     idx == len(logical_plan.models) - 1:
-                all_grouped_models.append(_remap_cuda_device(group_model))
+                all_grouped_models.append(group_model)
                 group_model = {}
         return all_grouped_models
