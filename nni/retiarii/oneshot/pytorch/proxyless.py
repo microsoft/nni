@@ -331,7 +331,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
         logits = self.model(X)
         loss = self.loss(logits, y)
         return logits, loss
-    
+
     def _export_latency(self):
         current_architecture = {}
         for module_name, module in self.nas_modules:
