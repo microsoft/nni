@@ -73,6 +73,16 @@ def main():
         'op_names': ['fc1', 'fc2'],
     }]
 
+    # you can also set the quantization dtype and scheme layer-wise through configure_list like:
+    # configure_list = [{
+    #         'quant_types': ['weight', 'input'],
+    #         'quant_bits': {'weight': 8, 'input': 8},
+    #         'op_names': ['conv1', 'conv2'],
+    #         'quant_dtype': 'int',
+    #         'quant_scheme': 'per_channel_symmetric'
+    #       }]
+    # For now quant_dtype's options are 'int' and 'uint. And quant_scheme's options are per_tensor_affine,
+    # per_tensor_symmetric, per_channel_affine and per_channel_symmetric.
     set_quant_scheme_dtype('weight', 'per_channel_symmetric', 'int')
     set_quant_scheme_dtype('output', 'per_tensor_symmetric', 'int')
     set_quant_scheme_dtype('input', 'per_tensor_symmetric', 'int')

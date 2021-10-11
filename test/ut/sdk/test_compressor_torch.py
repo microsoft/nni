@@ -9,6 +9,7 @@ import torch.nn.functional as F
 import schema
 import nni.algorithms.compression.pytorch.pruning as torch_pruner
 import nni.algorithms.compression.pytorch.quantization as torch_quantizer
+from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape
 import math
 
 
@@ -332,6 +333,61 @@ class CompressorTestCase(TestCase):
             self.assertFalse(isinstance(model.conv2.module.weight, torch.nn.Parameter))
             self.assertFalse(isinstance(model.fc1.module.weight, torch.nn.Parameter))
             self.assertFalse(isinstance(model.fc2.module.weight, torch.nn.Parameter))
+
+    def test_quantization_dtype_scheme(self):
+        dtypes = ['int', 'uint']
+        qschemes = ['per_tensor_affine', 'per_tensor_symmetric', 'per_channel_affine', 'per_channel_symmetric']
+        for dtype1 in dtypes:
+            for dtype2 in dtypes:
+                for qscheme1 in qschemes:
+                    for qscheme2 in qschemes:
+                        config_list = [{
+                            'quant_types': ['weight', 'input'],
+                            'quant_bits': 8,
+                            'op_types': ['Conv2d'],
+                            'quant_dtype': dtype1,
+                            'quant_scheme': qscheme1
+                        },{
+                            'quant_types': ['weight', 'input'],
+                            'quant_bits': 8,
+                            'op_types': ['Linear'],
+                            'quant_dtype': dtype2,
+                            'quant_scheme': qscheme2
+                        }]
+                        model = TorchModel()
+                        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+                        dummy = torch.randn(1, 1, 28, 28)
+                        # only QAT_quantizer is supported for now
+                        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy)
+
+                        # test layer setting
+                        for layer, config in quantizer.modules_to_compress:
+                            module = layer.module
+                            name = layer.name
+                            layer_setting = module.layer_quant_setting
+                            dtype = dtype1 if isinstance(module, torch.nn.Conv2d) else dtype2
+                            qscheme = qscheme1 if isinstance(module, torch.nn.Conv2d) else qscheme2
+                            qmin, qmax = calculate_qmin_qmax(8, dtype)
+                            all_quant_types = ['input', 'weight']
+
+                            for quant_type in all_quant_types:
+                                tensor_setting = getattr(layer_setting, quant_type)
+                                self.assertTrue(tensor_setting is not None)
+                                self.assertTrue(tensor_setting.quant_scheme == qscheme)
+                                self.assertTrue(tensor_setting.quant_dtype == dtype)
+                                self.assertTrue(tensor_setting.qmin == qmin)
+                                self.assertTrue(tensor_setting.qmax == qmax)
+
+                                input_shape, output_shape = quantizer.all_shapes[name]
+
+                                shape = input_shape if quant_type == 'input' else module.weight.shape
+                                quant_shape = get_quant_shape(shape, quant_type, qscheme)
+                                scale_name = quant_type + '_scale'
+                                zero_point_name = quant_type + '_zero_point'
+                                scale = getattr(module, scale_name)
+                                zero_point = getattr(module, zero_point_name)
+                                self.assertTrue(list(scale.shape) == quant_shape)
+                                self.assertTrue(list(zero_point.shape) == quant_shape)
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
