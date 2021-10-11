@@ -11,7 +11,7 @@ def calculate_qmin_qmax(bits, dtype):
     elif dtype == QuantDtype.UINT:
         qmin, qmax = 0, 2 ** bits - 1
     else:
-        qmin, qmax = None, None
+        raise TypeError("Wrong quantization dtype, please make sure it is one of 'int' and 'uint'.")
     return qmin, qmax
 
 
