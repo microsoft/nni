@@ -212,28 +212,6 @@ class Model:
         else:
             return None
 
-    def get_node_by_python_name(self, python_name: str) -> 'Node':
-        """
-        Traverse all the nodes to find the matched node with the given python_name.
-        """
-        matched_nodes = []
-        for graph in self.graphs.values():
-            nodes = graph.get_nodes_by_python_name(python_name)
-            matched_nodes.extend(nodes)
-        # assert len(matched_nodes) <= 1
-        if matched_nodes:
-            return matched_nodes[0]
-        else:
-            return None
-
-    def get_cell_nodes(self) -> List['Node']:
-        matched_nodes = []
-        for graph in self.graphs.values():
-            nodes = [node for node in graph.nodes if isinstance(node.operation, Cell)]
-            matched_nodes.extend(nodes)
-        # assert len(matched_nodes) <= 1
-        return matched_nodes
-
 
 class ModelStatus(Enum):
     """
@@ -297,7 +275,6 @@ class Graph:
         self.model: Model = model
         self.id: int = graph_id
         self.name: str = name or f'_generated_{graph_id}'
-        self.python_name: Optional[str] = None
 
         self.input_node: Node = Node(self, _InputPseudoUid, '_inputs', _IOPseudoOperation('_inputs'), _internal=True)
         self.output_node: Node = Node(self, _OutputPseudoUid, '_outputs', _IOPseudoOperation('_outputs'), _internal=True)
@@ -371,13 +348,6 @@ class Graph:
         found = [node for node in self.nodes if node.name == name]
         return found[0] if found else None
 
-    def get_node_by_python_name(self, python_name: str) -> Optional['Node']:
-        """
-        Returns the node which has specified python_name; or returns `None` if no node has this python_name.
-        """
-        found = [node for node in self.nodes if node.python_name == python_name]
-        return found[0] if found else None
-
     def get_nodes_by_type(self, operation_type: str) -> List['Node']:
         """
         Returns nodes whose operation is specified typed.
@@ -396,9 +366,6 @@ class Graph:
 
     def get_nodes_by_name(self, name: str) -> List['Node']:
         return [node for node in self.hidden_nodes if node.name == name]
-
-    def get_nodes_by_python_name(self, python_name: str) -> Optional['Node']:
-        return [node for node in self.nodes if node.python_name == python_name]
 
     def topo_sort(self) -> List['Node']:
         node_to_fanin = {}
@@ -449,11 +416,9 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
-        new_graph.python_name = self.python_name
 
         for node in self.hidden_nodes:
             new_node = Node(new_graph, node.id, node.name, node.operation, _internal=True)
-            new_node.python_name = node.python_name
             new_node.update_label(node.label)
             new_node._register()
 
@@ -474,13 +439,11 @@ class Graph:
         new_graph.output_node.operation.io_names = self.output_node.operation.io_names
         new_graph.input_node.update_label(self.input_node.label)
         new_graph.output_node.update_label(self.output_node.label)
-        new_graph.python_name = self.python_name
 
         id_to_new_node = {}  # old node ID -> new node object
 
         for old_node in self.hidden_nodes:
             new_node = Node(new_graph, uid(), None, old_node.operation, _internal=True)._register()
-            new_node.python_name = old_node.python_name
             new_node.update_label(old_node.label)
             id_to_new_node[old_node.id] = new_node
 
@@ -544,8 +507,6 @@ class Node:
         If two models have nodes with same ID, they are semantically the same node.
     name
         Mnemonic name. It should have an one-to-one mapping with ID.
-    python_name
-        The name of torch.nn.Module, should have one-to-one mapping with items in python model
     label
         Optional. If two nodes have the same label, they are considered same by the mutator.
     operation
@@ -567,14 +528,13 @@ class Node:
         self.graph: Graph = graph
         self.id: int = node_id
         self.name: str = name or f'_generated_{node_id}'
-        self.python_name: Optional[str] = None
         # TODO: the operation is likely to be considered editable by end-user and it will be hard to debug
         # maybe we should copy it here or make Operation class immutable, in next release
         self.operation: Operation = operation
         self.label: Optional[str] = None
 
     def __repr__(self):
-        return f'Node(id={self.id}, name={self.name}, python_name={self.python_name}, label={self.label}, operation={self.operation})'
+        return f'Node(id={self.id}, name={self.name}, label={self.label}, operation={self.operation})'
 
     @property
     def predecessors(self) -> List['Node']:
@@ -657,10 +617,7 @@ class Node:
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:
             ret['label'] = self.label
-        if self.python_name is not None:
-            ret['python_name'] = self.python_name
         return ret
-
 
 
 class Edge:
