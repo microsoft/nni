@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { delay } from "../../../common/utils";
+import { delay } from "common/utils";
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { CommandChannel, RunnerConnection } from "../commandChannel";
 import { Channel, EnvironmentInformation } from "../environment";

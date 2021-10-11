@@ -1,0 +1,13 @@
+trialCommand: python trial.py
+trialGpuNumber: 0
+trialConcurrency: 1
+maxTrialNumber: 10
+maxExperimentDuration: 1h
+searchSpace: {}  # hard-coded in tuner
+tuner:
+  className: customer_tuner.CustomerTuner
+  codeDirectory: ../../tuners/ga_customer_tuner
+  classArgs:
+    optimize_mode: maximize
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local

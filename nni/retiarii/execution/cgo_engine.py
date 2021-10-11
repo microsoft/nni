@@ -137,41 +137,14 @@ class CGOExecutionEngine(AbstractExecutionEngine):
                 self._queue_lock.release()
             time.sleep(1)
 
-    def _run_trial(self, trial_sub: TrialSubmission):
-        placement_constraint, required_gpus = self._extract_placement_constaint(trial_sub.placement)
-        is_runnable = all([_ in self.available_devices for _ in required_gpus])
-        assert(is_runnable)
-        graph_data = BaseGraphData(codegen.model_to_pytorch_script(trial_sub.model,
-                                                                   placement=trial_sub.placement),
-                                   trial_sub.model.evaluator)
-        trial_id = send_trial(graph_data.dump(),
-                              placement_constraint=placement_constraint)
-
-        _logger.info("a trial of %d models is sent", len(trial_sub.grouped_models))
-
-        self._trial_used_devices[trial_id] = required_gpus.copy()
-
-        for d in required_gpus:
-            self.available_devices.remove(d)
-
-        self._running_models[trial_id] = trial_sub.model
-
-        self._trial_to_original_models[trial_id] = []
-        for m in trial_sub.grouped_models:
-            self._original_models[m.model_id] = m
-            self._original_model_to_multi_model[m.model_id] = trial_sub.model
-            self._trial_to_original_models[trial_id].append(m.model_id)
-            if m not in self._history:
-                self._history.append(m)
-
     def _extract_placement_constaint(self, placement_mapping: Dict[Node, Device]):
         unique_gpus = sorted(list(set([e for e in placement_mapping.values() if isinstance(e, GPUDevice)])))
         placement_constraint = None
-        assert len(unique_gpus) > 0  # each trial must use GPU
-        placement_constraint = {}
-        placement_constraint['type'] = 'Device'
-        placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
-        return placement_constraint, unique_gpus
+        if len(unique_gpus) > 0:
+            placement_constraint = {}
+            placement_constraint['type'] = 'Device'
+            placement_constraint['gpus'] = [(e.node_id, e.gpu_id) for e in unique_gpus]
+        return placement_constraint
 
     def _submit_models_in_batch(self, *models: List[Model]) -> None:
         _logger.info('%d models are submitted in batch', len(models))
@@ -183,7 +156,23 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
-            self._run_trial(TrialSubmission(model, placement, grouped_models))
+            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
+            placement_constraint = self._extract_placement_constaint(placement)
+            trial_id = send_trial(data.dump(), placement_constraint=placement_constraint)
+            # unique non-cpu devices used by the trial
+            self._trial_used_devices[trial_id] = list(set([_ for _ in placement.values() if isinstance(_, GPUDevice)]))
+
+            # currently, it is impossible for search strategy to submit models more than the number of available devices
+            for used_device in self._trial_used_devices[trial_id]:
+                self.available_devices.remove(used_device)  # used_device must be in self.available_devices
+            self._running_models[trial_id] = model
+
+            self._trial_to_original_models[trial_id] = []
+            for m in grouped_models:
+                self._original_models[m.model_id] = m
+                self._original_model_to_multi_model[m.model_id] = model
+                self._trial_to_original_models[trial_id].append(m.model_id)
+                self._history.append(m)
 
     def list_models(self) -> Iterable[Model]:
         return self._history
@@ -196,10 +185,10 @@ class CGOExecutionEngine(AbstractExecutionEngine):
         # try to use the available_devices first so that it can be launched as early as possible
         # if free devices are not enough to assemble all models in one trial, try all devices
         if len(self.available_devices) > 0:
-            grouped_models: List[Dict[Model, Device]] = AssemblePolicy.group(logical_plan, self.available_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.available_devices)
 
         if len(self.available_devices) == 0 or len(grouped_models) > 1:
-            grouped_models: List[Dict[Model, Device]] = AssemblePolicy.group(logical_plan, self.all_devices)
+            grouped_models: List[Dict[Model, Device]] = AssemblePolicy().group(logical_plan, self.all_devices)
 
         phy_models_and_placements = []
         for multi_model in grouped_models:

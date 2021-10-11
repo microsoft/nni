@@ -1,10 +1,11 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from copy import deepcopy
 import logging
 from typing import List, Dict, Tuple, Callable, Optional
 
-from schema import And, Optional as SchemaOptional
+from schema import And, Or, Optional as SchemaOptional
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -12,7 +13,8 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils.config_validation import PrunerSchema
+from nni.algorithms.compression.v2.pytorch.utils.config_validation import CompressorSchema
+from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
 
 from .tools import (
     DataCollector,
@@ -43,26 +45,50 @@ _logger = logging.getLogger(__name__)
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
            'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
 
+NORMAL_SCHEMA = {
+    Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
+}
 
-class OneShotPruner(Pruner):
+GLOBAL_SCHEMA = {
+    'total_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n <= 1),
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
+}
+
+EXCLUDE_SCHEMA = {
+    'exclude': bool,
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
+}
+
+INTERNAL_SCHEMA = {
+    'total_sparsity': And(float, lambda n: 0 <= n < 1),
+    SchemaOptional('max_sparsity_per_layer'): {str: float},
+    SchemaOptional('op_types'): [str],
+    SchemaOptional('op_names'): [str]
+}
+
+
+class BasicPruner(Pruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         self.data_collector: DataCollector = None
         self.metrics_calculator: MetricsCalculator = None
         self.sparsity_allocator: SparsityAllocator = None
-        self._convert_config_list(config_list)
 
         super().__init__(model, config_list)
 
-    def _convert_config_list(self, config_list: List[Dict]):
-        """
-        Convert `sparsity` in config to `sparsity_per_layer`.
-        """
-        for config in config_list:
-            if 'sparsity' in config:
-                if 'sparsity_per_layer' in config:
-                    raise ValueError("'sparsity' and 'sparsity_per_layer' have the same semantics, can not set both in one config.")
-                else:
-                    config['sparsity_per_layer'] = config.pop('sparsity')
+    def validate_config(self, model: Module, config_list: List[Dict]):
+        self._validate_config_before_canonical(model, config_list)
+        self.config_list = config_list_canonical(model, config_list)
+
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        pass
 
     def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         super().reset(model=model, config_list=config_list)
@@ -97,7 +123,7 @@ class OneShotPruner(Pruner):
         return self.bound_model, masks
 
 
-class LevelPruner(OneShotPruner):
+class LevelPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict]):
         """
         Parameters
@@ -110,19 +136,14 @@ class LevelPruner(OneShotPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         """
-        self.mode = 'normal'
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): [str],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
-
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
 
     def reset_tools(self):
@@ -136,7 +157,7 @@ class LevelPruner(OneShotPruner):
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
 
-class NormPruner(OneShotPruner):
+class NormPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -150,6 +171,7 @@ class NormPruner(OneShotPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         p
             The order of norm.
@@ -171,13 +193,11 @@ class NormPruner(OneShotPruner):
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -211,6 +231,7 @@ class L1NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L1NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -242,6 +263,7 @@ class L2NormPruner(NormPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in L2NormPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -259,7 +281,7 @@ class L2NormPruner(NormPruner):
         super().__init__(model, config_list, 2, mode, dummy_input)
 
 
-class FPGMPruner(OneShotPruner):
+class FPGMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         """
@@ -273,6 +295,7 @@ class FPGMPruner(OneShotPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in FPGMPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         mode
             'normal' or 'dependency_aware'.
@@ -291,13 +314,11 @@ class FPGMPruner(OneShotPruner):
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -317,7 +338,7 @@ class FPGMPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
 
 
-class SlimPruner(OneShotPruner):
+class SlimPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global'):
@@ -335,6 +356,7 @@ class SlimPruner(OneShotPruner):
                 - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
                 - op_types : Only BatchNorm2d is supported in SlimPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -376,15 +398,15 @@ class SlimPruner(OneShotPruner):
         self._scale = scale
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['BatchNorm2d'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        if self.mode == 'global':
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
+        else:
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['BatchNorm2d']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -413,7 +435,7 @@ class SlimPruner(OneShotPruner):
                 raise NotImplementedError('Only support mode `normal` and `global`')
 
 
-class ActivationPruner(OneShotPruner):
+class ActivationPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -428,6 +450,7 @@ class ActivationPruner(OneShotPruner):
                 - sparsity_per_layer : Equals to sparsity.
                 - op_types : Conv2d and Linear are supported in ActivationPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -477,13 +500,11 @@ class ActivationPruner(OneShotPruner):
         self._activation = self._choose_activation(activation)
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
@@ -532,7 +553,7 @@ class ActivationMeanRankPruner(ActivationPruner):
         return MeanRankMetricsCalculator(dim=1)
 
 
-class TaylorFOWeightPruner(OneShotPruner):
+class TaylorFOWeightPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -550,6 +571,7 @@ class TaylorFOWeightPruner(OneShotPruner):
                 - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
                 - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
                 - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
                 - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -603,19 +625,19 @@ class TaylorFOWeightPruner(OneShotPruner):
         self.training_batches = training_batches
         super().__init__(model, config_list)
 
-    def validate_config(self, model: Module, config_list: List[Dict]):
-        schema = PrunerSchema([{
-            SchemaOptional('sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('total_sparsity'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n < 1),
-            SchemaOptional('op_types'): ['Conv2d', 'Linear'],
-            SchemaOptional('op_names'): [str],
-            SchemaOptional('exclude'): bool
-        }], model, _logger)
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        if self.mode == 'global':
+            schema_list.append(deepcopy(GLOBAL_SCHEMA))
+        else:
+            schema_list.append(deepcopy(NORMAL_SCHEMA))
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
 
         schema.validate(config_list)
 
-    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Module, Tensor, Tensor], None]:
+    def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
         def collect_taylor(grad: Tensor):
             if len(buffer) < self.training_batches:
                 buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
@@ -643,3 +665,123 @@ class TaylorFOWeightPruner(OneShotPruner):
                 self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
             else:
                 raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
+
+
+class ADMMPruner(BasicPruner):
+    """
+    ADMM (Alternating Direction Method of Multipliers) Pruner is a kind of mathematical optimization technique.
+    The metric used in this pruner is the absolute value of the weight.
+    In each iteration, the weight with small magnitudes will be set to zero.
+    Only in the final iteration, the mask will be generated and apply to model wrapper.
+
+    The original paper refer to: https://arxiv.org/abs/1804.03294.
+    """
+
+    def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
+                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
+        """
+        Parameters
+        ----------
+        model
+            Model to be pruned.
+        config_list
+            Supported keys:
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - rho : Penalty parameters in ADMM algorithm.
+                - op_types : Operation types to prune.
+                - op_names : Operation names to prune.
+                - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+        trainer
+            A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
+
+            Example::
+
+                def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                    training = model.training
+                    model.train(mode=True)
+                    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                    for batch_idx, (data, target) in enumerate(train_loader):
+                        data, target = data.to(device), target.to(device)
+                        optimizer.zero_grad()
+                        output = model(data)
+                        loss = criterion(output, target)
+                        loss.backward()
+                        # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
+                        optimizer.step()
+                    model.train(mode=training)
+        optimizer
+            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
+            so do not use this optimizer in other places.
+        criterion
+            The criterion function used in trainer. Take model output and target value as input, and return the loss.
+        iterations
+            The total iteration number in admm pruning algorithm.
+        training_epochs
+            The epoch number for training model in each iteration.
+        """
+        self.trainer = trainer
+        self.optimizer = optimizer
+        self.criterion = criterion
+        self.iterations = iterations
+        self.training_epochs = training_epochs
+        super().__init__(model, config_list)
+
+        self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
+        self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
+
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for schema in schema_list:
+            schema.update({SchemaOptional('rho'): And(float, lambda n: n > 0)})
+        schema_list.append(deepcopy(EXCLUDE_SCHEMA))
+        schema = CompressorSchema(schema_list, model, _logger)
+        schema.validate(config_list)
+
+    def criterion_patch(self, origin_criterion: Callable[[Tensor, Tensor], Tensor]):
+        def patched_criterion(output: Tensor, target: Tensor):
+            penalty = torch.tensor(0.0).to(output.device)
+            for name, wrapper in self.get_modules_wrapper().items():
+                rho = wrapper.config['rho']
+                penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
+            return origin_criterion(output, target) + penalty
+        return patched_criterion
+
+    def reset_tools(self):
+        if self.data_collector is None:
+            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+                                                                  self.training_epochs, criterion_patch=self.criterion_patch)
+        else:
+            self.data_collector.reset()
+        if self.metrics_calculator is None:
+            self.metrics_calculator = NormMetricsCalculator()
+        if self.sparsity_allocator is None:
+            self.sparsity_allocator = NormalSparsityAllocator(self)
+
+    def compress(self) -> Tuple[Module, Dict]:
+        """
+        Returns
+        -------
+        Tuple[Module, Dict]
+            Return the wrapped model and mask.
+        """
+        for i in range(self.iterations):
+            _logger.info('======= ADMM Iteration %d Start =======', i)
+            data = self.data_collector.collect()
+
+            for name, weight in data.items():
+                self.Z[name] = weight + self.U[name]
+            metrics = self.metrics_calculator.calculate_metrics(self.Z)
+            masks = self.sparsity_allocator.generate_sparsity(metrics)
+
+            for name, mask in masks.items():
+                self.Z[name] = self.Z[name].mul(mask['weight'])
+                self.U[name] = self.U[name] + data[name] - self.Z[name]
+
+        metrics = self.metrics_calculator.calculate_metrics(data)
+        masks = self.sparsity_allocator.generate_sparsity(metrics)
+
+        self.load_masks(masks)
+        return self.bound_model, masks

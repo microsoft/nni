@@ -305,10 +305,37 @@ class CompressorTestCase(TestCase):
         self.assertTrue(calibration_config is not None)
         self.assertTrue(len(calibration_config) == 4)
 
+    def test_torch_quantizer_weight_type(self):
+        quantizer_list = [
+            torch_quantizer.QAT_Quantizer,
+            torch_quantizer.LsqQuantizer,
+            torch_quantizer.ObserverQuantizer,
+            torch_quantizer.NaiveQuantizer,
+            torch_quantizer.DoReFaQuantizer]
+        for quantizer_type in quantizer_list:
+            model = TorchModel().eval()
+            config_list = [{
+                'quant_types': ['weight'],
+                'quant_bits': 8,
+                'op_types': ['Conv2d', 'Linear']
+            }]
+
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            dummy = torch.randn(1, 1, 28, 28)
+            if quantizer_type == torch_quantizer.QAT_Quantizer:
+                quantizer_type(model, config_list, optimizer, dummy_input=dummy)
+            else:
+                quantizer_type(model, config_list, optimizer)
+
+            self.assertFalse(isinstance(model.conv1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.conv2.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc1.module.weight, torch.nn.Parameter))
+            self.assertFalse(isinstance(model.fc2.module.weight, torch.nn.Parameter))
+
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
         config_list = [{
-            'quant_types': ['weight'],
+            'quant_types': ['weight', 'input'],
             'quant_bits': 8,
             'op_types': ['Conv2d', 'Linear']
         }, {
@@ -326,18 +353,24 @@ class CompressorTestCase(TestCase):
         # test quantize
         # range not including 0
         eps = 1e-7
-        input = torch.tensor([[0, 4], [2, 1]]).float()
+        input = torch.tensor([[1, 4], [2, 1]])
         weight = torch.tensor([[1, 2], [3, 5]]).float()
         model.conv2.module.weight.data = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 5 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point == 0
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.04 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         model.conv2.module.weight = weight
         quantizer.quantize_weight(model.conv2, input_tensor=input)
         assert math.isclose(model.conv2.module.scale, 6 / 255, abs_tol=eps)
         assert model.conv2.module.zero_point in (42, 43)
+        quantizer.quantize_input(input, model.conv2)
+        self.assertTrue(torch.allclose(model.conv2.module.scale, torch.tensor([0.0796 / 255])))
+        self.assertTrue(torch.equal(model.conv2.module.zero_point, torch.tensor([0.])))
         # test value of weight and bias after quantization
         weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])
@@ -411,6 +444,35 @@ class CompressorTestCase(TestCase):
 
             calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
             assert calibration_config is not None
+
+    def test_quantizer_load_calibration_config(self):
+        configure_list = [{
+            'quant_types': ['weight', 'input'],
+            'quant_bits': {'weight': 8, 'input': 8},
+            'op_names': ['conv1', 'conv2']
+        }, {
+            'quant_types': ['output', 'weight', 'input'],
+            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
+            'op_names': ['fc1', 'fc2'],
+        }]
+        quantize_algorithm_set = [torch_quantizer.ObserverQuantizer, torch_quantizer.QAT_Quantizer, torch_quantizer.LsqQuantizer]
+        calibration_config = None
+        for quantize_algorithm in quantize_algorithm_set:
+            model = TorchModel().eval()
+            model.relu = torch.nn.ReLU()
+            optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+            quantizer = quantize_algorithm(model, configure_list, optimizer)
+            quantizer.compress()
+            if calibration_config is not None:
+                quantizer.load_calibration_config(calibration_config)
+
+            model_path = "test_model.pth"
+            calibration_path = "test_calibration.pth"
+            onnx_path = "test_model.onnx"
+            input_shape = (1, 1, 28, 28)
+            device = torch.device("cpu")
+
+            calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
 
     def test_torch_pruner_validation(self):
         # test bad configuraiton

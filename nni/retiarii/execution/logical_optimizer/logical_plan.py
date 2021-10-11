@@ -5,22 +5,10 @@ import copy
 from typing import Dict, Tuple, Any
 
 from nni.retiarii.utils import uid
-from nni.common.device import Device
+from nni.common.device import Device, CPUDevice
 
 from ...graph import Cell, Edge, Graph, Model, Node
 from ...operation import Operation, _IOPseudoOperation
-
-
-class CPUDevice(Device):
-    def __init__(self, node_id):
-        self.node_id = node_id
-        self.device = 'cpu'
-
-    def __repr__(self) -> str:
-        return "{CPU Device, NodeID %s, Status %s}" % (self.node_id, self.status)
-
-    def device_repr(self):
-        return "cpu"
 
 
 class AbstractLogicalNode(Node):
@@ -29,6 +17,24 @@ class AbstractLogicalNode(Node):
         self.related_models = []
 
     def assemble(self, multi_model_placement: Dict[Model, Device]) -> Tuple[Node, Device]:
+        """
+        Given a set of models to be formed in a physical model and their device placement,
+        this function replaces the logical node with an executable physical node for the physical model.
+
+        Parameters
+        ----------
+        multi_model_placement : dict
+            a dict of models and device placement.
+            These models will be assembled into the same physical model to run.
+
+        Returns
+        -------
+        node : Node
+            the physical node to replace the logical node in the physical model
+        placement : Device
+            the device placement of the returned physical node
+        """
+
         raise NotImplementedError
 
     def _fork_to(self, graph: Graph):
@@ -88,6 +94,11 @@ class LogicalGraph(Graph):
 
 
 class OriginNode(AbstractLogicalNode):
+    """
+    This is logical node representing the original node without any modification.
+    In assemble, just return the original node along with the physical placement given by multi_model_placement.
+    """
+
     def __init__(self, logical_graph: LogicalGraph,
                  original_graph: Graph, original_node: Node,
                  name: str, operation, _internal=False):
@@ -143,6 +154,25 @@ class LogicalPlan:
 
     def assemble(self, multi_model_placement: Dict[Model, Device]) \
             -> Tuple[Model, Dict[Node, Device]]:
+        """
+        Given a set of models to be formed in a physical model and their device placement,
+        this function replaces all the logical node in this LogicalPlan with executable physical nodes
+        for the physical model.
+
+        Parameters
+        ----------
+        multi_model_placement : dict
+            a dict of models and device placement.
+            These models will be assembled into the same physical model to run.
+
+        Returns
+        -------
+        phy_model : Model
+            the physical model formed by models in `multi_model_placement`
+            all logical node are replaced by physical nodes
+        node_placements : dict
+            the device placement of the nodes in `phy_model`
+        """
         phy_model = Model(_internal=True)
         phy_graph = self.lp_model.root_graph._fork_to(phy_model)
         phy_graph._rename_graph(phy_graph.name, "_model")
@@ -225,6 +255,7 @@ class LogicalPlan:
                 node.remove()
 
         # If two nodes are placed on different devices, use ToDevice op to copy the node
+        # TODO: when copying one node to multiple devices, broadcast is more efficient than P2P communication
         existing_edges = phy_graph.edges.copy()
         # Avoid a node is copied multiple times on the same device
         copied_op: Dict[Tuple(Node, Device), Node] = {}

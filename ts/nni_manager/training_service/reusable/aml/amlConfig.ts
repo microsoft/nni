@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import { TrialConfig } from '../../common/trialConfig';
+import { TrialConfig } from 'training_service/common/trialConfig';
 import { EnvironmentInformation } from '../environment';
 import { AMLClient } from '../aml/amlClient';
 

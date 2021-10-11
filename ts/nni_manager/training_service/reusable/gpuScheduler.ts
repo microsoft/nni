@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { PlacementConstraint } from 'common/trainingService';
-import { getLogger, Logger } from '../../common/log';
-import { randomSelect } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { randomSelect } from 'common/utils';
 import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { EnvironmentInformation } from './environment';
 import { RemoteMachineEnvironmentInformation } from './remote/remoteConfig';
@@ -232,6 +230,7 @@ export class GpuScheduler {
                 assert(false, 'gpuInfos is undefined');
             }
         }
+        return undefined;
     }
 
     /**

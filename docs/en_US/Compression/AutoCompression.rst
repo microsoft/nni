@@ -12,6 +12,9 @@ The main differences are as follows:
 * Need to provide the model to be compressed, and the model should have already been pre-trained.
 * No need to set ``trial_command``, additional need to set ``auto_compress_module`` as ``AutoCompressionExperiment`` input.
 
+.. note::
+    Auto compression only supports TPE Tuner, Random Search Tuner, Anneal Tuner, Evolution Tuner right now.
+
 Generate search space
 ---------------------
 
