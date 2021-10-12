@@ -13,7 +13,7 @@ import torch
 from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils.pruning import (
+from nni.algorithms.compression.v2.pytorch.utils import (
     config_list_canonical,
     compute_sparsity,
     get_model_weights_numel

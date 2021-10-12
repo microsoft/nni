@@ -102,6 +102,7 @@ class AutoMaskInference:
         self.weight_mask = {}
         if weight_mask:
             self.weight_mask.update(weight_mask)
+        self.name = name
         if isinstance(self.module, nn.Module):
             # the function should not has parameters
             # get all the parameter tensors of the target module
@@ -109,7 +110,6 @@ class AutoMaskInference:
                 self.weights[name] = para
                 if name not in self.weight_mask:
                     self.weight_mask[name] = torch.ones_like(para.data)
-        self.name = name
         self.state_dict = state_dict
         # TODO support the other batch dimension in the future
         self.batch_dim = batch_dim

@@ -56,15 +56,16 @@ def _extract_info_from_trace_node(trace_node):
             if shape:
                 output_shape.append(shape)
 
-    parameters = {
+    shape_parameters = {
         'input_shape': input_shape,
         'output_shape': output_shape,
     }
 
     if trace_node.kind() == 'aten::cat':
-        parameters['dim'] = inputs[1].toIValue()
-
-    return parameters
+        parameters = {'dim': inputs[1].toIValue()}
+        return shape_parameters, parameters
+    else:
+        return shape_parameters, None
 
 
 def is_layerchoice_node(ir_node: Node):
@@ -100,7 +101,7 @@ def match_node(ir_model: Model, torch_node, prefix=''):
     graph = ir_model.graphs.get(full_name)
     if graph is not None:
         for node in graph.get_nodes_by_type(torch_node.kind()):
-            if not node.operation.parameters['input_shape']:
+            if not node.operation.attributes['input_shape']:
                 return node
         return None
     else:
@@ -108,4 +109,4 @@ def match_node(ir_model: Model, torch_node, prefix=''):
 
 
 def _without_shape_info(node: Node):
-    return not node.operation.parameters['input_shape'] and not node.operation.parameters['output_shape']
+    return not node.operation.attributes['input_shape'] and not node.operation.attributes['output_shape']
