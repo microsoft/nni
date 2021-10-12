@@ -192,7 +192,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
             const taskRole: any = this.generateTaskRoleConfig(
                 trialWorkingFolder,
                 this.config.taskRoles[index].dockerImage,
-                `run_${this.config.taskRoles[index].name}.sh`,
+                `run.sh`,
                 podResources[index],
                 containerPort,
                 await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
