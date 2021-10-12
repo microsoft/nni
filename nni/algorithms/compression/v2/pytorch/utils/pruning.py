@@ -38,6 +38,12 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                 config['sparsity_per_layer'] = config.pop('sparsity')
 
     for config in config_list:
+        if 'op_types' in config:
+            if 'default' in config['op_types']:
+                from ..base.compressor import weighted_modules
+                config['op_types'] = weighted_modules
+
+    for config in config_list:
         if 'op_partial_names' in config:
             op_names = []
             for partial_name in config['op_partial_names']:
