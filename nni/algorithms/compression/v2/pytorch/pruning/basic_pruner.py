@@ -13,8 +13,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils.config_validation import CompressorSchema
-from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical
 
 from .tools import (
     DataCollector,
@@ -48,20 +47,23 @@ __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPru
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 GLOBAL_SCHEMA = {
     'total_sparsity': And(float, lambda n: 0 <= n < 1),
     SchemaOptional('max_sparsity_per_layer'): And(float, lambda n: 0 < n <= 1),
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 EXCLUDE_SCHEMA = {
     'exclude': bool,
     SchemaOptional('op_types'): [str],
-    SchemaOptional('op_names'): [str]
+    SchemaOptional('op_names'): [str],
+    SchemaOptional('op_partial_names'): [str]
 }
 
 INTERNAL_SCHEMA = {
@@ -730,7 +732,7 @@ class ADMMPruner(BasicPruner):
         def patched_criterion(output: Tensor, target: Tensor):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
-                rho = wrapper.config['rho']
+                rho = wrapper.config.get('rho', 1e-4)
                 penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
             return origin_criterion(output, target) + penalty
         return patched_criterion

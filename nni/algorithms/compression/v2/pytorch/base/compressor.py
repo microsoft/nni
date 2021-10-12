@@ -3,13 +3,13 @@
 
 import collections
 import logging
-from typing import List, Dict, Optional, OrderedDict, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any
 
 import torch
 from torch.nn import Module
 
 from nni.common.graph_utils import TorchModuleGraph
-from nni.compression.pytorch.utils import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
 
 _logger = logging.getLogger(__name__)
 
@@ -149,7 +149,7 @@ class Compressor:
             return None
         return ret
 
-    def get_modules_wrapper(self) -> OrderedDict[str, Module]:
+    def get_modules_wrapper(self) -> Dict[str, Module]:
         """
         Returns
         -------
