@@ -231,3 +231,32 @@ def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[
             else:
                 model_weights_numel[module_name] = module.weight.data.numel()
     return model_weights_numel, masked_rate
+
+# FIXME: to avoid circular import, copy this function in this place
+def get_module_by_name(model, module_name):
+    """
+    Get a module specified by its module name
+
+    Parameters
+    ----------
+    model : pytorch model
+        the pytorch model from which to get its module
+    module_name : str
+        the name of the required module
+
+    Returns
+    -------
+    module, module
+        the parent module of the required module, the required module
+    """
+    name_list = module_name.split(".")
+    for name in name_list[:-1]:
+        if hasattr(model, name):
+            model = getattr(model, name)
+        else:
+            return None, None
+    if hasattr(model, name_list[-1]):
+        leaf_module = getattr(model, name_list[-1])
+        return model, leaf_module
+    else:
+        return None, None
