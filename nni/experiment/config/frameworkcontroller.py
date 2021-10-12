@@ -26,6 +26,11 @@ class _FrameworkControllerStorageConfig(ConfigBase):
     key_vault_key: Optional[str] = None
 
 @dataclass(init=False)
+class FrameworkAttemptCompletionPolicy(ConfigBase):
+    min_failed_task_count: int
+    min_succeed_task_count: int
+
+@dataclass(init=False)
 class FrameworkControllerRoleConfig(ConfigBase):
     name: str
     docker_image: str = 'msranni/nni:latest'
@@ -34,8 +39,7 @@ class FrameworkControllerRoleConfig(ConfigBase):
     gpu_number: int
     cpu_number: int
     memory_size: str
-    attempt_completion_min_failed_tasks: int
-    attempt_completion_min_succeeded_tasks: int
+    framework_attempt_completion_policy: FrameworkAttemptCompletionPolicy
 
 
 @dataclass(init=False)
