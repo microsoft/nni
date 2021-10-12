@@ -5,7 +5,8 @@ import os
 import numpy as np
 import tqdm
 
-from .model import db, NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
+from nni.nas.benchmarks.utils import load_benchmark
+from .model import NdsTrialConfig, NdsTrialStats, NdsIntermediateStats
 
 
 def inject_item(db, item, proposer, dataset, generator):
@@ -119,6 +120,8 @@ def main():
         'Vanilla_rng2.json',
         'Vanilla_rng3.json'
     ]
+
+    db = load_benchmark('nds')
 
     with db:
         db.create_tables([NdsTrialConfig, NdsTrialStats, NdsIntermediateStats])
