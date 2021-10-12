@@ -198,8 +198,8 @@ class LotteryTicketPruner(IterativePruner):
                                                     origin_config_list=config_list,
                                                     log_dir=log_dir,
                                                     keep_intermediate_result=keep_intermediate_result)
-        pruner = PRUNER_DICT[pruning_algorithm](model, config_list, **pruning_params)
-        super().__init__(None, None, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
+        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=reset_weight)
 
 
