@@ -13,8 +13,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils.config_validation import CompressorSchema
-from nni.algorithms.compression.v2.pytorch.utils.pruning import config_list_canonical
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical
 
 from .tools import (
     DataCollector,
@@ -43,7 +42,7 @@ from .tools import (
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
-           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner']
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner']
 
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
@@ -688,7 +687,7 @@ class ADMMPruner(BasicPruner):
             Supported keys:
                 - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
                 - sparsity_per_layer : Equals to sparsity.
-                - rho : Penalty parameters in ADMM algorithm.
+                - rho : Penalty parameters in ADMM algorithm. Default: 1e-4.
                 - op_types : Operation types to prune.
                 - op_names : Operation names to prune.
                 - op_partial_names: An auxiliary field collecting matched op_names in model, then this will convert to op_names.
@@ -744,7 +743,7 @@ class ADMMPruner(BasicPruner):
         def patched_criterion(output: Tensor, target: Tensor):
             penalty = torch.tensor(0.0).to(output.device)
             for name, wrapper in self.get_modules_wrapper().items():
-                rho = wrapper.config['rho']
+                rho = wrapper.config.get('rho', 1e-4)
                 penalty += (rho / 2) * torch.sqrt(torch.norm(wrapper.module.weight - self.Z[name] + self.U[name]))
             return origin_criterion(output, target) + penalty
         return patched_criterion
