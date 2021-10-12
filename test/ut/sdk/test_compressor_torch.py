@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import schema
 import nni.algorithms.compression.pytorch.pruning as torch_pruner
 import nni.algorithms.compression.pytorch.quantization as torch_quantizer
-from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape
+from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape, get_min_max_value
 import math
 
 
@@ -335,59 +335,128 @@ class CompressorTestCase(TestCase):
             self.assertFalse(isinstance(model.fc2.module.weight, torch.nn.Parameter))
 
     def test_quantization_dtype_scheme(self):
+        class TestModel(torch.nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = torch.nn.Conv2d(1, 2, 3, 1)
+                self.bn1 = torch.nn.BatchNorm2d(2)
+
+            def forward(self, x):
+                x = self.bn1(self.conv1(x))
+                return x
         dtypes = ['int', 'uint']
         qschemes = ['per_tensor_affine', 'per_tensor_symmetric', 'per_channel_affine', 'per_channel_symmetric']
-        for dtype1 in dtypes:
-            for dtype2 in dtypes:
-                for qscheme1 in qschemes:
-                    for qscheme2 in qschemes:
-                        config_list = [{
-                            'quant_types': ['weight', 'input'],
-                            'quant_bits': 8,
-                            'op_types': ['Conv2d'],
-                            'quant_dtype': dtype1,
-                            'quant_scheme': qscheme1
-                        },{
-                            'quant_types': ['weight', 'input'],
-                            'quant_bits': 8,
-                            'op_types': ['Linear'],
-                            'quant_dtype': dtype2,
-                            'quant_scheme': qscheme2
-                        }]
-                        model = TorchModel()
-                        optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
-                        dummy = torch.randn(1, 1, 28, 28)
-                        # only QAT_quantizer is supported for now
-                        quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy)
+        for dtype in dtypes:
+            for qscheme in qschemes:
+                config_list = [{
+                    'quant_types': ['weight', 'input'],
+                    'quant_bits': 8,
+                    'op_types': ['Conv2d'],
+                    'quant_dtype': dtype,
+                    'quant_scheme': qscheme
+                }]
+                model = TestModel()
+                optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.5)
+                # only QAT_quantizer is supported for now
+                dummy = torch.randn(1, 1, 4, 4)
+                quantizer = torch_quantizer.QAT_Quantizer(model, config_list, optimizer, dummy_input=dummy)
 
-                        # test layer setting
-                        for layer, config in quantizer.modules_to_compress:
-                            module = layer.module
-                            name = layer.name
-                            layer_setting = module.layer_quant_setting
-                            dtype = dtype1 if isinstance(module, torch.nn.Conv2d) else dtype2
-                            qscheme = qscheme1 if isinstance(module, torch.nn.Conv2d) else qscheme2
-                            qmin, qmax = calculate_qmin_qmax(8, dtype)
-                            all_quant_types = ['input', 'weight']
+                # test layer setting
+                for layer, config in quantizer.modules_to_compress:
+                    module = layer.module
+                    name = layer.name
+                    layer_setting = module.layer_quant_setting
+                    qmin, qmax = calculate_qmin_qmax(8, dtype)
+                    all_quant_types = ['input', 'weight']
+                    for quant_type in all_quant_types:
+                        # check for settings
+                        tensor_setting = getattr(layer_setting, quant_type)
+                        self.assertTrue(tensor_setting is not None)
+                        self.assertTrue(tensor_setting.quant_scheme == qscheme)
+                        self.assertTrue(tensor_setting.quant_dtype == dtype)
+                        self.assertTrue(tensor_setting.qmin == qmin)
+                        self.assertTrue(tensor_setting.qmax == qmax)
 
-                            for quant_type in all_quant_types:
-                                tensor_setting = getattr(layer_setting, quant_type)
-                                self.assertTrue(tensor_setting is not None)
-                                self.assertTrue(tensor_setting.quant_scheme == qscheme)
-                                self.assertTrue(tensor_setting.quant_dtype == dtype)
-                                self.assertTrue(tensor_setting.qmin == qmin)
-                                self.assertTrue(tensor_setting.qmax == qmax)
+                        input_shape, output_shape = quantizer.all_shapes[name]
 
-                                input_shape, output_shape = quantizer.all_shapes[name]
+                        shape = input_shape if quant_type == 'input' else module.weight.shape
+                        quant_shape = get_quant_shape(shape, quant_type, qscheme)
+                        scale_name = quant_type + '_scale'
+                        zero_point_name = quant_type + '_zero_point'
+                        scale = getattr(module, scale_name)
+                        zero_point = getattr(module, zero_point_name)
+                        self.assertTrue(list(scale.shape) == quant_shape)
+                        self.assertTrue(list(zero_point.shape) == quant_shape)
 
-                                shape = input_shape if quant_type == 'input' else module.weight.shape
-                                quant_shape = get_quant_shape(shape, quant_type, qscheme)
-                                scale_name = quant_type + '_scale'
-                                zero_point_name = quant_type + '_zero_point'
-                                scale = getattr(module, scale_name)
-                                zero_point = getattr(module, zero_point_name)
-                                self.assertTrue(list(scale.shape) == quant_shape)
-                                self.assertTrue(list(zero_point.shape) == quant_shape)
+                    weight = torch.arange(start=1, end=19).view(2, 1, 3, 3)
+                    if qscheme == 'per_channel_symmetric':
+                        if dtype == 'int':
+                            target_scale = torch.tensor([9. / 127, 18. / 127]).view([2, 1, 1, 1])
+                            target_zero_point = torch.ones([2, 1, 1, 1]) * 0
+                        else:
+                            target_scale = torch.tensor([9. / 127.5, 18. / 127.5]).view([2, 1, 1, 1])
+                            target_zero_point = torch.ones([2, 1, 1, 1]) * 127
+                    elif qscheme == 'per_tensor_symmetric':
+                        if dtype == 'int':
+                            target_scale = torch.tensor(18. / 127)
+                            target_zero_point = torch.zeros([])
+                        else:
+                            target_scale = torch.tensor(18. / 127.5)
+                            target_zero_point = torch.ones([]) * 127
+                    elif qscheme == 'per_channel_affine':
+                        min_val = torch.tensor([0., 0.]).view([2, 1, 1, 1])
+                        if dtype == 'int':
+                            target_scale = torch.tensor([9. / 254, 18. / 254]).view([2, 1, 1, 1])
+                            target_zero_point = -127 - torch.round(min_val / target_scale)
+                        else:
+                            target_scale = torch.tensor([9. / 255, 18. / 255]).view([2, 1, 1, 1])
+                            target_zero_point = 0 - torch.round(min_val / target_scale)
+                    else:
+                        if dtype == 'int':
+                            target_scale = torch.tensor(18. / 254)
+                            target_zero_point = -127 - torch.round(0 / target_scale)
+                        else:
+                            target_scale = torch.tensor(18. / 255)
+                            target_zero_point = 0 - torch.round(0 / target_scale)
+                    wrapper = getattr(model, name)
+                    wrapper.module.weight = weight
+                    quantizer.quantize_weight(wrapper)
+                    self.assertTrue(torch.equal(getattr(model, name).module.weight_scale, target_scale))
+                    self.assertTrue(torch.equal(getattr(model, name).module.weight_zero_point, target_zero_point))
+
+                    inp = torch.arange(start=0, end=16).view(1, 1, 4, 4)
+                    if qscheme == 'per_channel_symmetric':
+                        if dtype == 'int':
+                            target_scale = torch.tensor([15. / 127]).view([1, 1, 1, 1])
+                            target_zero_point = torch.ones([1, 1, 1, 1]) * 0
+                        else:
+                            target_scale = torch.tensor([15. / 127.5]).view([1, 1, 1, 1])
+                            target_zero_point = torch.ones([1, 1, 1, 1]) * 127
+                    elif qscheme == 'per_tensor_symmetric':
+                        if dtype == 'int':
+                            target_scale = torch.tensor(15. / 127)
+                            target_zero_point = torch.zeros([])
+                        else:
+                            target_scale = torch.tensor(15. / 127.5)
+                            target_zero_point = torch.ones([]) * 127
+                    elif qscheme == 'per_channel_affine':
+                        min_val = torch.tensor([0.]).view([1, 1, 1, 1])
+                        if dtype == 'int':
+                            target_scale = torch.tensor([15. / 254]).view([1, 1, 1, 1])
+                            target_zero_point = -127 - torch.round(min_val / target_scale)
+                        else:
+                            target_scale = torch.tensor([15. / 255]).view([1, 1, 1, 1])
+                            target_zero_point = 0 - torch.round(min_val / target_scale)
+                    else:
+                        if dtype == 'int':
+                            target_scale = torch.tensor(15. / 254)
+                            target_zero_point = -127 - torch.round(0 / target_scale)
+                        else:
+                            target_scale = torch.tensor(15. / 255)
+                            target_zero_point = 0 - torch.round(0 / target_scale)
+                    quantizer.quantize_input(inp, wrapper)
+                    self.assertTrue(torch.equal(getattr(model, name).module.input_scale, target_scale))
+                    self.assertTrue(torch.equal(getattr(model, name).module.input_zero_point, target_zero_point))
 
     def test_torch_QAT_quantizer(self):
         model = TorchModel()
