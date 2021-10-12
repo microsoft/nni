@@ -11,9 +11,8 @@ import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo'
 import { EnvironmentInformation } from '../../environment';
 import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
 import { FrameworkControllerClientFactory } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerApiClient';
-import { FrameworkControllerClusterConfigAzure, FrameworkControllerClusterConfig, FrameworkControllerClusterConfigFactory,
-    FrameworkControllerClusterConfigNFS, FrameworkControllerTrialConfig, FrameworkControllerTrialConfigTemplate,
-    FrameworkControllerClusterConfigPVC} from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
+import { FrameworkControllerClusterConfigAzure, FrameworkControllerJobStatus, FrameworkControllerTrialConfigTemplate,
+     FrameworkControllerJobCompleteStatus } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
 import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
 
 interface FlattenKubeflowConfig extends ExperimentConfig, FrameworkControllerConfig { }
@@ -91,7 +90,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
 
         const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
         environment.command = `cd ${expFolder} && ${environment.command} \
-        1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
+1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
         if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
             environment.useActiveGpu = this.config.deprecated.useActiveGpu;
         }
@@ -312,5 +311,46 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                 spec: spec
             }
         };
+    }
+
+    public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
+        environments.forEach(async (environment) => {
+            if (this.kubernetesCRDClient === undefined) {
+                throw new Error("kubernetesCRDClient undefined")
+            }
+            const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
+            const kubernetesJobInfo = await this.kubernetesCRDClient.getKubernetesJob(kubeflowJobName);
+
+            if (kubernetesJobInfo.status && kubernetesJobInfo.status.state) {
+                const frameworkJobType: FrameworkControllerJobStatus = <FrameworkControllerJobStatus>kubernetesJobInfo.status.state;
+                /* eslint-disable require-atomic-updates */
+                switch (frameworkJobType) {
+                    case 'AttemptCreationPending':
+                    case 'AttemptCreationRequested':
+                    case 'AttemptPreparing':
+                        environment.setStatus('WAITING');
+                        break;
+                    case 'AttemptRunning':
+                        environment.setStatus('RUNNING');
+                        break;
+                    case  'Completed': {
+                        const completedJobType: FrameworkControllerJobCompleteStatus =
+                          <FrameworkControllerJobCompleteStatus>kubernetesJobInfo.status.attemptStatus.completionStatus.type.name;
+                        switch (completedJobType) {
+                            case 'Succeeded':
+                                environment.setStatus('SUCCEEDED');
+                                break;
+                            case 'Failed':
+                                environment.setStatus('FAILED');
+                                break;
+                            default:
+                        }
+                        break;
+                    }
+                    default:
+                }
+                /* eslint-enable require-atomic-updates */
+            }
+        });
     }
 }
