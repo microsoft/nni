@@ -415,13 +415,13 @@ class QAT_Quantizer(Quantizer):
                         layer_quant_setting.input.quant_scheme in PER_CHANNEL_QUANT_SCHEME:
                     if len(input_shape) != 2:
                         logger.warning("When quantize torch.nn.Linear, make sure that the rank of the inputs "
-                                       "of the layer is 2. Skip quantization of layer {}.".format(name))
+                                       "of the layer is 2. Skip quantization of layer %s.", name)
                         continue
                 if "output" in config.get("quant_types", []) and \
                         layer_quant_setting.output.quant_scheme in PER_CHANNEL_QUANT_SCHEME:
                     if len(output_shape) != 2:
                         logger.warning("When quantize torch.nn.Linear, make sure that the rank of the outputs "
-                                       "of the layer is 2. Skip quantization of layer {}.".format(name))
+                                       "of the layer is 2. Skip quantization of layer %s.", name)
                         continue
 
             if "weight" in config.get("quant_types", []):
