@@ -8,7 +8,12 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from nni.algorithms.compression.v2.pytorch.base.compressor import weighted_modules
+weighted_modules = [
+    'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d', 'ConvTranspose2d', 'ConvTranspose3d',
+    'Linear', 'Bilinear',
+    'PReLU',
+    'Embedding', 'EmbeddingBag',
+]
 
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:

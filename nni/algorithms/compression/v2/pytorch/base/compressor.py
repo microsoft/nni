@@ -9,7 +9,7 @@ import torch
 from torch.nn import Module
 
 from nni.common.graph_utils import TorchModuleGraph
-from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.utils.pruning import get_module_by_name, weighted_modules
 
 _logger = logging.getLogger(__name__)
 
@@ -30,14 +30,6 @@ def _setattr(model: Module, name: str, module: Module):
         setattr(parent_module, name_list[-1], module)
     else:
         raise '{} not exist.'.format(name)
-
-
-weighted_modules = [
-    'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d', 'ConvTranspose2d', 'ConvTranspose3d',
-    'Linear', 'Bilinear',
-    'PReLU',
-    'Embedding', 'EmbeddingBag',
-]
 
 
 class Compressor:
