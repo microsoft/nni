@@ -28,6 +28,8 @@ from .tools.task_generator import (
 
 _logger = logging.getLogger(__name__)
 
+__all__ = ['LinearPruner', 'AGPPruner', 'LotteryTicketPruner', 'SimulatedAnnealingPruner']
+
 
 PRUNER_DICT = {
     'level': LevelPruner,
