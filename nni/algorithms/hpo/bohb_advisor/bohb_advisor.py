@@ -4,7 +4,6 @@
 '''
 bohb_advisor.py
 '''
-
 import sys
 import math
 import logging
@@ -12,6 +11,7 @@ import json_tricks
 from schema import Schema, Optional
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
+from ConfigSpace.read_and_write import pcs_new
 
 from nni import ClassArgsValidator
 from nni.runtime.protocol import CommandType, send
@@ -244,6 +244,7 @@ class BOHBClassArgsValidator(ClassArgsValidator):
             Optional('random_fraction'): self.range('random_fraction', float, 0, 9999),
             Optional('bandwidth_factor'): self.range('bandwidth_factor', float, 0, 9999),
             Optional('min_bandwidth'): self.range('min_bandwidth', float, 0, 9999),
+            Optional('config_space'): self.path('config_space')
         }).validate(kwargs)
 
 class BOHB(MsgDispatcherBase):
@@ -297,7 +298,8 @@ class BOHB(MsgDispatcherBase):
                  num_samples=64,
                  random_fraction=1/3,
                  bandwidth_factor=3,
-                 min_bandwidth=1e-3):
+                 min_bandwidth=1e-3,
+                 config_space=None):
         super(BOHB, self).__init__()
         self.optimize_mode = OptimizeMode(optimize_mode)
         self.min_budget = min_budget
@@ -309,6 +311,7 @@ class BOHB(MsgDispatcherBase):
         self.random_fraction = random_fraction
         self.bandwidth_factor = bandwidth_factor
         self.min_bandwidth = min_bandwidth
+        self.config_space = config_space
 
         # all the configs waiting for run
         self.generated_hyper_configs = []
@@ -468,48 +471,56 @@ class BOHB(MsgDispatcherBase):
             search space of this experiment
         """
         search_space = data
-        cs = CS.ConfigurationSpace()
-        for var in search_space:
-            _type = str(search_space[var]["_type"])
-            if _type == 'choice':
-                cs.add_hyperparameter(CSH.CategoricalHyperparameter(
-                    var, choices=search_space[var]["_value"]))
-            elif _type == 'randint':
-                cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
-            elif _type == 'uniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
-            elif _type == 'quniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    q=search_space[var]["_value"][2]))
-            elif _type == 'loguniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    log=True))
-            elif _type == 'qloguniform':
-                cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
-                    var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
-                    q=search_space[var]["_value"][2], log=True))
-            elif _type == 'normal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
-            elif _type == 'qnormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    q=search_space[var]["_value"][3]))
-            elif _type == 'lognormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    log=True))
-            elif _type == 'qlognormal':
-                cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
-                    var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
-                    q=search_space[var]["_value"][3], log=True))
-            else:
-                raise ValueError(
-                    'unrecognized type in search_space, type is {}'.format(_type))
+        cs = None
+        logger.debug(f'Received data: {data}')
+        if self.config_space:
+            logger.info(f'Got a ConfigSpace file path, parsing the search space directly from {self.config_space}. '
+                        'The NNI search space is ignored.')
+            with open(self.config_space, 'r') as fh:
+                cs = pcs_new.read(fh)
+        else:
+            cs = CS.ConfigurationSpace()
+            for var in search_space:
+                _type = str(search_space[var]["_type"])
+                if _type == 'choice':
+                    cs.add_hyperparameter(CSH.CategoricalHyperparameter(
+                        var, choices=search_space[var]["_value"]))
+                elif _type == 'randint':
+                    cs.add_hyperparameter(CSH.UniformIntegerHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1] - 1))
+                elif _type == 'uniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1]))
+                elif _type == 'quniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        q=search_space[var]["_value"][2]))
+                elif _type == 'loguniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        log=True))
+                elif _type == 'qloguniform':
+                    cs.add_hyperparameter(CSH.UniformFloatHyperparameter(
+                        var, lower=search_space[var]["_value"][0], upper=search_space[var]["_value"][1],
+                        q=search_space[var]["_value"][2], log=True))
+                elif _type == 'normal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2]))
+                elif _type == 'qnormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        q=search_space[var]["_value"][3]))
+                elif _type == 'lognormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        log=True))
+                elif _type == 'qlognormal':
+                    cs.add_hyperparameter(CSH.NormalFloatHyperparameter(
+                        var, mu=search_space[var]["_value"][1], sigma=search_space[var]["_value"][2],
+                        q=search_space[var]["_value"][3], log=True))
+                else:
+                    raise ValueError(
+                        'unrecognized type in search_space, type is {}'.format(_type))
 
         self.search_space = cs
 
