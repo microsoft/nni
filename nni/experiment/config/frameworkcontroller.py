@@ -44,6 +44,8 @@ class FrameworkControllerConfig(TrainingServiceConfig):
     service_account_name: str
     storage: _FrameworkControllerStorageConfig
     task_roles: List[FrameworkControllerRoleConfig]
+    reuse_mode: Optional[bool] = True #set reuse mode as true for v2 config
+    service_account_name: str
 
     def __init__(self, **kwargs):
         kwargs = util.case_insensitive(kwargs)
