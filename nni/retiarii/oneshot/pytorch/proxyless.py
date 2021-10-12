@@ -111,6 +111,7 @@ class HardwareLatencyEstimator():
         self.predictor_name = applied_hardware
         self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
         self.block_latency_table = self._form_latency_table(model, dummy_input, dump_lat_table=dump_lat_table)
+        exit()
 
     def _form_latency_table(self, model, dummy_input, dump_lat_table):
         latency_table = {}
@@ -149,11 +150,11 @@ class HardwareLatencyEstimator():
         if dump_lat_table:
             import os, yaml
             os.makedirs(os.path.dirname(dump_lat_table), exist_ok=True)
-            with open(dump_lat_table, 'w') as fp:
-                yaml.dump({
+            with open(dump_lat_table, 'a') as fp:
+                yaml.dump([{
                     "applied_hardware": self.predictor_name,
                     'latency_table': latency_table
-                    }, fp)
+                    }], fp)
         _logger.info("Latency lookup table form done")
 
         return latency_table
