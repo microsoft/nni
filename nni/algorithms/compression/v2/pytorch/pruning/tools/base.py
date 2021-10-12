@@ -452,7 +452,7 @@ class TaskGenerator:
     This class used to generate config list for pruner in each iteration.
     """
     def __init__(self, origin_model: Module, origin_masks: Dict[str, Dict[str, Tensor]] = {},
-                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermidiate_result: bool = False):
+                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------
@@ -465,16 +465,16 @@ class TaskGenerator:
             This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
         log_dir
             The log directory use to saving the task generator log.
-        keep_intermidiate_result
+        keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
         assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
         self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
         self._log_dir_root.mkdir(parents=True, exist_ok=True)
-        self._keep_intermidiate_result = keep_intermidiate_result
-        self._intermidiate_result_dir = Path(self._log_dir_root, 'intermidiate_result')
-        self._intermidiate_result_dir.mkdir(parents=True, exist_ok=True)
+        self._keep_intermediate_result = keep_intermediate_result
+        self._intermediate_result_dir = Path(self._log_dir_root, 'intermediate_result')
+        self._intermediate_result_dir.mkdir(parents=True, exist_ok=True)
 
         # save origin data in {log_dir}/origin
         self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
@@ -540,7 +540,7 @@ class TaskGenerator:
         self._pending_tasks.extend(self.generate_tasks(task_result))
         self._dump_tasks_info()
 
-        if not self._keep_intermidiate_result:
+        if not self._keep_intermediate_result:
             self._tasks[task_id].clean_up()
 
     def next(self) -> Optional[Task]:
