@@ -8,6 +8,8 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+from ..base.compressor import weighted_modules
+
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
     '''
@@ -40,7 +42,6 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
     for config in config_list:
         if 'op_types' in config:
             if 'default' in config['op_types']:
-                from ..base.compressor import weighted_modules
                 config['op_types'] = weighted_modules
 
     for config in config_list:
