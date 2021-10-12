@@ -8,7 +8,7 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
-from ..base.compressor import weighted_modules
+from nni.algorithms.compression.v2.pytorch.base.compressor import weighted_modules
 
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
@@ -233,6 +233,8 @@ def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[
                 model_weights_numel[module_name] = module.weight.data.numel()
     return model_weights_numel, masked_rate
 
+
+# FIXME: to avoid circular import, copy this function in this place
 def get_module_by_name(model, module_name):
     """
     Get a module specified by its module name
