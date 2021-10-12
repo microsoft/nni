@@ -160,157 +160,157 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
     
-        private generateContainerPort(taskRoles: FrameworkControllerTrialConfigTemplate[]): void {
-            if (taskRoles === undefined) {
-                throw new Error('frameworkcontroller trial config is not initialized');
-            }
-    
-            let port: number = 4000; //The default port used in container
-            for (const index of taskRoles.keys()) {
-                this.fcContainerPortMap.set(taskRoles[index].name, port);
-                port += 1;
-            }
+    private generateContainerPort(taskRoles: FrameworkControllerTrialConfigTemplate[]): void {
+        if (taskRoles === undefined) {
+            throw new Error('frameworkcontroller trial config is not initialized');
         }
-    
-        /**
-         * Generate frameworkcontroller resource config file
-         * @param trialJobId trial job id
-         * @param trialWorkingFolder working folder
-         * @param frameworkcontrollerJobName job name
-         * @param podResources  pod template
-         */
-        private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
-            frameworkcontrollerJobName: string, podResources: any): Promise<any> {
-    
-            const taskRoles: any = [];
-            for (const index of this.config.taskRoles.keys()) {
-                const containerPort: number | undefined = this.fcContainerPortMap.get(this.config.taskRoles[index].name);
-                if (containerPort === undefined) {
-                    throw new Error('Container port is not initialized');
-                }
-    
-                const taskRole: any = this.generateTaskRoleConfig(
-                    trialWorkingFolder,
-                    this.config.taskRoles[index].dockerImage,
-                    `run_${this.config.taskRoles[index].name}.sh`,
-                    podResources[index],
-                    containerPort,
-                    await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
-                );
-                taskRoles.push({
-                    name: this.config.taskRoles[index].name,
-                    taskNumber: this.config.taskRoles[index].taskNumber,
-                    frameworkAttemptCompletionPolicy: {
-                        minFailedTaskCount: this.config.taskRoles[index].frameworkAttemptCompletionPolicy.minFailedTaskCount,
-                        minSucceededTaskCount: this.config.taskRoles[index].frameworkAttemptCompletionPolicy.minSucceedTaskCount
-                    },
-                    task: taskRole
-                });
+
+        let port: number = 4000; //The default port used in container
+        for (const index of taskRoles.keys()) {
+            this.fcContainerPortMap.set(taskRoles[index].name, port);
+            port += 1;
+        }
+    }
+
+    /**
+     * Generate frameworkcontroller resource config file
+     * @param trialJobId trial job id
+     * @param trialWorkingFolder working folder
+     * @param frameworkcontrollerJobName job name
+     * @param podResources  pod template
+     */
+    private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
+        frameworkcontrollerJobName: string, podResources: any): Promise<any> {
+
+        const taskRoles: any = [];
+        for (const index of this.config.taskRoles.keys()) {
+            const containerPort: number | undefined = this.fcContainerPortMap.get(this.config.taskRoles[index].name);
+            if (containerPort === undefined) {
+                throw new Error('Container port is not initialized');
             }
-    
-            return Promise.resolve({
-                apiVersion: `frameworkcontroller.microsoft.com/v1`,
-                kind: 'Framework',
-                metadata: {
-                    name: frameworkcontrollerJobName,
-                    namespace: this.config.namespace ? this.config.namespace : "default",
-                    labels: {
-                        app: this.NNI_KUBERNETES_TRIAL_LABEL,
-                        expId: this.experimentId,
-                        trialId: trialJobId
-                    }
+
+            const taskRole: any = this.generateTaskRoleConfig(
+                trialWorkingFolder,
+                this.config.taskRoles[index].dockerImage,
+                `run_${this.config.taskRoles[index].name}.sh`,
+                podResources[index],
+                containerPort,
+                await this.createRegistrySecret(this.config.taskRoles[index].privateRegistryAuthPath)
+            );
+            taskRoles.push({
+                name: this.config.taskRoles[index].name,
+                taskNumber: this.config.taskRoles[index].taskNumber,
+                frameworkAttemptCompletionPolicy: {
+                    minFailedTaskCount: this.config.taskRoles[index].frameworkAttemptCompletionPolicy.minFailedTaskCount,
+                    minSucceededTaskCount: this.config.taskRoles[index].frameworkAttemptCompletionPolicy.minSucceedTaskCount
                 },
-                spec: {
-                    executionType: 'Start',
-                    taskRoles: taskRoles
-                }
+                task: taskRole
             });
         }
-    
-        private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string,
-            podResources: any, containerPort: number, privateRegistrySecretName: string | undefined): any {
-    
-            const volumeSpecMap: Map<string, object> = new Map<string, object>();
-            if (this.config.storage.storageType === 'azureStorage') {
-                volumeSpecMap.set('nniVolumes', [
-                    {
-                        name: 'nni-vol',
-                        azureFile: {
-                            secretName: `${this.azureStorageSecretName}`,
-                            shareName: `${this.azureStorageShare}`,
-                            readonly: false
-                        }
-                    }, {
-                        name: 'frameworkbarrier-volume',
-                        emptyDir: {}
-                    }]);
-            } else {
-                volumeSpecMap.set('nniVolumes', [
-                    {
-                        name: 'nni-vol',
-                        nfs: {
-                            server: `${this.config.storage.server}`,
-                            path: `${this.config.storage.path}`
-                        }
-                    }, {
-                        name: 'frameworkbarrier-volume',
-                        emptyDir: {}
-                    }]);
-            }
-    
-            const containers: any = [
-                {
-                    name: 'framework',
-                    image: replicaImage,
-                    command: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
-                    volumeMounts: [
-                        {
-                            name: 'nni-vol',
-                            mountPath: this.CONTAINER_MOUNT_PATH
-                        }, {
-                            name: 'frameworkbarrier-volume',
-                            mountPath: '/mnt/frameworkbarrier'
-                        }],
-                    resources: podResources,
-                    ports: [{
-                        containerPort: containerPort
-                    }]
-                }];
-    
-            const initContainers: any = [
-                {
-                    name: 'frameworkbarrier',
-                    image: 'frameworkcontroller/frameworkbarrier',
-                    volumeMounts: [
-                        {
-                            name: 'frameworkbarrier-volume',
-                            mountPath: '/mnt/frameworkbarrier'
-                        }]
-                }];
-    
-            const spec: any = {
-                containers: containers,
-                initContainers: initContainers,
-                restartPolicy: 'OnFailure',
-                volumes: volumeSpecMap.get('nniVolumes'),
-                hostNetwork: false
-            };
-            if (privateRegistrySecretName) {
-                spec.imagePullSecrets = [
-                    {
-                        name: privateRegistrySecretName
-                    }
-                ]
-            }
-    
-            if (this.config.serviceAccountName !== undefined) {
-                spec.serviceAccountName = this.config.serviceAccountName;
-            }
-    
-            return {
-                pod: {
-                    spec: spec
+
+        return Promise.resolve({
+            apiVersion: `frameworkcontroller.microsoft.com/v1`,
+            kind: 'Framework',
+            metadata: {
+                name: frameworkcontrollerJobName,
+                namespace: this.config.namespace ? this.config.namespace : "default",
+                labels: {
+                    app: this.NNI_KUBERNETES_TRIAL_LABEL,
+                    expId: this.experimentId,
+                    trialId: trialJobId
                 }
-            };
+            },
+            spec: {
+                executionType: 'Start',
+                taskRoles: taskRoles
+            }
+        });
+    }
+
+    private generateTaskRoleConfig(trialWorkingFolder: string, replicaImage: string, runScriptFile: string,
+        podResources: any, containerPort: number, privateRegistrySecretName: string | undefined): any {
+
+        const volumeSpecMap: Map<string, object> = new Map<string, object>();
+        if (this.config.storage.storageType === 'azureStorage') {
+            volumeSpecMap.set('nniVolumes', [
+                {
+                    name: 'nni-vol',
+                    azureFile: {
+                        secretName: `${this.azureStorageSecretName}`,
+                        shareName: `${this.azureStorageShare}`,
+                        readonly: false
+                    }
+                }, {
+                    name: 'frameworkbarrier-volume',
+                    emptyDir: {}
+                }]);
+        } else {
+            volumeSpecMap.set('nniVolumes', [
+                {
+                    name: 'nni-vol',
+                    nfs: {
+                        server: `${this.config.storage.server}`,
+                        path: `${this.config.storage.path}`
+                    }
+                }, {
+                    name: 'frameworkbarrier-volume',
+                    emptyDir: {}
+                }]);
         }
+
+        const containers: any = [
+            {
+                name: 'framework',
+                image: replicaImage,
+                command: ['sh', `${path.join(trialWorkingFolder, runScriptFile)}`],
+                volumeMounts: [
+                    {
+                        name: 'nni-vol',
+                        mountPath: this.CONTAINER_MOUNT_PATH
+                    }, {
+                        name: 'frameworkbarrier-volume',
+                        mountPath: '/mnt/frameworkbarrier'
+                    }],
+                resources: podResources,
+                ports: [{
+                    containerPort: containerPort
+                }]
+            }];
+
+        const initContainers: any = [
+            {
+                name: 'frameworkbarrier',
+                image: 'frameworkcontroller/frameworkbarrier',
+                volumeMounts: [
+                    {
+                        name: 'frameworkbarrier-volume',
+                        mountPath: '/mnt/frameworkbarrier'
+                    }]
+            }];
+
+        const spec: any = {
+            containers: containers,
+            initContainers: initContainers,
+            restartPolicy: 'OnFailure',
+            volumes: volumeSpecMap.get('nniVolumes'),
+            hostNetwork: false
+        };
+        if (privateRegistrySecretName) {
+            spec.imagePullSecrets = [
+                {
+                    name: privateRegistrySecretName
+                }
+            ]
+        }
+
+        if (this.config.serviceAccountName !== undefined) {
+            spec.serviceAccountName = this.config.serviceAccountName;
+        }
+
+        return {
+            pod: {
+                spec: spec
+            }
+        };
+    }
 }

@@ -11,35 +11,19 @@ from . import util
 __all__ = [
     'FrameworkControllerConfig',
     'FrameworkControllerRoleConfig',
-    'FrameworkControllerNfsConfig',
-    'FrameworkControllerAzureStorageConfig'
+    '_FrameworkControllerStorageConfig'
 ]
 
 
 @dataclass(init=False)
 class _FrameworkControllerStorageConfig(ConfigBase):
-    storage: str
+    storage_type: str
     server: Optional[str] = None
     path: Optional[str] = None
     azure_account: Optional[str] = None
     azure_share: Optional[str] = None
-    key_vault: Optional[str] = None
-    key_vault_secret: Optional[str] = None
-
-@dataclass(init=False)
-class FrameworkControllerNfsConfig(ConfigBase):
-    storage: str = 'nfs'
-    server: str
-    path: str
-
-@dataclass(init=False)
-class FrameworkControllerAzureStorageConfig(ConfigBase):
-    storage: str = 'azureStorage'
-    azure_account: str
-    azure_share: str
-    key_vault: str
-    key_vault_secret: str
-
+    key_vault_name: Optional[str] = None
+    key_vault_key: Optional[str] = None
 
 @dataclass(init=False)
 class FrameworkControllerRoleConfig(ConfigBase):
