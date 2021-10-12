@@ -8,6 +8,7 @@ from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
 from nni.compression.pytorch.compressor import BN_FOLD_TAG, Quantizer, QuantForward, QuantGrad
 from nni.compression.pytorch.quantization.literal import (
+    PER_CHANNEL_QUANT_SCHEME,
     QuantScheme,
     QuantDtype,
     QuantType
@@ -408,6 +409,21 @@ class QAT_Quantizer(Quantizer):
             layer_quant_setting.ema_decay = 0.99
             quant_start_step = config.get('quant_start_step', 0)
             layer_quant_setting.quant_start_step = quant_start_step
+            # todo: support other ranks and remove this check
+            if isinstance(module, torch.nn.Linear):
+                if "input" in config.get("quant_types", []) and \
+                        layer_quant_setting.input.quant_scheme in PER_CHANNEL_QUANT_SCHEME:
+                    if len(input_shape) != 2:
+                        logger.warning("When quantize torch.nn.Linear, make sure that the rank of the inputs "
+                                       "of the layer is 2. Skip quantization of layer {}.".format(name))
+                        continue
+                if "output" in config.get("quant_types", []) and \
+                        layer_quant_setting.output.quant_scheme in PER_CHANNEL_QUANT_SCHEME:
+                    if len(output_shape) != 2:
+                        logger.warning("When quantize torch.nn.Linear, make sure that the rank of the outputs "
+                                       "of the layer is 2. Skip quantization of layer {}.".format(name))
+                        continue
+
             if "weight" in config.get("quant_types", []):
                 quant_shape = get_quant_shape(module.weight.shape, QuantType.WEIGHT, layer_quant_setting.weight.quant_scheme)
                 module.register_buffer('weight_scale', torch.zeros(quant_shape))
@@ -451,6 +467,7 @@ class QAT_Quantizer(Quantizer):
         config_list : list of dict
             List of configurations
         """
+        SUPPORTED_OPS = ['Conv2d', 'Linear', 'ReLU', 'ReLU6']
         schema = QuantizerSchema([{
             Optional('quant_types'): Schema([lambda x: x in ['weight', 'output', 'input']]),
             Optional('quant_bits'): Or(And(int, lambda n: 0 < n < 32), Schema({
@@ -469,7 +486,7 @@ class QAT_Quantizer(Quantizer):
                 Optional('output'): lambda x: x in QuantDtype
             })),
             Optional('quant_start_step'): And(int, lambda n: n >= 0),
-            Optional('op_types'): [str],
+            Optional('op_types'): [And(str, lambda n: n in SUPPORTED_OPS)],
             Optional('op_names'): [str],
             Optional('exclude'): bool
         }], model, logger)

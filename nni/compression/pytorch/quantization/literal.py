@@ -21,6 +21,9 @@ class QuantScheme(str, _QuantLiteralEnum):
     PER_CHANNEL_SYMMETRIC = 'per_channel_symmetric'
 
 
+PER_CHANNEL_QUANT_SCHEME = [QuantScheme.PER_CHANNEL_AFFINE, QuantScheme.PER_CHANNEL_SYMMETRIC]
+
+
 class QuantDtype(str, _QuantLiteralEnum):
     UINT = 'uint'
     INT = 'int'
