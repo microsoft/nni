@@ -84,12 +84,12 @@ if __name__ == '__main__':
 
     # pruner = L1NormPruner(model, config_list)
     # pruner._unwrap_model()
-    # task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermidiate_result=True)
+    # task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
     # pruner._wrap_model()
 
-    # you can specify the log_dir, all intermidiate results and best result will save under this folder.
-    # if you don't want to keep intermidiate results, you can set `keep_intermidiate_result=False`.
-    task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermidiate_result=True)
+    # you can specify the log_dir, all intermediate results and best result will save under this folder.
+    # if you don't want to keep intermediate results, you can set `keep_intermediate_result=False`.
+    task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
     pruner = L1NormPruner(model, config_list)
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
