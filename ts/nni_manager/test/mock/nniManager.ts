@@ -27,10 +27,10 @@ export class MockedNNIManager extends Manager {
             errors: []
         }
     }
-    public updateExperimentProfile(experimentProfile: ExperimentProfile, updateType: ProfileUpdateType): Promise<void> {
+    public updateExperimentProfile(_experimentProfile: ExperimentProfile, _updateType: ProfileUpdateType): Promise<void> {
         return Promise.resolve();
     }
-    public importData(data: string): Promise<void> {
+    public importData(_data: string): Promise<void> {
         return Promise.resolve();
     }
     public getImportedData(): Promise<string[]> {
@@ -53,7 +53,7 @@ export class MockedNNIManager extends Manager {
 
         return deferred.promise;
     }
-    public addCustomizedTrialJob(hyperParams: string): Promise<number> {
+    public addCustomizedTrialJob(_hyperParams: string): Promise<number> {
         return Promise.resolve(99);
     }
 
@@ -61,7 +61,7 @@ export class MockedNNIManager extends Manager {
         return Promise.resolve();
     }
 
-    public submitTrialJob(form: TrialJobApplicationForm): Promise<TrialJobDetail> {
+    public submitTrialJob(_form: TrialJobApplicationForm): Promise<TrialJobDetail> {
         const deferred: Deferred<TrialJobDetail> = new Deferred<TrialJobDetail>();
         const jobDetail: TrialJobDetail = {
             id: '1234',
@@ -82,23 +82,23 @@ export class MockedNNIManager extends Manager {
         return deferred.promise;
     }
 
-    public cancelTrialJobByUser(trialJobId: string): Promise<void> {
+    public cancelTrialJobByUser(_trialJobId: string): Promise<void> {
         return Promise.resolve();
     }
 
-    public getClusterMetadata(key: string): Promise<string> {
+    public getClusterMetadata(_key: string): Promise<string> {
         return Promise.resolve('METAVALUE1');
     }
 
-    public startExperiment(experimentParams: ExperimentConfig): Promise<string> {
+    public startExperiment(_experimentParams: ExperimentConfig): Promise<string> {
         return Promise.resolve('id-1234');
     }
 
-    public setClusterMetadata(key: string, value: string): Promise<void> {
+    public setClusterMetadata(_key: string, _value: string): Promise<void> {
         return Promise.resolve();
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
+    public getTrialJob(_trialJobId: string): Promise<TrialJobInfo> {
         const deferred: Deferred<TrialJobInfo> = new Deferred<TrialJobInfo>();
         const jobInfo: TrialJobInfo = {
             trialJobId: '1234',
@@ -120,16 +120,16 @@ export class MockedNNIManager extends Manager {
     public stopExperimentBottomHalf(): Promise<void> {
         throw new MethodNotImplementedError();
     }
-    public getMetricData(trialJobId: string, metricType: MetricType): Promise<MetricDataRecord[]> {
+    public getMetricData(_trialJobId: string, _metricType: MetricType): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
-    public getMetricDataByRange(minSeqId: number, maxSeqId: number): Promise<MetricDataRecord[]> {
+    public getMetricDataByRange(_minSeqId: number, _maxSeqId: number): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
     public getLatestMetricData(): Promise<MetricDataRecord[]> {
         throw new MethodNotImplementedError();
     }
-    public getTrialFile(trialJobId: string, fileName: string): Promise<string> {
+    public getTrialFile(_trialJobId: string, _fileName: string): Promise<string> {
         throw new MethodNotImplementedError();
     }
     public getExperimentProfile(): Promise<ExperimentProfile> {
@@ -161,7 +161,7 @@ export class MockedNNIManager extends Manager {
 
         return Promise.resolve(profile);
     }
-    public listTrialJobs(status?: TrialJobStatus): Promise<TrialJobInfo[]> {
+    public listTrialJobs(_status?: TrialJobStatus): Promise<TrialJobInfo[]> {
         const job1: TrialJobInfo = {
             trialJobId: '1234',
             status: 'SUCCEEDED',

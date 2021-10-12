@@ -41,7 +41,8 @@ to the official Kubernetes documentation for `further information <https://kuber
 Setup FrameworkController
 -------------------------
 
-Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run>`__ to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. `refer <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset>`__
+Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run>`__ to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. `refer <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset>`__.  
+If the k8s cluster enforces Authorization, you also need to create a ServiceAccount with granted permission for FrameworkController, `refer <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__.  
 
 Design
 ------
@@ -107,6 +108,14 @@ If you use Azure Kubernetes Service, you should  set ``frameworkcontrollerConfig
      azureStorage:
        accountName: {your_storage_account_name}
        azureShare: {your_azure_share_name}
+
+If you set `ServiceAccount <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__ in your k8s, please set ``serviceAccountName`` in your config file: 
+For example:
+
+.. code-block:: yaml
+
+   frameworkcontrollerConfig:
+     serviceAccountName: frameworkcontroller
 
 Note: You should explicitly set ``trainingServicePlatform: frameworkcontroller`` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode.
 

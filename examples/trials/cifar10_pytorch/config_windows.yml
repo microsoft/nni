@@ -1,0 +1,14 @@
+searchSpaceFile: search_space.json
+trialCommand: python main.py
+trialGpuNumber: 1
+trialConcurrency: 4
+maxTrialNumber: 10
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:  # For other platforms, check mnist-pytorch example
+  platform: local
+  maxTrialNumberPerGpu: 2
+  useActiveGpu: false  # NOTE: Use "true" if you are using an OS with graphical interface (e.g. Windows 10, Ubuntu desktop)
+                       # Check the doc for details: https://nni.readthedocs.io/en/latest/reference/experiment_config.html#useactivegpu

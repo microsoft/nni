@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
+import fs from 'fs';
 import { GeneralK8sClient, KubernetesCRDClient } from '../kubernetesApiClient';
 
 /**

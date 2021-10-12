@@ -136,7 +136,7 @@ def trial_keeper_help_info(*args):
 def check_version(args):
     try:
         trial_keeper_version = pkg_resources.get_distribution('nni').version
-    except pkg_resources.ResolutionError as err:
+    except pkg_resources.ResolutionError:
         # package nni does not exist, try nni-tool package
         nni_log(LogType.Error, 'Package nni does not exist!')
         os._exit(1)

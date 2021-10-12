@@ -1,10 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Inject } from 'typescript-ioc';
-import * as component from '../../common/component';
+import * as component from 'common/component';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { KubernetesTrainingService } from './kubernetesTrainingService';
 

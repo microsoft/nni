@@ -1,16 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as cpp from 'child-process-promise';
-import * as path from 'path';
+import cpp from 'child-process-promise';
+import path from 'path';
 
 import { SharedStorageService, SharedStorageType } from '../sharedStorage'
 import { MountedStorageService } from '../storages/mountedStorageService';
-import { getLogger, Logger } from '../../../common/log';
-import { getExperimentId } from '../../../common/experimentStartupInfo';
-import { NfsConfig } from '../../../common/experimentConfig';
+import { getLogger, Logger } from 'common/log';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { NfsConfig } from 'common/experimentConfig';
 
 const INSTALL_NFS_CLIENT = `
 #!/bin/bash
