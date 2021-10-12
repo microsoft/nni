@@ -107,7 +107,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         // Generate kubeflow job resource config object
         const frameworkcontrollerJobConfig: any = await this.prepareFrameworkControllerConfig(
             environment.id,
-            environment.workingFolder,
+            this.environmentWorkingFolder,
             frameworkcontrollerJobName
         );
         // Create kubeflow job based on generated kubeflow job resource config
