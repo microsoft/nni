@@ -105,7 +105,7 @@ class LinearPruner(IterativePruner):
                                              origin_config_list=config_list,
                                              log_dir=log_dir,
                                              keep_intermediate_result=keep_intermediate_result)
-        pruner = PRUNER_DICT[pruning_algorithm](model, config_list, **pruning_params)
+        pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
 
@@ -150,7 +150,7 @@ class AGPPruner(IterativePruner):
                                           origin_config_list=config_list,
                                           log_dir=log_dir,
                                           keep_intermediate_result=keep_intermediate_result)
-        pruner = PRUNER_DICT[pruning_algorithm](model, config_list, **pruning_params)
+        pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
 
@@ -199,7 +199,7 @@ class LotteryTicketPruner(IterativePruner):
                                                     log_dir=log_dir,
                                                     keep_intermediate_result=keep_intermediate_result)
         pruner = PRUNER_DICT[pruning_algorithm](model, config_list, **pruning_params)
-        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+        super().__init__(None, None, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=reset_weight)
 
 
@@ -253,6 +253,6 @@ class SimulatedAnnealingPruner(IterativePruner):
                                                          perturbation_magnitude=perturbation_magnitude,
                                                          log_dir=log_dir,
                                                          keep_intermediate_result=keep_intermediate_result)
-        pruner = PRUNER_DICT[pruning_algorithm](model, config_list, **pruning_params)
+        pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
