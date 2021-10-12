@@ -217,6 +217,8 @@ class SimulatedAnnealingPruner(IterativePruner):
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
+    evaluator : Callable[[Module], float]
+        Evaluate the pruned model and give a score.
     start_temperature : float
         Start temperature of the simulated annealing process.
     stop_temperature : float
@@ -235,18 +237,15 @@ class SimulatedAnnealingPruner(IterativePruner):
         If set True, speed up the model in each iteration.
     dummy_input : Optional[torch.Tensor]
         If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
-    evaluator : Optional[Callable[[Module], float]]
-        Evaluate the pruned model and give a score.
-        If evaluator is None, the best result refers to the latest result.
     pruning_params : dict
         If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
+    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str, evaluator: Callable[[Module], float],
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
                  perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: dict = {}):
+                 pruning_params: dict = {}):
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
                                                          start_temperature=start_temperature,

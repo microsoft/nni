@@ -506,16 +506,15 @@ class TaskGenerator:
 
     def update_best_result(self, task_result: TaskResult):
         score = task_result.score
-        if score is not None:
-            task_id = task_result.task_id
-            task = self._tasks[task_id]
-            task.score = score
-            if self._best_score is None or score > self._best_score:
-                self._best_score = score
-                self._best_task_id = task_id
-                with Path(task.config_list_path).open('r') as fr:
-                    best_config_list = json_tricks.load(fr)
-                self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
+        task_id = task_result.task_id
+        task = self._tasks[task_id]
+        task.score = score
+        if self._best_score is None or score > self._best_score:
+            self._best_score = score
+            self._best_task_id = task_id
+            with Path(task.config_list_path).open('r') as fr:
+                best_config_list = json_tricks.load(fr)
+            self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
 
     def init_pending_tasks(self) -> List[Task]:
         raise NotImplementedError()
@@ -567,9 +566,9 @@ class TaskGenerator:
             return best task id, best compact model, masks on the compact model, score, config list used in this task.
         """
         if self._best_task_id is not None:
-            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'best_model.pth'))
-            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'best_masks.pth'))
-            with Path(self._log_dir_root, 'best_result', 'best_config_list.json').open('r') as f:
+            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'model.pth'))
+            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'masks.pth'))
+            with Path(self._log_dir_root, 'best_result', 'config_list.json').open('r') as f:
                 config_list = json_tricks.load(f)
             return self._best_task_id, compact_model, compact_model_masks, self._best_score, config_list
         return None
