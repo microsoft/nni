@@ -87,7 +87,7 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         }
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
-        const kubeflowJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
+        const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), environment.command, { encoding: 'utf8' });
 

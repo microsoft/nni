@@ -205,8 +205,9 @@ Here is the example:
          gpuNumber:
          cpuNumber:
          memorySize:
-         attemptCompletionMinFailedTasks: 1
-         attemptCompletionMinSucceededTasks: 1
+         frameworkAttemptCompletionPolicy:
+           minFailedTaskCount: 1
+           minSucceedTaskCount: 1
      storage:
        storageType: azureStorage
        azureAccount: {your_account}
