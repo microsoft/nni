@@ -69,7 +69,7 @@ class PrimConstant(PyTorchOperation):
         # TODO: deal with all the types
         if self.parameters['type'] in ['None', 'NoneType']:
             return f'{output} = None'
-        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'): # 'Long()' ???
+        elif self.parameters['type'] in ('int', 'float', 'bool', 'int[]'):  # 'Long()' ???
             return f'{output} = {self.parameters["value"]}'
         elif self.parameters['type'] == 'str':
             str_val = self.parameters["value"]
@@ -494,17 +494,36 @@ class ToDevice(PyTorchOperation):
     def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
         self.type = "ToDevice"
         self.device = parameters['device']
+        self.overridden_device_repr = None
         self.src = parameters['src']
         self.dst = parameters['dst']
 
+    def override_device_repr(self, device_repr):
+        # CUDA GPUDevice may remap GPU physical ID to CUDA ID. The device repr is different from GPUDevice.device_repr()
+        # override_device_repr will be called in pytorch.graph_to_pytorch_model to replace device_repr with the correct
+        # CUDA ID, e.g., when a job uses Physical GPU-1,2, its CUDA ID should be "cuda:0" and "cuda:1".
+        # self.device.device_repr() would return "cuda:1" and "cuda:2", but override_device_repr should be "cuda:0" and
+        # "cuda:1"
+        self.overridden_device_repr = device_repr
+
     def __repr__(self):
-        return f'to("{self.device}")'
+        if self.overridden_device_repr is None:
+            return f'to("{self.device.device_repr()}")'
+        else:
+            return f'to("{self.overridden_device_repr}")'
 
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any]) -> str:
-        return f'{output} = {inputs[0]}.to("{self.device}")'
+        if self.overridden_device_repr is None:
+            forward_code = f'{output} = {inputs[0]}.to("{self.device.device_repr()}")'
+        else:
+            forward_code = f'{output} = {inputs[0]}.to("{self.overridden_device_repr}")'
+        return forward_code
+
+
 class AtenDet(PyTorchOperation):
     # for torch 1.9
     # NOTE: it is not included in the above aten ops, maybe because torch.det is alias for torch.linalg.det
     _ori_type_name = ['aten::linalg_det']
+
     def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
         return f'{output} = torch.det({inputs[0]})'
