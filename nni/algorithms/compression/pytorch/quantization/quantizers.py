@@ -118,7 +118,7 @@ def update_quantization_param(bits, rmin, rmax, dtype, scheme):
             zero_point_val = (qmin + qmax) // 2
             zero_point = zero_point.new_full(zero_point.size(), zero_point_val)
     else:
-        scale = (rmax - rmin) / (qmax - qmin)
+        scale = (rmax - rmin) / float(qmax - qmin)
         zero_point = qmin - torch.round(rmin / scale)
 
     zero_point = torch.clamp(zero_point, qmin, qmax)
