@@ -37,7 +37,7 @@ class Compressor:
     The abstract base pytorch compressor.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict]):
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         """
         Parameters
         ----------
@@ -46,9 +46,11 @@ class Compressor:
         config_list
             The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
         """
-        assert isinstance(model, Module)
         self.is_wrapped = False
-        self.reset(model=model, config_list=config_list)
+        if model is not None:
+            self.reset(model=model, config_list=config_list)
+        else:
+            _logger.warning('This compressor is not set model and config_list, waiting for reset() or pass this to scheduler.')
 
     def reset(self, model: Module, config_list: List[Dict]):
         """
