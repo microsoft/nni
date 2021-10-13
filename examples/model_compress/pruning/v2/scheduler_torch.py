@@ -1,4 +1,3 @@
-import functools
 from tqdm import tqdm
 
 import torch
