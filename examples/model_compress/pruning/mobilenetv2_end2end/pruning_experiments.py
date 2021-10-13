@@ -25,6 +25,7 @@ from nni.algorithms.compression.pytorch.pruning import (
     ActivationMeanRankFilterPruner,
     ActivationAPoZRankFilterPruner
 )
+from nni.compression.pytorch.utils import get_module_by_name
 
 from utils import *
 
@@ -238,7 +239,7 @@ def parse_args():
                         help='Alpha for knowledge distillation loss')
     parser.add_argument('--temp', type=float, default=8,
                         help='Temperature for knowledge distillation loss')
-
+    parser.add_argument('--align', default=None, type=int, help='Channel number alignment')
     args = parser.parse_args()
     return args
 
@@ -344,6 +345,22 @@ def run_pruning(args):
         dummy_input = torch.rand(1,3,224,224).to(device)
         ms = ModelSpeedup(model, dummy_input, os.path.join(args.experiment_dir, 'mask_temp.pth'))
         ms.speedup_model()
+        if args.align:
+            for name, module in model.named_modules():
+                if isinstance(module, torch.nn.Conv2d):
+                    in_channel = module.in_channels
+                    out_channel = module.out_channels
+                    new_in_c = in_channel + args.align - in_channel % args.align
+                    new_out_c = out_channel + args.align - out_channel % args.align
+                    print(f"{name} In Channel:{in_channel} -> {new_in_c}  Out Channel:{out_channel}->{new_out_c}")
+                    new_conv = torch.nn.Conv2d(new_in_c, new_out_c, module.kernel_size, module.stride, module.padding, module.bias)
+                    new_conv.weight.data[:] = 0
+                    new_conv.weight.data[:out_channel, :in_channel] = module.weight.data
+                    if new_conv.bias is not None:
+                        new_conv.bias.data[:] = 0
+                        new_conv.bias.data[:out_channel] = module.bias.data
+                    father, leaf = get_module_by_name(model, name)
+                    setattr(father, name.split('.')[-1], new_conv)
         print(model)
         count_flops(model, log)
 
