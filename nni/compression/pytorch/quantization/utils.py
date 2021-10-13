@@ -50,8 +50,8 @@ def get_min_max_value(x, quant_type, quant_scheme):
     else:
         min_val = max_val = x
         for ind in indices:
-            min_val = torch.min(min_val, dim=ind, keepdim=True)
-            max_val = torch.max(max_val, dim=ind, keepdim=True)
+            min_val = torch.min(min_val, dim=ind, keepdim=True)[0]
+            max_val = torch.max(max_val, dim=ind, keepdim=True)[0]
     return min_val, max_val
 
 
