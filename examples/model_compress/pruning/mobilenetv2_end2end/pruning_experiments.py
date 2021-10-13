@@ -353,7 +353,7 @@ def run_pruning(args):
                     new_in_c = in_channel + args.align - in_channel % args.align
                     new_out_c = out_channel + args.align - out_channel % args.align
                     print(f"{name} In Channel:{in_channel} -> {new_in_c}  Out Channel:{out_channel}->{new_out_c}")
-                    new_conv = torch.nn.Conv2d(new_in_c, new_out_c, module.kernel_size, module.stride, module.padding, module.bias)
+                    new_conv = torch.nn.Conv2d(in_channels = new_in_c, out_channels=new_out_c, kernel_size=module.kernel_size, stride=module.stride, padding = module.padding, bias = module.bias is not None)
                     new_conv.weight.data[:] = 0
                     new_conv.weight.data[:out_channel, :in_channel] = module.weight.data
                     if new_conv.bias is not None:
