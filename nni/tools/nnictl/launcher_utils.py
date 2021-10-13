@@ -94,6 +94,10 @@ def parse_path(experiment_config, config_path):
         parse_relative_path(root_path, experiment_config['assessor'], 'codeDir')
     if experiment_config.get('advisor'):
         parse_relative_path(root_path, experiment_config['advisor'], 'codeDir')
+        # for BOHB when delivering a ConfigSpace file directly
+        if experiment_config.get('advisor').get('classArgs') and experiment_config.get('advisor').get('classArgs').get('config_space'):
+            parse_relative_path(root_path, experiment_config.get('advisor').get('classArgs'), 'config_space')
+
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')

@@ -4,8 +4,9 @@ import re
 import tqdm
 import torch
 
+from nni.nas.benchmarks.utils import load_benchmark
 from .constants import NONE, SKIP_CONNECT, CONV_1X1, CONV_3X3, AVG_POOL_3X3
-from .model import db, Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats
+from .model import Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats
 
 
 def parse_arch_str(arch_str):
@@ -38,6 +39,8 @@ def main():
         'cifar100': ['train', 'x-valid', 'x-test', 'ori-test'],
         'imagenet16-120': ['train', 'x-valid', 'x-test', 'ori-test'],
     }
+
+    db = load_benchmark('nasbench201')
 
     with db:
         db.create_tables([Nb201TrialConfig, Nb201TrialStats, Nb201IntermediateStats])

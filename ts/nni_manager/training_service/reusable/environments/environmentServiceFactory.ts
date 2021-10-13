@@ -3,6 +3,7 @@ import { OpenPaiEnvironmentService } from './openPaiEnvironmentService';
 import { LocalEnvironmentService } from './localEnvironmentService';
 import { RemoteEnvironmentService } from './remoteEnvironmentService';
 import { KubeflowEnvironmentService } from './kubernetes/kubeflowEnvironmentService';
+import { FrameworkControllerEnvironmentService } from './kubernetes/frameworkcontrollerEnvironmentService';
 import { EnvironmentService } from '../environment';
 import { ExperimentConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
@@ -24,6 +25,8 @@ export async function createEnvironmentService(name: string, config: ExperimentC
             return new OpenPaiEnvironmentService(config, info);
         case 'kubeflow':
             return new KubeflowEnvironmentService(config, info);
+        case 'frameworkcontroller':
+            return new FrameworkControllerEnvironmentService(config, info);
         case 'dlc':
             return new DlcEnvironmentService(config, info);
     }
