@@ -77,6 +77,8 @@ if __name__ == '__main__':
     print('\nThe accuracy after speed up:')
     evaluator(model)
 
+    # Need a new optimizer due to the modules in model will be replaced during speedup.
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     print('\nFinetune the model after speed up:')
     for i in range(5):
         trainer(model, optimizer, criterion, i)
