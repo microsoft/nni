@@ -347,13 +347,14 @@ def run_pruning(args):
         ms.speedup_model()
         if args.align:
             for name, module in model.named_modules():
-                if isinstance(module, torch.nn.Conv2d) and name!='conv1.0':
+                if isinstance(module, torch.nn.Conv2d):
                     in_channel = module.in_channels
                     out_channel = module.out_channels
                     depthwise = False
                     if in_channel == out_channel and in_channel == module.groups:
                         depthwise =  True
-                    new_in_c = in_channel + args.align - in_channel % args.align
+                    if name != "conv1.0":
+                        new_in_c = in_channel + args.align - in_channel % args.align
                     new_out_c = out_channel + args.align - out_channel % args.align
                     print(f"{name} In Channel:{in_channel} -> {new_in_c}  Out Channel:{out_channel}->{new_out_c}")
                     new_conv = torch.nn.Conv2d(in_channels = new_in_c, out_channels=new_out_c, groups=module.groups if not depthwise else new_in_c, kernel_size=module.kernel_size, stride=module.stride, padding = module.padding, bias = module.bias is not None).to(module.weight.device)
@@ -364,7 +365,7 @@ def run_pruning(args):
                         new_conv.bias.data[:out_channel] = module.bias.data
                     father, leaf = get_module_by_name(model, name)
                     setattr(father, name.split('.')[-1], new_conv)
-                elif isinstance(module, torch.nn.BatchNorm2d) and name!="conv1.1":
+                elif isinstance(module, torch.nn.BatchNorm2d):
                     num_features = module.num_features
                     new_features = num_features + args.align - num_features % args.align
                     new_norm = torch.nn.BatchNorm2d(num_features=new_features,
