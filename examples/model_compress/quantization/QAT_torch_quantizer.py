@@ -2,10 +2,12 @@ import torch
 import torch.nn.functional as F
 from torchvision import datasets, transforms
 from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
 
 import sys
 sys.path.append('../models')
 from mnist.naive import NaiveModel
+
 
 def train(model, device, train_loader, optimizer):
     model.train()
@@ -58,22 +60,32 @@ def main():
     # {'quant_types': ['input'], 'op_names': ['b']} in the configure_list.
 
     configure_list = [{
-            'quant_types': ['weight', 'input'],
-            'quant_bits': {'weight': 8, 'input': 8},
-            'op_names': ['conv1', 'conv2']
-        }, {
-            'quant_types': ['output'],
-            'quant_bits': {'output': 8, },
-            'op_names': ['relu1', 'relu2']
-        }, {
-            'quant_types': ['output', 'weight', 'input'],
-            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
-            'op_names': ['fc1'],
-        }, {
-            'quant_types': ['output', 'weight', 'input'],
-            'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
-            'op_names': ['fc2'],
-        }]
+        'quant_types': ['weight', 'input'],
+        'quant_bits': {'weight': 8, 'input': 8},
+        'op_names': ['conv1', 'conv2']
+    }, {
+        'quant_types': ['output'],
+        'quant_bits': {'output': 8, },
+        'op_names': ['relu1', 'relu2']
+    }, {
+        'quant_types': ['output', 'weight', 'input'],
+        'quant_bits': {'output': 8, 'weight': 8, 'input': 8},
+        'op_names': ['fc1', 'fc2'],
+    }]
+
+    # you can also set the quantization dtype and scheme layer-wise through configure_list like:
+    # configure_list = [{
+    #         'quant_types': ['weight', 'input'],
+    #         'quant_bits': {'weight': 8, 'input': 8},
+    #         'op_names': ['conv1', 'conv2'],
+    #         'quant_dtype': 'int',
+    #         'quant_scheme': 'per_channel_symmetric'
+    #       }]
+    # For now quant_dtype's options are 'int' and 'uint. And quant_scheme's options are per_tensor_affine,
+    # per_tensor_symmetric, per_channel_affine and per_channel_symmetric.
+    set_quant_scheme_dtype('weight', 'per_channel_symmetric', 'int')
+    set_quant_scheme_dtype('output', 'per_tensor_symmetric', 'int')
+    set_quant_scheme_dtype('input', 'per_tensor_symmetric', 'int')
 
     model = NaiveModel().to(device)
     dummy_input = torch.randn(1, 1, 28, 28).to(device)
@@ -97,6 +109,7 @@ def main():
 
     calibration_config = quantizer.export_model(model_path, calibration_path, onnx_path, input_shape, device)
     print("Generated calibration config is: ", calibration_config)
+
 
 if __name__ == '__main__':
     main()
