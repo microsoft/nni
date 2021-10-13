@@ -71,7 +71,7 @@ if __name__ == '__main__':
     criterion = torch.nn.CrossEntropyLoss()
 
     # pre-train the model
-    for i in range(1):
+    for i in range(5):
         trainer(model, optimizer, criterion, i)
 
     config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
@@ -81,6 +81,6 @@ if __name__ == '__main__':
     # or the result with the highest score (given by evaluator) will be the best result.
 
     # pruner = AGPPruner(model, config_list, 'l1', 10, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
-    pruner = AGPPruner(model, config_list, 'l1', 10, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
+    pruner = AGPPruner(model, config_list, 'l1', 10, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
