@@ -355,6 +355,8 @@ def run_pruning(args):
                         depthwise =  True
                     if name != "conv1.0":
                         new_in_c = in_channel + args.align - in_channel % args.align
+                    else:
+                        new_in_c = in_channel
                     new_out_c = out_channel + args.align - out_channel % args.align
                     print(f"{name} In Channel:{in_channel} -> {new_in_c}  Out Channel:{out_channel}->{new_out_c}")
                     new_conv = torch.nn.Conv2d(in_channels = new_in_c, out_channels=new_out_c, groups=module.groups if not depthwise else new_in_c, kernel_size=module.kernel_size, stride=module.stride, padding = module.padding, bias = module.bias is not None).to(module.weight.device)
