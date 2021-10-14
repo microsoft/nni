@@ -17,7 +17,7 @@ import math
 from typing import NamedTuple, Optional, Union
 
 import numpy as np
-from scipy.special import erf
+from scipy.special import erf  # pylint: disable=no-name-in-module
 
 from nni.tuner import Tuner
 from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters
