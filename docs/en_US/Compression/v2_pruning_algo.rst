@@ -174,7 +174,7 @@ Useage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ActivationAPoZRankPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
@@ -200,7 +200,7 @@ Useage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ActivationMeanRankPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
@@ -230,7 +230,7 @@ Useage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = TaylorFOWeightPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
@@ -261,7 +261,7 @@ Useage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
 
@@ -284,8 +284,10 @@ Useage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
-   config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
+   pruner.compress()
+   _, model, masks, _, _ = pruner.get_best_result()
 
 User configuration for Linear Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -293,3 +295,104 @@ User configuration for Linear Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LinearPruner
+
+AGP Pruner
+----------
+
+This is an iterative pruner, which the sparsity is increased from an initial sparsity value :math:`s_{i}` (usually 0) to a final sparsity value :math:`s_{f}` over a span of :math:`n` pruning iterations,
+starting at training step :math:`t_{0}` and with pruning frequency :math:`\Delta t`:
+
+:math:`s_{t}=s_{f}+\left(s_{i}-s_{f}\right)\left(1-\frac{t-t_{0}}{n \Delta t}\right)^{3} \text { for } t \in\left\{t_{0}, t_{0}+\Delta t, \ldots, t_{0} + n \Delta t\right\}`
+
+For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
+   pruner.compress()
+   _, model, masks, _, _ = pruner.get_best_result()
+
+User configuration for AGP Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AGPPruner
+
+Lottery Ticket Pruner
+---------------------
+
+`The Lottery Ticket Hypothesis: Finding Sparse, Trainable Neural Networks <https://arxiv.org/abs/1803.03635>`__\ ,
+authors Jonathan Frankle and Michael Carbin,provides comprehensive measurement and analysis,
+and articulate the *lottery ticket hypothesis*\ : dense, randomly-initialized, feed-forward networks contain subnetworks (*winning tickets*\ ) that
+-- when trained in isolation -- reach test accuracy comparable to the original network in a similar number of iterations.
+
+In this paper, the authors use the following process to prune a model, called *iterative prunning*\ :
+
+..
+
+   #. Randomly initialize a neural network f(x;theta_0) (where theta\ *0 follows D*\ {theta}).
+   #. Train the network for j iterations, arriving at parameters theta_j.
+   #. Prune p% of the parameters in theta_j, creating a mask m.
+   #. Reset the remaining parameters to their values in theta_0, creating the winning ticket f(x;m*theta_0).
+   #. Repeat step 2, 3, and 4.
+
+If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning,
+each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import LotteryTicketPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = LotteryTicketPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner, reset_weight=True)
+   pruner.compress()
+   _, model, masks, _, _ = pruner.get_best_result()
+
+User configuration for Lottery Ticket Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LotteryTicketPruner
+
+Simulated Annealing Pruner
+--------------------------
+
+We implement a guided heuristic search method, Simulated Annealing (SA) algorithm, with enhancement on guided search based on prior experience. 
+The enhanced SA technique is based on the observation that a DNN layer with more number of weights often has a higher degree of model compression with less impact on overall accuracy.
+
+* Randomly initialize a pruning rate distribution (sparsities).
+* While current_temperature < stop_temperature:
+
+  #. generate a perturbation to current distribution
+  #. Perform fast evaluation on the perturbated distribution
+  #. accept the perturbation according to the performance and probability, if not accepted, return to step 1
+  #. cool down, current_temperature <- current_temperature * cool_down_rate
+
+For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
+
+Useage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm='l1', cool_down_rate=0.9, finetuner=finetuner)
+   pruner.compress()
+   _, model, masks, _, _ = pruner.get_best_result()
+
+User configuration for Simulated Annealing Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
