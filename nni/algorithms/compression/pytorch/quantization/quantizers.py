@@ -676,17 +676,21 @@ class QAT_Quantizer(Quantizer):
         for layer, _ in modules_to_compress:
             name, module = layer.name, layer.module
             if name not in calibration_config:
-                if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits') or hasattr(module, 'input_bits'):
+                if module.layer_quant_setting.weight or module.layer_quant_setting.input or module.layer_quant_setting.output:
+                #if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits') or hasattr(module, 'input_bits'):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
-            if hasattr(module, 'weight_bits'):
-                assert calibration_config[name]['weight_bits'] == module.weight_bits, f"weight bits of module {name} fail to match"
-            if hasattr(module, 'input_bits'):
-                assert calibration_config[name]['input_bits'] == module.input_bits, f"input bits of module {name} fail to match"
+            # if hasattr(module, 'weight_bits'):
+            if module.layer_quant_setting.weight:
+                assert calibration_config[name]['weight_bits'] == module.layer_quant_setting.weight.bits, f"weight bits of module {name} fail to match"
+            # if hasattr(module, 'input_bits'):
+            if module.layer_quant_setting.input:
+                assert calibration_config[name]['input_bits'] == module.layer_quant_setting.input.bits, f"input bits of module {name} fail to match"
                 module.tracked_min_input.data = torch.tensor([calibration_config[name]['tracked_min_input']])
                 module.tracked_max_input.data = torch.tensor([calibration_config[name]['tracked_max_input']])
-            if hasattr(module, 'output_bits'):
-                assert calibration_config[name]['output_bits'] == module.output_bits, f"output bits of module {name} fail to match"
+            # if hasattr(module, 'output_bits'):
+            if module.layer_quant_setting.output:
+                assert calibration_config[name]['output_bits'] == module.layer_quant_setting.output.bits, f"output bits of module {name} fail to match"
                 module.tracked_min_output.data = torch.tensor([calibration_config[name]['tracked_min_output']])
                 module.tracked_max_output.data = torch.tensor([calibration_config[name]['tracked_max_output']])
 
@@ -716,11 +720,20 @@ class QAT_Quantizer(Quantizer):
         self._unwrap_model()
         calibration_config = {}
 
-        for name, module in self.bound_model.named_modules():
-            if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+        modules_to_compress = self.get_modules_to_compress()
+        for layer, _ in modules_to_compress:
+            name, module = layer.name, layer.module
+        # for name, module in self.bound_model.named_modules():
+            # if hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
+            # if hasattr(module, 'layer_quant_setting') == False:
+            #    continue
+            if hasattr(module.layer_quant_setting, 'weight') or hasattr(module.layer_quant_setting, 'output'):
                 calibration_config[name] = {}
-            if hasattr(module, 'weight_bits'):
-                calibration_config[name]['weight_bits'] = int(module.weight_bits)
+            # if hasattr(module, 'weight_bits'):
+            # if hasattr(module.layer_quant_setting, 'weight'):
+            if module.layer_quant_setting.weight:
+                # calibration_config[name]['weight_bits'] = int(module.weight_bits)
+                calibration_config[name]['weight_bits'] = int(module.layer_quant_setting.weight.bits)
                 calibration_config[name]['weight_scale'] = module.weight_scale
                 calibration_config[name]['weight_zero_point'] = module.weight_zero_point
 
@@ -738,13 +751,17 @@ class QAT_Quantizer(Quantizer):
                         module.register_parameter('bias', actual_bias)
                     else:
                         setattr(module, 'bias', None)
-            if hasattr(module, 'input_bits'):
-                calibration_config[name]['input_bits'] = int(module.input_bits)
+            #if hasattr(module, 'input_bits'):
+            if module.layer_quant_setting.input:
+                #calibration_config[name]['input_bits'] = int(module.input_bits)
+                calibration_config[name]['input_bits'] = int(module.layer_quant_setting.input.bits)
                 calibration_config[name]['tracked_min_input'] = float(module.tracked_min_input)
                 calibration_config[name]['tracked_max_input'] = float(module.tracked_max_input)
 
-            if hasattr(module, 'output_bits'):
-                calibration_config[name]['output_bits'] = int(module.output_bits)
+            #if hasattr(module, 'output_bits'):
+            if module.layer_quant_setting.output:
+                #calibration_config[name]['output_bits'] = int(module.output_bits)
+                calibration_config[name]['output_bits'] = int(module.layer_quant_setting.output.bits)
                 calibration_config[name]['tracked_min_output'] = float(module.tracked_min_output)
                 calibration_config[name]['tracked_max_output'] = float(module.tracked_max_output)
             self._del_simulated_attr(module)
