@@ -19,12 +19,12 @@ Right now, pruning algorithms with how to generate masks in one step are impleme
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
 
-**Task Generator**
+**Iterative Pruner**
 
-* `Linear Task Generator <#linear-task-generator>`__
-* `AGP Task Generator <#agp-task-generator>`__
-* `Lottery Ticket Task Generator <#lottery-ticket-task-generator>`__
-* `Simulated Annealing Task Generator <#simulated-annealing-task-generator>`__
+* `Linear Pruner <#linear-pruner>`__
+* `AGP Pruner <#agp-pruner>`__
+* `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
+* `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
 
 Level Pruner
 ------------
@@ -272,10 +272,10 @@ User configuration for ADMM Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
 
-Linear Task Generator
----------------------
+Linear Pruner
+-------------
 
-Linear task generator is a naive task generator, it will increase sparsity evenly from scratch during each iteration.
+Linear pruner is an iterative pruner, it will increase sparsity evenly from scratch during each iteration.
 For example, the final sparsity is set as 0.5, and the iteration number is 5, then the sparsity used in each iteration are ``[0, 0.1, 0.2, 0.3, 0.4, 0.5]``.
 
 Useage
@@ -283,16 +283,13 @@ Useage
 
 .. code-block:: python
 
-   from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner, LinearTaskGenerator, PruningScheduler
+   from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-   task_generator = LinearTaskGenerator(10, model, config_list)
-   pruner = LevelPruner(model, config_list)
-   scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner)
-   scheduler.compress()
+   pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
 
-User configuration for Linear Task Generator
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+User configuration for Linear Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
 
-.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LinearTaskGenerator
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LinearPruner

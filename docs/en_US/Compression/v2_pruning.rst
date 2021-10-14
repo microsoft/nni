@@ -22,3 +22,4 @@ For details, please refer to the following tutorials:
     :maxdepth: 2
 
     Pruning Algorithms <v2_pruning_algo>
+    Pruning Scheduler <v2_scheduler>
