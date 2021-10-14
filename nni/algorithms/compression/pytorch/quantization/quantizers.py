@@ -680,13 +680,16 @@ class QAT_Quantizer(Quantizer):
                     logger.warning(f"Can not find module {name}'s parameter in input config.")
                 continue
             if module.layer_quant_setting.weight:
-                assert calibration_config[name]['weight_bits'] == module.layer_quant_setting.weight.bits, f"weight bits of module {name} fail to match"
+                assert calibration_config[name]['weight_bits'] == module.layer_quant_setting.weight.bits, \
+                    f"weight bits of module {name} fail to match"
             if module.layer_quant_setting.input:
-                assert calibration_config[name]['input_bits'] == module.layer_quant_setting.input.bits, f"input bits of module {name} fail to match"
+                assert calibration_config[name]['input_bits'] == module.layer_quant_setting.input.bits, \
+                    f"input bits of module {name} fail to match"
                 module.tracked_min_input.data = torch.tensor([calibration_config[name]['tracked_min_input']])
                 module.tracked_max_input.data = torch.tensor([calibration_config[name]['tracked_max_input']])
             if module.layer_quant_setting.output:
-                assert calibration_config[name]['output_bits'] == module.layer_quant_setting.output.bits, f"output bits of module {name} fail to match"
+                assert calibration_config[name]['output_bits'] == module.layer_quant_setting.output.bits, \
+                    f"output bits of module {name} fail to match"
                 module.tracked_min_output.data = torch.tensor([calibration_config[name]['tracked_min_output']])
                 module.tracked_max_output.data = torch.tensor([calibration_config[name]['tracked_max_output']])
 
