@@ -208,7 +208,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
             if (this.kubernetesCRDClient === undefined) {
                 throw new Error("kubernetesCRDClient undefined")
             }
-            const kubeflowJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
+            const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
             const kubernetesJobInfo = await this.kubernetesCRDClient.getKubernetesJob(kubeflowJobName);
             if (kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
                 const latestCondition: any = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
@@ -254,5 +254,18 @@ export class KubernetesEnvironmentService extends EnvironmentService {
 
             return Promise.reject(errorMessage);
         }
+    }
+
+    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
+        const resources: any = {
+            memory: `${memory}Mi`,
+            cpu: `${cpuNum}`
+        };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
     }
 }

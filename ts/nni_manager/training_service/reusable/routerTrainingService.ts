@@ -3,12 +3,13 @@
 
 import { getLogger, Logger } from 'common/log';
 import { MethodNotImplementedError } from 'common/errors';
-import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig } from 'common/experimentConfig';
+import { ExperimentConfig, RemoteConfig, OpenpaiConfig, KubeflowConfig, FrameworkControllerConfig } from 'common/experimentConfig';
 import { TrainingService, TrialJobApplicationForm, TrialJobDetail, TrialJobMetric } from 'common/trainingService';
 import { delay } from 'common/utils';
 import { PAITrainingService } from '../pai/paiTrainingService';
 import { RemoteMachineTrainingService } from '../remote_machine/remoteMachineTrainingService';
 import { KubeflowTrainingService } from '../kubernetes/kubeflow/kubeflowTrainingService';
+import { FrameworkControllerTrainingService } from '../kubernetes/frameworkcontroller/frameworkcontrollerTrainingService';
 import { TrialDispatcher } from './trialDispatcher';
 
 
@@ -30,6 +31,8 @@ class RouterTrainingService implements TrainingService {
             instance.internalTrainingService = new PAITrainingService(config);
         } else if (platform === 'kubeflow' && (<KubeflowConfig>config.trainingService).reuseMode === false) {
             instance.internalTrainingService = new KubeflowTrainingService();
+        } else if (platform === 'frameworkcontroller' && (<FrameworkControllerConfig>config.trainingService).reuseMode === false) {
+            instance.internalTrainingService = new FrameworkControllerTrainingService();
         } else {
             instance.internalTrainingService = await TrialDispatcher.construct(config);
         }

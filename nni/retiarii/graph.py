@@ -603,16 +603,18 @@ class Node:
     @staticmethod
     def _load(graph: Graph, name: str, ir: Any) -> 'Node':
         if ir['operation']['type'] == '_cell':
-            op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}))
+            op = Cell(ir['operation']['cell_name'], ir['operation'].get('parameters', {}), attributes=ir['operation'].get('attributes', {}))
         else:
-            op = Operation.new(ir['operation']['type'], ir['operation'].get('parameters', {}))
+            op = Operation.new(ir['operation']['type'],
+                               ir['operation'].get('parameters', {}),
+                               attributes=ir['operation'].get('attributes', {}))
         node = Node(graph, uid(), name, op)
         if 'label' in ir:
             node.update_label(ir['label'])
         return node
 
     def _dump(self) -> Any:
-        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters}}
+        ret = {'operation': {'type': self.operation.type, 'parameters': self.operation.parameters, 'attributes': self.operation.attributes}}
         if isinstance(self.operation, Cell):
             ret['operation']['cell_name'] = self.operation.cell_name
         if self.label is not None:

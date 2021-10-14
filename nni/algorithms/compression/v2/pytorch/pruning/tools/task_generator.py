@@ -13,7 +13,7 @@ import torch
 from torch.nn import Module
 
 from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
-from nni.algorithms.compression.v2.pytorch.utils.pruning import (
+from nni.algorithms.compression.v2.pytorch.utils import (
     config_list_canonical,
     compute_sparsity,
     get_model_weights_numel
@@ -25,7 +25,7 @@ _logger = logging.getLogger(__name__)
 
 class FunctionBasedTaskGenerator(TaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermidiate_result: bool = False):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------
@@ -40,7 +40,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
             The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
         log_dir
             The log directory use to saving the task generator log.
-        keep_intermidiate_result
+        keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
         self.current_iteration = 0
@@ -48,7 +48,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         self.total_iteration = total_iteration
 
         super().__init__(origin_model, origin_config_list=self.target_sparsity, origin_masks=origin_masks,
-                         log_dir=log_dir, keep_intermidiate_result=keep_intermidiate_result)
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
 
     def init_pending_tasks(self) -> List[Task]:
         origin_model = torch.load(self._origin_model_path)
@@ -62,9 +62,9 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         compact_model = task_result.compact_model
         compact_model_masks = task_result.compact_model_masks
 
-        # save intermidiate result
-        model_path = Path(self._intermidiate_result_dir, '{}_compact_model.pth'.format(task_result.task_id))
-        masks_path = Path(self._intermidiate_result_dir, '{}_compact_model_masks.pth'.format(task_result.task_id))
+        # save intermediate result
+        model_path = Path(self._intermediate_result_dir, '{}_compact_model.pth'.format(task_result.task_id))
+        masks_path = Path(self._intermediate_result_dir, '{}_compact_model_masks.pth'.format(task_result.task_id))
         torch.save(compact_model, model_path)
         torch.save(compact_model_masks, masks_path)
 
@@ -81,7 +81,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
         task_id = self._task_id_candidate
         new_config_list = self.generate_config_list(self.target_sparsity, self.current_iteration, compact2origin_sparsity)
-        config_list_path = Path(self._intermidiate_result_dir, '{}_config_list.json'.format(task_id))
+        config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
 
         with Path(config_list_path).open('w') as f:
             json_tricks.dump(new_config_list, f, indent=4)
@@ -124,9 +124,9 @@ class LinearTaskGenerator(FunctionBasedTaskGenerator):
 
 class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermidiate_result: bool = False):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False):
         super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks, log_dir=log_dir,
-                         keep_intermidiate_result=keep_intermidiate_result)
+                         keep_intermediate_result=keep_intermediate_result)
         self.current_iteration = 1
 
     def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
@@ -147,7 +147,7 @@ class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
 class SimulatedAnnealingTaskGenerator(TaskGenerator):
     def __init__(self, origin_model: Module, origin_config_list: List[Dict], origin_masks: Dict[str, Dict[str, Tensor]] = {},
                  start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermidiate_result: bool = False):
+                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------
@@ -168,7 +168,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
             Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
         log_dir
             The log directory use to saving the task generator log.
-        keep_intermidiate_result
+        keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
         self.start_temperature = start_temperature
@@ -186,7 +186,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self._current_score = None
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermidiate_result=keep_intermidiate_result)
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
 
     def _adjust_target_sparsity(self):
         """
@@ -288,8 +288,8 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         origin_model = torch.load(self._origin_model_path)
         origin_masks = torch.load(self._origin_masks_path)
 
-        self.temp_model_path = Path(self._intermidiate_result_dir, 'origin_compact_model.pth')
-        self.temp_masks_path = Path(self._intermidiate_result_dir, 'origin_compact_model_masks.pth')
+        self.temp_model_path = Path(self._intermediate_result_dir, 'origin_compact_model.pth')
+        self.temp_masks_path = Path(self._intermediate_result_dir, 'origin_compact_model_masks.pth')
         torch.save(origin_model, self.temp_model_path)
         torch.save(origin_masks, self.temp_masks_path)
 
@@ -319,7 +319,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
 
         task_id = self._task_id_candidate
         new_config_list = self._recover_real_sparsity(deepcopy(self._temp_config_list))
-        config_list_path = Path(self._intermidiate_result_dir, '{}_config_list.json'.format(task_id))
+        config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
 
         with Path(config_list_path).open('w') as f:
             json_tricks.dump(new_config_list, f, indent=4)

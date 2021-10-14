@@ -11,35 +11,24 @@ from . import util
 __all__ = [
     'FrameworkControllerConfig',
     'FrameworkControllerRoleConfig',
-    'FrameworkControllerNfsConfig',
-    'FrameworkControllerAzureStorageConfig'
+    '_FrameworkControllerStorageConfig'
 ]
 
 
 @dataclass(init=False)
 class _FrameworkControllerStorageConfig(ConfigBase):
-    storage: str
+    storage_type: str
     server: Optional[str] = None
     path: Optional[str] = None
     azure_account: Optional[str] = None
     azure_share: Optional[str] = None
-    key_vault: Optional[str] = None
-    key_vault_secret: Optional[str] = None
+    key_vault_name: Optional[str] = None
+    key_vault_key: Optional[str] = None
 
 @dataclass(init=False)
-class FrameworkControllerNfsConfig(ConfigBase):
-    storage: str = 'nfs'
-    server: str
-    path: str
-
-@dataclass(init=False)
-class FrameworkControllerAzureStorageConfig(ConfigBase):
-    storage: str = 'azureStorage'
-    azure_account: str
-    azure_share: str
-    key_vault: str
-    key_vault_secret: str
-
+class FrameworkAttemptCompletionPolicy(ConfigBase):
+    min_failed_task_count: int
+    min_succeed_task_count: int
 
 @dataclass(init=False)
 class FrameworkControllerRoleConfig(ConfigBase):
@@ -50,8 +39,7 @@ class FrameworkControllerRoleConfig(ConfigBase):
     gpu_number: int
     cpu_number: int
     memory_size: str
-    attempt_completion_min_failed_tasks: int
-    attempt_completion_min_succeeded_tasks: int
+    framework_attempt_completion_policy: FrameworkAttemptCompletionPolicy
 
 
 @dataclass(init=False)
@@ -60,6 +48,8 @@ class FrameworkControllerConfig(TrainingServiceConfig):
     service_account_name: str
     storage: _FrameworkControllerStorageConfig
     task_roles: List[FrameworkControllerRoleConfig]
+    reuse_mode: Optional[bool] = True #set reuse mode as true for v2 config
+    service_account_name: Optional[str]
 
     def __init__(self, **kwargs):
         kwargs = util.case_insensitive(kwargs)

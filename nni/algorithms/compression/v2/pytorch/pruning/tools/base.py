@@ -452,7 +452,7 @@ class TaskGenerator:
     This class used to generate config list for pruner in each iteration.
     """
     def __init__(self, origin_model: Module, origin_masks: Dict[str, Dict[str, Tensor]] = {},
-                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermidiate_result: bool = False):
+                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
         """
         Parameters
         ----------
@@ -465,16 +465,16 @@ class TaskGenerator:
             This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
         log_dir
             The log directory use to saving the task generator log.
-        keep_intermidiate_result
+        keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
         assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
         self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
         self._log_dir_root.mkdir(parents=True, exist_ok=True)
-        self._keep_intermidiate_result = keep_intermidiate_result
-        self._intermidiate_result_dir = Path(self._log_dir_root, 'intermidiate_result')
-        self._intermidiate_result_dir.mkdir(parents=True, exist_ok=True)
+        self._keep_intermediate_result = keep_intermediate_result
+        self._intermediate_result_dir = Path(self._log_dir_root, 'intermediate_result')
+        self._intermediate_result_dir.mkdir(parents=True, exist_ok=True)
 
         # save origin data in {log_dir}/origin
         self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
@@ -506,16 +506,15 @@ class TaskGenerator:
 
     def update_best_result(self, task_result: TaskResult):
         score = task_result.score
-        if score is not None:
-            task_id = task_result.task_id
-            task = self._tasks[task_id]
-            task.score = score
-            if self._best_score is None or score > self._best_score:
-                self._best_score = score
-                self._best_task_id = task_id
-                with Path(task.config_list_path).open('r') as fr:
-                    best_config_list = json_tricks.load(fr)
-                self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
+        task_id = task_result.task_id
+        task = self._tasks[task_id]
+        task.score = score
+        if self._best_score is None or score > self._best_score:
+            self._best_score = score
+            self._best_task_id = task_id
+            with Path(task.config_list_path).open('r') as fr:
+                best_config_list = json_tricks.load(fr)
+            self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
 
     def init_pending_tasks(self) -> List[Task]:
         raise NotImplementedError()
@@ -540,7 +539,7 @@ class TaskGenerator:
         self._pending_tasks.extend(self.generate_tasks(task_result))
         self._dump_tasks_info()
 
-        if not self._keep_intermidiate_result:
+        if not self._keep_intermediate_result:
             self._tasks[task_id].clean_up()
 
     def next(self) -> Optional[Task]:
@@ -567,9 +566,9 @@ class TaskGenerator:
             return best task id, best compact model, masks on the compact model, score, config list used in this task.
         """
         if self._best_task_id is not None:
-            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'best_model.pth'))
-            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'best_masks.pth'))
-            with Path(self._log_dir_root, 'best_result', 'best_config_list.json').open('r') as f:
+            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'model.pth'))
+            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'masks.pth'))
+            with Path(self._log_dir_root, 'best_result', 'config_list.json').open('r') as f:
                 config_list = json_tricks.load(f)
             return self._best_task_id, compact_model, compact_model_masks, self._best_score, config_list
         return None
