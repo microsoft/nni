@@ -9,8 +9,7 @@ import torch.nn.functional as F
 import schema
 import nni.algorithms.compression.pytorch.pruning as torch_pruner
 import nni.algorithms.compression.pytorch.quantization as torch_quantizer
-from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape, get_min_max_value
-from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
+from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape
 import math
 
 
