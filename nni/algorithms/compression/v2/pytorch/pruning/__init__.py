@@ -6,3 +6,4 @@ from .tools.task_generator import (
     LotteryTicketTaskGenerator,
     SimulatedAnnealingTaskGenerator
 )
+from .iterative_pruner import *

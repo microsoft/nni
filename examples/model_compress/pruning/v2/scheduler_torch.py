@@ -1,4 +1,3 @@
-import functools
 from tqdm import tqdm
 
 import torch
@@ -77,20 +76,13 @@ if __name__ == '__main__':
     for i in range(5):
         trainer(model, optimizer, criterion, i)
 
-    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-
-    # Make sure initialize task generator at first, this because the model pass to the generator should be an unwrapped model.
-    # If you want to initialize pruner at first, you can use the follow code.
-
-    # pruner = L1NormPruner(model, config_list)
-    # pruner._unwrap_model()
-    # task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
-    # pruner._wrap_model()
+    # No need to pass model and config_list to pruner during initializing when using scheduler.
+    pruner = L1NormPruner(None, None)
 
     # you can specify the log_dir, all intermediate results and best result will save under this folder.
     # if you don't want to keep intermediate results, you can set `keep_intermediate_result=False`.
+    config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
     task_generator = AGPTaskGenerator(10, model, config_list, log_dir='.', keep_intermediate_result=True)
-    pruner = L1NormPruner(model, config_list)
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
 

@@ -3,8 +3,7 @@ from tqdm import tqdm
 import torch
 from torchvision import datasets, transforms
 
-from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
-from nni.compression.pytorch.speedup import ModelSpeedup
+from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
 
 from examples.model_compress.models.cifar10.vgg import VGG
 
@@ -40,6 +39,18 @@ def trainer(model, optimizer, criterion, epoch):
         loss.backward()
         optimizer.step()
 
+def finetuner(model):
+    model.train()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    criterion = torch.nn.CrossEntropyLoss()
+    for data, target in tqdm(iterable=train_loader, desc='Epoch PFs'):
+        data, target = data.to(device), target.to(device)
+        optimizer.zero_grad()
+        output = model(data)
+        loss = criterion(output, target)
+        loss.backward()
+        optimizer.step()
+
 def evaluator(model):
     model.eval()
     correct = 0
@@ -59,27 +70,17 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
 
-    print('\nPre-train the model:')
+    # pre-train the model
     for i in range(5):
         trainer(model, optimizer, criterion, i)
-        evaluator(model)
 
     config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-    pruner = L1NormPruner(model, config_list)
-    _, masks = pruner.compress()
+    dummy_input = torch.rand(10, 3, 32, 32).to(device)
 
-    print('\nThe accuracy with masks:')
-    evaluator(model)
+    # if you just want to keep the final result as the best result, you can pass evaluator as None.
+    # or the result with the highest score (given by evaluator) will be the best result.
 
-    pruner._unwrap_model()
-    ModelSpeedup(model, dummy_input=torch.rand(10, 3, 32, 32).to(device), masks_file='simple_masks.pth').speedup_model()
-
-    print('\nThe accuracy after speed up:')
-    evaluator(model)
-
-    # Need a new optimizer due to the modules in model will be replaced during speedup.
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-    print('\nFinetune the model after speed up:')
-    for i in range(5):
-        trainer(model, optimizer, criterion, i)
-        evaluator(model)
+    # pruner = AGPPruner(model, config_list, 'l1', 10, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
+    pruner = AGPPruner(model, config_list, 'l1', 10, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None)
+    pruner.compress()
+    _, model, masks, _, _ = pruner.get_best_result()

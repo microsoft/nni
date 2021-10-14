@@ -6,7 +6,8 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler, L1NormPruner, AGPTaskGenerator
+from nni.algorithms.compression.v2.pytorch.pruning import PruningScheduler, L1NormPruner
+from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 
 
 class TorchModel(torch.nn.Module):

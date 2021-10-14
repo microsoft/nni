@@ -155,7 +155,7 @@ Sometimes it's necessary for a quantization operation to have a customized backw
            grad_output : Tensor
                gradient of the output of quantization operation
            quant_type : QuantType
-               the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`, `QuantType.QUANT_OUTPUT`,
+               the type of quantization, it can be `QuantType.INPUT`, `QuantType.WEIGHT`, `QuantType.OUTPUT`,
                you can define different behavior for different types.
            Returns
            -------
@@ -164,7 +164,7 @@ Sometimes it's necessary for a quantization operation to have a customized backw
            """
 
            # for quant_output function, set grad to zero if the absolute value of tensor is larger than 1
-           if quant_type == QuantType.QUANT_OUTPUT: 
+           if quant_type == QuantType.OUTPUT:
                grad_output[torch.abs(tensor) > 1] = 0
            return grad_output
 
