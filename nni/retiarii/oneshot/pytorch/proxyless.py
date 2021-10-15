@@ -278,8 +278,6 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 for _, module in self.nas_modules:
                     module.finalize_grad()
                 self.ctrl_optim.step()
-                # export current architecture
-                # ref latency
 
             # 2) train model parameters
             for _, module in self.nas_modules:
