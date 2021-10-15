@@ -90,6 +90,8 @@ if __name__ == '__main__':
     # or the result with the highest score (given by evaluator) will be the best result.
 
     # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None, reset_weight=True)
 
     scheduler.compress()
+
+    _, model, masks, _, _ = scheduler.get_best_result()
