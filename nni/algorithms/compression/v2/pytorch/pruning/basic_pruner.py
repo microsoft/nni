@@ -348,7 +348,7 @@ class SlimPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - total_sparsity : This is to specify the total sparsity for all layers in this config,
-            each layer may have different sparsity.
+                each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Only BatchNorm2d is supported in SlimPruner.
             - op_names : Operation names to prune.
@@ -563,7 +563,7 @@ class TaylorFOWeightPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - total_sparsity : This is to specify the total sparsity for all layers in this config,
-            each layer may have different sparsity.
+                each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
             - op_names : Operation names to prune.
