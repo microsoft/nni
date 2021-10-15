@@ -6,8 +6,8 @@ import pickle
 import re
 
 import torch
-import torch.nn as nn
-from nni.nas.pytorch import mutables
+import nni.retiarii.nn.pytorch as nn
+from nni.retiarii.nn.pytorch import LayerChoice
 
 from blocks import ShuffleNetBlock, ShuffleXceptionBlock
 
@@ -75,7 +75,7 @@ class ShuffleNetV2OneShot(nn.Module):
 
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
-            choice_block = mutables.LayerChoice([
+            choice_block = LayerChoice([
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
@@ -124,26 +124,26 @@ class ShuffleNetV2OneShot(nn.Module):
         for name, m in self.named_modules():
             if isinstance(m, nn.Conv2d):
                 if 'first' in name:
-                    nn.init.normal_(m.weight, 0, 0.01)
+                    torch.nn.init.normal_(m.weight, 0, 0.01)
                 else:
-                    nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])
+                    torch.nn.init.normal_(m.weight, 0, 1.0 / m.weight.shape[1])
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
+                    torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, nn.BatchNorm2d):
                 if m.weight is not None:
-                    nn.init.constant_(m.weight, 1)
+                    torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0.0001)
-                nn.init.constant_(m.running_mean, 0)
+                    torch.nn.init.constant_(m.bias, 0.0001)
+                torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.BatchNorm1d):
-                nn.init.constant_(m.weight, 1)
+                torch.nn.init.constant_(m.weight, 1)
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0.0001)
-                nn.init.constant_(m.running_mean, 0)
+                    torch.nn.init.constant_(m.bias, 0.0001)
+                torch.nn.init.constant_(m.running_mean, 0)
             elif isinstance(m, nn.Linear):
-                nn.init.normal_(m.weight, 0, 0.01)
+                torch.nn.init.normal_(m.weight, 0, 0.01)
                 if m.bias is not None:
-                    nn.init.constant_(m.bias, 0)
+                    torch.nn.init.constant_(m.bias, 0)
 
 
 def load_and_parse_state_dict(filepath="./data/checkpoint-150000.pth.tar"):

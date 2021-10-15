@@ -88,6 +88,47 @@ class PathSamplingInputChoice(nn.Module):
         return _get_mask(self.sampled, len(self))
 
 
+class HardwareLatencyEstimator:
+    def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224)):
+        import nn_meter  # pylint: disable=import-error
+        _logger.info(f'Load latency predictor for applied hardware: {applied_hardware}.')
+        self.predictor_name = applied_hardware
+        self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
+        self.supernet_ir = self._form_supernet_ir(model, dummy_input)
+
+    def _form_supernet_ir(self, model, dummy_input):
+        from nni.retiarii.converter import convert_to_graph
+        from nni.retiarii.converter.graph_gen import GraphConverterWithShape
+        # from nni.retiarii.converter.utils import is_layerchoice_node
+        script_module = torch.jit.script(model)
+        supernet_ir = convert_to_graph(script_module, model,
+                                       converter=GraphConverterWithShape(), dummy_input=torch.randn(*dummy_input))
+        import pdb; pdb.set_trace()
+        return supernet_ir
+
+    def export_latency(self, current_architecture):
+        chosen = current_architecture
+        model = self.supernet_ir.fork()
+        for node in current_architecture:
+            # find the graph of candidate node
+            target = self.model.graphs[node.operation.cell_name]
+            chosen_node = target.get_node_by_name(chosen)
+            assert chosen_node is not None
+
+            # remove the layerchoice node and use candidate node to replace it
+            target.add_edge((target.input_node, 0), (chosen_node, None))
+            target.add_edge((chosen_node, None), (target.output_node, None))
+            model.get_node_by_name(node.name).update_operation(Cell(node.operation.cell_name))
+
+            # # remove other candidates
+            # for rm_node in list(target.hidden_nodes):
+            #     if rm_node.name != chosen_node.name:
+            #         rm_node.remove()
+
+        # flatten the graph to get the sampled ir_graph and predict latency
+        latency = ...
+        return latency
+
 class SinglePathTrainer(BaseOneShotTrainer):
     """
     Single-path trainer. Samples a path every time and backpropagates on that path.
@@ -121,7 +162,9 @@ class SinglePathTrainer(BaseOneShotTrainer):
 
     def __init__(self, model, loss, metrics,
                  optimizer, num_epochs, dataset_train, dataset_valid,
-                 batch_size=64, workers=4, device=None, log_frequency=None):
+                 batch_size=64, workers=4, device=None, log_frequency=None,
+                 applied_hardware=None, dummy_input=(1, 3, 224, 224),
+                 latency_constraint=65):
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -133,8 +176,16 @@ class SinglePathTrainer(BaseOneShotTrainer):
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
-        self.model.to(self.device)
 
+        # latency predictor
+        if applied_hardware:
+            self.latency_estimator = HardwareLatencyEstimator(applied_hardware, self.model, dummy_input)
+            self.latency_constraint = latency_constraint
+        else:
+            self.latency_estimator = None
+            self.latency_constraint = float('inf')
+
+        self.model.to(self.device)
         self.nas_modules = []
         replace_layer_choice(self.model, PathSamplingLayerChoice, self.nas_modules)
         replace_input_choice(self.model, PathSamplingInputChoice, self.nas_modules)
@@ -155,6 +206,12 @@ class SinglePathTrainer(BaseOneShotTrainer):
                 result[name] = random.randint(0, len(module) - 1)
             module.sampled = result[name]
         return result
+
+    def _constraint_resample(self):
+        sampling = self._resample()
+        while self.latency_estimator.export_latency(sampling) > self.latency_constraint:
+            sampling = self._resample()
+        return sampling
 
     def _train_one_epoch(self, epoch):
         self.model.train()
