@@ -136,6 +136,7 @@ class LevelPruner(BasicPruner):
             - op_names : Operation names to prune.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     """
+
     def __init__(self, model: Module, config_list: List[Dict]):
         super().__init__(model, config_list)
 
@@ -183,6 +184,7 @@ class NormPruner(BasicPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict], p: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.p = p
@@ -240,6 +242,7 @@ class L1NormPruner(NormPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         super().__init__(model, config_list, 1, mode, dummy_input)
@@ -271,6 +274,7 @@ class L2NormPruner(NormPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         super().__init__(model, config_list, 2, mode, dummy_input)
@@ -302,6 +306,7 @@ class FPGMPruner(BasicPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict],
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
@@ -380,6 +385,7 @@ class SlimPruner(BasicPruner):
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
     """
+
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global'):
@@ -480,6 +486,7 @@ class ActivationPruner(BasicPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -605,6 +612,7 @@ class TaylorFOWeightPruner(BasicPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
+
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
@@ -708,6 +716,7 @@ class ADMMPruner(BasicPruner):
     training_epochs : int
         The epoch number for training model in each iteration.
     """
+
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
