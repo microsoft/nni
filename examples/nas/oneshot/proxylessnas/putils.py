@@ -1,5 +1,5 @@
 import torch
-import nni.retiarii.nn.pytorch as nn
+import torch.nn as nn
 
 
 def get_parameters(model, keys=None, mode='include'):

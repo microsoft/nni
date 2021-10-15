@@ -95,9 +95,6 @@ class ProxylessLayerChoice(nn.Module):
     def export(self):
         return torch.argmax(self.alpha).item()
 
-    def export_prob(self):
-        return F.softmax(self.alpha, dim=-1)
-
 
 class ProxylessInputChoice(nn.Module):
     def __init__(self, *args, **kwargs):
@@ -139,10 +136,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
     def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, warmup_epochs=0,
                  batch_size=64, workers=4, device=None, log_frequency=None,
-                 arc_learning_rate=1.0E-3, 
-                 grad_reg_loss_type=None, grad_reg_loss_params=None, 
-                 latency_predictor=None, dummy_input=(1, 3, 224, 224),
-                 ref_latency=65):
+                 arc_learning_rate=1.0E-3):
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -155,13 +149,6 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
         self.model.to(self.device)
-
-        # latency predictor
-        self.reg_loss_type = grad_reg_loss_type
-        self.reg_loss_params = {} if grad_reg_loss_params is None else grad_reg_loss_params
-        self.latency_predictor = latency_predictor
-        self.block_latency_table = self._form_latency_table(dummy_input) if self.latency_predictor else None
-        self.ref_latency = ref_latency
 
         self.nas_modules = []
         replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
@@ -202,7 +189,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 for _, module in self.nas_modules:
                     module.resample()
                 self.ctrl_optim.zero_grad()
-                logits, loss = self._logits_and_loss_for_arch_update(val_X, val_y)
+                logits, loss = self._logits_and_loss(val_X, val_y)
                 loss.backward()
                 for _, module in self.nas_modules:
                     module.finalize_grad()
@@ -212,7 +199,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
             for _, module in self.nas_modules:
                 module.resample()
             self.optimizer.zero_grad()
-            logits, loss = self._logits_and_loss_for_weight_update(trn_X, trn_y)
+            logits, loss = self._logits_and_loss(trn_X, trn_y)
             loss.backward()
             self.optimizer.step()
             metrics = self.metrics(logits, trn_y)
@@ -222,82 +209,10 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 _logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                              self.num_epochs, step + 1, len(self.train_loader), meters)
 
-    def _form_latency_table(self, dummy_input):
-        latency_table = {}
-
-        from nni.retiarii.converter import convert_to_graph
-        from nni.retiarii.converter.graph_gen import GraphConverterWithShape
-        script_module = torch.jit.script(self.model)
-        converter = GraphConverterWithShape()
-        base_model_ir = convert_to_graph(script_module, self.model, 
-                                         converter=converter, dummy_input=torch.randn(*dummy_input))
-
-        # form the latency of layerchoice blocks for the latency table
-        temp_ir_model = base_model_ir.fork()
-        layerchoice_nodes = base_model_ir.get_layerchoice_nodes()
-        for lc_node in layerchoice_nodes:
-            cand_lat = {}
-            for candidate in lc_node.operation.parameters['candidates']:
-                node_graph = base_model_ir.graphs.get(candidate)
-                if node_graph is not None:
-                    temp_ir_model._root_graph_name = node_graph.name
-                    latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
-                else:
-                    logging.Logger.warning(f"Could not found graph for layerchoice candidate {candidate}")
-                    latency = 0
-                cand_lat[candidate.split('_')[-1]] = latency
-            latency_table[lc_node.operation.parameters['label']] = cand_lat
-        
-        # form the latency of the stationary block in the latency table
-        temp_ir_model._root_graph_name = base_model_ir._root_graph_name
-        GraphConverterWithShape().flatten_without_layerchoice(temp_ir_model)
-        latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
-        latency_table['stationary_block'] = {'root': latency}
-        
-        return latency_table
-
-    def _cal_expected_latency(self):
-        lat = self.block_latency_table['stationary_block']['root']
-        for module_name, module in self.nas_modules:
-            probs = module.export_prob()
-            assert len(probs) == len(self.block_latency_table[module_name])
-            lat += torch.sum(torch.tensor([probs[i] * self.block_latency_table[module_name][str(i)] 
-                                for i in range(len(probs))]))
-        return lat
-
-    def _logits_and_loss_for_arch_update(self, X, y): 
-        ''' return logits and loss for architecture parameter update '''
-        logits = self.model(X)
-        ce_loss = self.loss(logits, y)
-        if not self.block_latency_table:
-            return logits, ce_loss
-        # import time; since=time.time()
-        expected_latency = self._cal_expected_latency()
-        # print(f'_cal_expected_latency: {time.time() - since}')
-        
-        if self.reg_loss_type == 'mul#log':
-            import math
-            alpha = self.reg_loss_params.get('alpha', 1)
-            beta = self.reg_loss_params.get('beta', 0.6)
-            # noinspection PyUnresolvedReferences
-            reg_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
-            # print(f"expected_latency: {expected_latency}, reg_loss[mul#log]: {reg_loss}")
-            return logits, alpha * ce_loss * reg_loss
-        elif self.reg_loss_type == 'add#linear':
-            reg_lambda = self.reg_loss_params.get('lambda', 2e-1)
-            reg_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
-            # print(f"expected_latency: {expected_latency}, reg_loss[add#linear]: {reg_loss}")
-            return logits, ce_loss + reg_loss
-        elif self.reg_loss_type is None:
-            return logits, ce_loss
-        else:
-            raise ValueError(f'Do not support: {self.reg_loss_type}')
-    
-    def _logits_and_loss_for_weight_update(self, X, y):
-        ''' return logits and loss for weight parameter update '''
+    def _logits_and_loss(self, X, y):
         logits = self.model(X)
         loss = self.loss(logits, y)
-        return logits, loss  
+        return logits, loss
 
     def fit(self):
         for i in range(self.num_epochs):
