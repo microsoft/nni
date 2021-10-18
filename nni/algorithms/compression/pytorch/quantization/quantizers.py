@@ -26,7 +26,6 @@ __all__ = ['NaiveQuantizer', 'QAT_Quantizer', 'DoReFaQuantizer', 'BNNQuantizer',
 
 logger = logging.getLogger(__name__)
 
-
 class NaiveQuantizer(Quantizer):
     """quantize weight to 8 bits
     """
