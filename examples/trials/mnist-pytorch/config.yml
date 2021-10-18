@@ -2,6 +2,7 @@
 # Use "nnictl create --config config.yml" to launch this experiment.
 # Afterwards, you can check "config_detailed.yml" for more explanation.
 
+experimentName: MNIST
 searchSpaceFile: search_space.json
 trialCommand: python3 mnist.py  # NOTE: change "python3" to "python" if you are using Windows
 trialGpuNumber: 0
