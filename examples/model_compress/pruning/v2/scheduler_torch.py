@@ -1,3 +1,4 @@
+import sys
 from tqdm import tqdm
 
 import torch
@@ -7,7 +8,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 from nni.algorithms.compression.v2.pytorch.pruning.basic_scheduler import PruningScheduler
 
-from examples.model_compress.models.cifar10.vgg import VGG
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
