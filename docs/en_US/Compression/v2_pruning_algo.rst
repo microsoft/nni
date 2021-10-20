@@ -5,7 +5,8 @@ NNI provides several pruning algorithms that reproducing from the papers. In pru
 This means users can freely combine components from different algorithms,
 or easily use a component of their own implementation to replace a step in the original algorithm to implement their own pruning algorithm.
 
-Right now, pruning algorithms with how to generate masks in one step are implemented as pruners, and how to schedule sparsity in each iteration are implemented as task generators.
+Right now, pruning algorithms with how to generate masks in one step are implemented as pruners,
+and how to schedule sparsity in each iteration are implemented as iterative pruners.
 
 **Pruner**
 
