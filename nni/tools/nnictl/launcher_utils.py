@@ -100,8 +100,6 @@ def parse_path(experiment_config, config_path):
         if experiment_config['advisor'].get('classArgs') and experiment_config['advisor']['classArgs'].get('config_space'):
             parse_relative_path(root_path, experiment_config['advisor']['classArgs'], 'config_space')
 
-    print(experiment_config)
-
     if experiment_config.get('machineList'):
         for index in range(len(experiment_config['machineList'])):
             parse_relative_path(root_path, experiment_config['machineList'][index], 'sshKeyPath')
