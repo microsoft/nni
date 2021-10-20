@@ -1157,13 +1157,10 @@ class LsqQuantizer(Quantizer):
         calibration_config = {}
 
         for name, module in self.bound_model.named_modules():
-            if hasattr(module, 'input_bits') or hasattr(module, 'output_bits'):
+            if hasattr(module, 'input_bits') or hasattr(module, 'weight_bits') or hasattr(module, 'output_bits'):
                 calibration_config[name] = {}
             if hasattr(module, 'weight_bits'):
                 calibration_config[name]['weight_bits'] = int(module.weight_bits)
-                abs_max_input = float(module.input_scale * module.input_qmax)
-                calibration_config[name]['tracked_min_input'] = -abs_max_input
-                calibration_config[name]['tracked_max_input'] = abs_max_input
                 actual_weight = getattr(module, 'old_weight', None)
                 if actual_weight is None:
                     logger.warning("Can not recover weight for layer %s. "
@@ -1177,6 +1174,11 @@ class LsqQuantizer(Quantizer):
                         module.register_parameter('bias', actual_bias)
                     else:
                         setattr(module, 'bias', None)
+            if hasattr(module, 'input_bits'):
+                calibration_config[name]['input_bits'] = int(module.input_bits)
+                abs_max_input = float(module.input_scale * module.input_qmax)
+                calibration_config[name]['tracked_min_input'] = -abs_max_input
+                calibration_config[name]['tracked_max_input'] = abs_max_input
             if hasattr(module, 'output_bits'):
                 calibration_config[name]['output_bits'] = int(module.output_bits)
                 abs_max_output = float(module.output_scale * module.output_qmax)
