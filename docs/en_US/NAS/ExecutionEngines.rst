@@ -61,12 +61,26 @@ Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharin
 
 To enable CGO execution engine, you need to follow these steps:
 
-1. Create ``RetiariiExeConfig('remote')`` by running the experiment using remote training service.
-2. Add ``config.execution_engine = 'cgo'`` to ``RetiariiExeConfig`` to specify CGO execution engine.
+1. CGO execution engine currently only supports remote training service.
+2. Add configurations for remote training service, especially
 3. Add configurations for CGO engine
+
+  .. code-block:: python
+
+    config.max_concurrency_cgo = 3 # the maximum number of concurrent models to merge
+    config.batch_waiting_time = 10  # how many seconds CGO execution engine should wait before optimizing a new batch of models
+    exp_config.execution_engine = 'cgo' # set execution engine to CGO
+
+CGO Execution Engine only supports pytorch-lightning trainer that inherits `MultiModelSupervisedLearningModule <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule>`__
+For a trial running multiple models, the trainers inheriting ``MultiModelSupervisedLearningModule`` can handle the multiple outputs from the merged model for training, test and validation.
+Users can use two trainers for `Classification<./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification>`__ and `Regression<./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression>`__ in ``import nni.retiarii.evaluator.pytorch.cgo.evaluator``.
+
 .. code-block:: python
-config.max_concurrency_cgo = 1 # the maximum number of concurrent models to merge
-config.batch_waiting_time = 0  # how long CGO execution engine should wait before optimizing a new batch of models
-.. code-block:: python
+
+  trainer = Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
+                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
+                                max_epochs=1, limit_train_batches=0.2)
+
+Advanced users can also implement their own trainer logic by inheriting ``MultiModelSupervisedLearningModule``.
 
 #This execution engine will be `released in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
