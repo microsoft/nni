@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 
 import { KubeflowOperator, OperatorApiVersion } from '../training_service/kubernetes/kubeflow/kubeflowConfig'
 import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetesConfig';
@@ -92,7 +90,7 @@ export interface DlcConfig extends TrainingServiceConfig {
 /* Kubeflow */
 
 // FIXME: merge with shared storage config
-export interface KubeflowStorageConfig {
+export interface KubernetesStorageConfig {
     storageType: string;
     maxTrialNumberPerGpu?: number;
     server?: string;
@@ -122,31 +120,34 @@ export interface KubeflowConfig extends TrainingServiceConfig {
     maxTrialNumberPerGpu: number;
     operator: KubeflowOperator;
     apiVersion: OperatorApiVersion;
-    storage: KubeflowStorageConfig;
+    storage: KubernetesStorageConfig;
     reuseMode: boolean;
 }
 
-/* FrameworkController */
-
-type FrameworkControllerStorageConfig = KubeflowStorageConfig;
-
-export interface FrameworkControllerRoleConfig {
+export interface FrameworkControllerTaskRoleConfig {
     name: string;
-    dockerImage: string;
     taskNumber: number;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: string;
-    attemptCompletionMinFailedTasks: number;
-    attemptCompletionMinSucceededTasks: number;
+    memorySize: number;
+    dockerImage: string;
+    privateRegistryAuthPath?: string;
+    frameworkAttemptCompletionPolicy: {
+        minFailedTaskCount: number;
+        minSucceedTaskCount: number;
+    };
 }
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {
     platform: 'frameworkcontroller';
+    taskRoles: FrameworkControllerTaskRoleConfig[];
+    maxTrialNumberPerGpu: number;
+    storage: KubernetesStorageConfig;
+    reuseMode: boolean;
+    namespace: 'default';
+    apiVersion: string;
     serviceAccountName: string;
-    storage: FrameworkControllerStorageConfig;
-    taskRoles: FrameworkControllerRoleConfig[];
 }
 
 /* shared storage */

@@ -1,0 +1,10 @@
+searchSpaceFile: search_space.json
+trialCommand: python mnist.py
+trialGpuNumber: 0
+trialConcurrency: 1
+tuner:
+  name: TPE
+  classArgs:
+    optimize_mode: maximize
+trainingService:
+  platform: local

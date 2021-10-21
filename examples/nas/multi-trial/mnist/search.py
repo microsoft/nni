@@ -1,5 +1,6 @@
 import random
 
+import torch
 import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
 import nni.retiarii.evaluator.pytorch.lightning as pl
@@ -10,32 +11,40 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 from torchvision.datasets import MNIST
 
-# comment the follwing line for graph-based execution engine
+class DepthwiseSeparableConv(nn.Module):
+    def __init__(self, in_ch, out_ch):
+        super().__init__()
+        self.depthwise = nn.Conv2d(in_ch, in_ch, kernel_size=3, groups=in_ch)
+        self.pointwise = nn.Conv2d(in_ch, out_ch, kernel_size=1)
+
+    def forward(self, x):
+        return self.pointwise(self.depthwise(x))
+
 @model_wrapper
 class Net(nn.Module):
-    def __init__(self, hidden_size):
+    def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 20, 5, 1)
-        self.conv2 = nn.Conv2d(20, 50, 5, 1)
-        self.fc1 = nn.LayerChoice([
-            nn.Linear(4*4*50, hidden_size),
-            nn.Linear(4*4*50, hidden_size, bias=False)
-        ], label='fc1_choice')
-        self.fc2 = nn.Linear(hidden_size, 10)
+        self.conv1 = nn.Conv2d(1, 32, 3, 1)
+        self.conv2 = nn.LayerChoice([
+            nn.Conv2d(32, 64, 3, 1),
+            DepthwiseSeparableConv(32, 64)
+        ])
+        self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
+        self.dropout2 = nn.Dropout(0.5)
+        feature = nn.ValueChoice([64, 128, 256])
+        self.fc1 = nn.Linear(9216, feature)
+        self.fc2 = nn.Linear(feature, 10)
 
     def forward(self, x):
         x = F.relu(self.conv1(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = F.relu(self.conv2(x))
-        x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4*4*50)
-        x = F.relu(self.fc1(x))
-        x = self.fc2(x)
-        return F.log_softmax(x, dim=1)
-
+        x = F.max_pool2d(self.conv2(x), 2)
+        x = torch.flatten(self.dropout1(x), 1)
+        x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+        output = F.log_softmax(x, dim=1)
+        return output
 
 if __name__ == '__main__':
-    base_model = Net(128)
+    base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
     test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
@@ -50,7 +59,7 @@ if __name__ == '__main__':
     exp_config = RetiariiExeConfig('local')
     exp_config.experiment_name = 'mnist_search'
     exp_config.trial_concurrency = 2
-    exp_config.max_trial_number = 2
+    exp_config.max_trial_number = 20
     exp_config.training_service.use_active_gpu = False
     export_formatter = 'dict'
 

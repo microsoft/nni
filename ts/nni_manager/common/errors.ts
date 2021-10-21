@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 export namespace NNIErrorNames {
     export const NOT_FOUND: string = 'NOT_FOUND';
     export const INVALID_JOB_DETAIL: string = 'NO_VALID_JOB_DETAIL_FOUND';

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Request, Response, Router } from 'express';
 import { ClusterJobRestServer } from '../common/clusterJobRestServer';
 import { PAITrainingService } from './paiTrainingService';
@@ -56,7 +54,7 @@ export class PAIJobRestServer extends ClusterJobRestServer {
             }
         });
 
-        router.get(`/parameter-file-meta`, (req: Request, res: Response) => {
+        router.get(`/parameter-file-meta`, (_req: Request, res: Response) => {
             try {
                 this.log.info(`GET /parameter-file-meta`);
                 res.send(this.parameterFileMetaList);
