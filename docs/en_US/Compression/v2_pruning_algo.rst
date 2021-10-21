@@ -54,7 +54,7 @@ User configuration for Level Pruner
 L1 Norm Pruner
 --------------
 
-L1 norm pruner compute the l1 norm of the layer weight on the first dimension,
+L1 norm pruner computes the l1 norm of the layer weight on the first dimension,
 then prune the weight blocks on this dimension with smaller l1 norm values.
 i.e., compute the l1 norm of the filters in convolution layer as metric values,
 compute the l1 norm of the weight by rows in linear layer as metric values.
@@ -110,7 +110,7 @@ FPGM Pruner
 FPGM pruner prunes the blocks of the weight on the first dimension with the smallest geometric median.
 FPGM chooses the weight blocks with the most replaceable contribution.
 
-For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/pdf/1811.00250.pdf>`__.
+For more details, please refer to `Filter Pruning via Geometric Median for Deep Convolutional Neural Networks Acceleration <https://arxiv.org/abs/1811.00250>`__.
 
 FPGM pruner also supports dependency-aware mode.
 
@@ -137,7 +137,7 @@ Slim Pruner
 Slim pruner adds sparsity regularization on the scaling factors of batch normalization (BN) layers during training to identify unimportant channels.
 The channels with small scaling factor values will be pruned.
 
-For more details, please refer to `'Learning Efficient Convolutional Networks through Network Slimming' <https://arxiv.org/pdf/1708.06519.pdf>`__\.
+For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
 
 Useage
 ^^^^^^
