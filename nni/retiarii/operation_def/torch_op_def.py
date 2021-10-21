@@ -293,7 +293,8 @@ ManuallyChooseDef = {
 
 TensorOpExceptions = {
     'aten::sub': lambda output, inputs: f'{output} = {inputs[0]} - {inputs[1]}',  # example: x.size(1) - 3
-    'aten::add': lambda output, inputs: f'{output} = {inputs[0]} + {inputs[1]}'  # example: input.shape[0] + 5
+    'aten::add': lambda output, inputs: f'{output} = {inputs[0]} + {inputs[1]}',  # example: input.shape[0] + 5
+    'aten::mul': lambda output, inputs: f'{output} = {inputs[0]} * {inputs[1]}'  # exmaple: 3 * 5
 }
 
 TorchOpExclude = ['aten::Size', 'aten::as_tensor', 'aten::device',
@@ -403,6 +404,9 @@ class TensorOps(PyTorchOperation):
         overloaded_defs = TensorOps._op_args[_type]
         matched = []
         for each in overloaded_defs:
+            # aten::mul has length 1 def, which is not intended to be matched
+            if _type == 'aten::mul' and len(each) == 1:
+                continue
             # plus 1 because we skip the first argument when generating tensor op def
             if len(each) + 1 == len(inputs):
                 matched.append(each)
