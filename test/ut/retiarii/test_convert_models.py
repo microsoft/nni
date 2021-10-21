@@ -90,11 +90,8 @@ class TestModels(unittest.TestCase, ConvertMixin):
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
 
-    def test_identity_block(self):
+    def test_identity_node(self):
         class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                
             def forward(self, x):
                 return x
 
