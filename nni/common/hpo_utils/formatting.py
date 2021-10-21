@@ -6,6 +6,9 @@ This script provides a more program-friendly representation of HPO search space.
 The format is considered internal helper and is not visible to end users.
 
 You will find this useful when you want to support nested search space.
+
+The random tuner is an intuitive example for this utility.
+You should check its code before reading docstrings in this file.
 """
 
 __all__ = [
@@ -15,11 +18,14 @@ __all__ = [
 ]
 
 import math
+from types import SimpleNamespace
 from typing import Any, List, NamedTuple, Optional, Tuple
 
 class ParameterSpec(NamedTuple):
     """
-    Specification (aka space / range) of one single parameter.
+    Specification (aka space / range / domain) of one single parameter.
+
+    NOTE: For `loguniform` (and `qloguniform`), the fields `low` and `high` are logarithm of original values.
     """
 
     name: str                       # The object key in JSON
@@ -27,126 +33,137 @@ class ParameterSpec(NamedTuple):
     values: List[Any]               # "_value" in JSON
 
     key: Tuple[str]                 # The "path" of this parameter
-    parent_index: Optional[int]     # If the parameter is in a nested choice, this is its parent's index;
-                                    # if the parameter is at top level, this is `None`.
 
     categorical: bool               # Whether this paramter is categorical (unordered) or numerical (ordered)
-    size: int = None                # If it's categorical, how many canidiates it has
+    size: int = None                # If it's categorical, how many candidates it has
 
     # uniform distributed
     low: float = None               # Lower bound of uniform parameter
     high: float = None              # Upper bound of uniform parameter
 
     normal_distributed: bool = None # Whether this parameter is uniform or normal distrubuted
-    mu: float = None                # Mean of normal parameter
-    sigma: float = None             # Scale of normal parameter
+    mu: float = None                # µ of normal parameter
+    sigma: float = None             # σ of normal parameter
 
-    q: Optional[float] = None       # If not `None`, the value should be an integer multiple of this
+    q: Optional[float] = None       # If not `None`, the parameter value should be an integer multiple of this
+    clip: Optional[Tuple[float, float]] = None
+                                    # For q(log)uniform, this equals to "values[:2]"; for others this is None
+
     log_distributed: bool = None    # Whether this parameter is log distributed
+                                    # When true, low/high/mu/sigma describes log of parameter value (like np.lognormal)
 
-    def is_activated(self, partial_parameters):
+    def is_activated_in(self, partial_parameters):
         """
         For nested search space, check whether this parameter should be skipped for current set of paremters.
-        This function works because the return value of `format_search_space()` is sorted in a way that
-        parents always appear before children.
+        This function must be used in a pattern similar to random tuner. Otherwise it will misbehave.
         """
-        return self.parent_index is None or partial_parameters.get(self.key[:-1]) == self.parent_index
+        if len(self.key) < 2 or isinstance(self.key[-2], str):
+            return True
+        return partial_parameters[self.key[:-2]] == self.key[-2]
 
-def format_search_space(search_space, ordered_randint=False):
-    formatted = _format_search_space(tuple(), None, search_space)
-    if ordered_randint:
-        for i, spec in enumerate(formatted):
-            if spec.type == 'randint':
-                formatted[i] = _format_ordered_randint(spec.key, spec.parent_index, spec.values)
+def format_search_space(search_space):
+    """
+    Convert user provided search space into a dict of ParameterSpec.
+    The dict key is dict value's `ParameterSpec.key`.
+    """
+    formatted = _format_search_space(tuple(), search_space)
+    # In CPython 3.6, dicts preserve order by internal implementation.
+    # In Python 3.7+, dicts preserve order by language spec.
+    # Python 3.6 is crappy enough. Don't bother to do extra work for it.
+    # Remove these comments when we drop 3.6 support.
     return {spec.key: spec for spec in formatted}
 
 def deformat_parameters(parameters, formatted_search_space):
     """
-    `paramters` is a dict whose key is `ParamterSpec.key`, and value is integer index if the parameter is categorical.
-    Convert it to the format expected by end users.
+    Convert internal format parameters to users' expected format.
+
+    "test/ut/sdk/test_hpo_formatting.py" provides examples of how this works.
+
+    The function do following jobs:
+     1. For "choice" and "randint", convert index (integer) to corresponding value.
+     2. For "*log*", convert x to `exp(x)`.
+     3. For "q*", convert x to `round(x / q) * q`, then clip into range.
+     4. For nested choices, convert flatten key-value pairs into nested structure.
     """
     ret = {}
     for key, x in parameters.items():
         spec = formatted_search_space[key]
-        if not spec.categorical:
-            _assign(ret, key, x)
-        elif spec.type == 'randint':
-            lower = min(math.ceil(float(x)) for x in spec.values)
-            _assign(ret, key, lower + x)
-        elif _is_nested_choices(spec.values):
-            _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
+        if spec.categorical:
+            if spec.type == 'randint':
+                lower = min(math.ceil(float(x)) for x in spec.values)
+                _assign(ret, key, lower + x)
+            elif _is_nested_choices(spec.values):
+                _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
+            else:
+                _assign(ret, key, spec.values[x])
         else:
-            _assign(ret, key, spec.values[x])
+            if spec.log_distributed:
+                x = math.exp(x)
+            if spec.q is not None:
+                x = round(x / spec.q) * spec.q
+            if spec.clip:
+                x = max(x, spec.clip[0])
+                x = min(x, spec.clip[1])
+            _assign(ret, key, x)
     return ret
 
-def _format_search_space(parent_key, parent_index, space):
+def _format_search_space(parent_key, space):
     formatted = []
     for name, spec in space.items():
         if name == '_name':
             continue
         key = tuple([*parent_key, name])
-        formatted.append(_format_parameter(key, parent_index, spec['_type'], spec['_value']))
+        formatted.append(_format_parameter(key, spec['_type'], spec['_value']))
         if spec['_type'] == 'choice' and _is_nested_choices(spec['_value']):
             for index, sub_space in enumerate(spec['_value']):
-                formatted += _format_search_space(key, index, sub_space)
+                key = tuple([*parent_key, name, index])
+                formatted += _format_search_space(key, sub_space)
     return formatted
 
-def _format_parameter(key, parent_index, type_, values):
-    spec = {}
-    spec['name'] = key[-1]
-    spec['type'] = type_
-    spec['values'] = values
-
-    spec['key'] = key
-    spec['parent_index'] = parent_index
-
-    if type_ in ['choice', 'randint']:
-        spec['categorical'] = True
-        if type_ == 'choice':
-            spec['size'] = len(values)
-        else:
-            lower, upper = sorted(math.ceil(float(x)) for x in values)
-            spec['size'] = upper - lower
-
-    else:
-        spec['categorical'] = False
-        if type_.startswith('q'):
-            spec['q'] = float(values[2])
-        spec['log_distributed'] = ('log' in type_)
-
-        if 'normal' in type_:
-            spec['normal_distributed'] = True
-            spec['mu'] = float(values[0])
-            spec['sigma'] = float(values[1])
-
-        else:
-            spec['normal_distributed'] = False
-            spec['low'], spec['high'] = sorted(float(x) for x in values[:2])
-            if 'q' in spec:
-                spec['low'] = math.ceil(spec['low'] / spec['q']) * spec['q']
-                spec['high'] = math.floor(spec['high'] / spec['q']) * spec['q']
-
-    return ParameterSpec(**spec)
-
-def _format_ordered_randint(key, parent_index, values):
-    lower, upper = sorted(math.ceil(float(x)) for x in values)
-    return ParameterSpec(
+def _format_parameter(key, type_, values):
+    spec = SimpleNamespace(
         name = key[-1],
-        type = 'randint',
+        type = type_,
         values = values,
         key = key,
-        parent_index = parent_index,
-        categorical = False,
-        low = float(lower),
-        high = float(upper - 1),
-        normal_distributed = False,
-        q = 1.0,
-        log_distributed = False,
+        categorical = type_ in ['choice', 'randint'],
     )
 
+    if spec.categorical:
+        if type_ == 'choice':
+            spec.size = len(values)
+        else:
+            lower = math.ceil(float(values[0]))
+            upper = math.ceil(float(values[1]))
+            spec.size = upper - lower
+
+    else:
+        if type_.startswith('q'):
+            spec.q = float(values[2])
+        else:
+            spec.q = None
+        spec.log_distributed = ('log' in type_)
+
+        if 'normal' in type_:
+            spec.normal_distributed = True
+            spec.mu = float(values[0])
+            spec.sigma = float(values[1])
+
+        else:
+            spec.normal_distributed = False
+            spec.low = float(values[0])
+            spec.high = float(values[1])
+            if spec.q is not None:
+                spec.clip = (spec.low, spec.high)
+            if spec.log_distributed:
+                # make it align with mu
+                spec.low = math.log(spec.low)
+                spec.high = math.log(spec.high)
+
+    return ParameterSpec(**spec.__dict__)
+
 def _is_nested_choices(values):
-    if not values:
-        return False
+    assert values  # choices should not be empty
     for value in values:
         if not isinstance(value, dict):
             return False
@@ -157,6 +174,8 @@ def _is_nested_choices(values):
 def _assign(params, key, x):
     if len(key) == 1:
         params[key[0]] = x
+    elif isinstance(key[0], int):
+        _assign(params, key[1:], x)
     else:
         if key[0] not in params:
             params[key[0]] = {}

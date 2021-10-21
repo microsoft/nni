@@ -3,7 +3,8 @@ import argparse
 from tqdm import tqdm
 from nasbench import api  # pylint: disable=import-error
 
-from .model import db, Nb101TrialConfig, Nb101TrialStats, Nb101IntermediateStats
+from nni.nas.benchmarks.utils import load_benchmark
+from .model import Nb101TrialConfig, Nb101TrialStats, Nb101IntermediateStats
 from .graph_util import nasbench_format_to_architecture_repr, hash_module
 
 
@@ -13,6 +14,8 @@ def main():
                         help='Path to the file to be converted, e.g., nasbench_full.tfrecord')
     args = parser.parse_args()
     nasbench = api.NASBench(args.input_file)
+
+    db = load_benchmark('nasbench101')
     with db:
         db.create_tables([Nb101TrialConfig, Nb101TrialStats, Nb101IntermediateStats])
         for hashval in tqdm(nasbench.hash_iterator(), desc='Dumping data into database'):

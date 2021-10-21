@@ -566,9 +566,9 @@ class TaskGenerator:
             return best task id, best compact model, masks on the compact model, score, config list used in this task.
         """
         if self._best_task_id is not None:
-            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'best_model.pth'))
-            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'best_masks.pth'))
-            with Path(self._log_dir_root, 'best_result', 'best_config_list.json').open('r') as f:
+            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'model.pth'))
+            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'masks.pth'))
+            with Path(self._log_dir_root, 'best_result', 'config_list.json').open('r') as f:
                 config_list = json_tricks.load(f)
             return self._best_task_id, compact_model, compact_model_masks, self._best_score, config_list
         return None

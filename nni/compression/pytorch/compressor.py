@@ -1,10 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import copy
 import types
 import logging
 import torch
 from nni.common.graph_utils import build_module_graph
+from nni.compression.pytorch.quantization.literal import QuantType, BN_FOLD_OP, BN_FOLD_TAG
+from nni.compression.pytorch.quantization.observers import RecordingObserver
 from . import default_layers
 
 _logger = logging.getLogger(__name__)
@@ -547,7 +550,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
             assert len(inputs) == 1, "Quantization of input only supports ops with single input."
             new_inp = self.quantizer.quant_grad(
                 inputs[0],
-                QuantType.QUANT_INPUT,
+                QuantType.INPUT,
                 self)
             inputs = (new_inp,)
 
@@ -563,7 +566,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
 
             self.quantizer.quant_grad(
                 new_weight,
-                QuantType.QUANT_WEIGHT,
+                QuantType.WEIGHT,
                 self, inputs[0])
 
         result = self.module(*inputs)
@@ -571,7 +574,7 @@ class QuantizerModuleWrapper(torch.nn.Module):
         if 'output' in self.config['quant_types']:
             result = self.quantizer.quant_grad(
                 result,
-                QuantType.QUANT_OUTPUT,
+                QuantType.OUTPUT,
                 self)
         return result
 
@@ -604,10 +607,13 @@ class Quantizer(Compressor):
     def __init__(self, model, config_list, optimizer=None, dummy_input=None):
         if isinstance(model, torch.nn.DataParallel):
             model = model.module
+        model_copied = copy.deepcopy(model)
         self.identity_wrappers = []
         self.conv_bn_patterns = {}
         self.find_conv_bn_patterns(model, dummy_input)
         super().__init__(model, config_list, optimizer)
+        self.all_shapes = {}
+        self.record_shape(model_copied, dummy_input)
         self.quant_grad = QuantGrad.apply
         if self.optimizer is not None:
             self.patch_optimizer(self.step_with_optimizer)
@@ -845,25 +851,54 @@ class Quantizer(Compressor):
                     if successor.op_type == 'BatchNorm2d':
                         self.conv_bn_patterns[node_group.name] = successor.name
 
+    def record_shape(self, model, dummy_input):
+        """
+        Record input/output's shapes of each module to be quantized
+
+        Parameters
+        ----------
+        model : torch.nn.Module
+            model to be recorded.
+        dummy_input : tupel of torch.tensor
+            inputs to the model.
+        """
+        def _pre_forward_hook(self, inp):
+            # Only record the first tensor of the input
+            return self.pre_forward(inp[0])
+
+        def _post_forward_hook(self, _, out):
+            return self.post_forward(out)
+
+        if dummy_input is None:
+            return
+
+        all_handles = []
+        all_observers = {}
+        modules_to_compress = self.get_modules_to_compress()
+        compress_names = [layer_info[0].name for layer_info in modules_to_compress]
+        for name, module in model.named_modules():
+            if name in compress_names:
+                all_observers[name] = {}
+                all_observers[name]['input_hook'] = RecordingObserver()
+                all_observers[name]['output_hook'] = RecordingObserver()
+                module.add_module('pre_forward', all_observers[name]['input_hook'])
+                module.add_module('post_forward', all_observers[name]['output_hook'])
+                all_handles.append(module.register_forward_pre_hook(_pre_forward_hook))
+                all_handles.append(module.register_forward_hook(_post_forward_hook))
+        model(dummy_input)
+        for name, hooks in all_observers.items():
+            # only support single input
+            input_val = hooks['input_hook'].tensor_val
+            input_shape = input_val[0].shape if input_val else None
+            output_val = hooks['output_hook'].tensor_val
+            output_shape = output_val[0].shape if output_val else None
+            shapes = [input_shape, output_shape]
+            self.all_shapes[name] = shapes
+        return
+
     def step_with_optimizer(self):
         pass
 
-class QuantType:
-    """
-    Enum class for quantization type.
-    """
-    QUANT_INPUT = 0
-    QUANT_WEIGHT = 1
-    QUANT_OUTPUT = 2
-
-QType_Dict = {
-    0: "input",
-    1: "weight",
-    2: "output"
-}
-
-BN_FOLD_OP = ["Conv2d"]
-BN_FOLD_TAG = 'BN_FOLD_TAG'
 
 class QuantGrad(torch.autograd.Function):
     """
@@ -920,8 +955,8 @@ class QuantGrad(torch.autograd.Function):
         grad_output : Tensor
             gradient of the output of quantization operation
         scale : Tensor
-            the type of quantization, it can be `QuantType.QUANT_INPUT`, `QuantType.QUANT_WEIGHT`,
-            `QuantType.QUANT_OUTPUT`, you can define different behavior for different types.
+            the type of quantization, it can be `QuantType.INPUT`, `QuantType.WEIGHT`,
+            `QuantType.OUTPUT`, you can define different behavior for different types.
         zero_point : Tensor
             zero_point for quantizing tensor
         qmin : Tensor
@@ -939,28 +974,39 @@ class QuantGrad(torch.autograd.Function):
     def forward(ctx, tensor, quant_type, wrapper, input_tensor=None, **kwargs):
         output = quantize_helper(tensor, quant_type, wrapper, input_tensor, **kwargs)
 
-        bits = QuantGrad.get_bits_length(wrapper.config, QType_Dict[quant_type])
-        qmin, qmax = torch.Tensor([0]).to(tensor.device), torch.Tensor([(1 << bits) - 1]).to(tensor.device)
-        if hasattr(wrapper.module, 'scale') and hasattr(wrapper.module, 'zero_point'):
+        if hasattr(wrapper.module, "layer_quant_setting"):
+            layer_quant_setting = wrapper.module.layer_quant_setting
+            qmin, qmax = getattr(layer_quant_setting, quant_type).get_qmin_qmax()
+        else:
+            # todo: when dtype/scheme customization is ready for all quantizers, remove this
+            bits = QuantGrad.get_bits_length(wrapper.config, quant_type)
+            qmin, qmax = 0, (1 << bits) - 1
+
+        scale_name, zero_point_name = quant_type.type_to_scale_zero_point_name()
+        if hasattr(wrapper.module, scale_name) and hasattr(wrapper.module, zero_point_name):
+            scale = getattr(wrapper.module, scale_name)
+            zero_point = getattr(wrapper.module, zero_point_name)
+        # todo: remove this when other quantizers use different scale & zero point for input/weight/output
+        elif hasattr(wrapper.module, 'scale') and hasattr(wrapper.module, 'zero_point'):
             scale = wrapper.module.scale
             zero_point = wrapper.module.zero_point
         else:
             scale, zero_point = None, None
-        ctx.save_for_backward(tensor)
         # Only tensors have gradients flowing back needs to be saved by save_for_backward.
         # Others should directly assign to ctx.
-        ctx.scale = scale
-        ctx.zero_point = zero_point
+        ctx.save_for_backward(tensor)
         ctx.quant_type = quant_type
         ctx.qmin, ctx.qmax = qmin, qmax
+        ctx.scale = scale
+        ctx.zero_point = zero_point
         return output
 
     @classmethod
     def backward(cls, ctx, grad_output):
         tensor = ctx.saved_variables[0]
         scale, zero_point = ctx.scale, ctx.zero_point
-        qmin, qmax = ctx.qmin, ctx.qmax
         quant_type = ctx.quant_type
+        qmin, qmax = ctx.qmin, ctx.qmax
         output = cls.quant_backward(tensor, grad_output, quant_type, scale, zero_point, qmin, qmax)
         return output, None, None, None
 
@@ -977,11 +1023,11 @@ def _check_bias(module):
         return False
 
 def quantize_helper(tensor, quant_type, wrapper, input_tensor=None, **kwargs):
-    if quant_type == QuantType.QUANT_INPUT:
+    if quant_type == QuantType.INPUT:
         output = wrapper.quantizer.quantize_input(tensor, wrapper=wrapper, **kwargs)
-    elif quant_type == QuantType.QUANT_WEIGHT:
+    elif quant_type == QuantType.WEIGHT:
         output = wrapper.quantizer.quantize_weight(wrapper, input_tensor=input_tensor, **kwargs)
-    elif quant_type == QuantType.QUANT_OUTPUT:
+    elif quant_type == QuantType.OUTPUT:
         output = wrapper.quantizer.quantize_output(tensor, wrapper, **kwargs)
     else:
         raise ValueError("unrecognized QuantType.")

@@ -8,6 +8,13 @@ import torch
 from torch import Tensor
 from torch.nn import Module
 
+weighted_modules = [
+    'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d', 'ConvTranspose2d', 'ConvTranspose3d',
+    'Linear', 'Bilinear',
+    'PReLU',
+    'Embedding', 'EmbeddingBag',
+]
+
 
 def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
     '''
@@ -36,6 +43,12 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
                 raise ValueError("'sparsity' and 'sparsity_per_layer' have the same semantics, can not set both in one config.")
             else:
                 config['sparsity_per_layer'] = config.pop('sparsity')
+
+    for config in config_list:
+        if 'op_types' in config:
+            if 'default' in config['op_types']:
+                config['op_types'].remove('default')
+                config['op_types'].extend(weighted_modules)
 
     for config in config_list:
         if 'op_partial_names' in config:
@@ -225,18 +238,17 @@ def get_model_weights_numel(model: Module, config_list: List[Dict], masks: Dict[
                 model_weights_numel[module_name] = module.weight.data.numel()
     return model_weights_numel, masked_rate
 
+
 # FIXME: to avoid circular import, copy this function in this place
 def get_module_by_name(model, module_name):
     """
     Get a module specified by its module name
-
     Parameters
     ----------
     model : pytorch model
         the pytorch model from which to get its module
     module_name : str
         the name of the required module
-
     Returns
     -------
     module, module
