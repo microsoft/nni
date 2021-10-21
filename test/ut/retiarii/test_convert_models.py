@@ -90,5 +90,38 @@ class TestModels(unittest.TestCase, ConvertMixin):
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
 
+    def test_identity_block(self):
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                
+            def forward(self, x):
+                return x
+
+        model = Net()
+        x = torch.rand((1, 64, 224, 224), dtype=torch.float)
+        self.run_test(model, (x, ))
+
+    def test_nn_sequential_inherit(self):
+        class ConvBNReLU(nn.Sequential):
+            def __init__(self):
+                super().__init__(
+                    nn.Conv2d(3, 3, 1, 1, bias=False),
+                    nn.BatchNorm2d(3),
+                    nn.ReLU(inplace=False)
+                )
+
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv_bn_relu = ConvBNReLU()
+                
+            def forward(self, x):
+                return self.conv_bn_relu(x)
+
+        model = Net()
+        x = torch.rand((1, 3, 224, 224), dtype=torch.float)
+        self.run_test(model, (x, ))
+
 class TestModelsWithShape(TestModels, ConvertWithShapeMixin):
     pass
