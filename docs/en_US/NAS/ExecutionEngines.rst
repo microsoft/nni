@@ -56,4 +56,17 @@ For exporting top models, graph-based execution engine supports exporting source
 CGO Execution Engine
 --------------------
 
-CGO execution engine does cross-model optimizations based on the graph-based execution engine. This execution engine will be `released in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
+CGO execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple graphs could be merged and trained together.
+Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
+
+To enable CGO execution engine, you need to follow these steps:
+
+1. Create ``RetiariiExeConfig('remote')`` by running the experiment using remote training service.
+2. Add ``config.execution_engine = 'cgo'`` to ``RetiariiExeConfig`` to specify CGO execution engine.
+3. Add configurations for CGO engine
+.. code-block:: python
+config.max_concurrency_cgo = 1 # the maximum number of concurrent models to merge
+config.batch_waiting_time = 0  # how long CGO execution engine should wait before optimizing a new batch of models
+.. code-block:: python
+
+#This execution engine will be `released in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
