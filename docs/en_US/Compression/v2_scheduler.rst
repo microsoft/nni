@@ -2,9 +2,9 @@ Pruning Scheduler
 =================
 
 Pruning scheduler is new feature supported in pruning v2. It can bring more flexibility for pruning the model iteratively.
-All the built-in iterative pruners are based on pruning scheduler, pruners and task generators.
-In addition to using the NNI built-in iterative pruner implementations,
-users can directly using pruning scheduler to implement their own iterative pruning logic.
+All the built-in iterative pruners (e.g., AGPPruner, SimulatedAnnealingPruner) are based on three abstracted components: pruning scheduler, pruners and task generators.
+In addition to using the NNI built-in iterative pruners,
+users can directly use the pruning schedulers to customize their own iterative pruning logic.
 
 Workflow of Pruning Scheduler
 -----------------------------
