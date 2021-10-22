@@ -56,7 +56,7 @@ For exporting top models, graph-based execution engine supports exporting source
 CGO Execution Engine
 --------------------
 
-CGO execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
+CGO（Cross-Graph Optimization) execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
 Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
 
 To enable CGO execution engine, you need to follow these steps:
