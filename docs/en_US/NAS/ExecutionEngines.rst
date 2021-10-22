@@ -56,31 +56,47 @@ For exporting top models, graph-based execution engine supports exporting source
 CGO Execution Engine
 --------------------
 
-CGO execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple graphs could be merged and trained together.
+CGO execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
 Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
 
 To enable CGO execution engine, you need to follow these steps:
 
-1. CGO execution engine currently only supports remote training service.
-2. Add configurations for remote training service, especially
+1. Create RetiariiExeConfig with remote training service. CGO execution engine currently only supports remote training service.
+2. Add configurations for remote training service
 3. Add configurations for CGO engine
 
   .. code-block:: python
+    exp = RetiariiExperiment(base_model, trainer, mutators, strategy)
+    config = RetiariiExeConfig('remote')
+    
+    # ...
+    # other configurations of RetiariiExeConfig
 
+    config.execution_engine = 'cgo' # set execution engine to CGO
     config.max_concurrency_cgo = 3 # the maximum number of concurrent models to merge
     config.batch_waiting_time = 10  # how many seconds CGO execution engine should wait before optimizing a new batch of models
-    exp_config.execution_engine = 'cgo' # set execution engine to CGO
 
-CGO Execution Engine only supports pytorch-lightning trainer that inherits `MultiModelSupervisedLearningModule <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule>`__
+    rm_conf = RemoteMachineConfig()
+
+    # ...
+    # server configuration in rm_conf
+
+    config.training_service.machine_list = [rm_conf]
+    exp.run(config, 8099)
+
+CGO Execution Engine only supports pytorch-lightning trainer that inherits `MultiModelSupervisedLearningModule <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule>`__.
 For a trial running multiple models, the trainers inheriting ``MultiModelSupervisedLearningModule`` can handle the multiple outputs from the merged model for training, test and validation.
-Users can use two trainers for `Classification<./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification>`__ and `Regression<./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression>`__ in ``import nni.retiarii.evaluator.pytorch.cgo.evaluator``.
+We have already implemented two trainers: `Classification <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification>`__ and `Regression <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression>`__.
 
 .. code-block:: python
+
+  from nni.retiarii.evaluator.pytorch.cgo.evaluator import Classification
 
   trainer = Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=1, limit_train_batches=0.2)
 
-Advanced users can also implement their own trainer logic by inheriting ``MultiModelSupervisedLearningModule``.
+Advanced users can also implement their own trainers by inheriting ``MultiModelSupervisedLearningModule``.
 
-#This execution engine will be `released in v2.4 <https://github.com/microsoft/nni/issues/3813>`__.
+Sometimes, a mutated model cannot be executed (e.g., due to shape mismatch). When a trial running multiple models contains 
+a bad model, CGO execution engine will re-run each model independently in seperate trials without cross-model optimizations.
