@@ -17,6 +17,8 @@ Then run following command to register extension:
 $ nnictl jupyter-extension install
 ```
 
+It does not have prompt message. Exit without error means success.
+
 ## Run ##
 
 For now, the extension does not support creating experiment, so you have to create one with nnictl:
@@ -33,6 +35,14 @@ $ jupyter lab --ip=0.0.0.0
 
 Following JupyterLab's guide to open its web page, you should find an NNI icon.
 Click the icon and it will open NNI web UI for your running experiment.
+
+## Uninstall ##
+
+To uninstall (or more accurately, unregister) the extension, run following command:
+
+```
+$ nnictl jupyter-extension uninstall
+```
 
 ## Known Issues ##
 
