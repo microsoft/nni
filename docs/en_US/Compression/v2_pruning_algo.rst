@@ -286,7 +286,7 @@ Useage
 
    from nni.algorithms.compression.v2.pytorch.pruning import LinearPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
+   pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
 
