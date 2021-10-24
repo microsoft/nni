@@ -273,12 +273,12 @@ class RetiariiExperiment(Experiment):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
             for machine in self.config.training_service.machine_list:
-                assert hasattr(machine, 'gpu_indices'), \
+                assert machine.gpu_indices is not None, \
                     'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         else:
-            assert hasattr(self.config.training_service, 'gpu_indices'), \
+            assert self.config.training_service.gpu_indices is not None, \
                 'gpu_indices must be set in training service for CGO execution engine'
             for gpu_idx in self.config.training_service.gpu_indices:
                 devices.append(GPUDevice('local', gpu_idx))
