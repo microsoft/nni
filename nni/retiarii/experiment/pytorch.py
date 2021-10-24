@@ -278,6 +278,8 @@ class RetiariiExperiment(Experiment):
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         else:
+            assert hasattr(self.config.training_service, 'gpu_indices'), \
+                'gpu_indices must be set in training service for CGO execution engine'
             for gpu_idx in self.config.training_service.gpu_indices:
                 devices.append(GPUDevice('local', gpu_idx))
         return devices
