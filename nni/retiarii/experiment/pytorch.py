@@ -273,6 +273,8 @@ class RetiariiExperiment(Experiment):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
             for machine in self.config.training_service.machine_list:
+                assert hasattr(machine, 'gpu_indices'), \
+                    'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
         else:
