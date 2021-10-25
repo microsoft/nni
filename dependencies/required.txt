@@ -2,7 +2,7 @@ astor
 hyperopt == 0.1.2
 json_tricks
 psutil
-pyyaml
+pyyaml >= 5.4
 requests
 responses
 schema

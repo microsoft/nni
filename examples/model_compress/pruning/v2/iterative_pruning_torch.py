@@ -1,3 +1,4 @@
+import sys
 from tqdm import tqdm
 
 import torch
@@ -5,7 +6,8 @@ from torchvision import datasets, transforms
 
 from nni.algorithms.compression.v2.pytorch.pruning import AGPPruner
 
-from examples.model_compress.models.cifar10.vgg import VGG
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

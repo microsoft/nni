@@ -106,6 +106,7 @@ To use BOHB, you should add the following spec in your experiment's YAML config 
 * **random_fraction**\ (*float, optional, default = 0.33*\ ): fraction of purely random configurations that are sampled from the prior without the model.
 * **bandwidth_factor**\ (*float, optional, default = 3.0*\ ): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
 * **min_bandwidth**\ (*float, optional, default = 0.001*\ ): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
+* **config_space** (*str, optional*): directly use a .pcs file serialized by `ConfigSpace <https://automl.github.io/ConfigSpace/>` in "pcs new" format. In this case, search space file (if provided in config) will be ignored. Note that this path needs to be an absolute path. Relative path is currently not supported.
 
 *Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
