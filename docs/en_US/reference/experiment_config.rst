@@ -159,21 +159,21 @@ ExperimentConfig
 
     * - maxExperimentDuration
       - ``Optional[str]``
-      - Default: None. Limit the duration of this experiment if specified.
-        format: ``number + s|m|h|d``
-        examples: ``"10m"``, ``"0.5h"``
+      - Default: None. Limit the duration of this experiment if specified. None means unlimited duration.
+        Format: ``number + s|m|h|d``.
+        Examples: ``"10m"``, ``"0.5h"``.
         When time runs out, the experiment will stop creating trials but continue to serve WebUI.
 
     * - maxTrialNumber
       - ``Optional[int]``
-      - Default: None. Limit the number of trials to create if specified.
+      - Default: None. Limit the number of trials to create if specified. None means unlimited trials.
         When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
 
     * - maxTrialDuration
       - ``Optional[str]``
-      - Default: None. Limit the duration of trial job if specified.
-        format: ``number + s|m|h|d``
-        examples: ``"10m"``, ``"0.5h"``
+      - Default: None. Limit the duration of trial job if specified. None means unlimited duration.
+        Format: ``number + s|m|h|d``.
+        Examples: ``"10m"``, ``"0.5h"``.
         When time runs out, the current trial job will stop.
 
     * - nniManagerIp
