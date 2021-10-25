@@ -73,6 +73,7 @@ class TestModels(unittest.TestCase, ConvertMixin):
 
     def test_append_input_tensor(self):
         from typing import List
+
         class Net(nn.Module):
             def __init__(self, num_nodes):
                 super().__init__()
@@ -80,6 +81,7 @@ class TestModels(unittest.TestCase, ConvertMixin):
                 self.num_nodes = num_nodes
                 for _ in range(num_nodes):
                     self.ops.append(nn.Linear(16, 16))
+
             def forward(self, x: List[torch.Tensor]):
                 state = x
                 for ops in self.ops:
@@ -89,6 +91,19 @@ class TestModels(unittest.TestCase, ConvertMixin):
         model = Net(4)
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
+
+    def test_channels_shuffle(self):
+        class Net(nn.Module):
+            def forward(self, x):
+                bs, num_channels, height, width = x.size()
+                x = x.reshape(bs * num_channels // 2, 2, height * width)
+                x = x.permute(1, 0, 2)
+                x = x.reshape(2, -1, num_channels // 2, height, width)
+                return x[0], x[1]
+
+        model = Net()
+        x = torch.rand((1, 64, 224, 224), dtype=torch.float)
+        self.run_test(model, (x, ))
 
     def test_identity_node(self):
         class Net(nn.Module):

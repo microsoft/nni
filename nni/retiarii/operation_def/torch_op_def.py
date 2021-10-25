@@ -254,6 +254,13 @@ class AtenFloordiv(PyTorchOperation):
         return f'{output} = {inputs[0]} // {inputs[1]}'
 
 
+class AtenMul(PyTorchOperation):
+    _ori_type_name = ['aten::mul']
+
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = {inputs[0]} * {inputs[1]}'
+
+
 class AtenLen(PyTorchOperation):
     _ori_type_name = ['aten::len']
 
