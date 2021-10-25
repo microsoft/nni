@@ -81,6 +81,7 @@ To enable CGO execution engine, you need to follow these steps:
 
     # ...
     # server configuration in rm_conf
+    rm_conf.gpu_indices = [0, 1, 2, 3] # gpu_indices must be set in RemoteMachineConfig for CGO execution engine
 
     config.training_service.machine_list = [rm_conf]
     exp.run(config, 8099)
