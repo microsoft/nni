@@ -92,7 +92,7 @@ class TestModels(unittest.TestCase, ConvertMixin):
         x = torch.rand((1, 16), dtype=torch.float)
         self.run_test(model, ([x], ))
 
-    def test_shuffle_block(self):
+    def test_channels_shuffle(self):
         class Net(nn.Module):
             def forward(self, x):
                 bs, num_channels, height, width = x.size()
