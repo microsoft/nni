@@ -300,7 +300,7 @@ ManuallyChooseDef = {
 
 TensorOpExceptions = {
     'aten::sub': lambda output, inputs: f'{output} = {inputs[0]} - {inputs[1]}',  # example: x.size(1) - 3
-    'aten::add': lambda output, inputs: f'{output} = {inputs[0]} + {inputs[1]}',  # example: input.shape[0] + 5
+    'aten::add': lambda output, inputs: f'{output} = {inputs[0]} + {inputs[1]}'  # example: input.shape[0] + 5
 }
 
 TorchOpExclude = ['aten::Size', 'aten::as_tensor', 'aten::device',
