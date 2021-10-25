@@ -34,7 +34,7 @@ This is a basic pruner, and in some papers called it magnitude pruning or fine-g
 
 It will mask the weight in each specified layer with smaller absolute value by a ratio configured in the config list.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -63,7 +63,7 @@ For more details, please refer to `PRUNING FILTERS FOR EFFICIENT CONVNETS <https
 
 In addition, L1 norm pruner also supports dependency-aware mode.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -87,7 +87,7 @@ L2 norm pruner is a variant of L1 norm pruner. It uses l2 norm as metric to dete
 
 L2 norm pruner also supports dependency-aware mode.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -114,7 +114,7 @@ For more details, please refer to `Filter Pruning via Geometric Median for Deep 
 
 FPGM pruner also supports dependency-aware mode.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -139,7 +139,7 @@ The channels with small scaling factor values will be pruned.
 
 For more details, please refer to `Learning Efficient Convolutional Networks through Network Slimming <https://arxiv.org/abs/1708.06519>`__\.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -169,7 +169,7 @@ The APoZ is defined as:
 
 Activation APoZ rank pruner also supports dependency-aware mode.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -195,7 +195,7 @@ The pruning criterion ``mean activation`` is explained in section 2.2 of the pap
 
 Activation mean rank pruner also supports dependency-aware mode.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -225,7 +225,7 @@ Taylor FO weight pruner also supports dependency-aware mode.
 
 What's more, we provide a global-sort mode for this pruner which is aligned with paper implementation.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -256,7 +256,7 @@ This solution framework applies both to non-structured and different variations 
 
 For more details, please refer to `A Systematic DNN Weight Pruning Framework using Alternating Direction Method of Multipliers <https://arxiv.org/abs/1804.03294>`__.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -279,7 +279,7 @@ Linear Pruner
 Linear pruner is an iterative pruner, it will increase sparsity evenly from scratch during each iteration.
 For example, the final sparsity is set as 0.5, and the iteration number is 5, then the sparsity used in each iteration are ``[0, 0.1, 0.2, 0.3, 0.4, 0.5]``.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -307,7 +307,7 @@ starting at training step :math:`t_{0}` and with pruning frequency :math:`\Delta
 
 For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -346,7 +346,7 @@ In this paper, the authors use the following process to prune a model, called *i
 If the configured final sparsity is P (e.g., 0.8) and there are n times iterative pruning,
 each iterative pruning prunes 1-(1-P)^(1/n) of the weights that survive the previous round.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
@@ -380,7 +380,7 @@ The enhanced SA technique is based on the observation that a DNN layer with more
 
 For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
 
-Useage
+Usage
 ^^^^^^
 
 .. code-block:: python
