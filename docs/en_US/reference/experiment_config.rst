@@ -115,17 +115,17 @@ ExperimentConfig
     
     * - experimentName
       - ``Optional[str]``
-      - Mnemonic name of the experiment, which will be shown in WebUI and nnictl.
+      - Default: None. Mnemonic name of the experiment, which will be shown in WebUI and nnictl.
 
     * - searchSpaceFile
       - ``Optional[str]``
-      - Path_ to the JSON file containing the search space.
+      - Default: None. Path_ to the JSON file containing the search space.
         Search space format is determined by tuner. The common format for built-in tuners is documented  `here <../Tutorial/SearchSpaceSpec.rst>`__.
         Mutually exclusive to ``searchSpace``.
 
     * - searchSpace
       - ``Optional[JSON]``
-      - Search space object.
+      - Default: None. Search space object.
         The format is determined by tuner. Common format for built-in tuners is documented `here <../Tutorial/SearchSpaceSpec.rst>`__.
         Note that ``None`` means "no such field" so empty search space should be written as ``{}``.
         Mutually exclusive to ``searchSpaceFile``.
@@ -138,8 +138,7 @@ ExperimentConfig
 
     * - trialCodeDirectory
       - ``str``
-      - `Path`_ to the directory containing trial source files.
-        default: ``"."``.
+      - Default: ``"."``. `Path`_ to the directory containing trial source files.
         All files in this directory will be sent to the training machine, unless in the ``.nniignore`` file.
         (See :ref:`nniignore <nniignore>` for details.)
 
@@ -150,7 +149,7 @@ ExperimentConfig
 
     * - trialGpuNumber
       - ``Optional[int]``
-      - This field might have slightly different meanings for various training services,
+      - Default: None. This field might have slightly different meanings for various training services,
         especially when set to ``0`` or ``None``.
         See `training service's document <../training_services.rst>`__ for details.
 
@@ -160,75 +159,73 @@ ExperimentConfig
 
     * - maxExperimentDuration
       - ``Optional[str]``
-      - Limit the duration of this experiment if specified.
+      - Default: None. Limit the duration of this experiment if specified.
         format: ``number + s|m|h|d``
         examples: ``"10m"``, ``"0.5h"``
         When time runs out, the experiment will stop creating trials but continue to serve WebUI.
 
     * - maxTrialNumber
       - ``Optional[int]``
-      - Limit the number of trials to create if specified.
+      - Default: None. Limit the number of trials to create if specified.
         When the budget runs out, the experiment will stop creating trials but continue to serve WebUI.
 
     * - maxTrialDuration
       - ``Optional[str]``
-      - Limit the duration of trial job if specified.
+      - Default: None. Limit the duration of trial job if specified.
         format: ``number + s|m|h|d``
         examples: ``"10m"``, ``"0.5h"``
         When time runs out, the current trial job will stop.
 
     * - nniManagerIp
       - ``Optional[str]``
-      - IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
+      - Default: IPv4 address of ``eth0``. IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
         If not specified, IPv4 address of ``eth0`` will be used.
         Except for the local mode, it is highly recommended to set this field manually.
 
     * - useAnnotation
       - ``bool``
-      - Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
-        default: ``False``.
+      - Default: ``False``. Enable `annotation <../Tutorial/AnnotationSpec.rst>`__.
         When using annotation, ``searchSpace`` and ``searchSpaceFile`` should not be specified manually.
 
     * - debug
       - ``bool``
-      - Enable debug mode.
-        default: ``False``
+      - Default: ``False``. Enable debug mode.
         When enabled, logging will be more verbose and some internal validation will be loosened.
 
     * - logLevel
       - ``Optional[str]``
-      - Set log level of the whole system.
+      - Default: ``info`` or ``debug``, depending on ``debug`` option. Set log level of the whole system.
         values: ``"trace"``, ``"debug"``, ``"info"``, ``"warning"``, ``"error"``, ``"fatal"``
-        Defaults to "info" or "debug", depending on ``debug`` option. When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
+        When debug mode is enabled, Loglevel is set to "debug", otherwise, Loglevel is set to "info".
         Most modules of NNI will be affected by this value, including NNI manager, tuner, training service, etc.
         The exception is trial, whose logging level is directly managed by trial code.
         For Python modules, "trace" acts as logging level 0 and "fatal" acts as ``logging.CRITICAL``.
 
     * - experimentWorkingDirectory
-      - ``Optional[str]``
-      - Specify the :ref:`directory <path>` to place log, checkpoint, metadata, and other run-time stuff.
-        By default uses ``~/nni-experiments``.
+      - ``str``
+      - Default: ``~/nni-experiments``.
+        Specify the :ref:`directory <path>` to place log, checkpoint, metadata, and other run-time stuff.
         NNI will create a subdirectory named by experiment ID, so it is safe to use the same directory for multiple experiments.
 
     * - tunerGpuIndices
       - ``Optional[list[int] | str | int]``
-      - Limit the GPUs visible to tuner, assessor, and advisor.
+      - Default: None. Limit the GPUs visible to tuner, assessor, and advisor.
         This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
         Because tuner, assessor, and advisor run in the same process, this option will affect them all.
 
     * - tuner
       - ``Optional[AlgorithmConfig]``
-      - Specify the tuner.
+      - Default: None. Specify the tuner.
         The built-in tuners can be found `here <../builtin_tuner.rst>`__ and you can follow `this tutorial <../Tuner/CustomizeTuner.rst>`__ to customize a new tuner.
 
     * - assessor
       - ``Optional[AlgorithmConfig]``
-      - Specify the assessor.
+      - Default: None. Specify the assessor.
         The built-in assessors can be found `here <../builtin_assessor.rst>`__ and you can follow `this tutorial <../Assessor/CustomizeAssessor.rst>`__ to customize a new assessor.
 
     * - advisor
       - ``Optional[AlgorithmConfig]``
-      - Specify the advisor.
+      - Default: None. Specify the advisor.
         NNI provides two built-in advisors: `BOHB <../Tuner/BohbAdvisor.rst>`__ and `Hyperband <../Tuner/HyperbandAdvisor.rst>`__, and you can follow `this tutorial <../Tuner/CustomizeAdvisor.rst>`__ to customize a new advisor.
 
     * - trainingService
@@ -237,7 +234,7 @@ ExperimentConfig
 
     * - sharedStorage
       - ``Optional[SharedStorageConfig]``
-      - Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
+      - Default: None. Configure the shared storage, detailed usage can be found `here <../Tutorial/HowToUseSharedStorage.rst>`__.
 
 AlgorithmConfig
 ^^^^^^^^^^^^^^^
@@ -260,23 +257,23 @@ For customized algorithms, there are two ways to describe them:
     
     * - name
       - ``Optional[str]``
-      - Name of the built-in or registered algorithm.
+      - Default: None. Name of the built-in or registered algorithm.
         ``str`` for the built-in and registered algorithm, ``None`` for other customized algorithms.
 
     * - className
       - ``Optional[str]``
-      - Qualified class name of not registered customized algorithm.
+      - Default: None. Qualified class name of not registered customized algorithm.
         ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
         example: ``"my_tuner.MyTuner"``
 
     * - codeDirectory
       - ``Optional[str]``
-      - `Path`_ to the directory containing the customized algorithm class.
+      - `Default: None. Path`_ to the directory containing the customized algorithm class.
         ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
 
     * - classArgs
       - ``Optional[dict[str, Any]]``
-      - Keyword arguments passed to algorithm class' constructor.
+      - Default: None. Keyword arguments passed to algorithm class' constructor.
         See algorithm's document for supported value.
 
 TrainingServiceConfig
@@ -312,7 +309,7 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
     
     * - useActiveGpu
       - ``Optional[bool]``
-      - Specify whether NNI should submit trials to GPUs occupied by other tasks.
+      - Default: None. Specify whether NNI should submit trials to GPUs occupied by other tasks.
         Must be set when ``trialGpuNumber`` greater than zero.
         Following processes can make GPU "active":
 
@@ -326,12 +323,11 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
 
     * - maxTrialNumberPerGpu
       - ``int``
-      - Specify how many trials can share one GPU.
-        default: ``1``
+      - Default: ``1``. Specify how many trials can share one GPU.
 
     * - gpuIndices
       - ``Optional[list[int] | str | int]``
-      - Limit the GPUs visible to trial processes.
+      - Default: None. Limit the GPUs visible to trial processes.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
@@ -358,7 +354,7 @@ Detailed usage can be found `here <../TrainingService/RemoteMachineMode.rst>`__.
 
     * - reuseMode
       - ``bool``
-      - Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
+      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
 
 RemoteMachineConfig
 """""""""""""""""""
@@ -377,8 +373,7 @@ RemoteMachineConfig
 
     * - port
       - ``int``
-      - SSH service port.
-        default: ``22``
+      - Default: ``22``. SSH service port.
 
     * - user
       - ``str``
@@ -386,21 +381,20 @@ RemoteMachineConfig
 
     * - password
       - ``Optional[str]``
-      - If not specified, ``sshKeyFile`` will be used instead.
+      - Default: None. If not specified, ``sshKeyFile`` will be used instead.
     
     * - sshKeyFile
       - ``Optional[str]``
-      - `Path`_ to ``sshKeyFile`` (identity file).
+      - Default: None. `Path`_ to ``sshKeyFile`` (identity file).
         Only used when ``password`` is not specified.
 
     * - sshPassphrase
       - ``Optional[str]``
-      - Passphrase of SSH identity file.
+      - Default: None. Passphrase of SSH identity file.
 
     * - useActiveGpu
       - ``bool``
-      - Specify whether NNI should submit trials to GPUs occupied by other tasks.
-        default: ``False``
+      - Default: ``False``. Specify whether NNI should submit trials to GPUs occupied by other tasks.
         Must be set when ``trialGpuNumber`` greater than zero.
         Following processes can make GPU "active":
 
@@ -414,18 +408,17 @@ RemoteMachineConfig
 
     * - maxTrialNumberPerGpu
       - ``int``
-      - Specify how many trials can share one GPU.
-        default: ``1``
+      - Default: ``1``. Specify how many trials can share one GPU.
 
     * - gpuIndices
       - ``Optional[list[int] | str | int]``
-      - Limit the GPUs visible to trial processes.
+      - Default: None. Limit the GPUs visible to trial processes.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
     * - pythonPath
       - ``Optional[str]``
-      - Specify a Python environment.
+      - Default: None. Specify a Python environment.
         This path will be inserted at the front of PATH. Here are some examples: 
 
           - (linux) pythonPath: ``/opt/python3.7/bin``
@@ -434,7 +427,7 @@ RemoteMachineConfig
         If you are working on Anaconda, there is some difference. On Windows, you also have to add ``../script`` and ``../Library/bin`` separated by ``;``. Examples are as below:
 
           - (linux anaconda) pythonPath: ``/home/yourname/anaconda3/envs/myenv/bin/``
-          - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv;C:/Users/yourname/.conda/envs/myenv/Scripts;C:/Users/yourname/.conda/envs/myenv/Library/bin``
+          - (windows anaconda) pythonPath: ``C:/Users/yourname/.conda/envs/myenv``; ``C:/Users/yourname/.conda/envs/myenv/Scripts``; ``C:/Users/yourname/.conda/envs/myenv/Library/bin``
 
         This is useful if preparing steps vary for different machines.
 
@@ -486,8 +479,7 @@ Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 
     * - dockerImage
       - ``str``
-      - Name and tag of docker image to run the trials.
-        default: ``"msranni/nni:latest"``.
+      - Default: ``"msranni/nni:latest"``. Name and tag of docker image to run the trials.
 
     * - localStorageMountPoint
       - ``str``
@@ -500,16 +492,15 @@ Detailed usage can be found `here <../TrainingService/PaiMode.rst>`__.
 
     * - reuseMode
       - ``bool``
-      - Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
-        default: ``False``.
+      - Default: ``True``. Enable `reuse mode <../TrainingService/Overview.rst#training-service-under-reuse-mode>`__.
 
     * - openpaiConfig
       - ``Optional[JSON]``
-      - Embedded OpenPAI config file.
+      - Default: None. Embedded OpenPAI config file.
 
     * - openpaiConfigFile
       - ``Optional[str]``
-      - `Path`_ to OpenPAI config file.
+      - Default: None. `Path`_ to OpenPAI config file.
         An example can be found `here <https://github.com/microsoft/pai/blob/master/docs/manual/cluster-user/examples/hello-world-job.yaml>`__.
 
 AmlConfig
@@ -528,11 +519,10 @@ Detailed usage can be found `here <../TrainingService/AMLMode.rst>`__.
     * - platform
       - ``"aml"``
       -
-    
+
     * - dockerImage
       - ``str``
-      - Name and tag of docker image to run the trials.
-        default: ``"msranni/nni:latest"``
+      - Default: ``"msranni/nni:latest"``. Name and tag of docker image to run the trials.
 
     * - subscriptionId
       - ``str``
@@ -569,8 +559,7 @@ Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
     
     * - type
       - ``str``
-      - Job spec type.
-        default: ``"worker"``.
+      - Default: ``"Worker"``. Job spec type.
 
     * - image
       - ``str``
@@ -578,7 +567,7 @@ Detailed usage can be found `here <../TrainingService/DlcMode.rst>`__.
 
     * - jobType
       - ``str``
-      - PAI-DLC training job type, ``"TFJob"`` or ``"PyTorchJob"``.
+      - Default: ``"TFJob"``. PAI-DLC training job type, ``"TFJob"`` or ``"PyTorchJob"``.
 
     * - podCount
       - ``str``
@@ -698,7 +687,7 @@ azureBlobConfig
       - Azure storage account name.
 
     * - storageAccountKey
-      - ``Optional[str]``
+      - ``str``
       - Azure storage account key.
 
     * - containerName
