@@ -367,7 +367,7 @@ User configuration for Lottery Ticket Pruner
 Simulated Annealing Pruner
 --------------------------
 
-We implement a guided heuristic search method, Simulated Annealing (SA) algorithm, with enhancement on guided search based on prior experience. 
+We implement a guided heuristic search method, Simulated Annealing (SA) algorithm. As mentioned in the paper, this method is enhanced on guided search based on prior experience.
 The enhanced SA technique is based on the observation that a DNN layer with more number of weights often has a higher degree of model compression with less impact on overall accuracy.
 
 * Randomly initialize a pruning rate distribution (sparsities).
