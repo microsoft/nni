@@ -1,6 +1,22 @@
 import os
 
 
-# TODO: need to be refactored to support automatic download
+ENV_NNI_HOME = 'NNI_HOME'
+ENV_XDG_CACHE_HOME = 'XDG_CACHE_HOME'
+DEFAULT_CACHE_DIR = '~/.cache'
 
-DATABASE_DIR = os.environ.get("NASBENCHMARK_DIR", os.path.expanduser("~/.nni/nasbenchmark"))
+
+def _get_nasbenchmark_dir():
+    nni_home = os.path.expanduser(
+        os.getenv(ENV_NNI_HOME,
+                  os.path.join(os.getenv(ENV_XDG_CACHE_HOME, DEFAULT_CACHE_DIR), 'nni')))
+    return os.path.join(nni_home, 'nasbenchmark')
+
+
+DATABASE_DIR = _get_nasbenchmark_dir()
+
+DB_URLS = {
+    'nasbench101': 'https://nni.blob.core.windows.net/nasbenchmark/nasbench101-209f5694.db',
+    'nasbench201': 'https://nni.blob.core.windows.net/nasbenchmark/nasbench201-b2b60732.db',
+    'nds': 'https://nni.blob.core.windows.net/nasbenchmark/nds-5745c235.db'
+}
