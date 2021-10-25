@@ -268,7 +268,7 @@ For customized algorithms, there are two ways to describe them:
 
     * - codeDirectory
       - ``Optional[str]``
-      - `Default: None. Path`_ to the directory containing the customized algorithm class.
+      - Default: None. Path_ to the directory containing the customized algorithm class.
         ``None`` for the built-in and registered algorithm, ``str`` for other customized algorithms.
 
     * - classArgs
