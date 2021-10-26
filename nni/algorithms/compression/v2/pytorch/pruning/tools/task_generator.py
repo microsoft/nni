@@ -81,6 +81,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
         task_id = self._task_id_candidate
         new_config_list = self.generate_config_list(self.target_sparsity, self.current_iteration, compact2origin_sparsity)
+        new_config_list = self.allocate_sparsity(new_config_list, compact_model, compact_model_masks)
         config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
 
         with Path(config_list_path).open('w') as f:
@@ -96,6 +97,9 @@ class FunctionBasedTaskGenerator(TaskGenerator):
 
     def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
         raise NotImplementedError()
+
+    def allocate_sparsity(self, new_config_list: List[Dict], model: Module, masks: Dict[str, Dict[str, Tensor]]):
+        return new_config_list
 
 
 class AGPTaskGenerator(FunctionBasedTaskGenerator):

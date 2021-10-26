@@ -45,6 +45,9 @@ class PruningScheduler(BasePruningScheduler):
         self.evaluator = evaluator
         self.reset_weight = reset_weight
 
+    def reset(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}):
+        self.task_generator.reset(model, config_list, masks)
+
     def generate_task(self) -> Optional[Task]:
         return self.task_generator.next()
 
