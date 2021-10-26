@@ -8,7 +8,6 @@ Note that pruners use masks to simulate the real pruning. In order to obtain a r
 
 '''
 import argparse
-from tqdm import tqdm
 
 import torch
 from torchvision import datasets, transforms
