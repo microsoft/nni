@@ -119,9 +119,7 @@ if __name__ == '__main__':
     for i in range(args.fine_tune_epochs):
         trainer(model, optimizer, criterion)
         scheduler.step()
-        acc = evaluator(model)
-        if acc > best_acc:
-            best_acc = acc
+        best_acc = max(evaluator(model), best_acc)
     flops, params, results = count_flops_params(model, torch.randn([128, 3, 32, 32]).to(device))
     print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
     print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')
