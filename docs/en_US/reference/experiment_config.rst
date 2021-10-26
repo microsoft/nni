@@ -178,8 +178,7 @@ ExperimentConfig
 
     * - nniManagerIp
       - ``Optional[str]``
-      - Default: IPv4 address of ``eth0``. IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
-        If not specified, IPv4 address of ``eth0`` will be used.
+      - Default: default connection chosen by system. IP of the current machine, used by training machines to access NNI manager. Not used in local mode.
         Except for the local mode, it is highly recommended to set this field manually.
 
     * - useAnnotation
@@ -209,7 +208,7 @@ ExperimentConfig
 
     * - tunerGpuIndices
       - ``Optional[list[int] | str | int]``
-      - Default: None. Limit the GPUs visible to tuner, assessor, and advisor.
+      - Default: None. Limit the GPUs visible to tuner, assessor, and advisor. None means no limit.
         This will be the ``CUDA_VISIBLE_DEVICES`` environment variable of tuner process.
         Because tuner, assessor, and advisor run in the same process, this option will affect them all.
 
@@ -327,7 +326,7 @@ Detailed usage can be found `here <../TrainingService/LocalMode.rst>`__.
 
     * - gpuIndices
       - ``Optional[list[int] | str | int]``
-      - Default: None. Limit the GPUs visible to trial processes.
+      - Default: None. Limit the GPUs visible to trial processes. None means no limit.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
@@ -412,7 +411,7 @@ RemoteMachineConfig
 
     * - gpuIndices
       - ``Optional[list[int] | str | int]``
-      - Default: None. Limit the GPUs visible to trial processes.
+      - Default: None. Limit the GPUs visible to trial processes. None means no limit.
         If ``trialGpuNumber`` is less than the length of this value, only a subset will be visible to each trial.
         This will be used as ``CUDA_VISIBLE_DEVICES`` environment variable.
 
