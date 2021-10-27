@@ -83,16 +83,16 @@ def quantization_aware_training_example(train_loader, test_loader, device):
     model = NaiveModel()
 
     configure_list = [{
-            'quant_types': ['weight', 'output'],
-            'quant_bits': {'weight':8, 'output':8},
+            'quant_types': ['input', 'weight'],
+            'quant_bits': {'input':8, 'weight':8},
             'op_names': ['conv1']
         }, {
             'quant_types': ['output'],
             'quant_bits': {'output':8},
             'op_names': ['relu1']
         }, {
-            'quant_types': ['weight', 'output'],
-            'quant_bits': {'weight':8, 'output':8},
+            'quant_types': ['input', 'weight'],
+            'quant_bits': {'input':8, 'weight':8},
             'op_names': ['conv2']
         }, {
             'quant_types': ['output'],
