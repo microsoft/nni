@@ -28,4 +28,3 @@ from .task_generator import (
     LotteryTicketTaskGenerator,
     SimulatedAnnealingTaskGenerator
 )
-from .auto_compress_task_generator import AutoCompressTaskGenerator

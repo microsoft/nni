@@ -728,6 +728,8 @@ class ADMMPruner(BasicPruner):
         self.training_epochs = training_epochs
         super().__init__(model, config_list)
 
+    def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
+        super().reset(model, config_list)
         self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
         self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
 

@@ -43,12 +43,14 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         keep_intermediate_result
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
-        self.current_iteration = 0
-        self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
         self.total_iteration = total_iteration
-
-        super().__init__(origin_model, origin_config_list=self.target_sparsity, origin_masks=origin_masks,
+        super().__init__(origin_model, origin_config_list=origin_config_list, origin_masks=origin_masks,
                          log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        self.current_iteration = 0
+        self.target_sparsity = config_list_canonical(model, config_list)
+        super().reset(model, config_list=config_list, masks=masks)
 
     def init_pending_tasks(self) -> List[Task]:
         origin_model = torch.load(self._origin_model_path)
@@ -127,11 +129,10 @@ class LinearTaskGenerator(FunctionBasedTaskGenerator):
 
 
 class LotteryTicketTaskGenerator(FunctionBasedTaskGenerator):
-    def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False):
-        super().__init__(total_iteration, origin_model, origin_config_list, origin_masks=origin_masks, log_dir=log_dir,
-                         keep_intermediate_result=keep_intermediate_result)
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_iteration = 1
+        self.target_sparsity = config_list_canonical(model, config_list)
+        super(FunctionBasedTaskGenerator, self).reset(model, config_list=config_list, masks=masks)
 
     def generate_config_list(self, target_sparsity: List[Dict], iteration: int, compact2origin_sparsity: List[Dict]) -> List[Dict]:
         config_list = []
@@ -176,21 +177,25 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
             If keeping the intermediate result, including intermediate model and masks during each iteration.
         """
         self.start_temperature = start_temperature
-        self.current_temperature = start_temperature
         self.stop_temperature = stop_temperature
         self.cool_down_rate = cool_down_rate
         self.perturbation_magnitude = perturbation_magnitude
 
-        self.weights_numel, self.masked_rate = get_model_weights_numel(origin_model, origin_config_list, origin_masks)
-        self.target_sparsity_list = config_list_canonical(origin_model, origin_config_list)
+        super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        self.current_temperature = self.start_temperature
+
+        self.weights_numel, self.masked_rate = get_model_weights_numel(model, config_list, masks)
+        self.target_sparsity_list = config_list_canonical(model, config_list)
         self._adjust_target_sparsity()
 
         self._temp_config_list = None
         self._current_sparsity_list = None
         self._current_score = None
 
-        super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
-                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+        super().reset(model, config_list=config_list, masks=masks)
 
     def _adjust_target_sparsity(self):
         """
