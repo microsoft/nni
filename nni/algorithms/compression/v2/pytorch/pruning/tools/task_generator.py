@@ -208,9 +208,10 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
                 pruned_weight_numel = 0
                 for name in op_names:
                     remaining_weight_numel += self.weights_numel[name]
-                    if name in self.masked_rate:
+                    if name in self.masked_rate and self.masked_rate[name] != 0:
                         pruned_weight_numel += 1 / (1 / self.masked_rate[name] - 1) * self.weights_numel[name]
-                config['total_sparsity'] = max(0, sparsity - pruned_weight_numel / (pruned_weight_numel + remaining_weight_numel))
+                total_mask_rate = pruned_weight_numel / (pruned_weight_numel + remaining_weight_numel)
+                config['total_sparsity'] = max(0, (sparsity - total_mask_rate) / (1 - total_mask_rate))
 
     def _init_temp_config_list(self):
         self._temp_config_list = []
