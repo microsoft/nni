@@ -3,7 +3,7 @@
 
 '''
 NNI example for supported slim pruning algorithms.
-In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
+In this example, we show the end-to-end pruning process: pre-training -> pruning -> speedup -> fine-tuning.
 Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speed up is required.
 
 '''
@@ -67,6 +67,11 @@ def evaluator(model):
     print('Accuracy: {}%\n'.format(acc))
     return acc
 
+def optimizer_schedular_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
+    optimizer = torch.optim.SGD(model.parameters(), lr=_lr, momentum=_momentum, weight_decay=_weight_decay)
+    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+    return optimizer, scheduler
+
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
     parser.add_argument('--pretrain-epochs', type=int, default=20,
@@ -77,8 +82,7 @@ if __name__ == '__main__':
 
     print('\n' + '=' * 50 + ' START TO TRAIN THE MODEL ' + '=' * 50)
     model = VGG().to(device)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+    optimizer, scheduler = optimizer_schedular_generator(model)
     criterion = torch.nn.CrossEntropyLoss()
     pre_best_acc = 0.0
     best_state_dict = None
@@ -94,14 +98,16 @@ if __name__ == '__main__':
     model.load_state_dict(best_state_dict)
     pre_flops, pre_params, _ = count_flops_params(model, torch.randn([128, 3, 32, 32]).to(device))
     g_epoch = 0
-    
+
     # Start to prune and speedup
     print('\n' + '=' * 50 + ' START TO PRUNE THE BEST ACCURACY PRETRAINED MODEL ' + '=' * 50)
     config_list = [{
             'total_sparsity': 0.5,
             'op_types': ['BatchNorm2d'],
     }]
-    pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, 2)
+
+    optimizer, scheduler = optimizer_schedular_generator(model)
+    pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, 1, 0.0001, 'normal')
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()
@@ -111,17 +117,13 @@ if __name__ == '__main__':
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[int(args.fine_tune_epochs * 0.5), int(args.fine_tune_epochs * 0.75)], gamma=0.1)
-
+    optimizer, scheduler = optimizer_schedular_generator(model, _lr=0.01)
     best_acc = 0.0
     g_epoch = 0
     for i in range(args.fine_tune_epochs):
         trainer(model, optimizer, criterion)
         scheduler.step()
-        acc = evaluator(model)
-        if acc > best_acc:
-            best_acc = acc
+        best_acc = max(evaluator(model), best_acc)
     flops, params, results = count_flops_params(model, torch.randn([128, 3, 32, 32]).to(device))
     print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_best_acc: .2f}%')
     print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')
