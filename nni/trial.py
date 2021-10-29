@@ -124,11 +124,7 @@ def report_intermediate_result(metric):
     global _intermediate_seq
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_intermediate_result'
-    if isinstance(metric, dict):
-        for k, v in metric.items():
-            metric[k] = float(v)
-    else:
-        metric = float(metric)
+    _check_metric(metric)
     metric = to_json({
         'parameter_id': _params['parameter_id'] if _params else None,
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
@@ -151,11 +147,7 @@ def report_final_result(metric):
     """
     assert _params or trial_env_vars.NNI_PLATFORM is None, \
         'nni.get_next_parameter() needs to be called before report_final_result'
-    if isinstance(metric, dict):
-        for k, v in metric.items():
-            metric[k] = float(v)
-    else:
-        metric = float(metric)
+    _check_metric(metric)
     metric = to_json({
         'parameter_id': _params['parameter_id'] if _params else None,
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
@@ -164,3 +156,22 @@ def report_final_result(metric):
         'value': to_json(metric)
     })
     platform.send_metric(metric)
+
+
+def _check_metric(metric):
+    """
+    Check if the metric is valid.
+
+    Parameters
+    ----------
+    metric:
+        serializable object.
+    """
+    if not isinstance(metric, (dict, int, float)):
+        raise ValueError('Metric should be a number or a dict with key "default" but got {type(metric)}')
+    if isinstance(metric, dict):
+        if 'default' not in metric.keys():
+            raise ValueError('Metric should have a key "default"')
+        for k, v in metric.items():
+            if not isinstance(v, (int, float)):
+                raise ValueError(f'Metric values should be numbers but got {type(v)} in key {k}')
