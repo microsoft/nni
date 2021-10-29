@@ -6,6 +6,7 @@ import logging
 import torch
 import numpy as np
 from nni.compression.pytorch.compressor import PrunerModuleWrapper
+from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper as PrunerModuleWrapper_v2
 from .utils import get_module_by_name
 
 
@@ -390,7 +391,7 @@ class GroupDependency(Dependency):
         """
         node_name = node_group.name
         _, leaf_module = get_module_by_name(self.model, node_name)
-        if isinstance(leaf_module, PrunerModuleWrapper):
+        if isinstance(leaf_module, (PrunerModuleWrapper, PrunerModuleWrapper_v2)):
             leaf_module = leaf_module.module
         assert isinstance(
             leaf_module, (torch.nn.Conv2d, torch.nn.ConvTranspose2d))

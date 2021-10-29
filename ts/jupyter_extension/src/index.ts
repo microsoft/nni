@@ -1,8 +1,9 @@
 import { JupyterFrontEnd, JupyterFrontEndPlugin } from '@jupyterlab/application';
-import { ICommandPalette, IFrame } from '@jupyterlab/apputils';
+import { ICommandPalette, IFrame, Dialog, showDialog } from '@jupyterlab/apputils';
 import { PageConfig } from '@jupyterlab/coreutils';
 import { ILauncher } from '@jupyterlab/launcher';
 import { LabIcon } from '@jupyterlab/ui-components';
+import React from 'react';
 
 const nniIconSvg = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 162 84">
@@ -14,15 +15,16 @@ const nniIconSvg = `
 `;
 const nniIcon = new LabIcon({ name: 'nni', svgstr: nniIconSvg });
 
+const NNI_URL = PageConfig.getBaseUrl() + 'nni/index';
 class NniWidget extends IFrame {
-    constructor() {
+    constructor(url) {
         super({
             sandbox: [
                 'allow-same-origin',
                 'allow-scripts',
             ]
         });
-        this.url = PageConfig.getBaseUrl() + 'nni/index';
+        this.url = url;
         this.id = 'nni';
         this.title.label = 'NNI';
         this.title.icon = nniIcon;
@@ -41,7 +43,19 @@ async function activate(app: JupyterFrontEnd, palette: ICommandPalette, launcher
         caption: 'NNI',
         icon: (args) => (args.isPalette ? null : nniIcon),
         execute: () => {
-            shell.add(new NniWidget(), 'main');
+            fetch(NNI_URL).then(async (resp) => {
+                if (resp.status !== 200) {
+                    showDialog({
+                        title: 'NNI-HPO Launcher Error',
+                        body: React.createElement("div", null,
+                            "please run command:",
+                            React.createElement("div", { style: { color: 'blue', fontSize: "14px", lineHeight: "28px" } }, "nnictl create --config experiment.yml")),
+                        buttons: [Dialog.warnButton({ label: 'OK' })]
+                    });
+                    return;
+                }
+                shell.add(new NniWidget(NNI_URL), 'main');
+            });
         }
     });
 

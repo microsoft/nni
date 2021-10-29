@@ -3,13 +3,13 @@
 
 import collections
 import logging
-from typing import List, Dict, Optional, OrderedDict, Tuple, Any
+from typing import List, Dict, Optional, Tuple, Any
 
 import torch
 from torch.nn import Module
 
 from nni.common.graph_utils import TorchModuleGraph
-from nni.compression.pytorch.utils import get_module_by_name
+from nni.algorithms.compression.v2.pytorch.utils.pruning import get_module_by_name, weighted_modules
 
 _logger = logging.getLogger(__name__)
 
@@ -32,20 +32,12 @@ def _setattr(model: Module, name: str, module: Module):
         raise '{} not exist.'.format(name)
 
 
-weighted_modules = [
-    'Conv1d', 'Conv2d', 'Conv3d', 'ConvTranspose1d', 'ConvTranspose2d', 'ConvTranspose3d',
-    'Linear', 'Bilinear',
-    'PReLU',
-    'Embedding', 'EmbeddingBag',
-]
-
-
 class Compressor:
     """
     The abstract base pytorch compressor.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict]):
+    def __init__(self, model: Optional[Module], config_list: Optional[List[Dict]]):
         """
         Parameters
         ----------
@@ -54,9 +46,11 @@ class Compressor:
         config_list
             The config list used by compressor, usually specifies the 'op_types' or 'op_names' that want to compress.
         """
-        assert isinstance(model, Module)
         self.is_wrapped = False
-        self.reset(model=model, config_list=config_list)
+        if model is not None:
+            self.reset(model=model, config_list=config_list)
+        else:
+            _logger.warning('This compressor is not set model and config_list, waiting for reset() or pass this to scheduler.')
 
     def reset(self, model: Module, config_list: List[Dict]):
         """
@@ -149,7 +143,7 @@ class Compressor:
             return None
         return ret
 
-    def get_modules_wrapper(self) -> OrderedDict[str, Module]:
+    def get_modules_wrapper(self) -> Dict[str, Module]:
         """
         Returns
         -------
