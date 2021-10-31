@@ -105,7 +105,7 @@ graph. Note that when the quantization aware training process is finished, the f
 Quantization dtype and scheme customization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 QAT quantizer support dtype (int or uint) and scheme (per-tensor or per-channel and symmetric or affine) customization.
-There are two ways to set them. One way is that we provide a function `set_quant_scheme_dtype` to set them globally like:
+There are two ways to set them. One way is setting them globally through a function named `set_quant_scheme_dtype` like:
 
 .. code-block:: python
 
