@@ -107,7 +107,7 @@ There are totally two kinds of `quant_dtype` you can set, they are 'int' and 'ui
 
 * **quant_scheme** : str or dict of {str : str}
 
-quantization scheme, key is the quantization type, value is the quantization dtype, eg.
+quantization scheme, key is the quantization type, value is the quantization scheme, eg.
 
 .. code-block:: bash
 
