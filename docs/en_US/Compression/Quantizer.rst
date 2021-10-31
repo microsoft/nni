@@ -102,6 +102,43 @@ The quantizer will automatically detect Conv-BN patterns and simulate batch norm
 graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
 `quantizer.export_model`.
 
+Quantization dtype and scheme customization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+QAT quantizer support dtype (int or uint) and scheme (per-tensor or per-channel and symmetric or affine) customization.
+There are two ways to set them. One way is that we provide a function `set_quant_scheme_dtype` to set them globally like:
+
+.. code-block:: python
+
+    from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
+
+    # This will set all the quantization of 'input' in 'per_tensor_affine' and 'uint' manner
+    set_quant_scheme_dtype('input', 'per_tensor_affine', 'uint)
+    # This will set all the quantization of 'output' in 'per_tensor_symmetric' and 'int' manner
+    set_quant_scheme_dtype('output', 'per_tensor_symmetric', 'int')
+    # This will set all the quantization of 'weight' in 'per_channel_symmetric' and 'int' manner
+    set_quant_scheme_dtype('weight', 'per_channel_symmetric', 'int')
+
+
+The other way is more detailed. You can customize the dtype and scheme in each quantization config list like:
+
+.. code-block:: python
+
+    config_list = [{
+       'quant_types': ['weight'],
+       'quant_bits':  8,
+       'op_types':['Conv2d', 'Linear'],
+       'quant_dtype': 'int',
+       'quant_scheme': 'per_channel_symmetric'
+   }, {
+       'quant_types': ['output'],
+       'quant_bits': 8,
+       'quant_start_step': 7000,
+       'op_types':['ReLU6'],
+       'quant_dtype': 'uint',
+       'quant_scheme': 'per_tensor_affine'
+   }]
+
+
 ----
 
 LSQ Quantizer
