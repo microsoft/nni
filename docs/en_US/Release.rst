@@ -9,7 +9,7 @@ Release 2.5 - 11/2/2021
 -----------------------
 
 Model Compression
-"""""""""""""""""
+^^^^^^^^^^^^^^^^^
 
 * New major version of pruning framework `(doc)<https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`_
   * Iterative pruning is more automated, users can use less code to implement iterative pruning.
@@ -29,7 +29,7 @@ Model Compression
 * Support QAT and LSQ resume from PTQ
 
 Neural Architecture Search
-""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * NAS benchmark `(doc)<https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`_
   * Support benchmark table lookup in experiments
@@ -38,7 +38,8 @@ Neural Architecture Search
 * Experimental CGO execution engine `(doc)<https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`_
 
 Hyper-Parameter Optimization
-""""""""""""""""""""""""""""
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 * New training platform: Alibaba DSW+DLC `(doc)<https://nni.readthedocs.io/en/v2.5/TrainingService/DLCMode.html>`_
 * Support passing ConfigSpace definition directly to BOHB `(doc)<https://nni.readthedocs.io/en/v2.5/Tuner/BohbAdvisor.html#usage>`_ (thanks to khituras)
 * Reformatted `experiment config doc<https://nni.readthedocs.io/en/v2.5/reference/experiment_config.html>`_
@@ -46,7 +47,8 @@ Hyper-Parameter Optimization
 * FrameworkController now supports reuse mode
 
 Fixed Bugs
-""""""""""
+^^^^^^^^^^
+
 * Experiment cannot start due to platform timestamp format (issue #4077 #4083)
 * Cannot use ``1e-5`` in search space (issue #4080)
 * Dependency version conflict caused by ConfigSpace (issue #3909) (thanks to @jexxers)
@@ -55,7 +57,7 @@ Fixed Bugs
 * cudnn.deterministic is always set in AMC pruner (#4117) thanks to @mstczuo
 
 And...
-""""""
+^^^^^^
 
 * New `emoticons<https://github.com/microsoft/nni/blob/v2.5/docs/en_US/Tutorial/NNSpider.md>`_!
 .. image:: https://raw.githubusercontent.com/microsoft/nni/v2.5/docs/img/emoicons/Holiday.png
