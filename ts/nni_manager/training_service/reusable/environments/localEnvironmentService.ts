@@ -41,6 +41,7 @@ export class LocalEnvironmentService extends EnvironmentService {
 
     public async refreshEnvironmentsStatus(environments: EnvironmentInformation[]): Promise<void> {
         environments.forEach(async (environment) => {
+            this.log.info("-------------------local--refresh environment status for " + environment.id);
             const jobpidPath: string = `${path.join(environment.runnerWorkingFolder, 'pid')}`;
             const runnerReturnCodeFilePath: string = `${path.join(environment.runnerWorkingFolder, 'code')}`;
             /* eslint-disable require-atomic-updates */
@@ -48,6 +49,7 @@ export class LocalEnvironmentService extends EnvironmentService {
                 // check if pid file exist
                 const pidExist = await fs.existsSync(jobpidPath);
                 if (!pidExist) {
+                    this.log.info("-------------------local---" + jobpidPath + " does not exist!");
                     return;
                 }
                 const pid: string = await fs.promises.readFile(jobpidPath, 'utf8');
@@ -127,6 +129,7 @@ export class LocalEnvironmentService extends EnvironmentService {
         // Execute command in local machine
         runScript(path.join(localEnvCodeFolder, scriptName));
         environment.trackingUrl = `${environment.runnerWorkingFolder}`;
+        this.log.info(`--------------------local----Start environment ${environment.id} finished.`);
     }
 
     public async stopEnvironment(environment: EnvironmentInformation): Promise<void> {
