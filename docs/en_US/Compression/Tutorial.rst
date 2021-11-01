@@ -66,7 +66,7 @@ to the weight parameter of modules. 'input' means applying quantization operatio
 
 bits length of quantization, key is the quantization type, value is the quantization bits length, eg. 
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_bits: {
@@ -77,7 +77,7 @@ bits length of quantization, key is the quantization type, value is the quantiza
 
 when the value is int type, all quantization types share same bits length. eg. 
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_bits: 8, # weight or output quantization are all 8 bits
@@ -87,7 +87,7 @@ when the value is int type, all quantization types share same bits length. eg.
 
 quantization dtype, key is the quantization type, value is the quantization dtype, eg.
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_dtype: {
@@ -98,18 +98,19 @@ quantization dtype, key is the quantization type, value is the quantization dtyp
 
 when the value is str type, all quantization types share the same dtype. eg.
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_dtype: 'int', # the dtype of weight and output quantization are all 'int'
    }
+
 There are totally two kinds of `quant_dtype` you can set, they are 'int' and 'uint'.
 
 * **quant_scheme** : str or dict of {str : str}
 
 quantization scheme, key is the quantization type, value is the quantization scheme, eg.
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_scheme: {
@@ -120,7 +121,7 @@ quantization scheme, key is the quantization type, value is the quantization sch
 
 when the value is str type, all quantization types share the same quant_scheme. eg.
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_scheme: 'per_channel_symmetric', # the quant_scheme of weight and output quantization are all 'per_channel_symmetric'
@@ -130,7 +131,7 @@ There are totally four kinds of `quant_scheme` you can set, they are 'per_tensor
 
 The following example shows a more complete ``config_list``\ , it uses ``op_names`` (or ``op_types``\ ) to specify the target layers along with the quantization bits for those layers.
 
-.. code-block:: bash
+.. code-block:: python
 
    config_list = [{
       'quant_types': ['weight'],
