@@ -11,14 +11,14 @@ Release 2.5 - 11/2/2021
 Model Compression
 ^^^^^^^^^^^^^^^^^
 
-* New major version of pruning framework `(doc)<https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`_
+* New major version of pruning framework `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`__
   * Iterative pruning is more automated, users can use less code to implement iterative pruning.
   * Support exporting intermediate models in the iterative pruning process.
   * The implementation of the pruning algorithm is closer to the paper.
   * Users can easily customize their own iterative pruning by using ``PruningScheduler``.
   * Optimize the basic pruners underlying generate mask logic, easier to extend new functions.
   * Optimized the memory usage of the pruners.
-* MobileNetV2 end-to-end example `(notebook)<https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`_
+* MobileNetV2 end-to-end example `(notebook) <https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`__
 * Improved QAT quantizer
   * support dtype and scheme customization
   * support dp multi-gpu training
@@ -31,18 +31,18 @@ Model Compression
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* NAS benchmark `(doc)<https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`_
+* NAS benchmark `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`__
   * Support benchmark table lookup in experiments
   * New data preparation approach
-* Improved `quick start doc<https://nni.readthedocs.io/en/v2.5/NAS/QuickStart.html>`_
-* Experimental CGO execution engine `(doc)<https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`_
+* Improved `quick start doc <https://nni.readthedocs.io/en/v2.5/NAS/QuickStart.html>`__
+* Experimental CGO execution engine `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`__
 
 Hyper-Parameter Optimization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* New training platform: Alibaba DSW+DLC `(doc)<https://nni.readthedocs.io/en/v2.5/TrainingService/DLCMode.html>`_
-* Support passing ConfigSpace definition directly to BOHB `(doc)<https://nni.readthedocs.io/en/v2.5/Tuner/BohbAdvisor.html#usage>`_ (thanks to khituras)
-* Reformatted `experiment config doc<https://nni.readthedocs.io/en/v2.5/reference/experiment_config.html>`_
+* New training platform: Alibaba DSW+DLC `(doc) <https://nni.readthedocs.io/en/v2.5/TrainingService/DLCMode.html>`__
+* Support passing ConfigSpace definition directly to BOHB `(doc) <https://nni.readthedocs.io/en/v2.5/Tuner/BohbAdvisor.html#usage>`__ (thanks to khituras)
+* Reformatted `experiment config doc <https://nni.readthedocs.io/en/v2.5/reference/experiment_config.html>`__
 * Added example config files for Windows (thanks to @politecat314)
 * FrameworkController now supports reuse mode
 
@@ -59,7 +59,8 @@ Fixed Bugs
 And...
 ^^^^^^
 
-* New `emoticons<https://github.com/microsoft/nni/blob/v2.5/docs/en_US/Tutorial/NNSpider.md>`_!
+* New `emoticons <https://github.com/microsoft/nni/blob/v2.5/docs/en_US/Tutorial/NNSpider.md>`__!
+
 .. image:: https://raw.githubusercontent.com/microsoft/nni/v2.5/docs/img/emoicons/Holiday.png
 
 Release 2.4 - 8/11/2021
