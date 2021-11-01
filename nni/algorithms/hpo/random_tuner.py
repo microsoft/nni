@@ -1,6 +1,14 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+"""
+Naive random tuner for hyper-parameter optimization.
+
+You can specify an integer seed to determine random result.
+"""
+
+__all__ = ['RandomTuner', 'suggest', 'suggest_parameter']
+
 import numpy as np
 import schema
 
@@ -29,25 +37,15 @@ class RandomClassArgsValidator(ClassArgsValidator):
 
 def suggest(rng, space):
     params = {}
-    for spec in space.values():
-        if not spec.is_activated(params):
-            continue
-
-        if spec.categorical:
-            params[spec.key] = rng.integers(spec.size)
-            continue
-
-        if spec.normal_distributed:
-            if spec.log_distributed:
-                x = rng.lognormal(spec.mu, spec.sigma)
-            else:
-                x = rng.normal(spec.mu, spec.sigma)
-        else:
-            if spec.log_distributed:
-                x = np.exp(rng.uniform(np.log(spec.low), np.log(spec.high)))
-            else:
-                x = rng.uniform(spec.low, spec.high)
-        if spec.q is not None:
-            x = np.round(x / spec.q) * spec.q
-        params[spec.key] = x
+    for key, spec in space.items():
+        if spec.is_activated_in(params):
+            params[key] = suggest_parameter(rng, spec)
     return params
+
+def suggest_parameter(rng, spec):
+    if spec.categorical:
+        return rng.integers(spec.size)
+    if spec.normal_distributed:
+        return rng.normal(spec.mu, spec.sigma)
+    else:
+        return rng.uniform(spec.low, spec.high)

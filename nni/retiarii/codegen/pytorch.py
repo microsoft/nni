@@ -2,7 +2,10 @@
 # Licensed under the MIT license.
 
 import logging
-from typing import List, Tuple, Any
+from typing import Dict, List, Tuple, Any
+
+from nni.retiarii.operation_def.torch_op_def import ToDevice
+from nni.common.device import Device, GPUDevice
 
 from ..graph import IllegalGraphError, Edge, Graph, Node, Model
 
@@ -70,7 +73,7 @@ def _format_inputs(node: Node) -> Tuple[List[str], List[Any]]:
                 # when the input comes from a single-output operator
                 inputs.append('{}'.format(edge.head.name))
                 if edge.head.operation.type in ('prim::Constant', 'prim::GetAttr') and \
-                    'value' in edge.head.operation.parameters:
+                        'value' in edge.head.operation.parameters:
                     inputs_value.append(edge.head.operation.parameters['value'])
                 else:
                     inputs_value.append(None)
@@ -98,6 +101,24 @@ def _remove_prefix(names, graph_name):
         return names[len(graph_name):] if names.startswith(graph_name) else names
 
 
+def generate_cuda_mapping(placement: Dict[Node, Device]) -> Dict[Device, int]:
+    '''
+    Since CUDA_VISIBLE_DEVICES will be set to the list of real GPU ID,
+    we need to remap the GPU ID when generating code to match them correctly.
+    For example, when CUDA_VISIBLE_DEVICES="0,3", we need to use "cuda:0", "cuda:1" in the generated code.
+    '''
+    unique_devices = sorted(list(set([e for e in placement.values() if isinstance(e, GPUDevice)])))
+    node_gpu_cnt = {}
+    cuda_remapped_id = {}
+    for d in unique_devices:
+        if d.node_id not in node_gpu_cnt:
+            node_gpu_cnt[d.node_id] = 0
+        node_gpu_cnt[d.node_id] += 1
+        cuda_remapped_id[d] = node_gpu_cnt[d.node_id] - 1
+
+    return cuda_remapped_id
+
+
 def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str:
     nodes = graph.topo_sort()
 
@@ -105,8 +126,14 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
     # only need to generate code for module here
     import_pkgs = set()
     node_codes = []
+    cuda_remapped_id = None
+    if placement:
+        cuda_remapped_id = generate_cuda_mapping(placement)
     for node in nodes:
         if node.operation:
+            if placement and isinstance(node.operation, ToDevice):
+                node.operation.override_device_repr("cuda:%d" % cuda_remapped_id[node.operation.device])
+
             if node.operation.type == 'shared':
                 continue
             pkg_name = node.operation.get_import_pkg()
@@ -115,7 +142,11 @@ def graph_to_pytorch_model(graph_name: str, graph: Graph, placement=None) -> str
             node_code = node.operation.to_init_code(_remove_prefix(node.name, graph_name))
             if node_code is not None:
                 if placement and node in placement and len(node_code) > 0:
-                    node_codes.append(f"{node_code}.to('{placement[node].device_repr()}')")
+                    if isinstance(placement[node], GPUDevice):
+                        device_repr = "cuda:%d" % cuda_remapped_id[placement[node]]
+                    else:
+                        device_repr = placement[node].device_repr()
+                    node_codes.append(f"{node_code}.to('{device_repr}')")
                 else:
                     node_codes.append(node_code)
 

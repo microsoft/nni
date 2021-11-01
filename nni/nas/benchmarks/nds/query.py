@@ -2,7 +2,9 @@ import functools
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import NdsTrialStats, NdsTrialConfig
+
+from nni.nas.benchmarks.utils import load_benchmark
+from .model import NdsTrialStats, NdsTrialConfig, proxy
 
 
 def query_nds_trial_stats(model_family, proposer, generator, model_spec, cell_spec, dataset,
@@ -41,6 +43,10 @@ def query_nds_trial_stats(model_family, proposer, generator, model_spec, cell_sp
         A generator of :class:`nni.nas.benchmark.nds.NdsTrialStats` objects,
         where each of them has been converted into a dict.
     """
+
+    if proxy.obj is None:
+        proxy.initialize(load_benchmark('nds'))
+
     fields = []
     if reduction == 'none':
         reduction = None

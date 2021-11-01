@@ -6,7 +6,7 @@ ConfigSpaceNNI
 smac4nni
 
 # BOHB
-ConfigSpace==0.4.7
+ConfigSpace==0.4.11
 statsmodels==0.12.0
 
 # PPOTuner
