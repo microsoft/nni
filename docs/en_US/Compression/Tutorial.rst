@@ -85,7 +85,12 @@ when the value is int type, all quantization types share same bits length. eg.
 
 * **quant_dtype** : str or dict of {str : str}
 
-quantization dtype, key is the quantization type, value is the quantization dtype, eg.
+quantization dtype, used to determine the range of quantized value. Two choices can be used:
+
+- int: the range is singed
+- uint: the range is unsigned
+
+Two ways to set it. One is that the key is the quantization type, and the value is the quantization dtype, eg.
 
 .. code-block:: python
 
@@ -96,19 +101,26 @@ quantization dtype, key is the quantization type, value is the quantization dtyp
          },
    }
 
-when the value is str type, all quantization types share the same dtype. eg.
+The other is that the value is str type, and all quantization types share the same dtype. eg.
 
 .. code-block:: python
 
    {
-      quant_dtype: 'int', # the dtype of weight and output quantization are all 'int'
+      'quant_dtype': 'int', # the dtype of weight and output quantization are all 'int'
    }
 
 There are totally two kinds of `quant_dtype` you can set, they are 'int' and 'uint'.
 
 * **quant_scheme** : str or dict of {str : str}
 
-quantization scheme, key is the quantization type, value is the quantization scheme, eg.
+quantization scheme, used to determine the quantization manners. Four choices can used:
+
+- per_tensor_affine: per tensor, asymmetric quantization
+- per_tensor_symmetric: per tensor, symmetric quantization
+- per_channel_affine: per channel, asymmetric quantization
+- per_channel_symmetric: per channel, symmetric quantization
+
+Two ways to set it. One is that the key is the quantization type, value is the quantization scheme, eg.
 
 .. code-block:: python
 
@@ -119,7 +131,7 @@ quantization scheme, key is the quantization type, value is the quantization sch
          },
    }
 
-when the value is str type, all quantization types share the same quant_scheme. eg.
+The other is that the value is str type, all quantization types share the same quant_scheme. eg.
 
 .. code-block:: python
 
