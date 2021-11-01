@@ -86,7 +86,7 @@ export class GpuScheduler {
                     environment: undefined,
                 });
             }
-
+            this.log.info('----------------89-----------')
             // Step 2: Allocate Host/GPU for specified trial job
             // Currenty the requireGPUNum parameter for all trial jobs are identical.
             if (requiredGPUNum > 0) {
@@ -98,7 +98,8 @@ export class GpuScheduler {
             } else {
                 // Trail job does not need GPU
                 const allocatedRm: EnvironmentInformation = this.selectMachine(environments, environments);
-
+                this.log.info('----------------101------selected env-----')
+                this.log.info(allocatedRm.id)
                 return this.allocateHost(requiredGPUNum, allocatedRm, [], trialDetail);
             }
 
@@ -284,7 +285,10 @@ export class GpuScheduler {
 
     private selectMachine(qualifiedEnvironments: EnvironmentInformation[], allEnvironments: EnvironmentInformation[]): EnvironmentInformation {
         assert(qualifiedEnvironments !== undefined && qualifiedEnvironments.length > 0);
-
+        this.log.info('-------------------288-----all env')
+        for(let i = 0; i < allEnvironments.length; i ++) {
+           this.log.info(allEnvironments[i].id)
+        }
         if (this.policyName === 'random') {
             return randomSelect(qualifiedEnvironments);
         } else if (this.policyName === 'round-robin') {
