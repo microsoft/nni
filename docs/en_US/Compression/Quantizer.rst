@@ -145,6 +145,7 @@ QAT quantizer natively supports multi-gpu training (DataParallel and Distributed
 instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
 
 .. code-block:: python
+
     from torch.nn.parallel import DistributedDataParallel as DDP
     from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
 
