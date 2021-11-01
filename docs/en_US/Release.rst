@@ -15,7 +15,7 @@ Model Compression
   * Iterative pruning is more automated, users can use less code to implement iterative pruning.
   * Support exporting intermediate models in the iterative pruning process.
   * The implementation of the pruning algorithm is closer to the paper.
-  * Users can easily customize their own iterative pruning by using `PruningScheduler`.
+  * Users can easily customize their own iterative pruning by using ``PruningScheduler``.
   * Optimize the basic pruners underlying generate mask logic, easier to extend new functions.
   * Optimized the memory usage of the pruners.
 * MobileNetV2 end-to-end example `(notebook)<https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`_
@@ -48,7 +48,7 @@ Hyper-Parameter Optimization
 Fixed Bugs
 """"""""""
 * Experiment cannot start due to platform timestamp format (issue #4077 #4083)
-* Cannot use `1e-5` in search space (issue #4080)
+* Cannot use ``1e-5`` in search space (issue #4080)
 * Dependency version conflict caused by ConfigSpace (issue #3909) (thanks to @jexxers)
 * Hardware-aware SPOS example does not work (issue #4198)
 * Web UI show wrong remaining time when duration exceeds limit (issue #4015)
