@@ -104,7 +104,8 @@ graph. Note that when the quantization aware training process is finished, the f
 
 Quantization dtype and scheme customization
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-QAT quantizer support dtype (int or uint) and scheme (per-tensor or per-channel and symmetric or affine) customization.
+Different backends on different devices use different quantization strategies (i.e. dtype (int or uint) and
+scheme (per-tensor or per-channel and symmetric or affine)). QAT quantizer supports customization of mainstream dtypes and schemes.
 There are two ways to set them. One way is setting them globally through a function named `set_quant_scheme_dtype` like:
 
 .. code-block:: python
@@ -137,6 +138,25 @@ The other way is more detailed. You can customize the dtype and scheme in each q
        'quant_dtype': 'uint',
        'quant_scheme': 'per_tensor_affine'
    }]
+
+Multi-GPU training
+^^^^^^^^^^^^^^^^^^^
+QAT quantizer natively supports multi-gpu training (DataParallel and DistributedDataParallel). Note that the quantizer
+instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
+
+.. code-block:: python
+    from torch.nn.parallel import DistributedDataParallel as DDP
+    from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+
+    model = define_your_model()
+
+    model = QAT_Quantizer(model, **other_params)  # <--- QAT_Quantizer instantiation
+
+    model = DDP(model)
+
+    for i in range(epochs):
+        train(model)
+        eval(model)
 
 
 ----
