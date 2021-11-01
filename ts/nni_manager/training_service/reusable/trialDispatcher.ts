@@ -209,7 +209,7 @@ class TrialDispatcher implements TrainingService {
         }
     }
 
-    private getStorageService(environmentService: EnvironmentService) {
+    private getStorageService(environmentService: EnvironmentService): StorageService {
         let storageService: StorageService;
         if (this.useSharedStorage) {
             this.log.debug(`TrialDispatcher: use shared storage service.`);
@@ -240,7 +240,7 @@ class TrialDispatcher implements TrainingService {
                     continue;
                 }
             }
-            let storageService: StorageService = this.getStorageService(environmentService);
+            const storageService: StorageService = this.getStorageService(environmentService);
 
             // Copy the compressed file to remoteDirectory and delete it
             const codeDir = path.resolve(this.config.trialCodeDirectory);
@@ -649,11 +649,11 @@ class TrialDispatcher implements TrainingService {
         }
     }
 
-    private async setEnvironmentSetting(environment: EnvironmentInformation) {
+    private async setEnvironmentSetting(environment: EnvironmentInformation): Promise<void> {
         if (environment.environmentService === undefined) {
             throw new Error(`Environmentservice for ${environment.id} not initialized!`);
         }
-        let environmentService = environment.environmentService;
+        const environmentService = environment.environmentService;
         const runnerSettings: RunnerSettings = new RunnerSettings();
         runnerSettings.nniManagerIP = this.config.nniManagerIp === undefined? await getIPV4Address() : this.config.nniManagerIp;
         runnerSettings.nniManagerPort = getBasePort() + 1;
@@ -664,7 +664,7 @@ class TrialDispatcher implements TrainingService {
         runnerSettings.logCollection = this.logCollection;
         runnerSettings.platform = environmentService.getName;
         runnerSettings.experimentId = this.experimentId;
-        let storageService: StorageService = this.getStorageService(environmentService);
+        const storageService: StorageService = this.getStorageService(environmentService);
         const envDir = storageService.joinPath("envs");
         const runnerSettingsConfig = storageService.joinPath(envDir, environment.id, "settings.json");
         await storageService.save(JSON.stringify(runnerSettings), runnerSettingsConfig);
