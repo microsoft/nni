@@ -120,10 +120,10 @@ def update_training_service_config(args):
         config[args.ts]['trainingService'][0]['machineList'][0]['host'] = args.remote_host
         config[args.ts]['trainingService'][0]['machineList'][0]['password'] = args.remote_pwd
         config[args.ts]['trainingService'][0]['machineList'][0]['port'] = args.remote_port
-        # config[args.ts]['trainingService'][2]['subscriptionId'] = args.subscription_id
-        # config[args.ts]['trainingService'][2]['resourceGroup'] = args.resource_group
-        # config[args.ts]['trainingService'][2]['workspaceName'] = args.workspace_name
-        # config[args.ts]['trainingService'][2]['computeTarget'] = args.compute_target
+        config[args.ts]['trainingService'][2]['subscriptionId'] = args.subscription_id
+        config[args.ts]['trainingService'][2]['resourceGroup'] = args.resource_group
+        config[args.ts]['trainingService'][2]['workspaceName'] = args.workspace_name
+        config[args.ts]['trainingService'][2]['computeTarget'] = args.compute_target
         config[args.ts]['nni_manager_ip'] = args.nni_manager_ip
         dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
 

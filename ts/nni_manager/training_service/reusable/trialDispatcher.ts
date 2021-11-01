@@ -386,7 +386,6 @@ class TrialDispatcher implements TrainingService {
                 if (oldIsAlive !== environment.isAlive) {
                     this.log.debug(`set environment ${environment.id} isAlive from ${oldIsAlive} to ${environment.isAlive} due to status is ${environment.status}.`);
                 }
-                this.log.info(`------update environment ${environment.id} to ${environment.status}`)
             }
             this.shouldUpdateTrials = true;
             if (this.environmentMaintenceLoopInterval === -1) {
