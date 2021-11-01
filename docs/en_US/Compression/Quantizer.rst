@@ -303,7 +303,7 @@ You can view example :githublink:`examples/model_compress/quantization/observer_
 
 User configuration for Observer Quantizer
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+Common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
 
 
 .. note::
