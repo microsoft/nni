@@ -494,7 +494,6 @@ class TrialDispatcher implements TrainingService {
             let liveEnvironmentsCount = 0;
             const reusableEnvironments: EnvironmentInformation[] = [];
             for (const environment of this.environments.values()) {
-                this.log.info(`----------environment ${environment.id}, status ${environment.status}, isAlive ${environment.isAlive}, isrunnerready ${environment.isRunnerReady}`)
                 if (environment.isAlive === true) {
                     liveEnvironmentsCount++;
                     if (environment.status === "RUNNING" && environment.isRunnerReady) {
