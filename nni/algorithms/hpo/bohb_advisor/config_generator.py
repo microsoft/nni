@@ -243,7 +243,7 @@ class CG_BOHB:
             while np.any(nan_indices):
                 nan_idx = nan_indices[0]
                 valid_indices = np.argwhere(np.isfinite(array[:, nan_idx])).flatten()
-                if valid_indices:
+                if len(valid_indices) > 0:
                     # pick one of them at random and overwrite all NaN values
                     row_idx = np.random.choice(valid_indices)
                     datum[nan_indices] = array[row_idx, nan_indices]
