@@ -159,8 +159,8 @@ def replace_linear(linear, masks):
 
     weight_mask = weight_mask['weight']
     # N C K
-    pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
-    pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
+    pruned_in, remained_in = convert_to_coarse_mask(in_mask, len(in_mask.size()) - 1)
+    pruned_out, remained_out = convert_to_coarse_mask(output_mask, len(output_mask.size()) - 1)
     n_remained_in = weight_mask.size(1) - pruned_in.size(0)
     n_remained_out = weight_mask.size(0) - pruned_out.size(0)
     remained_in, remained_out = remained_in.to(

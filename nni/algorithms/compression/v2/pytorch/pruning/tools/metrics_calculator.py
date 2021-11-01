@@ -18,7 +18,8 @@ class NormMetricsCalculator(MetricsCalculator):
     L1, L2, Level, Slim pruner use this to calculate metric.
     """
 
-    def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None):
+    def __init__(self, dim: Optional[Union[int, List[int]]] = None, p: Optional[Union[int, float]] = None,
+                 block_sparse_size: Optional[Union[int, List[int]]] = None):
         """
         Parameters
         ----------
@@ -45,8 +46,16 @@ class NormMetricsCalculator(MetricsCalculator):
             In both of these two case, the metric of this module has size (32,).
         p
             The order of norm. None means Frobenius norm.
+        block_sparse_size
+            This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
+            Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
+
+            Example:
+
+            The under pruning weight size is (768, 768), and you want to apply a block sparse on dim=[0] with block size [64, 768],
+            then you can set block_sparse_size=[64]. The final metric size is (12,).
         """
-        super().__init__(dim=dim)
+        super().__init__(dim=dim, block_sparse_size=block_sparse_size)
         self.p = p if p is not None else 'fro'
 
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -59,6 +68,12 @@ class NormMetricsCalculator(MetricsCalculator):
                 metrics[name] = tensor.abs()
             else:
                 metrics[name] = tensor.norm(p=self.p, dim=across_dim)
+            if self.block_sparse_size is not None:
+                assert len(self.block_sparse_size) == len(metrics[name].size())
+                for i, step in enumerate(self.block_sparse_size):
+                    metrics[name] = metrics[name].unfold(i, step, step)
+                across_dim = list(range(len(self.block_sparse_size), 2 * len(self.block_sparse_size)))
+                metrics[name] = metrics[name].norm(p=self.p, dim=across_dim)
         return metrics
 
 
@@ -79,7 +94,7 @@ class DistMetricsCalculator(MetricsCalculator):
     FPGM pruner use this to calculate metric.
     """
 
-    def __init__(self, p: float, dim: Union[int, List[int]]):
+    def __init__(self, p: float, dim: Union[int, List[int]], block_sparse_size: Optional[Union[int, List[int]]] = None):
         """
         Parameters
         ----------
@@ -106,8 +121,16 @@ class DistMetricsCalculator(MetricsCalculator):
             In both of these two case, the metric of this module has size (32,).
         p
             The order of norm.
+        block_sparse_size
+            This used to describe the block size a metric value represented. By default, None means the block size is ones(len(dim)).
+            Make sure len(dim) == len(block_sparse_size), and the block_sparse_size dimension position is corresponding to dim.
+
+            Example:
+
+            The under pruning weight size is (768, 768), and you want to apply a block sparse on dim=[0] with block size [64, 768],
+            then you can set block_sparse_size=[64]. The final metric size is (12,).
         """
-        super().__init__(dim=dim)
+        super().__init__(dim=dim, block_sparse_size=block_sparse_size)
         self.p = p
 
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
@@ -118,8 +141,11 @@ class DistMetricsCalculator(MetricsCalculator):
             reorder_dim.extend([i for i in range(len(tensor.size())) if i not in keeped_dim])
             reorder_tensor = tensor.permute(*reorder_dim).clone()
 
+            for i, step in enumerate(self.block_sparse_size):
+                reorder_tensor = reorder_tensor.unfold(i, step, step)
+
             metric = torch.ones(*reorder_tensor.size()[:len(keeped_dim)], device=reorder_tensor.device)
-            across_dim = list(range(len(keeped_dim), len(reorder_dim)))
+            across_dim = list(range(len(keeped_dim), len(reorder_tensor.size())))
             idxs = metric.nonzero(as_tuple=False)
             for idx in idxs:
                 other = reorder_tensor

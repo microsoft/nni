@@ -2,14 +2,14 @@
 # Licensed under the MIT license.
 
 import math
-from typing import Any, Dict, List, Tuple, Union
+from typing import Any, Dict, List, OrderedDict, Tuple, Union, Optional
 
 import numpy as np
 import torch
 from torch import Tensor
 
 from nni.algorithms.compression.v2.pytorch.base import Pruner
-from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency, AttentionWeightDependency
 
 from .base import SparsityAllocator
 
@@ -159,3 +159,82 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for group_metric in group_metrics:
             group_sum_metric += group_metric
         return group_sum_metric
+
+
+class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
+    """
+    A specify allocator for Linear in transformers with dependency aware.
+    """
+
+    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any, block_sparse_size: Optional[Union[int, List[int]]] = None):
+        assert isinstance(dim, int), 'Only support single dim in AttentionHeadDependencyAwareAllocator.'
+        super().__init__(pruner, dim=dim, block_sparse_size=block_sparse_size)
+        self.dummy_input = dummy_input
+
+    def _get_dependency(self):
+        """
+        Populate self.attention_name_groups by running inference on the module graph.
+        Currently, the group inferred AttentionWeightDependency is limited to a set of four weights, with the first
+        three corresponding to Q_proj, K_proj, V_proj (in any order) and the last one being output_proj.
+        """
+        try:
+            graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
+            dependency_tracer = AttentionWeightDependency(traced_model=graph.trace)
+            self.attention_name_groups = dependency_tracer.dependency_sets
+
+        except Exception as e:
+            raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups.\n'
+                               'Exception message: ' + str(e))
+
+    def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
+        """
+        Add Q_proj, K_proj, V_proj metric value in the same position in one group.
+        """
+        group_metrics = list(group_metrics.values()) if isinstance(group_metrics, dict) else group_metrics
+        assert all(group_metrics[0].size() == group_metric.size() for group_metric in group_metrics), 'Metrics size do not match.'
+        group_sum_metric = torch.zeros(group_metrics[0].size(), device=group_metrics[0].device)
+        for group_metric in group_metrics:
+            group_sum_metric += group_metric
+        return group_sum_metric
+
+    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        self._get_dependency()
+        masks = {}
+        grouped_metrics = {}
+
+        for idx, names in enumerate(self.attention_name_groups):
+            grouped_metric = OrderedDict()
+            for name in names:
+                grouped_metric[name] = metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
+            assert len(grouped_metric) in [0, 3, 4]
+            # This is for (q, k, v) or (q, k, v, output)
+            if len(grouped_metric) in [3, 4]:
+                grouped_metrics[idx] = grouped_metric
+
+        for _, group_metric_dict in grouped_metrics.items():
+            group_metric = self._group_metric_calculate(group_metric_dict)
+
+            sparsities = {name: self.pruner.get_modules_wrapper()[name].config['total_sparsity'] for name in group_metric_dict.keys()}
+            sparsity = list(sparsities.values())[0]
+
+            pruned_num = int(sparsity * group_metric.numel())
+            if pruned_num > 0:
+                threshold = torch.topk(group_metric, pruned_num, largest=False)[0].max()
+                proj_mask = torch.gt(group_metric, threshold).type_as(group_metric)
+            else:
+                proj_mask = torch.ones(group_metric.size()).type_as(group_metric)
+
+            name_list = list(group_metric_dict.keys())
+            for name in name_list[0: 3]:
+                masks[name] = self._expand_mask(name, proj_mask)
+
+            # special rule based output layer mask generation
+            if len(name_list) == 4:
+                wrapper = self.pruner.get_modules_wrapper()[name_list[-1]]
+                head_width = int(wrapper.module.weight.size(1) / len(proj_mask))
+                masks[name_list[-1]] = {
+                    'weight': proj_mask.unsqueeze(1).expand(-1, head_width).reshape(-1).unsqueeze(0).expand_as(wrapper.module.weight).clone()
+                }
+                if wrapper.bias_mask is not None:
+                    masks[name_list[-1]]['bias'] = wrapper.bias_mask.clone().detach()
+        return masks

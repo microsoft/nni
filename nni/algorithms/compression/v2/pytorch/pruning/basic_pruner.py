@@ -3,7 +3,7 @@
 
 from copy import deepcopy
 import logging
-from typing import List, Dict, Tuple, Callable, Optional
+from typing import List, Dict, Tuple, Callable, Optional, Union
 
 from schema import And, Or, Optional as SchemaOptional
 import torch
@@ -36,13 +36,14 @@ from .tools import (
     SparsityAllocator,
     NormalSparsityAllocator,
     GlobalSparsityAllocator,
-    Conv2dDependencyAwareAllocator
+    Conv2dDependencyAwareAllocator,
+    AttentionHeadDependencyAwareAllocator
 )
 
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
-           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner']
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner', 'TransformerPruner']
 
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
@@ -672,7 +673,6 @@ class ADMMPruner(BasicPruner):
     The metric used in this pruner is the absolute value of the weight.
     In each iteration, the weight with small magnitudes will be set to zero.
     Only in the final iteration, the mask will be generated and apply to model wrapper.
-
     The original paper refer to: https://arxiv.org/abs/1804.03294.
     """
 
@@ -695,9 +695,7 @@ class ADMMPruner(BasicPruner):
         trainer
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
-
             Example::
-
                 def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
                     training = model.training
                     model.train(mode=True)
@@ -784,3 +782,77 @@ class ADMMPruner(BasicPruner):
 
         self.load_masks(masks)
         return self.bound_model, masks
+
+
+class TransformerPruner(BasicPruner):
+    """
+    This is a special pruner for pruning huggingface transformers bert or other implementations like that.
+    """
+    def __init__(self, model: Module, config_list: List[Dict], metric: str = 'l1', dim: Optional[Union[list, int]] = 0,
+                 block_sparse_size: Optional[Union[list, int]] = None, mode: str = 'normal',
+                 dummy_input: Optional[Tensor] = None):
+        """
+        Parameters
+        ----------
+        model
+            Model to be pruned
+        config_list
+            Supported keys:
+                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer : Equals to sparsity.
+                - op_types : Only Linear is supported in TransformerPruner.
+                - op_names : Operation names to prune.
+                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+        metric
+            ...
+        dim
+            ...
+        block_sparse_size
+            ...
+        mode
+            'normal' or 'dependency_aware'.
+            If prune the model in a dependency-aware way, this pruner will
+            prune the model according to the metric and the channel-dependency or group-dependency of the model.
+            In this way, the pruner will force the linear layers that have dependencies to prune the same channels,
+            so the speedup module can better harvest the speed benefit from the pruned model. Note that,
+            if set 'dependency_aware' , the dummy_input cannot be None, because the pruner needs a dummy input to
+            trace the dependency between the linear layers.
+        dummy_input
+            The dummy input to analyze the topology constraints. Note that, the dummy_input
+            should on the same device with the model.
+        """
+        assert metric in ['l1', 'l2', 'fpgm']
+        self.metric = metric
+        self.dim = dim
+        self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
+        self.mode = mode
+        self.dummy_input = dummy_input
+        super().__init__(model, config_list)
+
+    def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
+        schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
+        for sub_shcema in schema_list:
+            sub_shcema[SchemaOptional('op_types')] = ['Linear']
+        schema = CompressorSchema(schema_list, model, _logger)
+
+        schema.validate(config_list)
+
+    def reset_tools(self):
+        if self.data_collector is None:
+            if self.metric in ['l1', 'l2', 'fpgm']:
+                self.data_collector = WeightDataCollector(self)
+        else:
+            self.data_collector.reset()
+        if self.metrics_calculator is None:
+            if self.metric == 'l1':
+                self.metrics_calculator = NormMetricsCalculator(p=1, dim=self.dim, block_sparse_size=self.block_sparse_size)
+            if self.metric == 'l2':
+                self.metrics_calculator = NormMetricsCalculator(p=2, dim=self.dim, block_sparse_size=self.block_sparse_size)
+            if self.metric == 'fpgm':
+                self.metrics_calculator = DistMetricsCalculator(p=2, dim=self.dim, block_sparse_size=self.block_sparse_size)
+        if self.sparsity_allocator is None:
+            if self.mode == 'normal':
+                self.sparsity_allocator = NormalSparsityAllocator(self, dim=self.dim, block_sparse_size=self.block_sparse_size)
+            elif self.mode == 'dependency_aware':
+                assert self.dummy_input is not None and self.metric in ['l1', 'l2', 'fpgm']
+                self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, self.dim, self.dummy_input, self.block_sparse_size)
