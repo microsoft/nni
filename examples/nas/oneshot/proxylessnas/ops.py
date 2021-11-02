@@ -249,7 +249,7 @@ class LinearLayer(nn.Module):
                 return True
             elif op == 'weight':
                 return False
-        raise ValueError(f'Invalid ops_order:{self.ops_order}')
+        raise ValueError(f'Invalid ops_order: {self.ops_order}')
 
     def forward(self, x):
         x = self.sequence(x)
@@ -282,7 +282,7 @@ class MBInvertedConvLayer(nn.Module):
             feature_dim = self.mid_channels
 
         if self.expand_ratio == 1:
-            self.inverted_bottleneck = nn.Sequential(OrderedDict([]))
+            self.inverted_bottleneck = nn.Sequential()
         else:
             self.inverted_bottleneck = nn.Sequential(OrderedDict([
                 ('conv', nn.Conv2d(self.in_channels, feature_dim, 1, 1, 0, bias=False)),

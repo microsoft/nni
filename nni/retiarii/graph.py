@@ -217,7 +217,6 @@ class Model:
         for graph in self.graphs.values():
             nodes = [node for node in graph.nodes if isinstance(node.operation, Cell)]
             matched_nodes.extend(nodes)
-        # assert len(matched_nodes) <= 1
         return matched_nodes
 
 
