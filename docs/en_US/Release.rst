@@ -12,17 +12,21 @@ Model Compression
 ^^^^^^^^^^^^^^^^^
 
 * New major version of pruning framework `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`__
+
   * Iterative pruning is more automated, users can use less code to implement iterative pruning.
   * Support exporting intermediate models in the iterative pruning process.
   * The implementation of the pruning algorithm is closer to the paper.
   * Users can easily customize their own iterative pruning by using ``PruningScheduler``.
   * Optimize the basic pruners underlying generate mask logic, easier to extend new functions.
   * Optimized the memory usage of the pruners.
+
 * MobileNetV2 end-to-end example `(notebook) <https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`__
 * Improved QAT quantizer
+
   * support dtype and scheme customization
   * support dp multi-gpu training
   * support load_calibration_config
+
 * Model speed-up now supports directly loading the mask
 * Support speed-up depth-wise convolution
 * Support bn-folding for LSQ quantizer
@@ -32,8 +36,10 @@ Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 * NAS benchmark `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`__
+
   * Support benchmark table lookup in experiments
   * New data preparation approach
+
 * Improved `quick start doc <https://nni.readthedocs.io/en/v2.5/NAS/QuickStart.html>`__
 * Experimental CGO execution engine `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`__
 
