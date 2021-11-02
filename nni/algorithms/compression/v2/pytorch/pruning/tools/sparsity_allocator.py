@@ -103,8 +103,10 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
 
     def _get_dependency(self):
         graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
-        self.channel_depen = ChannelDependency(traced_model=graph.trace).dependency_sets
-        self.group_depen = GroupDependency(traced_model=graph.trace).dependency_sets
+        self.pruner._unwrap_model()
+        self.channel_depen = ChannelDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.group_depen = GroupDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.pruner._wrap_model()
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         self._get_dependency()
