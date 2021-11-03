@@ -213,8 +213,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
         - 'alpha' and 'beta' is required when grad_reg_loss_type == 'mul#log';
         - 'lambda' is required when grad_reg_loss_type == 'add#linear'.
     applied_hardware: string
-        Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft 
-        nn-Meter (https://github.com/microsoft/nn-Meter). 
+        Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft
+        nn-Meter (https://github.com/microsoft/nn-Meter).
     dummy_input: tuple
         The dummy input shape when applied to the target hardware.
     ref_latency: float
