@@ -20,6 +20,7 @@ from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 from nni.algorithms.hpo.metis_tuner import MetisTuner
 from nni.algorithms.hpo.pbt_tuner import PBTTuner
 from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionTuner
+from nni.algorithms.hpo.tpe_tuner import TpeTuner
 from nni.runtime.msg_dispatcher import _pack_parameter, MsgDispatcher
 
 smac_imported = False
@@ -319,10 +320,8 @@ class BuiltinTunersTestCase(TestCase):
         self.import_data_test(tuner_fn)
 
     def test_tpe(self):
-        tuner_fn = lambda: HyperoptTuner("tpe")
-        self.search_space_test_all(tuner_fn,
-                                   ignore_types=["uniform_equal", "qloguniform_equal", "loguniform_equal", "quniform_clip_2"])
-        # NOTE: types are ignored because `tpe.py line 465, in adaptive_parzen_normal assert prior_sigma > 0`
+        tuner_fn = TpeTuner
+        self.search_space_test_all(tuner_fn)
         self.import_data_test(tuner_fn)
 
     def test_random_search(self):

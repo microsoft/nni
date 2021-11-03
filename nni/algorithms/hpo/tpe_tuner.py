@@ -13,6 +13,7 @@ This is a slightly modified re-implementation of the algorithm.
 __all__ = ['TpeTuner', 'TpeArguments', 'suggest', 'suggest_parameter']
 
 from collections import defaultdict
+import logging
 import math
 from typing import NamedTuple, Optional, Union
 
@@ -22,6 +23,8 @@ from scipy.special import erf  # pylint: disable=no-name-in-module
 from nni.tuner import Tuner
 from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters
 from . import random_tuner
+
+_logger = logging.getLogger('nni.tuner.tpe')
 
 ## Public API part ##
 
@@ -93,7 +96,11 @@ class TpeTuner(Tuner):
         # concurrent generate_parameters() calls are likely to yield similar result, because they use same history
         # the liar solves this problem by adding fake results to history
         self.liar = create_liar(self.args.constant_liar_type)
+
+        if seed is None:  # explicitly generate a seed to make the experiment reproducible
+            seed = np.random.default_rng().integers(2 ** 31)
         self.rng = np.random.default_rng(seed)
+        _logger.info(f'Using random seed {seed}')
 
         self._params = {}                   # parameter_id -> parameters (in internal format)
         self._running_params = {}           # subset of above
@@ -339,7 +346,7 @@ def gmm1(args, rng, weights, mus, sigmas, clip=None):
         active = np.argmax(rng.multinomial(1, weights, n), axis=1)
         samples = rng.normal(mus[active], sigmas[active])
         if clip:
-            samples = samples[(clip[0] <= samples) & (samples < clip[1])]
+            samples = samples[(clip[0] <= samples) & (samples <= clip[1])]
         ret = np.concatenate([ret, samples])
     return ret
 
