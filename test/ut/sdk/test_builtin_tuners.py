@@ -19,6 +19,7 @@ from nni.algorithms.hpo.gridsearch_tuner import GridSearchTuner
 from nni.algorithms.hpo.hyperopt_tuner import HyperoptTuner
 from nni.algorithms.hpo.metis_tuner import MetisTuner
 from nni.algorithms.hpo.pbt_tuner import PBTTuner
+from nni.algorithms.hpo.random_tuner import RandomTuner
 from nni.algorithms.hpo.regularized_evolution_tuner import RegularizedEvolutionTuner
 from nni.algorithms.hpo.tpe_tuner import TpeTuner
 from nni.runtime.msg_dispatcher import _pack_parameter, MsgDispatcher
@@ -321,11 +322,11 @@ class BuiltinTunersTestCase(TestCase):
 
     def test_tpe(self):
         tuner_fn = TpeTuner
-        self.search_space_test_all(tuner_fn)
+        self.search_space_test_all(TpeTuner)
         self.import_data_test(tuner_fn)
 
     def test_random_search(self):
-        tuner_fn = lambda: HyperoptTuner("random_search")
+        tuner_fn = RandomTuner
         self.search_space_test_all(tuner_fn)
         self.import_data_test(tuner_fn)
 
