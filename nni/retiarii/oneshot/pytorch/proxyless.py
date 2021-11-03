@@ -203,6 +203,23 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Step count per logging.
     arc_learning_rate : float
         Learning rate of architecture parameters.
+    grad_reg_loss_type: string
+        Regularization type to add hardware related loss, allowed types include
+        - mul#log: 
+        - add#linear: 
+        - None: do not use regularization term
+    grad_reg_loss_params: dict
+        - 'alpha' and 'beta' is required when grad_reg_loss_type == 'mul#log', 
+          regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
+        - 'lambda' is required when grad_reg_loss_type == 'add#linear',
+          regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
+    applied_hardware: string
+        Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft 
+        nn-Meter (https://github.com/microsoft/nn-Meter). 
+    dummy_input: list
+        The dummy input shape when applied to the target hardware.
+    ref_latency: float
+        Reference latency value in the applied hardware (ms).
     """
 
     def __init__(self, model, loss, metrics, optimizer,
