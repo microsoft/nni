@@ -7,7 +7,6 @@ from typing import Dict, List, Optional, Union
 
 import torch.nn as nn
 import torch.optim as optim
-import pytorch_lightning as pl
 import torchmetrics
 from torch.utils.data import DataLoader
 
