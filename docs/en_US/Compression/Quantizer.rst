@@ -9,6 +9,7 @@ Index of supported quantization algorithms
 * `DoReFa Quantizer <#dorefa-quantizer>`__
 * `BNN Quantizer <#bnn-quantizer>`__
 * `LSQ Quantizer <#lsq-quantizer>`__
+* `Observer Quantizer <#observer-quantizer>`__
 
 Naive Quantizer
 ---------------
@@ -311,3 +312,74 @@ We implemented one of the experiments in `Binarized Neural Networks: Training De
 
 
 The experiments code can be found at :githublink:`examples/model_compress/quantization/BNN_quantizer_cifar10.py <examples/model_compress/quantization/BNN_quantizer_cifar10.py>` 
+
+
+Observer Quantizer
+------------------
+
+..
+
+   Observer quantizer is a framework of post-training quantization. It will insert observers into the place where the quantization will happen. During quantization calibration, each observer will record all the tensors it 'sees'. These tensors will be used to calculate the quantization statistics after calibration.
+
+Usage
+^^^^^
+
+1. configure which layer to be quantized and which tensor (input/output/weight) of that layer to be quantized.
+2. construct the observer quantizer.
+3. do quantization calibration.
+4. call the `compress` API to calculate the scale and zero point for each tensor and switch model to evaluation mode.
+
+PyTorch code
+
+.. code-block:: python
+
+   from nni.algorithms.compression.pytorch.quantization import ObserverQuantizer
+
+   def calibration(model, calib_loader):
+       model.eval()
+       with torch.no_grad():
+           for data, _ in calib_loader:
+               model(data)
+
+   model = Mnist()
+
+   configure_list = [{
+       'quant_bits': 8,
+       'quant_types': ['weight', 'input'],
+       'op_names': ['conv1', 'conv2],
+   }, {
+       'quant_bits': 8,
+       'quant_types': ['output'],
+       'op_names': ['relu1', 'relu2],
+   }]
+
+   quantizer = ObserverQuantizer(model, configure_list)
+   calibration(model, calib_loader)
+   model = quantizer.compress()
+
+You can view example :githublink:`examples/model_compress/quantization/observer_quantizer.py <examples/model_compress/quantization/observer_quantizer.py>` for more information.
+
+User configuration for Observer Quantizer
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Common configuration needed by compression algorithms can be found at `Specification of `config_list <./QuickStart.rst>`__.
+
+
+.. note::
+    This quantizer is still under development for now. Some quantizer settings are hard-coded:
+
+    - weight observer: per_tensor_symmetric, qint8
+    - output observer: per_tensor_affine, quint8, reduce_range=True
+
+    Other settings (such as quant_type and op_names) can be configured.
+
+About the compress API
+^^^^^^^^^^^^^^^^^^^^^^
+Before the `compress` API is called, the model will only record tensors' statistics and no quantization process will be executed.
+After the `compress` API is called, the model will NOT record tensors' statistics any more. The quantization scale and zero point will
+be generated for each tensor and will be used to quantize each tensor during inference (we call it evaluation mode)
+
+About calibration
+^^^^^^^^^^^^^^^^^
+Usually we pick up about 100 training/evaluation examples for calibration. If you found the accuracy is a bit low, try
+to reduce the number of calibration examples.
+
