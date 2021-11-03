@@ -205,18 +205,17 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Learning rate of architecture parameters.
     grad_reg_loss_type: string
         Regularization type to add hardware related loss, allowed types include
-        - mul#log: 
-        - add#linear: 
-        - None: do not use regularization term
+        - mul#log: regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta;
+        - add#linear: regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency;
+        - None: do not apply loss regularization.
     grad_reg_loss_params: dict
-        - 'alpha' and 'beta' is required when grad_reg_loss_type == 'mul#log', 
-          regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
-        - 'lambda' is required when grad_reg_loss_type == 'add#linear',
-          regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
+        Regularization params, allowed params include
+        - 'alpha' and 'beta' is required when grad_reg_loss_type == 'mul#log';
+        - 'lambda' is required when grad_reg_loss_type == 'add#linear'.
     applied_hardware: string
         Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft 
         nn-Meter (https://github.com/microsoft/nn-Meter). 
-    dummy_input: list
+    dummy_input: tuple
         The dummy input shape when applied to the target hardware.
     ref_latency: float
         Reference latency value in the applied hardware (ms).
@@ -228,7 +227,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
                  arc_learning_rate=1.0E-3,
                  grad_reg_loss_type=None, grad_reg_loss_params=None,
                  applied_hardware=None, dummy_input=(1, 3, 224, 224),
-                 ref_latency=65):
+                 ref_latency=65.0):
         self.model = model
         self.loss = loss
         self.metrics = metrics
