@@ -102,6 +102,64 @@ The quantizer will automatically detect Conv-BN patterns and simulate batch norm
 graph. Note that when the quantization aware training process is finished, the folded weight/bias would be restored after calling
 `quantizer.export_model`.
 
+Quantization dtype and scheme customization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Different backends on different devices use different quantization strategies (i.e. dtype (int or uint) and
+scheme (per-tensor or per-channel and symmetric or affine)). QAT quantizer supports customization of mainstream dtypes and schemes.
+There are two ways to set them. One way is setting them globally through a function named `set_quant_scheme_dtype` like:
+
+.. code-block:: python
+
+    from nni.compression.pytorch.quantization.settings import set_quant_scheme_dtype
+
+    # This will set all the quantization of 'input' in 'per_tensor_affine' and 'uint' manner
+    set_quant_scheme_dtype('input', 'per_tensor_affine', 'uint)
+    # This will set all the quantization of 'output' in 'per_tensor_symmetric' and 'int' manner
+    set_quant_scheme_dtype('output', 'per_tensor_symmetric', 'int')
+    # This will set all the quantization of 'weight' in 'per_channel_symmetric' and 'int' manner
+    set_quant_scheme_dtype('weight', 'per_channel_symmetric', 'int')
+
+
+The other way is more detailed. You can customize the dtype and scheme in each quantization config list like:
+
+.. code-block:: python
+
+    config_list = [{
+       'quant_types': ['weight'],
+       'quant_bits':  8,
+       'op_types':['Conv2d', 'Linear'],
+       'quant_dtype': 'int',
+       'quant_scheme': 'per_channel_symmetric'
+   }, {
+       'quant_types': ['output'],
+       'quant_bits': 8,
+       'quant_start_step': 7000,
+       'op_types':['ReLU6'],
+       'quant_dtype': 'uint',
+       'quant_scheme': 'per_tensor_affine'
+   }]
+
+Multi-GPU training
+^^^^^^^^^^^^^^^^^^^
+QAT quantizer natively supports multi-gpu training (DataParallel and DistributedDataParallel). Note that the quantizer
+instantiation should happen before you wrap your model with DataParallel or DistributedDataParallel. For example:
+
+.. code-block:: python
+
+    from torch.nn.parallel import DistributedDataParallel as DDP
+    from nni.algorithms.compression.pytorch.quantization import QAT_Quantizer
+
+    model = define_your_model()
+
+    model = QAT_Quantizer(model, **other_params)  # <--- QAT_Quantizer instantiation
+
+    model = DDP(model)
+
+    for i in range(epochs):
+        train(model)
+        eval(model)
+
+
 ----
 
 LSQ Quantizer
