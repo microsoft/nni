@@ -70,9 +70,8 @@ class BypassPlugin(TrainingTypePlugin):
         # bypass device placement from pytorch lightning
         pass
 
-    def setup(self, model: torch.nn.Module) -> torch.nn.Module:
-        self.model_to_device()
-        return self.model
+    def setup(self) -> None:
+        pass
 
     @property
     def is_global_zero(self) -> bool:
@@ -101,7 +100,7 @@ def get_accelerator_connector(
         deterministic: bool = False,
         precision: int = 32,
         amp_backend: str = 'native',
-        amp_level: str = 'O2',
+        amp_level: Optional[str] = None,
         plugins: Optional[Union[List[Union[TrainingTypePlugin, ClusterEnvironment, str]],
                                 TrainingTypePlugin, ClusterEnvironment, str]] = None,
         **other_trainier_kwargs) -> AcceleratorConnector:
