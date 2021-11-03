@@ -21,16 +21,17 @@ Model Compression
   * Optimized the memory usage of the pruners.
 
 * MobileNetV2 end-to-end example `(notebook) <https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`__
-* Improved QAT quantizer
+* Improved QAT quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#qat-quantizer>`__
 
   * support dtype and scheme customization
   * support dp multi-gpu training
   * support load_calibration_config
 
-* Model speed-up now supports directly loading the mask
+* Model speed-up now supports directly loading the mask `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/ModelSpeedup.html#nni.compression.pytorch.ModelSpeedup>`__
 * Support speed-up depth-wise convolution
 * Support bn-folding for LSQ quantizer
 * Support QAT and LSQ resume from PTQ
+* Added doc for observer quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#observer-quantizer>`__
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
