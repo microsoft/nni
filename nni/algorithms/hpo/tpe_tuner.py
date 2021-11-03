@@ -64,9 +64,6 @@ class TpeArguments(NamedTuple):
     gamma: float (default: 0.25)
         Controls how many trials are considered "good".
         The number is calculated as "min(gamma * sqrt(N), linear_forgetting)".
-
-    eps: float (default: 1e-12)
-        Used to limit minimal σ of internal normal distributions.
     """
     constant_liar_type: Optional[str] = 'best'
     n_startup_jobs: int = 20
@@ -74,7 +71,6 @@ class TpeArguments(NamedTuple):
     linear_forgetting: int = 25
     prior_weight: float = 1.0
     gamma: float = 0.25
-    eps: float = 1e-12
 
 class TpeTuner(Tuner):
     """
@@ -350,20 +346,22 @@ def gmm1(args, rng, weights, mus, sigmas, clip=None):
         ret = np.concatenate([ret, samples])
     return ret
 
-def gmm1_lpdf(args, samples, weights, mus, sigmas, clip=None):
+def gmm1_lpdf(_args, samples, weights, mus, sigmas, clip=None):
     """
     Gaussian Mixture Model 1D's log probability distribution function.
     """
+    eps = 1e-12
+
     if clip:
-        normal_cdf_low = erf((clip[0] - mus) / np.maximum(np.sqrt(2) * sigmas, args.eps)) * 0.5 + 0.5
-        normal_cdf_high = erf((clip[1] - mus) / np.maximum(np.sqrt(2) * sigmas, args.eps)) * 0.5 + 0.5
+        normal_cdf_low = erf((clip[0] - mus) / np.maximum(np.sqrt(2) * sigmas, eps)) * 0.5 + 0.5
+        normal_cdf_high = erf((clip[1] - mus) / np.maximum(np.sqrt(2) * sigmas, eps)) * 0.5 + 0.5
         p_accept = np.sum(weights * (normal_cdf_high - normal_cdf_low))
     else:
         p_accept = 1
 
     # normal lpdf
     dist = samples.reshape(-1, 1) - mus
-    mahal = (dist / np.maximum(sigmas, args.eps)) ** 2
+    mahal = (dist / np.maximum(sigmas, eps)) ** 2
     z = np.sqrt(2 * np.pi) * sigmas
     coef = weights / z / p_accept
     normal_lpdf = -0.5 * mahal + np.log(coef)
