@@ -5,6 +5,71 @@
 Change Log
 ==========
 
+Release 2.5 - 11/2/2021
+-----------------------
+
+Model Compression
+^^^^^^^^^^^^^^^^^
+
+* New major version of pruning framework `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/v2_pruning.html>`__
+
+  * Iterative pruning is more automated, users can use less code to implement iterative pruning.
+  * Support exporting intermediate models in the iterative pruning process.
+  * The implementation of the pruning algorithm is closer to the paper.
+  * Users can easily customize their own iterative pruning by using ``PruningScheduler``.
+  * Optimize the basic pruners underlying generate mask logic, easier to extend new functions.
+  * Optimized the memory usage of the pruners.
+
+* MobileNetV2 end-to-end example `(notebook) <https://github.com/microsoft/nni/blob/v2.5/examples/model_compress/pruning/mobilenetv2_end2end/Compressing%20MobileNetV2%20with%20NNI%20Pruners.ipynb>`__
+* Improved QAT quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#qat-quantizer>`__
+
+  * support dtype and scheme customization
+  * support dp multi-gpu training
+  * support load_calibration_config
+
+* Model speed-up now supports directly loading the mask `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/ModelSpeedup.html#nni.compression.pytorch.ModelSpeedup>`__
+* Support speed-up depth-wise convolution
+* Support bn-folding for LSQ quantizer
+* Support QAT and LSQ resume from PTQ
+* Added doc for observer quantizer `(doc) <https://nni.readthedocs.io/en/v2.5/Compression/Quantizer.html#observer-quantizer>`__
+
+Neural Architecture Search
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* NAS benchmark `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/Benchmarks.html>`__
+
+  * Support benchmark table lookup in experiments
+  * New data preparation approach
+
+* Improved `quick start doc <https://nni.readthedocs.io/en/v2.5/NAS/QuickStart.html>`__
+* Experimental CGO execution engine `(doc) <https://nni.readthedocs.io/en/v2.5/NAS/ExecutionEngines.html#cgo-execution-engine-experimental>`__
+
+Hyper-Parameter Optimization
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* New training platform: Alibaba DSW+DLC `(doc) <https://nni.readthedocs.io/en/v2.5/TrainingService/DLCMode.html>`__
+* Support passing ConfigSpace definition directly to BOHB `(doc) <https://nni.readthedocs.io/en/v2.5/Tuner/BohbAdvisor.html#usage>`__ (thanks to khituras)
+* Reformatted `experiment config doc <https://nni.readthedocs.io/en/v2.5/reference/experiment_config.html>`__
+* Added example config files for Windows (thanks to @politecat314)
+* FrameworkController now supports reuse mode
+
+Fixed Bugs
+^^^^^^^^^^
+
+* Experiment cannot start due to platform timestamp format (issue #4077 #4083)
+* Cannot use ``1e-5`` in search space (issue #4080)
+* Dependency version conflict caused by ConfigSpace (issue #3909) (thanks to @jexxers)
+* Hardware-aware SPOS example does not work (issue #4198)
+* Web UI show wrong remaining time when duration exceeds limit (issue #4015)
+* cudnn.deterministic is always set in AMC pruner (#4117) thanks to @mstczuo
+
+And...
+^^^^^^
+
+* New `emoticons <https://github.com/microsoft/nni/blob/v2.5/docs/en_US/Tutorial/NNSpider.md>`__!
+
+.. image:: https://raw.githubusercontent.com/microsoft/nni/v2.5/docs/img/emoicons/Holiday.png
+
 Release 2.4 - 8/11/2021
 -----------------------
 
