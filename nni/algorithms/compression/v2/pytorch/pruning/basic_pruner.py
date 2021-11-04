@@ -787,40 +787,39 @@ class ADMMPruner(BasicPruner):
 class TransformerPruner(BasicPruner):
     """
     This is a special pruner for pruning huggingface transformers bert or other implementations like that.
+
+    Parameters
+    ----------
+    model
+        Model to be pruned
+    config_list
+        Supported keys:
+            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+            - sparsity_per_layer : Equals to sparsity.
+            - op_types : Only Linear is supported in TransformerPruner.
+            - op_names : Operation names to prune.
+            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    metric
+        ...
+    dim
+        ...
+    block_sparse_size
+        ...
+    mode
+        'normal' or 'dependency_aware'.
+        If prune the model in a dependency-aware way, this pruner will
+        prune the model according to the metric and the channel-dependency or group-dependency of the model.
+        In this way, the pruner will force the linear layers that have dependencies to prune the same channels,
+        so the speedup module can better harvest the speed benefit from the pruned model. Note that,
+        if set 'dependency_aware' , the dummy_input cannot be None, because the pruner needs a dummy input to
+        trace the dependency between the linear layers.
+    dummy_input
+        The dummy input to analyze the topology constraints. Note that, the dummy_input
+        should on the same device with the model.
     """
     def __init__(self, model: Module, config_list: List[Dict], metric: str = 'l1', dim: Optional[Union[list, int]] = 0,
                  block_sparse_size: Optional[Union[list, int]] = None, mode: str = 'normal',
                  dummy_input: Optional[Tensor] = None):
-        """
-        Parameters
-        ----------
-        model
-            Model to be pruned
-        config_list
-            Supported keys:
-                - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
-                - sparsity_per_layer : Equals to sparsity.
-                - op_types : Only Linear is supported in TransformerPruner.
-                - op_names : Operation names to prune.
-                - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
-        metric
-            ...
-        dim
-            ...
-        block_sparse_size
-            ...
-        mode
-            'normal' or 'dependency_aware'.
-            If prune the model in a dependency-aware way, this pruner will
-            prune the model according to the metric and the channel-dependency or group-dependency of the model.
-            In this way, the pruner will force the linear layers that have dependencies to prune the same channels,
-            so the speedup module can better harvest the speed benefit from the pruned model. Note that,
-            if set 'dependency_aware' , the dummy_input cannot be None, because the pruner needs a dummy input to
-            trace the dependency between the linear layers.
-        dummy_input
-            The dummy input to analyze the topology constraints. Note that, the dummy_input
-            should on the same device with the model.
-        """
         assert metric in ['l1', 'l2', 'fpgm']
         self.metric = metric
         self.dim = dim

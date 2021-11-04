@@ -205,7 +205,8 @@ class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
         for idx, names in enumerate(self.attention_name_groups):
             grouped_metric = OrderedDict()
             for name in names:
-                grouped_metric[name] = metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
+                if name in metrics:
+                    grouped_metric[name] = metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
             assert len(grouped_metric) in [0, 3, 4]
             # This is for (q, k, v) or (q, k, v, output)
             if len(grouped_metric) in [3, 4]:
