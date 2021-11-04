@@ -9,7 +9,7 @@ import torch.nn.functional as F
 import schema
 import nni.algorithms.compression.pytorch.pruning as torch_pruner
 import nni.algorithms.compression.pytorch.quantization as torch_quantizer
-from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape, get_min_max_value
+from nni.compression.pytorch.quantization.utils import calculate_qmin_qmax, get_quant_shape
 import math
 
 
@@ -398,11 +398,11 @@ class CompressorTestCase(TestCase):
                             target_zero_point = torch.ones([2, 1, 1, 1]) * 127
                     elif qscheme == 'per_tensor_symmetric':
                         if dtype == 'int':
-                            target_scale = torch.tensor(18. / 127)
-                            target_zero_point = torch.zeros([])
+                            target_scale = torch.tensor([18. / 127])
+                            target_zero_point = torch.zeros([1])
                         else:
-                            target_scale = torch.tensor(18. / 127.5)
-                            target_zero_point = torch.ones([]) * 127
+                            target_scale = torch.tensor([18. / 127.5])
+                            target_zero_point = torch.ones([1]) * 127
                     elif qscheme == 'per_channel_affine':
                         min_val = torch.tensor([0., 0.]).view([2, 1, 1, 1])
                         if dtype == 'int':
@@ -413,10 +413,10 @@ class CompressorTestCase(TestCase):
                             target_zero_point = 0 - torch.round(min_val / target_scale)
                     else:
                         if dtype == 'int':
-                            target_scale = torch.tensor(18. / 254)
+                            target_scale = torch.tensor([18. / 254])
                             target_zero_point = -127 - torch.round(0 / target_scale)
                         else:
-                            target_scale = torch.tensor(18. / 255)
+                            target_scale = torch.tensor([18. / 255])
                             target_zero_point = 0 - torch.round(0 / target_scale)
                     wrapper = getattr(model, name)
                     wrapper.module.weight = weight
@@ -434,11 +434,11 @@ class CompressorTestCase(TestCase):
                             target_zero_point = torch.ones([1, 1, 1, 1]) * 127
                     elif qscheme == 'per_tensor_symmetric':
                         if dtype == 'int':
-                            target_scale = torch.tensor(15. / 127)
-                            target_zero_point = torch.zeros([])
+                            target_scale = torch.tensor([15. / 127])
+                            target_zero_point = torch.zeros([1])
                         else:
-                            target_scale = torch.tensor(15. / 127.5)
-                            target_zero_point = torch.ones([]) * 127
+                            target_scale = torch.tensor([15. / 127.5])
+                            target_zero_point = torch.ones([1]) * 127
                     elif qscheme == 'per_channel_affine':
                         min_val = torch.tensor([0.]).view([1, 1, 1, 1])
                         if dtype == 'int':
@@ -449,10 +449,10 @@ class CompressorTestCase(TestCase):
                             target_zero_point = 0 - torch.round(min_val / target_scale)
                     else:
                         if dtype == 'int':
-                            target_scale = torch.tensor(15. / 254)
+                            target_scale = torch.tensor([15. / 254])
                             target_zero_point = -127 - torch.round(0 / target_scale)
                         else:
-                            target_scale = torch.tensor(15. / 255)
+                            target_scale = torch.tensor([15. / 255])
                             target_zero_point = 0 - torch.round(0 / target_scale)
                     quantizer.quantize_input(inp, wrapper)
                     self.assertTrue(torch.equal(getattr(model, name).module.input_scale, target_scale))
@@ -488,7 +488,7 @@ class CompressorTestCase(TestCase):
         assert model.conv2.module.weight_zero_point == 0
         quantizer.quantize_input(input, model.conv2)
         self.assertTrue(torch.allclose(model.conv2.module.input_scale, torch.tensor([4. / 255])))
-        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor(0.)))
+        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor([0.])))
         # range including 0
         weight = torch.tensor([[-1, 2], [3, 5]]).float()
         model.conv2.module.weight = weight
@@ -497,7 +497,7 @@ class CompressorTestCase(TestCase):
         assert model.conv2.module.weight_zero_point in (42, 43)
         quantizer.quantize_input(input, model.conv2)
         self.assertTrue(torch.allclose(model.conv2.module.input_scale, torch.tensor([4. / 255])))
-        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor(0.)))
+        self.assertTrue(torch.equal(model.conv2.module.input_zero_point, torch.tensor([0.])))
         # test value of weight and bias after quantization
         weight = torch.tensor([[1.1287, 2.3456], [3.7814, 5.9723]])
         weight_valid = torch.tensor([[1.1242, 2.3421], [3.7707, 5.9723]])
@@ -513,14 +513,14 @@ class CompressorTestCase(TestCase):
         eps = 1e-7
         x = torch.tensor([[-0.2, 0], [0.1, 0.2]])
         model.relu(x)
-        self.assertTrue(torch.equal(model.relu.module.tracked_min_output, torch.tensor(0.)))
-        self.assertTrue(torch.equal(model.relu.module.tracked_max_output, torch.tensor(0.2)))
+        self.assertTrue(torch.equal(model.relu.module.tracked_min_output, torch.tensor([0.])))
+        self.assertTrue(torch.equal(model.relu.module.tracked_max_output, torch.tensor([0.2])))
 
         quantizer.step_with_optimizer()
         x = torch.tensor([[0.2, 0.4], [0.6, 0.8]])
         model.relu(x)
-        self.assertTrue(torch.equal(model.relu.module.tracked_min_output, torch.tensor(0.002)))
-        self.assertTrue(torch.equal(model.relu.module.tracked_max_output, torch.tensor(0.2060)))
+        self.assertTrue(torch.equal(model.relu.module.tracked_min_output, torch.tensor([0.002])))
+        self.assertTrue(torch.equal(model.relu.module.tracked_max_output, torch.tensor([0.2060])))
 
     def test_torch_quantizer_export(self):
         config_list_qat = [{

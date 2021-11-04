@@ -80,7 +80,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
             if expend_times > 1:
-                stay_metric = stay_metric.expand(stay_metric_num, int(layer_weight_num / metric.numel())).view(-1)
+                stay_metric = stay_metric.expand(int(layer_weight_num / metric.numel()), stay_metric_num).contiguous().view(-1)
             metric_list.append(stay_metric)
 
         total_prune_num = int(total_sparsity * total_weight_num)

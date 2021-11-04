@@ -110,6 +110,8 @@ def replace_prelu(prelu, masks):
 
     in_mask = in_masks[0]
     weight_mask = weight_mask['weight']
+    if weight_mask.size(0) == 1:
+        return prelu
     pruned_in, remained_in = convert_to_coarse_mask(in_mask, 1)
     pruned_out, remained_out = convert_to_coarse_mask(output_mask, 1)
     n_remained_in = weight_mask.size(0) - pruned_in.size(0)
@@ -221,8 +223,9 @@ def replace_batchnorm1d(norm, masks):
                                     affine=norm.affine,
                                     track_running_stats=norm.track_running_stats)
     # assign weights
-    new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
-    new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
+    if norm.affine:
+        new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
+        new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
 
     new_norm.running_mean.data = torch.index_select(
         norm.running_mean.data, 0, remained_in)
@@ -264,8 +267,9 @@ def replace_batchnorm2d(norm, masks):
                                     affine=norm.affine,
                                     track_running_stats=norm.track_running_stats)
     # assign weights
-    new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
-    new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
+    if norm.affine:
+        new_norm.weight.data = torch.index_select(norm.weight.data, 0, remained_in)
+        new_norm.bias.data = torch.index_select(norm.bias.data, 0, remained_in)
 
     new_norm.running_mean.data = torch.index_select(
         norm.running_mean.data, 0, remained_in)
