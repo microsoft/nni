@@ -81,6 +81,18 @@ pygments_style = None
 
 html_additional_pages = {
     'index': 'index.html',
+    'nnSpider': 'nnSpider.html',
+    'nobug': 'nobug.html',
+    'holiday': 'holiday.html',
+    'errorEmotion': 'errorEmotion.html',
+    'working': 'working.html',
+    'sign': 'sign.html',
+    'crying': 'crying.html',
+    'cut': 'cut.html',
+    'weaving': 'weaving.html',
+    'comfort': 'comfort.html',
+    'sweat': 'sweat.html',
+
 }
 
 # -- Options for HTML output -------------------------------------------------
