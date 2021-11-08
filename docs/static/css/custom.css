@@ -2,13 +2,25 @@
     white-space:normal
 }
 
+.gap{
+    margin-top: 24px; 
+}
+
+.gap2{
+    margin-top: 12px; 
+}
+
+.rowHeight{
+    line-height: 24px;
+}
+
 .title {
     padding-bottom: 6px;
     border-bottom: 1px solid #ccc;
 }
 
 .second-title{
-    margin-top: 14px;
+    margin-top: 24px;
 }
 /* command style */
 .command {
@@ -21,17 +33,12 @@
 }
 
 .command-intro {
-    line-height: 40px;
+    line-height: 48px;
 }
 
 .code{
     background-color: #f8f8f8;
     padding: 15px 20px;
-}
-
-/* p margin-top: 24 */
-.topMargin{
-    margin-top: 24px;
 }
 
 /* document body width */
@@ -86,10 +93,19 @@ td.framework{
     text-align: center;
 }
 
-.inline img, .inline h3{
+.inline img, .inline h2{
     display: inline-block;
+    margin-bottom: 0px;
 }
-  
+
+inline hr{
+    margin-top: 0px;
+}
+
+.inline img {
+    margin-top: -20px;
+}
+
 .ui-img img{
     height: 350px;
 }
@@ -188,4 +204,15 @@ td.framework{
 
 .clear{
     clear: both;
+}
+
+.whatNew{
+    margin-top: 6px;
+}
+
+.pipeline tr, .pipeline td, .pipeline th{
+    width: 248px;
+    line-height: 26px;
+    text-align: center;
+    border: 1px solid #ccc;
 }

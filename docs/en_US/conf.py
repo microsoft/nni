@@ -82,16 +82,16 @@ pygments_style = None
 html_additional_pages = {
     'index': 'index.html',
     'nnSpider': 'nnSpider.html',
-    'nobug': 'nobug.html',
-    'holiday': 'holiday.html',
-    'errorEmotion': 'errorEmotion.html',
-    'working': 'working.html',
-    'sign': 'sign.html',
-    'crying': 'crying.html',
-    'cut': 'cut.html',
-    'weaving': 'weaving.html',
-    'comfort': 'comfort.html',
-    'sweat': 'sweat.html',
+    'nnSpider/nobug': 'nnSpider/nobug.html',
+    'nnSpider/holiday': 'nnSpider/holiday.html',
+    'nnSpider/errorEmotion': 'nnSpider/errorEmotion.html',
+    'nnSpider/working': 'nnSpider/working.html',
+    'nnSpider/sign': 'nnSpider/sign.html',
+    'nnSpider/crying': 'nnSpider/crying.html',
+    'nnSpider/cut': 'nnSpider/cut.html',
+    'nnSpider/weaving': 'nnSpider/weaving.html',
+    'nnSpider/comfort': 'nnSpider/comfort.html',
+    'nnSpider/sweat': 'nnSpider/sweat.html'
 
 }
 
