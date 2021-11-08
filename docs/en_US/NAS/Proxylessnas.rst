@@ -43,7 +43,7 @@ The complete example code can be found :githublink:`here <examples/nas/oneshot/p
 * **device** (*device, optional, default = 'cpu'*\ ) - The devices that users provide to do the train/search. The trainer applies data parallel on the model for users.
 * **log_frequency** (*int, optional, default = None*\ ) - Step count per logging.
 * **arc_learning_rate** (*float, optional, default = 1e-3*\ ) - The learning rate of the architecture parameters optimizer.
-* **grad_reg_loss_type** (*'mul#log', 'add#linear', or None, optional, default = None*\ ) - Regularization type to add hardware related loss. The trainer will not apply loss regularization when grad_reg_loss_type is set as None.
+* **grad_reg_loss_type** (*'mul#log', 'add#linear', or None, optional, default = 'add#linear'*\ ) - Regularization type to add hardware related loss. The trainer will not apply loss regularization when grad_reg_loss_type is set as None.
 * **grad_reg_loss_params** (*dict, optional, default = None*\ ) - Regularization params. 'alpha' and 'beta' is required when ``grad_reg_loss_type`` is 'mul#log', 'lambda' is required when ``grad_reg_loss_type`` is 'add#linear'.
 * **applied_hardware** (*string, optional, default = None*\ ) - Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft nn-Meter (https://github.com/microsoft/nn-Meter). 
 * **dummy_input** (*tuple, optional, default = (1, 3, 224, 224)*\ ) - The dummy input shape when applied to the target hardware.
