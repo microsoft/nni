@@ -800,11 +800,12 @@ class TransformerPruner(BasicPruner):
             - op_names : Operation names to prune.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     metric
-        ...
-    dim
-        ...
+        Supported pruning metric ['level', 'l1', 'l2', 'fpgm'].
     block_sparse_size
-        ...
+        In 'level', `block_sparse_size` is the block size of Linear layer weight, i.e., [64, 64],
+        and Linear layer weight must be divisible by on each dim of `block_sparse_size`.
+        In 'l1', 'l2', 'fpgm', because these metric already reduce to output channels,
+        so the `block_sparse_size` is the block size of output channels, i.e., [64].
     mode
         'normal' or 'dependency_aware'.
         If prune the model in a dependency-aware way, this pruner will
@@ -817,12 +818,11 @@ class TransformerPruner(BasicPruner):
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
     """
-    def __init__(self, model: Module, config_list: List[Dict], metric: str = 'l1', dim: Optional[Union[list, int]] = 0,
+    def __init__(self, model: Module, config_list: List[Dict], metric: str = 'l1',
                  block_sparse_size: Optional[Union[list, int]] = None, mode: str = 'normal',
                  dummy_input: Optional[Tensor] = None):
-        assert metric in ['l1', 'l2', 'fpgm']
+        assert metric in ['level', 'l1', 'l2', 'fpgm']
         self.metric = metric
-        self.dim = dim
         self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
         self.mode = mode
         self.dummy_input = dummy_input
@@ -838,20 +838,28 @@ class TransformerPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            if self.metric in ['l1', 'l2', 'fpgm']:
+            if self.metric in ['level', 'l1', 'l2', 'fpgm']:
                 self.data_collector = WeightDataCollector(self)
         else:
             self.data_collector.reset()
         if self.metrics_calculator is None:
+            if self.metric == 'level':
+                self.metrics_calculator = NormMetricsCalculator(p=1, dim=None, block_sparse_size=self.block_sparse_size)
             if self.metric == 'l1':
-                self.metrics_calculator = NormMetricsCalculator(p=1, dim=self.dim, block_sparse_size=self.block_sparse_size)
+                self.metrics_calculator = NormMetricsCalculator(p=1, dim=0, block_sparse_size=self.block_sparse_size)
             if self.metric == 'l2':
-                self.metrics_calculator = NormMetricsCalculator(p=2, dim=self.dim, block_sparse_size=self.block_sparse_size)
+                self.metrics_calculator = NormMetricsCalculator(p=2, dim=0, block_sparse_size=self.block_sparse_size)
             if self.metric == 'fpgm':
-                self.metrics_calculator = DistMetricsCalculator(p=2, dim=self.dim, block_sparse_size=self.block_sparse_size)
+                self.metrics_calculator = DistMetricsCalculator(p=2, dim=0, block_sparse_size=self.block_sparse_size)
         if self.sparsity_allocator is None:
             if self.mode == 'normal':
-                self.sparsity_allocator = NormalSparsityAllocator(self, dim=self.dim, block_sparse_size=self.block_sparse_size)
+                if self.metric in ['level']:
+                    self.sparsity_allocator = NormalSparsityAllocator(self, dim=None, block_sparse_size=self.block_sparse_size)
+                if self.metric in ['l1', 'l2', 'fpgm']:
+                    self.sparsity_allocator = NormalSparsityAllocator(self, dim=0, block_sparse_size=self.block_sparse_size)
             elif self.mode == 'dependency_aware':
-                assert self.dummy_input is not None and self.metric in ['l1', 'l2', 'fpgm']
-                self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, self.dim, self.dummy_input, self.block_sparse_size)
+                assert self.dummy_input is not None
+                if self.metric in ['level']:
+                    self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, None, self.dummy_input, self.block_sparse_size)
+                if self.metric in ['l1', 'l2', 'fpgm']:
+                    self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, 0, self.dummy_input, self.block_sparse_size)

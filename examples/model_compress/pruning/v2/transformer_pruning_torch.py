@@ -27,6 +27,8 @@ task_to_keys = {
     "wnli": ("sentence1", "sentence2"),
 }
 
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
 def trainer(model, optimizer, train_dataloader):
     model.train()
     for batch in tqdm(train_dataloader):
@@ -52,14 +54,13 @@ if __name__ == '__main__':
     task_name = 'sst2'
     num_labels = 2
     is_regression = False
-    algo = 'l1_finegrained'
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    algo = 'l1_head'
     train_batch_size = 32
     eval_batch_size = 32
 
     set_seed(1024)
 
-    tokenizer = BertTokenizerFast.from_pretrained('bert_base_cased')
+    tokenizer = BertTokenizerFast.from_pretrained('bert-base-cased')
     sentence1_key, sentence2_key = task_to_keys[task_name]
 
     # used to preprocess the raw data
@@ -87,7 +88,7 @@ if __name__ == '__main__':
 
     metric = load_metric("glue", task_name)
 
-    model = BertForSequenceClassification.from_pretrained('bert_base_cased', num_labels=num_labels, use_auth=True)
+    model = BertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=num_labels).to(device)
     optimizer = Adam(model.parameters(), lr=2e-5)
 
     trainer(model, optimizer, train_dataloader)
@@ -100,13 +101,13 @@ if __name__ == '__main__':
 
     config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.5}]
     if algo == 'l1_channel':
-        pruner = TransformerPruner(model.bert, config_list, mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerPruner(model.bert, config_list, metric='l1', mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
     elif algo == 'l1_head':
-        pruner = TransformerPruner(model.bert, config_list, block_sparse_size=[64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
-    elif algo == 'l1_block':
-        pruner = TransformerPruner(model.bert, config_list, dim=None, block_sparse_size=[64, 64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
-    elif algo == 'l1_finegrained':
-        pruner = TransformerPruner(model.bert, config_list, dim=None, mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerPruner(model.bert, config_list, metric='l1', block_sparse_size=[64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+    elif algo == 'level_block':
+        pruner = TransformerPruner(model.bert, config_list, metric='level', block_sparse_size=[64, 64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+    elif algo == 'level_finegrained':
+        pruner = TransformerPruner(model.bert, config_list, metric='level', mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
 
     _, masks = pruner.compress()
 

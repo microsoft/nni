@@ -8,7 +8,7 @@ import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner
+from nni.algorithms.compression.v2.pytorch.base import Pruner, pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency, AttentionWeightDependency
 
 from .base import SparsityAllocator
@@ -167,7 +167,6 @@ class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
     """
 
     def __init__(self, pruner: Pruner, dim: int, dummy_input: Any, block_sparse_size: Optional[Union[int, List[int]]] = None):
-        assert isinstance(dim, int), 'Only support single dim in AttentionHeadDependencyAwareAllocator.'
         super().__init__(pruner, dim=dim, block_sparse_size=block_sparse_size)
         self.dummy_input = dummy_input
 
@@ -204,12 +203,8 @@ class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
 
         for idx, names in enumerate(self.attention_name_groups):
             grouped_metric = OrderedDict()
-            for name in names:
-                if name in metrics:
-                    grouped_metric[name] = metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
-            assert len(grouped_metric) in [0, 3, 4]
-            # This is for (q, k, v) or (q, k, v, output)
-            if len(grouped_metric) in [3, 4]:
+            for name in names[0: 3]:
+                grouped_metric[name] = metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
                 grouped_metrics[idx] = grouped_metric
 
         for _, group_metric_dict in grouped_metrics.items():
@@ -220,7 +215,7 @@ class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
 
             pruned_num = int(sparsity * group_metric.numel())
             if pruned_num > 0:
-                threshold = torch.topk(group_metric, pruned_num, largest=False)[0].max()
+                threshold = torch.topk(group_metric.view(-1), pruned_num, largest=False)[0].max()
                 proj_mask = torch.gt(group_metric, threshold).type_as(group_metric)
             else:
                 proj_mask = torch.ones(group_metric.size()).type_as(group_metric)
