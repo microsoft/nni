@@ -82,6 +82,9 @@ if __name__ == '__main__':
         'iterations': 10,
         'training_epochs': 1
     }
-    pruner = AutoCompressPruner(model, config_list, 10, evaluator, keep_intermediate_result=True, finetuner=finetuner, admm_params=admm_params)
+    sa_params = {
+        'evaluator': evaluator
+    }
+    pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, keep_intermediate_result=True, finetuner=finetuner)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()

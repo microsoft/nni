@@ -14,20 +14,12 @@ from .tools import LotteryTicketTaskGenerator
 
 class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
     def __init__(self, total_iteration: int, origin_model: Module, origin_config_list: List[Dict],
-                 pruning_algorithm: str, evaluator: Callable[[Module], float],
-                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, start_temperature: float = 100,
-                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
-                 log_dir: str = '.', keep_intermediate_result: bool = False):
+                 origin_masks: Dict[str, Dict[str, Tensor]] = {}, sa_params: Dict = {}, log_dir: str = '.',
+                 keep_intermediate_result: bool = False):
         self.iterative_pruner = SimulatedAnnealingPruner(model=None,
                                                          config_list=None,
-                                                         pruning_algorithm=pruning_algorithm,
-                                                         evaluator=evaluator,
-                                                         start_temperature=start_temperature,
-                                                         stop_temperature=stop_temperature,
-                                                         cool_down_rate=cool_down_rate,
-                                                         perturbation_magnitude=perturbation_magnitude,
                                                          log_dir=Path(log_dir, 'SA'),
-                                                         keep_intermediate_result=False)
+                                                         **sa_params)
         super().__init__(total_iteration=total_iteration,
                          origin_model=origin_model,
                          origin_config_list=origin_config_list,
@@ -59,14 +51,39 @@ class AutoCompressPruner(IterativePruner):
         The total iteration number.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
-    start_temperature : float
-        Start temperature of the simulated annealing process.
-    stop_temperature : float
-        Stop temperature of the simulated annealing process.
-    cool_down_rate : float
-        Cool down rate of the temperature.
-    perturbation_magnitude : float
-        Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+
+    admm_params : Dict
+        The parameters pass to the ADMMPruner.
+        - trainer : Callable[[Module, Optimizer, Callable].
+            A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+            The model will be trained or inferenced `training_epochs` epochs.
+        - optimizer : torch.optim.Optimizer.
+            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
+            so do not use this optimizer in other places.
+        - criterion : Callable[[Tensor, Tensor], Tensor].
+            The criterion function used in trainer. Take model output and target value as input, and return the loss.
+        - iterations : int.
+            The total iteration number in admm pruning algorithm.
+        - training_epochs : int.
+            The epoch number for training model in each iteration.
+
+    sa_params : Dict
+        The parameters pass to the SimulatedAnnealingPruner.
+        - evaluator : Callable[[Module], float]. Required.
+            Evaluate the pruned model and give a score.
+        - start_temperature : float. Default: `100`.
+            Start temperature of the simulated annealing process.
+        - stop_temperature : float. Default: `20`.
+            Stop temperature of the simulated annealing process.
+        - cool_down_rate : float. Default: `0.9`.
+            Cool down rate of the temperature.
+        - perturbation_magnitude : float. Default: `0.35`.
+            Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+        - pruning_algorithm : str. Default: `'level'`.
+            Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
+        - pruning_params : Dict. Default: `{}`.
+            If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+
     log_dir : str
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
@@ -77,24 +94,16 @@ class AutoCompressPruner(IterativePruner):
         If set True, speed up the model in each iteration.
     dummy_input : Optional[torch.Tensor]
         If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
-    admm_params : Dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, evaluator: Callable[[Module], float],
-                 start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
-                 admm_params: Dict = {}):
+    def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
+                 sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
+                 dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,
-                                                   pruning_algorithm='level',
-                                                   evaluator=evaluator,
-                                                   start_temperature=start_temperature,
-                                                   stop_temperature=stop_temperature,
-                                                   cool_down_rate=cool_down_rate,
-                                                   perturbation_magnitude=perturbation_magnitude,
+                                                   sa_params=sa_params,
                                                    log_dir=log_dir,
                                                    keep_intermediate_result=keep_intermediate_result)
         pruner = ADMMPruner(None, None, **admm_params)
