@@ -4,6 +4,7 @@
 from copy import deepcopy
 from typing import Dict, List, Tuple, Callable, Optional
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -147,9 +148,11 @@ class PruningScheduler(BasePruningScheduler):
 
     def pruning_one_step(self, task: Task) -> TaskResult:
         if self.reset_weight:
-            return self.pruning_one_step_reset_weight(task)
+            result = self.pruning_one_step_reset_weight(task)
         else:
-            return self.pruning_one_step_normal(task)
+            result = self.pruning_one_step_normal(task)
+        torch.cuda.empty_cache()
+        return result
 
     def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
         return self.task_generator.get_best_result()

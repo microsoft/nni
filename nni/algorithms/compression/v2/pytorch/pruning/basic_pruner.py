@@ -720,6 +720,7 @@ class ADMMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
+        # TODO: handle optimizer here will case additional memory use, need improve, also in WeightTrainerBasedDataCollector
         self.optimizer = optimizer
         self.criterion = criterion
         self.iterations = iterations
@@ -778,6 +779,10 @@ class ADMMPruner(BasicPruner):
             for name, mask in masks.items():
                 self.Z[name] = self.Z[name].mul(mask['weight'])
                 self.U[name] = self.U[name] + data[name] - self.Z[name]
+
+        self.Z = None
+        self.U = None
+        torch.cuda.empty_cache()
 
         metrics = self.metrics_calculator.calculate_metrics(data)
         masks = self.sparsity_allocator.generate_sparsity(metrics)
