@@ -51,9 +51,9 @@ class AutoCompressPruner(IterativePruner):
         The total iteration number.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
-
     admm_params : Dict
         The parameters pass to the ADMMPruner.
+
         - trainer : Callable[[Module, Optimizer, Callable].
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
@@ -69,6 +69,7 @@ class AutoCompressPruner(IterativePruner):
 
     sa_params : Dict
         The parameters pass to the SimulatedAnnealingPruner.
+
         - evaluator : Callable[[Module], float]. Required.
             Evaluate the pruned model and give a score.
         - start_temperature : float. Default: `100`.
