@@ -6,6 +6,7 @@ pyyaml >= 5.4
 requests
 responses
 schema
+typeguard
 PythonWebHDFS
 colorama
 scikit-learn >= 0.24.1 ; python_version >= "3.7"
