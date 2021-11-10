@@ -205,8 +205,8 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Learning rate of architecture parameters.
     grad_reg_loss_type: string
         Regularization type to add hardware related loss, allowed types include
-        - mul#log: regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta;
-        - add#linear: regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency;
+        - mul#log: ``regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta``
+        - add#linear: ``regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency``
         - None: do not apply loss regularization.
     grad_reg_loss_params: dict
         Regularization params, allowed params include
