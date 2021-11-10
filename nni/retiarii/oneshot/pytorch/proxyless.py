@@ -95,10 +95,82 @@ class ProxylessLayerChoice(nn.Module):
     def export(self):
         return torch.argmax(self.alpha).item()
 
+    def export_prob(self):
+        return F.softmax(self.alpha, dim=-1)
+
 
 class ProxylessInputChoice(nn.Module):
     def __init__(self, *args, **kwargs):
         raise NotImplementedError('Input choice is not supported for ProxylessNAS.')
+
+
+class HardwareLatencyEstimator:
+    def __init__(self, applied_hardware, model, dummy_input=(1, 3, 224, 224), dump_lat_table='data/latency_table.yaml'):
+        import nn_meter  # pylint: disable=import-error
+        _logger.info(f'Load latency predictor for applied hardware: {applied_hardware}.')
+        self.predictor_name = applied_hardware
+        self.latency_predictor = nn_meter.load_latency_predictor(applied_hardware)
+        self.block_latency_table = self._form_latency_table(model, dummy_input, dump_lat_table=dump_lat_table)
+
+    def _form_latency_table(self, model, dummy_input, dump_lat_table):
+        latency_table = {}
+
+        from nni.retiarii.converter import convert_to_graph
+        from nni.retiarii.converter.graph_gen import GraphConverterWithShape
+        from nni.retiarii.converter.utils import flatten_model_graph_without_layerchoice, is_layerchoice_node
+        script_module = torch.jit.script(model)
+        base_model_ir = convert_to_graph(script_module, model,
+                                         converter=GraphConverterWithShape(), dummy_input=torch.randn(*dummy_input))
+
+        # form the latency of layerchoice blocks for the latency table
+        temp_ir_model = base_model_ir.fork()
+        cell_nodes = base_model_ir.get_cell_nodes()
+        layerchoice_nodes = [node for node in cell_nodes if is_layerchoice_node(node)]
+        for lc_node in layerchoice_nodes:
+            cand_lat = {}
+            for candidate in lc_node.operation.parameters['candidates']:
+                node_graph = base_model_ir.graphs.get(candidate)
+                if node_graph is not None:
+                    temp_ir_model._root_graph_name = node_graph.name
+                    latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
+                else:
+                    _logger.warning(f"Could not found graph for layerchoice candidate {candidate}")
+                    latency = 0
+                cand_lat[candidate.split('_')[-1]] = float(latency)
+            latency_table[lc_node.operation.parameters['label']] = cand_lat
+
+        # form the latency of the stationary block in the latency table
+        temp_ir_model._root_graph_name = base_model_ir._root_graph_name
+        temp_ir_model = flatten_model_graph_without_layerchoice(temp_ir_model)
+        latency = self.latency_predictor.predict(temp_ir_model, model_type = 'nni-ir')
+        latency_table['stationary_block'] = {'root': float(latency)}
+
+        # save latency table
+        if dump_lat_table:
+            import os, yaml
+            os.makedirs(os.path.dirname(dump_lat_table), exist_ok=True)
+            with open(dump_lat_table, 'a') as fp:
+                yaml.dump([{
+                    "applied_hardware": self.predictor_name,
+                    'latency_table': latency_table
+                    }], fp)
+        _logger.info("Latency lookup table form done")
+
+        return latency_table
+
+    def cal_expected_latency(self, current_architecture_prob):
+        lat = self.block_latency_table['stationary_block']['root']
+        for module_name, probs in current_architecture_prob.items():
+            assert len(probs) == len(self.block_latency_table[module_name])
+            lat += torch.sum(torch.tensor([probs[i] * self.block_latency_table[module_name][str(i)]
+                                for i in range(len(probs))]))
+        return lat
+
+    def export_latency(self, current_architecture):
+        lat = self.block_latency_table['stationary_block']['root']
+        for module_name, selected_module in current_architecture.items():
+            lat += self.block_latency_table[module_name][str(selected_module)]
+        return lat
 
 
 class ProxylessTrainer(BaseOneShotTrainer):
@@ -131,12 +203,31 @@ class ProxylessTrainer(BaseOneShotTrainer):
         Step count per logging.
     arc_learning_rate : float
         Learning rate of architecture parameters.
+    grad_reg_loss_type: string
+        Regularization type to add hardware related loss, allowed types include
+        - ``"mul#log"``: ``regularized_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta``
+        - ``"add#linear"``: ``regularized_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency``
+        - None: do not apply loss regularization.
+    grad_reg_loss_params: dict
+        Regularization params, allowed params include
+        - ``"alpha"`` and ``"beta"`` is required when ``grad_reg_loss_type == "mul#log"``
+        - ``"lambda"`` is required when ``grad_reg_loss_type == "add#linear"``
+    applied_hardware: string
+        Applied hardware for to constraint the model's latency. Latency is predicted by Microsoft
+        nn-Meter (https://github.com/microsoft/nn-Meter).
+    dummy_input: tuple
+        The dummy input shape when applied to the target hardware.
+    ref_latency: float
+        Reference latency value in the applied hardware (ms).
     """
 
     def __init__(self, model, loss, metrics, optimizer,
                  num_epochs, dataset, warmup_epochs=0,
                  batch_size=64, workers=4, device=None, log_frequency=None,
-                 arc_learning_rate=1.0E-3):
+                 arc_learning_rate=1.0E-3,
+                 grad_reg_loss_type=None, grad_reg_loss_params=None,
+                 applied_hardware=None, dummy_input=(1, 3, 224, 224),
+                 ref_latency=65.0):
         self.model = model
         self.loss = loss
         self.metrics = metrics
@@ -148,8 +239,17 @@ class ProxylessTrainer(BaseOneShotTrainer):
         self.workers = workers
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu') if device is None else device
         self.log_frequency = log_frequency
-        self.model.to(self.device)
 
+        # latency predictor
+        if applied_hardware:
+            self.latency_estimator = HardwareLatencyEstimator(applied_hardware, self.model, dummy_input)
+        else:
+            self.latency_estimator = None
+        self.reg_loss_type = grad_reg_loss_type
+        self.reg_loss_params = {} if grad_reg_loss_params is None else grad_reg_loss_params
+        self.ref_latency = ref_latency
+
+        self.model.to(self.device)
         self.nas_modules = []
         replace_layer_choice(self.model, ProxylessLayerChoice, self.nas_modules)
         replace_input_choice(self.model, ProxylessInputChoice, self.nas_modules)
@@ -189,7 +289,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
                 for _, module in self.nas_modules:
                     module.resample()
                 self.ctrl_optim.zero_grad()
-                logits, loss = self._logits_and_loss(val_X, val_y)
+                logits, loss = self._logits_and_loss_for_arch_update(val_X, val_y)
                 loss.backward()
                 for _, module in self.nas_modules:
                     module.finalize_grad()
@@ -199,20 +299,59 @@ class ProxylessTrainer(BaseOneShotTrainer):
             for _, module in self.nas_modules:
                 module.resample()
             self.optimizer.zero_grad()
-            logits, loss = self._logits_and_loss(trn_X, trn_y)
+            logits, loss = self._logits_and_loss_for_weight_update(trn_X, trn_y)
             loss.backward()
             self.optimizer.step()
             metrics = self.metrics(logits, trn_y)
             metrics["loss"] = loss.item()
+            if self.latency_estimator:
+                metrics["latency"] = self._export_latency()
             meters.update(metrics)
             if self.log_frequency is not None and step % self.log_frequency == 0:
                 _logger.info("Epoch [%s/%s] Step [%s/%s]  %s", epoch + 1,
                              self.num_epochs, step + 1, len(self.train_loader), meters)
 
-    def _logits_and_loss(self, X, y):
+    def _logits_and_loss_for_arch_update(self, X, y):
+        ''' return logits and loss for architecture parameter update '''
+        logits = self.model(X)
+        ce_loss = self.loss(logits, y)
+        if not self.latency_estimator:
+            return logits, ce_loss
+
+        current_architecture_prob = {}
+        for module_name, module in self.nas_modules:
+            probs = module.export_prob()
+            current_architecture_prob[module_name] = probs
+        expected_latency = self.latency_estimator.cal_expected_latency(current_architecture_prob)
+
+        if self.reg_loss_type == 'mul#log':
+            import math
+            alpha = self.reg_loss_params.get('alpha', 1)
+            beta = self.reg_loss_params.get('beta', 0.6)
+            # noinspection PyUnresolvedReferences
+            reg_loss = (torch.log(expected_latency) / math.log(self.ref_latency)) ** beta
+            return logits, alpha * ce_loss * reg_loss
+        elif self.reg_loss_type == 'add#linear':
+            reg_lambda = self.reg_loss_params.get('lambda', 2e-1)
+            reg_loss = reg_lambda * (expected_latency - self.ref_latency) / self.ref_latency
+            return logits, ce_loss + reg_loss
+        elif self.reg_loss_type is None:
+            return logits, ce_loss
+        else:
+            raise ValueError(f'Do not support: {self.reg_loss_type}')
+
+    def _logits_and_loss_for_weight_update(self, X, y):
+        ''' return logits and loss for weight parameter update '''
         logits = self.model(X)
         loss = self.loss(logits, y)
         return logits, loss
+
+    def _export_latency(self):
+        current_architecture = {}
+        for module_name, module in self.nas_modules:
+            selected_module = module.export()
+            current_architecture[module_name] = selected_module
+        return self.latency_estimator.export_latency(current_architecture)
 
     def fit(self):
         for i in range(self.num_epochs):

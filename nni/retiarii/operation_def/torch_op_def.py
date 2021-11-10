@@ -254,6 +254,13 @@ class AtenFloordiv(PyTorchOperation):
         return f'{output} = {inputs[0]} // {inputs[1]}'
 
 
+class AtenMul(PyTorchOperation):
+    _ori_type_name = ['aten::mul']
+
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = {inputs[0]} * {inputs[1]}'
+
+
 class AtenLen(PyTorchOperation):
     _ori_type_name = ['aten::len']
 
@@ -491,7 +498,8 @@ class AtenAvgpool2d(PyTorchOperation):
 class ToDevice(PyTorchOperation):
     _artificial_op_name = "ToDevice"
 
-    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
+    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False,
+                 attributes: Dict[str, Any] = None):
         self.type = "ToDevice"
         self.device = parameters['device']
         self.overridden_device_repr = None
