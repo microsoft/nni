@@ -34,6 +34,10 @@ def send_trial(parameters: dict, placement_constraint=None) -> int:
     """
     return get_advisor().send_trial(parameters, placement_constraint)
 
+def report_search_space(search_space: dict) -> None:
+    """
+    """
+    return get_advisor().report_search_space(search_space)
 
 def receive_trial_parameters() -> dict:
     """

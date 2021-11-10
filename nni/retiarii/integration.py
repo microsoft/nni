@@ -126,6 +126,9 @@ class RetiariiAdvisor(MsgDispatcherBase):
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count
 
+    def report_search_space(self, search_space: dict) -> None:
+        send(CommandType.ReportSearchSpace, json_dumps(search_space))
+
     def mark_experiment_as_ending(self):
         send(CommandType.NoMoreTrialJobs, '')
 

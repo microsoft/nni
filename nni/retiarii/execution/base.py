@@ -10,7 +10,7 @@ from typing import Any, Dict, Iterable, List
 from .interface import AbstractExecutionEngine, AbstractGraphListener
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Evaluator
-from ..integration_api import send_trial, receive_trial_parameters, get_advisor
+from ..integration_api import send_trial, receive_trial_parameters, get_advisor, report_search_space
 
 _logger = logging.getLogger(__name__)
 
@@ -57,6 +57,9 @@ class BaseExecutionEngine(AbstractExecutionEngine):
         self._history: List[Model] = []
 
         self.resources = 0
+
+    def report_search_space(self, search_space: dict) -> None:
+        report_search_space(search_space)
 
     def submit_models(self, *models: Model) -> None:
         for model in models:
