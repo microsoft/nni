@@ -1,14 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from collections import OrderedDict
 import math
-from typing import Any, Dict, List, OrderedDict, Tuple, Union, Optional
+from typing import Any, Dict, List, Tuple, Union, Optional
 
 import numpy as np
 import torch
 from torch import Tensor
 
-from nni.algorithms.compression.v2.pytorch.base import Pruner, pruner
+from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency, AttentionWeightDependency
 
 from .base import SparsityAllocator
