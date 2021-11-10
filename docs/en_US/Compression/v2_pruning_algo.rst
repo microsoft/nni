@@ -402,12 +402,12 @@ User configuration for Simulated Annealing Pruner
 Auto Compress Pruner
 --------------------
 
-For each round, AutoCompressPruner prune the model for the same sparsity to achive the overall sparsity:
+For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
 
 .. code-block:: bash
 
        1. Generate sparsities distribution using SimulatedAnnealingPruner
-       2. Perform ADMM-based structured pruning to generate pruning result for the next round.
+       2. Perform ADMM-based pruning to generate pruning result for the next iteration.
 
 For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
 
@@ -431,6 +431,8 @@ Usage
     pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
 
 User configuration for Auto Compress Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

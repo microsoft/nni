@@ -25,10 +25,11 @@ class PruningScheduler(BasePruningScheduler):
         Used to generate task for each iteration.
     finetuner
         The finetuner handled all finetune logic, use a pytorch module as input.
+        It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
     speed_up
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     evaluator
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.

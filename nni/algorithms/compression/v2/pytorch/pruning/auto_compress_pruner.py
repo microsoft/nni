@@ -52,7 +52,7 @@ class AutoCompressPruner(IterativePruner):
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     admm_params : Dict
-        The parameters pass to the ADMMPruner.
+        The parameters passed to the ADMMPruner.
 
         - trainer : Callable[[Module, Optimizer, Callable].
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -68,7 +68,7 @@ class AutoCompressPruner(IterativePruner):
             The epoch number for training model in each iteration.
 
     sa_params : Dict
-        The parameters pass to the SimulatedAnnealingPruner.
+        The parameters passed to the SimulatedAnnealingPruner.
 
         - evaluator : Callable[[Module], float]. Required.
             Evaluate the pruned model and give a score.
@@ -77,7 +77,7 @@ class AutoCompressPruner(IterativePruner):
         - stop_temperature : float. Default: `20`.
             Stop temperature of the simulated annealing process.
         - cool_down_rate : float. Default: `0.9`.
-            Cool down rate of the temperature.
+            Cooldown rate of the temperature.
         - perturbation_magnitude : float. Default: `0.35`.
             Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
         - pruning_algorithm : str. Default: `'level'`.
@@ -86,15 +86,16 @@ class AutoCompressPruner(IterativePruner):
             If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
 
     log_dir : str
-        The log directory use to saving the result, you can find the best result under this folder.
+        The log directory used to save the result, you can find the best result under this folder.
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
+        The finetuner handles all finetune logic, takes a pytorch module as input.
+        It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, admm_params: Dict,
