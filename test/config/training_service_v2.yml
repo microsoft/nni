@@ -12,3 +12,28 @@ hybrid:
     resourceGroup:
     workspaceName:
     computeTarget:
+kubeflow:
+  trialCommand:
+  trialGpuNumber: 0
+  trialConcurrency: 2
+  maxTrialNumber: 2
+  nniManagerIp:
+  trainingService:
+    reuseMode: true
+    platform: kubeflow
+    worker:
+      command:
+      code_directory:
+      dockerImage:
+      cpuNumber: 1
+      gpuNumber: 0
+      memorySize: 8192
+      replicas: 1
+    operator: tf-operator
+    storage:
+      storageType: azureStorage
+      azureAccount:
+      azureShare:
+      keyVaultName:
+      keyVaultKey:
+    apiVersion: v1
