@@ -4,12 +4,12 @@
 from copy import deepcopy
 import logging
 from schema import Optional as SchemaOptional
-from typing import Dict, List, Tuple, Callable
+from typing import Dict, List, Callable
 
 import torch
 from torch import autograd, Tensor
 from torch.nn import Module, Parameter
-from torch.optim import Optimizer
+from torch.optim import Optimizer, SGD
 
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
@@ -67,17 +67,19 @@ class PrunerScoredModuleWrapper(Module):
 
     def _weight2buffer(self):
         delattr(self.module, 'weight')
-        self.module.register_buffer('weight', self.weight)
+        self.module.register_buffer('weight', self.weight.data)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             delattr(self.module, 'bias')
-            self.module.register_buffer('bias', self.bias)
+            self.module.register_buffer('bias', self.bias.data)
 
     def _weight2parameter(self):
         delattr(self.module, 'weight')
-        self.module.register_parameter('weight', self.weight)
+        self.module.weight = Parameter(torch.empty(self.weight.size()))
+        self.module.weight.data = torch.mul(self.weight, self.weight_mask)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             delattr(self.module, 'bias')
-            self.module.register_parameter('bias', self.bias)
+            self.module.bias = Parameter(torch.empty(self.bias.size()))
+            self.module.bias.data = torch.mul(self.bias, self.bias_mask)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
@@ -133,13 +135,21 @@ class MovementPruner(BasicPruner):
         if self.sparsity_allocator is None:
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
+        params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
+        optimizer = SGD(params, 0.001)
+        self.step_counter = 0
+
         def _optimizer_patch():
-            data = {}
-            for _, wrapper in self.compressor.get_modules_wrapper().items():
-                data[wrapper.name] = wrapper.weight_score.data.clone().detach()
-            metrics = self.metrics_calculator.calculate_metrics(data)
-            masks = self.sparsity_allocator(metrics)
-            self.load_masks(masks)
+            optimizer.step()
+            optimizer.zero_grad()
+            self.step_counter += 1
+            if self.step_counter > 100:
+                data = {}
+                for _, wrapper in self.get_modules_wrapper().items():
+                    data[wrapper.name] = wrapper.weight_score.data.clone().detach()
+                metrics = self.metrics_calculator.calculate_metrics(data)
+                masks = self.sparsity_allocator.generate_sparsity(metrics)
+                self.load_masks(masks)
 
         if self.data_collector is None:
             self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])

@@ -146,6 +146,7 @@ class TrainerBasedDataCollector(DataCollector):
 
     def reset(self):
         # refresh optimizer and criterion
+        self.compressor._unwrap_model()
         if self._origin_optimizer is not None:
             optimizer_cls = self._origin_optimizer.__class__
             if optimizer_cls.__name__ == 'SGD':
@@ -160,6 +161,7 @@ class TrainerBasedDataCollector(DataCollector):
             self.criterion = self._criterion_patch(self._origin_criterion)
         else:
             self.criterion = self._origin_criterion
+        self.compressor._wrap_model()
 
         # patch optimizer
         self._patch_optimizer()
