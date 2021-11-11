@@ -110,6 +110,7 @@ if __name__ == '__main__':
         pruner = TransformerAttentionPruner(model.bert, config_list, metric='level', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
 
     _, masks = pruner.compress()
+    pruner.show_pruned_weights()
 
     trainer(model, optimizer, train_dataloader)
     print(evaluator(model, metric, is_regression, validate_dataloader))

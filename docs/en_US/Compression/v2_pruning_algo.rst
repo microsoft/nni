@@ -19,6 +19,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Activation Mean Rank Pruner <#activation-mean-rank-pruner>`__
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
+* `Transformer Attention Pruner <#transformer-attention-pruner>`__
 
 **Iterative Pruner**
 
@@ -272,6 +273,56 @@ User configuration for ADMM Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
+
+Transformer Attention Pruner
+----------------------------
+
+Transformer Head Pruner is a tool designed for pruning attention heads from the models belonging to the `Transformer family <https://proceedings.neurips.cc/paper/2017/file/3f5ee243547dee91fbd053c1c4a845aa-Paper.pdf>`__. The following image from `Efficient Transformers: A Survey <https://arxiv.org/pdf/2009.06732.pdf>`__ gives a good overview the general structure of the Transformer.
+
+.. image:: ../../img/transformer_structure.png
+   :target: ../../img/transformer_structure.png
+   :alt: 
+
+Typically, each attention layer in the Transformer models consists of four weights:
+three projection matrices for query, key, value, and an output projection matrix.
+The outputs of the former three matrices contain the projected results for all heads.
+Normally, the results are then reshaped so that each head performs that attention computation independently.
+The final results are concatenated back before being fed into the output projection.
+Therefore, when an attention head is pruned, the same weights corresponding to that heads in the three projection matrices are pruned.
+Also, if the pruner prunes the Q, K, V layer on output channels, the weights in the output projection corresponding to the head's output can be pruned.
+In our implementation, we calculate and apply masks to the three or four matrices together.
+
+Note: currently, the pruner can only handle models with projection weights written as separate ``Linear`` modules,
+i.e., it expects four ``Linear`` modules corresponding to query, key, value, and an output projection.
+Therefore, in the ``config_list``, you should either write ``['Linear']`` for the ``op_types`` field,
+or write names corresponding to ``Linear`` modules for the ``op_names`` field.
+For instance, the `Huggingface transformers <https://huggingface.co/transformers/index.html>`_ are supported, but ``torch.nn.Transformer`` is not.
+
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import TransformerAttentionPruner
+
+   op_names = []
+   op_names.extend(["encoder.layer.{}.attention.self.query".format(i) for i in range(0, 12)])
+   op_names.extend(["encoder.layer.{}.attention.self.key".format(i) for i in range(0, 12)])
+   op_names.extend(["encoder.layer.{}.attention.self.value".format(i) for i in range(0, 12)])
+   config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.5}]
+
+   pruner = TransformerAttentionPruner(model.bert, config_list, metric='l1', block_sparse_size=[64], dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+   masked_model, masks = pruner.compress()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/transformer_pruning_torch.py>`.
+
+User configuration for Transformer Attention Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.TransformerAttentionPruner
 
 Linear Pruner
 -------------
