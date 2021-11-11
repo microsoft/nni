@@ -115,11 +115,12 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
 
 class MovementPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int):
+                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int):
         self.trainer = trainer
         self.optimizer = optimizer
         self.criterion = criterion
         self.training_epochs = training_epochs
+        self.warm_up_step = warm_up_step
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -143,10 +144,10 @@ class MovementPruner(BasicPruner):
             optimizer.step()
             optimizer.zero_grad()
             self.step_counter += 1
-            if self.step_counter > 100:
+            if self.step_counter > self.warm_up_step:
                 data = {}
                 for _, wrapper in self.get_modules_wrapper().items():
-                    data[wrapper.name] = wrapper.weight_score.data.clone().detach()
+                    data[wrapper.name] = wrapper.weight_score.data
                 metrics = self.metrics_calculator.calculate_metrics(data)
                 masks = self.sparsity_allocator.generate_sparsity(metrics)
                 self.load_masks(masks)
@@ -193,12 +194,3 @@ class MovementPruner(BasicPruner):
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
-
-    def _patch_optimizer(self):
-        data = self.data_collector.collect()
-        _logger.debug('Collected Data:\n%s', data)
-        metrics = self.metrics_calculator.calculate_metrics(data)
-        _logger.debug('Metrics Calculate:\n%s', metrics)
-        masks = self.sparsity_allocator.generate_sparsity(metrics)
-        _logger.debug('Masks:\n%s', masks)
-        self.load_masks(masks)
