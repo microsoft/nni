@@ -4,7 +4,7 @@
 from copy import deepcopy
 import logging
 from schema import Optional as SchemaOptional
-from typing import Dict, List, Callable
+from typing import Dict, List, Tuple, Callable
 
 import torch
 from torch import autograd, Tensor
@@ -103,6 +103,19 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
     Collect all wrapper weight score.
     """
+    def _reset_optimizer(self):
+        if self._origin_optimizer_cls is not None:
+            optimizer_grouped_parameters = [{
+                "params": [p for n, p in self.compressor.bound_model.named_parameters() if "weight_score" not in n and p.requires_grad]
+            }]
+            if self._origin_optimizer_cls.__name__ == 'SGD':
+                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters, lr=0.001)
+            else:
+                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters)
+            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
+        else:
+            self.optimizer = None
+
     def collect(self) -> Dict[str, Tensor]:
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
@@ -115,12 +128,15 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
 
 class MovementPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int):
+                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
+                 cool_down_beginning_step: int):
         self.trainer = trainer
         self.optimizer = optimizer
         self.criterion = criterion
         self.training_epochs = training_epochs
         self.warm_up_step = warm_up_step
+        self.cool_down_beginning_step = cool_down_beginning_step
+        assert self.warm_up_step < self.cool_down_beginning_step
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -130,21 +146,33 @@ class MovementPruner(BasicPruner):
         schema = CompressorSchema(schema_list, model, _logger)
         schema.validate(config_list)
 
+    def cubic_schedule(self, current_step: int):
+        if self.warm_up_step < current_step <= self.cool_down_beginning_step:
+            wrapper_dict = self.get_modules_wrapper()
+            for config in self.config_list:
+                config = config.copy()
+                total_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
+                for op_name in config['op_names']:
+                    wrapper_dict[op_name].config['total_sparsity'] = total_sparsity
+
     def reset_tools(self):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
+        # use a SGD to update the weight_score
         params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
         optimizer = SGD(params, 0.001)
         self.step_counter = 0
 
+        # update the masks after each optimzier step
         def _optimizer_patch():
             optimizer.step()
             optimizer.zero_grad()
             self.step_counter += 1
             if self.step_counter > self.warm_up_step:
+                self.cubic_schedule(self.step_counter)
                 data = {}
                 for _, wrapper in self.get_modules_wrapper().items():
                     data[wrapper.name] = wrapper.weight_score.data
@@ -194,3 +222,9 @@ class MovementPruner(BasicPruner):
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
+
+    def compress(self) -> Tuple[Module, Dict]:
+        # sparsity grow from 0
+        for _, wrapper in self.get_modules_wrapper().items():
+            wrapper.config['total_sparsity'] = 0
+        return super().compress()

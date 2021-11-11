@@ -56,7 +56,7 @@ def evaluator(model, metric, is_regression, eval_dataloader):
     return metric.compute()
 
 if __name__ == '__main__':
-    task_name = 'sst2'
+    task_name = 'cola'
     num_labels = 2
     is_regression = False
     algo = 'l1_head'
@@ -105,10 +105,12 @@ if __name__ == '__main__':
     config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.8}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 3, 500)
+    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 500, 2000)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
+
+    print(evaluator(model, metric, is_regression, validate_dataloader))
 
     optimizer = Adam(model.parameters(), lr=2e-5)
     trainer(model, optimizer, criterion, train_dataloader)

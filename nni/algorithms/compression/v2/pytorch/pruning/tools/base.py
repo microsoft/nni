@@ -133,7 +133,8 @@ class TrainerBasedDataCollector(DataCollector):
         super().__init__(compressor)
         self.trainer = trainer
         self.training_epochs = training_epochs
-        self._origin_optimizer = optimizer
+        self._origin_optimizer_cls = optimizer.__class__ if optimizer is not None else None
+        self._origin_optimizer_state_dict = optimizer.state_dict() if optimizer is not None else None
         self._origin_criterion = criterion
         self._opt_before_tasks = opt_before_tasks
         self._opt_after_tasks = opt_after_tasks
@@ -146,22 +147,12 @@ class TrainerBasedDataCollector(DataCollector):
 
     def reset(self):
         # refresh optimizer and criterion
-        self.compressor._unwrap_model()
-        if self._origin_optimizer is not None:
-            optimizer_cls = self._origin_optimizer.__class__
-            if optimizer_cls.__name__ == 'SGD':
-                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
-            else:
-                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
-            self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
-        else:
-            self.optimizer = None
+        self._reset_optimizer()
 
         if self._criterion_patch is not None:
             self.criterion = self._criterion_patch(self._origin_criterion)
         else:
             self.criterion = self._origin_criterion
-        self.compressor._wrap_model()
 
         # patch optimizer
         self._patch_optimizer()
@@ -172,6 +163,18 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_handles = {}
         self._hook_buffer = {}
         self._add_all_hook()
+
+    def _reset_optimizer(self):
+        self.compressor._unwrap_model()
+        if self._origin_optimizer_cls is not None:
+            if self._origin_optimizer_cls.__name__ == 'SGD':
+                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+            else:
+                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters())
+            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
+        else:
+            self.optimizer = None
+        self.compressor._wrap_model()
 
     def _patch_optimizer(self):
         def patch_step(old_step):
