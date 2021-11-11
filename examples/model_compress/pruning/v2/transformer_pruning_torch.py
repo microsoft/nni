@@ -12,7 +12,7 @@ from transformers import (
     set_seed
 )
 
-from nni.algorithms.compression.v2.pytorch.pruning import TransformerPruner
+from nni.algorithms.compression.v2.pytorch.pruning import TransformerAttentionPruner
 
 
 task_to_keys = {
@@ -101,13 +101,13 @@ if __name__ == '__main__':
 
     config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.5}]
     if algo == 'l1_channel':
-        pruner = TransformerPruner(model.bert, config_list, metric='l1', mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerAttentionPruner(model.bert, config_list, metric='l1', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
     elif algo == 'l1_head':
-        pruner = TransformerPruner(model.bert, config_list, metric='l1', block_sparse_size=[64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerAttentionPruner(model.bert, config_list, metric='l1', block_sparse_size=[64], dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
     elif algo == 'level_block':
-        pruner = TransformerPruner(model.bert, config_list, metric='level', block_sparse_size=[64, 64], mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerAttentionPruner(model.bert, config_list, metric='level', block_sparse_size=[64, 64], dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
     elif algo == 'level_finegrained':
-        pruner = TransformerPruner(model.bert, config_list, metric='level', mode='dependency_aware', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
+        pruner = TransformerAttentionPruner(model.bert, config_list, metric='level', dummy_input=torch.randint(0, 28996, (3, 128)).to(device))
 
     _, masks = pruner.compress()
 

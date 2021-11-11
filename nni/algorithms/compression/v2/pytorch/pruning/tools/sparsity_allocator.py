@@ -226,7 +226,7 @@ class AttentionHeadDependencyAwareAllocator(SparsityAllocator):
                 masks[name] = self._expand_mask(name, proj_mask)
 
             # special rule based output layer mask generation
-            if len(name_list) == 4:
+            if len(name_list) == 4 and len(self.dim) == 1 and self.dim[0] == 1:
                 wrapper = self.pruner.get_modules_wrapper()[name_list[-1]]
                 head_width = int(wrapper.module.weight.size(1) / len(proj_mask))
                 masks[name_list[-1]] = {

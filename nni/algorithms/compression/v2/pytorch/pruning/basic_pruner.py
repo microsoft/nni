@@ -43,7 +43,8 @@ from .tools import (
 _logger = logging.getLogger(__name__)
 
 __all__ = ['LevelPruner', 'L1NormPruner', 'L2NormPruner', 'FPGMPruner', 'SlimPruner', 'ActivationPruner',
-           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner', 'TransformerPruner']
+           'ActivationAPoZRankPruner', 'ActivationMeanRankPruner', 'TaylorFOWeightPruner', 'ADMMPruner',
+           'TransformerAttentionPruner']
 
 NORMAL_SCHEMA = {
     Or('sparsity', 'sparsity_per_layer'): And(float, lambda n: 0 <= n < 1),
@@ -784,9 +785,14 @@ class ADMMPruner(BasicPruner):
         return self.bound_model, masks
 
 
-class TransformerPruner(BasicPruner):
+class TransformerAttentionPruner(BasicPruner):
     """
-    This is a special pruner for pruning huggingface transformers bert or other implementations like that.
+    This is a special pruner for pruning the attention layer of huggingface transformers bert or other implementations like that.
+    The pruner will force the Q, K, V layers that have dependencies to prune the same position,
+    i.e. if pruner decides to prune a certain position, it means the same position in Q, K, V.
+    To achieve this, the final metric of Q, K, V is the sum of sub-metric of Q, K, V.
+    Additional, if the output dense layer followed by Q, K, V also in config_list, it will follow a special rule to generate masks.
+    The pruner will not generate masks for output dense layer with 'level' metric.
 
     Parameters
     ----------
@@ -796,35 +802,24 @@ class TransformerPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Only Linear is supported in TransformerPruner.
-            - op_names : Operation names to prune.
+            - op_types : Only Linear is supported in TransformerAttentionPruner.
+            - op_names : Operation names to prune. The name of Q, K, V.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    dummy_input
+        The dummy input to analyze the topology constraints.
     metric
         Supported pruning metric ['level', 'l1', 'l2', 'fpgm'].
     block_sparse_size
-        In 'level', `block_sparse_size` is the block size of Linear layer weight, i.e., [64, 64],
-        and Linear layer weight must be divisible by on each dim of `block_sparse_size`.
+        In 'level', `block_sparse_size` is the block size on Linear layer weight, i.e., [64, 64],
+        and Linear layer weight must be divisible on each dim of `block_sparse_size`.
         In 'l1', 'l2', 'fpgm', because these metric already reduce to output channels,
-        so the `block_sparse_size` is the block size of output channels, i.e., [64].
-    mode
-        'normal' or 'dependency_aware'.
-        If prune the model in a dependency-aware way, this pruner will
-        prune the model according to the metric and the channel-dependency or group-dependency of the model.
-        In this way, the pruner will force the linear layers that have dependencies to prune the same channels,
-        so the speedup module can better harvest the speed benefit from the pruned model. Note that,
-        if set 'dependency_aware' , the dummy_input cannot be None, because the pruner needs a dummy input to
-        trace the dependency between the linear layers.
-    dummy_input
-        The dummy input to analyze the topology constraints. Note that, the dummy_input
-        should on the same device with the model.
+        so the `block_sparse_size` is the block size on output channels, i.e., [64].
     """
-    def __init__(self, model: Module, config_list: List[Dict], metric: str = 'l1',
-                 block_sparse_size: Optional[Union[list, int]] = None, mode: str = 'normal',
-                 dummy_input: Optional[Tensor] = None):
+    def __init__(self, model: Module, config_list: List[Dict], dummy_input: Optional[Tensor], metric: str = 'l1',
+                 block_sparse_size: Optional[Union[list, int]] = None):
         assert metric in ['level', 'l1', 'l2', 'fpgm']
         self.metric = metric
         self.block_sparse_size = block_sparse_size if not isinstance(block_sparse_size, int) else [block_sparse_size]
-        self.mode = mode
         self.dummy_input = dummy_input
         super().__init__(model, config_list)
 
@@ -852,14 +847,7 @@ class TransformerPruner(BasicPruner):
             if self.metric == 'fpgm':
                 self.metrics_calculator = DistMetricsCalculator(p=2, dim=0, block_sparse_size=self.block_sparse_size)
         if self.sparsity_allocator is None:
-            if self.mode == 'normal':
-                if self.metric in ['level']:
-                    self.sparsity_allocator = NormalSparsityAllocator(self, dim=None, block_sparse_size=self.block_sparse_size)
-                if self.metric in ['l1', 'l2', 'fpgm']:
-                    self.sparsity_allocator = NormalSparsityAllocator(self, dim=0, block_sparse_size=self.block_sparse_size)
-            elif self.mode == 'dependency_aware':
-                assert self.dummy_input is not None
-                if self.metric in ['level']:
-                    self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, None, self.dummy_input, self.block_sparse_size)
-                if self.metric in ['l1', 'l2', 'fpgm']:
-                    self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, 0, self.dummy_input, self.block_sparse_size)
+            if self.metric in ['level']:
+                self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, None, self.dummy_input, self.block_sparse_size)
+            if self.metric in ['l1', 'l2', 'fpgm']:
+                self.sparsity_allocator = AttentionHeadDependencyAwareAllocator(self, 0, self.dummy_input, self.block_sparse_size)
