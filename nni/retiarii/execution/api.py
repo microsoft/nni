@@ -76,6 +76,7 @@ def budget_exhausted() -> bool:
 
 def report_search_space(search_space: dict) -> None:
     """
+    Strategy uses this API to report its extracted search space to execution engine
     """
     engine = get_execution_engine()
     return engine.report_search_space(search_space)
