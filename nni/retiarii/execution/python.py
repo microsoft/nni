@@ -3,23 +3,25 @@ from typing import Dict, Any, List
 from ..graph import Evaluator, Model
 from ..integration_api import receive_trial_parameters
 from ..utils import ContextStack, import_, get_importable_name
-from .base import BaseExecutionEngine
+from .base import BaseExecutionEngine, extract_visual_hp
 
 
 class PythonGraphData:
     def __init__(self, class_name: str, init_parameters: Dict[str, Any],
-                 mutation: Dict[str, Any], evaluator: Evaluator) -> None:
+                 mutation: Dict[str, Any], evaluator: Evaluator, visual_hp: dict = None) -> None:
         self.class_name = class_name
         self.init_parameters = init_parameters
         self.mutation = mutation
         self.evaluator = evaluator
+        self.visual_hp = visual_hp
 
     def dump(self) -> dict:
         return {
             'class_name': self.class_name,
             'init_parameters': self.init_parameters,
             'mutation': self.mutation,
-            'evaluator': self.evaluator
+            'evaluator': self.evaluator,
+            '_visual_hyper_params_': self.visual_hp
         }
 
     @staticmethod
@@ -41,8 +43,9 @@ class PurePythonExecutionEngine(BaseExecutionEngine):
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
         mutation = get_mutation_dict(model)
+        visual_hp = extract_visual_hp(model)
         graph_data = PythonGraphData(get_importable_name(model.python_class, relocate_module=True),
-                                     model.python_init_params, mutation, model.evaluator)
+                                     model.python_init_params, mutation, model.evaluator, visual_hp)
         return graph_data
 
     @classmethod

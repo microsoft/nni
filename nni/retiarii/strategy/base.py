@@ -22,6 +22,7 @@ class BaseStrategy(abc.ABC):
         new_model = base_model
         for mutator in applied_mutators:
             recorded_candidates, new_model = mutator.dry_run(new_model)
+            # TODO: check label is never None
             if mutator.label is not None:
                 label = mutator.label
             else:
