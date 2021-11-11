@@ -105,13 +105,16 @@ if __name__ == '__main__':
     config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.8}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 500, 2000)
+    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 11, 500, 2000)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
 
     print(evaluator(model, metric, is_regression, validate_dataloader))
 
-    optimizer = Adam(model.parameters(), lr=2e-5)
+    optimizer_grouped_parameters = [{
+        "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
+    }]
+    optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
     trainer(model, optimizer, criterion, train_dataloader)
     print(evaluator(model, metric, is_regression, validate_dataloader))
