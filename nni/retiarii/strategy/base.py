@@ -27,11 +27,11 @@ class BaseStrategy(abc.ABC):
             else:
                 label = f'auto_label_{auto_label_seq}'
                 auto_label_seq += 1
-            if len(recorded_candidates) > 1:
+            if len(recorded_candidates) == 1:
+                search_space[label] = {'_type': 'choice', '_value': recorded_candidates[0]}
+            else:
                 for i, candidate in enumerate(recorded_candidates):
                     search_space[f'{label}_{i}'] = {'_type': 'choice', '_value': candidate}
-            else:
-                search_space[label] = {'_type': 'choice', '_value': recorded_candidates[0]}
 
         report_search_space(search_space)
 
