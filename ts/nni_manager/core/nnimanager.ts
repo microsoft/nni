@@ -21,7 +21,7 @@ import {
 } from '../common/trainingService';
 import { delay, getCheckpointDir, getExperimentRootDir, getLogDir, getMsgDispatcherCommand, mkDirP, getTunerProc, getLogLevel, isAlive, killPid } from '../common/utils';
 import {
-    INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING,
+    INITIALIZE, INITIALIZED, KILL_TRIAL_JOB, NEW_TRIAL_JOB, NO_MORE_TRIAL_JOBS, PING, REPORT_SEARCH_SPACE,
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
@@ -852,6 +852,12 @@ class NNIManager implements Manager {
             case KILL_TRIAL_JOB: {
                 this.log.info('cancelTrialJob:', content);
                 await this.trainingService.cancelTrialJob(JSON.parse(content), true);
+                break;
+            }
+            case REPORT_SEARCH_SPACE: {
+                this.log.info('Retiarii reported search space:', content);
+                this.experimentProfile.params.searchSpace = JSON.parse(content);
+                this.storeExperimentProfile();
                 break;
             }
             default:

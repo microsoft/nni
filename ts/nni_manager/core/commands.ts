@@ -21,6 +21,7 @@ const NEW_TRIAL_JOB = 'TR';
 const SEND_TRIAL_JOB_PARAMETER = 'SP';
 const NO_MORE_TRIAL_JOBS = 'NO';
 const KILL_TRIAL_JOB = 'KI';
+const REPORT_SEARCH_SPACE = 'RS';
 
 const TRIAL_COMMANDS: Set<string> = new Set([
     // from ctl to node
@@ -49,7 +50,8 @@ const TUNER_COMMANDS: Set<string> = new Set([
     INITIALIZED,
     NEW_TRIAL_JOB,
     SEND_TRIAL_JOB_PARAMETER,
-    NO_MORE_TRIAL_JOBS
+    NO_MORE_TRIAL_JOBS,
+    REPORT_SEARCH_SPACE
 ]);
 
 const ASSESSOR_COMMANDS: Set<string> = new Set([
@@ -78,6 +80,7 @@ export {
     NEW_TRIAL_JOB,
     NO_MORE_TRIAL_JOBS,
     KILL_TRIAL_JOB,
+    REPORT_SEARCH_SPACE,
     TUNER_COMMANDS,
     ASSESSOR_COMMANDS,
     TRIAL_COMMANDS,

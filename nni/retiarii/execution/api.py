@@ -77,4 +77,5 @@ def budget_exhausted() -> bool:
 def report_search_space(search_space: dict) -> None:
     """
     """
+    engine = get_execution_engine()
     return engine.report_search_space(search_space)

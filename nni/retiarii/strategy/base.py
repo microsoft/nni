@@ -8,14 +8,19 @@ from .. import report_search_space
 from ..graph import Model
 from ..mutator import Mutator
 
-from .utils import dry_run_for_search_space
-
 
 class BaseStrategy(abc.ABC):
 
-    @abc.classmethod
+    @classmethod
     def report_model_space(self, base_model: Model, applied_mutators: List[Mutator]) -> None:
-        search_space = dry_run_for_search_space(base_model, applied_mutators)
+        sample_space = []
+        new_model = base_model
+        for mutator in applied_mutators:
+            recorded_candidates, new_model = mutator.dry_run(new_model)
+            sample_space.extend(recorded_candidates)
+        search_space = {}
+        for i, each in enumerate(sample_space):
+            search_space[str(i)] = {'_type': 'choice', '_value': each}
         report_search_space(search_space)
 
     @abc.abstractmethod
