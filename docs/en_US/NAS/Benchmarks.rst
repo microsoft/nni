@@ -15,14 +15,21 @@ Prerequisites
 -------------
 
 
-* Please prepare a folder to household all the benchmark databases. By default, it can be found at ``${HOME}/.nni/nasbenchmark``. You can place it anywhere you like, and specify it in ``NASBENCHMARK_DIR`` via ``export NASBENCHMARK_DIR=/path/to/your/nasbenchmark`` before importing NNI.
+* Please prepare a folder to household all the benchmark databases. By default, it can be found at ``${HOME}/.cache/nni/nasbenchmark``. Or you can place it anywhere you like, and specify it in ``NASBENCHMARK_DIR`` via ``export NASBENCHMARK_DIR=/path/to/your/nasbenchmark`` before importing NNI.
 * Please install ``peewee`` via ``pip3 install peewee``\ , which NNI uses to connect to database.
 
 Data Preparation
 ----------------
 
-To avoid storage and legality issues, we do not provide any prepared databases. Please follow the following steps.
+Option 1 (Recommended)
+^^^^^^^^^^^^^^^^^^^^^^
 
+You can download the preprocessed benchmark files via ``python -m nni.nas.benchmarks.download <benchmark_name>``, where ``<benchmark_name>`` can be ``nasbench101``, ``nasbench201``, and etc. Add ``--help`` to the command for supported command line arguments.
+
+Option 2
+^^^^^^^^
+
+.. note:: If you have files that are processed before v2.5, it is recommended that you delete them and try option 1.
 
 #. 
    Clone NNI to your machine and enter ``examples/nas/benchmarks`` directory.

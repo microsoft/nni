@@ -384,6 +384,7 @@ class ADMMPruner(IterativePruner):
             for i, wrapper in enumerate(self.get_modules_wrapper()):
                 z = wrapper.module.weight.data + self.U[i]
                 self.Z[i] = self._projection(z, wrapper.config['sparsity'], wrapper)
+                torch.cuda.empty_cache()
                 self.U[i] = self.U[i] + wrapper.module.weight.data - self.Z[i]
 
         # apply prune
