@@ -180,7 +180,7 @@ class Model:
         There could be multiple nodes with the same label. Name space name can uniquely
         identify a graph or node.
 
-        NOTE: the implementation does not support the class abstration
+        NOTE: the implementation does not support the class abstraction
         """
         matched_nodes = []
         for graph in self.graphs.values():
@@ -211,6 +211,13 @@ class Model:
             return matched_nodes[0]
         else:
             return None
+
+    def get_cell_nodes(self) -> List['Node']:
+        matched_nodes = []
+        for graph in self.graphs.values():
+            nodes = [node for node in graph.nodes if isinstance(node.operation, Cell)]
+            matched_nodes.extend(nodes)
+        return matched_nodes
 
 
 class ModelStatus(Enum):
