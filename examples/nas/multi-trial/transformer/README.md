@@ -16,3 +16,4 @@ And then we tune these two hyper-parameters jointly. The results are:
 </p>
 
 As we can observe, we have found better hyper-parameters (`n_layer = 8`, `p_dropout = 0.2`) than default values. 
+
