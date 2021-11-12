@@ -228,6 +228,10 @@ interface SearchItems {
     isChoice: boolean; // for parameters: type = choice and status also as choice type
 }
 
+interface RetiariiParameter {
+    _visual_hyper_params_: object; // retiarii experiment's parameter
+}
+
 export {
     TableObj,
     TableRecord,
@@ -253,5 +257,6 @@ export {
     SortInfo,
     AllExperimentList,
     Tensorboard,
-    SearchItems
+    SearchItems,
+    RetiariiParameter
 };
