@@ -326,7 +326,7 @@ starting at training step :math:`t_{0}` and with pruning frequency :math:`\Delta
 For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
 
 Usage
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`^^^^^^
+^^^^^^
 
 .. code-block:: python
 
