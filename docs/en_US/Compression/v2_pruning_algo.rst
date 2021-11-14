@@ -44,7 +44,7 @@ Usage
    pruner = LevelPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
-For detail instance please refer to `Level Pruner example <../../../examples/model_compress/pruning/v2/level_pruning/example.py>`__
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_example.py <examples/model_compress/pruning/v2/level_pruning_example.py>`
 
 User configuration for Level Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,6 +75,8 @@ Usage
    pruner = L1NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_example.py <examples/model_compress/pruning/v2/norm_pruning_example.py>`
+
 User configuration for L1 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -98,6 +100,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = L2NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_example.py <examples/model_compress/pruning/v2/norm_pruning_example.py>`
 
 User configuration for L2 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -126,6 +130,8 @@ Usage
    pruner = FPGMPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_example.py <examples/model_compress/pruning/v2/fpgm_pruning_example.py>`
+
 User configuration for FPGM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -150,6 +156,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
    pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, training_epochs=1)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_example.py <examples/model_compress/pruning/v2/slim_pruning_example.py>`
 
 User configuration for Slim Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -181,6 +189,8 @@ Usage
    pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`
+
 User configuration for Activation APoZ Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -206,6 +216,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`
 
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -237,6 +249,8 @@ Usage
    pruner = TaylorFOWeightPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_example.py <examples/model_compress/pruning/v2/taylorfo_pruning_example.py>`
+
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -267,6 +281,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_example.py <examples/model_compress/pruning/v2/admm_pruning_example.py>`
 
 User configuration for ADMM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -310,7 +326,7 @@ starting at training step :math:`t_{0}` and with pruning frequency :math:`\Delta
 For more details please refer to `To prune, or not to prune: exploring the efficacy of pruning for model compression <https://arxiv.org/abs/1710.01878>`__\.
 
 Usage
-^^^^^^
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`^^^^^^
 
 .. code-block:: python
 
