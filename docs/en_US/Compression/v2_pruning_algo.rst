@@ -44,6 +44,8 @@ Usage
    pruner = LevelPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
+For detail instance please refer to `Level Pruner example <../../../examples/model_compress/pruning/v2/level_pruning/example.py>`__
+
 User configuration for Level Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
