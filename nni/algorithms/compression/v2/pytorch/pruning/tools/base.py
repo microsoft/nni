@@ -446,16 +446,6 @@ class SparsityAllocator:
 
         return (mask != 0).type_as(mask)
 
-    def metric_shift(self, metrics: Dict):
-        """
-        Shift all metric values greater than 0.
-        """
-        min_value = 0
-        for metric in metrics.values():
-            min_value = min(min_value, metric.min())
-        for name in metrics.keys():
-            metrics[name] -= min_value
-
 
 class TaskGenerator:
     """

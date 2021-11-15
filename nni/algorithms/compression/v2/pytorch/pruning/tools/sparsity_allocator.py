@@ -19,7 +19,6 @@ class NormalSparsityAllocator(SparsityAllocator):
     This allocator simply pruned the weight with smaller metrics in layer level.
     """
     def generate_sparsity(self, metrics: Dict[str, Tensor]) -> Dict[str, Dict[str, Tensor]]:
-        self.metric_shift(metrics)
         masks = {}
         for name, wrapper in self.pruner.get_modules_wrapper().items():
             sparsity_rate = wrapper.config['total_sparsity']
@@ -43,7 +42,6 @@ class GlobalSparsityAllocator(SparsityAllocator):
     The layers with the same config in config_list is a group.
     """
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
-        self.metric_shift(metrics)
         masks = {}
         # {group_index: {layer_name: metric}}
         grouped_metrics = {idx: {name: metrics[name] for name in names}
@@ -111,7 +109,6 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         self.pruner._wrap_model()
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
-        self.metric_shift(metrics)
         self._get_dependency()
         masks = {}
         grouped_metrics = {}
