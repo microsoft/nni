@@ -204,7 +204,7 @@ class Trial implements TableObj {
             if (typeof getPara === 'string') {
                 ret.parameters = JSON.parse(getPara);
             } else {
-                ret.parameters = getPara;
+                ret.parameters = '_visual_hyper_params_' in getPara ? getPara._visual_hyper_params_ : getPara;
             }
         } else {
             ret.parameters = { error: "This trial's parameters are not available." };
