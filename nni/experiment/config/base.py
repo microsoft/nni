@@ -26,7 +26,7 @@ class ConfigBase:
     .. code-block:: python
 
         @dataclass(init=False)
-        ExperimentConfig(ConfigBase):
+        class ExperimentConfig(ConfigBase):
             name: Optional[str]
             ...
 
