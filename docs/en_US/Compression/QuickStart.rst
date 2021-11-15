@@ -4,7 +4,6 @@ Quick Start
 ..  toctree::
     :hidden:
 
-    Tutorial <Tutorial>
     Notebook Example <compression_pipeline_example>
 
 
