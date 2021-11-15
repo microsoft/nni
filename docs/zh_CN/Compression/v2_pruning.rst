@@ -2,25 +2,25 @@
 剪枝（V2版本）
 #################
 
-Pruning V2 is a refactoring of the old version and provides more powerful functions.
-Compared with the old version, the iterative pruning process is detached from the pruner and the pruner is only responsible for pruning and generating the masks once.
-What's more, pruning V2 unifies the pruning process and provides a more free combination of pruning components.
-Task generator only cares about the pruning effect that should be achieved in each round, and uses a config list to express how to pruning in the next step.
-Pruner will reset with the model and config list given by task generator then generate the masks in current step.
+剪枝（V2版本）是对旧版本的重构，提供了更强大的功能。
+与旧版本相比，迭代剪枝过程与剪枝器分离，剪枝器只负责剪枝且生成掩码一次。
+更重要的是，V2版本统一了剪枝过程，并提供了更自由的剪枝组件组合。
+任务生成器只关心在每一轮中应该达到的修剪效果，并使用配置列表来表示下一步如何修剪。
+剪枝器将使用任务生成器提供的模型和配置列表重置，然后在当前步骤中生成掩码。
 
-For a clearer structure vision, please refer to the figure below.
+有关更清晰的结构，请参考下图。
 
 .. image:: ../../img/pruning_process.png
    :target: ../../img/pruning_process.png
    :alt:
 
-In V2, a pruning process is usually driven by a pruning scheduler, it contains a specific pruner and a task generator.
-But users can also use pruner directly like in the pruning V1.
+在V2版本中，修剪过程通常由剪枝调度器驱动，它包含一个特定的剪枝器和一个任务生成器。
+但是用户也可以像V1版本中那样直接使用剪枝器。
 
-For details, please refer to the following tutorials:
+有关详细信息，请参阅以下教程：
 
 ..  toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     剪枝算法 <v2_pruning_algo>
-    剪枝调度接口 <v2_scheduler>
+    剪枝调度器接口 <v2_scheduler>
