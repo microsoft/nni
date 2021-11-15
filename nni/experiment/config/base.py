@@ -175,8 +175,10 @@ class ConfigBase:
         The config schema for end users is more flexible than the format NNI manager accepts.
         This method convert a config object to the constrained format accepted by NNI manager.
 
-        The default implementation calls ``_canonicalize()`` on all children config objects,
-        including those inside list and dict.
+        The default implementation will:
+
+        1. Resolve all ``PathLike`` fields to absolute path
+        2. Call ``_canonicalize()`` on all children config objects, including those inside list and dict
 
         Subclasses are recommended to call ``super()._canonicalize(parents)`` at the end of their overrided version.
 
@@ -188,8 +190,11 @@ class ConfigBase:
             in this case it will be invoked like ``localConfig._canonicalize([experimentConfig])``.
         """
         for field in dataclasses.fields(self):
-            child = getattr(self, field.name)
-            _recursive_canonicalize_child(child, [self] + parents)
+            value = getattr(self, field.name)
+            if isinstance(value, (Path, str)) and utils.is_path_like(field.type):
+                setattr(self, field.name, utils.resolve_path(value, self._base_path))
+            else:
+                _recursive_canonicalize_child(value, [self] + parents)
 
     def _validate_canonical(self):
         """
@@ -206,8 +211,8 @@ class ConfigBase:
         """
         utils.validate_type(self)
         for field in dataclasses.fields(self):
-            child = getattr(self, field.name)
-            _recursive_validate_child(child)
+            value = getattr(self, field.name)
+            _recursive_validate_child(value)
 
 def _dict_factory(items):
     ret = {}

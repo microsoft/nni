@@ -8,6 +8,7 @@ If you are implementing a config class for a training service, it's unlikely you
 """
 
 import dataclasses
+import os.path
 from pathlib import Path
 
 import typeguard
@@ -31,6 +32,15 @@ def set_base_path(path):
 def unset_base_path():
     global _current_base_path
     _current_base_path = None
+
+def resolve_path(path, base_path):
+    if path is None:
+        return None
+    # Path.resolve() does not work on Windows when file not exist, so use os.path instead
+    path = os.path.expanduser(path)
+    if not os.path.isabs(path):
+        path = os.path.join(base_path, path)
+    return str(os.path.realpath(path))  # it should be already str, but official doc does not specify it's type
 
 ## field name case convertion ##
 
@@ -59,6 +69,10 @@ def validate_type(config):
             raise ValueError(f'{class_name}: {field.name} is not set')
         if not is_instance(value, field.type):
             raise ValueError(f'{class_name}: type of {field.name} ({repr(value)}) is not {field.type}')
+
+def is_path_like(type_hint):
+    # only `PathLike` and `Any` accepts `Path`; check `int` to make sure it's not `Any`
+    return is_instance(Path, type_hint) and not is_instance(int, type_hint)
 
 def guess_config_type(obj, type_hint):
     ret = guess_list_config_type([obj], type_hint, _hint_list_item=True)
