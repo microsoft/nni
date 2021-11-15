@@ -1,5 +1,6 @@
-Pruning V2
-==========
+#################
+剪枝（V2版本）
+#################
 
 Pruning V2 is a refactoring of the old version and provides more powerful functions.
 Compared with the old version, the iterative pruning process is detached from the pruner and the pruner is only responsible for pruning and generating the masks once.
