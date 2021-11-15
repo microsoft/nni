@@ -18,7 +18,7 @@ from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
 from .tools.base import TrainerBasedDataCollector
 
 from .tools import (
-    NormMetricsCalculator,
+    StraightMetricsCalculator,
     NormalSparsityAllocator
 )
 
@@ -157,7 +157,7 @@ class MovementPruner(BasicPruner):
 
     def reset_tools(self):
         if self.metrics_calculator is None:
-            self.metrics_calculator = NormMetricsCalculator()
+            self.metrics_calculator = StraightMetricsCalculator()
         if self.sparsity_allocator is None:
             self.sparsity_allocator = NormalSparsityAllocator(self)
 
