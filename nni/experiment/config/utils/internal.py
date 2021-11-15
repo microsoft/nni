@@ -8,10 +8,14 @@ If you are implementing a config class for a training service, it's unlikely you
 """
 
 import dataclasses
+import importlib
+import json
 import os.path
 from pathlib import Path
 
 import typeguard
+
+import nni.runtime.config
 
 from .public import is_missing
 
@@ -72,7 +76,7 @@ def validate_type(config):
 
 def is_path_like(type_hint):
     # only `PathLike` and `Any` accepts `Path`; check `int` to make sure it's not `Any`
-    return is_instance(Path, type_hint) and not is_instance(int, type_hint)
+    return is_instance(Path(), type_hint) and not is_instance(1, type_hint)
 
 def guess_config_type(obj, type_hint):
     ret = guess_list_config_type([obj], type_hint, _hint_list_item=True)
@@ -108,17 +112,44 @@ def guess_list_config_type(objs, type_hint, _hint_list_item=False):
     if not candidate_configs:
         return None
     if len(candidate_configs) == 1:
-        return candidate_configs
+        return candidate_configs[0]
 
-    # still have multiple candidates, try to find the common base class
-    for base in candidate_configs:
-        base_class = type(base[0])
-        is_base = all(isinstance(configs[0], base_class) for configs in candidate_configs)
-        if is_base:
-            return base
+    # still have multiple candidates, inheritance relationship among these classes should make up a tree
+    # if the tree only has one leaf (e.g. TrainingServiceConfig -> LocalConfig), choose the leaf
+    # otherwise, choose the common base class (the root)
+    roots = []
+    leaves = []
+    for cls_configs in candidate_configs:
+        cls = type(cls_configs[0])
+        subclass_cnt = sum(isinstance(configs[0], cls) for configs in candidate_configs)
+        if subclass_cnt == len(candidate_configs):
+            roots.append(cls_configs)
+        if subclass_cnt == 1:
+            leaves.append(cls_configs)
+    if len(leaves) == 1:
+        return leaves[0]
+    if len(roots) == 1:
+        return roots[0]
 
     return None  # cannot detect the type, give up
 
 def _all_subclasses(cls):
     subclasses = set(cls.__subclasses__())
     return subclasses.union(*[_all_subclasses(subclass) for subclass in subclasses])
+
+## training service factory ##
+
+def training_service_config_factory(platform):
+    from ..training_service import TrainingServiceConfig  # avoid circular import
+
+    # import all custom config classes so they can be found in TrainingServiceConfig.__subclasses__()
+    custom_ts_config_path = nni.runtime.config.get_config_file('training_services.json')
+    custom_ts_config = json.load(custom_ts_config_path.open())
+    for custom_ts_pkg in custom_ts_config.keys():
+        pkg = importlib.import_module(custom_ts_pkg)
+        _config_class = pkg.nni_training_service_info.config_class
+
+    for cls in TrainingServiceConfig.__subclasses__():
+        if cls.platform == platform:
+            return cls()
+    raise ValueError(f'Bad training service platform: {platform}')

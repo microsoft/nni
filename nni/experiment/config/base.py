@@ -21,7 +21,8 @@ class ConfigBase:
     """
     The abstract base class of experiment config classes.
 
-    A config class should be a type-hinted dataclass inheriting ``ConfigBase``:
+    A config class should be a type-hinted dataclass inheriting ``ConfigBase``.
+    Or for a training service config class, it can inherit ``TrainingServiceConfig``.
 
     .. code-block:: python
 
@@ -200,7 +201,7 @@ class ConfigBase:
         """
         Validate legality of a canonical config object. It's caller's responsibility to ensure the config is canonical.
 
-        Raise ``ValueError`` if any problem found. This function does **not** return truth value.
+        Raise exception if any problem found. This function does **not** return truth value.
 
         The default implementation will:
 
