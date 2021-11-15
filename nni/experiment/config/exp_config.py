@@ -115,6 +115,9 @@ class ExperimentConfig(ConfigBase):
         if self.search_space_file is not None:
             self.search_space = yaml.safe_load(open(self.search_space_file))
 
+        # to make the error message clear, ideally it should be:
+        # `if concurrency < 0: raise ValueError('trial_concurrency ({concurrency}) must greater than 0')`
+        # but I believe there will be hardy few users make this kind of mistakes, so let's keep it simple
         assert self.trial_concurrency > 0
         assert self.max_experiment_duration is None or self.max_experiment_duration > 0
         assert self.max_trial_number is None or self.max_trial_number > 0
