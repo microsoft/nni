@@ -24,8 +24,9 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
+            metric = metrics[name]
             if self.continuous_mask:
-                metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
+                metric *= self._compress_mask(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
                 threshold = metric.min() - 1
