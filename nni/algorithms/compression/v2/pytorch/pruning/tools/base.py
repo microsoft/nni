@@ -318,7 +318,7 @@ class SparsityAllocator:
     """
 
     def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
+                 block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
         """
         Parameters
         ----------
@@ -342,6 +342,8 @@ class SparsityAllocator:
             Example:
 
             The metric size is (12,), and block_sparse_size=[64], then the mask will expand to (768,) at first before expand with `dim`.
+        continuous_mask
+            Inherit the mask already in the wrapper if set True.
         """
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
@@ -353,6 +355,7 @@ class SparsityAllocator:
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
             self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+        self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         """

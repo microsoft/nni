@@ -150,20 +150,19 @@ class MovementPruner(BasicPruner):
         if self.warm_up_step < current_step <= self.cool_down_beginning_step:
             wrapper_dict = self.get_modules_wrapper()
             for config in self.config_list:
-                config = config.copy()
-                total_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
+                current_sparsity = config['total_sparsity'] * (1 - (1 - (current_step - self.warm_up_step) / (self.cool_down_beginning_step - self.warm_up_step)) ** 3)
                 for op_name in config['op_names']:
-                    wrapper_dict[op_name].config['total_sparsity'] = total_sparsity
+                    wrapper_dict[op_name].config['total_sparsity'] = current_sparsity
 
     def reset_tools(self):
         if self.metrics_calculator is None:
             self.metrics_calculator = StraightMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self)
+            self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
         # use a SGD to update the weight_score
         params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
-        optimizer = SGD(params, 0.001)
+        optimizer = SGD(params, 1e-3)
         self.step_counter = 0
 
         # update the masks after each optimzier step
