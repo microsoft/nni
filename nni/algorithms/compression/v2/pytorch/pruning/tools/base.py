@@ -10,7 +10,6 @@ from typing import List, Dict, Tuple, Optional, Callable, Union
 import json_tricks
 import torch
 from torch import Tensor
-from torch import tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
