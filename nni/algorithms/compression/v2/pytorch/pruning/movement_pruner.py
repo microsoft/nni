@@ -9,7 +9,7 @@ from typing import Dict, List, Tuple, Callable
 import torch
 from torch import autograd, Tensor
 from torch.nn import Module, Parameter
-from torch.optim import Optimizer, SGD
+from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
@@ -162,7 +162,7 @@ class MovementPruner(BasicPruner):
 
         # use a SGD to update the weight_score
         params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
-        optimizer = SGD(params, 1e-3)
+        optimizer = Adam(params, 1e-2)
         self.step_counter = 0
 
         # update the masks after each optimzier step

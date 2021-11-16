@@ -35,6 +35,7 @@ def criterion(input, target):
 
 def trainer(model, optimizer, criterion, train_dataloader):
     model.train()
+    counter = 0
     for batch in tqdm(train_dataloader):
         batch.to(device)
         optimizer.zero_grad()
@@ -42,6 +43,9 @@ def trainer(model, optimizer, criterion, train_dataloader):
         loss = criterion(outputs, None)
         loss.backward()
         optimizer.step()
+        counter += 1
+        if counter % 5000 == 0:
+            print('Step {}: {}'.format(counter, evaluator(model, metric, is_regression, validate_dataloader)))
 
 def evaluator(model, metric, is_regression, eval_dataloader):
     model.eval()
@@ -56,12 +60,11 @@ def evaluator(model, metric, is_regression, eval_dataloader):
     return metric.compute()
 
 if __name__ == '__main__':
-    task_name = 'cola'
-    num_labels = 2
+    task_name = 'mnli'
     is_regression = False
-    algo = 'l1_head'
-    train_batch_size = 32
-    eval_batch_size = 32
+    num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
+    train_batch_size = 16
+    eval_batch_size = 16
 
     set_seed(1024)
 
@@ -95,26 +98,26 @@ if __name__ == '__main__':
 
     model = BertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=num_labels).to(device)
 
-    print(evaluator(model, metric, is_regression, validate_dataloader))
+    print('Initial: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
 
-    op_names = []
-    op_names.extend(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(0, 12)])
-    op_names.extend(["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(0, 12)])
-    op_names.extend(["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(0, 12)])
+    # op_names = []
+    # op_names.extend(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(0, 12)])
+    # op_names.extend(["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(0, 12)])
+    # op_names.extend(["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(0, 12)])
 
-    config_list = [{'op_types': ['Linear'], 'op_names': op_names, 'sparsity': 0.8}]
+    config_list = [{'op_types': ['Linear'], 'op_partial_name': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 11, 500, 2000)
+    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 6, 5400, 120000)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
 
-    print(evaluator(model, metric, is_regression, validate_dataloader))
+    print('Final: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
 
     optimizer_grouped_parameters = [{
         "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
     }]
     optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
     trainer(model, optimizer, criterion, train_dataloader)
-    print(evaluator(model, metric, is_regression, validate_dataloader))
+    print('After 1 epoch finetuning: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
