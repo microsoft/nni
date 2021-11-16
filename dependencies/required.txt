@@ -2,16 +2,18 @@ astor
 hyperopt == 0.1.2
 json_tricks
 psutil
-pyyaml
+pyyaml >= 5.4
 requests
 responses
 schema
 PythonWebHDFS
 colorama
-scikit-learn >= 0.24.1
+scikit-learn >= 0.24.1 ; python_version >= "3.7"
+scikit-learn < 1.0 ; python_version < "3.7"
 websockets
 filelock
 prettytable
+cloudpickle
 dataclasses ; python_version < "3.7"
 typing_extensions ; python_version < "3.8"
 numpy < 1.19.4 ; sys_platform == "win32"
@@ -20,4 +22,6 @@ numpy ; sys.platform != "win32" and python_version >= "3.7"
 scipy < 1.6 ; python_version < "3.7"
 scipy ; python_version >= "3.7"
 pandas < 1.2 ; python_version < "3.7"
+pandas ; python_version >= "3.7"
 matplotlib < 3.4 ; python_version < "3.7"
+matplotlib ; python_version >= "3.7"

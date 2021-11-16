@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { PlacementConstraint } from 'common/trainingService';
-import { getLogger, Logger } from '../../common/log';
-import { randomSelect } from '../../common/utils';
+import { getLogger, Logger } from 'common/log';
+import { randomSelect } from 'common/utils';
 import { GPUInfo, ScheduleResultType } from '../common/gpuData';
 import { EnvironmentInformation } from './environment';
 import { RemoteMachineEnvironmentInformation } from './remote/remoteConfig';
@@ -117,8 +115,8 @@ export class GpuScheduler {
             const gpus = constraint.gpus as Array<[string, number]>;
             const selectedHost = gpus[0][0];
 
-            const hostsOfConstraint: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] === selectedHost);
-            if (hostsOfConstraint.length > 1) {
+            const differentHosts: Array<[string, number]> = gpus.filter((gpuTuple: [string, number]) => gpuTuple[0] != selectedHost);
+            if (differentHosts.length >= 1) {
                 //TODO: remove this constraint when supporting multi-host placement
                 throw new Error("Device constraint does not support using multiple hosts")
             }
@@ -232,6 +230,7 @@ export class GpuScheduler {
                 assert(false, 'gpuInfos is undefined');
             }
         }
+        return undefined;
     }
 
     /**

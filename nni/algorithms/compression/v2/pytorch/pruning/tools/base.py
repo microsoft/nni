@@ -1,20 +1,21 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from datetime import datetime
 import logging
+from pathlib import Path
 import types
-from typing import List, Dict, Optional, Callable, Union
+from typing import List, Dict, Tuple, Optional, Callable, Union
 
+import json_tricks
 import torch
 from torch import Tensor
 from torch.nn import Module
 from torch.optim import Optimizer
 
-from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo
+from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo, Task, TaskResult
 
 _logger = logging.getLogger(__name__)
-
-__all__ = ['DataCollector', 'TrainerBasedDataCollector', 'HookCollectorInfo', 'MetricsCalculator', 'SparsityAllocator']
 
 
 class DataCollector:
@@ -371,7 +372,7 @@ class SparsityAllocator:
         Returns
         -------
         Dict[str, Tensor]
-            The key is `weight_mask` or `bias_mask`, value is the final mask.
+            The key is `weight` or `bias`, value is the final mask.
         """
         weight_mask = mask.clone()
 
@@ -390,7 +391,7 @@ class SparsityAllocator:
 
         if self.dim is None:
             assert weight_mask.size() == weight_size
-            expand_mask = {'weight_mask': weight_mask}
+            expand_mask = {'weight': weight_mask}
         else:
             # expand mask to weight size with dim
             assert len(weight_mask.size()) == len(self.dim)
@@ -400,15 +401,19 @@ class SparsityAllocator:
             [idxs.pop(i) for i in reversed(self.dim)]
             for i in idxs:
                 weight_mask = weight_mask.unsqueeze(i)
-            expand_mask = {'weight_mask': weight_mask.expand(weight_size).clone()}
+            expand_mask = {'weight': weight_mask.expand(weight_size).clone()}
             # NOTE: assume we only mask output, so the mask and bias have a one-to-one correspondence.
             # If we support more kind of masks, this place need refactor.
             if wrapper.bias_mask is not None and weight_mask.size() == wrapper.bias_mask.size():
-                expand_mask['bias_mask'] = weight_mask.clone()
+                expand_mask['bias'] = weight_mask.clone()
         return expand_mask
 
     def _compress_mask(self, mask: Tensor) -> Tensor:
         """
+        This function will reduce the mask with `self.dim` and `self.block_sparse_size`.
+        e.g., a mask tensor with size [50, 60, 70], self.dim is (0, 1), self.block_sparse_size is [10, 10].
+        Then, the reduced mask size is [50 / 10, 60 / 10] => [5, 6].
+
         Parameters
         ----------
         name
@@ -419,7 +424,7 @@ class SparsityAllocator:
         Returns
         -------
         Tensor
-            Reduce the mask with `self.dim` and `self.block_sparse_size`.
+            Reduced mask.
         """
         if self.dim is None or len(mask.size()) == 1:
             mask = mask.clone()
@@ -440,3 +445,130 @@ class SparsityAllocator:
             mask = torch.einsum(ein_expression, mask, torch.ones(self.block_sparse_size).to(mask.device))
 
         return (mask != 0).type_as(mask)
+
+
+class TaskGenerator:
+    """
+    This class used to generate config list for pruner in each iteration.
+    """
+    def __init__(self, origin_model: Module, origin_masks: Dict[str, Dict[str, Tensor]] = {},
+                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
+        """
+        Parameters
+        ----------
+        origin_model
+            The origin unwrapped pytorch model to be pruned.
+        origin_masks
+            The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
+        origin_config_list
+            The origin config list provided by the user. Note that this config_list is directly config the origin model.
+            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        log_dir
+            The log directory use to saving the task generator log.
+        keep_intermediate_result
+            If keeping the intermediate result, including intermediate model and masks during each iteration.
+        """
+        assert isinstance(origin_model, Module), 'Only support pytorch module.'
+
+        self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
+        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+        self._keep_intermediate_result = keep_intermediate_result
+        self._intermediate_result_dir = Path(self._log_dir_root, 'intermediate_result')
+        self._intermediate_result_dir.mkdir(parents=True, exist_ok=True)
+
+        # save origin data in {log_dir}/origin
+        self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
+        self._origin_masks_path = Path(self._log_dir_root, 'origin', 'masks.pth')
+        self._origin_config_list_path = Path(self._log_dir_root, 'origin', 'config_list.json')
+        self._save_data('origin', origin_model, origin_masks, origin_config_list)
+
+        self._task_id_candidate = 0
+        self._tasks: Dict[int, Task] = {}
+        self._pending_tasks: List[Task] = self.init_pending_tasks()
+
+        self._best_score = None
+        self._best_task_id = None
+
+        # dump self._tasks into {log_dir}/.tasks
+        self._dump_tasks_info()
+
+    def _dump_tasks_info(self):
+        tasks = {task_id: task.to_dict() for task_id, task in self._tasks.items()}
+        with Path(self._log_dir_root, '.tasks').open('w') as f:
+            json_tricks.dump(tasks, f, indent=4)
+
+    def _save_data(self, folder_name: str, model: Module, masks: Dict[str, Dict[str, Tensor]], config_list: List[Dict]):
+        Path(self._log_dir_root, folder_name).mkdir(parents=True, exist_ok=True)
+        torch.save(model, Path(self._log_dir_root, folder_name, 'model.pth'))
+        torch.save(masks, Path(self._log_dir_root, folder_name, 'masks.pth'))
+        with Path(self._log_dir_root, folder_name, 'config_list.json').open('w') as f:
+            json_tricks.dump(config_list, f, indent=4)
+
+    def update_best_result(self, task_result: TaskResult):
+        score = task_result.score
+        task_id = task_result.task_id
+        task = self._tasks[task_id]
+        task.score = score
+        if self._best_score is None or score > self._best_score:
+            self._best_score = score
+            self._best_task_id = task_id
+            with Path(task.config_list_path).open('r') as fr:
+                best_config_list = json_tricks.load(fr)
+            self._save_data('best_result', task_result.compact_model, task_result.compact_model_masks, best_config_list)
+
+    def init_pending_tasks(self) -> List[Task]:
+        raise NotImplementedError()
+
+    def generate_tasks(self, task_result: TaskResult) -> List[Task]:
+        raise NotImplementedError()
+
+    def receive_task_result(self, task_result: TaskResult):
+        """
+        Parameters
+        ----------
+        task_result
+            The result of the task.
+        """
+        task_id = task_result.task_id
+        assert task_id in self._tasks, 'Task {} does not exist.'.format(task_id)
+        self.update_best_result(task_result)
+
+        self._tasks[task_id].status = 'Finished'
+        self._dump_tasks_info()
+
+        self._pending_tasks.extend(self.generate_tasks(task_result))
+        self._dump_tasks_info()
+
+        if not self._keep_intermediate_result:
+            self._tasks[task_id].clean_up()
+
+    def next(self) -> Optional[Task]:
+        """
+        Returns
+        -------
+        Optional[Task]
+            Return the next task from pending tasks.
+        """
+        if len(self._pending_tasks) == 0:
+            return None
+        else:
+            task = self._pending_tasks.pop(0)
+            task.status = 'Running'
+            self._dump_tasks_info()
+            return task
+
+    def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
+        """
+        Returns
+        -------
+        Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]
+            If self._best_task_id is not None,
+            return best task id, best compact model, masks on the compact model, score, config list used in this task.
+        """
+        if self._best_task_id is not None:
+            compact_model = torch.load(Path(self._log_dir_root, 'best_result', 'model.pth'))
+            compact_model_masks = torch.load(Path(self._log_dir_root, 'best_result', 'masks.pth'))
+            with Path(self._log_dir_root, 'best_result', 'config_list.json').open('r') as f:
+                config_list = json_tricks.load(f)
+            return self._best_task_id, compact_model, compact_model_masks, self._best_score, config_list
+        return None

@@ -9,6 +9,7 @@ from typing import Dict, NoReturn, Union, Optional, List, Type
 import pytorch_lightning as pl
 import torch.nn as nn
 import torch.optim as optim
+import torchmetrics
 from torch.utils.data import DataLoader
 
 import nni
@@ -140,7 +141,7 @@ def _check_dataloader(dataloader):
 ### The following are some commonly used Lightning modules ###
 
 class _SupervisedLearningModule(LightningModule):
-    def __init__(self, criterion: nn.Module, metrics: Dict[str, pl.metrics.Metric],
+    def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
                  learning_rate: float = 0.001,
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam,
@@ -213,7 +214,7 @@ class _SupervisedLearningModule(LightningModule):
             return {name: self.trainer.callback_metrics['val_' + name].item() for name in self.metrics}
 
 
-class _AccuracyWithLogits(pl.metrics.Accuracy):
+class _AccuracyWithLogits(torchmetrics.Accuracy):
     def update(self, pred, target):
         return super().update(nn.functional.softmax(pred), target)
 
@@ -278,7 +279,7 @@ class _RegressionModule(_SupervisedLearningModule):
                  weight_decay: float = 0.,
                  optimizer: optim.Optimizer = optim.Adam,
                  export_onnx: bool = True):
-        super().__init__(criterion, {'mse': pl.metrics.MeanSquaredError},
+        super().__init__(criterion, {'mse': torchmetrics.MeanSquaredError},
                          learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer,
                          export_onnx=export_onnx)
 

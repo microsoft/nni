@@ -3,41 +3,38 @@
 
 import atexit
 import logging
+import os
+import socket
 import time
 from dataclasses import dataclass
-import os
 from pathlib import Path
-import socket
 from subprocess import Popen
 from threading import Thread
-import time
 from typing import Any, List, Optional, Union
 
 import colorama
 import psutil
-
 import torch
 import torch.nn as nn
 import nni.runtime.log
-from nni.experiment import Experiment, TrainingServiceConfig
-from nni.experiment import management, launcher, rest
+from nni.common.device import GPUDevice
+from nni.experiment import Experiment, TrainingServiceConfig, launcher, management, rest
 from nni.experiment.config import util
 from nni.experiment.config.base import ConfigBase, PathLike
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
-from nni.common.device import GPUDevice
 
 from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
 from ..execution.python import get_mutation_dict
-from ..graph import Model, Evaluator
+from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
-from ..nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
-from ..strategy import BaseStrategy
+from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
 from ..oneshot.interface import BaseOneShotTrainer
+from ..strategy import BaseStrategy
 
 _logger = logging.getLogger(__name__)
 
@@ -66,11 +63,14 @@ class RetiariiExeConfig(ConfigBase):
     # input used in GraphConverterWithShape. Currently support shape tuple only.
     dummy_input: Optional[List[int]] = None
 
+    # input used for benchmark engine.
+    benchmark: Optional[str] = None
+
     def __init__(self, training_service_platform: Optional[str] = None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(platform = training_service_platform)
+            self.training_service = util.training_service_config_factory(platform=training_service_platform)
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
 
     def __setattr__(self, key, value):
@@ -82,7 +82,7 @@ class RetiariiExeConfig(ConfigBase):
         if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
-            assert value in ['base', 'py', 'cgo'], f'The specified execution engine "{value}" is not supported.'
+            assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
             self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry ' + value
         self.__dict__[key] = value
 
@@ -113,6 +113,7 @@ _validation_rules = {
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
 }
+
 
 def preprocess_model(base_model, trainer, applied_mutators, full_ir=True, dummy_input=None):
     # TODO: this logic might need to be refactored into execution engine
@@ -186,8 +187,10 @@ class RetiariiExperiment(Experiment):
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
-            self.base_model, self.trainer, self.applied_mutators, full_ir=self.config.execution_engine != 'py',
-            dummy_input=self.config.dummy_input)
+            self.base_model, self.trainer, self.applied_mutators,
+            full_ir=self.config.execution_engine not in ['py', 'benchmark'],
+            dummy_input=self.config.dummy_input
+        )
 
         _logger.info('Start strategy...')
         self.strategy.run(base_model_ir, self.applied_mutators)
@@ -215,7 +218,9 @@ class RetiariiExperiment(Experiment):
             engine = BaseExecutionEngine()
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
-            # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
+
+            assert self.config.training_service.platform == 'remote', \
+                "CGO execution engine currently only supports remote training service"
             assert self.config.batch_waiting_time is not None
             devices = self._construct_devices()
             engine = CGOExecutionEngine(devices,
@@ -224,6 +229,9 @@ class RetiariiExperiment(Experiment):
         elif self.config.execution_engine == 'py':
             from ..execution.python import PurePythonExecutionEngine
             engine = PurePythonExecutionEngine()
+        elif self.config.execution_engine == 'benchmark':
+            from ..execution.benchmark import BenchmarkExecutionEngine
+            engine = BenchmarkExecutionEngine(self.config.benchmark)
         set_execution_engine(engine)
 
         self.id = management.generate_experiment_id()
@@ -265,14 +273,13 @@ class RetiariiExperiment(Experiment):
     def _construct_devices(self):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
-            for machine_idx, machine in enumerate(self.config.training_service.machine_list):
+            for machine in self.config.training_service.machine_list:
+                assert machine.gpu_indices is not None, \
+                    'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
-        else:
-            for gpu_idx in self.config.training_service.gpu_indices:
-                devices.append(GPUDevice('local', gpu_idx))
         return devices
-    
+
     def _create_dispatcher(self):
         return self._dispatcher
 

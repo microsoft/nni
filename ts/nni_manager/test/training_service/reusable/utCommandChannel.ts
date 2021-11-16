@@ -26,7 +26,7 @@ export class UtCommandChannel extends CommandChannel {
         return this.receivedCommands.shift();
     }
 
-    public async config(_key: string, value: any): Promise<void> {
+    public async config(_key: string, _value: any): Promise<void> {
         // do nothing
     }
 

@@ -11,7 +11,7 @@ import argparse
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('exec', choices=['base', 'py', 'cgo'])
+    parser.add_argument('exec', choices=['base', 'py', 'cgo', 'benchmark'])
     args = parser.parse_args()
     if args.exec == 'base':
         from .execution.base import BaseExecutionEngine
@@ -22,4 +22,7 @@ if __name__ == '__main__':
     elif args.exec == 'py':
         from .execution.python import PurePythonExecutionEngine
         engine = PurePythonExecutionEngine
+    elif args.exec == 'benchmark':
+        from .execution.benchmark import BenchmarkExecutionEngine
+        engine = BenchmarkExecutionEngine
     engine.trial_execute_graph()

@@ -204,7 +204,7 @@ class MockedDataStore implements DataStore {
         return Promise.resolve(ret);
     }
 
-    public getTrialJob(trialJobId: string): Promise<TrialJobInfo> {
+    public getTrialJob(_trialJobId: string): Promise<TrialJobInfo> {
         return Promise.resolve({
             trialJobId: '1234',
             status: 'SUCCEEDED',

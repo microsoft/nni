@@ -31,12 +31,9 @@ tuners:
   classArgsValidator: nni.algorithms.hpo.hyperopt_tuner.HyperoptClassArgsValidator
   className: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
   source: nni
-- acceptClassArgs: false
-  builtinName: Random
-  classArgs:
-    algorithm_name: random_search
-  classArgsValidator: nni.algorithms.hpo.hyperopt_tuner.HyperoptClassArgsValidator
-  className: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
+- builtinName: Random
+  className: nni.algorithms.hpo.random_tuner.RandomTuner
+  classArgsValidator: nni.algorithms.hpo.random_tuner.RandomClassArgsValidator
   source: nni
 - builtinName: Anneal
   classArgs:

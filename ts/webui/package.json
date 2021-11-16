@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "license": "MIT",
   "dependencies": {
-    "axios": "^0.21.1",
+    "axios": "^0.21.2",
     "babel-jest": "^27.0.2",
     "babel-loader": "^8.2.2",
     "babel-plugin-named-asset-import": "^0.3.2",
