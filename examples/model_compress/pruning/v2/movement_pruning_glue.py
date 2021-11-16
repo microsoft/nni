@@ -105,7 +105,7 @@ if __name__ == '__main__':
     # op_names.extend(["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(0, 12)])
     # op_names.extend(["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(0, 12)])
 
-    config_list = [{'op_types': ['Linear'], 'op_partial_name': ['bert.encoder'], 'sparsity': 0.9}]
+    config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
     pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 6, 5400, 120000)
