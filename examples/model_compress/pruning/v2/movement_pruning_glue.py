@@ -30,6 +30,8 @@ task_to_keys = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
+gradient_accumulation_steps = 2
+
 def criterion(input, target):
     return input.loss
 
@@ -37,15 +39,16 @@ def trainer(model, optimizer, criterion, train_dataloader):
     model.train()
     counter = 0
     for batch in tqdm(train_dataloader):
+        counter += 1
         batch.to(device)
         optimizer.zero_grad()
         outputs = model(**batch)
         loss = criterion(outputs, None)
         loss.backward()
-        optimizer.step()
-        counter += 1
-        if counter % 5000 == 0:
-            print('Step {}: {}'.format(counter, evaluator(model, metric, is_regression, validate_dataloader)))
+        if counter % gradient_accumulation_steps == 0 or counter == len(train_dataloader):
+            optimizer.step()
+        if counter % 10000 == 0:
+            print('Step {}: {}'.format(counter // gradient_accumulation_steps, evaluator(model, metric, is_regression, validate_dataloader)))
 
 def evaluator(model, metric, is_regression, eval_dataloader):
     model.eval()
@@ -63,8 +66,8 @@ if __name__ == '__main__':
     task_name = 'mnli'
     is_regression = False
     num_labels = 1 if is_regression else (3 if task_name == 'mnli' else 2)
-    train_batch_size = 16
-    eval_batch_size = 16
+    train_batch_size = 8
+    eval_batch_size = 8
 
     set_seed(1024)
 
@@ -99,11 +102,6 @@ if __name__ == '__main__':
     model = BertForSequenceClassification.from_pretrained('bert-base-cased', num_labels=num_labels).to(device)
 
     print('Initial: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
-
-    # op_names = []
-    # op_names.extend(["bert.encoder.layer.{}.attention.self.query".format(i) for i in range(0, 12)])
-    # op_names.extend(["bert.encoder.layer.{}.attention.self.key".format(i) for i in range(0, 12)])
-    # op_names.extend(["bert.encoder.layer.{}.attention.self.value".format(i) for i in range(0, 12)])
 
     config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
