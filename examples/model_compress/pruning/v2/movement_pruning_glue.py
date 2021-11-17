@@ -30,7 +30,7 @@ task_to_keys = {
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-gradient_accumulation_steps = 2
+gradient_accumulation_steps = 16
 
 def criterion(input, target):
     return input.loss
@@ -44,10 +44,11 @@ def trainer(model, optimizer, criterion, train_dataloader):
         optimizer.zero_grad()
         outputs = model(**batch)
         loss = criterion(outputs, None)
+        loss = loss / gradient_accumulation_steps
         loss.backward()
         if counter % gradient_accumulation_steps == 0 or counter == len(train_dataloader):
             optimizer.step()
-        if counter % 10000 == 0:
+        if counter % 16000 == 0:
             print('Step {}: {}'.format(counter // gradient_accumulation_steps, evaluator(model, metric, is_regression, validate_dataloader)))
 
 def evaluator(model, metric, is_regression, eval_dataloader):
@@ -106,7 +107,7 @@ if __name__ == '__main__':
     config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 6, 5400, 120000)
+    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
