@@ -26,22 +26,22 @@ _logger = logging.getLogger(__name__)
 
 
 class PrunerScoredModuleWrapper(Module):
-    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
-        """
-        Wrap an module to enable data parallel, forward method customization and buffer registeration.
-        Different from `PrunerModuleWrapper`, `PrunerScoredModuleWrapper` will record the gradient.
+    """
+    Wrap an module to enable data parallel, forward method customization and buffer registeration.
+    Different from `PrunerModuleWrapper`, `PrunerScoredModuleWrapper` will record the gradient.
 
-        Parameters
-        ----------
-        module
-            The module user wants to compress.
-        config
-            The configurations that users specify for compression.
-        module_name
-            The name of the module to compress, wrapper module shares same name.
-        pruner
-            The pruner used to calculate mask.
-        """
+    Parameters
+    ----------
+    module
+        The module user wants to compress.
+    config
+        The configurations that users specify for compression.
+    module_name
+        The name of the module to compress, wrapper module shares same name.
+    pruner
+        The pruner used to calculate mask.
+    """
+    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
         super().__init__()
         # origin layer information
         self.module = module
@@ -66,6 +66,10 @@ class PrunerScoredModuleWrapper(Module):
             self.register_buffer("bias_mask", None)
 
     def _weight2buffer(self):
+        """
+        When using this wrapper to inference, call `_weight2buffer()` to make original weight untrainable.
+        The best place to call this function is in `Pruner._wrap_model()`.
+        """
         delattr(self.module, 'weight')
         self.module.register_buffer('weight', self.weight.data)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
@@ -73,6 +77,10 @@ class PrunerScoredModuleWrapper(Module):
             self.module.register_buffer('bias', self.bias.data)
 
     def _weight2parameter(self):
+        """
+        When don't need to record score or need to export the model, call `_weight2parameter()` to make the original weight trainable.
+        The best place to call this function is in `Pruner._unwrap_model()`.
+        """
         delattr(self.module, 'weight')
         self.module.weight = Parameter(torch.empty(self.weight.size()))
         self.module.weight.data = torch.mul(self.weight, self.weight_mask)
@@ -90,6 +98,9 @@ class PrunerScoredModuleWrapper(Module):
 
 
 class _StraightThrough(autograd.Function):
+    """
+    Straight through the gradient to the score, then the score = initial_score + sum(-lr * grad(weight) * weight).
+    """
     @staticmethod
     def forward(self, score, masks):
         return masks
@@ -101,9 +112,12 @@ class _StraightThrough(autograd.Function):
 
 class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
-    Collect all wrapper weight score.
+    Collect all weight_score in wrappers as data used to calculate metrics.
     """
     def _reset_optimizer(self):
+        """
+        Weed out the weight_score from the parameters passed to optimizer, guaranteed to load the optimizer state dict.
+        """
         if self._origin_optimizer_cls is not None:
             optimizer_grouped_parameters = [{
                 "params": [p for n, p in self.compressor.bound_model.named_parameters() if "weight_score" not in n and p.requires_grad]
@@ -127,6 +141,53 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
 
 
 class MovementPruner(BasicPruner):
+    """
+    Parameters
+    ----------
+    model : torch.nn.Module
+        Model to be pruned.
+    config_list : List[Dict]
+        Supported keys:
+            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
+            - sparsity_per_layer : Equals to sparsity.
+            - op_types : Operation types to prune.
+            - op_names : Operation names to prune.
+            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    trainer : Callable[[Module, Optimizer, Callable]
+        A callable function used to train model or just inference. Take model, optimizer, criterion as input.
+        The model will be trained or inferenced `training_epochs` epochs.
+
+        Example::
+
+            def trainer(model: Module, optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor]):
+                training = model.training
+                model.train(mode=True)
+                device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+                for batch_idx, (data, target) in enumerate(train_loader):
+                    data, target = data.to(device), target.to(device)
+                    optimizer.zero_grad()
+                    output = model(data)
+                    loss = criterion(output, target)
+                    loss.backward()
+                    # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
+                    optimizer.step()
+                model.train(mode=training)
+    optimizer : torch.optim.Optimizer
+        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
+        so do not use this optimizer in other places.
+    criterion : Callable[[Tensor, Tensor], Tensor]
+        The criterion function used in trainer. Take model output and target value as input, and return the loss.
+    training_epochs : int
+        The total epoch number for training the model.
+        Make sure the total `optimizer.step()` in `training_epochs` is bigger than `cool_down_beginning_step`.
+    warm_up_step : int
+        The total `optimizer.step()` number before start pruning for warm up.
+        Make sure `warm_up_step` is smaller than `cool_down_beginning_step`.
+    cool_down_beginning_step: int
+        The number of steps at which sparsity stops growing, note that the sparsity stop growing doesn't mean masks not changed.
+        The sparsity after each `optimizer.step()` is:
+        total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
+    """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
@@ -136,7 +197,7 @@ class MovementPruner(BasicPruner):
         self.training_epochs = training_epochs
         self.warm_up_step = warm_up_step
         self.cool_down_beginning_step = cool_down_beginning_step
-        assert self.warm_up_step < self.cool_down_beginning_step
+        assert self.warm_up_step < self.cool_down_beginning_step, '`warm_up_step` should smaller than `cool_down_beginning_step`'
         super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
@@ -160,7 +221,7 @@ class MovementPruner(BasicPruner):
         if self.sparsity_allocator is None:
             self.sparsity_allocator = NormalSparsityAllocator(self, continuous_mask=False)
 
-        # use a SGD to update the weight_score
+        # use Adam to update the weight_score
         params = [{"params": [p for n, p in self.bound_model.named_parameters() if "weight_score" in n and p.requires_grad]}]
         optimizer = Adam(params, 1e-2)
         self.step_counter = 0
@@ -187,6 +248,7 @@ class MovementPruner(BasicPruner):
     def _wrap_model(self):
         """
         Wrap all modules that needed to be compressed.
+        Different from the parent function, call `wrapper._weight2buffer()` after replace the origin module to wrapper.
         """
         if not self.is_wrapped:
             for _, wrapper in reversed(self.get_modules_wrapper().items()):
@@ -197,6 +259,7 @@ class MovementPruner(BasicPruner):
     def _unwrap_model(self):
         """
         Unwrap all modules that needed to be compressed.
+        Different from the parent function, call `wrapper._weight2parameter()` after replace the wrapper to origin module.
         """
         if self.is_wrapped:
             for _, wrapper in self.get_modules_wrapper().items():
@@ -207,6 +270,7 @@ class MovementPruner(BasicPruner):
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
         Create a wrapper module to replace the original one.
+        Different from the parent function, use `PrunerScoredModuleWrapper` instead of `PrunerModuleWrapper`.
 
         Parameters
         ----------
