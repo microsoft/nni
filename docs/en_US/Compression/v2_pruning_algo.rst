@@ -19,6 +19,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Activation Mean Rank Pruner <#activation-mean-rank-pruner>`__
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
+* `Movement Pruner <#movement-pruner>`__
 
 **Iterative Pruner**
 
@@ -272,6 +273,48 @@ User configuration for ADMM Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
+
+Movement Pruner
+---------------
+
+Movement pruner is an implementation of movement pruning.
+This is a pruning by step algorithm, the masks may change during each step.
+Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
+This means the weight elements moving towards zero will accumulate negative scores, the weight elements moving away from zero will accumulate positive scores.
+The weight elements with low scores will be masked during inference.
+
+The following figure from the paper shows the weight pruning by movement pruning.
+
+.. image:: ../../img/movement_pruning.png
+   :target: ../../img/movement_pruning.png
+   :alt: 
+
+For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+   config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
+   pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
+   masked_model, masks = pruner.compress()
+
+   # ignore the parameters with `weight_score` in name if you want to finetune with masks
+   optimizer_grouped_parameters = [{
+        "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
+   }]
+   optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
+   trainer(model, optimizer, criterion)
+
+
+User configuration for Movement Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.MovementPruner
 
 Linear Pruner
 -------------

@@ -32,6 +32,7 @@ device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 gradient_accumulation_steps = 16
 
+# a fake criterion because huggingface output already has loss
 def criterion(input, target):
     return input.loss
 
@@ -43,6 +44,7 @@ def trainer(model, optimizer, criterion, train_dataloader):
         batch.to(device)
         optimizer.zero_grad()
         outputs = model(**batch)
+        # pruner may wrap the criterion, for example, loss = origin_loss + norm(weight), so call criterion to get loss here
         loss = criterion(outputs, None)
         loss = loss / gradient_accumulation_steps
         loss.backward()
@@ -114,6 +116,7 @@ if __name__ == '__main__':
 
     print('Final: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
 
+    # ignore the parameters with `weight_score` in name if you want to finetune with masks
     optimizer_grouped_parameters = [{
         "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
     }]
