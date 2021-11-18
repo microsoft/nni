@@ -107,7 +107,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Serializab
     Also it records extra information about where this object comes from. That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
 
-    If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspect the argument
+    If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
 
     Example:
@@ -219,15 +219,7 @@ def _trace_cls(base, kw_only):
             # calling serializable object init to initialize the full object
             super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True)
 
-    _MISSING = '_missing'
-    for k in functools.WRAPPER_ASSIGNMENTS:
-        # assign magic attributes like __module__, __qualname__, __doc__
-        v = getattr(base, k, _MISSING)
-        if v is not _MISSING:
-            try:
-                setattr(wrapper, k, v)
-            except AttributeError:
-                pass
+    _copy_class_wrapper_attributes(base, wrapper)
 
     return wrapper
 
@@ -240,6 +232,18 @@ def _trace_func(func, kw_only):
         return SerializableObject(func, args, kwargs)
 
     return wrapper
+
+
+def _copy_class_wrapper_attributes(base, wrapper):
+    _MISSING = '_missing'
+    for k in functools.WRAPPER_ASSIGNMENTS:
+        # assign magic attributes like __module__, __qualname__, __doc__
+        v = getattr(base, k, _MISSING)
+        if v is not _MISSING:
+            try:
+                setattr(wrapper, k, v)
+            except AttributeError:
+                pass
 
 
 def _get_arguments_as_dict(func, args, kwargs, kw_only):

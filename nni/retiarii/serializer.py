@@ -9,7 +9,8 @@ from typing import Any
 
 import json_tricks
 
-from .utils import get_importable_name, get_module_name, import_, reset_uid
+from nni.common.serializer import trace, _copy_class_wrapper_attributes
+from .utils import ModelNamespace, get_importable_name, get_module_name, import_, reset_uid, ContextStack, NoContextError, get_current_context
 
 
 def get_init_parameters_or_fail(obj, silently=False):
@@ -148,20 +149,45 @@ def serialize(cls, *args, **kwargs):
 
 def basic_unit(cls):
     """
-    To wrap a module as a basic unit, to stop it from parsing and make it mutate-able.
+    To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
+
+    .. code-block:: python
+
+        @basic_unit
+        class PrimitiveOp(nn.Module):
+            ...
     """
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
-    return serialize_cls(cls)
+
+    cls = trace(cls)
+    cls.__dict__['_nni_basic_unit'] = True
+    return cls
 
 
 def model_wrapper(cls):
     """
-    Wrap the model if you are using pure-python execution engine.
+    Wrap the model if you are using pure-python execution engine. For example
+
+    .. code-block:: python
+
+        @model_wrapper
+        class MyModel(nn.Module):
+            ...
 
     The wrapper serves two purposes:
 
         1. Capture the init parameters of python class so that it can be re-instantiated in another process.
         2. Reset uid in `mutation` namespace so that each model counts from zero. Can be useful in unittest and other multi-model scenarios.
     """
-    return _create_wrapper_cls(cls, reset_mutation_uid=True, stop_parsing=False)
+    import torch.nn as nn
+    assert issubclass(cls, nn.Module)
+
+    wrapper = trace(cls)
+
+    class reset_wrapper(wrapper):
+        def __init__(self, *args, **kwargs):
+            with ModelNamespace():
+                super().__init__(*args, **kwargs)
+
+    _copy_class_wrapper_attributes(wrapper, reset_wrapper)
