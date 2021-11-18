@@ -79,6 +79,8 @@ class ExperimentConfig(ConfigBase):
     def __init__(self, training_service_platform=None, **kwargs):
         super().__init__(**kwargs)
         if training_service_platform is not None:
+            # the user chose to init with `config = ExperimentConfig('local')` and set fields later
+            # we need to create empty training service & algorithm configs to support `config.tuner.name = 'random'`
             assert utils.is_missing(self.training_service)
             if isinstance(training_service_platform, list):
                 self.training_service = [utils.training_service_config_factory(ts) for ts in training_service_platform]
@@ -88,6 +90,12 @@ class ExperimentConfig(ConfigBase):
                 # add placeholder items, so users can write `config.tuner.name = 'random'`
                 if getattr(self, algo_type) is None:
                     setattr(self, algo_type, _AlgorithmConfig(name='_none_'))
+        elif not utils.is_missing(self.training_service):
+            # training service is set via json or constructor
+            if isinstance(self.training_service, list):
+                self.training_service = [utils.load_training_service_config(ts) for ts in self.training_service]
+            else:
+                self.training_service = utils.load_training_service_config(self.training_service)
 
     def _canonicalize(self, _parents):
         self.max_experiment_duration = utils.parse_time(self.max_experiment_duration)
