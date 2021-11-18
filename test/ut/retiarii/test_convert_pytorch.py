@@ -1262,6 +1262,3 @@ class TestPytorch(unittest.TestCase, ConvertMixin):
 
 class TestPytorchWithShape(TestPytorch, ConvertWithShapeMixin):
     pass
-
-if __name__ == '__main__':
-    unittest.main()
