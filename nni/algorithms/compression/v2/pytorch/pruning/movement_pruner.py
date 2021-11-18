@@ -3,7 +3,6 @@
 
 from copy import deepcopy
 import logging
-from schema import Optional as SchemaOptional
 from typing import Dict, List, Tuple, Callable
 
 import torch
