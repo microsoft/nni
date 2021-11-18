@@ -34,10 +34,11 @@ class Operation:
         Arbitrary key-value parameters (e.g. kernel_size).
     """
 
-    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
+    def __init__(self, type_name: str, parameters: Dict[str, Any] = {}, _internal: bool = False, attributes: Dict[str, Any] = {}):
         assert _internal, '`Operation()` is private, use `Operation.new()` instead'
         self.type: str = type_name
         self.parameters: Dict[str, Any] = parameters
+        self.attributes: Dict[str, Any] = attributes
 
     def to_init_code(self, field: str) -> str:
         raise NotImplementedError()
@@ -52,9 +53,10 @@ class Operation:
         return True
 
     @staticmethod
-    def new(type_name: str, parameters: Dict[str, Any] = None, cell_name: str = None) -> 'Operation':
-        if parameters is None:
-            parameters = {}
+    def new(type_name: str, parameters: Dict[str, Any] = None, cell_name: str = None,
+            attributes: Dict[str, Any] = None) -> 'Operation':
+        parameters = parameters or {}
+        attributes = attributes or {}
         if type_name == '_cell':
             # NOTE: cell_name is the same as its Node's name, when the cell is wrapped within the node
             return Cell(cell_name, parameters)
@@ -67,7 +69,7 @@ class Operation:
                 cls = TensorFlowOperation._find_subclass(type_name)
             else:
                 raise ValueError(f'Unsupported framework: {debug_configs.framework}')
-            return cls(type_name, parameters, _internal=True)
+            return cls(type_name, parameters, _internal=True, attributes=attributes)
 
     @classmethod
     def _find_subclass(cls, subclass_name):
@@ -205,12 +207,11 @@ class Cell(PyTorchOperation):
         No real usage. Exists for compatibility with base class.
     """
 
-    def __init__(self, cell_name: str, parameters: Dict[str, Any] = None):
+    def __init__(self, cell_name: str, parameters: Dict[str, Any] = None, attributes: Dict[str, Any] = None):
         self.type = '_cell'
         self.cell_name = cell_name
-        if parameters is None:
-            parameters = {}
-        self.parameters = parameters
+        self.parameters = parameters or {}
+        self.attributes = attributes or {}
 
     def _to_class_name(self):
         # TODO: ugly, think about how to refactor this part

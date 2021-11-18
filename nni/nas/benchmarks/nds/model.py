@@ -1,12 +1,9 @@
-import os
+from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
+from playhouse.sqlite_ext import JSONField
 
-from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
-from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
-
-from nni.nas.benchmarks.constants import DATABASE_DIR
 from nni.nas.benchmarks.utils import json_dumps
 
-db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nds.db'), autoconnect=True)
+proxy = Proxy()
 
 
 class NdsTrialConfig(Model):
@@ -67,7 +64,7 @@ class NdsTrialConfig(Model):
     num_epochs = IntegerField()
 
     class Meta:
-        database = db
+        database = proxy
 
 
 class NdsTrialStats(Model):
@@ -112,7 +109,7 @@ class NdsTrialStats(Model):
     iter_time = FloatField()
 
     class Meta:
-        database = db
+        database = proxy
 
 
 class NdsIntermediateStats(Model):
@@ -140,4 +137,4 @@ class NdsIntermediateStats(Model):
     test_acc = FloatField()
 
     class Meta:
-        database = db
+        database = proxy

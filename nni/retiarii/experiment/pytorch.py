@@ -219,7 +219,8 @@ class RetiariiExperiment(Experiment):
         elif self.config.execution_engine == 'cgo':
             from ..execution.cgo_engine import CGOExecutionEngine
 
-            # assert self.config.trial_gpu_number==1, "trial_gpu_number must be 1 to use CGOExecutionEngine"
+            assert self.config.training_service.platform == 'remote', \
+                "CGO execution engine currently only supports remote training service"
             assert self.config.batch_waiting_time is not None
             devices = self._construct_devices()
             engine = CGOExecutionEngine(devices,
@@ -273,11 +274,10 @@ class RetiariiExperiment(Experiment):
         devices = []
         if hasattr(self.config.training_service, 'machine_list'):
             for machine in self.config.training_service.machine_list:
+                assert machine.gpu_indices is not None, \
+                    'gpu_indices must be set in RemoteMachineConfig for CGO execution engine'
                 for gpu_idx in machine.gpu_indices:
                     devices.append(GPUDevice(machine.host, gpu_idx))
-        else:
-            for gpu_idx in self.config.training_service.gpu_indices:
-                devices.append(GPUDevice('local', gpu_idx))
         return devices
 
     def _create_dispatcher(self):

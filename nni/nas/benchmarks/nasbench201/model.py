@@ -1,12 +1,9 @@
-import os
+from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model, Proxy
+from playhouse.sqlite_ext import JSONField
 
-from peewee import CharField, FloatField, ForeignKeyField, IntegerField, Model
-from playhouse.sqlite_ext import JSONField, SqliteExtDatabase
-
-from nni.nas.benchmarks.constants import DATABASE_DIR
 from nni.nas.benchmarks.utils import json_dumps
 
-db = SqliteExtDatabase(os.path.join(DATABASE_DIR, 'nasbench201.db'), autoconnect=True)
+proxy = Proxy()
 
 
 class Nb201TrialConfig(Model):
@@ -48,7 +45,7 @@ class Nb201TrialConfig(Model):
     ])
 
     class Meta:
-        database = db
+        database = proxy
 
 
 class Nb201TrialStats(Model):
@@ -113,7 +110,7 @@ class Nb201TrialStats(Model):
     ori_test_evaluation_time = FloatField()
 
     class Meta:
-        database = db
+        database = proxy
 
 
 class Nb201IntermediateStats(Model):
@@ -157,4 +154,4 @@ class Nb201IntermediateStats(Model):
     ori_test_loss = FloatField(null=True)
 
     class Meta:
-        database = db
+        database = proxy

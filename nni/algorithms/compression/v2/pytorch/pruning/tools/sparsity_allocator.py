@@ -80,7 +80,7 @@ class GlobalSparsityAllocator(SparsityAllocator):
             stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
             if expend_times > 1:
-                stay_metric = stay_metric.expand(stay_metric_num, int(layer_weight_num / metric.numel())).view(-1)
+                stay_metric = stay_metric.expand(int(layer_weight_num / metric.numel()), stay_metric_num).contiguous().view(-1)
             metric_list.append(stay_metric)
 
         total_prune_num = int(total_sparsity * total_weight_num)
@@ -103,8 +103,10 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
 
     def _get_dependency(self):
         graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
-        self.channel_depen = ChannelDependency(traced_model=graph.trace).dependency_sets
-        self.group_depen = GroupDependency(traced_model=graph.trace).dependency_sets
+        self.pruner._unwrap_model()
+        self.channel_depen = ChannelDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.group_depen = GroupDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.pruner._wrap_model()
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         self._get_dependency()

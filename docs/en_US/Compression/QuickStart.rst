@@ -4,7 +4,6 @@ Quick Start
 ..  toctree::
     :hidden:
 
-    Tutorial <Tutorial>
     Notebook Example <compression_pipeline_example>
 
 
@@ -85,12 +84,16 @@ Step1. Write configuration
        'quant_bits': {
            'weight': 8,
        }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
-       'op_types':['Conv2d', 'Linear']
+       'op_types':['Conv2d', 'Linear'],
+       'quant_dtype': 'int',
+       'quant_scheme': 'per_channel_symmetric'
    }, {
        'quant_types': ['output'],
        'quant_bits': 8,
        'quant_start_step': 7000,
-       'op_types':['ReLU6']
+       'op_types':['ReLU6'],
+       'quant_dtype': 'uint',
+       'quant_scheme': 'per_tensor_affine'
    }]
 
 The specification of configuration can be found `here <./Tutorial.rst#quantization-specific-keys>`__.
