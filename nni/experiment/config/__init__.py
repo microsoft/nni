@@ -1,6 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from .exp_config import ExperimentConfig
+from .training_services import *
+
 # FIXME: temporarily removed to run test case
 
 #from .common import *
