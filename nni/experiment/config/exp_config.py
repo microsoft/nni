@@ -113,7 +113,8 @@ class ExperimentConfig(ConfigBase):
             raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
 
         if self.search_space_file is not None:
-            self.search_space = yaml.safe_load(open(self.search_space_file))
+            with open(self.search_space_file) as ss_file:
+                self.search_space = yaml.safe_load(ss_file)
 
         # to make the error message clear, ideally it should be:
         # `if concurrency < 0: raise ValueError('trial_concurrency ({concurrency}) must greater than 0')`
