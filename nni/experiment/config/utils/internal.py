@@ -12,6 +12,7 @@ import importlib
 import json
 import os.path
 from pathlib import Path
+import socket
 
 import typeguard
 
@@ -152,7 +153,6 @@ def _get_ts_config_class(platform):
 
     # import all custom config classes so they can be found in TrainingServiceConfig.__subclasses__()
     custom_ts_config_path = nni.runtime.config.get_config_file('training_services.json')
-
     with custom_ts_config_path.open() as config_file:
         custom_ts_config = json.load(config_file)
     for custom_ts_pkg in custom_ts_config.keys():
@@ -163,3 +163,12 @@ def _get_ts_config_class(platform):
         if cls.platform == platform:
             return cls
     return None
+
+## misc ##
+
+def get_ipv4_address():
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(('192.0.2.0', 80))
+    addr = s.getsockname()[0]
+    s.close()
+    return addr

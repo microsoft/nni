@@ -1,7 +1,9 @@
-from copy import deepcopy
 import os.path
 
-from nni.experiment.config import ExperimentConfig, LocalConfig
+from nni.experiment.config import ExperimentConfig
+
+def expand_path(path):
+    return os.path.realpath(os.path.join(os.path.dirname(__file__), path))
 
 ## minimal config ##
 
@@ -44,59 +46,50 @@ minimal_canon = {
 
 ## detailed config ##
 
-detailed_json = {
+detailed_canon = {
     'experimentName': 'test case',
-    'searchSpaceFile': 'assets/search_space.json',
+    'searchSpaceFile': expand_path('assets/search_space.json'),
+    'searchSpace': {'a': 1},
     'trialCommand': 'python main.py',
-    'trialCodeDirectory': 'assets',
+    'trialCodeDirectory': expand_path('assets'),
     'trialConcurrency': 2,
     'trialGpuNumber': 1,
-    'maxExperimentDuration': '1.5h',
+    'maxExperimentDuration': 1.5 * 3600,
     'maxTrialNumber': 10,
     'maxTrialDuration': 60,
     'nniManagerIp': '1.2.3.4',
+    'useAnnotation': False,
     'debug': True,
     'logLevel': 'warning',
-    'tunerGpuIndices': 0,
+    'experimentWorkingDirectory': os.path.expanduser('~/nni-experiments'),
+    'tunerGpuIndices': [0],
     'assessor': {
         'name': 'assess',
     },
     'advisor': {
         'className': 'Advisor',
-        'codeDirectory': 'assets',
+        'codeDirectory': expand_path('assets'),
         'classArgs': {'random_seed': 0},
     },
     'trainingService': {
         'platform': 'local',
+        'trialCommand': 'python main.py',
+        'trialCodeDirectory': expand_path('assets'),
+        'trialGpuNumber': 1,
         'useActiveGpu': False,
         'maxTrialNumberPerGpu': 2,
-        'gpuIndices': '1,2',
+        'gpuIndices': [1, 2],
         'reuseMode': True,
     },
     'sharedStorage': {
         'storageType': 'NFS',
-        'localMountPoint': 'assets',
+        'localMountPoint': expand_path('assets'),
         'remoteMountPoint': '/tmp',
         'localMounted': 'nomount',
         'nfsServer': 'nfs.test.case',
         'exportedDirectory': 'root',
     },
 }
-
-detailed_canon = deepcopy(detailed_json)
-detailed_canon['searchSpaceFile'] = os.path.realpath('assets/search_space.json')
-detailed_canon['searchSpace'] = {'a': 1}
-detailed_canon['trialCodeDirectory'] = os.path.realpath('assets')
-detailed_canon['maxExperimentDuration'] = 1.5 * 3600
-detailed_canon['useAnnotation'] = False
-detailed_canon['experimentWorkingDirectory'] = os.path.expanduser('~/nni-experiments')
-detailed_canon['tunerGpuIndices'] = [0]
-detailed_canon['advisor']['codeDirectory'] = os.path.realpath('assets')
-detailed_canon['trainingService']['trialCommand'] = 'python main.py'
-detailed_canon['trainingService']['trialCodeDirectory'] = os.path.realpath('assets')
-detailed_canon['trainingService']['trialGpuNumber'] = 1
-detailed_canon['trainingService']['gpuIndices'] = [1, 2]
-detailed_canon['sharedStorage']['localMountPoint'] = os.path.realpath('assets')
 
 ## test function ##
 
@@ -106,7 +99,7 @@ def test_all():
 
     assert minimal_class.json() == minimal_canon
 
-    detailed = ExperimentConfig(**detailed_json)
+    detailed = ExperimentConfig.load(expand_path('assets/config.yaml'))
     assert detailed.json() == detailed_canon
 
 if __name__ == '__main__':

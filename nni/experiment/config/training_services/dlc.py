@@ -3,7 +3,7 @@
 
 from dataclasses import dataclass
 
-from .common import TrainingServiceConfig
+from ..training_service import TrainingServiceConfig
 
 __all__ = ['DlcConfig']
 
@@ -21,7 +21,3 @@ class DlcConfig(TrainingServiceConfig):
     access_key_secret: str
     local_storage_mount_point: str
     container_storage_mount_point: str
-
-    _validation_rules = {
-        'platform': lambda value: (value == 'dlc', 'cannot be modified')
-    }
