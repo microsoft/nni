@@ -2,12 +2,12 @@
 ==========
 
 安装
-------------
+----
 
 目前NNI支持了 Linux、macOS 和 Windows系统。 其中，Ubuntu 16.04 及更高版本、macOS 10.14.1 和 Windows 10.1809 均经过测试并支持。 在 ``python >= 3.6`` 环境中，只需运行 ``pip install`` 即可完成安装。
 
 Linux 和 macOS
-^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^
 
 .. code-block:: bash
 
@@ -24,11 +24,11 @@ Windows
 
 .. Note:: 如果出现 ``Segmentation fault`` 这样的错误，参考 :doc:`常见问题 <FAQ>` 。
 
-.. Note:: NNI 的系统需求，参考 :doc:`Linux & Mac <InstallationLinux>` 或者 :doc:`Windows <InstallationWin>`. 的安装教程。如果想要使用 docker, 参考 :doc:`如何使用 Docker <HowToUseDocker>`
+.. Note:: NNI 的系统需求，参考 :doc:`Linux & Mac <InstallationLinux>` 或者 :doc:`Windows <InstallationWin>` 的安装教程。如果想要使用 docker, 参考 :doc:`如何使用 Docker <HowToUseDocker>` 。
 
 
 MNIST 上的 "Hello World"
-------------------------------
+------------------------
 
 NNI 是一个能进行自动机器学习实验的工具包。 它可以自动进行获取超参、运行 Trial，测试结果，调优超参的循环。 在这里，将演示如何使用 NNI 帮助找到 MNIST 模型的最佳超参数。
 
@@ -83,11 +83,11 @@ NNI 用来帮助超参调优。它的流程如下：
    1. 编写配置文件，然后使用命令行启动 Experiment；
    2. 直接从 Python 文件中配置并启动 Experiment。
 
-   在本节中，我们将重点介绍第一种实现方式。如果希望使用第二种实现方式，请参考 `教程 <HowToLaunchFromPython.rst>`__\ .
+   在本节中，我们将重点介绍第一种实现方式。如果希望使用第二种实现方式，请参考 `教程 <HowToLaunchFromPython.rst>`__\ 。
 
 
 第一步：修改 ``Trial`` 代码
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 修改 ``Trial`` 代码来从 NNI 获取超参，并返回 NNI 最终结果。
 
@@ -116,11 +116,11 @@ NNI 用来帮助超参调优。它的流程如下：
     +     params = nni.get_next_parameter()
           main(params)
 
-*示例:* :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>`
+*示例：* :githublink:`mnist.py <examples/trials/mnist-pytorch/mnist.py>`
 
 
 第二步：定义搜索空间
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^
 
 编写 YAML 格式的 ``搜索空间`` 文件，包括所有需要搜索的超参的 ``名称`` 和 ``分布`` （离散和连续值均可）。
 
@@ -140,13 +140,13 @@ NNI 用来帮助超参调优。它的流程如下：
          _type: uniform
          _value: [0, 1]
 
-*示例:* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>`
+*示例：* :githublink:`config_detailed.yml <examples/trials/mnist-pytorch/config_detailed.yml>`
 
 也可以使用 JSON 文件来编写搜索空间，并在配置中确认文件路径。关于如何编写搜索空间，可以参考 `教程 <SearchSpaceSpec.rst>`__.
 
 
 第三步：配置 Experiment
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^
 
 除了在第二步中定义的搜索空间，还需要定义 YAML 格式的 ``配置`` 文件，声明 Experiment 的关键信息，例如 Trail 文件，调整算法，最大 Trial 运行次数和最大持续时间等。
 
@@ -168,9 +168,9 @@ Experiment config reference could be found `here <../reference/experiment_config
 
 .. _nniignore:
 
-.. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__ ，了解更多如何编写此文件的详细信息 _。
+.. Note:: 如果要使用远程计算机或集群作为 :doc:`训练平台 <../TrainingService/Overview>`，为了避免产生过大的网络压力，NNI 限制了文件的最大数量为 2000，大小为 300 MB。 如果 codeDir 中包含了过多的文件，可添加 ``.nniignore`` 文件来排除部分，与 ``.gitignore`` 文件用法类似。 参考 `git documentation <https://git-scm.com/docs/gitignore#_pattern_format>`__ ，了解更多如何编写此文件的详细信息。
 
-*示例:* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` 和 :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
+*示例：* :githublink:`config.yml <examples/trials/mnist-pytorch/config.yml>` 和 :githublink:`.nniignore <examples/trials/mnist-pytorch/.nniignore>`
 
 上面的代码都已准备好，并保存在 :githublink:`examples/trials/mnist-pytorch/ <examples/trials/mnist-pytorch>`。
 
@@ -237,7 +237,7 @@ Windows
 
    The Web UI urls are: [Your IP]:8080
 
-在浏览器中打开 ``Web 界面地址`` （即：`` [IP 地址]:8080`` ），就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考 `常见问题 <FAQ.rst>`__。
+在浏览器中打开 ``Web 界面地址`` （即： `` [IP 地址]:8080`` ），就可以看到 Experiment 的详细信息，以及所有的 Trial 任务。 如果无法打开终端中的 Web 界面链接，可以参考 `常见问题 <FAQ.rst>`__。
 
 
 查看概要页面
