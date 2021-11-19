@@ -66,4 +66,4 @@ if __name__ == "__main__":
                                 args.epochs, train_loader, valid_loader,
                                 batch_size=args.batch_size,
                                 log_frequency=args.log_frequency, workers=args.workers)
-    trainer.train()
+    trainer.fit()

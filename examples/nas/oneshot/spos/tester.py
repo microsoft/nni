@@ -12,7 +12,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from nni.algorithms.nas.pytorch.classic_nas import get_and_apply_next_architecture
-from nni.nas.pytorch.utils import AverageMeterGroup
+from nni.retiarii.oneshot.pytorch.utils import AverageMeterGroup
 
 from dataloader import get_imagenet_iter_dali
 from network import ShuffleNetV2OneShot, load_and_parse_state_dict
