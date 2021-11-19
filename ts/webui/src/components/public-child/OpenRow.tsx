@@ -8,6 +8,7 @@ import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../modals/MessageInfo';
+import { TeachingBubbleRetiarii } from '../modals/Bubble';
 import '../../static/style/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
@@ -20,6 +21,7 @@ interface OpenRowState {
     typeInfo: string;
     info: string;
     isHidenInfo: boolean;
+    isHidenRetiaParam: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
@@ -28,12 +30,17 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         this.state = {
             typeInfo: '',
             info: '',
-            isHidenInfo: true
+            isHidenInfo: true,
+            isHidenRetiaParam: true
         };
     }
 
     hideMessageInfo = (): void => {
         this.setState(() => ({ isHidenInfo: true }));
+    };
+
+    hideRetiaParam = (): void => {
+        this.setState(() => ({ isHidenRetiaParam: false }));
     };
 
     /**
@@ -70,6 +77,9 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || "This trial's log path is not available.";
+        const originParameters = JSON.parse(JSON.stringify(trial.description.parameters));
+        const isHasVisualHyperParams = '_visual_hyper_params_' in originParameters;
+        const showParameters = isHasVisualHyperParams ? originParameters._visual_hyper_params_ : originParameters;
         return (
             <Stack className='openRow'>
                 <Stack className='openRowContent'>
@@ -82,7 +92,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true} // default expandNode
                                             getItemString={(): null => null} // remove the {} items
-                                            data={trial.description.parameters}
+                                            data={showParameters}
                                         />
                                     </Stack>
                                     <Stack horizontal className='copy'>
@@ -93,6 +103,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         />
                                         {/* copy success | failed message info */}
                                         {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
+                                        {isHasVisualHyperParams && <TeachingBubbleRetiarii retiariiParam={trial.description.parameters}/>}
                                     </Stack>
                                 </Stack>
                             ) : (
