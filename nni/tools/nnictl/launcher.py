@@ -351,7 +351,7 @@ def set_platform_config(platform, experiment_config, port, config_file_name, res
             raise Exception(ERROR_INFO % 'Rest server stopped!')
         exit(1)
 
-def launch_experiment(args, experiment_config, mode, experiment_id):
+def launch_experiment(args, experiment_config, mode, experiment_id, config_version):
     '''follow steps to start rest server and start experiment'''
     # check packages for tuner
     package_name, module_name = None, None
@@ -372,7 +372,10 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
             if package_name in ['SMAC', 'BOHB', 'PPOTuner']:
                 print_error(f'The dependencies for {package_name} can be installed through pip install nni[{package_name}]')
             raise
-    log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    if config_version == 1:
+        log_dir = experiment_config['logDir'] if experiment_config.get('logDir') else NNI_HOME_DIR
+    else:
+        log_dir = experiment_config['experimentWorkingDirectory'] if experiment_config.get('experimentWorkingDirectory') else NNI_HOME_DIR
     log_level = experiment_config['logLevel'] if experiment_config.get('logLevel') else 'info'
     #view experiment mode do not need debug function, when view an experiment, there will be no new logs created
     foreground = False
@@ -381,7 +384,13 @@ def launch_experiment(args, experiment_config, mode, experiment_id):
         if log_level not in ['trace', 'debug'] and (args.debug or experiment_config.get('debug') is True):
             log_level = 'debug'
     # start rest server
-    platform = experiment_config['trainingServicePlatform']
+    if config_version == 1:
+        platform = experiment_config['trainingServicePlatform']
+    elif isinstance(experiment_config['trainingService'], list):
+        platform = 'hybrid'
+    else:
+        platform = experiment_config['trainingService']['platform']
+
     rest_process, start_time = start_rest_server(args.port, platform, \
                                                  mode, experiment_id, foreground, log_dir, log_level, args.url_prefix)
     # save experiment information
@@ -487,38 +496,7 @@ def _validate_prefix_path(path):
     valid = all(re.match('^[A-Za-z0-9_-]*$', part) for part in parts)
     assert valid, 'URL prefix should only contain letter, number, underscore, and hyphen.'
 
-def get_v1_platform(args):
-    try:
-        config_yml = get_yml_content(args.config)
-        return config_yml.get('trainingServicePlatform')
-    except Exception:
-        return None
-
 def create_experiment(args):
-    v1_platform = get_v1_platform()
-    if v1_platform is None:
-        create_experiment_v2(args)
-
-    if v1_platform in ['local', 'remote']:
-        print_warning('The config schema has been deprecated, please save and use following config instead.')
-        v2 = yaml.dumps(nni.experiment.config.convert(config_yml))
-        print(v2)
-        path = _v2_path(args.config)
-        open(path, 'w').write(v2)
-        create_experiment_v2(path)
-
-    else:
-        if v1_platform != 'adl':
-            print_warning('The config schema has been deprecated, please update your config')
-        create_experiment_v1(path)
-
-def create_experiment_v2(args):
-    exp = Experiment()
-    exp.config = ExperimentConfig.load(args.path)
-    exp.start()
-    exp.detach()
-
-def create_experiment_v1(args):
     '''start a new experiment'''
     experiment_id = ''.join(random.sample(string.ascii_letters + string.digits, 8))
     config_path = os.path.abspath(args.config)
@@ -526,9 +504,25 @@ def create_experiment_v1(args):
         print_error('Please set correct config path!')
         exit(1)
     config_yml = get_yml_content(config_path)
-    _validate_v1(config_yml, config_path)
+
+    if 'trainingServicePlatform' in config_yml:
+        _validate_v1(config_yml, config_path)
+        platform = config_yml['trainingServicePlatform']
+        if platform in k8s_training_services:
+            schema = 1
+            config_v1 = config_yml
+        else:
+            schema = 2
+            config_v2 = convert.to_v2(config_yml).json()
+    else:
+        config_v2 = _validate_v2(config_yml, config_path)
+        schema = 2
+
     try:
-        launch_experiment(args, config_yml, 'new', experiment_id)
+        if schema == 1:
+            launch_experiment(args, config_v1, 'new', experiment_id, 1)
+        else:
+            launch_experiment(args, config_v2, 'new', experiment_id, 2)
     except Exception as exception:
         restServerPid = Experiments().get_all_experiments().get(experiment_id, {}).get('pid')
         if restServerPid:

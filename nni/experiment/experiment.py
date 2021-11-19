@@ -73,10 +73,10 @@ class Experiment:
         nni.runtime.log.init_logger_experiment()
 
         self.config: Optional[ExperimentConfig] = None
-        self.id: Optional[str] = management.generate_experiment_id()
+        self.id: Optional[str] = None
         self.port: Optional[int] = None
         self._proc: Optional[Popen] = None
-        self._mode = 'new'
+        self.mode = 'new'
 
         args = [config, training_service]  # deal with overloading
         if isinstance(args[0], (str, list)):
@@ -103,13 +103,18 @@ class Experiment:
         """
         atexit.register(self.stop)
 
+        if self.mode == 'new':
+            self.id = management.generate_experiment_id()
+        else:
+            self.config = launcher.get_stopped_experiment_config(self.id, self.mode)
+
         if self.config.experiment_working_directory is not None:
             log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
-        else:  # newly created experiments should never come here, keep for compatibility
+        else:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.id, self.config, port, debug, self._mode)
+        self._proc = launcher.start_experiment(self.id, self.config, port, debug, mode=self.mode)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
@@ -210,8 +215,7 @@ class Experiment:
         """
         experiment = Experiment()
         experiment.id = experiment_id
-        experiemnt.config = management.get_stopped_experiment_config(experiment_id)
-        experiment._mode = 'resume'
+        experiment.mode = 'resume'
         experiment.run(port=port, wait_completion=wait_completion, debug=debug)
         if not wait_completion:
             return experiment
@@ -233,8 +237,7 @@ class Experiment:
         debug = False
         experiment = Experiment()
         experiment.id = experiment_id
-        experiment.config = management.get_stopped_experiment_config(experiment_id)
-        experiment._mode = 'view'
+        experiment.mode = 'view'
         experiment.start(port=port, debug=debug)
         if non_blocking:
             return experiment
