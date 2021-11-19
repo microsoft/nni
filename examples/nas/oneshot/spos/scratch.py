@@ -10,8 +10,8 @@ import numpy as np
 import torch
 import torch.nn as nn
 from dataloader import get_imagenet_iter_dali
-from nni.nas.pytorch.fixed import apply_fixed_architecture
-from nni.nas.pytorch.utils import AverageMeterGroup
+# from nni.nas.pytorch.fixed import apply_fixed_architecture
+# from nni.nas.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
 
 from network import ShuffleNetV2OneShot
