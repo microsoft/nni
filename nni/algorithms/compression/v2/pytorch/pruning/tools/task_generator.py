@@ -18,6 +18,9 @@ from nni.algorithms.compression.v2.pytorch.utils import (
     compute_sparsity,
     get_model_weights_numel
 )
+
+from .rl_env.channel_pruning_env import ChannelPruningEnv
+from .rl_env.agent import DDPG
 from .base import TaskGenerator
 
 _logger = logging.getLogger(__name__)
@@ -331,3 +334,131 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         self._task_id_candidate += 1
 
         return [task]
+
+
+class AMCTaskGenerator(TaskGenerator):
+    def __init__(self, origin_model: Module, origin_config_list: List[Dict], total_iteration: int, dummy_input: Tensor,
+                 log_dir: str = '.', keep_intermediate_result: bool = False, origin_masks: Dict[str, Dict[str, Tensor]] = {},
+                 env_params: Dict = {}, ddpg_params: Dict = {}):
+
+        self.total_iteration = total_iteration
+        self.current_iteration = 1
+        self.dummy_input = dummy_input
+        self.env_params = env_params
+        self.ddpg_params = ddpg_params
+        self._temp_config_list = []
+        self.target_sparsity_list = []
+        self._current_sparsity_list = None
+
+        self.best_score = 0
+        self.T = []  # trajectory
+        self.iteration_reward = 0.
+        self.observation = None
+
+        super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
+                         log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
+
+
+    def init_pending_tasks(self) -> List[Task]:
+        origin_model = torch.load(self._origin_model_path)
+        origin_masks = torch.load(self._origin_masks_path)
+        with open(self._origin_config_list_path, "r") as f:
+            origin_config_list = json_tricks.load(f)
+
+        self.temp_model_path = Path(self._intermediate_result_dir, 'origin_compact_model.pth')
+        self.temp_masks_path = Path(self._intermediate_result_dir, 'origin_compact_model_masks.pth')
+        torch.save(origin_model, self.temp_model_path)
+        torch.save(origin_masks, self.temp_masks_path)
+
+        self.env = ChannelPruningEnv(origin_model, origin_config_list, self.dummy_input, self.env_params)
+        nb_states = self.env.layer_embedding.shape[1]
+        nb_actions = 1  # just 1 action here
+        self.agent = DDPG(nb_states, nb_actions, self.ddpg_params)
+        self.agent.is_training = True
+
+        task_result = TaskResult('origin', origin_model, origin_masks, origin_masks, None)
+        #-- print("================ mask setted! ================")
+        self.env.set_mask(task_result.compact_model_masks)
+
+        return self.generate_tasks(task_result)
+
+
+    def generate_tasks(self, task_result: TaskResult) -> List[Task]:
+        # initial/update temp config list
+        if task_result.task_id == 'origin':
+            self._temp_config_list = []
+            self._current_score = 0
+        else:
+            score = self._tasks[task_result.task_id].score
+            print("Task: {} / {}, Score: {}\n".format(task_result.task_id, self.total_iteration, score))
+            #-- print("SCORE: {}".format(score))
+            self.env.set_reward(score)
+            self.env.set_mask(task_result.pruner_generated_masks)
+            #-- print("***************************")
+            #-- print(task_result.pruner_generated_masks)
+            self._current_score = score
+            if self.observation is None:
+                self.observation = deepcopy(self.env.reset())
+                self.agent.reset(self.observation)
+
+            # agent pick action ...
+            warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
+            if self.current_iteration <= warmup_num:
+                action = self.agent.random_action()
+                # action = sample_from_truncated_normal_distribution(lower=0., upper=1., mu=env.preserve_ratio, sigma=0.5)
+            else:
+                action = self.agent.select_action(self.observation, episode=self.current_iteration)
+
+            # env response with next_observation, reward, terminate_info
+            observation1, reward, done, info = self.env.step(action)
+
+            self.T.append([reward, deepcopy(self.observation), deepcopy(observation1), action, done])
+
+            # fix-length, never reach here
+            # if max_episode_length and episode_steps >= max_episode_length - 1:
+            #     done = True
+
+            # update
+            self.iteration_reward += reward
+            self.observation = deepcopy(observation1)
+
+            if done:  # end of episode
+                _logger.info(
+                    '#%d: iteration_reward: %.4f reward: %.4f, ratio: %.4f',
+                        self.current_iteration, self.iteration_reward,
+                        info['reward'],
+                        info['compress_ratio']
+                )
+                final_reward = self.T[-1][0]
+                self._temp_config_list = deepcopy(info['config_list'])
+
+                # agent observe and update policy
+                for _, s_t, s_t1, a_t, done in self.T:
+                    self.agent.observe(final_reward, s_t, s_t1, a_t, done)
+                    if self.current_iteration > warmup_num:
+                        self.agent.update_policy()
+
+                # reset
+                self.observation = None
+                self.iteration_reward = 0.
+                self.T = []
+
+        task_id = self._task_id_candidate
+        # new_config_list = self._recover_real_sparsity(deepcopy(self._temp_config_list))
+        new_config_list = deepcopy(self._temp_config_list)
+        config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
+
+        with Path(config_list_path).open('w') as f:
+            json_tricks.dump(new_config_list, f, indent=4)
+
+        task = Task(task_id, self.temp_model_path, self.temp_masks_path, config_list_path)
+
+        self._tasks[task_id] = task
+
+        self._task_id_candidate += 1
+        
+        if self.current_iteration < self.total_iteration:
+            self.current_iteration += 1
+            return [task]
+        else:
+            return []
