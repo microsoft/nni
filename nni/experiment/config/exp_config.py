@@ -8,6 +8,7 @@ Top level experiement configuration class, ``ExperimentConfig``.
 __all__ = ['ExperimentConfig']
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
@@ -110,6 +111,12 @@ class ExperimentConfig(ConfigBase):
                 setattr(self, algo_type, None)
 
         super()._canonicalize([self])
+
+        if self.nni_manager_ip is None:
+            platform = getattr(self.training_service, 'platform')
+            if platform and platform != 'local':
+                msg = f'nni_manager_ip is not set, will use {utils.get_ipv4_address()}'
+                logging.getLogger('nni.experiment.config').info(msg)
 
     def _validate_canonical(self):
         super()._validate_canonical()
