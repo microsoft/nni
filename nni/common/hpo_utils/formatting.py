@@ -21,6 +21,8 @@ import math
 from types import SimpleNamespace
 from typing import Any, List, NamedTuple, Optional, Tuple
 
+import numpy as np
+
 class ParameterSpec(NamedTuple):
     """
     Specification (aka space / range / domain) of one single parameter.
@@ -91,7 +93,7 @@ def deformat_parameters(parameters, formatted_search_space):
         if spec.categorical:
             if spec.type == 'randint':
                 lower = min(math.ceil(float(x)) for x in spec.values)
-                _assign(ret, key, lower + x)
+                _assign(ret, key, int(lower + x))
             elif _is_nested_choices(spec.values):
                 _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
             else:
@@ -104,6 +106,8 @@ def deformat_parameters(parameters, formatted_search_space):
             if spec.clip:
                 x = max(x, spec.clip[0])
                 x = min(x, spec.clip[1])
+            if isinstance(x, np.number):
+                x = x.item()
             _assign(ret, key, x)
     return ret
 
