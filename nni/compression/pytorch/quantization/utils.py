@@ -79,5 +79,5 @@ def get_quant_shape(shape, quant_type, quant_scheme):
     if is_per_channel(quant_scheme):
         quant_shape = [1 if idx != default_idx else s for idx, s in enumerate(shape)]
     else:
-        quant_shape = []
+        quant_shape = [1]
     return quant_shape
