@@ -14,6 +14,7 @@ You should check its code before reading docstrings in this file.
 __all__ = [
     'ParameterSpec',
     'deformat_parameters',
+    'deformat_single_parameter',
     'format_search_space',
 ]
 
@@ -90,26 +91,29 @@ def deformat_parameters(parameters, formatted_search_space):
     ret = {}
     for key, x in parameters.items():
         spec = formatted_search_space[key]
-        if spec.categorical:
-            if spec.type == 'randint':
-                lower = min(math.ceil(float(x)) for x in spec.values)
-                _assign(ret, key, int(lower + x))
-            elif _is_nested_choices(spec.values):
-                _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
-            else:
-                _assign(ret, key, spec.values[x])
+        if spec.categorical and _is_nested_choices(spec.values):
+            _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
         else:
-            if spec.log_distributed:
-                x = math.exp(x)
-            if spec.q is not None:
-                x = round(x / spec.q) * spec.q
-            if spec.clip:
-                x = max(x, spec.clip[0])
-                x = min(x, spec.clip[1])
-            if isinstance(x, np.number):
-                x = x.item()
-            _assign(ret, key, x)
-    return ret
+            _assign(ret, key, deformat_single_parameter(x, spec))
+
+def deformat_single_parameter(x, spec):
+    if spec.categorical:
+        if spec.type == 'randint':
+            lower = min(math.ceil(float(x)) for x in spec.values)
+            return int(lower + x)
+        else:
+            return spec.values[x]
+    else:
+        if spec.log_distributed:
+            x = math.exp(x)
+        if spec.q is not None:
+            x = round(x / spec.q) * spec.q
+        if spec.clip:
+            x = max(x, spec.clip[0])
+            x = min(x, spec.clip[1])
+        if isinstance(x, np.number):
+            x = x.item()
+        return x
 
 def _format_search_space(parent_key, space):
     formatted = []
