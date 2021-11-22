@@ -109,7 +109,8 @@ if __name__ == '__main__':
     config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
     optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
+    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, training_epochs=10,
+                            warm_up_step=3000, cool_down_beginning_step=27000)
 
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
