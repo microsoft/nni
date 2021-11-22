@@ -95,6 +95,7 @@ def deformat_parameters(parameters, formatted_search_space):
             _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
         else:
             _assign(ret, key, deformat_single_parameter(x, spec))
+    return ret
 
 def deformat_single_parameter(x, spec):
     if spec.categorical:

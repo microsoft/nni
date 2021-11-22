@@ -316,8 +316,8 @@ class BuiltinTunersTestCase(TestCase):
     def test_grid_search(self):
         self.exhaustive = True
         tuner_fn = lambda: GridSearchTuner()
-        self.search_space_test_all(tuner_fn,
-                                   supported_types=["choice", "randint", "quniform"])
+        supported_types = ["choice", "randint", "uniform", "quniform", "loguniform", "qloguniform"]
+        self.search_space_test_all(tuner_fn, supported_types=supported_types)
         self.import_data_test(tuner_fn)
 
     def test_tpe(self):
