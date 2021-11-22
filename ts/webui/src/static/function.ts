@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard, RetiariiParameter } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -375,6 +375,11 @@ const parametersType = (): Map<string, string> => {
     return parametersTypeMap;
 };
 
+// retiarii experiment parameters is in field `_visual_hyper_params_`
+const filterParameter = (parameters: RetiariiParameter): {} => {
+    return '_visual_hyper_params_' in parameters ? parameters._visual_hyper_params_ : parameters;
+};
+
 export {
     getPrefix,
     convertTime,
@@ -401,5 +406,6 @@ export {
     copyAndSort,
     disableTensorboard,
     getTensorboardMenu,
-    parametersType
+    parametersType,
+    filterParameter
 };

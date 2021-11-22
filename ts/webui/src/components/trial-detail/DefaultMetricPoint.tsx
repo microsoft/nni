@@ -3,7 +3,8 @@ import { Toggle, Stack } from '@fluentui/react';
 import ReactEcharts from 'echarts-for-react';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { Trial } from '../../static/model/trial';
-import { TooltipForAccuracy, EventMap } from '../../static/interface';
+import { TooltipForAccuracy, EventMap, RetiariiParameter } from '../../static/interface';
+import { filterParameter } from '../../static/function';
 import 'echarts/lib/chart/scatter';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -82,7 +83,11 @@ class DefaultPoint extends React.Component<DefaultPointProps, DefaultPointState>
                         <div>Trial No.: ${data.data[0]}</div>
                         <div>Trial ID: ${data.data[2]}</div>
                         <div>Default metric: ${data.data[1]}</div>
-                        <div>Parameters: <pre>${JSON.stringify(data.data[3], null, 4)}</pre></div>
+                        <div>Parameters: <pre>${JSON.stringify(
+                            filterParameter(data.data[3] as RetiariiParameter),
+                            null,
+                            4
+                        )}</pre></div>
                     </div>
                 `
             },

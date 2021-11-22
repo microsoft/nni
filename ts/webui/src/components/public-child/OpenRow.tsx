@@ -1,14 +1,15 @@
 import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
-import { Stack, PrimaryButton, Pivot, PivotItem } from '@fluentui/react';
+import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import { Trial } from '../../static/model/trial';
 import { MANAGER_IP } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
+import { filterParameter } from '../../static/function';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
 import MessageInfo from '../modals/MessageInfo';
-import { TeachingBubbleRetiarii } from '../modals/Bubble';
+import PanelMonacoEditor from '../public-child/PanelMonacoEditor';
 import '../../static/style/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
@@ -21,7 +22,7 @@ interface OpenRowState {
     typeInfo: string;
     info: string;
     isHidenInfo: boolean;
-    isHidenRetiaParam: boolean;
+    showRetiaParamPanel: boolean;
 }
 
 class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
@@ -31,7 +32,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
             typeInfo: '',
             info: '',
             isHidenInfo: true,
-            isHidenRetiaParam: true
+            showRetiaParamPanel: false
         };
     }
 
@@ -40,7 +41,11 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     };
 
     hideRetiaParam = (): void => {
-        this.setState(() => ({ isHidenRetiaParam: false }));
+        this.setState(() => ({ showRetiaParamPanel: false }));
+    };
+
+    isshowRetiaParamPanel = (): void => {
+        this.setState(() => ({ showRetiaParamPanel: true }));
     };
 
     /**
@@ -73,13 +78,12 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     };
 
     render(): React.ReactNode {
-        const { isHidenInfo, typeInfo, info } = this.state;
+        const { isHidenInfo, typeInfo, info, showRetiaParamPanel } = this.state;
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || "This trial's log path is not available.";
         const originParameters = JSON.parse(JSON.stringify(trial.description.parameters));
         const isHasVisualHyperParams = '_visual_hyper_params_' in originParameters;
-        const showParameters = isHasVisualHyperParams ? originParameters._visual_hyper_params_ : originParameters;
         return (
             <Stack className='openRow'>
                 <Stack className='openRowContent'>
@@ -92,7 +96,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true} // default expandNode
                                             getItemString={(): null => null} // remove the {} items
-                                            data={showParameters}
+                                            data={filterParameter(originParameters)}
                                         />
                                     </Stack>
                                     <Stack horizontal className='copy'>
@@ -101,9 +105,21 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             text='Copy as json'
                                             styles={{ root: { width: 128, marginRight: 10 } }}
                                         />
+                                        {isHasVisualHyperParams && (
+                                            <DefaultButton
+                                                onClick={this.isshowRetiaParamPanel}
+                                                text='Origin parameter'
+                                            />
+                                        )}
                                         {/* copy success | failed message info */}
                                         {!isHidenInfo && <MessageInfo typeInfo={typeInfo} info={info} />}
-                                        {isHasVisualHyperParams && <TeachingBubbleRetiarii retiariiParam={trial.description.parameters}/>}
+                                        {showRetiaParamPanel && (
+                                            <PanelMonacoEditor
+                                                hideConfigPanel={this.hideRetiaParam}
+                                                panelName='Retiarii parameters'
+                                                panelContent={JSON.stringify(originParameters, null, 2)}
+                                            />
+                                        )}
                                     </Stack>
                                 </Stack>
                             ) : (
