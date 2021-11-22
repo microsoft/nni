@@ -47,7 +47,7 @@ class TpeArguments(NamedTuple):
     n_startup_jobs: int (default: 20)
         The first N hyper-parameters are generated fully randomly for warming up.
         If the search space is large, you can increase this value.
-        Or if max_trial_number is small, you man want to decrease it.
+        Or if max_trial_number is small, you may want to decrease it.
 
     n_ei_candidates: int (default: 24)
         For each iteration TPE samples EI for N sets of parameters and choose the best one. (loosely speaking)
