@@ -44,7 +44,7 @@ Usage
    pruner = LevelPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_example.py <examples/model_compress/pruning/v2/level_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_torch.py <examples/model_compress/pruning/v2/level_pruning_torch.py>`
 
 User configuration for Level Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ Usage
    pruner = L1NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_example.py <examples/model_compress/pruning/v2/norm_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
 
 User configuration for L1 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -101,7 +101,7 @@ Usage
    pruner = L2NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_example.py <examples/model_compress/pruning/v2/norm_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
 
 User configuration for L2 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -130,7 +130,7 @@ Usage
    pruner = FPGMPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_example.py <examples/model_compress/pruning/v2/fpgm_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_torch.py <examples/model_compress/pruning/v2/fpgm_pruning_torch.py>`
 
 User configuration for FPGM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +157,7 @@ Usage
    pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, training_epochs=1)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_example.py <examples/model_compress/pruning/v2/slim_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_torch.py <examples/model_compress/pruning/v2/slim_pruning_torch.py>`
 
 User configuration for Slim Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -189,7 +189,7 @@ Usage
    pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
 
 User configuration for Activation APoZ Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -217,7 +217,7 @@ Usage
    pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_example.py <examples/model_compress/pruning/v2/activation_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
 
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -249,7 +249,7 @@ Usage
    pruner = TaylorFOWeightPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_example.py <examples/model_compress/pruning/v2/taylorfo_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_torch.py <examples/model_compress/pruning/v2/taylorfo_pruning_torch.py>`
 
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -282,7 +282,7 @@ Usage
    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
 
-For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_example.py <examples/model_compress/pruning/v2/admm_pruning_example.py>`
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_torch.py <examples/model_compress/pruning/v2/admm_pruning_torch.py>`
 
 User configuration for ADMM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -307,6 +307,8 @@ Usage
    pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
 
 User configuration for Linear Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -335,6 +337,8 @@ Usage
    pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
 
 User configuration for AGP Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -375,6 +379,8 @@ Usage
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+
 User configuration for Lottery Ticket Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -405,9 +411,11 @@ Usage
 
    from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm='l1', cool_down_rate=0.9, finetuner=finetuner)
+   pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm='l1', evaluator=evaluator, cool_down_rate=0.9, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py>`
 
 User configuration for Simulated Annealing Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -67,7 +67,7 @@ def evaluator(model):
     print('Accuracy: {}%\n'.format(acc))
     return acc
 
-def optimizer_schedular_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
+def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
     optimizer = torch.optim.SGD(model.parameters(), lr=_lr, momentum=_momentum, weight_decay=_weight_decay)
     scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
     return optimizer, scheduler
@@ -82,7 +82,7 @@ if __name__ == '__main__':
 
     print('\n' + '=' * 50 + ' START TO TRAIN THE MODEL ' + '=' * 50)
     model = VGG().to(device)
-    optimizer, scheduler = optimizer_schedular_generator(model)
+    optimizer, scheduler = optimizer_scheduler_generator(model)
     criterion = torch.nn.CrossEntropyLoss()
     pre_best_acc = 0.0
     best_state_dict = None
@@ -107,14 +107,14 @@ if __name__ == '__main__':
     pruner = LevelPruner(model, config_list)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
-    pruner._unwrap_model()
-    ModelSpeedup(model, dummy_input=torch.rand([10, 3, 32, 32]).to(device), masks_file=masks).speedup_model()
-    print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER SPEEDUP ' + '=' * 50)
+
+    # Fine-grained method does not need to speedup
+    print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER PRUNING ' + '=' * 50)
     evaluator(model)
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer, scheduler = optimizer_schedular_generator(model, _lr=0.01)
+    optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01)
 
     best_acc = 0.0
     g_epoch = 0

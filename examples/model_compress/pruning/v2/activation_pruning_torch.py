@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 '''
-NNI example for supported ADMM pruning algorithms.
+NNI example for supported ActivationAPoZRank and ActivationMeanRank pruning algorithms.
 In this example, we show the end-to-end pruning process: pre-training -> pruning -> fine-tuning.
 Note that pruners use masks to simulate the real pruning. In order to obtain a real compressed model, model speed up is required.
 
@@ -16,7 +16,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from nni.compression.pytorch import ModelSpeedup
 from examples.model_compress.models.cifar10.vgg import VGG
 from nni.compression.pytorch.utils.counter import count_flops_params
-from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPruner
+from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ActivationAPoZRankPruner, ActivationMeanRankPruner
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
@@ -67,13 +67,16 @@ def evaluator(model):
     print('Accuracy: {}%\n'.format(acc))
     return acc
 
-def optimizer_schedular_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
+def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
     optimizer = torch.optim.SGD(model.parameters(), lr=_lr, momentum=_momentum, weight_decay=_weight_decay)
     scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
     return optimizer, scheduler
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='PyTorch Example for model comporession')
+    parser.add_argument('--pruner', type=str, default='apoz',
+                        choices=['apoz', 'mean'],
+                        help='pruner to use')
     parser.add_argument('--pretrain-epochs', type=int, default=20,
                         help='number of epochs to pretrain the model')
     parser.add_argument('--fine-tune-epochs', type=int, default=20,
@@ -82,7 +85,7 @@ if __name__ == '__main__':
 
     print('\n' + '=' * 50 + ' START TO TRAIN THE MODEL ' + '=' * 50)
     model = VGG().to(device)
-    optimizer, scheduler = optimizer_schedular_generator(model)
+    optimizer, scheduler = optimizer_scheduler_generator(model)
     criterion = torch.nn.CrossEntropyLoss()
     pre_best_acc = 0.0
     best_state_dict = None
@@ -102,14 +105,14 @@ if __name__ == '__main__':
     # Start to prune and speedup
     print('\n' + '=' * 50 + ' START TO PRUNE THE BEST ACCURACY PRETRAINED MODEL ' + '=' * 50)
     config_list = [{
-        'sparsity': 0.8,
-        'op_types': ['Conv2d'],
-    }, {
-        'sparsity': 0.92,
-        'op_types': ['Conv2d'],
+            'total_sparsity': 0.5,
+            'op_types': ['Conv2d'],
     }]
-    optimizer, _ = optimizer_schedular_generator(model)
-    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, 2, 2)
+    optimizer, _ = optimizer_scheduler_generator(model)
+    if 'apoz' in args.pruner:
+        pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=1)
+    else:
+        pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=1)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()
@@ -119,7 +122,7 @@ if __name__ == '__main__':
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer, scheduler = optimizer_schedular_generator(model, _lr=0.01)
+    optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01)
 
     best_acc = 0.0
     g_epoch = 0

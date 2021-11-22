@@ -380,7 +380,7 @@ class SlimPruner(BasicPruner):
     training_epochs : int
         The epoch number for training model to sparsify the BN weight.
     scale : float
-        Penalty parameters for sparsification.
+        Penalty parameter for sparsification, which could reduce overfitting.
     mode : str
         'normal' or 'global'.
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
@@ -415,7 +415,7 @@ class SlimPruner(BasicPruner):
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
             for _, wrapper in self.get_modules_wrapper().items():
-                sum_l1 += torch.norm(wrapper.module.weight.data, p=1)
+                sum_l1 += torch.norm(wrapper.module.weight, p=1)
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 
