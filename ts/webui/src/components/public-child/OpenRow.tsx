@@ -108,7 +108,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                         {isHasVisualHyperParams && (
                                             <DefaultButton
                                                 onClick={this.isshowRetiaParamPanel}
-                                                text='Origin parameter'
+                                                text='Origin parameters'
                                             />
                                         )}
                                         {/* copy success | failed message info */}
