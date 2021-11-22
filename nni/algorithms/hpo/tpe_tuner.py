@@ -21,7 +21,7 @@ import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
 from nni.tuner import Tuner
-from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters
+from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from . import random_tuner
 
 _logger = logging.getLogger('nni.tuner.tpe')
@@ -100,7 +100,7 @@ class TpeTuner(Tuner):
 
         self._params = {}                   # parameter_id -> parameters (in internal format)
         self._running_params = {}           # subset of above
-        self._history = defaultdict(list)   # parameter key -> list of loss
+        self._history = defaultdict(list)   # parameter key -> list of Record
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
@@ -132,6 +132,16 @@ class TpeTuner(Tuner):
 
     def trial_end(self, parameter_id, _success, **kwargs):
         self._running_params.pop(parameter_id, None)
+
+    def import_data(self, data):  # for resuming experiment
+        for trial in data:
+            param = format_parameters(trial['parameter'], self.space)
+            loss = trial['value']
+            if self.optimize_mode is OptimizeMode.Maximize:
+                loss = -trial['value']
+            for key, value in param.items():
+                self._history[key].append(Record(value, loss))
+        _logger.info(f'Replayed {len(data)} trials')
 
 def suggest(args, rng, space, history):
     params = {}
