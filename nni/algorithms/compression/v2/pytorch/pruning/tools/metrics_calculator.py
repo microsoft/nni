@@ -13,6 +13,9 @@ __all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetri
 
 
 class StraightMetricsCalculator(MetricsCalculator):
+    """
+    This metrics calculator directly returns a copy of data as metrics.
+    """
     def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
         metrics = {}
         for name, tensor in data.items():

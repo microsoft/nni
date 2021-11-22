@@ -26,7 +26,7 @@ _logger = logging.getLogger(__name__)
 
 class PrunerScoredModuleWrapper(Module):
     """
-    Wrap an module to enable data parallel, forward method customization and buffer registeration.
+    Wrap a module to enable data parallel, forward method customization and buffer registeration.
     Different from `PrunerModuleWrapper`, `PrunerScoredModuleWrapper` will record the gradient.
 
     Parameters
