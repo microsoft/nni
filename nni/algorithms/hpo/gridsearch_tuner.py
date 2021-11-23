@@ -20,7 +20,7 @@ import logging
 import math
 
 import numpy as np
-from scipy.special import erfinv
+from scipy.special import erfinv  # pylint: disable=no-name-in-module
 
 import nni
 from nni.common.hpo_utils import ParameterSpec, deformat_parameters, format_search_space
@@ -93,7 +93,7 @@ class GridSearchTuner(Tuner):
     def update_search_space(self, space):
         self.space = format_search_space(space)
         if not self.space:  # the tuner will crash in this case, report it explicitly
-            raise ValueError('Grid search tuner does not support empty search space')
+            raise ValueError('Search space is empty')
         self._init_grid()
 
     def generate_parameters(self, *args, **kwargs):
@@ -160,13 +160,14 @@ class GridSearchTuner(Tuner):
         for i, spec in enumerate(self.space.values()):
             self.epoch_bar[i] = len(self.grid[i])
             if not spec.categorical:
-                new_vals = []
-                new_divs = []
-                for l, r in self.divisions[i]:  # we can skip these for non-q, but it will harm readability
+                # further divide intervals
+                new_vals = []  # values to append to grid
+                new_divs = []  # sub-intervals
+                for l, r in self.divisions[i]:
                     mid = (l + r) / 2
                     diff_l = _less(l, mid, spec)
                     diff_r = _less(mid, r, spec)
-                    if diff_l and diff_r:
+                    if diff_l and diff_r:  # we can skip these for non-q, but it will complicate the code
                         new_vals.append(mid)
                         updated = True
                     if diff_l:
@@ -211,19 +212,19 @@ class GridSearchTuner(Tuner):
                 params[spec.key] = _cdf_inverse(x, spec)
         return params
 
-def _cdf_inverse(x, spec):
-    # inverse function of spec's cumulative distribution function
-    if spec.normal_distributed:
-        return spec.mu + spec.sigma * math.sqrt(2) * erfinv(2 * x - 1)
-    else:
-        return spec.low + (spec.high - spec.low) * x
-
 def _less(x, y, spec):
     if spec.q is None:
         return x < y
     real_x = _deformat_single_parameter(_cdf_inverse(x, spec), spec)
     real_y = _deformat_single_parameter(_cdf_inverse(y, spec), spec)
     return real_x < real_y
+
+def _cdf_inverse(x, spec):
+    # inverse function of spec's cumulative distribution function
+    if spec.normal_distributed:
+        return spec.mu + spec.sigma * math.sqrt(2) * erfinv(2 * x - 1)
+    else:
+        return spec.low + (spec.high - spec.low) * x
 
 def _deformat_single_parameter(x, spec):
     if math.isinf(x):
