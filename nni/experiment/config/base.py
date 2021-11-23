@@ -141,6 +141,12 @@ class ConfigBase:
         utils.unset_base_path()
         return config
 
+    def canonical_copy(self):
+        canon = copy.deepcopy(self)
+        canon._canonicalize([])
+        canon._validate_canonical()
+        return canon
+
     def validate(self):
         """
         Validate legality of the config object. Raise exception if any error occurred.
@@ -151,9 +157,7 @@ class ConfigBase:
         -------
         None
         """
-        canon = copy.deepcopy(self)
-        canon._canonicalize([])
-        canon._validate_canonical()
+        self.canonical_copy()
 
     def json(self):
         """
@@ -167,9 +171,7 @@ class ConfigBase:
         dict
             JSON object.
         """
-        canon = copy.deepcopy(self)
-        canon._canonicalize([])
-        canon._validate_canonical()
+        canon = self.canonical_copy()
         return dataclasses.asdict(canon, dict_factory=_dict_factory)  # this is recursive
 
     def _canonicalize(self, parents):

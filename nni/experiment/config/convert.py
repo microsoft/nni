@@ -4,12 +4,12 @@
 import copy
 import logging
 
-from .common import ExperimentConfig, AlgorithmConfig, CustomAlgorithmConfig
-from .remote import RemoteMachineConfig
-from .kubeflow import KubeflowRoleConfig, KubeflowNfsConfig, KubeflowAzureStorageConfig
-from .frameworkcontroller import FrameworkControllerRoleConfig
+from .algorithm import AlgorithmConfig, CustomAlgorithmConfig
+from .exp_config import ExperimentConfig
+#from .remote import RemoteMachineConfig
+#from .kubeflow import KubeflowRoleConfig, KubeflowNfsConfig, KubeflowAzureStorageConfig
+#from .frameworkcontroller import FrameworkControllerRoleConfig
 from .shared_storage import NfsConfig, AzureBlobConfig
-from . import util
 
 _logger = logging.getLogger(__name__)
 
@@ -254,7 +254,7 @@ def convert_algo(algo_type, v1, v2):
         v2_algo = AlgorithmConfig(name=builtin_name, class_args=class_args)
 
     else:
-        code_directory = util.canonical_path(v1_algo.pop('codeDir'))
+        code_directory = v1_algo.pop('codeDir')
         class_file_name = v1_algo.pop('classFileName')
         assert class_file_name.endswith('.py')
         class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')

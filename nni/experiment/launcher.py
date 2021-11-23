@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import contextlib
+from dataclasses import dataclass, fields
 import logging
 from pathlib import Path
 import socket
@@ -23,29 +24,88 @@ from ..tools.nnictl.nnictl_utils import update_experiment
 
 _logger = logging.getLogger('nni.experiment')
 
+@dataclass(init=False)
+class NniManagerArgs:
+    port: int
+    experiment_id: int
+    start_mode: str  # new or resume
+    mode: str  # training service platform
+    log_dir: str
+    log_level: str
+    readonly: bool = False
+    foreground: bool = False
+    url_prefix: Optional[str] = None
+    dispatcher_pipe: Optional[str] = None
 
-def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bool, mode: str = 'new') -> Popen:
+    def __init__(self, action, exp_id, config, port, debug, foreground, url_prefix):
+        self.port = port
+        self.experiment_id = exp_id
+        self.foreground = foreground
+        self.url_prefix = url_prefix
+        self.log_dir = config.experiment_working_directory
+
+        if isinstance(config.training_service, list):
+            self.mode = 'hybrid'
+        else:
+            self.mode = config.training_service.platform
+
+        self.log_level = config.log_level
+        if debug and args.log_level not in ['debug', 'trace']:
+            args.log_level = 'debug'
+
+        if action == 'resume':
+            self.start_mode = 'resume'
+        elif action == 'view':
+            self.start_mode = 'resume'
+            self.readonly = True
+        else:
+            self.start_mode = 'new'
+
+    def to_command_line_args(self):
+        ret = []
+        for field in fields(self):
+            value = getattr(self, field.name)
+            if value is not None:
+                ret.append('--' + field.name)
+                if isinstance(value, bool):
+                    ret.append(str(value).lower())
+                else:
+                    ret.append(str(value))
+        return ret
+
+def start_experiment(config, nni_manager_args):
     proc = None
 
-    config.validate(initialized_tuner=False)
-    _ensure_port_idle(port)
-
-    if mode != 'view':
-        if isinstance(config.training_service, list): # hybrid training service
-            _ensure_port_idle(port + 1, 'Hybrid training service requires an additional port')
-        elif config.training_service.platform in ['remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']:
-            _ensure_port_idle(port + 1, f'{config.training_service.platform} requires an additional port')
+    _ensure_port_idle(nni_manager_args.port)
+    ws_platforms = ['hybrid', 'remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']
+    if not nni_manager_args.readonly and nni_manager_args.mode in ws_platforms:
+        _ensure_port_idle(port + 1, f'{nni_manager_args.mode} requires an additional port')
 
     try:
-        _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
-        start_time, proc = _start_rest_server(config, port, debug, exp_id, mode=mode)
+        _logger.info(
+            'Creating experiment, Experiment ID: %s',
+            colorama.Fore.CYAN + nni_manager_args.experiment_id + colorama.Style.RESET_ALL
+        )
+        proc = _start_rest_server(nni_manager_args)
+        start_time = int(time.time() * 1000)
+
         _logger.info('Starting web server...')
-        _check_rest_server(port)
-        platform = 'hybrid' if isinstance(config.training_service, list) else config.training_service.platform
-        _save_experiment_information(exp_id, port, start_time, platform,
-                                     config.experiment_name, proc.pid, str(config.experiment_working_directory), [])
+        _check_rest_server(nni_manager_args.port, url_prefix=nni_manager_args.url_prefix)
+
+        Experiments().add_experiment(
+            nni_manager_args.experiment_id,
+            nni_manager_args.port,
+            start_time,
+            nni_manager_args.mode,
+            config.experiment_name,
+            pid=proc.pid,
+            logDir=nni_manager_args.log_dir,
+            tag=[],
+        )
+
         _logger.info('Setting up...')
-        rest.post(port, '/experiment', config.json())
+        rest.post(nni_manager_args.port, '/experiment', config.json(), nni_manager_args.url_prefix)
+
         return proc
 
     except Exception as e:
@@ -54,6 +114,20 @@ def start_experiment(exp_id: str, config: ExperimentConfig, port: int, debug: bo
             with contextlib.suppress(Exception):
                 proc.kill()
         raise e
+
+def _start_rest_server(nni_manager_args) -> Tuple[int, Popen]:
+    node_dir = Path(nni_node.__path__[0])
+    node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
+    main_js = str(node_dir / 'main.js')
+    cmd = [node, '--max-old-space-size=4096', main_js]
+    cmd += nni_manager_args.to_command_line_args()
+    if sys.platform == 'win32':
+        from subprocess import CREATE_NEW_PROCESS_GROUP
+        return Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+    else:
+        import os
+        return Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
+
 
 def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
     pipe = None
@@ -69,7 +143,7 @@ def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, 
     try:
         _logger.info('Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL)
         pipe = Pipe(exp_id)
-        start_time, proc = _start_rest_server(config, port, debug, exp_id, pipe.path)
+        start_time, proc = _start_rest_server_retiarii(config, port, debug, exp_id, pipe.path)
         _logger.info('Connecting IPC pipe...')
         pipe_file = pipe.connect()
         nni.runtime.protocol._in_file = pipe_file
@@ -101,8 +175,8 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
         raise RuntimeError(f'Port {port} is not idle {message}')
 
 
-def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experiment_id: str, pipe_path: str = None,
-                       mode: str = 'new') -> Tuple[int, Popen]:
+def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool, experiment_id: str,
+                                pipe_path: str = None, mode: str = 'new') -> Tuple[int, Popen]:
     if isinstance(config.training_service, list):
         ts = 'hybrid'
     else:
@@ -145,15 +219,15 @@ def _start_rest_server(config: ExperimentConfig, port: int, debug: bool, experim
     return int(time.time() * 1000), proc
 
 
-def _check_rest_server(port: int, retry: int = 3) -> None:
+def _check_rest_server(port: int, retry: int = 3, url_prefix: Optional[str] = None) -> None:
     for i in range(retry):
         with contextlib.suppress(Exception):
-            rest.get(port, '/check-status')
+            rest.get(port, '/check-status', url_prefix)
             return
         if i > 0:
             _logger.warning('Timeout, retry...')
         time.sleep(1)
-    rest.get(port, '/check-status')
+    rest.get(port, '/check-status', url_prefix)
 
 
 def _save_experiment_information(experiment_id: str, port: int, start_time: int, platform: str,
@@ -162,7 +236,7 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
     experiments_config.add_experiment(experiment_id, port, start_time, platform, name, pid=pid, logDir=logDir, tag=tag)
 
 
-def get_stopped_experiment_config(exp_id: str, mode: str) -> None:
+def get_stopped_experiment_config(exp_id, exp_dir=None):
     update_experiment()
     experiments_config = Experiments()
     experiments_dict = experiments_config.get_all_experiments()
@@ -171,7 +245,7 @@ def get_stopped_experiment_config(exp_id: str, mode: str) -> None:
         _logger.error('Id %s not exist!', exp_id)
         return
     if experiment_metadata['status'] != 'STOPPED':
-        _logger.error('Only stopped experiments can be %sed!', mode)
+        _logger.error('Only stopped experiments can be resumed or viewed!')
         return
     experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
     config = ExperimentConfig(**experiment_config)
