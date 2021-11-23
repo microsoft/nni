@@ -1,7 +1,7 @@
 import base64
 import functools
 import inspect
-from typing import Any, Union, Dict, Optional, List, TypeVar
+from typing import Any, Union, Dict, Optional, List, TypeVar, Callable
 
 import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
@@ -20,7 +20,7 @@ class SerializableObject:
     """
 
     def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any],
-                 _self_contained: bool = False):
+                 _self_contained: bool = False, _extra_argument_process: Optional[Callable[[Any], Any]] = None):
         # use dict to avoid conflicts with user's getattr and setattr
         self.__dict__['_nni_symbol'] = symbol
         self.__dict__['_nni_args'] = args
@@ -28,10 +28,18 @@ class SerializableObject:
 
         self.__dict__['_nni_self_contained'] = _self_contained
 
+        # argument process is another layer to process arguments before they are passed to the underlying class/function.
+        # by default, it's simply a `.get()` for serializable object.
+        # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
+        self.__dict__['_nni_extra_argument_process'] = _extra_argument_process
+
         if _self_contained:
             # this is for internal usage only.
             # kwargs is used to init the full object in the same object as this one, for simpler implementation.
-            super().__init__(*self._recursive_init(args), **self._recursive_init(kwargs))
+            super().__init__(
+                *[self._recursive_init(arg) for arg in args],
+                **{kw: self._recursive_init(arg) for kw, arg in kwargs.items()}
+            )
 
     def get(self) -> Any:
         """
@@ -41,8 +49,8 @@ class SerializableObject:
             return self
         if '_nni_cache' not in self.__dict__:
             self.__dict__['_nni_cache'] = self._get_nni_attr('symbol')(
-                *self._recursive_init(self._get_nni_attr('args')),
-                **self._recursive_init(self._get_nni_attr('kwargs'))
+                *[self._recursive_init(arg) for arg in self._get_nni_attr('args')],
+                **{kw: self._recursive_init(arg) for kw, arg in self._get_nni_attr('kwargs').items()}
             )
         return self.__dict__['_nni_cache']
 
@@ -78,16 +86,17 @@ class SerializableObject:
                       [k + '=' + repr(v) for k, v in self._get_nni_attr('kwargs').items()]) + \
             ')'
 
-    @staticmethod
-    def _recursive_init(d):
+    def _recursive_init(self, d):
         # auto-call get() to prevent type-converting in downstreaming functions
-        if isinstance(d, dict):
-            return {k: v.get() if isinstance(v, SerializableObject) else v for k, v in d.items()}
-        else:
-            return [v.get() if isinstance(v, SerializableObject) else v for v in d]
+        if isinstance(d, SerializableObject):
+            d = d.get()
+        if hasattr(self, '_nni_extra_argument_process') and self._nni_extra_argument_process is not None:
+            d = self._nni_extra_argument_process(d)
+        return d
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, SerializableObject]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True,
+          extra_arg_proc: Optional[Callable[[Any], Any]] = None) -> Union[T, SerializableObject]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -110,6 +119,9 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Serializab
     If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
 
+    ``extra_arg_proc`` is used to intercept the arguments for the class or function, and transform them to make them
+    different from what they originally received.
+
     Example:
 
     .. code-block:: python
@@ -121,9 +133,9 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Serializab
 
     def wrap(cls_or_func):
         if isinstance(cls_or_func, type):
-            return _trace_cls(cls_or_func, kw_only)
+            return _trace_cls(cls_or_func, kw_only, extra_arg_proc)
         else:
-            return _trace_func(cls_or_func, kw_only)
+            return _trace_func(cls_or_func, kw_only, extra_arg_proc)
 
     # if we're being called as @trace()
     if cls_or_func is None:
@@ -207,7 +219,7 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only):
+def _trace_cls(base, kw_only, extra_arg_proc):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
@@ -217,19 +229,19 @@ def _trace_cls(base, kw_only):
             args, kwargs = _get_arguments_as_dict(base.__init__, args, kwargs, kw_only)
 
             # calling serializable object init to initialize the full object
-            super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True)
+            super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True, _extra_argument_process=extra_arg_proc)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
     return wrapper
 
 
-def _trace_func(func, kw_only):
+def _trace_func(func, kw_only, extra_arg_proc):
     @functools.wraps
     def wrapper(*args, **kwargs):
         # similar to class, store parameters here
         args, kwargs = _get_arguments_as_dict(func, args, kwargs, kw_only)
-        return SerializableObject(func, args, kwargs)
+        return SerializableObject(func, args, kwargs, _extra_argument_process=extra_arg_proc)
 
     return wrapper
 

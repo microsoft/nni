@@ -25,54 +25,6 @@ def get_init_parameters_or_fail(obj, silently=False):
                          'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
                          'try to use serialize or @serialize_cls.')
 
-
-### This is a patch of json-tricks to make it more useful to us ###
-
-
-def _serialize_class_instance_encode(obj, primitives=False):
-    assert not primitives, 'Encoding with primitives is not supported.'
-    try:  # FIXME: raise error
-        if hasattr(obj, '__class__'):
-            return {
-                '__type__': get_importable_name(obj.__class__),
-                'arguments': get_init_parameters_or_fail(obj)
-            }
-    except ValueError:
-        pass
-    return obj
-
-
-def _serialize_class_instance_decode(obj):
-    if isinstance(obj, dict) and '__type__' in obj and 'arguments' in obj:
-        return import_(obj['__type__'])(**obj['arguments'])
-    return obj
-
-
-def _type_encode(obj, primitives=False):
-    assert not primitives, 'Encoding with primitives is not supported.'
-    if isinstance(obj, type):
-        return {'__typename__': get_importable_name(obj, relocate_module=True)}
-    if isinstance(obj, (types.FunctionType, types.BuiltinFunctionType)):
-        # This is not reliable for cases like closure, `open`, or objects that is callable but not intended to be serialized.
-        # https://stackoverflow.com/questions/624926/how-do-i-detect-whether-a-python-variable-is-a-function
-        return {'__typename__': get_importable_name(obj, relocate_module=True)}
-    return obj
-
-
-def _type_decode(obj):
-    if isinstance(obj, dict) and '__typename__' in obj:
-        return import_(obj['__typename__'])
-    return obj
-
-
-json_loads = functools.partial(json_tricks.loads, extra_obj_pairs_hooks=[_serialize_class_instance_decode, _type_decode])
-json_dumps = functools.partial(json_tricks.dumps, extra_obj_encoders=[_serialize_class_instance_encode, _type_encode])
-json_load = functools.partial(json_tricks.load, extra_obj_pairs_hooks=[_serialize_class_instance_decode, _type_decode])
-json_dump = functools.partial(json_tricks.dump, extra_obj_encoders=[_serialize_class_instance_encode, _type_encode])
-
-### End of json-tricks patch ###
-
-
 class Translatable(abc.ABC):
     """
     Inherit this class and implement ``translate`` when the inner class needs a different
@@ -82,6 +34,12 @@ class Translatable(abc.ABC):
     @abc.abstractmethod
     def _translate(self) -> Any:
         pass
+
+    @staticmethod
+    def _translate_argument(d: Any) -> Any:
+        if isinstance(d, Translatable):
+            return d._translate()
+        return d
 
 
 def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=False, stop_parsing=True):
@@ -122,29 +80,12 @@ def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=Fals
     return wrapper
 
 
-def serialize_cls(cls):
-    """
-    To create an serializable class.
-    """
-    return _create_wrapper_cls(cls)
-
-
 def transparent_serialize(cls):
     """
     Wrap a module but does not record parameters. For internal use only.
     """
     return _create_wrapper_cls(cls, store_init_parameters=False)
 
-
-def serialize(cls, *args, **kwargs):
-    """
-    To create an serializable instance inline without decorator. For example,
-
-    .. code-block:: python
-
-        self.op = serialize(MyCustomOp, hidden_units=128)
-    """
-    return serialize_cls(cls)(*args, **kwargs)
 
 
 def basic_unit(cls):
@@ -160,7 +101,7 @@ def basic_unit(cls):
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
 
-    cls = trace(cls)
+    cls = trace(cls, extra_arg_proc=Translatable._translate_argument)
     cls.__dict__['_nni_basic_unit'] = True
     return cls
 
@@ -183,7 +124,7 @@ def model_wrapper(cls):
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
-    wrapper = trace(cls)
+    wrapper = trace(cls, extra_arg_proc=Translatable._translate_argument)
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
