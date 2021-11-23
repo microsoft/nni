@@ -308,13 +308,30 @@ Usage
    optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
    trainer(model, optimizer, criterion)
 
-
 User configuration for Movement Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.MovementPruner
+
+Reproduced Experiment
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Dataset
+     - Remaining Weights
+     - MaP acc.(paper/ours)
+     - MvP acc.(paper/ours)
+   * - Bert base
+     - MNLI - Dev
+     - 10%
+     - 77.8% / 73.6%
+     - 79.3% / 78.8%
 
 Linear Pruner
 -------------
