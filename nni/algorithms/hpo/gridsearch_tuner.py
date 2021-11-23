@@ -14,14 +14,17 @@ Use this tuner if you have abundant resource and want to find strictly optimal p
 Grid search tuner has no argument.
 """
 
-__all__ = 'GridSearchTuner'
+__all__ = ['GridSearchTuner']
 
 import logging
+import math
 
 import numpy as np
+from scipy.special import erfinv
 
 import nni
-from nni.common.hpo_utils import ParameterSpec, deformat_parameters, deformat_single_parameter, format_search_space
+from nni.common.hpo_utils import ParameterSpec, deformat_parameters, format_search_space
+from nni.tuner import Tuner
 
 _logger = logging.getLogger('nni.tuner.gridsearch')
 
@@ -30,50 +33,38 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 # But to support continuous space, things get tricky.
 #
 # To support continuous space, we divide search process into "epochs".
-# The first epoch only explores lowest and highest point of uniform parameters.
+# The first epoch only explores middle point of uniform and normal parameters.
 # When first epoch is fully explored, the algorithm starts second epoch,
-# where it divides uniform spaces by adding middle points into the grid.
-# Then in third epoch it adds quartile points, and so on.
-# Of course, the algorithm will skip parameters already tried in previous epochs.
+# where it divides non-categorical spaces by adding quartile points into the grid.
+# Then in third epoch it adds [1/8, 3/8, 5/8, 7/8], and so on.
 #
-# There is another problem, "q".
-# We do not want to convert quniform/qloguniform to choices,
-# because large spaces like "qloguniform(1, 1000000, 1)" will become un-searchable.
-# And we do not want to ignore the "q", or otherwise small spaces can cause exponential explosion.
-# To solve this, the algorithm will eliminate undivisible "q" ranges at the end of each epoch.
+# We divide normal distributed spaces using inverse function of CDF.
+# For example the 1/4 point of a normal distribution is defined as X where `normal_cdf(X) = 1/4`.
 #
 # Here is an example:
 #
 #   search space:
 #     x: choices(5, 7)
-#     y: uniform(-1, 1)
-#     z: quniform(2, 5, 1)
+#     y: normal(0, 1)
+#     z: quniform(2, 3, 1)
 #
 #   grid of first epoch:
 #     x: [5, 7]
-#     y: [-1, 1]
-#     z: [2, 5]
+#     y: [1/2]
+#     z: [1/2]
 #   generated parameters:
-#     (5,-1,2) (5,-1,5)  (5,1,2) (5,1,5)   (7,-1,2) (7,-1,5)  (7,1,2) (7,1,5)
+#     (5,0,3) (7,0,3)
 #
 #   grid of second epoch:
 #     x: [5, 7]
-#     y: [-1, 1, 0]
-#     z: [2, 5, 3.5]  (results in [2, 4, 5])
+#     y: [1/2, 1/4, 3/4]  (results in [0, -0.67, 0.67])
+#     z: [1/2, 1/4]  (results in [3, 2], 3/4 is eliminated due to duplication)
 #   generated parameters:
-#     (5,-1,4)  (5,1,4)  (5,0,2) (5,0,5) (5,0,4)
-#     (7,-1,4)  (7,1,4)  (7,0,2) (7,0,5) (7,0,4)
-#
-#   grid of third epoch:
-#     x: [5, 7]
-#     y: [-1, 0, 1, -0.5, 0.5]  (old values are sorted in the implementation)
-#     z: [2, 3.5, 5, 2.75]  (results in [2, 3, 4, 5])
-#   generated parameters:
-#     (5,-1,3)  (5,0,3)  (5,1,3)  (5,-0.5,2) (5,-0.5,4) (5,-0.5,5) (5,-0.5,3)  (5,0.5,2) (5,0.5,4) (5,0.5,5) (5,0.5,3)
-#     (7,-1,3)  (7,0,3)  (7,1,3)  (7,-0.5,2) (7,-0.5,4) (7,-0.5,5) (7,-0.5,3)  (7,0.5,2) (7,0.5,4) (7,0.5,5) (7,0.5,3)
+#     (5,0,2)    (5,-0.67,3) (5,-0.67,2)    (5,0.67,3) (5,0.67,2)
+#     (7,0,2)    (7,-0.67,3) (7,-0.67,2)    (7,0.67,3) (7,0.67,2)
 ##
 
-class GridSearchTuner(nni.tuner.Tuner):
+class GridSearchTuner(Tuner):
     def __init__(self):
         self.space = None
 
@@ -82,27 +73,27 @@ class GridSearchTuner(nni.tuner.Tuner):
         self.grid = None  # list[int | float]
 
         # a paremter set is internally expressed as a vector
-        # for each dimension i, self.vector[i] is the parameter value's index in self.grid[i]
-        # in third epoch of above example, vector [1, 3, 0] means parameters {x: 7, y: -0.5, z: 2}
+        # for each dimension i, self.vector[i] is the parameter's index in self.grid[i]
+        # in second epoch of above example, vector [1, 2, 0] means parameters {x: 7, y: 0.67, z: 3}
         self.vector = None  # list[int]
 
-        # this tells which parameter candidates are newly added in current epoch
-        # during third epoch of above example, epoch_bar is [2, 3, 3]
+        # this tells which parameters are succeeded from previous epoch
+        # in second epoch of above example, epoch_bar is [2, 1, 1]
         self.epoch_bar = None  # list[int]
 
-        # for "q" parameters, this stores which ranges may be divisible
-        # at the end of each epoch in above example, the value will be:
-        #   1st: {2: [(2, 5)]}
-        #   2nd: {2: [(2, 3.5), (3.5, 5)]}
-        #   3rd: {2: [(2, 2.75), (2.75, 3.5), (4.25, 5)]}  (3.5~4.25 is eliminated)
-        self.divisions = None  # dict[int, list[tuple[float, float]]]
+        # this stores which intervals can be divisible
+        # in first epoch of above example, divisions are:
+        #     {1: [(0,1/2), (1/2,1)], 2: [(0,1/2)]}
+        # in second epoch:
+        #     {1: [(0,1/4), (1/4,1/2), (1/2,3/4), (3/4,1)], 2: [(1/4,1/2)]}
+        # and in third epoch:
+        #     {1: [(0,1/8), ..., (7/8,1)], 2: []}
+        self.divisions = {}  # dict[int, list[tuple[float, float]]]
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
         if not self.space:  # the tuner will crash in this case, report it explicitly
             raise ValueError('Grid search tuner does not support empty search space')
-        if any(spec.normal_distributed for spec in self.space.values()):
-            raise NotImplementedError('Grid search does not support normal distribution')
         self._init_grid()
 
     def generate_parameters(self, *args, **kwargs):
@@ -114,22 +105,27 @@ class GridSearchTuner(nni.tuner.Tuner):
     def receive_trial_result(self, *args, **kwargs):
         pass
 
+    def import_data(self, data):  # for resuming
+        # this is not accurate for concurrency > 1
+        # but I believe it's not worthy to introduce complex logic to fix this
+        # instead we should support checkpoint (TODO)
+        for _ in data:
+            self._suggest()
+
     def _suggest(self):
         # returns next parameter set, or None if the space is already fully explored
         while True:
-            if self.grid is None:
-                # search space fully explored
+            if self.grid is None:  # search space fully explored
                 return None
 
             self._next_vector()
 
-            if self.vector is None:
-                # epoch end, update grid and retry
+            if self.vector is None:  # epoch end, update grid and retry
                 self._next_grid()
                 continue
 
-            if all((self.vector[i] < self.epoch_bar[i]) for i in range(len(self.space))):
-                # already explored in previous epochs
+            old = all((self.vector[i] < self.epoch_bar[i]) for i in range(len(self.space)))
+            if old:  # already explored in past epochs
                 continue
 
             # this vector is valid, stop
@@ -142,7 +138,7 @@ class GridSearchTuner(nni.tuner.Tuner):
             self.vector = [0] * len(self.space)
             return
 
-        # deals with nested choice, don't touch nested spaces that are not chosen by current vector
+        # deal with nested choice, don't touch nested spaces that are not chosen by current vector
         activated_dims = []
         params = self._current_parameters()
         for i, spec in enumerate(self.space.values()):
@@ -163,21 +159,13 @@ class GridSearchTuner(nni.tuner.Tuner):
         updated = False
         for i, spec in enumerate(self.space.values()):
             self.epoch_bar[i] = len(self.grid[i])
-            if spec.categorical:
-                continue
-            self.grid[i] = sorted(self.grid[i])
-
-            if spec.q is None:
-                for j in range(self.epoch_bar[i] - 1):
-                    mid = (self.grid[i][j] + self.grid[i][j + 1]) / 2
-                    self.grid[i].append(mid)
-            else:
+            if not spec.categorical:
                 new_vals = []
                 new_divs = []
-                for l, r in self.divisions[i]:
+                for l, r in self.divisions[i]:  # we can skip these for non-q, but it will harm readability
                     mid = (l + r) / 2
-                    diff_l = _less_after_q(l, mid, spec)
-                    diff_r = _less_after_q(mid, r, spec)
+                    diff_l = _less(l, mid, spec)
+                    diff_r = _less(mid, r, spec)
                     if diff_l and diff_r:
                         new_vals.append(mid)
                         updated = True
@@ -201,17 +189,13 @@ class GridSearchTuner(nni.tuner.Tuner):
         for i, spec in enumerate(self.space.values()):
             if spec.categorical:
                 self.grid[i] = list(range(spec.size))
-                continue
-
-            if spec.q is None:
-                self.grid[i] = [spec.low, spec.high]
             else:
-                if _less_after_q(spec.low, spec.high, spec):
-                    self.grid[i] = [spec.low, spec.high]
-                    self.divisions[i] = [(spec.low, spec.high)]
-                else:  # only one choice
-                    self.grid[i] = [spec.low]
-                    self.divisions[i] = []
+                self.grid[i] = [0.5]
+                self.divisions[i] = []
+                if _less(0, 0.5, spec):
+                    self.divisions[i].append((0, 0.5))
+                if _less(0.5, 1, spec):
+                    self.divisions[i].append((0.5, 1))
 
         size = _grid_size_info(self.grid)
         _logger.info(f'Grid initialized, size: {size}')
@@ -220,22 +204,39 @@ class GridSearchTuner(nni.tuner.Tuner):
         # convert self.vector to "formatted" parameters
         params = {}
         for i, spec in enumerate(self.space.values()):
-            params[spec.key] = self.grid[i][self.vector[i]]
+            x = self.grid[i][self.vector[i]]
+            if spec.categorical:
+                params[spec.key] = x
+            else:
+                params[spec.key] = _cdf_inverse(x, spec)
         return params
 
-def _less_after_q(x, y, spec):
-    real_x = _deformat_single_parameter(x, spec)
-    real_y = _deformat_single_parameter(y, spec)
-    return x < y
+def _cdf_inverse(x, spec):
+    # inverse function of spec's cumulative distribution function
+    if spec.normal_distributed:
+        return spec.mu + spec.sigma * math.sqrt(2) * erfinv(2 * x - 1)
+    else:
+        return spec.low + (spec.high - spec.low) * x
+
+def _less(x, y, spec):
+    if spec.q is None:
+        return x < y
+    real_x = _deformat_single_parameter(_cdf_inverse(x, spec), spec)
+    real_y = _deformat_single_parameter(_cdf_inverse(y, spec), spec)
+    return real_x < real_y
 
 def _deformat_single_parameter(x, spec):
+    if math.isinf(x):
+        return x
     spec_dict = spec._asdict()
     spec_dict['key'] = (spec.name,)
     spec = ParameterSpec(**spec_dict)
     params = deformat_parameters({spec.key: x}, {spec.key: spec})
-    return params[spec.key]
+    return params[spec.name]
 
 def _grid_size_info(grid):
+    if len(grid) == 1:
+        return str(len(grid[0]))
     sizes = [len(candidates) for candidates in grid]
     mul = 'x'.join(str(s) for s in sizes)
     total = np.prod(sizes)
