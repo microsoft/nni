@@ -8,16 +8,20 @@ import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetes
 
 export interface TrainingServiceConfig {
     platform: string;
+    trialCommand: string;
+    trialCodeDirectory: string;
+    trialGpuNumber?: number;
+    nniManagerIp?: string;
 }
 
 /* Local */
 
 export interface LocalConfig extends TrainingServiceConfig {
     platform: 'local';
-    reuseMode: boolean;
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
+    reuseMode: boolean;
 }
 
 /* Remote */
@@ -37,8 +41,8 @@ export interface RemoteMachineConfig {
 
 export interface RemoteConfig extends TrainingServiceConfig {
     platform: 'remote';
-    reuseMode: boolean;
     machineList: RemoteMachineConfig[];
+    reuseMode: boolean;
 }
 
 /* OpenPAI */
@@ -52,11 +56,11 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     trialMemorySize: string;
     storageConfigName: string;
     dockerImage: string;
+    virtualCluster?: string;
     localStorageMountPoint: string;
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
-    virtualCluster?: string;
 }
 
 /* AML */
@@ -89,10 +93,8 @@ export interface DlcConfig extends TrainingServiceConfig {
 }
 /* Kubeflow */
 
-// FIXME: merge with shared storage config
 export interface KubernetesStorageConfig {
     storageType: string;
-    maxTrialNumberPerGpu?: number;
     server?: string;
     path?: string;
     azureAccount?: string;
@@ -103,51 +105,51 @@ export interface KubernetesStorageConfig {
 
 export interface KubeflowRoleConfig {
     replicas: number;
-    codeDirectory: string;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: number;
+    memorySize: string | number;
     dockerImage: string;
+    codeDirectory: string;
     privateRegistryAuthPath?: string;
 }
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
-    ps?: KubeflowRoleConfig;
-    master?: KubeflowRoleConfig;
-    worker?: KubeflowRoleConfig;
-    maxTrialNumberPerGpu: number;
     operator: KubeflowOperator;
     apiVersion: OperatorApiVersion;
     storage: KubernetesStorageConfig;
+    worker?: KubeflowRoleConfig;
+    ps?: KubeflowRoleConfig;
+    master?: KubeflowRoleConfig;
     reuseMode: boolean;
+    maxTrialNumberPerGpu?: number;
 }
 
 export interface FrameworkControllerTaskRoleConfig {
     name: string;
+    dockerImage: string;
     taskNumber: number;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: number;
-    dockerImage: string;
-    privateRegistryAuthPath?: string;
+    memorySize: string | number;
     frameworkAttemptCompletionPolicy: {
         minFailedTaskCount: number;
         minSucceedTaskCount: number;
     };
+    privateRegistryAuthPath?: string;
 }
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {
     platform: 'frameworkcontroller';
-    taskRoles: FrameworkControllerTaskRoleConfig[];
-    maxTrialNumberPerGpu: number;
     storage: KubernetesStorageConfig;
-    reuseMode: boolean;
-    namespace: 'default';
-    apiVersion: string;
     serviceAccountName: string;
+    taskRoles: FrameworkControllerTaskRoleConfig[];
+    reuseMode: boolean;
+    maxTrialNumberPerGpu?: number;
+    namespace?: 'default';
+    apiVersion?: string;
 }
 
 /* shared storage */
@@ -168,6 +170,7 @@ export interface NfsConfig extends SharedStorageConfig {
 export interface AzureBlobConfig extends SharedStorageConfig {
     storageAccountName: string;
     storageAccountKey?: string;
+    resourceGroupName?: string;
     containerName: string;
 }
 
@@ -182,14 +185,15 @@ export interface AlgorithmConfig {
 
 export interface ExperimentConfig {
     experimentName?: string;
+    // searchSpaceFile  (handled outside NNI manager)
     searchSpace: any;
     trialCommand: string;
     trialCodeDirectory: string;
     trialConcurrency: number;
     trialGpuNumber?: number;
-    maxExperimentDuration?: string;
-    maxTrialDuration?: string;
+    maxExperimentDuration?: string | number;
     maxTrialNumber?: number;
+    maxTrialDuration?: string | number;
     nniManagerIp?: string;
     //useAnnotation: boolean;  // dealed inside nnictl
     debug: boolean;
