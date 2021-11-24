@@ -23,8 +23,15 @@ from ..tools.nnictl.command_utils import kill_command
 _logger = logging.getLogger('nni.experiment')
 
 class RunMode(Enum):
-    Foreground = 'foreground'
+    """
+    Config lifecycle and ouput redirection of NNI manager process.
+
+      - Background: stop NNI manager when Python script exits; do not print NNI manager log. (default)
+      - Foreground: stop NNI manager when Python script exits; print NNI manager log to stdout.
+      - Detach: do not stop NNI manager when Python script exits.
+    """
     Background = 'background'
+    Foreground = 'foreground'
     Detach = 'detach'
 
 class Experiment:
@@ -116,8 +123,7 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        nni_manager_args = launcher.NniManagerArgs(self.mode, self.id, config, port, debug, foreground, self.url_prefix)
-        self._proc = launcher.start_experiment(config, nni_manager_args)
+        self._proc = launcher.start_experiment(self.mode, self.id, config, port, debug, foreground, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed

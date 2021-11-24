@@ -73,38 +73,38 @@ class NniManagerArgs:
                     ret.append(str(value))
         return ret
 
-def start_experiment(config, nni_manager_args):
+def start_experiment(action, exp_id, config, port, debug, foreground, url_prefix):
     proc = None
+    nni_manager_args = NniManagerArgs(action, exp_id, config, port, debug, foreground, url_prefix)
 
-    _ensure_port_idle(nni_manager_args.port)
-    ws_platforms = ['hybrid', 'remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']
-    if not nni_manager_args.readonly and nni_manager_args.mode in ws_platforms:
+    _ensure_port_idle(port)
+    websocket_platforms = ['hybrid', 'remote', 'openpai', 'kubeflow', 'frameworkcontroller', 'adl']
+    if action != 'view' and nni_manager_args.mode in websocket_platforms:
         _ensure_port_idle(port + 1, f'{nni_manager_args.mode} requires an additional port')
 
     try:
         _logger.info(
-            'Creating experiment, Experiment ID: %s',
-            colorama.Fore.CYAN + nni_manager_args.experiment_id + colorama.Style.RESET_ALL
+            'Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL
         )
         proc = _start_rest_server(nni_manager_args)
         start_time = int(time.time() * 1000)
 
         _logger.info('Starting web server...')
-        _check_rest_server(nni_manager_args.port, url_prefix=nni_manager_args.url_prefix)
+        _check_rest_server(port, url_prefix=url_prefix)
 
         Experiments().add_experiment(
-            nni_manager_args.experiment_id,
-            nni_manager_args.port,
+            exp_id,
+            port,
             start_time,
             nni_manager_args.mode,
             config.experiment_name,
             pid=proc.pid,
-            logDir=nni_manager_args.log_dir,
+            logDir=config.experiment_working_directory,
             tag=[],
         )
 
         _logger.info('Setting up...')
-        rest.post(nni_manager_args.port, '/experiment', config.json(), nni_manager_args.url_prefix)
+        rest.post(port, '/experiment', config.json(), url_prefix)
 
         return proc
 

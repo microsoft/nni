@@ -142,6 +142,16 @@ class ConfigBase:
         return config
 
     def canonical_copy(self):
+        """
+        Create a canonicalized copy of the config, and validate it.
+
+        This function is mainly used internally by NNI.
+
+        Returns
+        -------
+        type(self)
+            A deep copy.
+        """
         canon = copy.deepcopy(self)
         canon._canonicalize([])
         canon._validate_canonical()
