@@ -99,8 +99,6 @@ class ExperimentConfig(ConfigBase):
                 self.training_service = utils.load_training_service_config(self.training_service)
 
     def _canonicalize(self, _parents):
-        self.max_experiment_duration = utils.parse_time(self.max_experiment_duration)
-        self.max_trial_duration = utils.parse_time(self.max_trial_duration)
         if self.log_level is None:
             self.log_level = 'debug' if self.debug else 'info'
         self.tuner_gpu_indices = utils.canonical_gpu_indices(self.tuner_gpu_indices)
@@ -129,7 +127,7 @@ class ExperimentConfig(ConfigBase):
         space_cnt = (self.search_space is not None) + (self.search_space_file is not None)
         if self.use_annotation and space_cnt != 0:
             raise ValueError('ExperimentConfig: search space must not be set when annotation is enabled')
-        if not self.use_annotation and space_cnt != 1:
+        if not self.use_annotation and space_cnt < 1:
             raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
 
         if self.search_space_file is not None:
@@ -140,9 +138,9 @@ class ExperimentConfig(ConfigBase):
         # `if concurrency < 0: raise ValueError('trial_concurrency ({concurrency}) must greater than 0')`
         # but I believe there will be hardy few users make this kind of mistakes, so let's keep it simple
         assert self.trial_concurrency > 0
-        assert self.max_experiment_duration is None or self.max_experiment_duration > 0
+        assert self.max_experiment_duration is None or utils.parse_time(self.max_experiment_duration) > 0
         assert self.max_trial_number is None or self.max_trial_number > 0
-        assert self.max_trial_duration is None or self.max_trial_duration > 0
+        assert self.max_trial_duration is None or utils.parse_time(self.max_trial_duration) > 0
         assert self.log_level in ['fatal', 'error', 'warning', 'info', 'debug', 'trace']
 
         # following line is disabled because it has side effect
