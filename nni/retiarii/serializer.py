@@ -7,23 +7,19 @@ import inspect
 import types
 from typing import Any
 
-import json_tricks
-
 from nni.common.serializer import trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace, get_importable_name, get_module_name, import_, reset_uid, ContextStack, NoContextError, get_current_context
 
 
-def get_init_parameters_or_fail(obj, silently=False):
+def get_init_parameters_or_fail(obj):
     if hasattr(obj, '_init_parameters'):
         return obj._init_parameters
-    elif silently:
-        return None
-    else:
-        raise ValueError(f'Object {obj} needs to be serializable but `_init_parameters` is not available. '
-                         'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
-                         'If it is a customized module, please to decorate it with @basic_unit. '
-                         'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
-                         'try to use serialize or @serialize_cls.')
+    raise ValueError(f'Object {obj} needs to be serializable but `_init_parameters` is not available. '
+                     'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
+                     'If it is a customized module, please to decorate it with @basic_unit. '
+                     'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
+                     'try to use serialize or @serialize_cls.')
+
 
 class Translatable(abc.ABC):
     """
@@ -42,55 +38,12 @@ class Translatable(abc.ABC):
         return d
 
 
-def _create_wrapper_cls(cls, store_init_parameters=True, reset_mutation_uid=False, stop_parsing=True):
-    class wrapper(cls):
-        def __init__(self, *args, **kwargs):
-            self._stop_parsing = stop_parsing
-            if reset_mutation_uid:
-                reset_uid('mutation')
-            if store_init_parameters:
-                argname_list = list(inspect.signature(cls.__init__).parameters.keys())[1:]
-                full_args = {}
-                full_args.update(kwargs)
-
-                assert len(args) <= len(argname_list), f'Length of {args} is greater than length of {argname_list}.'
-                for argname, value in zip(argname_list, args):
-                    full_args[argname] = value
-
-                # translate parameters
-                args = list(args)
-                for i, value in enumerate(args):
-                    if isinstance(value, Translatable):
-                        args[i] = value._translate()
-                for i, value in kwargs.items():
-                    if isinstance(value, Translatable):
-                        kwargs[i] = value._translate()
-
-                self._init_parameters = full_args
-            else:
-                self._init_parameters = {}
-
-            super().__init__(*args, **kwargs)
-
-    wrapper.__module__ = get_module_name(cls)
-    wrapper.__name__ = cls.__name__
-    wrapper.__qualname__ = cls.__qualname__
-    wrapper.__init__.__doc__ = cls.__init__.__doc__
-
-    return wrapper
-
-
-def transparent_serialize(cls):
-    """
-    Wrap a module but does not record parameters. For internal use only.
-    """
-    return _create_wrapper_cls(cls, store_init_parameters=False)
-
-
-
-def basic_unit(cls):
+def basic_unit(cls, basic_unit_tag=True):
     """
     To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
+
+    ``basic_unit_tag`` is true by default. If set to false, it will not be explicitly mark as a basic unit, and
+    graph parser will continue to parse. Currently, this is to handle a special case in ``nn.Sequential``.
 
     .. code-block:: python
 
@@ -102,7 +55,7 @@ def basic_unit(cls):
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
 
     cls = trace(cls, extra_arg_proc=Translatable._translate_argument)
-    cls.__dict__['_nni_basic_unit'] = True
+    cls.__dict__['_nni_basic_unit'] = basic_unit_tag
     return cls
 
 
