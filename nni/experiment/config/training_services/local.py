@@ -6,11 +6,11 @@ Configuration for local training service.
 
 Check the reference_ for explaination of each field.
 
-You man also want to check `local training service doc`_.
+You may also want to check `local training service doc`_.
 
 .. _reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html
 
-.. _local training service doc: https://nni.readthedocs.io/en/latest/TrainingService/LocalMode.html
+.. _local training service doc: https://nni.readthedocs.io/en/stable/TrainingService/LocalMode.html
 
 """
 
@@ -20,7 +20,7 @@ from dataclasses import dataclass
 from typing import List, Optional, Union
 
 from ..training_service import TrainingServiceConfig
-from ..utils import canonical_gpu_indices
+from .. import utils
 
 @dataclass(init=False)
 class LocalConfig(TrainingServiceConfig):
@@ -32,11 +32,12 @@ class LocalConfig(TrainingServiceConfig):
 
     def _canonicalize(self, parents):
         super()._canonicalize(parents)
-        self.gpu_indices = canonical_gpu_indices(self.gpu_indices)
+        self.gpu_indices = utils.canonical_gpu_indices(self.gpu_indices)
         self.nni_manager_ip = None
 
     def _validate_canonical(self):
         super()._validate_canonical()
+        utils.validate_gpu_indices(self.gpu_indices)
         if self.trial_gpu_number and self.use_active_gpu is None:
             raise ValueError(
                 'LocalConfig: please set use_active_gpu to True if your system has GUI, '

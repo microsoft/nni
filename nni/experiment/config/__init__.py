@@ -2,17 +2,6 @@
 # Licensed under the MIT license.
 
 from .exp_config import ExperimentConfig
+from .algorithm import AlgorithmConfig, CustomAlgorithmConfig
 from .training_services import *
-
-# FIXME: temporarily removed to run test case
-
-#from .common import *
-#from .local import *
-#from .remote import *
-#from .openpai import *
-#from .aml import *
-#from .kubeflow import *
-#from .frameworkcontroller import *
-#from .adl import *
-#from .dlc import *
-#from .shared_storage import *
+from .shared_storage import *
