@@ -21,7 +21,7 @@ import numpy as np
 from scipy.special import erf  # pylint: disable=no-name-in-module
 
 from nni.tuner import Tuner
-from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters
+from nni.common.hpo_utils import OptimizeMode, format_search_space, deformat_parameters, format_parameters
 from . import random_tuner
 
 _logger = logging.getLogger('nni.tuner.tpe')
@@ -47,7 +47,7 @@ class TpeArguments(NamedTuple):
     n_startup_jobs: int (default: 20)
         The first N hyper-parameters are generated fully randomly for warming up.
         If the search space is large, you can increase this value.
-        Or if max_trial_number is small, you man want to decrease it.
+        Or if max_trial_number is small, you may want to decrease it.
 
     n_ei_candidates: int (default: 24)
         For each iteration TPE samples EI for N sets of parameters and choose the best one. (loosely speaking)
@@ -57,7 +57,11 @@ class TpeArguments(NamedTuple):
         This controls how many iterations it takes for a trial to start decay.
 
     prior_weight: float (default: 1.0)
-        TPE uses history trials plus the search space itself (called "prior") to choose parameters.
+        TPE treats user provided search space as prior.
+        When generating new trials, it also incorporates the prior in trial history by transforming the search space to
+        one trial configuration (i.e., each parameter of this configuration chooses the mean of its candidate range).
+        Here, prior_weight determines the weight of this trial configuration in the history trial configurations.
+
         With prior weight 1.0, the search space is treated as one good trial.
         For example, "normal(0, 1)" effectly equals to a trial with x = 0 which has yielded good result.
 
@@ -99,15 +103,16 @@ class TpeTuner(Tuner):
         _logger.info(f'Using random seed {seed}')
 
         self._params = {}                   # parameter_id -> parameters (in internal format)
-        self._running_params = {}           # subset of above
-        self._history = defaultdict(list)   # parameter key -> list of loss
+        self._running_params = {}           # subset of above, that has been submitted but has not yet received loss
+        self._history = defaultdict(list)   # parameter key -> list of Record
 
     def update_search_space(self, space):
         self.space = format_search_space(space)
 
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
-            history = {key: records.copy() for key, records in self._history.items()}  # copy history to append lies
+            # give a fake loss for each concurrently running paramater set
+            history = {key: records.copy() for key, records in self._history.items()}  # copy history
             lie = self.liar.lie()
             for param in self._running_params.values():
                 for key, value in param.items():
@@ -132,6 +137,16 @@ class TpeTuner(Tuner):
 
     def trial_end(self, parameter_id, _success, **kwargs):
         self._running_params.pop(parameter_id, None)
+
+    def import_data(self, data):  # for resuming experiment
+        for trial in data:
+            param = format_parameters(trial['parameter'], self.space)
+            loss = trial['value']
+            if self.optimize_mode is OptimizeMode.Maximize:
+                loss = -trial['value']
+            for key, value in param.items():
+                self._history[key].append(Record(value, loss))
+        _logger.info(f'Replayed {len(data)} trials')
 
 def suggest(args, rng, space, history):
     params = {}

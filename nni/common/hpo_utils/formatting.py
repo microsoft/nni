@@ -14,7 +14,7 @@ You should check its code before reading docstrings in this file.
 __all__ = [
     'ParameterSpec',
     'deformat_parameters',
-    'deformat_single_parameter',
+    'format_parameters',
     'format_search_space',
 ]
 
@@ -76,7 +76,7 @@ def format_search_space(search_space):
     # Remove these comments when we drop 3.6 support.
     return {spec.key: spec for spec in formatted}
 
-def deformat_parameters(parameters, formatted_search_space):
+def deformat_parameters(formatted_parameters, formatted_search_space):
     """
     Convert internal format parameters to users' expected format.
 
@@ -89,32 +89,58 @@ def deformat_parameters(parameters, formatted_search_space):
      4. For nested choices, convert flatten key-value pairs into nested structure.
     """
     ret = {}
-    for key, x in parameters.items():
+    for key, x in formatted_parameters.items():
         spec = formatted_search_space[key]
-        if spec.categorical and _is_nested_choices(spec.values):
-            _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
+        if spec.categorical:
+            if spec.type == 'randint':
+                lower = min(math.ceil(float(x)) for x in spec.values)
+                _assign(ret, key, int(lower + x))
+            elif _is_nested_choices(spec.values):
+                _assign(ret, tuple([*key, '_name']), spec.values[x]['_name'])
+            else:
+                _assign(ret, key, spec.values[x])
         else:
-            _assign(ret, key, deformat_single_parameter(x, spec))
+            if spec.log_distributed:
+                x = math.exp(x)
+            if spec.q is not None:
+                x = round(x / spec.q) * spec.q
+            if spec.clip:
+                x = max(x, spec.clip[0])
+                x = min(x, spec.clip[1])
+            if isinstance(x, np.number):
+                x = x.item()
+            _assign(ret, key, x)
     return ret
 
-def deformat_single_parameter(x, spec):
-    if spec.categorical:
-        if spec.type == 'randint':
-            lower = min(math.ceil(float(x)) for x in spec.values)
-            return int(lower + x)
+def format_parameters(parameters, formatted_search_space):
+    """
+    Convert end users' parameter format back to internal format, mainly for resuming experiments.
+
+    The result is not accurate for "q*" and for "choice" that have duplicate candidates.
+    """
+    # I don't like this function. It's better to use checkpoint for resuming.
+    ret = {}
+    for key, spec in formatted_search_space.items():
+        if not spec.is_activated_in(ret):
+            continue
+        value = parameters
+        for name in key:
+            if isinstance(name, str):
+                value = value[name]
+        if spec.categorical:
+            if spec.type == 'randint':
+                lower = min(math.ceil(float(x)) for x in spec.values)
+                ret[key] = value - lower
+            elif _is_nested_choices(spec.values):
+                names = [nested['_name'] for nested in spec.values]
+                ret[key] = names.index(value['_name'])
+            else:
+                ret[key] = spec.values.index(value)
         else:
-            return spec.values[x]
-    else:
-        if spec.log_distributed:
-            x = math.exp(x)
-        if spec.q is not None:
-            x = round(x / spec.q) * spec.q
-        if spec.clip:
-            x = max(x, spec.clip[0])
-            x = min(x, spec.clip[1])
-        if isinstance(x, np.number):
-            x = x.item()
-        return x
+            if spec.log_distributed:
+                value = math.log(value)
+            ret[key] = value
+    return ret
 
 def _format_search_space(parent_key, space):
     formatted = []
