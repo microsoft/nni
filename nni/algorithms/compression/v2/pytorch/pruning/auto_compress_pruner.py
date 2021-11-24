@@ -45,8 +45,7 @@ class AutoCompressPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     total_iteration : int
         The total iteration number.
     evaluator : Callable[[Module], float]
@@ -83,7 +82,7 @@ class AutoCompressPruner(IterativePruner):
         - pruning_algorithm : str. Default: `'level'`.
             Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         - pruning_params : Dict. Default: `{}`.
-            If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+            If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
 
     log_dir : str
         The log directory used to save the result, you can find the best result under this folder.

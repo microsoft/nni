@@ -74,8 +74,7 @@ class LinearPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -96,7 +95,7 @@ class LinearPruner(IterativePruner):
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
     pruning_params : Dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -120,8 +119,7 @@ class AGPPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -142,7 +140,7 @@ class AGPPruner(IterativePruner):
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
     pruning_params : Dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -166,8 +164,7 @@ class LotteryTicketPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -190,7 +187,7 @@ class LotteryTicketPruner(IterativePruner):
     reset_weight : bool
         If set True, the model weight will reset to the original model weight at the end of each iteration step.
     pruning_params : Dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
@@ -215,8 +212,7 @@ class SimulatedAnnealingPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     start_temperature : float
@@ -231,7 +227,7 @@ class SimulatedAnnealingPruner(IterativePruner):
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
     pruning_params : Dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     log_dir : str
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
