@@ -57,7 +57,11 @@ class TpeArguments(NamedTuple):
         This controls how many iterations it takes for a trial to start decay.
 
     prior_weight: float (default: 1.0)
-        TPE uses history trials plus the search space itself (called "prior") to choose parameters.
+        TPE treats user provided search space as prior.
+        When generating new trials, it also incorporates the prior in trial history by transforming the search space to
+        one trial configuration (i.e., each parameter of this configuration chooses the mean of its candidate range).
+        Here, prior_weight determines the weight of this trial configuration in the history trial configurations.
+
         With prior weight 1.0, the search space is treated as one good trial.
         For example, "normal(0, 1)" effectly equals to a trial with x = 0 which has yielded good result.
 
@@ -99,7 +103,7 @@ class TpeTuner(Tuner):
         _logger.info(f'Using random seed {seed}')
 
         self._params = {}                   # parameter_id -> parameters (in internal format)
-        self._running_params = {}           # subset of above
+        self._running_params = {}           # subset of above, that has been submitted but has not yet received loss
         self._history = defaultdict(list)   # parameter key -> list of Record
 
     def update_search_space(self, space):
@@ -107,7 +111,8 @@ class TpeTuner(Tuner):
 
     def generate_parameters(self, parameter_id, **kwargs):
         if self.liar and self._running_params:
-            history = {key: records.copy() for key, records in self._history.items()}  # copy history to append lies
+            # give a fake loss for each concurrently running paramater set
+            history = {key: records.copy() for key, records in self._history.items()}  # copy history
             lie = self.liar.lie()
             for param in self._running_params.values():
                 for key, value in param.items():
