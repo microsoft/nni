@@ -4,6 +4,7 @@
 import contextlib
 from dataclasses import dataclass, fields
 import logging
+import os.path
 from pathlib import Path
 import socket
 from subprocess import Popen
@@ -125,7 +126,6 @@ def _start_rest_server(nni_manager_args) -> Tuple[int, Popen]:
         from subprocess import CREATE_NEW_PROCESS_GROUP
         return Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        import os
         return Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
 
 
@@ -237,16 +237,24 @@ def _save_experiment_information(experiment_id: str, port: int, start_time: int,
 
 
 def get_stopped_experiment_config(exp_id, exp_dir=None):
-    update_experiment()
-    experiments_config = Experiments()
-    experiments_dict = experiments_config.get_all_experiments()
-    experiment_metadata = experiments_dict.get(exp_id)
-    if experiment_metadata is None:
-        _logger.error('Id %s not exist!', exp_id)
-        return
-    if experiment_metadata['status'] != 'STOPPED':
-        _logger.error('Only stopped experiments can be resumed or viewed!')
-        return
-    experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
-    config = ExperimentConfig(**experiment_config)
-    return config
+    if exp_dir:
+        exp_config = Config(exp_id, exp_dir).get_config()
+        config = ExperimentConfig(**exp_config)
+        if not os.path.samefile(exp_dir, config.experiment_working_directory):
+            msg = 'Experiment working directory provided in command line (%s) is different from experiment config (%s)'
+            _logger.warning(msg, exp_dir, config.experiment_working_directory)
+            config.experiment_working_directory = exp_dir
+        return config
+    else:
+        update_experiment()
+        experiments_config = Experiments()
+        experiments_dict = experiments_config.get_all_experiments()
+        experiment_metadata = experiments_dict.get(exp_id)
+        if experiment_metadata is None:
+            _logger.error('Id %s not exist!', exp_id)
+            return
+        if experiment_metadata['status'] != 'STOPPED':
+            _logger.error('Only stopped experiments can be resumed or viewed!')
+            return
+        experiment_config = Config(exp_id, experiment_metadata['logDir']).get_config()
+        return ExperimentConfig(**experiment_config)
