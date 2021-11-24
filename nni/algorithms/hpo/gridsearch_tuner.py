@@ -79,7 +79,7 @@ class GridSearchTuner(Tuner):
         # in second epoch of above example, epoch_bar is [2, 1, 1]
         self.epoch_bar = None  # list[int]
 
-        # this stores which intervals can be divisible
+        # this stores which intervals are possibly divisible (low < high after log and q)
         # in first epoch of above example, divisions are:
         #     {1: [(0,1/2), (1/2,1)], 2: [(0,1/2)]}
         # in second epoch:
