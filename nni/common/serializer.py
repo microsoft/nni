@@ -1,6 +1,7 @@
 import base64
 import functools
 import inspect
+import numbers
 from typing import Any, Union, Dict, Optional, List, TypeVar, Callable
 
 import json_tricks  # use json_tricks as serializer backend
@@ -37,8 +38,8 @@ class SerializableObject:
             # this is for internal usage only.
             # kwargs is used to init the full object in the same object as this one, for simpler implementation.
             super().__init__(
-                *[self._recursive_init(arg) for arg in args],
-                **{kw: self._recursive_init(arg) for kw, arg in kwargs.items()}
+                *[_argument_processor(arg) for arg in args],
+                **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
             )
 
     def get(self) -> Any:
@@ -49,8 +50,8 @@ class SerializableObject:
             return self
         if '_nni_cache' not in self.__dict__:
             self.__dict__['_nni_cache'] = self._get_nni_attr('symbol')(
-                *[self._recursive_init(arg) for arg in self._get_nni_attr('args')],
-                **{kw: self._recursive_init(arg) for kw, arg in self._get_nni_attr('kwargs').items()}
+                *[_argument_processor(arg) for arg in self._get_nni_attr('args')],
+                **{kw: _argument_processor(arg) for kw, arg in self._get_nni_attr('kwargs').items()}
             )
         return self.__dict__['_nni_cache']
 
@@ -85,16 +86,6 @@ class SerializableObject:
                       [repr(d) for d in self._get_nni_attr('args')] +
                       [k + '=' + repr(v) for k, v in self._get_nni_attr('kwargs').items()]) + \
             ')'
-
-    def _recursive_init(self, d):
-        # auto-call get() to prevent type-converting in downstreaming functions
-        if isinstance(d, SerializableObject):
-            d = d.get()
-        # see comments in `_freeze_list_and_dict`
-        d = _freeze_list_and_dict(d)
-        if hasattr(self, '_nni_extra_argument_process') and self._nni_extra_argument_process is not None:
-            d = self._nni_extra_argument_process(d)
-        return d
 
 
 def trace(cls_or_func: T = None, *, kw_only: bool = True,
@@ -258,7 +249,22 @@ def _trace_func(func, kw_only, extra_arg_proc):
     def wrapper(*args, **kwargs):
         # similar to class, store parameters here
         args, kwargs = _formulate_arguments(func, args, kwargs, kw_only)
-        return SerializableObject(func, args, kwargs, _extra_argument_process=extra_arg_proc)
+
+        # it's not clear whether this wrapper can handle all the types in python
+        # There are many cases here: https://docs.python.org/3/reference/datamodel.html
+        # but it looks that we have handled most commonly used cases
+        res = func(
+            *[_argument_processor(arg) for arg in args],
+            **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
+        )
+
+        if res is None:
+            res = SerializableObject(func, args, kwargs)
+        elif hasattr(res, '__class__') and (hasattr(res, '__dict__') or hasattr(res, '__slots__')):
+            ...
+        elif isinstance(res, (numbers.Number, str, tuple, bytes, )):
+            # handle primitive types
+            ...
 
     return wrapper
 
@@ -273,6 +279,19 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 setattr(wrapper, k, v)
             except AttributeError:
                 pass
+
+
+def _argument_processor(arg, extra=None):
+    # to convert argument before it is used in class or function
+    # 1) auto-call get() to prevent type-converting in downstreaming functions
+    if isinstance(arg, SerializableObject):
+        arg = arg.get()
+    # 2) see comments in `_freeze_list_and_dict`
+    arg = _freeze_list_and_dict(arg)
+    # 3) extra process, e.g., handle cases like ValueChoice
+    if extra is not None:
+        arg = extra(arg)
+    return arg
 
 
 def _freeze_list_and_dict(list_or_dict):
