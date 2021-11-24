@@ -145,8 +145,8 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True,
     return wrap(cls_or_func)
 
 
-def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size_limit: int = 4096,
-         **json_tricks_kwargs) -> Union[str, bytes]:
+def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_size_limit: int = 4096,
+         allow_nan: bool = True, **json_tricks_kwargs) -> Union[str, bytes]:
     """
     Convert a nested data structure to a json string. Save to file if fp is specified.
     Use json-tricks as main backend. For unhandled cases in json-tricks, use cloudpickle.
@@ -155,10 +155,14 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size
 
     Parameters
     ----------
+    obj : any
+        The object to dump.
     fp : file handler or path
         File to write to. Keep it none if you want to dump a string.
     pickle_size_limit : int
         This is set to avoid too long serialization result. Set to -1 to disable size check.
+    allow_nan : bool
+        Whether to allow nan to be serialized. Different from default value in json-tricks, our default value is true.
     json_tricks_kwargs : dict
         Other keyword arguments passed to json tricks (backend), e.g., indent=2.
 
@@ -183,6 +187,8 @@ def dump(obj: Any, fp: Optional[Any] = None, use_trace: bool = True, pickle_size
         functools.partial(_json_tricks_any_object_encode, pickle_size_limit=pickle_size_limit),
     ]
 
+    json_tricks_kwargs['allow_nan'] = allow_nan
+
     if fp is not None:
         return json_tricks.dump(obj, fp, obj_encoders=encoders, **json_tricks_kwargs)
     else:
@@ -196,6 +202,15 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
 
     Parameters
     ----------
+    string : str
+        JSON string to parse. Can be set to none if fp is used.
+    fp : str
+        File path to load JSON from. Can be set to none if string is used.
+
+    Returns
+    -------
+    any
+        The loaded object.
     """
     assert string is not None or fp is not None
     # see encoders for explanation

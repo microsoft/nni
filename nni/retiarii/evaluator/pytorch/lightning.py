@@ -20,7 +20,6 @@ except ImportError:
     cgo_import_failed = True
 
 from ...graph import Evaluator
-from ...serializer import serialize_cls
 
 
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
@@ -40,8 +39,8 @@ class LightningModule(pl.LightningModule):
             self.model = model
 
 
-Trainer = serialize_cls(pl.Trainer)
-DataLoader = serialize_cls(DataLoader)
+Trainer = nni.trace(pl.Trainer)
+DataLoader = nni.trace(DataLoader)
 
 class Lightning(Evaluator):
     """
@@ -219,7 +218,7 @@ class _AccuracyWithLogits(torchmetrics.Accuracy):
         return super().update(nn.functional.softmax(pred), target)
 
 
-@serialize_cls
+@nni.trace
 class _ClassificationModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -272,7 +271,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@serialize_cls
+@nni.trace
 class _RegressionModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,

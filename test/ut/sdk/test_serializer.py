@@ -64,6 +64,31 @@ def test_unserializable():
     assert a._a == 1
 
 
+class Foo:
+    def __init__(self, a, b=1):
+        self.aa = a
+        self.bb = [b + 1 for _ in range(1000)]
+
+    def __eq__(self, other):
+        return self.aa == other.aa and self.bb == other.bb
+
+
+def test_custom_class():
+    module = nni.trace(Foo)(3)
+    assert nni.load(nni.dump(module)) == module
+    module = nni.trace(Foo)(b=2, a=1)
+    assert nni.load(nni.dump(module)) == module
+
+    module = nni.trace(Foo)(Foo(1), 5)
+    dumped_module = nni.dump(module)
+    assert len(dumped_module) > 200  # should not be too longer if the serialization is correct
+
+    module = nni.trace(Foo)(nni.trace(Foo)(1), 5)
+    dumped_module = nni.dump(module)
+    assert len(dumped_module) < 200  # should not be too longer if the serialization is correct
+    assert nni.load(dumped_module) == module
+
+
 if __name__ == '__main__':
     test_simple_class()
     test_external_class()

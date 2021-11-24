@@ -2,13 +2,11 @@
 # Licensed under the MIT license.
 
 import abc
-import functools
-import inspect
-import types
+import warnings
 from typing import Any
 
 from nni.common.serializer import trace, _copy_class_wrapper_attributes
-from .utils import ModelNamespace, get_importable_name, get_module_name, import_, reset_uid, ContextStack, NoContextError, get_current_context
+from .utils import ModelNamespace
 
 
 def get_init_parameters_or_fail(obj):
@@ -36,6 +34,28 @@ class Translatable(abc.ABC):
         if isinstance(d, Translatable):
             return d._translate()
         return d
+
+
+def serialize(cls, *args, **kwargs):
+    """
+    To create an serializable instance inline without decorator. For example,
+
+    .. code-block:: python
+
+        self.op = serialize(MyCustomOp, hidden_units=128)
+    """
+    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' + \
+                  'Try to use nni.trace, e.g., nni.trace(torch.optim.Adam)(learning_rate=1e-4) instead.')
+    return trace(cls)(*args, **kwargs)
+
+
+def serialize_cls(cls):
+    """
+    To create an serializable class.
+    """
+    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' + \
+                  'Try to use nni.trace instead.')
+    return trace(cls)
 
 
 def basic_unit(cls, basic_unit_tag=True):
@@ -72,7 +92,8 @@ def model_wrapper(cls):
     The wrapper serves two purposes:
 
         1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-        2. Reset uid in `mutation` namespace so that each model counts from zero. Can be useful in unittest and other multi-model scenarios.
+        2. Reset uid in `mutation` namespace so that each model counts from zero.
+           Can be useful in unittest and other multi-model scenarios.
     """
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
@@ -84,4 +105,6 @@ def model_wrapper(cls):
             with ModelNamespace():
                 super().__init__(*args, **kwargs)
 
+    reset_wrapper.__dict__['_nni_model_wrapper'] = True
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
+    return reset_wrapper
