@@ -9,7 +9,7 @@ use ``CustomAlgorithmConfig`` to specify a custom algorithm.
 
 Check the reference_ for explaination of each field.
 
-You man also want to check `tuner's overview`_.
+You may also want to check `tuner's overview`_.
 
 .. _reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html
 

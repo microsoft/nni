@@ -8,6 +8,7 @@ Top level experiement configuration class, ``ExperimentConfig``.
 __all__ = ['ExperimentConfig']
 
 from dataclasses import dataclass
+import logging
 from pathlib import Path
 from typing import Any, List, Optional, Union
 
@@ -110,6 +111,17 @@ class ExperimentConfig(ConfigBase):
                 setattr(self, algo_type, None)
 
         super()._canonicalize([self])
+
+        if self.nni_manager_ip is None:
+            # show a warning if user does not set nni_manager_ip. we have many issues caused by this
+            # the simple detection logic won't work for hybrid, but advanced users should not need it
+            # ideally we should check accessibility of the ip, but it need much more work
+            platform = getattr(self.training_service, 'platform')
+            has_ip = isinstance(getattr(self.training_service, 'nni_manager_ip'), str)  # not None or MISSING
+            if platform and platform != 'local' and not has_ip:
+                ip = utils.get_ipv4_address()
+                msg = f'nni_manager_ip is not set, please make sure {ip} is accessible from training machines'
+                logging.getLogger('nni.experiment.config').warning(msg)
 
     def _validate_canonical(self):
         super()._validate_canonical()
