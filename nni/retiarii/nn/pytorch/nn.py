@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 
 from ...serializer import basic_unit
-from ...serializer import transparent_serialize
 from ...utils import version_larger_equal
 
 # NOTE: support pytorch version >= 1.5.0

@@ -75,7 +75,7 @@ def basic_unit(cls, basic_unit_tag=True):
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
 
     cls = trace(cls, extra_arg_proc=Translatable._translate_argument)
-    cls.__dict__['_nni_basic_unit'] = basic_unit_tag
+    cls._nni_basic_unit = basic_unit_tag
     return cls
 
 

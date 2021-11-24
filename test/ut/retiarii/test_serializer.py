@@ -65,18 +65,19 @@ def test_dataset():
 
 
 def test_type():
-    assert nni.dump(torch.optim.Adam) == '{"__symbol__": "torch.optim.adam.Adam"}'
-    assert nni.load('{"__symbol__": "torch.optim.adam.Adam"}') == torch.optim.Adam
-    assert re.match(r'{"__symbol__": "(.*)test_serializer.Foo"}', nni.dump(Foo))
-    assert nni.dump(math.floor) == '{"__symbol__": "math.floor"}'
-    assert nni.load('{"__symbol__": "math.floor"}') == math.floor
+    assert nni.dump(torch.optim.Adam) == '{"__nni_type__": "path:torch.optim.adam.Adam"}'
+    assert nni.load('{"__nni_type__": "path:torch.optim.adam.Adam"}') == torch.optim.Adam
+    assert re.match(r'{"__nni_type__": "bytes:(.*)"}', nni.dump(Foo))
+    assert nni.dump(math.floor) == '{"__nni_type__": "path:math.floor"}'
+    assert nni.load('{"__nni_type__": "path:math.floor"}') == math.floor
 
 
 def test_lightning_earlystop():
     import nni.retiarii.evaluator.pytorch.lightning as pl
     from pytorch_lightning.callbacks.early_stopping import EarlyStopping
-    trainer = pl.Trainer(callbacks=[EarlyStopping(monitor="val_loss")])
-    print(nni.dump(trainer))
+    trainer = pl.Trainer(callbacks=[nni.trace(EarlyStopping)(monitor="val_loss")])
+    trainer = nni.load(nni.dump(trainer))
+    print(trainer.get())  # FIXME AttributeError: 'SerializableObject' object has no attribute 'on_init_start'
 
 
 if __name__ == '__main__':

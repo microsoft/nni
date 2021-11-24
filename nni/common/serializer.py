@@ -77,7 +77,7 @@ class SerializableObject:
 
     def __repr__(self):
         if self._get_nni_attr('self_contained'):
-            return repr(self)
+            return super().__repr__()
         if '_nni_cache' in self.__dict__:
             return repr(self._get_nni_attr('cache'))
         return 'SerializableObject(' + \
@@ -90,6 +90,8 @@ class SerializableObject:
         # auto-call get() to prevent type-converting in downstreaming functions
         if isinstance(d, SerializableObject):
             d = d.get()
+        # see comments in `_freeze_list_and_dict`
+        d = _freeze_list_and_dict(d)
         if hasattr(self, '_nni_extra_argument_process') and self._nni_extra_argument_process is not None:
             d = self._nni_extra_argument_process(d)
         return d
@@ -241,7 +243,7 @@ def _trace_cls(base, kw_only, extra_arg_proc):
     class wrapper(SerializableObject, base):
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
-            args, kwargs = _get_arguments_as_dict(base.__init__, args, kwargs, kw_only)
+            args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only)
 
             # calling serializable object init to initialize the full object
             super().__init__(symbol=base, args=args, kwargs=kwargs, _self_contained=True, _extra_argument_process=extra_arg_proc)
@@ -255,7 +257,7 @@ def _trace_func(func, kw_only, extra_arg_proc):
     @functools.wraps
     def wrapper(*args, **kwargs):
         # similar to class, store parameters here
-        args, kwargs = _get_arguments_as_dict(func, args, kwargs, kw_only)
+        args, kwargs = _formulate_arguments(func, args, kwargs, kw_only)
         return SerializableObject(func, args, kwargs, _extra_argument_process=extra_arg_proc)
 
     return wrapper
@@ -273,7 +275,19 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 pass
 
 
-def _get_arguments_as_dict(func, args, kwargs, kw_only):
+def _freeze_list_and_dict(list_or_dict):
+    # prevent the stored parameters to be mutated by inner class.
+    # an example: https://github.com/microsoft/nni/issues/4329
+    if isinstance(list_or_dict, list):
+        return type(list_or_dict)(list_or_dict[:])
+    if isinstance(list_or_dict, dict):
+        # python dict is ordered by default now
+        return type(list_or_dict)({k: v for k, v in list_or_dict.items()})
+    return list_or_dict
+
+
+def _formulate_arguments(func, args, kwargs, kw_only):
+    # This is to formulate the arguments and make them well-formed.
     if kw_only:
         # get arguments passed to a function, and save it as a dict
         argname_list = list(inspect.signature(func).parameters.keys())[1:]
@@ -384,8 +398,9 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
         if len(b) > pickle_size_limit:
-            raise ValueError(f'Pickle too large when trying to dump {obj}. '
-                             'Please try to raise pickle_size_limit if you insist.')
+            raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
+                             'not decorated by @nni.trace. Another option is to force bytes pickling and '
+                             'try to raise pickle_size_limit.')
         # use base64 to dump a bytes array
         return {
             '__nni_obj__': base64.b64encode(b).decode()
