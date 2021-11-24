@@ -27,6 +27,6 @@ sharedStorage:
     storageType: NFS
     localMountPoint: .  # git cannot commit empty dir, so just use this
     remoteMountPoint: /tmp
-    localMounted: nomount
+    localMounted: usermount
     nfsServer: nfs.test.case
     exportedDirectory: root

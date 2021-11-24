@@ -121,7 +121,7 @@ class ExperimentConfig(ConfigBase):
             if platform and platform != 'local' and not has_ip:
                 ip = utils.get_ipv4_address()
                 msg = f'nni_manager_ip is not set, please make sure {ip} is accessible from training machines'
-                logging.getLogger('nni.experiment.config').info(msg)
+                logging.getLogger('nni.experiment.config').warning(msg)
 
     def _validate_canonical(self):
         super()._validate_canonical()

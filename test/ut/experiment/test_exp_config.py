@@ -85,7 +85,7 @@ detailed_canon = {
         'storageType': 'NFS',
         'localMountPoint': expand_path('assets'),
         'remoteMountPoint': '/tmp',
-        'localMounted': 'nomount',
+        'localMounted': 'usermount',
         'nfsServer': 'nfs.test.case',
         'exportedDirectory': 'root',
     },

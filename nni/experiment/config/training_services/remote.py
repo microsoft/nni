@@ -6,7 +6,7 @@ Configuration for remote training service.
 
 Check the reference_ for explaination of each field.
 
-You man also want to check `remote training service doc`_.
+You may also want to check `remote training service doc`_.
 
 .. _reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html
 
