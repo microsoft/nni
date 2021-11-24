@@ -75,7 +75,7 @@ class GridSearchTuner(Tuner):
         # in second epoch of above example, vector [1, 2, 0] means parameters {x: 7, y: 0.67, z: 3}
         self.vector = None  # list[int]
 
-        # this tells which parameters are succeeded from previous epoch
+        # this tells which parameters are derived from previous epoch
         # in second epoch of above example, epoch_bar is [2, 1, 1]
         self.epoch_bar = None  # list[int]
 
