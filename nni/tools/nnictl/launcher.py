@@ -30,13 +30,20 @@ def create_experiment(args):
         exit()
 
     if v1_platform:
-        v2_config = convert.to_v2(config_content)
-        print(Fore.YELLOW + f'You are using legacy config file, please update it to latest format:')
-        print('=' * 80 + Fore.RESET)
-        print(yaml.dump(v2_config))
-        print(Fore.YELLOW + '=' * 80)
-        print('Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
+        try:
+            v2_config = convert.to_v2(config_content)
+        except Exception:
+            print(Fore.RED + 'ERROR: You are using legacy config file, please update it to latest format.' + Fore.RESET)
+            print(Fore.RED + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
+            exit(1)
+        print(Fore.YELLOW + f'WARNING: You are using legacy config file, please update it to latest format:' + Fore.RESET)
+        print(Fore.YELLOW + '=' * 80 + Fore.RESET)
+        print(yaml.dump(v2_config).strip())
+        print(Fore.YELLOW + '=' * 80 + Fore.RESET)
+        print(Fore.YELLOW + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
         config = ExperimentConfig(**v2_config)
+        print(config)
+        print(config.json())
     else:
         config = ExperimentConfig.load(config_file)
 
