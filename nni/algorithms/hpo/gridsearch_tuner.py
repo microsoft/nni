@@ -4,8 +4,6 @@
 """
 Grid search tuner for hyper-parameter optimization.
 
-This tuner does not support normal distributions.
-
 For categorical parameters this tuner fully explore all combinations.
 For numerical parameters it samples them at progressively decreased intervals.
 
