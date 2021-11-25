@@ -13,7 +13,7 @@ import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 
 
-__all__ = ['trace', 'dump', 'load', 'SerializableObject']
+__all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
 
 
 T = TypeVar('T')
@@ -58,6 +58,25 @@ class Traceable(abc.ABC):
         ...
 
 
+
+class Translatable(abc.ABC):
+    """
+    Inherit this class and implement ``translate`` when the inner class needs a different
+    parameter from the wrapper class in its init function.
+    """
+
+    @abc.abstractmethod
+    def _translate(self) -> Any:
+        pass
+
+    @staticmethod
+    def _translate_argument(d: Any) -> Any:
+        if isinstance(d, Translatable):
+            return d._translate()
+        return d
+
+
+
 def is_traceable(obj: Any) -> bool:
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
@@ -71,23 +90,18 @@ class SerializableObject(Traceable):
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
     """
 
-    def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any],
-                 call_super: bool = False, extra_argument_process: Optional[Callable[[Any], Any]] = None):
+    def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any], call_super: bool = False):
         # use dict to avoid conflicts with user's getattr and setattr
         self.__dict__['_nni_symbol'] = symbol
         self.__dict__['_nni_args'] = args
         self.__dict__['_nni_kwargs'] = kwargs
         self.__dict__['_nni_call_super'] = call_super
 
-        # argument process is another layer to process arguments before they are passed to the underlying class/function.
-        # by default, it's simply a `.get()` for serializable object.
-        # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
-        self.__dict__['_nni_extra_argument_process'] = extra_argument_process
-
         if call_super:
+            # call super means that the serializable object is by itself an object of the target class
             super().__init__(
-                *[_argument_processor(arg, extra_argument_process) for arg in args],
-                **{kw: _argument_processor(arg, extra_argument_process) for kw, arg in kwargs.items()}
+                *[_argument_processor(arg) for arg in args],
+                **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
             )
 
     def trace_copy(self) -> Union[T, 'SerializableObject']:
@@ -165,7 +179,7 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
         for name, method in attributes.items():
             setattr(obj, name, method)
     else:
-        wrapper = type('wrapper', type(obj), attributes)
+        wrapper = type('wrapper', (Traceable, type(obj)), attributes)
         obj = wrapper(obj)
 
     # make obj complying with the interface of traceable, though we cannot change its base class
@@ -174,8 +188,7 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
     return obj
 
 
-def trace(cls_or_func: T = None, *, kw_only: bool = True,
-          extra_arg_proc: Optional[Callable[[Any], Any]] = None) -> Union[T, SerializableObject]:
+def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]:
     """
     Annotate a function or a class if you want to preserve where it comes from.
     This is usually used in the following scenarios:
@@ -198,9 +211,6 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True,
     If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
 
-    ``extra_arg_proc`` is used to intercept the arguments for the class or function, and transform them to make them
-    different from what they originally received.
-
     Example:
 
     .. code-block:: python
@@ -211,10 +221,15 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True,
     """
 
     def wrap(cls_or_func):
+        # already annotated, do nothing
+        if getattr(cls_or_func, '_traced', False):
+            return cls_or_func
         if isinstance(cls_or_func, type):
-            return _trace_cls(cls_or_func, kw_only, extra_arg_proc)
+            cls_or_func = _trace_cls(cls_or_func, kw_only)
         else:
-            return _trace_func(cls_or_func, kw_only, extra_arg_proc)
+            cls_or_func = _trace_func(cls_or_func, kw_only)
+        cls_or_func._traced = True
+        return cls_or_func
 
     # if we're being called as @trace()
     if cls_or_func is None:
@@ -313,25 +328,25 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only, extra_arg_proc):
+def _trace_cls(base, kw_only):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
     class wrapper(SerializableObject, base):
         def __init__(self, *args, **kwargs):
             # store a copy of initial parameters
-            args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only)
+            args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
 
             # calling serializable object init to initialize the full object
-            super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=True, extra_argument_process=extra_arg_proc)
+            super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=True)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
     return wrapper
 
 
-def _trace_func(func, kw_only, extra_arg_proc):
-    @functools.wraps
+def _trace_func(func, kw_only):
+    @functools.wraps(func)
     def wrapper(*args, **kwargs):
         # similar to class, store parameters here
         args, kwargs = _formulate_arguments(func, args, kwargs, kw_only)
@@ -361,6 +376,8 @@ def _trace_func(func, kw_only, extra_arg_proc):
             raise TypeError(f'Try to add trace info to {res}, but the type "{type(res)}" is unknown. '
                             'Please file an issue at https://github.com/microsoft/nni/issues')
 
+        return res
+
     return wrapper
 
 
@@ -376,35 +393,25 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 pass
 
 
-def _argument_processor(arg, extra=None):
-    # to convert argument before it is used in class or function
-    # 1) auto-call get() to prevent type-converting in downstreaming functions
-    if isinstance(arg, SerializableObject):
-        arg = arg.get()
-    # 2) see comments in `_freeze_list_and_dict`
-    arg = _freeze_list_and_dict(arg)
-    # 3) extra process, e.g., handle cases like ValueChoice
-    if extra is not None:
-        arg = extra(arg)
+def _argument_processor(arg):
+    # 1) translate
+    # handle cases like ValueChoice
+    # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
+    arg = Translatable._translate_argument(arg)
+    # 2) prevent the stored parameters to be mutated by inner class.
+    # an example: https://github.com/microsoft/nni/issues/4329
+    if isinstance(arg, (collections.MutableMapping, collections.MutableSequence, collections.MutableSet)):
+        arg = copy.copy(arg)
     return arg
 
 
-def _freeze_list_and_dict(list_or_dict):
-    # prevent the stored parameters to be mutated by inner class.
-    # an example: https://github.com/microsoft/nni/issues/4329
-    if isinstance(list_or_dict, list):
-        return type(list_or_dict)(list_or_dict[:])
-    if isinstance(list_or_dict, dict):
-        # python dict is ordered by default now
-        return type(list_or_dict)({k: v for k, v in list_or_dict.items()})
-    return list_or_dict
-
-
-def _formulate_arguments(func, args, kwargs, kw_only):
+def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
     # This is to formulate the arguments and make them well-formed.
     if kw_only:
         # get arguments passed to a function, and save it as a dict
-        argname_list = list(inspect.signature(func).parameters.keys())[1:]
+        argname_list = list(inspect.signature(func).parameters.keys())
+        if is_class_init:
+            argname_list = argname_list[1:]
         full_args = {}
         full_args.update(kwargs)
 
@@ -416,7 +423,7 @@ def _formulate_arguments(func, args, kwargs, kw_only):
 
         args, kwargs = [], full_args
 
-    return args, kwargs
+    return list(args), kwargs
 
 
 def _import_cls_or_func_from_name(target: str) -> Any:
@@ -501,11 +508,10 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
 
 def _json_tricks_serializable_object_decode(obj: Dict[str, Any]) -> Any:
     if isinstance(obj, dict) and '__symbol__' in obj:
-        return SerializableObject(
-            _import_cls_or_func_from_hybrid_name(obj['__symbol__']),
-            getattr(obj, '__args__', []),
-            getattr(obj, '__kwargs__', {}),
-        )
+        symbol = _import_cls_or_func_from_hybrid_name(obj['__symbol__'])
+        args = obj.get('__args__', [])
+        kwargs = obj.get('__kwargs__', {})
+        return trace(symbol)(*args, **kwargs)
     return obj
 
 

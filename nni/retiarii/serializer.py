@@ -1,39 +1,23 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import abc
 import warnings
-from typing import Any
+from typing import Any, TypeVar, Union
 
-from nni.common.serializer import trace, _copy_class_wrapper_attributes
+from nni.common.serializer import Traceable, is_traceable, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
 
+T = TypeVar('T')
 
-def get_init_parameters_or_fail(obj):
-    if hasattr(obj, '_init_parameters'):
-        return obj._init_parameters
-    raise ValueError(f'Object {obj} needs to be serializable but `_init_parameters` is not available. '
+
+def get_init_parameters_or_fail(obj: Any):
+    if is_traceable(obj):
+        return obj.trace_kwargs
+    raise ValueError(f'Object {obj} needs to be serializable but `trace_kwargs` is not available. '
                      'If it is a built-in module (like Conv2d), please import it from retiarii.nn. '
                      'If it is a customized module, please to decorate it with @basic_unit. '
                      'For other complex objects (e.g., trainer, optimizer, dataset, dataloader), '
-                     'try to use serialize or @serialize_cls.')
-
-
-class Translatable(abc.ABC):
-    """
-    Inherit this class and implement ``translate`` when the inner class needs a different
-    parameter from the wrapper class in its init function.
-    """
-
-    @abc.abstractmethod
-    def _translate(self) -> Any:
-        pass
-
-    @staticmethod
-    def _translate_argument(d: Any) -> Any:
-        if isinstance(d, Translatable):
-            return d._translate()
-        return d
+                     'try to use @nni.trace.')
 
 
 def serialize(cls, *args, **kwargs):
@@ -44,7 +28,7 @@ def serialize(cls, *args, **kwargs):
 
         self.op = serialize(MyCustomOp, hidden_units=128)
     """
-    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' + \
+    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
                   'Try to use nni.trace, e.g., nni.trace(torch.optim.Adam)(learning_rate=1e-4) instead.')
     return trace(cls)(*args, **kwargs)
 
@@ -53,12 +37,12 @@ def serialize_cls(cls):
     """
     To create an serializable class.
     """
-    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' + \
+    warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
                   'Try to use nni.trace instead.')
     return trace(cls)
 
 
-def basic_unit(cls, basic_unit_tag=True):
+def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     """
     To wrap a module as a basic unit, is to make it a primitive and stop the engine from digging deeper into it.
 
@@ -74,12 +58,12 @@ def basic_unit(cls, basic_unit_tag=True):
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
 
-    cls = trace(cls, extra_arg_proc=Translatable._translate_argument)
+    cls = trace(cls)
     cls._nni_basic_unit = basic_unit_tag
     return cls
 
 
-def model_wrapper(cls):
+def model_wrapper(cls: T) -> Union[T, Traceable]:
     """
     Wrap the model if you are using pure-python execution engine. For example
 
@@ -98,7 +82,7 @@ def model_wrapper(cls):
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
-    wrapper = trace(cls, extra_arg_proc=Translatable._translate_argument)
+    wrapper = trace(cls)
 
     class reset_wrapper(wrapper):
         def __init__(self, *args, **kwargs):
