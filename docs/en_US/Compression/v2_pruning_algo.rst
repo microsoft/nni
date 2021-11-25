@@ -278,7 +278,7 @@ Movement Pruner
 ---------------
 
 Movement pruner is an implementation of movement pruning.
-This is a pruning by step algorithm, the masks may change during each step.
+This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
 Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
 This means the weight elements moving towards zero will accumulate negative scores, the weight elements moving away from zero will accumulate positive scores.
 The weight elements with low scores will be masked during inference.
@@ -300,13 +300,6 @@ Usage
    config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
    masked_model, masks = pruner.compress()
-
-   # ignore the parameters with `weight_score` in name if you want to finetune with masks
-   optimizer_grouped_parameters = [{
-        "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
-   }]
-   optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
-   trainer(model, optimizer, criterion)
 
 User configuration for Movement Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

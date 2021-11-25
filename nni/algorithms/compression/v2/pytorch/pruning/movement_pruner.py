@@ -287,4 +287,8 @@ class MovementPruner(BasicPruner):
         # sparsity grow from 0
         for _, wrapper in self.get_modules_wrapper().items():
             wrapper.config['total_sparsity'] = 0
-        return super().compress()
+        result = super().compress()
+        # del weight_score
+        for _, wrapper in self.get_modules_wrapper().items():
+            wrapper.weight_score = None
+        return result

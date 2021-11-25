@@ -117,10 +117,6 @@ if __name__ == '__main__':
 
     print('Final: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
 
-    # ignore the parameters with `weight_score` in name if you want to finetune with masks
-    optimizer_grouped_parameters = [{
-        "params": [p for n, p in model.named_parameters() if "weight_score" not in n and p.requires_grad]
-    }]
-    optimizer = Adam(optimizer_grouped_parameters, lr=2e-5)
+    optimizer = Adam(model.parameters(), lr=2e-5)
     trainer(model, optimizer, criterion, train_dataloader)
     print('After 1 epoch finetuning: {}'.format(evaluator(model, metric, is_regression, validate_dataloader)))
