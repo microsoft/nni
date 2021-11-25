@@ -1,8 +1,13 @@
+import abc
 import base64
 import functools
 import inspect
 import numbers
 from typing import Any, Union, Dict, Optional, List, TypeVar, Callable
+try:
+    from typing import TypedDict
+except:
+    from typing_extensions import TypedDict
 
 import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
@@ -13,60 +18,66 @@ __all__ = ['trace', 'dump', 'load', 'SerializableObject']
 
 T = TypeVar('T')
 
+class TraceDictType(TypedDict):
+    __symbol__: str
+    __args__: Optional[List[Any]]
+    __kwargs__: Optional[Dict[str, Any]]
 
-class SerializableObject:
+
+class Traceable(abc.ABC):
+    """
+    A traceable object have copy and dict. Copy and mutate are used to copy the object for further mutations.
+    Dict returns a TraceDictType to enable serialization.
+    """
+    @abc.abstractmethod
+    def _trace_copy(self) -> 'Traceable':
+        ...
+
+    @abc.abstractmethod
+    def _trace_dict(self) -> TraceDictType:
+        ...
+
+    @abc.abstractmethod
+    def _trace_mutate(self, symbol: str, args: List[Any], kwargs: Dict[str, Any]) -> None:
+        ...
+
+
+class SerializableObject(Traceable):
     """
     Serializable object is a wrapper of existing python objects, that supports dump and load easily.
     Stores a symbol ``s`` and a dict of arguments ``args``, and the object can be restored with ``s(**args)``.
     """
 
     def __init__(self, symbol: T, args: List[Any], kwargs: Dict[str, Any],
-                 _self_contained: bool = False, _extra_argument_process: Optional[Callable[[Any], Any]] = None):
+                 extra_argument_process: Optional[Callable[[Any], Any]] = None):
         # use dict to avoid conflicts with user's getattr and setattr
         self.__dict__['_nni_symbol'] = symbol
         self.__dict__['_nni_args'] = args
         self.__dict__['_nni_kwargs'] = kwargs
 
-        self.__dict__['_nni_self_contained'] = _self_contained
-
         # argument process is another layer to process arguments before they are passed to the underlying class/function.
         # by default, it's simply a `.get()` for serializable object.
         # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
-        self.__dict__['_nni_extra_argument_process'] = _extra_argument_process
+        self.__dict__['_nni_extra_argument_process'] = extra_argument_process
 
-        if _self_contained:
-            # this is for internal usage only.
-            # kwargs is used to init the full object in the same object as this one, for simpler implementation.
-            super().__init__(
-                *[_argument_processor(arg) for arg in args],
-                **{kw: _argument_processor(arg) for kw, arg in kwargs.items()}
-            )
+        super().__init__(
+            *[_argument_processor(arg, extra_argument_process) for arg in args],
+            **{kw: _argument_processor(arg, extra_argument_process) for kw, arg in kwargs.items()}
+        )
 
-    def get(self) -> Any:
+    def _trace_copy(self) -> Union[T, 'SerializableObject']:
         """
-        Get the original object.
-        """
-        if self._get_nni_attr('self_contained'):
-            return self
-        if '_nni_cache' not in self.__dict__:
-            self.__dict__['_nni_cache'] = self._get_nni_attr('symbol')(
-                *[_argument_processor(arg) for arg in self._get_nni_attr('args')],
-                **{kw: _argument_processor(arg) for kw, arg in self._get_nni_attr('kwargs').items()}
-            )
-        return self.__dict__['_nni_cache']
-
-    def copy(self) -> Union[T, 'SerializableObject']:
-        """
-        Perform a shallow copy. Will throw away the self-contain property for classes (refer to implementation).
+        Perform a shallow copy. Will reinstantiate the class.
         This is the one that should be used when you want to "mutate" a serializable object.
         """
         return SerializableObject(
             self._get_nni_attr('symbol'),
             self._get_nni_attr('args'),
-            self._get_nni_attr('kwargs')
+            self._get_nni_attr('kwargs'),
+            self._get_nni_attr('extra_argument_process')
         )
 
-    def __json_encode__(self):
+    def _trace_dict(self) -> TraceDictType:
         ret = {'__symbol__': _get_hybrid_cls_or_func_name(self._get_nni_attr('symbol'))}
         if self._get_nni_attr('args'):
             ret['__args__'] = self._get_nni_attr('args')
@@ -75,6 +86,7 @@ class SerializableObject:
 
     def _get_nni_attr(self, name):
         return self.__dict__['_nni_' + name]
+
 
     def __repr__(self):
         if self._get_nni_attr('self_contained'):
