@@ -347,13 +347,12 @@ class AMCTaskGenerator(TaskGenerator):
         self.env_params = env_params
         self.ddpg_params = ddpg_params
         self._temp_config_list = []
-        self.target_sparsity_list = []
-        self._current_sparsity_list = None
 
         self.best_score = 0
         self.T = []  # trajectory
         self.iteration_reward = 0.
         self.observation = None
+        self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
                          log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
@@ -377,7 +376,6 @@ class AMCTaskGenerator(TaskGenerator):
         self.agent.is_training = True
 
         task_result = TaskResult('origin', origin_model, origin_masks, origin_masks, None)
-        #-- print("================ mask setted! ================")
         self.env.set_mask(task_result.compact_model_masks)
 
         return self.generate_tasks(task_result)
@@ -389,23 +387,24 @@ class AMCTaskGenerator(TaskGenerator):
             self._temp_config_list = []
             self._current_score = 0
         else:
+            origin_model = torch.load(self._origin_model_path)
+            compact_model = task_result.compact_model
+            compact_model_masks = task_result.compact_model_masks
+            current2origin_sparsity, compact2origin_sparsity, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.target_sparsity)
+            self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
             score = self._tasks[task_result.task_id].score
-            print("Task: {} / {}, Score: {}\n".format(task_result.task_id, self.total_iteration, score))
-            #-- print("SCORE: {}".format(score))
+            # update environment information
             self.env.set_reward(score)
             self.env.set_mask(task_result.pruner_generated_masks)
-            #-- print("***************************")
-            #-- print(task_result.pruner_generated_masks)
             self._current_score = score
+
             if self.observation is None:
                 self.observation = deepcopy(self.env.reset())
-                self.agent.reset(self.observation)
 
             # agent pick action ...
             warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
             if self.current_iteration <= warmup_num:
                 action = self.agent.random_action()
-                # action = sample_from_truncated_normal_distribution(lower=0., upper=1., mu=env.preserve_ratio, sigma=0.5)
             else:
                 action = self.agent.select_action(self.observation, episode=self.current_iteration)
 
@@ -413,10 +412,6 @@ class AMCTaskGenerator(TaskGenerator):
             observation1, reward, done, info = self.env.step(action)
 
             self.T.append([reward, deepcopy(self.observation), deepcopy(observation1), action, done])
-
-            # fix-length, never reach here
-            # if max_episode_length and episode_steps >= max_episode_length - 1:
-            #     done = True
 
             # update
             self.iteration_reward += reward
@@ -444,7 +439,6 @@ class AMCTaskGenerator(TaskGenerator):
                 self.T = []
 
         task_id = self._task_id_candidate
-        # new_config_list = self._recover_real_sparsity(deepcopy(self._temp_config_list))
         new_config_list = deepcopy(self._temp_config_list)
         config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
 
@@ -452,9 +446,7 @@ class AMCTaskGenerator(TaskGenerator):
             json_tricks.dump(new_config_list, f, indent=4)
 
         task = Task(task_id, self.temp_model_path, self.temp_masks_path, config_list_path)
-
         self._tasks[task_id] = task
-
         self._task_id_candidate += 1
         
         if self.current_iteration < self.total_iteration:

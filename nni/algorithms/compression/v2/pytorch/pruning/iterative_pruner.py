@@ -273,8 +273,12 @@ class AMCPruner(IterativePruner):
         - op_types: operation type to be pruned
         - op_names: operation name to be pruned
     pruning_algorithm : str
-        Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
+        Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
+    total_iteration: int
+        The total iteration number.
+    dummy_input : Optional[torch.Tensor]
+        `dummy_input` is required for trace the model in RL environment.
     evaluator: Callable[[Module], float]
         Evaluate the pruned model and give a score.
     log_dir : str
@@ -285,8 +289,6 @@ class AMCPruner(IterativePruner):
         The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
     speed_up : bool
         If set True, speed up the model in each iteration.
-    dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
 
     env_params: dict
         Configuration dict to configure the environment, any key unset will be set to default implicitly.
@@ -295,12 +297,11 @@ class AMCPruner(IterativePruner):
         - flops_ratio: preserve flops ratio. Default: 0.5
         - lbound: minimum weight preserve ratio for each layer. Default: 0.2
         - rbound: maximum weight preserve ratio for each layer. Default: 1.0
-        - reward: reward function type. Default: acc_reward
         # parameters for channel pruning
         - n_calibration_batches: number of batches to extract layer information. Default: 60
         - n_points_per_layer: number of feature points per layer. Default: 10
         - channel_round: round channel to multiple of channel_round. Default: 8
-        - batch_size: need to be equivalent to 'DataLoader.batch_size'
+        - batch_size: need to be equivalent to 'DataLoader.batch_size'. Default: 50
 
     ddpg_params: dict
         Configuration dict to configure the DDPG agent, any key unset will be set to default implicitly.
@@ -314,12 +315,10 @@ class AMCPruner(IterativePruner):
         - rmsize: memory size for each layer. Default: 100
         - window_length: replay buffer window length. Default: 1
         - tau: moving average for target network being used by soft_update. Default: 0.99
-        - init_delta: initial variance of truncated normal distribution
-        - delta_decay: delta decay during exploration
+        - init_delta: initial variance of truncated normal distribution. Default: 0.5
+        - delta_decay: delta decay during exploration. Default: 0.99
         # parameters for training ddpg agent
-        - max_episode_length: maximum episode length
-        [x] - output_dir: output directory to save log files and model files. Default: ./logs
-        [x] - train_episode: train iters each timestep. Default: 800
+        - max_episode_length: maximum episode length. Default: 1e9
         - epsilon: linear decay of exploration policy. Default: 50000
 
     pruning_params : dict

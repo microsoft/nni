@@ -93,8 +93,6 @@ class DDPG(object):
 
         # Create replay buffer
         self.memory = SequentialMemory(limit=self.ddpg_params['rmsize'], window_length=self.ddpg_params['window_length'])
-        # self.random_process = OrnsteinUhlenbeckProcess(size=nb_actions, theta=self.ddpg_params['ou_theta, mu=self.ddpg_params['ou_mu,
-        #                                                sigma=self.ddpg_params['ou_sigma)
 
         # Hyper-parameters
         self.batch_size = self.ddpg_params['bsize']
@@ -109,7 +107,6 @@ class DDPG(object):
         self.delta_decay = self.ddpg_params['delta_decay']
         self.warmup = self.ddpg_params['warmup']
 
-        #
         self.epsilon = 1.0
         # self.s_t = None  # Most recent state
         # self.a_t = None  # Most recent action
@@ -134,8 +131,6 @@ class DDPG(object):
         else:
             self.moving_average += self.moving_alpha * (batch_mean_reward - self.moving_average)
         reward_batch -= self.moving_average
-        # if reward_batch.std() > 0:
-        #     reward_batch /= reward_batch.std()
 
         # Prepare for the target q batch
         with torch.no_grad():
@@ -187,7 +182,6 @@ class DDPG(object):
     def observe(self, r_t, s_t, s_t1, a_t, done):
         if self.is_training:
             self.memory.append(s_t, a_t, r_t, done)  # save to memory
-            # self.s_t = s_t1
 
     def random_action(self):
         action = np.random.uniform(self.lbound, self.rbound, self.nb_actions)
@@ -195,21 +189,12 @@ class DDPG(object):
         return action
 
     def select_action(self, s_t, episode):
-        # assert episode >= self.warmup, 'Episode: {} warmup: {}'.format(episode, self.warmup)
-
         action = to_numpy(self.actor(to_tensor(np.array(s_t).reshape(1, -1)))).squeeze(0)
         delta = self.init_delta * (self.delta_decay ** (episode - self.warmup))
         # action += self.is_training * max(self.epsilon, 0) * self.random_process.sample()
         action = self.sample_from_truncated_normal_distribution(lower=self.lbound, upper=self.rbound, mu=action, sigma=delta)
         action = np.clip(action, self.lbound, self.rbound)
-
-        # self.a_t = action
         return action
-
-    def reset(self, obs):
-        pass
-        # self.s_t = obs
-        # self.random_process.reset_states()
 
     def load_weights(self, output):
         if output is None: return
@@ -245,5 +230,3 @@ class DDPG(object):
     def sample_from_truncated_normal_distribution(self, lower, upper, mu, sigma, size=1):
         from scipy import stats
         return stats.truncnorm.rvs((lower-mu)/sigma, (upper-mu)/sigma, loc=mu, scale=sigma, size=size)
-
-

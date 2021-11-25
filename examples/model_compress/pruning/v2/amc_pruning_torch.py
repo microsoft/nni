@@ -4,9 +4,9 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
-from nni.compression.pytorch import ModelSpeedup
 from nni.algorithms.compression.v2.pytorch.pruning.iterative_pruner import AMCPruner
 from examples.model_compress.models.mobilenet_v2 import MobileNetV2
+from examples.model_compress.models.cifar10.vgg import VGG
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 
@@ -68,7 +68,8 @@ def evaluator(model):
 
 
 if __name__ == '__main__':
-    model = MobileNetV2(n_class=10).to(device)
+    # model = MobileNetV2(n_class=10).to(device)
+    model = VGG().to(device)
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     scheduler = MultiStepLR(optimizer, milestones=[50, 75], gamma=0.1)
     criterion = torch.nn.CrossEntropyLoss()
@@ -77,46 +78,25 @@ if __name__ == '__main__':
         trainer(model, optimizer, criterion, i)
         evaluator(model)
     '''
-    model.load_state_dict(torch.load("best_mobilenet_v2.pth"))
+    # model.load_state_dict(torch.load("best_mobilenet_v2.pth"))
+    model.load_state_dict(torch.load("VGG.pth"))
     pre_acc = evaluator(model)
     torch.save(model.state_dict(), "best_mobilenet_v2.pth")
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
     pre_flops, pre_params, _ = count_flops_params(model, dummy_input)
     
-    config_list = [{'op_types': ['Conv2d', 'Linear'], 'total_sparsity': 0.5}]
+    config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5}, {'exclude': True, 'op_names': ['classifier.3']}]
 
     # if you just want to keep the final result as the best result, you can pass evaluator as None.
     # or the result with the highest score (given by evaluator) will be the best result.
 
-    env_params = {'model_type': 'mobilenet', 'flops_ratio': 1. - config_list[0]['total_sparsity'], 'lbound': 0.2, 'rbound': 1., 'reward': 'acc_reward',
-                  'n_calibration_batches': 60, 'n_points_per_layer': 10, 'channel_round': 8, 'batch_size': 50}
+    env_params = {'flops_ratio': 1. - config_list[0]['total_sparsity'], 'lbound': 0.2, 'rbound': 1.,
+                  'n_calibration_batches': 60, 'n_points_per_layer': 10, 'channel_round': 8, 'batch_size': 128}
     ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
                    'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
-    pruner = AMCPruner(model, config_list, 'l1', 200, dummy_input=dummy_input, finetuner=finetuner,
+    pruner = AMCPruner(model, config_list, 'l1', 800, dummy_input=dummy_input, finetuner=finetuner, keep_intermediate_result=False,
                        speed_up=False, evaluator=evaluator, env_params=env_params, ddpg_params=ddpg_params)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
     flops, params, _ = count_flops_params(model, dummy_input)
-
-    '''
-    pruner._unwrap_model()
-    ModelSpeedup(model, dummy_input=torch.rand([10, 3, 32, 32]).to(device), masks_file=masks).speedup_model()
-    print('\n' + '=' * 50 + ' EVALUATE THE MODEL AFTER SPEEDUP ' + '=' * 50)
-    evaluator(model)
-
-    # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
-    print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    scheduler = MultiStepLR(optimizer, milestones=[50, 75], gamma=0.1)
-
-    best_acc = 0.0
-    g_epoch = 0
-    for i in range(10):
-        trainer(model, optimizer, criterion)
-        scheduler.step()
-        best_acc = max(evaluator(model), best_acc)
-
-    print(f'Pretrained model FLOPs {pre_flops/1e6:.2f} M, #Params: {pre_params/1e6:.2f}M, Accuracy: {pre_acc: .2f}%')
-    print(f'Finetuned model FLOPs {flops/1e6:.2f} M, #Params: {params/1e6:.2f}M, Accuracy: {best_acc: .2f}%')
-    '''
