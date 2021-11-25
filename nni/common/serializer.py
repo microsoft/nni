@@ -28,7 +28,7 @@ class Traceable(abc.ABC):
     def trace_copy(self) -> 'Traceable':
         """
         Perform a shallow copy.
-        NONE of the attributes will be preserved.
+        NOTE: NONE of the attributes will be preserved.
         This is the one that should be used when you want to "mutate" a serializable object.
         """
         ...
@@ -38,6 +38,8 @@ class Traceable(abc.ABC):
     def trace_symbol(self) -> Any:
         """
         Symbol object. Could be a class or a function.
+        ``get_hybrid_cls_or_func_name`` and ``import_cls_or_func_from_hybrid_name`` is a pair to
+        convert the symbol into a string and convert the string back to symbol.
         """
         ...
 
@@ -45,7 +47,8 @@ class Traceable(abc.ABC):
     @abc.abstractmethod
     def trace_args(self) -> List[Any]:
         """
-        List of positional arguments passed to symbol.
+        List of positional arguments passed to symbol. Usually empty if ``kw_only`` is true,
+        in which case all the positional arguments are converted into keyword arguments.
         """
         ...
 
@@ -56,7 +59,6 @@ class Traceable(abc.ABC):
         Dict of keyword arguments.
         """
         ...
-
 
 
 class Translatable(abc.ABC):
@@ -74,7 +76,6 @@ class Translatable(abc.ABC):
         if isinstance(d, Translatable):
             return d._translate()
         return d
-
 
 
 def is_traceable(obj: Any) -> bool:
@@ -177,7 +178,7 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
 
     if hasattr(obj, '__class__') and hasattr(obj, '__dict__'):
         for name, method in attributes.items():
-            setattr(obj, name, method)
+            setattr(obj.__class__, name, method)
     else:
         wrapper = type('wrapper', (Traceable, type(obj)), attributes)
         obj = wrapper(obj)
@@ -371,6 +372,10 @@ def _trace_func(func, kw_only):
             raise TypeError(f'Try to add trace info to {res}, but functions and modules are not supported.')
         elif isinstance(res, (numbers.Number, collections.Sequence, collections.Set, collections.Mapping)):
             # handle primitive types like int, str, set, dict, tuple
+            # NOTE: simple types including none, bool, int, float, list, tuple, dict
+            # will be directly captured by python json encoder
+            # and thus not possible to restore the trace parameters after dump and reload.
+            # this is a known limitation.
             res = inject_trace_info(res, func, args, kwargs)
         else:
             raise TypeError(f'Try to add trace info to {res}, but the type "{type(res)}" is unknown. '
@@ -442,6 +447,10 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
 
     try:
         imported = _import_cls_or_func_from_name(full_name)
+        print(imported, id(imported))
+        print(cls_or_func, id(cls_or_func))
+        import sys
+        import pdb; pdb.set_trace()
         if imported != cls_or_func:
             raise ImportError(f'Imported {imported} is not same as expected. The function might be dynamically created.')
     except ImportError:
@@ -450,7 +459,7 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
     return full_name
 
 
-def _get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:
+def get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096) -> str:
     try:
         name = _get_cls_or_func_name(cls_or_func)
         # import success, use a path format
@@ -464,7 +473,7 @@ def _get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096
         return 'bytes:' + base64.b64encode(b).decode()
 
 
-def _import_cls_or_func_from_hybrid_name(s: str) -> Any:
+def import_cls_or_func_from_hybrid_name(s: str) -> Any:
     if s.startswith('bytes:'):
         b = base64.b64decode(s.split(':', 1)[-1])
         return cloudpickle.loads(b)
@@ -479,26 +488,25 @@ def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, 
         return cls_or_func
 
     return {
-        '__nni_type__': _get_hybrid_cls_or_func_name(cls_or_func, pickle_size_limit)
+        '__nni_type__': get_hybrid_cls_or_func_name(cls_or_func, pickle_size_limit)
     }
 
 
 def _json_tricks_func_or_cls_decode(s: Dict[str, Any]) -> Any:
     if isinstance(s, dict) and '__nni_type__' in s:
         s = s['__nni_type__']
-        return _import_cls_or_func_from_hybrid_name(s)
+        return import_cls_or_func_from_hybrid_name(s)
     return s
 
 
 def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, use_trace: bool = True) -> Dict[str, Any]:
     # Encodes a serializable object instance to json.
-    # If primitives, the representation is simplified and cannot be recovered!
 
     # do nothing to instance that is not a serializable object and do not use trace
     if not use_trace or not is_traceable(obj):
         return obj
 
-    ret = {'__symbol__': _get_hybrid_cls_or_func_name(obj.trace_symbol)}
+    ret = {'__symbol__': get_hybrid_cls_or_func_name(obj.trace_symbol)}
     if obj.trace_args:
         ret['__args__'] = obj.trace_args
     if obj.trace_kwargs:
@@ -508,7 +516,7 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
 
 def _json_tricks_serializable_object_decode(obj: Dict[str, Any]) -> Any:
     if isinstance(obj, dict) and '__symbol__' in obj:
-        symbol = _import_cls_or_func_from_hybrid_name(obj['__symbol__'])
+        symbol = import_cls_or_func_from_hybrid_name(obj['__symbol__'])
         args = obj.get('__args__', [])
         kwargs = obj.get('__kwargs__', {})
         return trace(symbol)(*args, **kwargs)
