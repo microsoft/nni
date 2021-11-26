@@ -42,8 +42,6 @@ def create_experiment(args):
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
         print(Fore.YELLOW + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
         config = ExperimentConfig(**v2_config)
-        print(config)
-        print(config.json())
     else:
         config = ExperimentConfig.load(config_file)
 
