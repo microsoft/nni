@@ -1,13 +1,14 @@
 import abc
 import copy
-import collections
+import collections.abc
 import base64
 import functools
 import inspect
 import numbers
+import types
+import warnings
 from io import IOBase
-from types import ModuleType
-from typing import Any, Union, Dict, Optional, List, TypeVar, Callable
+from typing import Any, Union, Dict, Optional, List, TypeVar
 
 import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
@@ -79,10 +80,14 @@ class Translatable(abc.ABC):
 
 
 def is_traceable(obj: Any) -> bool:
+    """
+    Check whether an object is a traceable instance (not type).
+    """
     return hasattr(obj, 'trace_copy') and \
         hasattr(obj, 'trace_symbol') and \
         hasattr(obj, 'trace_args') and \
-        hasattr(obj, 'trace_kwargs')
+        hasattr(obj, 'trace_kwargs') and \
+        not inspect.isclass(obj)
 
 
 class SerializableObject(Traceable):
@@ -200,13 +205,13 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     When a class/function is annotated, all the instances/calls will return a object as it normally will.
     Although the object might act like a normal object, it's actually a different object with NNI-specific properties.
-    To get the original object, you should use ``obj.get()`` to retrieve. The retrieved object can be used
-    like the original one, but there are still subtle differences in implementation.
+    One exception is that if your function returns None, it will return an empty SerializableObject instead,
+    which should raise your attention when you want to check whether the None ``is None``.
 
-    Note that when using the result from a trace in another trace-able function/class, ``.get()`` is automatically
-    called, so that you don't have to worry about type-converting.
-
-    Also it records extra information about where this object comes from. That's why it's called "trace".
+    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to inner function.
+    This is to prevent mutable objects gets modified in the inner function. 
+    When the function finished execution, we also record extra information about where this object comes from.
+    That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
 
     If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
@@ -227,8 +232,11 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
             return cls_or_func
         if isinstance(cls_or_func, type):
             cls_or_func = _trace_cls(cls_or_func, kw_only)
-        else:
+        elif _is_function(cls_or_func):
             cls_or_func = _trace_func(cls_or_func, kw_only)
+        else:
+            raise TypeError(f'{cls_or_func} of type {type(cls_or_func)} is not supported to be traced. '
+                            'File an issue at https://github.com/microsoft/nni/issues if you believe this is a mistake.')
         cls_or_func._traced = True
         return cls_or_func
 
@@ -342,6 +350,7 @@ def _trace_cls(base, kw_only):
             super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=True)
 
     _copy_class_wrapper_attributes(base, wrapper)
+    wrapper.__wrapped__ = base
 
     return wrapper
 
@@ -368,9 +377,9 @@ def _trace_func(func, kw_only):
             # is a class, inject interface directly
             # need to be done before primitive types because there could be inheritance here.
             res = inject_trace_info(res, func, args, kwargs)
-        elif isinstance(res, (collections.Callable, ModuleType, IOBase)):
+        elif isinstance(res, (collections.abc.Callable, types.ModuleType, IOBase)):
             raise TypeError(f'Try to add trace info to {res}, but functions and modules are not supported.')
-        elif isinstance(res, (numbers.Number, collections.Sequence, collections.Set, collections.Mapping)):
+        elif isinstance(res, (numbers.Number, collections.abc.Sequence, collections.abc.Set, collections.abc.Mapping)):
             # handle primitive types like int, str, set, dict, tuple
             # NOTE: simple types including none, bool, int, float, list, tuple, dict
             # will be directly captured by python json encoder
@@ -405,7 +414,7 @@ def _argument_processor(arg):
     arg = Translatable._translate_argument(arg)
     # 2) prevent the stored parameters to be mutated by inner class.
     # an example: https://github.com/microsoft/nni/issues/4329
-    if isinstance(arg, (collections.MutableMapping, collections.MutableSequence, collections.MutableSet)):
+    if isinstance(arg, (collections.abc.MutableMapping, collections.abc.MutableSequence, collections.abc.MutableSet)):
         arg = copy.copy(arg)
     return arg
 
@@ -418,7 +427,6 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
         if is_class_init:
             argname_list = argname_list[1:]
         full_args = {}
-        full_args.update(kwargs)
 
         # match arguments with given arguments
         # args should be longer than given list, because args can be used in a kwargs way
@@ -426,9 +434,18 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
         for argname, value in zip(argname_list, args):
             full_args[argname] = value
 
+        # use kwargs to override
+        full_args.update(kwargs)
+
         args, kwargs = [], full_args
 
     return list(args), kwargs
+
+
+def _is_function(obj: Any) -> bool:
+    # https://stackoverflow.com/questions/624926/how-do-i-detect-whether-a-python-variable-is-a-function
+    return isinstance(obj, (types.FunctionType, types.BuiltinFunctionType, types.MethodType,
+                            types.BuiltinMethodType))
 
 
 def _import_cls_or_func_from_name(target: str) -> Any:
@@ -439,6 +456,12 @@ def _import_cls_or_func_from_name(target: str) -> Any:
     return getattr(module, identifier)
 
 
+def _strip_trace_type(traceable: Any) -> Any:
+    if getattr(traceable, '_traced', False):
+        return traceable.__wrapped__
+    return traceable
+
+
 def _get_cls_or_func_name(cls_or_func: Any) -> str:
     module_name = cls_or_func.__module__
     if module_name == '__main__':
@@ -447,11 +470,8 @@ def _get_cls_or_func_name(cls_or_func: Any) -> str:
 
     try:
         imported = _import_cls_or_func_from_name(full_name)
-        print(imported, id(imported))
-        print(cls_or_func, id(cls_or_func))
-        import sys
-        import pdb; pdb.set_trace()
-        if imported != cls_or_func:
+        # ignores the differences in trace
+        if _strip_trace_type(imported) != _strip_trace_type(cls_or_func):
             raise ImportError(f'Imported {imported} is not same as expected. The function might be dynamically created.')
     except ImportError:
         raise ImportError(f'Import {cls_or_func.__name__} from "{module_name}" failed.')
@@ -464,7 +484,7 @@ def get_hybrid_cls_or_func_name(cls_or_func: Any, pickle_size_limit: int = 4096)
         name = _get_cls_or_func_name(cls_or_func)
         # import success, use a path format
         return 'path:' + name
-    except ImportError:
+    except (ImportError, AttributeError):
         b = cloudpickle.dumps(cls_or_func)
         if len(b) > pickle_size_limit:
             raise ValueError(f'Pickle too large when trying to dump {cls_or_func}. '
@@ -483,7 +503,7 @@ def import_cls_or_func_from_hybrid_name(s: str) -> Any:
 
 
 def _json_tricks_func_or_cls_encode(cls_or_func: Any, primitives: bool = False, pickle_size_limit: int = 4096) -> str:
-    if not isinstance(cls_or_func, type) and not callable(cls_or_func):
+    if not isinstance(cls_or_func, type) and not _is_function(cls_or_func):
         # not a function or class, continue
         return cls_or_func
 
@@ -505,6 +525,10 @@ def _json_tricks_serializable_object_encode(obj: Any, primitives: bool = False, 
     # do nothing to instance that is not a serializable object and do not use trace
     if not use_trace or not is_traceable(obj):
         return obj
+
+    if isinstance(obj.trace_symbol, property):
+        # commonly made mistake when users forget to call the traced function/class.
+        warnings.warn(f'The symbol of {obj} is found to be a property. Did you forget to create the instance with ``xx(...)``?')
 
     ret = {'__symbol__': get_hybrid_cls_or_func_name(obj.trace_symbol)}
     if obj.trace_args:

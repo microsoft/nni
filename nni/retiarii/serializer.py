@@ -29,7 +29,8 @@ def serialize(cls, *args, **kwargs):
         self.op = serialize(MyCustomOp, hidden_units=128)
     """
     warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
-                  'Try to use nni.trace, e.g., nni.trace(torch.optim.Adam)(learning_rate=1e-4) instead.')
+                  'Try to use nni.trace, e.g., nni.trace(torch.optim.Adam)(learning_rate=1e-4) instead.',
+                  category=DeprecationWarning)
     return trace(cls)(*args, **kwargs)
 
 
@@ -38,7 +39,7 @@ def serialize_cls(cls):
     To create an serializable class.
     """
     warnings.warn('nni.retiarii.serialize is deprecated and will be removed in future release. ' +
-                  'Try to use nni.trace instead.')
+                  'Try to use nni.trace instead.', category=DeprecationWarning)
     return trace(cls)
 
 

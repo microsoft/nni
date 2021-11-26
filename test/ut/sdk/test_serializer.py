@@ -136,15 +136,17 @@ class Foo:
         return self.aa == other.aa and self.bb == other.bb
 
 
-def test_basic_unit():
+def test_basic_unit_and_custom_import():
     module = ImportTest(3, 0.5)
     ss = nni.dump(module)
-    print(ss)
+    assert ss == r'{"__symbol__": "path:imported.model.ImportTest", "__kwargs__": {"foo": 3, "bar": 0.5}}'
     assert nni.load(nni.dump(module)) == module
 
     import nni.retiarii.nn.pytorch as nn
     module = nn.Conv2d(3, 10, 3, bias=False)
-    assert nni.load(nni.dump(module)).bias is None
+    ss = nni.dump(module)
+    assert ss == r'{"__symbol__": "path:torch.nn.modules.conv.Conv2d", "__kwargs__": {"in_channels": 3, "out_channels": 10, "kernel_size": 3, "bias": false}}'
+    assert nni.load(ss).bias is None
 
 
 def test_dataset():
@@ -152,23 +154,26 @@ def test_dataset():
     dataloader = nni.trace(DataLoader)(dataset, batch_size=10)
 
     dumped_ans = {
-        "__symbol__": "torch.utils.data.dataloader.DataLoader",
+        "__symbol__": "path:torch.utils.data.dataloader.DataLoader",
         "__kwargs__": {
-            "batch_size": 10,
             "dataset": {
-                "__symbol__": "torchvision.datasets.mnist.MNIST",
+                "__symbol__": "path:torchvision.datasets.mnist.MNIST",
                 "__kwargs__": {"root": "data/mnist", "train": False, "download": True}
-            }
+            },
+            "batch_size": 10
         }
     }
+    print(nni.dump(dataloader))
+    print(nni.dump(dumped_ans))
     assert nni.dump(dataloader) == nni.dump(dumped_ans)
     dataloader = nni.load(nni.dump(dumped_ans))
     assert isinstance(dataloader, DataLoader)
 
     dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True,
-                               transform=nni.trace(transforms.Compose)(
-                                   [nni.trace(transforms.ToTensor), nni.trace(transforms.Normalize, (0.1307,), (0.3081,))]
-                               ))
+                               transform=nni.trace(transforms.Compose)([
+                                   nni.trace(transforms.ToTensor)(),
+                                   nni.trace(transforms.Normalize)((0.1307,), (0.3081,))
+                               ]))
     dataloader = nni.trace(DataLoader)(dataset, batch_size=10)
     x, y = next(iter(nni.load(nni.dump(dataloader))))
     assert x.size() == torch.Size([10, 1, 28, 28])
@@ -187,7 +192,7 @@ def test_dataset():
 def test_type():
     assert nni.dump(torch.optim.Adam) == '{"__nni_type__": "path:torch.optim.adam.Adam"}'
     assert nni.load('{"__nni_type__": "path:torch.optim.adam.Adam"}') == torch.optim.Adam
-    assert re.match(r'{"__nni_type__": "bytes:(.*)"}', nni.dump(Foo))
+    assert Foo == nni.load(nni.dump(Foo))
     assert nni.dump(math.floor) == '{"__nni_type__": "path:math.floor"}'
     assert nni.load('{"__nni_type__": "path:math.floor"}') == math.floor
 
@@ -206,4 +211,4 @@ if __name__ == '__main__':
     # test_nested_class()
     # test_unserializable()
     # test_basic_unit()
-    test_basic_unit()
+    test_type()
