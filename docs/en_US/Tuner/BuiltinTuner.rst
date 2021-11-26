@@ -30,7 +30,7 @@ Currently, we support the following algorithms:
    * - `Batch tuner <#Batch>`__
      - Batch tuner allows users to simply provide several configurations (i.e., choices of hyper-parameters) for their trial code. After finishing all the configurations, the experiment is done. Batch tuner only supports the type choice in search space spec.
    * - `Grid Search <#GridSearch>`__
-     - Grid Search performs an exhaustive searching through a manually specified subset of the hyperparameter space defined in the searchspace file. Note that the only acceptable types of search space are choice, quniform, randint.
+     - Grid Search performs an exhaustive searching through the search space.
    * - `Hyperband <#Hyperband>`__
      - Hyperband tries to use limited resources to explore as many configurations as possible and returns the most promising ones as a final result. The basic idea is to generate many configurations and run them for a small number of trials. The half least-promising configurations are thrown out, the remaining are further trained along with a selection of new configurations. The size of these populations is sensitive to resource constraints (e.g. allotted search time). `Reference Paper <https://arxiv.org/pdf/1603.06560.pdf>`__
    * - `Network Morphism <#NetworkMorphism>`__
@@ -49,7 +49,7 @@ Currently, we support the following algorithms:
 Usage of Built-in Tuners
 ------------------------
 
-Using a built-in tuner provided by the NNI SDK requires one to declare the  **builtinTunerName** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
+Using a built-in tuner provided by the NNI SDK requires one to declare the  **name** and **classArgs** in the ``config.yml`` file. In this part, we will introduce each tuner along with information about usage and suggested scenarios, classArg requirements, and an example configuration.
 
 Note: Please follow the format when you write your ``config.yml`` file. Some built-in tuners have dependencies that need to be installed using ``pip install nni[<tuner>]``, like SMAC's dependencies can be installed using ``pip install nni[SMAC]``.
 
@@ -62,7 +62,7 @@ TPE
 
    Built-in Tuner Name: **TPE**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./HyperoptTuner.rst>`__
+TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./tpe_tuner.rst>`__
 
 :raw-html:`<br>`
 
@@ -75,7 +75,7 @@ Random Search
 
    Built-in Tuner Name: **Random**
 
-Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./HyperoptTuner.rst>`__
+Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./random_tuner.rst>`__
 
 :raw-html:`<br>`
 
@@ -143,8 +143,6 @@ Grid Search
 ..
 
    Built-in Tuner Name: **Grid Search**
-
-Note that the only acceptable types within the search space are ``choice``\ , ``quniform``\ , and ``randint``.
 
 This is suggested when the search space is small. It's suggested when it is feasible to exhaustively sweep the whole search space. `Detailed Description <./GridsearchTuner.rst>`__
 
