@@ -26,6 +26,9 @@ Tuner
 ..  autoclass:: nni.algorithms.hpo.random_tuner.RandomTuner
     :members:
 
+..  autoclass:: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
+    :members:
+
 ..  autoclass:: nni.algorithms.hpo.evolution_tuner.EvolutionTuner
     :members:
 
