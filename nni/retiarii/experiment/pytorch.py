@@ -185,6 +185,8 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+        self.auto_exit = None
+
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.trainer, self.applied_mutators,
@@ -283,11 +285,12 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False) -> str:
+    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False, auto_exit: bool = True) -> str:
         """
         Run the experiment.
         This function will block until experiment finish or error.
         """
+        self.auto_exit = auto_exit
         if isinstance(self.trainer, BaseOneShotTrainer):
             self.trainer.fit()
         else:
@@ -317,7 +320,8 @@ class RetiariiExperiment(Experiment):
         except KeyboardInterrupt:
             _logger.warning('KeyboardInterrupt detected')
         finally:
-            self.stop()
+            if self.auto_exit:
+                self.stop()
 
     def stop(self) -> None:
         """
