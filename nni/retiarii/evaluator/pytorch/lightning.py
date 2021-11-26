@@ -75,11 +75,11 @@ class Lightning(Evaluator):
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if cgo_import_failed:
-            assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}'
+            assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), f'Trainer must be imported from {__name__}'
         else:
-            assert isinstance(trainer, Trainer) or isinstance(trainer, cgo_trainer.Trainer), \
+            # this is not isinstance(trainer, Trainer) because with a different trace call, it can be different
+            assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
                 f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
-        print(train_dataloader, val_dataloaders)
         assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         self.module = lightning_module

@@ -169,7 +169,7 @@ class Experiments:
         if os.path.exists(self.experiment_file):
             try:
                 with open(self.experiment_file, 'r') as file:
-                    return nni.load(file)
+                    return nni.load(fp=file)
             except ValueError:
                 return {}
         return {}

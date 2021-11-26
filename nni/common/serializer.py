@@ -298,7 +298,7 @@ def dump(obj: Any, fp: Optional[Any] = None, *, use_trace: bool = True, pickle_s
         return json_tricks.dumps(obj, obj_encoders=encoders, **json_tricks_kwargs)
 
 
-def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> Any:
+def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comments: bool = True, **json_tricks_kwargs) -> Any:
     """
     Load the string or from file, and convert it to a complex data structure.
     At least one of string or fp has to be not none.
@@ -309,6 +309,8 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         JSON string to parse. Can be set to none if fp is used.
     fp : str
         File path to load JSON from. Can be set to none if string is used.
+    ignore_comments : bool
+        Remove comments (starting with ``#`` or ``//``). Default is true.
 
     Returns
     -------
@@ -331,7 +333,11 @@ def load(string: str = None, fp: Optional[Any] = None, **json_tricks_kwargs) -> 
         _json_tricks_any_object_decode
     ]
 
+    json_tricks_kwargs['ignore_comments'] = ignore_comments
+
     if string is not None:
+        if isinstance(string, IOBase):
+            raise TypeError(f'Expect a string, found a {string}. If you intend to use a file, use `nni.load(fp=file)`')
         return json_tricks.loads(string, obj_pairs_hooks=hooks, **json_tricks_kwargs)
     else:
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
