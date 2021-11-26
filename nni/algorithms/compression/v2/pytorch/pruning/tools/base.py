@@ -456,29 +456,35 @@ class SparsityAllocator:
 class TaskGenerator:
     """
     This class used to generate config list for pruner in each iteration.
-    """
-    def __init__(self, origin_model: Module, origin_masks: Dict[str, Dict[str, Tensor]] = {},
-                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
-        """
-        Parameters
-        ----------
-        origin_model
-            The origin unwrapped pytorch model to be pruned.
-        origin_masks
-            The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
-        origin_config_list
-            The origin config list provided by the user. Note that this config_list is directly config the origin model.
-            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
-        log_dir
-            The log directory use to saving the task generator log.
-        keep_intermediate_result
-            If keeping the intermediate result, including intermediate model and masks during each iteration.
-        """
-        assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
-        self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
-        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+    Parameters
+    ----------
+    origin_model
+        The origin unwrapped pytorch model to be pruned.
+    origin_masks
+        The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
+    origin_config_list
+        The origin config list provided by the user. Note that this config_list is directly config the origin model.
+        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+    log_dir
+        The log directory use to saving the task generator log.
+    keep_intermediate_result
+        If keeping the intermediate result, including intermediate model and masks during each iteration.
+    """
+    def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
+                 origin_config_list: Optional[List[Dict]] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
+        self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
+
+        if origin_model is not None and origin_config_list is not None and origin_masks is not None:
+            self.reset(origin_model, origin_config_list, origin_masks)
+
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        assert isinstance(model, Module), 'Only support pytorch module.'
+
+        self._log_dir_root = Path(self._log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
+        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+
         self._intermediate_result_dir = Path(self._log_dir_root, 'intermediate_result')
         self._intermediate_result_dir.mkdir(parents=True, exist_ok=True)
 
@@ -486,7 +492,7 @@ class TaskGenerator:
         self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
         self._origin_masks_path = Path(self._log_dir_root, 'origin', 'masks.pth')
         self._origin_config_list_path = Path(self._log_dir_root, 'origin', 'config_list.json')
-        self._save_data('origin', origin_model, origin_masks, origin_config_list)
+        self._save_data('origin', model, masks, config_list)
 
         self._task_id_candidate = 0
         self._tasks: Dict[int, Task] = {}
