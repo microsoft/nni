@@ -142,7 +142,7 @@ class SerializableObject(Traceable):
     def trace_kwargs(self, kwargs: Dict[str, Any]):
         self.__dict__['_nni_kwargs'] = kwargs
 
-    def _get_nni_attr(self, name):
+    def _get_nni_attr(self, name: str) -> Any:
         return self.__dict__['_nni_' + name]
 
     def __repr__(self):

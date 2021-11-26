@@ -67,6 +67,17 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
 
     cls = trace(cls)
     cls._nni_basic_unit = basic_unit_tag
+
+    # HACK: for torch script
+    # https://github.com/pytorch/pytorch/pull/45261
+    # https://github.com/pytorch/pytorch/issues/54688
+    # I'm not sure whether there will be potential issues
+    import torch
+    cls._get_nni_attr = torch.jit.ignore(cls._get_nni_attr)
+    cls.trace_symbol = torch.jit.unused(cls.trace_symbol)
+    cls.trace_args = torch.jit.unused(cls.trace_args)
+    cls.trace_kwargs = torch.jit.unused(cls.trace_kwargs)
+
     return cls
 
 
