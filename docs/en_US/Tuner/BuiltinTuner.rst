@@ -62,7 +62,7 @@ TPE
 
    Built-in Tuner Name: **TPE**
 
-TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./tpe_tuner.rst>`__
+TPE, as a black-box optimization, can be used in various scenarios and shows good performance in general. Especially when you have limited computation resources and can only try a small number of trials. From a large amount of experiments, we found that TPE is far better than Random Search. `Detailed Description <./TpeTuner.rst>`__
 
 :raw-html:`<br>`
 
@@ -75,7 +75,7 @@ Random Search
 
    Built-in Tuner Name: **Random**
 
-Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./random_tuner.rst>`__
+Random search is suggested when each trial does not take very long (e.g., each trial can be completed very quickly, or early stopped by the assessor), and you have enough computational resources. It's also useful if you want to uniformly explore the search space. Random Search can be considered a baseline search algorithm. `Detailed Description <./RandomTuner.rst>`__
 
 :raw-html:`<br>`
 
