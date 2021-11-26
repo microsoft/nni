@@ -13,7 +13,8 @@ _trace_module_names = [
 
 def remove_inject_pytorch_nn():
     for name in _trace_module_names:
-        setattr(nn, name, getattr(nn, name).__wrapped__)
+        if hasattr(getattr(nn, name), '__wrapped__'):
+            setattr(nn, name, getattr(nn, name).__wrapped__)
 
 
 def inject_pytorch_nn():
