@@ -25,7 +25,7 @@ def version_larger_equal(a: str, b: str) -> bool:
 
 _last_uid = defaultdict(int)
 
-_DEFAULT_NAMESPACE = 'model'
+_DEFAULT_MODEL_NAMESPACE = 'model'
 
 
 def uid(namespace: str = 'default') -> int:
@@ -116,7 +116,7 @@ class ModelNamespace:
     To create an individual namespace for models to enable automatic numbering.
     """
 
-    def __init__(self, key: str = _DEFAULT_NAMESPACE):
+    def __init__(self, key: str = _DEFAULT_MODEL_NAMESPACE):
         # for example, key: "model_wrapper"
         self.key = key
 
@@ -137,11 +137,12 @@ class ModelNamespace:
         ContextStack.pop(self.key)
 
     @staticmethod
-    def next_label(key: str = _DEFAULT_NAMESPACE) -> str:
+    def next_label(key: str = _DEFAULT_MODEL_NAMESPACE) -> str:
         try:
             current_context = ContextStack.top(key)
         except NoContextError:
-            raise ValueError(f'Namespace with name "{key}" not found. Did you forget to wrap your model with "@model_wrapper"?')
+            # fallback to use "default" namespace
+            return ModelNamespace._simple_name('default', [uid()])
 
         next_uid = uid(ModelNamespace._simple_name(key, current_context))
         return ModelNamespace._simple_name(key, current_context + [next_uid])

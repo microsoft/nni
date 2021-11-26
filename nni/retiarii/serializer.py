@@ -1,11 +1,15 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import inspect
 import warnings
 from typing import Any, TypeVar, Union
 
 from nni.common.serializer import Traceable, is_traceable, trace, _copy_class_wrapper_attributes
 from .utils import ModelNamespace
+
+__all__ = ['get_init_parameters_or_fail', 'serialize', 'serialize_cls', 'basic_unit', 'model_wrapper',
+           'is_basic_unit', 'is_model_wrapped']
 
 T = TypeVar('T')
 
@@ -98,6 +102,18 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     reset_wrapper.__wrapped__ = wrapper.__wrapped__
     reset_wrapper._nni_model_wrapper = True
     return reset_wrapper
+
+
+def is_basic_unit(cls_or_instance) -> bool:
+    if not inspect.isclass(cls_or_instance):
+        cls_or_instance = cls_or_instance.__class__
+    return getattr(cls_or_instance, '_nni_basic_unit', False)
+
+
+def is_model_wrapped(cls_or_instance) -> bool:
+    if not inspect.isclass(cls_or_instance):
+        cls_or_instance = cls_or_instance.__class__
+    return getattr(cls_or_instance, '_nni_model_wrapper', False)
 
 
 def _check_wrapped(cls: T) -> bool:
