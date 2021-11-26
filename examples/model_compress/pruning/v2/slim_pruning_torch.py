@@ -102,8 +102,9 @@ if __name__ == '__main__':
     # Start to prune and speedup
     print('\n' + '=' * 50 + ' START TO PRUNE THE BEST ACCURACY PRETRAINED MODEL ' + '=' * 50)
     config_list = [{
-            'total_sparsity': 0.5,
-            'op_types': ['BatchNorm2d'],
+        'total_sparsity': 0.5,
+        'op_types': ['BatchNorm2d'],
+        'max_sparsity_per_layer': 0.9
     }]
 
     optimizer, _ = optimizer_scheduler_generator(model)
