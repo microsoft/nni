@@ -26,7 +26,7 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: Evolution
+     name: Evolution
      classArgs:
        optimize_mode: maximize
        population_size: 100

@@ -36,7 +36,7 @@ To use Network Morphism, you should modify the following spec in your ``config.y
 
    tuner:
      #choice: NetworkMorphism
-     builtinTunerName: NetworkMorphism
+     name: NetworkMorphism
      classArgs:
        #choice: maximize, minimize
        optimize_mode: maximize

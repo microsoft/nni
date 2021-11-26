@@ -35,6 +35,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: SMAC
+     name: SMAC
      classArgs:
        optimize_mode: maximize

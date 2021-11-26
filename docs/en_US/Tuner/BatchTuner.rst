@@ -18,7 +18,7 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: BatchTuner
+     name: BatchTuner
 
 :raw-html:`<br>`
 

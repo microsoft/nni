@@ -62,7 +62,7 @@ Below is an exmaple of PBTTuner configuration in experiment config file. **Note 
 
    # config.yml
    tuner:
-     builtinTunerName: PBTTuner
+     name: PBTTuner
      classArgs:
        optimize_mode: maximize
        all_checkpoint_dir: /the/path/to/store/checkpoints

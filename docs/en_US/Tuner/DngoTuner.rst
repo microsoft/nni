@@ -25,6 +25,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: DNGOTuner
+     name: DNGOTuner
      classArgs:
        optimize_mode: maximize

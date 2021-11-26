@@ -38,6 +38,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: MetisTuner
+     name: MetisTuner
      classArgs:
        optimize_mode: maximize

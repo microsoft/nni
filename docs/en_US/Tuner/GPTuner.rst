@@ -35,7 +35,7 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: GPTuner
+     name: GPTuner
      classArgs:
        optimize_mode: maximize
        utility: 'ei'
