@@ -1,4 +1,3 @@
-import json
 import os
 import threading
 import unittest
@@ -158,7 +157,7 @@ def _new_trainer():
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'mnist_pytorch.json'
     with open(path) as f:
-        mnist_model = Model._load(json.load(f))
+        mnist_model = Model._load(nni.load(fp=f))
         mnist_model.evaluator = _new_trainer()
 
     if n_models == 1:
@@ -173,12 +172,12 @@ def _load_mnist(n_models: int = 1):
 
 
 def _get_final_result():
-    result = json.loads(nni.runtime.platform.test._last_metric)['value']
+    result = nni.load(nni.runtime.platform.test._last_metric)['value']
     if isinstance(result, list):
         return [float(_) for _ in result]
     else:
         if isinstance(result, str) and '[' in result:
-            return json.loads(result)
+            return nni.load(result)
         return [float(result)]
 
 
@@ -308,7 +307,7 @@ class CGOEngineTest(unittest.TestCase):
 
         if torch.cuda.is_available() and torch.cuda.device_count() >= 2:
             cmd, data = protocol.receive()
-            params = json.loads(data)
+            params = nni.load(data)
 
             tt.init_params(params)
 
