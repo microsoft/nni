@@ -1,6 +1,6 @@
 from typing import Any, Optional, Tuple
 
-from ...utils import ModelNamespace, uid, get_current_context
+from nni.retiarii.utils import ModelNamespace, get_current_context
 
 
 def generate_new_label(label: Optional[str]):

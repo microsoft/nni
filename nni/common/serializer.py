@@ -186,7 +186,7 @@ def inject_trace_info(obj: Any, symbol: T, args: List[Any], kwargs: Dict[str, An
             setattr(obj.__class__, name, method)
     else:
         wrapper = type('wrapper', (Traceable, type(obj)), attributes)
-        obj = wrapper(obj)
+        obj = wrapper(obj)  # pylint: disable=abstract-class-instantiated
 
     # make obj complying with the interface of traceable, though we cannot change its base class
     obj.__dict__.update(_nni_symbol=symbol, _nni_args=args, _nni_kwargs=kwargs)
@@ -350,7 +350,6 @@ def _trace_cls(base, kw_only):
             super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=True)
 
     _copy_class_wrapper_attributes(base, wrapper)
-    wrapper.__wrapped__ = base
 
     return wrapper
 
@@ -405,6 +404,8 @@ def _copy_class_wrapper_attributes(base, wrapper):
                 setattr(wrapper, k, v)
             except AttributeError:
                 pass
+
+    wrapper.__wrapped__ = base
 
 
 def _argument_processor(arg):

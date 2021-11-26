@@ -56,6 +56,8 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
         class PrimitiveOp(nn.Module):
             ...
     """
+    _check_wrapped(cls)
+
     import torch.nn as nn
     assert issubclass(cls, nn.Module), 'When using @basic_unit, the class must be a subclass of nn.Module.'
 
@@ -77,9 +79,11 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     The wrapper serves two purposes:
 
         1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-        2. Reset uid in `mutation` namespace so that each model counts from zero.
+        2. Reset uid in ``mutation`` namespace so that each model counts from zero.
            Can be useful in unittest and other multi-model scenarios.
     """
+    _check_wrapped(cls)
+
     import torch.nn as nn
     assert issubclass(cls, nn.Module)
 
@@ -90,6 +94,12 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
             with ModelNamespace():
                 super().__init__(*args, **kwargs)
 
-    reset_wrapper.__dict__['_nni_model_wrapper'] = True
     _copy_class_wrapper_attributes(wrapper, reset_wrapper)
+    reset_wrapper.__wrapped__ = wrapper.__wrapped__
+    reset_wrapper._nni_model_wrapper = True
     return reset_wrapper
+
+
+def _check_wrapped(cls: T) -> bool:
+    if getattr(cls, '_traced', False) or getattr(cls, '_nni_model_wrapper', False):
+        raise TypeError(f'{cls} is already wrapped with trace wrapper (basic_unit / model_wrapper / trace). Cannot wrap again.')

@@ -136,7 +136,7 @@ class ModelNamespace:
     def __exit__(self, *args, **kwargs):
         ContextStack.pop(self.key)
 
-    @classmethod
+    @staticmethod
     def next_label(key: str = _DEFAULT_NAMESPACE) -> str:
         try:
             current_context = ContextStack.top(key)
