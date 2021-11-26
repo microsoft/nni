@@ -50,7 +50,7 @@ class FCNet(nn.Module):
         return output.view(-1)
 
 
-@serialize_cls
+@nni.trace
 class DiabetesDataset(Dataset):
     def __init__(self, train=True):
         data = load_diabetes()

@@ -209,7 +209,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
     which should raise your attention when you want to check whether the None ``is None``.
 
     When parameters of functions are received, it is first stored, and then a shallow copy will be passed to inner function.
-    This is to prevent mutable objects gets modified in the inner function. 
+    This is to prevent mutable objects gets modified in the inner function.
     When the function finished execution, we also record extra information about where this object comes from.
     That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
@@ -333,6 +333,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         _json_tricks_any_object_decode
     ]
 
+    # to bypass a deprecation warning in json-tricks
     json_tricks_kwargs['ignore_comments'] = ignore_comments
 
     if string is not None:

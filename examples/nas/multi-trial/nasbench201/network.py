@@ -3,7 +3,7 @@ import nni
 import nni.retiarii.evaluator.pytorch.lightning as pl
 import torch.nn as nn
 import torchmetrics
-from nni.retiarii import model_wrapper, serialize, serialize_cls
+from nni.retiarii import model_wrapper, serialize
 from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
 from nni.retiarii.nn.pytorch import NasBench201Cell
 from nni.retiarii.strategy import Random
@@ -71,7 +71,7 @@ class AccuracyWithLogits(torchmetrics.Accuracy):
         return super().update(nn.functional.softmax(pred), target)
 
 
-@serialize_cls
+@nni.trace
 class NasBench201TrainingModule(pl.LightningModule):
     def __init__(self, max_epochs=200, learning_rate=0.1, weight_decay=5e-4):
         super().__init__()
