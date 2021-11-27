@@ -15,7 +15,11 @@ def measure_time(model, dummy_input, runtimes=200):
     std = np.std(times[_drop:-1*_drop])
     return mean*1000, std*1000
 
-model = create_model('mobilenet_v1').cuda()
-data = torch.rand(32,3,224,224).cuda()
+model = create_model('mobilenet_v1').cpu()
+data = torch.rand(32,3,224,224).cpu()
 trace = torch.jit.trace(model, data)
 print(measure_time(trace,data))
+
+import pdb; pdb.set_trace()
+torch.cuda.mem_get_info()
+
