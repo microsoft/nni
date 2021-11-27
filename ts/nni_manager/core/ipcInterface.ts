@@ -2,6 +2,7 @@
 // Licensed under the MIT license.
 
 import assert from 'assert';
+import fs from 'fs';
 import { ChildProcess } from 'child_process';
 import { EventEmitter } from 'events';
 import net from 'net';
@@ -13,6 +14,8 @@ import * as CommandType from './commands';
 
 const ipcOutgoingFd: number = 3;
 const ipcIncomingFd: number = 4;
+
+let ipcPipePath: string = '';
 
 /**
  * Encode a command
@@ -82,6 +85,12 @@ class IpcInterface {
         this.logger.debug(`ipcInterface command type: [${commandType}], content:[${content}]`);
         assert.ok(this.acceptCommandTypes.has(commandType));
 
+        if (commandType === CommandType.PING) {
+            if (ipcPipePath !== '' && !fs.existsSync(ipcPipePath)) {
+                throw new Error('Dispatcher stream error, strategy may have crashed.');
+            }
+        }
+
         try {
             const data: Buffer = encodeCommand(commandType, content);
             if (!this.outgoingStream.write(data)) {
@@ -137,6 +146,7 @@ function createDispatcherInterface(process: ChildProcess): IpcInterface {
 }
 
 function createDispatcherPipeInterface(pipePath: string): IpcInterface {
+    ipcPipePath = pipePath;
     const client = net.createConnection(pipePath);
     return new IpcInterface(client, client, new Set([...CommandType.TUNER_COMMANDS, ...CommandType.ASSESSOR_COMMANDS]));
 }

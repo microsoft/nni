@@ -5,6 +5,7 @@ import atexit
 import logging
 import os
 import socket
+import traceback
 import time
 from dataclasses import dataclass
 from pathlib import Path
@@ -185,7 +186,7 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
-        self.auto_exit = None
+        self.keep_exp_alive = False
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
@@ -205,6 +206,7 @@ class RetiariiExperiment(Experiment):
         Start the experiment in background.
         This method will raise exception on failure.
         If it returns, the experiment should have been successfully started.
+
         Parameters
         ----------
         port
@@ -267,9 +269,17 @@ class RetiariiExperiment(Experiment):
 
         exp_status_checker = Thread(target=self._check_exp_status)
         exp_status_checker.start()
-        self._start_strategy()
-        # TODO: the experiment should be completed, when strategy exits and there is no running job
-        _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
+        try:
+            self._start_strategy()
+            # TODO: the experiment should be completed, when strategy exits and there is no running job
+            _logger.info('Waiting for experiment to become DONE (you can ctrl+c if there is no running trial jobs)...')
+        except Exception as err:
+            traceback.print_exc()
+            # strategy is failed, stop dispatcher/advisor accordingly
+            assert self._dispatcher_thread is not None
+            self._dispatcher.stopping = True
+            self._dispatcher_thread.join(timeout=1)
+            self._pipe.close()
         exp_status_checker.join()
 
     def _construct_devices(self):
@@ -285,12 +295,24 @@ class RetiariiExperiment(Experiment):
     def _create_dispatcher(self):
         return self._dispatcher
 
-    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False, auto_exit: bool = True) -> str:
+    def run(self, config: RetiariiExeConfig = None, port: int = 8080, debug: bool = False, keep_exp_alive: bool = False) -> str:
         """
         Run the experiment.
         This function will block until experiment finish or error.
+
+        Parameters
+        ----------
+        config
+            configuration for Retiarii experiment
+        port
+            the port of this Retiarii experiment
+        debug
+            when debug is True, ...
+        keep_exp_alive
+            if keep_exp_alive is True, the whole experiment exits when the experiment is done or failed.
+            otherwise, the experiment keeps alive, users can still access webui when experiment is done.
         """
-        self.auto_exit = auto_exit
+        self.keep_exp_alive = keep_exp_alive
         if isinstance(self.trainer, BaseOneShotTrainer):
             self.trainer.fit()
         else:
@@ -320,7 +342,9 @@ class RetiariiExperiment(Experiment):
         except KeyboardInterrupt:
             _logger.warning('KeyboardInterrupt detected')
         finally:
-            if self.auto_exit:
+            if self.keep_exp_alive:
+                atexit.unregister(self.stop)
+            else:
                 self.stop()
 
     def stop(self) -> None:
