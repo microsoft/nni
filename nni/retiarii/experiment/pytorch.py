@@ -278,8 +278,9 @@ class RetiariiExperiment(Experiment):
             # strategy is failed, stop dispatcher/advisor accordingly
             assert self._dispatcher_thread is not None
             self._dispatcher.stopping = True
-            self._dispatcher_thread.join(timeout=1)
+            self._dispatcher_thread.join()
             self._pipe.close()
+            self._pipe = None
         exp_status_checker.join()
 
     def _construct_devices(self):
@@ -344,6 +345,7 @@ class RetiariiExperiment(Experiment):
         finally:
             if self.keep_exp_alive:
                 atexit.unregister(self.stop)
+                _logger.warning('This experiment is still alive, can be stopped with command "nnictl stop".')
             else:
                 self.stop()
 
