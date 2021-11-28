@@ -16,9 +16,11 @@ logger = logging.getLogger(__name__)
 class ObserverQuantizer(Quantizer):
     """This quantizer uses observers to record weight/output statistics to get quantization information.
     The whole process can be divided into three steps:
-        1. It will register observers to the place where quantization would happen (just like registering hooks).
-        2. The observers would record tensors' statistics during calibration.
-        3. Scale & zero point would be obtained after calibration.
+
+    1. It will register observers to the place where quantization would happen (just like registering hooks).
+    2. The observers would record tensors' statistics during calibration.
+    3. Scale & zero point would be obtained after calibration.
+    
     Note that the observer type, tensor dtype and quantization qscheme are hard coded for now. Their customization
     are under development and will be ready soon.
     """

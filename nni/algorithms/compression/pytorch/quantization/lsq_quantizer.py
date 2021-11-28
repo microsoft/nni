@@ -93,7 +93,9 @@ class LsqQuantizer(Quantizer):
             Used to scale the gradient. Give tensor `x`, we have `y=grad_scale(x, scale)=x` in the forward pass,
             which means that this function will not change the value of `x`. In the backward pass, we have:
 
-            :math:`\frac{\alpha_L}{\alpha_x}=\frac{\alpha_L}{\alpha_y}*\frac{\alpha_y}{\alpha_x}=sclae*\frac{\alpha_L}{\alpha_x}`
+            .. math:
+
+                \frac{\alpha_L}{\alpha_x}=\frac{\alpha_L}{\alpha_y}*\frac{\alpha_y}{\alpha_x}=sclae*\frac{\alpha_L}{\alpha_x}
 
             This means that the origin gradient of x is scaled by a factor of `scale`. Applying this function
             to a nn.Parameter will scale the gradient of it without changing its value.
