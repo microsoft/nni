@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 import logging
-from collections import defaultdict
 import torch
 from schema import Schema, And, Or, Optional
 from nni.compression.pytorch.utils.config_validation import QuantizerSchema
