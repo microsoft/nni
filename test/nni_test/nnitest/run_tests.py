@@ -35,7 +35,7 @@ def update_training_service_config(config, training_service, config_file_path, n
     elif training_service == 'kubeflow' and reuse_mode == 'True':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
         print(it_ts_config)
-        it_ts_config[training_service]['trainingService']['worker']['command'] = config['trial']['command']
+        it_ts_config[training_service]['trainingService']['worker']['command'] = config['trialCommand']
 
     if training_service == 'frameworkcontroller' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['taskRoles'][0]['command'] = config['trial']['command']
@@ -44,7 +44,7 @@ def update_training_service_config(config, training_service, config_file_path, n
             config['trial'].pop('gpuNum')
     elif training_service == 'frameworkcontroller' and reuse_mode == 'True':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-        it_ts_config[training_service]['trainingService']['taskRoles'][0]['command'] = config['trial']['command']
+        it_ts_config[training_service]['trainingService']['taskRoles'][0]['command'] = config['trialCommand']
 
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
