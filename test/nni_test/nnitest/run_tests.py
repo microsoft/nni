@@ -36,6 +36,7 @@ def update_training_service_config(config, training_service, config_file_path, n
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
         print(it_ts_config)
         it_ts_config[training_service]['trainingService']['worker']['command'] = config['trialCommand']
+        it_ts_config[training_service]['trainingService']['worker']['code_directory'] = config['trialCodeDirectory']
 
     if training_service == 'frameworkcontroller' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['taskRoles'][0]['command'] = config['trial']['command']
@@ -73,9 +74,9 @@ def update_training_service_config(config, training_service, config_file_path, n
         else:
             it_ts_config[training_service].pop('sharedStorage')
     
-    if training_service == 'hybrid' or reuse_mode == 'True':
+    if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-    else:
+    else if reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
     print(it_ts_config[training_service])
