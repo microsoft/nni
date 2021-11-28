@@ -76,7 +76,7 @@ def update_training_service_config(config, training_service, config_file_path, n
     
     if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-    else if reuse_mode != 'True':
+    elif reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
     print(it_ts_config[training_service])

@@ -21,3 +21,21 @@ trainingService:
     resourceGroup: ${your resource group}
     workspaceName: ${your workspace name}
     computeTarget: ${your compute target}
+  - platform: kubeflow
+    reuseMode: true
+    worker:
+      command:
+      code_directory: 
+      dockerImage: msranni/nni
+      cpuNumber: 
+      gpuNumber: 
+      memorySize: 
+      replicas: 
+    operator: tf-operator
+    storage:
+      storageType: 
+      azureAccount: 
+      azureShare: 
+      keyVaultName: 
+      keyVaultKey: 
+    apiVersion: v1
