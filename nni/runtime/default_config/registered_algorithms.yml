@@ -26,6 +26,9 @@ tuners:
   className: nni.algorithms.hpo.smac_tuner.SMACTuner
   source: nni
 - builtinName: TPE
+  className: nni.algorithms.hpo.tpe_tuner.TpeTuner
+  source: nni
+- builtinName: TPE_legacy
   classArgs:
     algorithm_name: tpe
   classArgsValidator: nni.algorithms.hpo.hyperopt_tuner.HyperoptClassArgsValidator

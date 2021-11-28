@@ -26,6 +26,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `AGP Pruner <#agp-pruner>`__
 * `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
 * `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
+* `Auto Compress Pruner <#auto-compress-pruner>`__
 
 Level Pruner
 ------------
@@ -397,3 +398,45 @@ User configuration for Simulated Annealing Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
+
+Auto Compress Pruner
+--------------------
+
+For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
+
+.. code-block:: bash
+
+       1. Generate sparsities distribution using SimulatedAnnealingPruner
+       2. Perform ADMM-based pruning to generate pruning result for the next iteration.
+
+For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   admm_params = {
+        'trainer': trainer,
+        'optimizer': optimizer,
+        'criterion': criterion,
+        'iterations': 10,
+        'training_epochs': 1
+    }
+    sa_params = {
+        'evaluator': evaluator
+    }
+    pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
+    pruner.compress()
+    _, model, masks, _, _ = pruner.get_best_result()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
+
+User configuration for Auto Compress Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AutoCompressPruner
