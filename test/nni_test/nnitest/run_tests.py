@@ -72,7 +72,7 @@ def update_training_service_config(config, training_service, config_file_path, n
         else:
             it_ts_config[training_service].pop('sharedStorage')
     
-    if training_service == 'hybrid' or reuse_mode == 'False':
+    if training_service == 'hybrid' or reuse_mode == 'True':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
     else:
         deep_update(config, it_ts_config['all'])
