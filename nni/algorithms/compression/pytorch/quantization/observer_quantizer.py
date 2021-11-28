@@ -20,7 +20,7 @@ class ObserverQuantizer(Quantizer):
     1. It will register observers to the place where quantization would happen (just like registering hooks).
     2. The observers would record tensors' statistics during calibration.
     3. Scale & zero point would be obtained after calibration.
-    
+
     Note that the observer type, tensor dtype and quantization qscheme are hard coded for now. Their customization
     are under development and will be ready soon.
     """
