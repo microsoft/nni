@@ -4,6 +4,7 @@
 from copy import deepcopy
 from typing import Dict, List, Tuple, Callable, Optional
 
+import torch
 from torch import Tensor
 from torch.nn import Module
 
@@ -14,29 +15,30 @@ from .tools import TaskGenerator
 
 
 class PruningScheduler(BasePruningScheduler):
+    """
+    Parameters
+    ----------
+    pruner
+        The pruner used in pruner scheduler.
+        The scheduler will use `Pruner.reset(model, config_list)` to reset it in each iteration.
+    task_generator
+        Used to generate task for each iteration.
+    finetuner
+        The finetuner handled all finetune logic, use a pytorch module as input.
+        It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
+    speed_up
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
+    dummy_input
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
+    evaluator
+        Evaluate the pruned model and give a score.
+        If evaluator is None, the best result refers to the latest result.
+    reset_weight
+        If set True, the model weight will reset to the origin model weight at the end of each iteration step.
+    """
     def __init__(self, pruner: Pruner, task_generator: TaskGenerator, finetuner: Callable[[Module], None] = None,
                  speed_up: bool = False, dummy_input: Tensor = None, evaluator: Optional[Callable[[Module], float]] = None,
                  reset_weight: bool = False):
-        """
-        Parameters
-        ----------
-        pruner
-            The pruner used in pruner scheduler.
-            The scheduler will use `Pruner.reset(model, config_list)` to reset it in each iteration.
-        task_generator
-            Used to generate task for each iteration.
-        finetuner
-            The finetuner handled all finetune logic, use a pytorch module as input.
-        speed_up
-            If set True, speed up the model in each iteration.
-        dummy_input
-            If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
-        evaluator
-            Evaluate the pruned model and give a score.
-            If evaluator is None, the best result refers to the latest result.
-        reset_weight
-            If set True, the model weight will reset to the origin model weight at the end of each iteration step.
-        """
         self.pruner = pruner
         self.task_generator = task_generator
         self.finetuner = finetuner
@@ -44,6 +46,9 @@ class PruningScheduler(BasePruningScheduler):
         self.dummy_input = dummy_input
         self.evaluator = evaluator
         self.reset_weight = reset_weight
+
+    def reset(self, model: Module, config_list: List[Dict], masks: Dict[str, Dict[str, Tensor]] = {}):
+        self.task_generator.reset(model, config_list, masks)
 
     def generate_task(self) -> Optional[Task]:
         return self.task_generator.next()
@@ -144,9 +149,11 @@ class PruningScheduler(BasePruningScheduler):
 
     def pruning_one_step(self, task: Task) -> TaskResult:
         if self.reset_weight:
-            return self.pruning_one_step_reset_weight(task)
+            result = self.pruning_one_step_reset_weight(task)
         else:
-            return self.pruning_one_step_normal(task)
+            result = self.pruning_one_step_normal(task)
+        torch.cuda.empty_cache()
+        return result
 
     def get_best_result(self) -> Optional[Tuple[int, Module, Dict[str, Dict[str, Tensor]], float, List[Dict]]]:
         return self.task_generator.get_best_result()

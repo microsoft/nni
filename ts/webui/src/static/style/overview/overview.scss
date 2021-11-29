@@ -6,6 +6,7 @@ $boxGapPadding: 10px;
     display: grid;
     grid-template-columns: repeat(8, 1fr);
     grid-auto-rows: 102px;
+    margin-bottom: 24px;
 
     > div {
         background: #fff;
@@ -42,7 +43,7 @@ $boxGapPadding: 10px;
         grid-column: 1 / 5;
         grid-row-start: 8;
         margin-top: -50px;
-        height: 158px;
+        height: 152px;
         margin-right: $boxGapPadding;
         border-radius: $boxBorderRadius;
     }
@@ -83,7 +84,7 @@ $boxGapPadding: 10px;
 
 .overviewBestMetric {
     grid-column: 5 / 9;
-    grid-row: 1 / 10;
+    grid-row: 1 / 9;
     max-height: 822px;
     overflow: hidden;
 

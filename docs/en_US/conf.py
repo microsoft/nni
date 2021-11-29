@@ -27,7 +27,7 @@ author = 'Microsoft'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = 'v2.4'
+release = 'v2.5'
 
 # -- General configuration ---------------------------------------------------
 
@@ -81,6 +81,18 @@ pygments_style = None
 
 html_additional_pages = {
     'index': 'index.html',
+    'nnSpider': 'nnSpider.html',
+    'nnSpider/nobug': 'nnSpider/nobug.html',
+    'nnSpider/holiday': 'nnSpider/holiday.html',
+    'nnSpider/errorEmotion': 'nnSpider/errorEmotion.html',
+    'nnSpider/working': 'nnSpider/working.html',
+    'nnSpider/sign': 'nnSpider/sign.html',
+    'nnSpider/crying': 'nnSpider/crying.html',
+    'nnSpider/cut': 'nnSpider/cut.html',
+    'nnSpider/weaving': 'nnSpider/weaving.html',
+    'nnSpider/comfort': 'nnSpider/comfort.html',
+    'nnSpider/sweat': 'nnSpider/sweat.html'
+
 }
 
 # -- Options for HTML output -------------------------------------------------

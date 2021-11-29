@@ -26,7 +26,7 @@ export const BasicInfo = (): any => {
             <Stack horizontal horizontalAlign='space-between' className='marginTop'>
                 <div className='basic'>
                     <p>Name</p>
-                    <div className='ellipsis'>{EXPERIMENT.profile.params.experimentName}</div>
+                    <div className='ellipsis'>{EXPERIMENT.profile.params.experimentName || '--'}</div>
                     <p className='marginTop'>ID</p>
                     <div className='ellipsis'>{EXPERIMENT.profile.id}</div>
                 </div>
