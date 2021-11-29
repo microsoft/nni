@@ -19,6 +19,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Activation Mean Rank Pruner <#activation-mean-rank-pruner>`__
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
+* `Movement Pruner <#movement-pruner>`__
 
 **Iterative Pruner**
 
@@ -291,6 +292,58 @@ User configuration for ADMM Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
+
+Movement Pruner
+---------------
+
+Movement pruner is an implementation of movement pruning.
+This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
+Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
+This means the weight elements moving towards zero will accumulate negative scores, the weight elements moving away from zero will accumulate positive scores.
+The weight elements with low scores will be masked during inference.
+
+The following figure from the paper shows the weight pruning by movement pruning.
+
+.. image:: ../../img/movement_pruning.png
+   :target: ../../img/movement_pruning.png
+   :alt: 
+
+For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+   config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
+   pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
+   masked_model, masks = pruner.compress()
+
+User configuration for Movement Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.MovementPruner
+
+Reproduced Experiment
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Dataset
+     - Remaining Weights
+     - MaP acc.(paper/ours)
+     - MvP acc.(paper/ours)
+   * - Bert base
+     - MNLI - Dev
+     - 10%
+     - 77.8% / 73.6%
+     - 79.3% / 78.8%
 
 Linear Pruner
 -------------
