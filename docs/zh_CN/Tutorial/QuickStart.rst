@@ -190,7 +190,7 @@ Linux 和 macOS
 Windows
 *******
 
-在 **config_windows.yml** 文件的 ``trialCommand`` 项中将 ``python3`` 修改为 ``python``，然后从命令行使用 **config_detailed.yml** 文件启动 MNIST experiment 。
+在 **config_detailed.yml** 文件的 ``trialCommand`` 项中将 ``python3`` 修改为 ``python``，然后从命令行使用 **config_detailed.yml** 文件启动 MNIST experiment 。
 
 .. code-block:: bash
 
