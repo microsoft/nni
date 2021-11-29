@@ -22,7 +22,7 @@ kubeflow:
     platform: kubeflow
     worker:
       command:
-      code_directory: .
+      code_directory:
       dockerImage:
       cpuNumber: 1
       gpuNumber: 0

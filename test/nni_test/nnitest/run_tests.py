@@ -25,7 +25,6 @@ it_variables = {}
 
 def update_training_service_config(config, training_service, config_file_path, nni_source_dir, reuse_mode='False'):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
-    print(config)
     # hack for kubeflow trial config
     if training_service == 'kubeflow' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['worker']['command'] = config['trial']['command']
@@ -79,8 +78,6 @@ def update_training_service_config(config, training_service, config_file_path, n
     elif reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
-    print(it_ts_config[training_service])
-    print(config)
 
 
 def prepare_config_file(test_case_config, it_config, args):
