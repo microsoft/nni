@@ -28,8 +28,11 @@ class MultiThreadEnvWorker(EnvWorker):
         self.pool = ThreadPool(processes=1)
         super().__init__(env_fn)
 
-    def __getattr__(self, key):
+    def get_env_attr(self, key):
         return getattr(self.env, key)
+
+    def set_env_attr(self, key, value):
+        return setattr(self.env, key, value)
 
     def reset(self):
         return self.env.reset()
