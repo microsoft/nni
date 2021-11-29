@@ -24,8 +24,11 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
+
             # We assume the metric value are all positive right now.
-            metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
+            metric = metrics[name]
+            if self.continuous_mask:
+                metric *= self._compress_mask(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
                 threshold = metric.min() - 1
@@ -65,8 +68,11 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
+
             # We assume the metric value are all positive right now.
-            metric = metric * self._compress_mask(wrapper.weight_mask)
+            if self.continuous_mask:
+                metric = metric * self._compress_mask(wrapper.weight_mask)
+
             layer_weight_num = wrapper.module.weight.data.numel()
             total_weight_num += layer_weight_num
             expend_times = int(layer_weight_num / metric.numel())
@@ -115,7 +121,10 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         masks = {}
         grouped_metrics = {}
         for idx, names in enumerate(self.channel_depen):
-            grouped_metric = {name: metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask) for name in names if name in metrics}
+            grouped_metric = {name: metrics[name] for name in names if name in metrics}
+            if self.continuous_mask:
+                for name, metric in grouped_metric.items():
+                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
             if len(grouped_metric) > 0:
                 grouped_metrics[idx] = grouped_metric
         for _, group_metric_dict in grouped_metrics.items():

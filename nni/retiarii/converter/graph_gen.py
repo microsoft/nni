@@ -5,7 +5,7 @@ import re
 
 import torch
 
-from ..graph import Graph, Model, Node, Edge
+from ..graph import Graph, Model, Node
 from ..nn.pytorch import InputChoice, Placeholder, LayerChoice
 from ..operation import Cell, Operation
 from ..serializer import get_init_parameters_or_fail
@@ -249,6 +249,15 @@ class GraphConverter:
                     return f'({left} < {right})'
                 elif tensor.node().kind() == 'prim::If':
                     raise RuntimeError('Have not supported `if A and/or B`, please use two `if` statements instead.')
+                elif tensor.node().kind() == 'aten::abs':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'(torch.abs({value}))'
+                elif tensor.node().kind() == 'aten::sum':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'(torch.sum({value}))'
+                elif tensor.node().kind() == 'aten::item':
+                    value = _generate_expr(tensor.node().inputsAt(0))
+                    return f'({value}.item())'
                 else:
                     raise RuntimeError(f'Unsupported op type {tensor.node().kind()} in if condition, '
                                         'you are suggested to decorate the corresponding class with "@basic_unit".')
@@ -712,7 +721,7 @@ class GraphConverterWithShape(GraphConverter):
 
         # trace each layerchoice
         for name, submodule in module.named_modules():
-            # TODO: support InputChoice and ValueChioce
+            # TODO: support InputChoice and ValueChoice
             if isinstance(submodule, LayerChoice):
                 full_name = get_full_name_by_scope_name(ir_model, name.split('.'), module_name)
                 lc_node = ir_model.get_node_by_name(full_name)
@@ -767,66 +776,6 @@ class GraphConverterWithShape(GraphConverter):
         # propagate from node to graph
         for node in ir_model.get_nodes():
             propagate_shape_for_graph(node.graph)
-
-    def flatten(self, ir_model: 'Model'):
-        """
-        Flatten the subgraph into root graph.
-        """
-        def _flatten(graph: 'Graph'):
-            """
-            flatten this graph
-            """
-            model = graph.model
-            node_to_remove = []
-
-            for node in graph.hidden_nodes:
-                node_graph = model.graphs.get(node.name)
-                if node_graph is not None:
-                    _flatten(node_graph)
-
-                    # flatten node graph into this graph
-                    id_to_new_node = {}
-                    for node_graph_node in node_graph.hidden_nodes:
-                        new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
-                        new_node.update_label(node_graph_node.label)
-                        new_node._register()
-                        id_to_new_node[new_node.id] = new_node
-
-                    # reconnect node edges
-                    for in_edge in node.incoming_edges:
-                        graph.del_edge(in_edge)
-                        for input_node_edge in node_graph.input_node.outgoing_edges:
-                            if input_node_edge.head_slot == in_edge.tail_slot:
-                                graph.add_edge(
-                                    head=(in_edge.head, in_edge.head_slot),
-                                    tail=(id_to_new_node[input_node_edge.tail.id], input_node_edge.tail_slot))
-
-                    for out_edge in node.outgoing_edges:
-                        graph.del_edge(out_edge)
-                        for output_node_edge in node_graph.output_node.incoming_edges:
-                            if output_node_edge.head_slot == out_edge.tail_slot:
-                                graph.add_edge(
-                                    head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
-                                    tail=(out_edge.tail, out_edge.tail_slot))
-
-
-                    for edge in node_graph.edges:
-                        if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
-                            continue
-                        new_head = id_to_new_node[edge.head.id]
-                        new_tail = id_to_new_node[edge.tail.id]
-                        Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
-
-                    node_to_remove.append(node)
-                    del model.graphs[node.name]
-
-            for node in node_to_remove:
-                node.remove()
-
-        _flatten(ir_model.root_graph)
-
-        # remove subgraphs
-        ir_model.graphs = {ir_model._root_graph_name: ir_model.root_graph}
 
     def _trace(self, module, dummy_input):
         traced_module = torch.jit.trace(module, dummy_input)
