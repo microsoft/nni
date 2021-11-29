@@ -6,6 +6,7 @@ from multiprocessing.pool import ThreadPool
 
 import gym
 import numpy as np
+import tianshou
 import torch
 import torch.nn as nn
 
@@ -33,6 +34,11 @@ class MultiThreadEnvWorker(EnvWorker):
 
     def set_env_attr(self, key, value):
         return setattr(self.env, key, value)
+
+    def __getattr__(self, key):
+        if tianshou.__version__ >= '0.4.5':  # not a strict check here
+            return super().__getattr__(key)  # https://github.com/thu-ml/tianshou/pull/478
+        return getattr(self.env, key)
 
     def reset(self):
         return self.env.reset()
