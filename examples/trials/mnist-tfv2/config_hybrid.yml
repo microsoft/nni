@@ -39,3 +39,23 @@ trainingService:
       keyVaultName: 
       keyVaultKey: 
     apiVersion: v1
+  - platform: frameworkcontroller
+    reuseMode: true
+    serviceAccountName: 
+    taskRoles:
+      - name: worker
+        dockerImage: 'msranni/nni:latest'
+        taskNumber: 
+        command: 
+        gpuNumber: 
+        cpuNumber: 
+        memorySize: 
+        framework_attempt_completion_policy:
+          min_failed_task_count: 1
+          minSucceedTaskCount: 1
+    storage:
+      storageType: 
+      azureAccount: 
+      azureShare: 
+      keyVaultName: 
+      keyVaultKey: 

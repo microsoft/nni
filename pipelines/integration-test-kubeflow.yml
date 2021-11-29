@@ -68,8 +68,8 @@ jobs:
       az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts kubeflow \
-          --keyvault_vaultname $(keyvault_vaultname) \
-          --keyvault_name $(keyvault_name) \
+          --keyvault_vaultname $(keyvault_name) \
+          --keyvault_name $(keyvault_vaultname) \
           --azs_account $(azs_account) \
           --azs_share $(azs_share) \
           --nni_docker_image nnidev/nni-nightly \
