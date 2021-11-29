@@ -1,15 +1,15 @@
 Network Morphism Tuner on NNI
 =============================
 
-1. Introduction
----------------
+Introduction
+------------
 
 `Autokeras <https://arxiv.org/abs/1806.10282>`__ is a popular autoML tool using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its `code <https://github.com/jhfjhfj1/autokeras>`__\ , we implemented our Network Morphism method on the NNI platform.
 
 If you want to know more about network morphism trial usage, please see the :githublink:`Readme.md <examples/trials/network_morphism/README.rst>`.
 
-2. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^
@@ -134,8 +134,8 @@ If you want to save and load the **best model**\ , the following methods are rec
    model_id = "" # id of the model you want to reuse
    loaded_model = torch.load("model-{}.pt".format(model_id))
 
-3. File Structure
------------------
+File Structure
+--------------
 
 The tuner has a lot of different files, functions, and classes. Here, we will give most of those files only a brief introduction:
 
@@ -164,8 +164,8 @@ The tuner has a lot of different files, functions, and classes. Here, we will gi
 * ``metric.py`` some metric classes including Accuracy and MSE.
 * ``utils.py`` is the example search network architectures for the ``cifar10`` dataset, using Keras.
 
-4. The Network Representation Json Example
-------------------------------------------
+The Network Representation Json Example
+---------------------------------------
 
 Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call the "json_to_graph()" function in the trial code to build a PyTorch or Keras model from this JSON file.
 
@@ -293,7 +293,7 @@ You can consider the model to be a `directed acyclic graph <https://en.wikipedia
   * 
     For else layers, the numbering follows the format: its node input id (or id list) and node output id.
 
-5. TODO
--------
+TODO
+----
 
 Next step, we will change the API from s fixed network generator to a network generator with more available operators. We will use ONNX instead of JSON later as the intermediate representation spec in the future.

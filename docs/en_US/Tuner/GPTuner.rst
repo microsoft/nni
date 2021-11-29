@@ -1,8 +1,8 @@
 GP Tuner on NNI
 ===============
 
-1. Introduction
----------------
+Introduction
+------------
 
 Bayesian optimization works by constructing a posterior distribution of functions (a Gaussian Process) that best describes the function you want to optimize. As the number of observations grows, the posterior distribution improves, and the algorithm becomes more certain of which regions in parameter space are worth exploring and which are not.
 
@@ -12,8 +12,8 @@ Note that the only acceptable types within the search space are ``randint``\ , `
 
 This optimization approach is described in Section 3 of `Algorithms for Hyper-Parameter Optimization <https://papers.nips.cc/paper/4443-algorithms-for-hyper-parameter-optimization.pdf>`__.
 
-2. Usage
---------
+Usage
+-----
 
 classArgs requirements
 ^^^^^^^^^^^^^^^^^^^^^^

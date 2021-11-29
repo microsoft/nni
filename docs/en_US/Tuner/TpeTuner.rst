@@ -1,8 +1,8 @@
 TPE Tuner
 =========
 
-1. Introduction
----------------
+Introduction
+------------
 
 The Tree-structured Parzen Estimator (TPE) is a sequential model-based optimization (SMBO) approach.
 SMBO methods sequentially construct models to approximate the performance of hyperparameters based on historical measurements,
@@ -23,8 +23,8 @@ If we were to use TPE with much concurrency, its performance will be bad.
 We have optimized this case using the Constant Liar algorithm.
 For these principles of optimization, please refer to our `research blog <../CommunitySharings/ParallelizingTpeSearch.rst>`__.
 
-2. Usage
---------
+Usage
+-----
 
  To use TPE, you should add the following spec in your experiment's YAML config file:
 

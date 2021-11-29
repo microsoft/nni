@@ -1,8 +1,8 @@
 BOHB Advisor on NNI
 ===================
 
-1. Introduction
----------------
+Introduction
+------------
 
 BOHB is a robust and efficient hyperparameter tuning algorithm mentioned in `this reference paper <https://arxiv.org/abs/1807.01774>`__. BO is an abbreviation for "Bayesian Optimization" and HB is an abbreviation for "Hyperband".
 
@@ -46,8 +46,8 @@ best and worst configurations, respectively, to model the two densities.
 
 Note that we also sample a constant fraction named **random fraction** of the configurations uniformly at random.
 
-2. Workflow
------------
+Workflow
+--------
 
 
 .. image:: ../../img/bohb_6.jpg
@@ -66,8 +66,8 @@ The sampling procedure (using Multidimensional KDE to guide selection) is summar
    :alt: 
 
 
-3. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^
@@ -133,8 +133,8 @@ To use BOHB, you should add the following spec in your experiment's YAML config 
 
 *Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
-4. File Structure
------------------
+File Structure
+--------------
 
 The advisor has a lot of different files, functions, and classes. Here, we will only give most of those files a brief introduction:
 
@@ -142,8 +142,8 @@ The advisor has a lot of different files, functions, and classes. Here, we will 
 * ``bohb_advisor.py`` Definition of BOHB, handles interaction with the dispatcher, including generating new trials and processing results. Also includes the implementation of the HB (Hyperband) part.
 * ``config_generator.py`` Includes the implementation of the BO (Bayesian Optimization) part. The function *get_config* can generate new configurations based on BO; the function *new_result* will update the model with the new result.
 
-5. Experiment
--------------
+Experiment
+----------
 
 MNIST with BOHB
 ^^^^^^^^^^^^^^^

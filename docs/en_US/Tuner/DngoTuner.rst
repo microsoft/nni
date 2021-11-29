@@ -1,11 +1,11 @@
 DNGO on NNI
 ===========
 
-1. Introduction
----------------
+Introduction
+------------
 
-2. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^

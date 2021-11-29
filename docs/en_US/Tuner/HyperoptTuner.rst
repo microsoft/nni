@@ -1,13 +1,13 @@
 Anneal Tuner
 ============
 
-1. Introduction
----------------
+Introduction
+------------
 
 This simple annealing algorithm begins by sampling from the prior but tends over time to sample from points closer and closer to the best ones observed. This algorithm is a simple variation on random search that leverages smoothness in the response surface. The annealing rate is not adaptive.
 
-2. Usage
---------
+Usage
+-----
 
 classArgs Requirements
 ^^^^^^^^^^^^^^^^^^^^^^
