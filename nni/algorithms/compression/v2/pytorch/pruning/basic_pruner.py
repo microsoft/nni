@@ -378,6 +378,8 @@ class SlimPruner(BasicPruner):
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
         The epoch number for training model to sparsify the BN weight.
+    scale : float
+        Penalty parameter for sparsification, which could reduce overfitting.
     mode : str
         'normal' or 'global'.
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
