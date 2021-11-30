@@ -60,7 +60,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
     copyParams = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(trial.description.parameters, null, 4);
+        const params = JSON.stringify(filterParameter(trial.description.parameters as any), null, 4);
+        // const params = JSON.stringify(trial.description.parameters, null, 4);
         if (copy.default(params)) {
             this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
         } else {
@@ -82,8 +83,8 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const trialId = this.props.trialId;
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || "This trial's log path is not available.";
-        const originParameters = JSON.parse(JSON.stringify(trial.description.parameters));
-        const isHasVisualHyperParams = '_visual_hyper_params_' in originParameters;
+        const originParameters = trial.description.parameters;
+        const hasVisualHyperParams = '_visual_hyper_params_' in originParameters;
         return (
             <Stack className='openRow'>
                 <Stack className='openRowContent'>
@@ -96,7 +97,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true} // default expandNode
                                             getItemString={(): null => null} // remove the {} items
-                                            data={filterParameter(originParameters)}
+                                            data={filterParameter(originParameters as any)}
                                         />
                                     </Stack>
                                     <Stack horizontal className='copy'>
@@ -105,10 +106,10 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             text='Copy as json'
                                             styles={{ root: { width: 128, marginRight: 10 } }}
                                         />
-                                        {isHasVisualHyperParams && (
+                                        {hasVisualHyperParams && (
                                             <DefaultButton
                                                 onClick={this.isshowRetiaParamPanel}
-                                                text='Origin parameters'
+                                                text='Original parameters'
                                             />
                                         )}
                                         {/* copy success | failed message info */}
