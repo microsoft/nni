@@ -249,6 +249,22 @@ class Compressor:
         self._wrap_model()
         return module_groups
 
+    def get_origin2wrapped_parameter_name_map(self) -> Dict[str, str]:
+        """
+        Get the name mapping of parameters from original model to wrapped model.
+
+        Returns
+        -------
+        Dict[str, str]
+            Return a dict `{original_model_parameter_name: wrapped_model_parameter_name}`
+        """
+        self._unwrap_model()
+        origin_param_names = [name for name, _ in self.bound_model.named_parameters()]
+        self._wrap_model()
+        wrapped_param_names = [name for name, _ in self.bound_model.named_parameters()]
+        parameter_name_map = {k: v for k, v in zip(origin_param_names, wrapped_param_names)}
+        return parameter_name_map
+
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
         This method is implemented in the subclasses, i.e., `Pruner` and `Quantizer`
