@@ -1,19 +1,11 @@
 import math
 
 import torch.nn as nn
-
-import nni.retiarii.evaluator.pytorch.lightning as pl
-import torch.nn as nn
-import torchmetrics
-from nni.retiarii import model_wrapper, serialize, serialize_cls
-from nni.retiarii.experiment.pytorch import RetiariiExperiment, RetiariiExeConfig
+from nni.retiarii import model_wrapper
 from nni.retiarii.nn.pytorch import NasBench101Cell
-from nni.retiarii.strategy import Random
-from pytorch_lightning.callbacks import LearningRateMonitor
-from timm.optim import RMSpropTF
-from torch.optim.lr_scheduler import CosineAnnealingLR
-from torchvision import transforms
-from torchvision.datasets import CIFAR10
+
+
+__all__ = ['NasBench101']
 
 
 def truncated_normal_(tensor, mean=0, std=1):
@@ -62,8 +54,6 @@ class Conv1x1BnRelu(ConvBnRelu):
 
 
 Projection = Conv1x1BnRelu
-
-
 
 
 @model_wrapper
