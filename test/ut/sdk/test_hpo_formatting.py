@@ -1,5 +1,5 @@
 from math import exp, log
-from nni.common.hpo_utils import deformat_parameters, format_search_space
+from nni.common.hpo_utils import deformat_parameters, format_parameters, format_search_space
 
 user_space = {
     'pool': { '_type': 'choice', '_value': ['max', 'min', 'avg'] },
@@ -34,7 +34,6 @@ user_space = {
         ],
     },
 }
-
 
 spec_names = ['pool', 'kernel', 'D', 'dropout', 'hidden', 'U_lr', 'U_batch', 'dropout', 'hidden', 'N_lr', 'N_batch', 'not_nested']
 spec_types = ['choice', 'randint', 'choice', 'uniform', 'quniform', 'loguniform', 'qloguniform', 'normal', 'qnormal', 'lognormal', 'qlognormal', 'choice']
@@ -95,6 +94,11 @@ user_params_1 = {
     'not_nested': {'x': 0, 'y': 0},
 }
 
+resume_params_1 = dict(internal_params_1)
+resume_params_1[('D', 0, 'hidden')] = 100.0
+resume_params_1[('D', 0, 'U_lr')] = log(exp(-4.6))
+resume_params_1[('D', 0, 'U_batch')] = log(54.375)
+
 internal_params_2 = {
     ('pool',): 2,
     ('kernel',): 0,
@@ -119,6 +123,11 @@ user_params_2 = {
     'not_nested': {'x': 1, 'y': 2},
 }
 
+resume_params_2 = dict(internal_params_2)
+resume_params_2[('D', 1, 'hidden')] = 99.0
+resume_params_2[('D', 1, 'N_lr')] = log(exp(-4.6))
+resume_params_2[('D', 1, 'N_batch')] = log(54.375)
+
 internal_params_3 = {
     ('pool',): 1,
     ('kernel',): 1,
@@ -135,11 +144,19 @@ user_params_3 = {
     'not_nested': {'x': 1, 'y': 2},
 }
 
+resume_params_3 = dict(internal_params_3)
+
 def test_deformatting():
     internal_space = format_search_space(user_space)
     assert deformat_parameters(internal_params_1, internal_space) == user_params_1
     assert deformat_parameters(internal_params_2, internal_space) == user_params_2
     assert deformat_parameters(internal_params_3, internal_space) == user_params_3
+
+def test_resuming():
+    internal_space = format_search_space(user_space)
+    assert format_parameters(user_params_1, internal_space) == resume_params_1
+    assert format_parameters(user_params_2, internal_space) == resume_params_2
+    assert format_parameters(user_params_3, internal_space) == resume_params_3
 
 
 def test_activate():
@@ -165,4 +182,5 @@ def test_activate():
 if __name__ == '__main__':
     test_formatting()
     test_deformatting()
+    test_resuming()
     test_activate()
