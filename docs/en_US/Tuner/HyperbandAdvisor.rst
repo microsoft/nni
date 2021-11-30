@@ -34,6 +34,9 @@ If you want to reproduce these results, refer to the example under ``examples/tr
 3. Usage
 --------
 
+Config file
+^^^^^^^^^^^
+
 To use Hyperband, you should add the following spec in your experiment's YAML config file:
 
 .. code-block:: bash
@@ -112,6 +115,28 @@ Here is a concrete example of ``R=81`` and ``eta=3``\ :
 ``s`` means bucket, ``n`` means the number of configurations that are generated, the corresponding ``r`` means how many budgets these configurations run. ``i`` means round, for example, bucket 4 has 5 rounds, bucket 3 has 4 rounds.
 
 For information about writing trial code, please refer to the instructions under ``examples/trials/mnist-hyperband/``.
+
+classArgs requirements
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **R** (*int, optional, default = 60*\ ) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
+* **eta** (*int, optional, default = 3*\ ) - ``(eta-1)/eta`` is the proportion of discarded trials.
+* **exec_mode** (*serial or parallelism, optional, default = parallelism*\ ) - If 'parallelism', the tuner will try to use available resources to start new bucket immediately. If 'serial', the tuner will only start new bucket after the current bucket is done.
+
+Example Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   # config.yml
+   advisor:
+     builtinAdvisorName: Hyperband
+     classArgs:
+       optimize_mode: maximize
+       R: 60
+       eta: 3
 
 4. Future improvements
 ----------------------

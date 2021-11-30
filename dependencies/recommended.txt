@@ -4,11 +4,11 @@
 tensorflow == 2.5.0
 keras == 2.4.3
 tensorboard == 2.5.0
-torch == 1.9.0+cpu ; sys_platform != "darwin"
-torch == 1.9.0 ; sys_platform == "darwin"
-torchvision == 0.10.0+cpu ; sys_platform != "darwin"
-torchvision == 0.10.0 ; sys_platform == "darwin"
-pytorch-lightning >= 1.5
+torch == 1.10.0+cpu ; sys_platform != "darwin"
+torch == 1.10.0 ; sys_platform == "darwin"
+torchvision == 0.11.1+cpu ; sys_platform != "darwin"
+torchvision == 0.11.1 ; sys_platform == "darwin"
+pytorch-lightning >= 1.5.0
 torchmetrics
 onnx
 peewee
