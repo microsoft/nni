@@ -12,7 +12,7 @@ from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, optimizer_construct_helper
 
 from .tools.base import TrainerBasedDataCollector
 
@@ -191,7 +191,7 @@ class MovementPruner(BasicPruner):
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
         self.trainer = trainer
-        self.optimizer = optimizer
+        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self.warm_up_step = warm_up_step
@@ -238,7 +238,7 @@ class MovementPruner(BasicPruner):
                 self.load_masks(masks)
 
         if self.data_collector is None:
-            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
         else:
             self.data_collector.reset()
 

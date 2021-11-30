@@ -258,11 +258,10 @@ class Compressor:
         Dict[str, str]
             Return a dict `{original_model_parameter_name: wrapped_model_parameter_name}`
         """
+        wrapped_param_names = {id(param): name for name, param in self.bound_model.named_parameters()}
         self._unwrap_model()
-        origin_param_names = [name for name, _ in self.bound_model.named_parameters()]
+        parameter_name_map = {name: wrapped_param_names(id(param)) for name, param in self.bound_model.named_parameters()}
         self._wrap_model()
-        wrapped_param_names = [name for name, _ in self.bound_model.named_parameters()]
-        parameter_name_map = {k: v for k, v in zip(origin_param_names, wrapped_param_names)}
         return parameter_name_map
 
     def _wrap_modules(self, layer: LayerInfo, config: Dict):

@@ -13,7 +13,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical, optimizer_construct_helper
 
 from .tools import (
     DataCollector,
@@ -392,7 +392,7 @@ class SlimPruner(BasicPruner):
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         self.mode = mode
         self.trainer = trainer
-        self.optimizer = optimizer
+        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self._scale = scale
@@ -420,7 +420,7 @@ class SlimPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                   self.training_epochs, criterion_patch=self.criterion_patch)
         else:
             self.data_collector.reset()
@@ -494,7 +494,7 @@ class ActivationPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer = optimizer
+        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
@@ -525,7 +525,7 @@ class ActivationPruner(BasicPruner):
     def reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
         if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
             self.data_collector.reset()
@@ -619,7 +619,7 @@ class TaylorFOWeightPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer = optimizer
+        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         super().__init__(model, config_list)
@@ -649,7 +649,7 @@ class TaylorFOWeightPruner(BasicPruner):
         hook_targets = {layer_info.name: layer_info.module.weight for layer_info, _ in self._detect_modules_to_compress()}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
         if self.data_collector is None:
-            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+            self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                       1, collector_infos=[collector_info])
         else:
             self.data_collector.reset()
@@ -720,8 +720,7 @@ class ADMMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
-        # TODO: handle optimizer here will case additional memory use, need improve, also in WeightTrainerBasedDataCollector
-        self.optimizer = optimizer
+        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs
@@ -751,7 +750,7 @@ class ADMMPruner(BasicPruner):
 
     def reset_tools(self):
         if self.data_collector is None:
-            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion,
+            self.data_collector = WeightTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
                                                                   self.training_epochs, criterion_patch=self.criterion_patch)
         else:
             self.data_collector.reset()
