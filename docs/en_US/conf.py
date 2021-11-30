@@ -107,7 +107,7 @@ html_theme = 'sphinx_material'
 # documentation.
 #
 html_theme_options = {
-    'logo_only': True,
+    # 'logo_only': True,
 }
 
 # Add any paths that contain custom static files (such as style sheets) here,
