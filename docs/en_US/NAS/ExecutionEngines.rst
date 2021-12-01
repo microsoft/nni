@@ -53,11 +53,13 @@ Three steps are need to use graph-based execution engine.
 
 For exporting top models, graph-based execution engine supports exporting source code for top models by running ``exp.export_top_models(formatter='code')``.
 
-CGO Execution Engine
---------------------
+CGO Execution Engine (experimental)
+-----------------------------------
 
 CGO（Cross-Graph Optimization) execution engine does cross-model optimizations based on the graph-based execution engine. In CGO execution engine, multiple models could be merged and trained together in one trial.
 Currently, it only supports ``DedupInputOptimizer`` that can merge graphs sharing the same dataset to only loading and pre-processing each batch of data once, which can avoid bottleneck on data loading. 
+
+.. note :: To use CGO engine, PyTorch-lightning above version 1.4.2 is required.
 
 To enable CGO execution engine, you need to follow these steps:
 
@@ -81,6 +83,7 @@ To enable CGO execution engine, you need to follow these steps:
 
     # ...
     # server configuration in rm_conf
+    rm_conf.gpu_indices = [0, 1, 2, 3] # gpu_indices must be set in RemoteMachineConfig for CGO execution engine
 
     config.training_service.machine_list = [rm_conf]
     exp.run(config, 8099)

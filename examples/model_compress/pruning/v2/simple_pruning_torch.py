@@ -1,3 +1,4 @@
+import sys
 from tqdm import tqdm
 
 import torch
@@ -6,7 +7,8 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.compression.pytorch.speedup import ModelSpeedup
 
-from examples.model_compress.models.cifar10.vgg import VGG
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -72,7 +74,7 @@ if __name__ == '__main__':
     evaluator(model)
 
     pruner._unwrap_model()
-    ModelSpeedup(model, dummy_input=torch.rand(10, 3, 32, 32).to(device), masks_file='simple_masks.pth').speedup_model()
+    ModelSpeedup(model, dummy_input=torch.rand(10, 3, 32, 32).to(device), masks_file=masks).speedup_model()
 
     print('\nThe accuracy after speed up:')
     evaluator(model)
