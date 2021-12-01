@@ -226,7 +226,7 @@ function toUnit(value: string | number, targetUnit: string, allUnits: any): numb
             return Math.ceil(num / allUnits[targetUnit]);
         }
     }
-    throw new Error(`Bad unit in "{value}"`);
+    throw new Error(`Bad unit in "${value}"`);
 }
 
 export function toSeconds(time: string | number): number {
