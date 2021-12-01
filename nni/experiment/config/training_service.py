@@ -29,6 +29,7 @@ class TrainingServiceConfig(ConfigBase):
     trial_code_directory: PathLike
     trial_gpu_number: Optional[int]
     nni_manager_ip: Optional[str]
+    debug: bool
 
     def _canonicalize(self, parents):
         """
