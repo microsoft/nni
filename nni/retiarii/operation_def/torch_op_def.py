@@ -491,7 +491,8 @@ class AtenAvgpool2d(PyTorchOperation):
 class ToDevice(PyTorchOperation):
     _artificial_op_name = "ToDevice"
 
-    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False):
+    def __init__(self, type_name: str, parameters: Dict[str, Any], _internal: bool = False,
+                 attributes: Dict[str, Any] = None):
         self.type = "ToDevice"
         self.device = parameters['device']
         self.overridden_device_repr = None
