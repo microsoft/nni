@@ -12,6 +12,7 @@ export interface TrainingServiceConfig {
     trialCodeDirectory: string;
     trialGpuNumber?: number;
     nniManagerIp?: string;
+    debug?: boolean;
 }
 
 /* Local */
@@ -185,7 +186,7 @@ export interface AlgorithmConfig {
 
 export interface ExperimentConfig {
     experimentName?: string;
-    // searchSpaceFile  (handled outside NNI manager)
+    // searchSpaceFile  (handled in python part)
     searchSpace: any;
     trialCommand: string;
     trialCodeDirectory: string;
@@ -195,7 +196,7 @@ export interface ExperimentConfig {
     maxTrialNumber?: number;
     maxTrialDuration?: string | number;
     nniManagerIp?: string;
-    //useAnnotation: boolean;  // dealed inside nnictl
+    // useAnnotation  (handled in python part)
     debug: boolean;
     logLevel?: string;
     experimentWorkingDirectory?: string;
@@ -211,45 +212,31 @@ export interface ExperimentConfig {
 /* util functions */
 
 const timeUnits = { d: 24 * 3600, h: 3600, m: 60, s: 1 };
+const sizeUnits = { tb: 1024 ** 4, gb: 1024 ** 3, mb: 1024 ** 2, kb: 1024, b: 1 };
 
-export function toSeconds(time: string): number {
-    for (const [unit, factor] of Object.entries(timeUnits)) {
-        if (time.toLowerCase().endsWith(unit)) {
-            const digits = time.slice(0, -1);
-            return Number(digits) * factor;
+function toUnit(value: string | number, targetUnit: string, allUnits: any): number {
+    if (typeof value === 'number') {
+        return value;
+    }
+    value = value.toLowerCase();
+    for (const [unit, factor] of Object.entries(allUnits)) {
+        if (value.endsWith(unit)) {
+            const digits = value.slice(0, -unit.length);
+            const num = Number(digits) * (factor as number);
+            return Math.ceil(num / allUnits[targetUnit]);
         }
     }
-    throw new Error(`Bad time string "${time}"`);
+    throw new Error(`Bad unit in "{value}"`);
 }
 
-const sizeUnits = { tb: 1024 * 1024, gb: 1024, mb: 1, kb: 1 / 1024 };
+export function toSeconds(time: string | number): number {
+    return toUnit(time, 's', timeUnits);
+}
 
-export function toMegaBytes(size: string): number {
-    for (const [unit, factor] of Object.entries(sizeUnits)) {
-        if (size.toLowerCase().endsWith(unit)) {
-            const digits = size.slice(0, -2);
-            return Math.floor(Number(digits) * factor);
-        }
-    }
-    throw new Error(`Bad size string "${size}"`);
+export function toMegaBytes(size: string | number): number {
+    return toUnit(size, 'mb', sizeUnits);
 }
 
 export function toCudaVisibleDevices(gpuIndices?: number[]): string {
-    return gpuIndices === undefined ? '' : gpuIndices.join(',');
-}
-
-export function flattenConfig<T>(config: ExperimentConfig, platform: string): T {
-    const flattened = { };
-    Object.assign(flattened, config);
-    if (Array.isArray(config.trainingService)) {
-        for (const trainingService of config.trainingService) {
-            if (trainingService.platform === platform) {
-                Object.assign(flattened, trainingService);
-            }
-        }
-    } else {
-        assert(config.trainingService.platform === platform);
-        Object.assign(flattened, config.trainingService);
-    }
-    return <T>flattened;
+        return gpuIndices === undefined ? '' : gpuIndices.join(',');
 }

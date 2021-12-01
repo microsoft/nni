@@ -6,10 +6,8 @@ import { Deferred } from 'ts-deferred';
 import { NNIError, NNIErrorNames } from 'common/errors';
 import { getLogger, Logger } from 'common/log';
 import { TrialJobStatus } from 'common/trainingService';
-import { ExperimentConfig, OpenpaiConfig } from 'common/experimentConfig';
+import { OpenpaiConfig } from 'common/experimentConfig';
 import { PAITrialJobDetail } from './paiConfig';
-
-interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 
 /**
  * Collector PAI jobs info from PAI cluster, and update pai job status locally
@@ -26,7 +24,7 @@ export class PAIJobInfoCollector {
         this.finalStatuses = ['SUCCEEDED', 'FAILED', 'USER_CANCELED', 'SYS_CANCELED', 'EARLY_STOPPED'];
     }
 
-    public async retrieveTrialStatus(protocol: string, token? : string, config?: FlattenOpenpaiConfig): Promise<void> {
+    public async retrieveTrialStatus(protocol: string, token? : string, config?: OpenpaiConfig): Promise<void> {
         if (config === undefined || token === undefined) {
             return Promise.resolve();
         }
@@ -42,7 +40,7 @@ export class PAIJobInfoCollector {
         await Promise.all(updatePaiTrialJobs);
     }
 
-    private getSinglePAITrialJobInfo(_protocol: string, paiTrialJob: PAITrialJobDetail, paiToken: string, config: FlattenOpenpaiConfig): Promise<void> {
+    private getSinglePAITrialJobInfo(_protocol: string, paiTrialJob: PAITrialJobDetail, paiToken: string, config: OpenpaiConfig): Promise<void> {
         const deferred: Deferred<void> = new Deferred<void>();
         if (!this.statusesNeedToCheck.includes(paiTrialJob.status)) {
             deferred.resolve();
