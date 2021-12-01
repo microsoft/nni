@@ -72,7 +72,7 @@ if (!strPort || strPort.length === 0) {
 }
 
 const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+if (!['true', 'false'].includes(foregroundArg.toLowerCase())) {
     console.log(`FATAL: foreground property should only be true or false`);
     usage();
     process.exit(1);
@@ -107,7 +107,7 @@ if (logDir.length > 0) {
 const logLevel: string = parseArg(['--log_level', '-ll']);
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+if (!['true', 'false'].includes(readonlyArg.toLowerCase())) {
     console.log(`FATAL: readonly property should only be true or false`);
     usage();
     process.exit(1);
