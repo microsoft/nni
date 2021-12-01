@@ -24,6 +24,8 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
+
+            # We assume the metric value are all positive right now.
             metric = metrics[name]
             if self.continuous_mask:
                 metric *= self._compress_mask(wrapper.weight_mask)
@@ -66,8 +68,11 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
+
+            # We assume the metric value are all positive right now.
             if self.continuous_mask:
                 metric = metric * self._compress_mask(wrapper.weight_mask)
+
             layer_weight_num = wrapper.module.weight.data.numel()
             total_weight_num += layer_weight_num
             expend_times = int(layer_weight_num / metric.numel())
@@ -147,7 +152,8 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
             group_mask = torch.cat(group_mask, dim=0)
 
             for name, metric in group_metric_dict.items():
-                metric = (metric - metric.min()) * group_mask
+                # We assume the metric value are all positive right now.
+                metric = metric * group_mask
                 pruned_num = int(sparsities[name] * len(metric))
                 threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
