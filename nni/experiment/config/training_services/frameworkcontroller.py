@@ -42,7 +42,6 @@ class FrameworkControllerRoleConfig(ConfigBase):
 @dataclass(init=False)
 class FrameworkControllerConfig(TrainingServiceConfig):
     platform: str = 'frameworkcontroller'
-    api_version: str
     storage: K8sStorageConfig
     service_account_name: Optional[str]
     task_roles: List[FrameworkControllerRoleConfig]
