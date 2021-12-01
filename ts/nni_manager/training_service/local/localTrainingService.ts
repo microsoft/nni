@@ -73,13 +73,11 @@ class LocalTrialJobDetail implements TrialJobDetail {
     }
 }
 
-interface FlattenLocalConfig extends LocalConfig { }
-
 /**
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
-    private readonly config: FlattenLocalConfig;
+    private readonly config: LocalConfig;
     private readonly eventEmitter: EventEmitter;
     private readonly jobMap: Map<string, LocalTrialJobDetail>;
     private readonly jobQueue: string[];
