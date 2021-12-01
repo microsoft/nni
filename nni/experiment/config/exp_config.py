@@ -9,7 +9,6 @@ __all__ = ['ExperimentConfig']
 
 from dataclasses import dataclass
 import logging
-from pathlib import Path
 from typing import Any, List, Optional, Union
 
 import yaml

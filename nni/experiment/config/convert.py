@@ -120,7 +120,7 @@ def to_v2(v1):
         _deprecate(pai_config, v2, 'maxTrialNumPerGpu')
         _deprecate(pai_config, v2, 'useActiveGpu')
         if pai_config:
-            _logger.error('paiConfig not fully converted: %s', paiConfig)
+            _logger.error('paiConfig not fully converted: %s', pai_config)
 
     if platform == 'aml':
         _move_field(v1_trial, ts, 'image', 'dockerImage')
@@ -133,7 +133,7 @@ def to_v2(v1):
         _move_field(aml_config, ts, 'maxTrialNumPerGpu', 'maxTrialNumberPerGpu')
         _deprecate(aml_config, v2, 'useActiveGpu')
         if aml_config:
-            _logger.error('amlConfig not fully converted: %s', amlConfig)
+            _logger.error('amlConfig not fully converted: %s', aml_config)
 
     if platform == 'kubeflow':
         kf_config = v1.pop('kubeflowConfig')
