@@ -260,7 +260,7 @@ class Compressor:
         """
         wrapped_param_names = {id(param): name for name, param in self.bound_model.named_parameters()}
         self._unwrap_model()
-        parameter_name_map = {name: wrapped_param_names(id(param)) for name, param in self.bound_model.named_parameters()}
+        parameter_name_map = {name: wrapped_param_names[id(param)] for name, param in self.bound_model.named_parameters()}
         self._wrap_model()
         return parameter_name_map
 
