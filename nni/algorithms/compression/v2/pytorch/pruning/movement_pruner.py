@@ -50,8 +50,6 @@ class PrunerScoredModuleWrapper(Module):
         self.pruner = pruner
 
         self.weight = Parameter(torch.empty(self.module.weight.size()))
-        self.weight.data = self.module.weight.data
-
         self.weight_score = Parameter(torch.empty(self.weight.size()))
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
@@ -60,7 +58,6 @@ class PrunerScoredModuleWrapper(Module):
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
             self.bias = Parameter(torch.empty(self.module.bias.size()))
-            self.bias.data = self.module.bias.data
         else:
             self.register_buffer("bias_mask", None)
 
@@ -69,9 +66,11 @@ class PrunerScoredModuleWrapper(Module):
         When using this wrapper to inference, call `_weight2buffer()` to make original weight untrainable.
         The best place to call this function is in `Pruner._wrap_model()`.
         """
+        self.weight.data = self.module.weight.data
         delattr(self.module, 'weight')
         self.module.register_buffer('weight', self.weight.data)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
+            self.bias.data = self.module.bias.data
             delattr(self.module, 'bias')
             self.module.register_buffer('bias', self.bias.data)
 
@@ -282,6 +281,15 @@ class MovementPruner(BasicPruner):
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
+
+    def get_origin2wrapped_parameter_name_map(self) -> Dict[str, str]:
+        if self.is_wrapped:
+            self._unwrap_model()
+            parameter_name_map = {name: name for name, _ in self.bound_model.named_parameters()}
+            self._wrap_model()
+            return parameter_name_map
+        else:
+            raise Exception('When only the model is wrapped can get the parameter_name_map.')
 
     def compress(self) -> Tuple[Module, Dict]:
         # sparsity grow from 0
