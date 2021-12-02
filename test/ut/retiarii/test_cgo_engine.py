@@ -5,6 +5,8 @@ import unittest
 import time
 import torch
 import torch.nn as nn
+import numpy as np
+import random
 
 from pathlib import Path
 
@@ -137,6 +139,11 @@ def _reset():
     nni.runtime.platform.test._last_metric = None
     nni.retiarii.integration_api._advisor = None
     nni.retiarii.execution.api._execution_engine = None
+    
+    torch.manual_seed(42)
+    torch.cuda.manual_seed(42)
+    np.random.seed(42)
+    random.seed(42)
 
 
 def _new_trainer():
