@@ -7,6 +7,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 import random
+from pytorch_lightning.utilities.seed import seed_everything
 
 from pathlib import Path
 
@@ -140,10 +141,7 @@ def _reset():
     nni.retiarii.integration_api._advisor = None
     nni.retiarii.execution.api._execution_engine = None
     
-    torch.manual_seed(42)
-    torch.cuda.manual_seed(42)
-    np.random.seed(42)
-    random.seed(42)
+    seed_everything(42)
 
 
 def _new_trainer():
