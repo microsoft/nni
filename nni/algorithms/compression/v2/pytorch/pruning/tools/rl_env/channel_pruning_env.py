@@ -70,6 +70,7 @@ class ChannelPruningEnv:
         self.dummy_input = dummy_input
         self.batch_size = self.env_params['batch_size']
         self.preserve_ratio = self.env_params['flops_ratio']
+        self.ini = False
 
         # options from args
         self.args = args
@@ -119,9 +120,7 @@ class ChannelPruningEnv:
     def set_reward(self, reward: float):
         self.cur_reward = reward
 
-
-    def step(self, act):
-        # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
+    def step_previous(self, act):
         if self.visited[self.cur_ind]:
             action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
             preserve_idx = self.index_buffer[self.cur_ind]
@@ -129,8 +128,20 @@ class ChannelPruningEnv:
             action = self._action_wall(act)  # percentage to preserve
             preserve_idx = None
         # prune and update action
-        named_op, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], act, preserve_idx)
-        self.temp_config_list.append({"op_names": [named_op], "sparsity": float(1. - act)})
+        named_list, m_list = [], []
+        for name, module in self.model.named_modules():
+            named_list.append(name)
+            m_list.append(module)
+        named_op = named_list[self.prunable_idx[self.cur_ind]]
+        self.temp_config_list.append({"op_names": [named_op], "sparsity": float(1. - action)})
+
+        self.visited[self.cur_ind] = True  # set to visited
+        self.cur_ind += 1  # the index of next layer
+
+        return action, preserve_idx
+
+    def step_after(self, action, preserve_idx):
+        _, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
         if not self.visited[self.cur_ind]:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
@@ -155,7 +166,7 @@ class ChannelPruningEnv:
             reward = self.cur_reward
             info_set = {'compress_ratio': compress_ratio, 'reward': reward, 'strategy': self.strategy.copy(), 'config_list': copy.deepcopy(self.temp_config_list)}
 
-            if reward > self.best_reward:
+            if reward > self.best_reward and self.ini:
                 self.best_reward = reward
                 self.best_strategy = self.strategy.copy()
                 self.best_d_prime_list = self.d_prime_list.copy()
@@ -165,6 +176,75 @@ class ChannelPruningEnv:
             obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
             done = True
             self.temp_config_list = []
+            self.ini = True
+            return obs, reward, done, info_set
+        
+        reward = 0
+        done = False
+        self.visited[self.cur_ind] = True  # set to visited
+        self.cur_ind += 1  # the index of next layer
+        info_set = {'compress_ratio': self._cur_flops() * 1. / self.org_flops, 'reward': reward, 'strategy': self.strategy.copy(), 'config_list': copy.deepcopy(self.temp_config_list)}
+        # build next state (in-place modify)
+        self.layer_embedding[self.cur_ind][-3] = self._cur_reduced() * 1. / self.org_flops  # reduced
+        self.layer_embedding[self.cur_ind][-2] = sum(self.flops_list[self.cur_ind + 1:]) * 1. / self.org_flops  # rest
+        self.layer_embedding[self.cur_ind][-1] = self.strategy[-1]  # last action
+        obs = self.layer_embedding[self.cur_ind, :].copy()
+
+        return obs, reward, done, info_set
+
+    def step(self, act):
+        # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
+        if self.visited[self.cur_ind]:
+            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
+            preserve_idx = self.index_buffer[self.cur_ind]
+        else:
+            action = self._action_wall(act)  # percentage to preserve
+            preserve_idx = None
+        # prune and update action
+        named_list, m_list = [], []
+        for name, module in self.model.named_modules():
+            named_list.append(name)
+            m_list.append(module)
+        named_op = named_list[self.prunable_idx[self.cur_ind]]
+        self.temp_config_list.append({"op_names": [named_op], "sparsity": float(1. - action)})
+
+        
+        named_op, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
+        if not self.visited[self.cur_ind]:
+            for group in self.shared_idx:
+                if self.cur_ind in group:  # set the shared ones
+                    for g_idx in group:
+                        self.strategy_dict[self.prunable_idx[g_idx]][0] = action
+                        self.strategy_dict[self.prunable_idx[g_idx - 1]][1] = action
+                        self.visited[g_idx] = True
+                        self.index_buffer[g_idx] = preserve_idx.copy()
+
+        self.strategy.append(action)  # save action to strategy
+        self.d_prime_list.append(d_prime)
+
+        self.strategy_dict[self.prunable_idx[self.cur_ind]][0] = action
+        if self.cur_ind > 0:
+            self.strategy_dict[self.prunable_idx[self.cur_ind - 1]][1] = action
+
+        # all the actions are made
+        if self._is_final_layer():
+            assert len(self.strategy) == len(self.prunable_idx)
+            current_flops = self._cur_flops()
+            compress_ratio = current_flops * 1. / self.org_flops
+            reward = self.cur_reward
+            info_set = {'compress_ratio': compress_ratio, 'reward': reward, 'strategy': self.strategy.copy(), 'config_list': copy.deepcopy(self.temp_config_list)}
+
+            if reward > self.best_reward and self.ini:
+                self.best_reward = reward
+                self.best_strategy = self.strategy.copy()
+                self.best_d_prime_list = self.d_prime_list.copy()
+                _logger.info('New best reward: %.4f, reward: %.4f, compress: %.4f', self.best_reward, reward, compress_ratio)
+                _logger.info('New best policy: %s', self.best_strategy)
+                _logger.info('New best d primes: %s', self.best_d_prime_list)
+            obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
+            done = True
+            self.temp_config_list = []
+            self.ini = True
             return obs, reward, done, info_set
         
         reward = 0
@@ -211,9 +291,11 @@ class ChannelPruningEnv:
                 legal = not legal
         assert legal, "layer not found."
 
-        if preserve_ratio == 1 or (not self.pruner_generated_masks):  # do not prune
+        if preserve_ratio == 1:  # do not prune
             if (preserve_idx is None) or (len(preserve_idx) == op.weight.size(1)):
                 return named_op, 1., op.weight.size(1), None  # should be a full index
+        if not self.pruner_generated_masks:
+            return named_op, preserve_ratio, preserve_ratio, None
         op.input_feat = self.layer_info_dict[op_idx]['input_feat']
         op.output_feat = self.layer_info_dict[op_idx]['output_feat']
 
@@ -247,8 +329,6 @@ class ChannelPruningEnv:
            action of this layer can not be greater than 0.4.
         2. The action must be greater than lbound which is stored in self.strategy_dict.
         """
-        assert len(self.strategy) == self.cur_ind
-
         action = float(action)
         action = np.clip(action, 0, 1)
 
