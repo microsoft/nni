@@ -23,28 +23,27 @@ _logger.setLevel(logging.INFO)
 class ModelSpeedup:
     """
     This class is to speedup the model with provided weight mask.
+
+    Parameters
+    ----------
+    model : pytorch model
+        The model user wants to speed up
+    dummy_input : pytorch tensor, tuple of tensor, list of tensor
+        Note: The first dimension of the dummy_input should be the batchsize.
+        The dummy input for ```jit.trace```, users should put it on the right
+        device.
+    masks_file : str/dict
+        The path of user provided mask file, or the mask object
+    map_location : str
+        the device on which masks are placed, same to map_location in ```torch.load```
+    batch_dim : int
+        the index of batch dimension in the dummy_input
+    confidence: the confidence coefficient of the sparsity inference. This value is
+        actually used as the batchsize of the dummy_input.
     """
 
     def __init__(self, model, dummy_input, masks_file, map_location=None,
                  batch_dim=0, confidence=8):
-        """
-        Parameters
-        ----------
-        model : pytorch model
-            The model user wants to speed up
-        dummy_input : pytorch tensor, tuple of tensor, list of tensor
-            Note: The first dimension of the dummy_input should be the batchsize.
-            The dummy input for ```jit.trace```, users should put it on the right
-            device.
-        masks_file : str/dict
-            The path of user provided mask file, or the mask object
-        map_location : str
-            the device on which masks are placed, same to map_location in ```torch.load```
-        batch_dim : int
-            the index of batch dimension in the dummy_input
-        confidence: the confidence coefficient of the sparsity inference. This value is
-            actually used as the batchsize of the dummy_input.
-        """
         assert confidence > 1
         # The auto inference will change the values of the parameters in the model
         # so we need make a copy before the mask inference

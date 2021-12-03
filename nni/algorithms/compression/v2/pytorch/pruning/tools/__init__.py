@@ -11,6 +11,7 @@ from .data_collector import (
     SingleHookTrainerBasedDataCollector
 )
 from .metrics_calculator import (
+    StraightMetricsCalculator,
     NormMetricsCalculator,
     MultiDataNormMetricsCalculator,
     DistMetricsCalculator,
