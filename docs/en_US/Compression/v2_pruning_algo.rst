@@ -55,6 +55,29 @@ User configuration for Level Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LevelPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 93.74%
+     - 14.98M
+     - 313.46M
+     - 0.8
+
 L1 Norm Pruner
 --------------
 
@@ -86,6 +109,26 @@ User configuration for L1 Norm Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L1NormPruner
 
+Reproduced Experiment
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accuracy(paper/ours)
+     - Parameters(paper/ours)
+     - Pruned(paper/ours)
+   * - VGG-16
+     - 93.25% / 93.86%
+     - 15M / 14.98M
+     - 
+   * - Pruned VGG-16
+     - 93.40% / 92.93%
+     - 5.40M / 3.81M
+     - 64.0% / 74.57%
+
 L2 Norm Pruner
 --------------
 
@@ -111,6 +154,29 @@ User configuration for L2 Norm Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.L2NormPruner
+
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 93.40%
+     - 3.81M
+     - 78.88M
+     - 0.5
 
 FPGM Pruner
 -----------
@@ -141,6 +207,29 @@ User configuration for FPGM Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.FPGMPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 92.24%
+     - 2.47M
+     - 51.39M
+     - 0.6
+
 Slim Pruner
 -----------
 
@@ -167,6 +256,26 @@ User configuration for Slim Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SlimPruner
+
+Reproduced Experiment
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accuracy(paper/ours)
+     - Parameters(paper/ours)
+     - Pruned(paper/ours)
+   * - VGGNet
+     - 93.66% / 92.80%
+     - 20.04M / 20.29M
+     - 
+   * - Pruned VGGNet
+     - 93.80% / 93.37%
+     - 2.03M / 2.08M
+     - 88.5% / 89.7%
 
 Activation APoZ Rank Pruner
 ---------------------------
@@ -200,6 +309,29 @@ User configuration for Activation APoZ Rank Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ActivationAPoZRankPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 87.24%
+     - 0.64M
+     - 12.98M
+     - 0.8
+
 Activation Mean Rank Pruner
 ---------------------------
 
@@ -227,6 +359,29 @@ User configuration for Activation Mean Rank Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ActivationMeanRankPruner
+
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 87.61%
+     - 0.66M
+     - 13.18M
+     - 0.8
 
 Taylor FO Weight Pruner
 -----------------------
@@ -259,6 +414,29 @@ User configuration for Activation Mean Rank Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.TaylorFOWeightPruner
+
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 87.97%
+     - 0.66M
+     - 13.18M
+     - 0.8
 
 ADMM Pruner
 -----------
@@ -401,6 +579,29 @@ User configuration for AGP Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AGPPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 76.94%
+     - 
+     - 
+     - 0.8
+
 Lottery Ticket Pruner
 ---------------------
 
@@ -442,6 +643,29 @@ User configuration for Lottery Ticket Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LotteryTicketPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGGNet
+     - 93.86%
+     - 20.29M
+     - 398.40M
+     - 
+   * - Pruned VGGNet
+     - 84.84%
+     - 0.66M
+     - 13.18M
+     - 0.8
+
 Simulated Annealing Pruner
 --------------------------
 
@@ -477,6 +701,29 @@ User configuration for Simulated Annealing Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
+
+Performance Test
+^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 33.6% (wo FT)
+     - 
+     - 
+     - 0.8
 
 Auto Compress Pruner
 --------------------
