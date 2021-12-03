@@ -73,15 +73,11 @@ if __name__ == '__main__':
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     scheduler = MultiStepLR(optimizer, milestones=[50, 75], gamma=0.1)
     criterion = torch.nn.CrossEntropyLoss()
-    '''
+    
     for i in range(100):
         trainer(model, optimizer, criterion, i)
-        evaluator(model)
-    '''
-    # model.load_state_dict(torch.load("best_mobilenet_v2.pth"))
-    model.load_state_dict(torch.load("VGG.pth"))
+
     pre_acc = evaluator(model)
-    torch.save(model.state_dict(), "best_mobilenet_v2.pth")
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
     pre_flops, pre_params, _ = count_flops_params(model, dummy_input)
@@ -95,7 +91,7 @@ if __name__ == '__main__':
                   'n_calibration_batches': 60, 'n_points_per_layer': 10, 'channel_round': 8, 'batch_size': 128}
     ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
                    'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
-    pruner = AMCPruner(model, config_list, 'l1', 800, dummy_input=dummy_input, finetuner=finetuner, keep_intermediate_result=False,
+    pruner = AMCPruner(model, config_list, 'l1', 200, dummy_input=dummy_input, finetuner=finetuner, keep_intermediate_result=False,
                        speed_up=False, evaluator=evaluator, env_params=env_params, ddpg_params=ddpg_params)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()
