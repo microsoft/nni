@@ -193,7 +193,6 @@ class RetiariiExperiment(Experiment):
         )
 
         _logger.info('Start strategy...')
-        #BaseStrategy.report_model_space(base_model_ir, self.applied_mutators)
         search_space = BaseStrategy.get_model_space(base_model_ir, self.applied_mutators)
         self.update_search_space(search_space)
         self.strategy.run(base_model_ir, self.applied_mutators)
