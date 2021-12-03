@@ -5,6 +5,7 @@ import unittest
 import time
 import torch
 import torch.nn as nn
+from pytorch_lightning.utilities.seed import seed_everything
 
 from pathlib import Path
 
@@ -137,6 +138,8 @@ def _reset():
     nni.runtime.platform.test._last_metric = None
     nni.retiarii.integration_api._advisor = None
     nni.retiarii.execution.api._execution_engine = None
+    
+    seed_everything(42)
 
 
 def _new_trainer():
