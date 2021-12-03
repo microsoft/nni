@@ -8,38 +8,29 @@ import string
 from typing import Any, Dict, Iterable, List
 
 from .interface import AbstractExecutionEngine, AbstractGraphListener
+from .utils import get_mutation_summary
 from .. import codegen, utils
 from ..graph import Model, ModelStatus, MetricData, Evaluator
 from ..integration_api import send_trial, receive_trial_parameters, get_advisor, report_search_space
 
 _logger = logging.getLogger(__name__)
 
-def extract_visual_hp(model: Model) -> dict:
-    hp_config = {}
-    for mut in model.history:
-        if len(mut.samples) == 1:
-            hp_config[mut.mutator.label] = mut.samples[0]
-        else:
-            for i, sample in enumerate(mut.samples):
-                hp_config[f'{mut.mutator.label}_{i}'] = sample
-    return hp_config
-
 class BaseGraphData:
-    def __init__(self, model_script: str, evaluator: Evaluator, visual_hp: dict = None) -> None:
+    def __init__(self, model_script: str, evaluator: Evaluator, mutation_summary: dict) -> None:
         self.model_script = model_script
         self.evaluator = evaluator
-        self.visual_hp = visual_hp
+        self.mutation_summary = mutation_summary
 
     def dump(self) -> dict:
         return {
             'model_script': self.model_script,
             'evaluator': self.evaluator,
-            '_visual_hyper_params_': self.visual_hp
+            'mutation_summary': self.mutation_summary
         }
 
     @staticmethod
     def load(data) -> 'BaseGraphData':
-        return BaseGraphData(data['model_script'], data['evaluator'])
+        return BaseGraphData(data['model_script'], data['evaluator'], data['mutation_summary'])
 
 
 class BaseExecutionEngine(AbstractExecutionEngine):
@@ -125,8 +116,8 @@ class BaseExecutionEngine(AbstractExecutionEngine):
 
     @classmethod
     def pack_model_data(cls, model: Model) -> Any:
-        visual_hp = extract_visual_hp(model)
-        return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, visual_hp)
+        mutation_summary = get_mutation_summary(model)
+        return BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, mutation_summary)
 
     @classmethod
     def trial_execute_graph(cls) -> None:

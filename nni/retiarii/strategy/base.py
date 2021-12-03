@@ -7,6 +7,7 @@ from typing import List
 from .. import report_search_space
 from ..graph import Model
 from ..mutator import Mutator
+from .utils import dry_run_for_formated_search_space
 
 
 class BaseStrategy(abc.ABC):
@@ -17,23 +18,7 @@ class BaseStrategy(abc.ABC):
         NOTE: nested search space is not supported (currently also not supported on webui),
         currently, only support type `choice`.
         """
-        search_space = {}
-        auto_label_seq = 0
-        new_model = base_model
-        for mutator in applied_mutators:
-            recorded_candidates, new_model = mutator.dry_run(new_model)
-            # TODO: check label is never None
-            if mutator.label is not None:
-                label = mutator.label
-            else:
-                label = f'auto_label_{auto_label_seq}'
-                auto_label_seq += 1
-            if len(recorded_candidates) == 1:
-                search_space[label] = {'_type': 'choice', '_value': recorded_candidates[0]}
-            else:
-                for i, candidate in enumerate(recorded_candidates):
-                    search_space[f'{label}_{i}'] = {'_type': 'choice', '_value': candidate}
-
+        search_space = dry_run_for_formated_search_space(base_model, applied_mutators)
         report_search_space(search_space)
 
     @abc.abstractmethod
