@@ -32,5 +32,4 @@ class AzureBlobConfig(SharedStorageConfig):
     storage_type: str = 'AzureBlob'
     storage_account_name: str
     storage_account_key: Optional[str] = None
-    resource_group_name: Optional[str] = None
     container_name: str
