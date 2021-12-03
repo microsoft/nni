@@ -229,7 +229,7 @@ interface SearchItems {
 }
 
 interface RetiariiParameter {
-    _visual_hyper_params_: object; // retiarii experiment's parameter
+    mutation_summary: object; // retiarii experiment's parameter
 }
 
 export {
