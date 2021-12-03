@@ -27,7 +27,6 @@ class CommandType(Enum):
     SendTrialJobParameter = b'SP'
     NoMoreTrialJobs = b'NO'
     KillTrialJob = b'KI'
-    ReportSearchSpace = b'RS'
 
 _lock = threading.Lock()
 try:

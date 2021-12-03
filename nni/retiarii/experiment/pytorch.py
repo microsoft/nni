@@ -193,7 +193,9 @@ class RetiariiExperiment(Experiment):
         )
 
         _logger.info('Start strategy...')
-        BaseStrategy.report_model_space(base_model_ir, self.applied_mutators)
+        #BaseStrategy.report_model_space(base_model_ir, self.applied_mutators)
+        search_space = BaseStrategy.get_model_space(base_model_ir, self.applied_mutators)
+        self.update_search_space(search_space)
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')
         # TODO: find out a proper way to show no more trial message on WebUI

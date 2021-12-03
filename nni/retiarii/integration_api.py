@@ -34,14 +34,6 @@ def send_trial(parameters: dict, placement_constraint=None) -> int:
     """
     return get_advisor().send_trial(parameters, placement_constraint)
 
-def report_search_space(search_space: dict) -> None:
-    """
-    Execution engine uses this API to report the search space extracted by
-    strategy to nnimanager which stores the search space into db,
-    so that webui can access the search space like HPO
-    """
-    return get_advisor().report_search_space(search_space)
-
 def receive_trial_parameters() -> dict:
     """
     Received a new trial. Executed on trial end.

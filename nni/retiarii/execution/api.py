@@ -13,7 +13,7 @@ _default_listener = None
 
 __all__ = ['get_execution_engine', 'get_and_register_default_listener',
            'list_models', 'submit_models', 'wait_models', 'query_available_resources',
-           'set_execution_engine', 'is_stopped_exec', 'budget_exhausted', 'report_search_space']
+           'set_execution_engine', 'is_stopped_exec', 'budget_exhausted']
 
 
 def set_execution_engine(engine: AbstractExecutionEngine) -> None:
@@ -72,11 +72,3 @@ def is_stopped_exec(model: Model) -> bool:
 def budget_exhausted() -> bool:
     engine = get_execution_engine()
     return engine.budget_exhausted()
-
-
-def report_search_space(search_space: dict) -> None:
-    """
-    Strategy uses this API to report its extracted search space to execution engine
-    """
-    engine = get_execution_engine()
-    return engine.report_search_space(search_space)
