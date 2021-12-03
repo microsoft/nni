@@ -19,6 +19,7 @@ def mutation_dict_to_summary(mutation: dict) -> dict:
         else:
             for i, sample in enumerate(samples):
                 mutation_summary[f'{label}_{i}'] = sample
+    return mutation_summary
 
 def get_mutation_summary(model: Model) -> dict:
     mutation = get_mutation_dict(model)
