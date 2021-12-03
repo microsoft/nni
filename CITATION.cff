@@ -1,7 +1,8 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
-- family-names: "Microsoft"
+- name: "Microsoft"
 title: "Neural Network Intelligence"
-date-released: 2018-09-10
+date-released: 2021-01-14
 url: "https://github.com/microsoft/nni"
+version: 2.0
