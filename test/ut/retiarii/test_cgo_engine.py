@@ -5,8 +5,6 @@ import unittest
 import time
 import torch
 import torch.nn as nn
-import numpy as np
-import random
 from pytorch_lightning.utilities.seed import seed_everything
 
 from pathlib import Path
