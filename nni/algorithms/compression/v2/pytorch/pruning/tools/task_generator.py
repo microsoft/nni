@@ -352,7 +352,7 @@ class AMCTaskGenerator(TaskGenerator):
                  env_params: Dict = {}, ddpg_params: Dict = {}):
 
         self.total_iteration = total_iteration
-        self.current_iteration = 0
+        self.current_iteration = 1
         self.dummy_input = dummy_input
         self.env_params = env_params
         self.ddpg_params = ddpg_params
@@ -431,57 +431,62 @@ class AMCTaskGenerator(TaskGenerator):
             self.env.set_reward(self._tasks[task_result.task_id].score)
             self.env.set_mask(task_result.pruner_generated_masks)
 
-            if self.env.ini is False:
+            if self.env.ini is not False:
+                # self.actions = deepcopy(next_action_list)
+                # self.preserv_idxes = deepcopy(next_preserve_idx_list)
+
+                # use last actions
+                info = None
+                for action, preserv_idx in zip(self.actions, self.preserv_idxes):
+                    observation1, reward, done, info = self.env.step_after(action, preserv_idx)
+                    self.T.append([reward, deepcopy(self.observation), deepcopy(observation1), action, done])
+                    # update
+                    self.observation = deepcopy(observation1)
+                    self.iteration_reward += reward
+
                 self.actions = deepcopy(next_action_list)
                 self.preserv_idxes = deepcopy(next_preserve_idx_list)
+                # end of episode
+                print("Generated config list: {}".format(info['config_list']))
+                _logger.info(
+                    '#%d: iteration_reward: %.4f reward: %.4f, ratio: %.4f\n',
+                        self.current_iteration - 1, self.iteration_reward,
+                        info['reward'],
+                        info['compress_ratio']
+                )
+                final_reward = self.T[-1][0]
+                self._temp_config_list = deepcopy(info['config_list'])
 
-            # use last actions
-            info = None
-            for action, preserv_idx in zip(self.actions, self.preserv_idxes):
-                observation1, reward, done, info = self.env.step_after(action, preserv_idx)
-                self.T.append([reward, deepcopy(self.observation), deepcopy(observation1), action, done])
-                # update
-                self.observation = deepcopy(observation1)
-                self.iteration_reward += reward
+                # agent observe and update policy
+                for _, s_t, s_t1, a_t, done in self.T:
+                    self.agent.observe(final_reward, s_t, s_t1, a_t, done)
+                    if self.current_iteration > warmup_num:
+                        self.agent.update_policy()
 
-            self.actions = deepcopy(next_action_list)
-            self.preserv_idxes = deepcopy(next_preserve_idx_list)
-            # end of episode
-            print("Generated config list: {}".format(info['config_list']))
-            _logger.info(
-                '#%d: iteration_reward: %.4f reward: %.4f, ratio: %.4f\n',
-                    self.current_iteration - 1, self.iteration_reward,
-                    info['reward'],
-                    info['compress_ratio']
-            )
-            final_reward = self.T[-1][0]
-            self._temp_config_list = deepcopy(info['config_list'])
-
-            # agent observe and update policy
-            for _, s_t, s_t1, a_t, done in self.T:
-                self.agent.observe(final_reward, s_t, s_t1, a_t, done)
-                if self.current_iteration > warmup_num:
-                    self.agent.update_policy()
-
-            # reset
-            self.observation = None
-            self.iteration_reward = 0.
-            self.T = []
+                # reset
+                self.observation = None
+                self.iteration_reward = 0.
+                self.T = []
     
-        task_id = self._task_id_candidate
-        new_config_list = deepcopy(self._temp_config_list)
-        config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
-
-        with Path(config_list_path).open('w') as f:
-            json_tricks.dump(new_config_list, f, indent=4)
-
-        task = Task(task_id, self.temp_model_path, self.temp_masks_path, config_list_path)
-        self._tasks[task_id] = task
-        self._task_id_candidate += 1
+        
         
         # generate task and get task result
-        if self.current_iteration < self.total_iteration:
-            self.current_iteration += 1
-            return [task]
-        else:
-            return []
+        if self._task_id_candidate < self.total_iteration:
+            task_id = self._task_id_candidate
+            new_config_list = deepcopy(self._temp_config_list)
+            config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
+            print("leave me alone.")
+            with Path(config_list_path).open('w') as f:
+                json_tricks.dump(new_config_list, f, indent=4)
+
+            task = Task(task_id, self.temp_model_path, self.temp_masks_path, config_list_path)
+            self._tasks[task_id] = task
+            self._task_id_candidate += 1
+
+            # generate task and get task result
+            if self.current_iteration < self.total_iteration:
+                self.current_iteration += 1
+                return [task]
+            else:
+                return []
+        return []
