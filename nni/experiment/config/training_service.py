@@ -41,6 +41,7 @@ class TrainingServiceConfig(ConfigBase):
             'trial_code_directory',
             'trial_gpu_number',
             'nni_manager_ip',
+            'debug',
         ]
         for field_name in shortcuts:
             if is_missing(getattr(self, field_name)):

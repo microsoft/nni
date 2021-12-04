@@ -12,6 +12,12 @@ export interface TrainingServiceConfig {
     trialCodeDirectory: string;
     trialGpuNumber?: number;
     nniManagerIp?: string;
+
+    // FIXME
+    // "debug" is only used by openpai to decide whether to check remote nni version
+    // it should be better to check when local nni version is not "dev"
+    // it should be even better to check version before launching the experiment and let user to confirm
+    // log level is currently handled by global logging module and has nothing to do with this
     debug?: boolean;
 }
 
