@@ -44,17 +44,18 @@ def to_v2(v1):
             continue
 
         builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
-        class_args = v1_algo.pop('classArgs', None)
-
         if builtin_name is not None:
-            v2_algo = {'name': builtin_name, 'classArgs': class_args}
+            v2_algo = {'name': builtin_name}
 
         else:
             code_directory = v1_algo.pop('codeDir')
             class_file_name = v1_algo.pop('classFileName')
             assert class_file_name.endswith('.py')
             class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
-            v2_algo = {'className': class_name, 'codeDirectory': code_directory, 'classArgs': class_args}
+            v2_algo = {'className': class_name, 'codeDirectory': code_directory}
+
+        if 'classArgs' in v1_algo:
+            v2_algo['classArgs'] = v1_algo.pop('classArgs')
 
         v2[algo_type] = v2_algo
         _deprecate(v1_algo, v2, 'includeIntermediateResults')
@@ -119,7 +120,7 @@ def to_v2(v1):
         _deprecate(pai_config, v2, 'maxTrialNumPerGpu')
         _deprecate(pai_config, v2, 'useActiveGpu')
         if pai_config:
-            _logger.error('paiConfig not fully converted: %s', paiConfig)
+            _logger.error('paiConfig not fully converted: %s', pai_config)
 
     if platform == 'aml':
         _move_field(v1_trial, ts, 'image', 'dockerImage')
@@ -132,7 +133,7 @@ def to_v2(v1):
         _move_field(aml_config, ts, 'maxTrialNumPerGpu', 'maxTrialNumberPerGpu')
         _deprecate(aml_config, v2, 'useActiveGpu')
         if aml_config:
-            _logger.error('amlConfig not fully converted: %s', amlConfig)
+            _logger.error('amlConfig not fully converted: %s', aml_config)
 
     if platform == 'kubeflow':
         kf_config = v1.pop('kubeflowConfig')

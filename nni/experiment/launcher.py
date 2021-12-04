@@ -51,8 +51,8 @@ class NniManagerArgs:
             self.mode = config.training_service.platform
 
         self.log_level = config.log_level
-        if debug and args.log_level not in ['debug', 'trace']:
-            args.log_level = 'debug'
+        if debug and self.log_level not in ['debug', 'trace']:
+            self.log_level = 'debug'
 
         if action == 'resume':
             self.start_mode = 'resume'

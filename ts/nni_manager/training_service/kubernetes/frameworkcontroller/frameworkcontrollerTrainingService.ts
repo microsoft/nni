@@ -26,7 +26,6 @@ import {
     FrameworkControllerClusterConfigNFS,
     FrameworkControllerTrialConfig,
     FrameworkControllerTrialConfigTemplate,
-    FrameworkControllerClusterConfigPVC,
 } from './frameworkcontrollerConfig';
 import {FrameworkControllerJobInfoCollector} from './frameworkcontrollerJobInfoCollector';
 import {FrameworkControllerJobRestServer} from './frameworkcontrollerJobRestServer';
@@ -239,19 +238,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         nfsFrameworkControllerClusterConfig.nfs.path
                     );
                     namespace = nfsFrameworkControllerClusterConfig.namespace
-                } else if (this.fcClusterConfig.storageType === 'pvc') {
-                    const pvcFrameworkControllerClusterConfig: FrameworkControllerClusterConfigPVC =
-                        <FrameworkControllerClusterConfigPVC>this.fcClusterConfig;
-                    this.fcTemplate = yaml.safeLoad(
-                        fs.readFileSync(
-                            pvcFrameworkControllerClusterConfig.configPath,
-                            'utf8'
-                        )
-                    );
-                    await this.createPVCStorage(
-                        pvcFrameworkControllerClusterConfig.pvc.path
-                    );
-                    namespace = pvcFrameworkControllerClusterConfig.namespace;
                 }
                 namespace = namespace ? namespace : "default";
                 this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(namespace);
