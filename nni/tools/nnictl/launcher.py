@@ -1,15 +1,19 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from getpass import getuser
 from pathlib import Path
+import tempfile
 
 from colorama import Fore
 import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert
+from nni.tools.annotation import expand_annotations, generate_search_space
 
 def create_experiment(args):
+    # to make it clear what are inside args
     config_file = Path(args.config)
     port = args.port
     debug = args.debug
@@ -44,6 +48,16 @@ def create_experiment(args):
         config = ExperimentConfig(**v2_config)
     else:
         config = ExperimentConfig.load(config_file)
+
+    if config.use_annotation:
+        path = Path(tempfile.gettempdir(), getuser(), 'nni', 'annotation')
+        path.mkdir(parents=True, exist_ok=True)
+        path = tempfile.mkdtemp(dir=path)
+        code_dir = expand_annotations(config.trial_code_directory, path)
+        config.trial_code_directory = code_dir
+        config.search_space = generate_search_space(code_dir)
+        assert config.search_space, 'ERROR: Generated search space is empty'
+        config.use_annotation = False
 
     exp = Experiment(config)
     exp.url_prefix = url_prefix
