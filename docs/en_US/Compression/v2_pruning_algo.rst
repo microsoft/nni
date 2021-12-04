@@ -58,6 +58,9 @@ User configuration for Level Pruner
 Performance Test
 ^^^^^^^^^^^^^^^^
 
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -112,6 +115,9 @@ User configuration for L1 Norm Pruner
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
 
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024, sparsity was 0.5. You can reproduct the result(the following 'ours') by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -157,6 +163,9 @@ User configuration for L2 Norm Pruner
 
 Performance Test
 ^^^^^^^^^^^^^^^^
+
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
    :header-rows: 1
@@ -210,6 +219,9 @@ User configuration for FPGM Pruner
 Performance Test
 ^^^^^^^^^^^^^^^^
 
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -259,6 +271,9 @@ User configuration for Slim Pruner
 
 Reproduced Experiment
 ^^^^^^^^^^^^^^^^^^^^^
+
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024, sparsity was 0.7. You can reproduct the result(the following 'ours') by corresponding example.
 
 .. list-table::
    :header-rows: 1
@@ -312,6 +327,9 @@ User configuration for Activation APoZ Rank Pruner
 Performance Test
 ^^^^^^^^^^^^^^^^
 
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -362,6 +380,9 @@ User configuration for Activation Mean Rank Pruner
 
 Performance Test
 ^^^^^^^^^^^^^^^^
+
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
    :header-rows: 1
@@ -417,6 +438,9 @@ User configuration for Activation Mean Rank Pruner
 
 Performance Test
 ^^^^^^^^^^^^^^^^
+
+We respectively train and finetune the model for 160 epochs with SGD and MultiStepLR.
+The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
    :header-rows: 1
@@ -582,6 +606,10 @@ User configuration for AGP Pruner
 Performance Test
 ^^^^^^^^^^^^^^^^
 
+We train the model for 160 epochs with SGD and MultiStepLR.
+In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -597,9 +625,9 @@ Performance Test
      - 313.46M
      - 
    * - Pruned VGG-16
-     - 76.94%
-     - 
-     - 
+     - 87.81%
+     - 0.66M
+     - 13.18M
      - 0.8
 
 Lottery Ticket Pruner
@@ -645,6 +673,10 @@ User configuration for Lottery Ticket Pruner
 
 Performance Test
 ^^^^^^^^^^^^^^^^
+
+We train the model for 160 epochs with SGD and MultiStepLR.
+In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
+The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
    :header-rows: 1
@@ -705,6 +737,10 @@ User configuration for Simulated Annealing Pruner
 Performance Test
 ^^^^^^^^^^^^^^^^
 
+We train the model for 160 epochs with SGD and MultiStepLR.
+In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
 .. list-table::
    :header-rows: 1
    :widths: auto
@@ -720,9 +756,9 @@ Performance Test
      - 313.46M
      - 
    * - Pruned VGG-16
-     - 33.6% (wo FT)
-     - 
-     - 
+     - 81.66%
+     - 0.66M
+     - 13.18M
      - 0.8
 
 Auto Compress Pruner
