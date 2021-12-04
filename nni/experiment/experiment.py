@@ -116,6 +116,8 @@ class Experiment:
         foreground = run_mode is RunMode.Foreground
 
         config = self.config.canonical_copy()
+        if config.use_annotation:
+            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
 
         if config.experiment_working_directory is not None:
             log_dir = Path(config.experiment_working_directory, self.id, 'log')
