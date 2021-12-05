@@ -14,3 +14,4 @@ peewee
 graphviz
 gym
 tianshou >= 0.4.1
+matplotlib < 3.4
