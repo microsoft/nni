@@ -1,4 +1,4 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from ..graph import Evaluator, Model
 from ..integration_api import receive_trial_parameters
