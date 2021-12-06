@@ -48,7 +48,7 @@ Then, pass this strategy to ``RetiariiExperiment``:
 In ``exp_config``, ``dummy_input`` is required for tracing shape info.
 
 
-End-to-end ProxylessNAS with latency constraints
+End-to-end ProxylessNAS with Latency Constraints
 ------------------------------------------------
 
 `ProxylessNAS <https://arxiv.org/pdf/1812.00332.pdf>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
