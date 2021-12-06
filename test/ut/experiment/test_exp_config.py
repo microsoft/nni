@@ -39,6 +39,7 @@ minimal_canon = {
         'platform': 'local',
         'trialCommand': 'python main.py',
         'trialCodeDirectory': os.path.realpath('.'),
+        'debug': False,
         'maxTrialNumberPerGpu': 1,
         'reuseMode': False,
     },
@@ -54,7 +55,7 @@ detailed_canon = {
     'trialCodeDirectory': expand_path('assets'),
     'trialConcurrency': 2,
     'trialGpuNumber': 1,
-    'maxExperimentDuration': 1.5 * 3600,
+    'maxExperimentDuration': '1.5h',
     'maxTrialNumber': 10,
     'maxTrialDuration': 60,
     'nniManagerIp': '1.2.3.4',
@@ -76,6 +77,7 @@ detailed_canon = {
         'trialCommand': 'python main.py',
         'trialCodeDirectory': expand_path('assets'),
         'trialGpuNumber': 1,
+        'debug': True,
         'useActiveGpu': False,
         'maxTrialNumberPerGpu': 2,
         'gpuIndices': [1, 2],
@@ -100,6 +102,8 @@ def test_all():
     assert minimal_class.json() == minimal_canon
 
     detailed = ExperimentConfig.load(expand_path('assets/config.yaml'))
+    print(detailed.json())
+    print(detailed_canon)
     assert detailed.json() == detailed_canon
 
 if __name__ == '__main__':

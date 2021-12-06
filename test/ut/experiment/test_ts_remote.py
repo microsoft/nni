@@ -57,6 +57,7 @@ minimal_canon = {
         'platform': 'remote',
         'trialCommand': 'python main.py',
         'trialCodeDirectory': os.path.realpath('.'),
+        'debug': False,
         'machineList': [
             {
                 'host': '1.2.3.4',
@@ -121,6 +122,7 @@ detailed_canon = {
         'trialCodeDirectory': os.path.realpath('.'),
         'trialGpuNumber': 1,
         'nniManagerIp': '1.2.3.0',
+        'debug': False,
         'machineList': [
             {
                 'host': '1.2.3.4',
@@ -149,6 +151,8 @@ detailed_canon = {
 
 def test_remote():
     config = ExperimentConfig(**minimal_json)
+    print(config.json())
+    print(minimal_canon)
     assert config.json() == minimal_canon
 
     assert minimal_class.json() == minimal_canon

@@ -43,3 +43,5 @@ class LocalConfig(TrainingServiceConfig):
                 'LocalConfig: please set use_active_gpu to True if your system has GUI, '
                 'or set it to False if the computer runs multiple experiments concurrently.'
             )
+        if not self.trial_gpu_number and self.max_trial_number_per_gpu != 1:
+            raise ValueError('LocalConfig: max_trial_number_per_gpu does not work without trial_gpu_number')
