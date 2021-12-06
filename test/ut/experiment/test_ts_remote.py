@@ -151,8 +151,6 @@ detailed_canon = {
 
 def test_remote():
     config = ExperimentConfig(**minimal_json)
-    print(config.json())
-    print(minimal_canon)
     assert config.json() == minimal_canon
 
     assert minimal_class.json() == minimal_canon
