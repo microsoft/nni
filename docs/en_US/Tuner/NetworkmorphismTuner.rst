@@ -11,6 +11,25 @@ If you want to know more about network morphism trial usage, please see the :git
 2. Usage
 --------
 
+Installation
+^^^^^^^^^^^^
+
+NetworkMorphism requires :githublink:`PyTorch <examples/trials/network_morphism/requirements.txt>`.
+
+classArgs Requirements
+^^^^^^^^^^^^^^^^^^^^^^
+
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **task** (*('cv'), optional, default = 'cv'*\ ) - The domain of the experiment. For now, this tuner only supports the computer vision (CV) domain.
+* **input_width** (*int, optional, default = 32*\ ) - input image width
+* **input_channel** (*int, optional, default = 3*\ ) - input image channel
+* **n_output_node** (*int, optional, default = 10*\ ) - number of classes
+
+
+
+Config File
+^^^^^^^^^^^
+
 To use Network Morphism, you should modify the following spec in your ``config.yml`` file:
 
 .. code-block:: yaml
@@ -29,6 +48,21 @@ To use Network Morphism, you should modify the following spec in your ``config.y
        input_channel: 3
        #modify to fit your number of classes
        n_output_node: 10
+
+Example Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   # config.yml
+   tuner:
+     builtinTunerName: NetworkMorphism
+       classArgs:
+         optimize_mode: maximize
+         task: cv
+         input_width: 32
+         input_channel: 3
+         n_output_node: 10
 
 In the training procedure, it generates a JSON file which represents a Network Graph. Users can call the "json_to_graph()" function to build a PyTorch or Keras model from this JSON file.
 

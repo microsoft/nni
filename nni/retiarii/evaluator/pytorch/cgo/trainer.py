@@ -1,11 +1,12 @@
-
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
 
 import pytorch_lightning as pl
-from ....serializer import serialize_cls
+import nni
 from .accelerator import BypassAccelerator
 
 
-@serialize_cls
+@nni.trace
 class Trainer(pl.Trainer):
     """
     Trainer for cross-graph optimization.

@@ -10,10 +10,10 @@ import logging
 import math
 import sys
 
-import json_tricks
 import numpy as np
 from schema import Schema, Optional
 
+import nni
 from nni import ClassArgsValidator
 from nni.common.hpo_utils import validate_search_space
 from nni.runtime.common import multi_phase_enabled
@@ -336,7 +336,7 @@ class Hyperband(MsgDispatcherBase):
     def _request_one_trial_job(self):
         ret = self._get_one_trial_job()
         if ret is not None:
-            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            send(CommandType.NewTrialJob, nni.dump(ret))
             self.credit -= 1
 
     def _get_one_trial_job(self):
@@ -365,7 +365,7 @@ class Hyperband(MsgDispatcherBase):
                     'parameter_source': 'algorithm',
                     'parameters': ''
                 }
-                send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
+                send(CommandType.NoMoreTrialJobs, nni.dump(ret))
                 return None
 
         assert self.generated_hyper_configs
@@ -408,7 +408,7 @@ class Hyperband(MsgDispatcherBase):
             event: the job's state
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
-        hyper_params = json_tricks.loads(data['hyper_params'])
+        hyper_params = nni.load(data['hyper_params'])
         self._handle_trial_end(hyper_params['parameter_id'])
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
@@ -426,7 +426,7 @@ class Hyperband(MsgDispatcherBase):
             Data type not supported
         """
         if 'value' in data:
-            data['value'] = json_tricks.loads(data['value'])
+            data['value'] = nni.load(data['value'])
         # multiphase? need to check
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
@@ -440,7 +440,7 @@ class Hyperband(MsgDispatcherBase):
             if data['parameter_index'] is not None:
                 ret['parameter_index'] = data['parameter_index']
             self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
-            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+            send(CommandType.SendTrialJobParameter, nni.dump(ret))
         else:
             value = extract_scalar_reward(data['value'])
             bracket_id, i, _ = data['parameter_id'].split('_')

@@ -96,16 +96,22 @@ Pruners
 
 Quantizers
 ^^^^^^^^^^
-..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.NaiveQuantizer
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.NaiveQuantizer
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.QAT_Quantizer
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.QAT_Quantizer
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.DoReFaQuantizer
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.DoReFaQuantizer
     :members:
 
-..  autoclass:: nni.algorithms.compression.pytorch.quantization.quantizers.BNNQuantizer
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.BNNQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.LsqQuantizer
+    :members:
+
+..  autoclass:: nni.algorithms.compression.pytorch.quantization.ObserverQuantizer
     :members:
 
 Model Speedup
