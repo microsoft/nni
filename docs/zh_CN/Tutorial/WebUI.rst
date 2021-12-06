@@ -1,7 +1,7 @@
 Web 界面
 ==================
 
-实验管理
+Experiments 管理
 -----------------------
 
 点击导航栏上的 ``All experiments`` 标签。
@@ -12,7 +12,7 @@ Web 界面
 
 
 
-* 在 ``All experiments`` 页面，可以看到机器上的所有实验。 
+* 在 ``All experiments`` 页面，可以看到机器上的所有 Experiment。 
 
 .. image:: ../../img/webui-img/managerExperimentList/expList.png
    :target: ../../img/webui-img/managerExperimentList/expList.png
@@ -20,7 +20,7 @@ Web 界面
 
 
 
-* 查看实验更多详细信息时，可以单击 trial ID 跳转至该实验详情页，如下所示：
+* 查看 Experiment 更多详细信息时，可以单击 trial ID 跳转至该 Experiment 详情页，如下所示：
 
 .. image:: ../../img/webui-img/managerExperimentList/toAnotherExp.png
    :target: ../../img/webui-img/managerExperimentList/toAnotherExp.png
@@ -28,7 +28,7 @@ Web 界面
 
 
 
-* 如果表格里有很多实验 ，可以使用 ``filter`` 按钮。
+* 如果表格里有很多 Experiment，可以使用 ``filter`` 按钮。
 
 .. image:: ../../img/webui-img/managerExperimentList/expFilter.png
    :target: ../../img/webui-img/managerExperimentList/expFilter.png
@@ -42,7 +42,7 @@ Web 界面
 点击 ``Overview`` 标签。
 
 
-* 在 Overview 标签上，可看到实验 trial 的概况、搜索空间以及 ``top trials`` 的结果。
+* 在 Overview 标签上，可看到 Experiment trial 的概况、搜索空间以及 ``top trials`` 的结果。
 
 
 .. image:: ../../img/webui-img/full-oview.png
@@ -51,7 +51,7 @@ Web 界面
 
 
 
-如果想查看实验配置和搜索空间，点击右边的 ``Search space`` 和 ``Config`` 按钮。
+如果想查看 Experiment 配置和搜索空间，点击右边的 ``Search space`` 和 ``Config`` 按钮。
 
    1. 搜索空间文件：
 
@@ -80,7 +80,7 @@ Web 界面
 
 
 
-* 如果实验包含了较多 Trial，可改变刷新间隔。
+* 如果 Experiment 包含了较多 Trial，可改变刷新间隔。
 
 
 .. image:: ../../img/webui-img/refresh-interval.png
@@ -90,7 +90,7 @@ Web 界面
 
 
 
-* 单击按钮 ``Experiment summary`` ，可以查看和下载实验结果（``实验配置``，``trial 信息`` 和 ``中间结果`` ）。
+* 单击按钮 ``Experiment summary`` ，可以查看和下载 Experiment 结果（``Experiment 配置``，``trial 信息`` 和 ``中间结果`` ）。
 
 
 .. image:: ../../img/webui-img/summary.png
@@ -99,7 +99,7 @@ Web 界面
 
 
 
-* 在这里修改实验配置（例如 ``maxExecDuration``, ``maxTrialNum`` 和 ``trial concurrency``）。
+* 在这里修改 Experiment 配置（例如 ``maxExecDuration``, ``maxTrialNum`` 和 ``trial concurrency``）。
 
 
 .. image:: ../../img/webui-img/edit-experiment-param.png
@@ -133,7 +133,7 @@ Web 界面
 
 
 
-* 打开 ``Optimization curve`` 来查看实验的优化曲线。
+* 打开 ``Optimization curve`` 来查看 Experiment 的优化曲线。
 
 
 .. image:: ../../img/webui-img/best-curve.png
@@ -245,7 +245,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
    :alt: searchParameterRange
 
 
-* ``Add column`` 按钮可选择在表格中显示的列。 如果实验的最终结果是 dict，则可以在表格中查看其它键。可选择 ``Intermediate count`` 列来查看 Trial 进度。
+* ``Add column`` 按钮可选择在表格中显示的列。 如果 Experiment 的最终结果是 dict，则可以在表格中查看其它键。可选择 ``Intermediate count`` 列来查看 Trial 进度。
 
 
 .. image:: ../../img/webui-img/addColumn.png
@@ -314,7 +314,7 @@ Trial 在训练过程中可能有大量中间结果。 为了更清楚的理解�
 
 
 
-* 自定义 Trial：您可以更改此 Trial 参数，然后将其提交给实验。如果您想重新运行失败的 Trial ，您可以向实验提交相同的参数。
+* 自定义 Trial：您可以更改此 Trial 参数，然后将其提交给 Experiment。如果您想重新运行失败的 Trial ，您可以向 Experiment 提交相同的参数。
 
 .. image:: ../../img/webui-img/detail/customizedTrialButton.png
    :target: ../../img/webui-img/detail/customizedTrialButton.png
