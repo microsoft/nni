@@ -12,6 +12,7 @@ import torch.nn as nn
 from torch.nn import Module
 from torch.optim import Optimizer
 
+from nni.common.serializer import SerializableObject
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
 from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical, OptimizerConstructHelper
 
@@ -371,9 +372,9 @@ class SlimPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    optimizer : torch.optim.Optimizer
-        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-        so do not use this optimizer in other places.
+    traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -388,11 +389,11 @@ class SlimPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor],
+                 traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor],
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         self.mode = mode
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self._scale = scale
@@ -467,9 +468,9 @@ class ActivationPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    optimizer : torch.optim.Optimizer
-        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-        so do not use this optimizer in other places.
+    traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches
@@ -489,12 +490,12 @@ class ActivationPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
+                 traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int, activation: str = 'relu',
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
@@ -587,9 +588,9 @@ class TaylorFOWeightPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    optimizer : torch.optim.Optimizer
-        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-        so do not use this optimizer in other places.
+    traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches : int
@@ -614,12 +615,12 @@ class TaylorFOWeightPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
+                 traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor], training_batches: int,
                  mode: str = 'normal', dummy_input: Optional[Tensor] = None):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         super().__init__(model, config_list)
@@ -706,9 +707,9 @@ class ADMMPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    optimizer : torch.optim.Optimizer
-        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-        so do not use this optimizer in other places.
+    traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     iterations : int
@@ -718,9 +719,9 @@ class ADMMPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
+                 traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs

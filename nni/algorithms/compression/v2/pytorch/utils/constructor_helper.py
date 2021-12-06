@@ -86,7 +86,7 @@ class OptimizerConstructHelper(ConstructHelper):
     @staticmethod
     def from_trace(model: Module, optimizer_trace: SerializableObject):
         assert isinstance(optimizer_trace, SerializableObject), \
-            'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
+            'Please use nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize the optimizer.'
         assert isinstance(optimizer_trace, Optimizer), \
             'It is not an instance of torch.nn.Optimizer.'
         return OptimizerConstructHelper(model,
@@ -118,7 +118,7 @@ class LRSchedulerConstructHelper(ConstructHelper):
     @staticmethod
     def from_trace(lr_scheduler_trace: SerializableObject):
         assert isinstance(lr_scheduler_trace, SerializableObject), \
-            'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
+            'Please use nni.algorithms.compression.v2.pytorch.utils.trace to wrap the lr scheduler class before initialize the scheduler.'
         assert isinstance(lr_scheduler_trace, _LRScheduler), \
             'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
         return LRSchedulerConstructHelper(lr_scheduler_trace._get_nni_attr('symbol'),

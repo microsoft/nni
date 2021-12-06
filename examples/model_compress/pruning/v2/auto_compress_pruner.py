@@ -80,7 +80,7 @@ if __name__ == '__main__':
     traced_optimizer = trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     admm_params = {
         'trainer': trainer,
-        'optimizer': traced_optimizer,
+        'traced_optimizer': traced_optimizer,
         'criterion': criterion,
         'iterations': 10,
         'training_epochs': 1
