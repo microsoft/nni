@@ -76,7 +76,6 @@ if __name__ == '__main__':
     
     for i in range(100):
         trainer(model, optimizer, criterion, i)
-
     pre_acc = evaluator(model)
 
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
@@ -86,7 +85,6 @@ if __name__ == '__main__':
 
     # if you just want to keep the final result as the best result, you can pass evaluator as None.
     # or the result with the highest score (given by evaluator) will be the best result.
-
     env_params = {'flops_ratio': 1. - config_list[0]['total_sparsity'], 'lbound': 0.2, 'rbound': 1.,
                   'n_calibration_batches': 60, 'n_points_per_layer': 10, 'channel_round': 8, 'batch_size': 128}
     ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,

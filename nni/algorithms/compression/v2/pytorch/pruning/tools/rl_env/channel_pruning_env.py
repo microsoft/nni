@@ -73,7 +73,6 @@ class ChannelPruningEnv:
         self.ini = False
 
         # options from args
-        self.args = args
         self.lbound = self.env_params['lbound']
         self.rbound = self.env_params['rbound']
 
@@ -142,74 +141,6 @@ class ChannelPruningEnv:
 
     def step_after(self, action, preserve_idx):
         _, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
-        if not self.visited[self.cur_ind]:
-            for group in self.shared_idx:
-                if self.cur_ind in group:  # set the shared ones
-                    for g_idx in group:
-                        self.strategy_dict[self.prunable_idx[g_idx]][0] = action
-                        self.strategy_dict[self.prunable_idx[g_idx - 1]][1] = action
-                        self.visited[g_idx] = True
-                        self.index_buffer[g_idx] = preserve_idx.copy()
-
-        self.strategy.append(action)  # save action to strategy
-        self.d_prime_list.append(d_prime)
-
-        self.strategy_dict[self.prunable_idx[self.cur_ind]][0] = action
-        if self.cur_ind > 0:
-            self.strategy_dict[self.prunable_idx[self.cur_ind - 1]][1] = action
-
-        # all the actions are made
-        if self._is_final_layer():
-            assert len(self.strategy) == len(self.prunable_idx)
-            current_flops = self._cur_flops()
-            compress_ratio = current_flops * 1. / self.org_flops
-            reward = self.cur_reward
-            info_set = {'compress_ratio': compress_ratio, 'reward': reward, 'strategy': self.strategy.copy(), 'config_list': copy.deepcopy(self.temp_config_list)}
-
-            if reward > self.best_reward and self.ini:
-                self.best_reward = reward
-                self.best_strategy = self.strategy.copy()
-                self.best_d_prime_list = self.d_prime_list.copy()
-                _logger.info('New best reward: %.4f, reward: %.4f, compress: %.4f', self.best_reward, reward, compress_ratio)
-                _logger.info('New best policy: %s', self.best_strategy)
-                _logger.info('New best d primes: %s', self.best_d_prime_list)
-            obs = self.layer_embedding[self.cur_ind, :].copy()  # actually the same as the last state
-            done = True
-            self.temp_config_list = []
-            self.ini = True
-            return obs, reward, done, info_set
-        
-        reward = 0
-        done = False
-        self.visited[self.cur_ind] = True  # set to visited
-        self.cur_ind += 1  # the index of next layer
-        info_set = {'compress_ratio': self._cur_flops() * 1. / self.org_flops, 'reward': reward, 'strategy': self.strategy.copy(), 'config_list': copy.deepcopy(self.temp_config_list)}
-        # build next state (in-place modify)
-        self.layer_embedding[self.cur_ind][-3] = self._cur_reduced() * 1. / self.org_flops  # reduced
-        self.layer_embedding[self.cur_ind][-2] = sum(self.flops_list[self.cur_ind + 1:]) * 1. / self.org_flops  # rest
-        self.layer_embedding[self.cur_ind][-1] = self.strategy[-1]  # last action
-        obs = self.layer_embedding[self.cur_ind, :].copy()
-
-        return obs, reward, done, info_set
-
-    def step(self, act):
-        # Pseudo prune and get the corresponding statistics. The real pruning happens till the end of all pseudo pruning
-        if self.visited[self.cur_ind]:
-            action = self.strategy_dict[self.prunable_idx[self.cur_ind]][0]
-            preserve_idx = self.index_buffer[self.cur_ind]
-        else:
-            action = self._action_wall(act)  # percentage to preserve
-            preserve_idx = None
-        # prune and update action
-        named_list, m_list = [], []
-        for name, module in self.model.named_modules():
-            named_list.append(name)
-            m_list.append(module)
-        named_op = named_list[self.prunable_idx[self.cur_ind]]
-        self.temp_config_list.append({"op_names": [named_op], "sparsity": float(1. - action)})
-
-        
-        named_op, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
         if not self.visited[self.cur_ind]:
             for group in self.shared_idx:
                 if self.cur_ind in group:  # set the shared ones
@@ -421,24 +352,7 @@ class ChannelPruningEnv:
                             self.strategy_dict[i] = [self.lbound, self.lbound]
         self.strategy_dict[self.prunable_idx[0]][0] = 1  # modify the input
         self.strategy_dict[self.prunable_idx[-1]][1] = 1  # modify the output
-
         self.shared_idx = []
-        '''
-        if self.env_params['model_type'] == 'mobilenetv2':  # TODO: to be tested! Share index for residual connection
-            connected_idx = [4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30, 32]  # to be partitioned
-            last_ch = -1
-            share_group = None
-            for c_idx in connected_idx:
-                if self.prunable_ops[c_idx].in_channels != last_ch:  # new group
-                    last_ch = self.prunable_ops[c_idx].in_channels
-                    if share_group is not None:
-                        self.shared_idx.append(share_group)
-                    share_group = [c_idx]
-                else:  # same group
-                    share_group.append(c_idx)
-            self.shared_idx.append(share_group)
-            _logger.info('=> Conv layers to share channels: %s', self.shared_idx)
-        '''
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)
 
         self.buffer_idx = []
@@ -447,7 +361,6 @@ class ChannelPruningEnv:
 
         _logger.info('=> Prunable layer idx: %s', self.prunable_idx)
         _logger.info('=> Buffer layer idx: %s', self.buffer_idx)
-        _logger.info('=> Shared idx: %s', self.shared_idx)
         _logger.info('=> Initial min strategy dict: %s', self.min_strategy_dict)
 
         # added for supporting residual connections during pruning
@@ -485,13 +398,6 @@ class ChannelPruningEnv:
         # now let the image flow
         _logger.info('=> Extracting information...')
         with torch.no_grad():
-            '''
-            for i_b, (inputs, target) in enumerate(self._val_loader):  # use image from train set
-                if i_b == self.n_calibration_batches:
-                    break
-                # self.data_saver.append((inputs.clone(), target.clone()))
-                input_var = torch.autograd.Variable(inputs).to(device)
-            '''
             for i_b in range(self.n_calibration_batches):
                 input_var = torch.autograd.Variable(self.dummy_input).to(device)
 

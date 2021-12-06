@@ -63,8 +63,9 @@ class Critic(nn.Module):
         return out
 
 
-class DDPG(object):
+class DDPG(nn.Module):
     def __init__(self, nb_states, nb_actions, args):
+        super(DDPG, self).__init__()
         self.ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
                             'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
         for key in args:
@@ -74,7 +75,7 @@ class DDPG(object):
         self.nb_states = nb_states
         self.nb_actions = nb_actions
 
-        # Create Actor and Critic Network
+        # Create Actor and Critic Networks
         net_cfg = {
             'hidden1': self.ddpg_params['hidden1'],
             'hidden2': self.ddpg_params['hidden2'],
@@ -166,18 +167,6 @@ class DDPG(object):
         # Target update
         self.soft_update(self.actor_target, self.actor)
         self.soft_update(self.critic_target, self.critic)
-
-    def eval(self):
-        self.actor.eval()
-        self.actor_target.eval()
-        self.critic.eval()
-        self.critic_target.eval()
-
-    def cuda(self):
-        self.actor.cuda()
-        self.actor_target.cuda()
-        self.critic.cuda()
-        self.critic_target.cuda()
 
     def observe(self, r_t, s_t, s_t1, a_t, done):
         if self.is_training:
