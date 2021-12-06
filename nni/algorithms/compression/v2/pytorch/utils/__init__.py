@@ -10,8 +10,6 @@ from .pruning import (
     get_module_by_name
 )
 from .constructor_helper import (
-    optimizer_construct_helper,
-    lr_scheduler_construct_helper,
     OptimizerConstructHelper,
     LRSchedulerConstructHelper
 )

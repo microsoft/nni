@@ -12,7 +12,7 @@ from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, optimizer_construct_helper
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
 
 from .tools.base import TrainerBasedDataCollector
 
@@ -190,7 +190,7 @@ class MovementPruner(BasicPruner):
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
         self.trainer = trainer
-        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self.warm_up_step = warm_up_step

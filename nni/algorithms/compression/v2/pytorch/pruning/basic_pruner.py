@@ -13,7 +13,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base.pruner import Pruner
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical, optimizer_construct_helper
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, config_list_canonical, OptimizerConstructHelper
 
 from .tools import (
     DataCollector,
@@ -392,7 +392,7 @@ class SlimPruner(BasicPruner):
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         self.mode = mode
         self.trainer = trainer
-        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self._scale = scale
@@ -494,7 +494,7 @@ class ActivationPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
@@ -619,7 +619,7 @@ class TaylorFOWeightPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         super().__init__(model, config_list)
@@ -720,7 +720,7 @@ class ADMMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
-        self.optimizer_helper = optimizer_construct_helper(model, optimizer)
+        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, optimizer)
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs

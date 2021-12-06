@@ -344,7 +344,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only, _self_contained=True):
+def _trace_cls(base, kw_only):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 

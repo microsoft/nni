@@ -9,11 +9,9 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
-from nni.common.serializer import _trace_cls, SerializableObject
+from nni.common.serializer import SerializableObject
 
-
-def trace_cls(base, kw_only: bool = True):
-    return _trace_cls(base, kw_only=kw_only, _self_contained=False)
+__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
 
 
 class ConstructHelper:
@@ -79,6 +77,17 @@ class OptimizerConstructHelper(ConstructHelper):
 
         return self.callable_obj(*args, **kwargs)
 
+    @staticmethod
+    def from_trace(model: Module, optimizer_trace: SerializableObject):
+        assert isinstance(optimizer_trace, SerializableObject), \
+            'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
+        assert isinstance(optimizer_trace, Optimizer), \
+            'It is not an instance of torch.nn.Optimizer.'
+        return OptimizerConstructHelper(model,
+                                        optimizer_trace._get_nni_attr('symbol'),
+                                        *optimizer_trace._get_nni_attr('args'),
+                                        **optimizer_trace._get_nni_attr('kwargs'))
+
 
 class LRSchedulerConstructHelper(ConstructHelper):
     def __init__(self, lr_scheduler_class: Callable, *args, **kwargs):
@@ -100,23 +109,12 @@ class LRSchedulerConstructHelper(ConstructHelper):
 
         return self.callable_obj(*args, **kwargs)
 
-
-def optimizer_construct_helper(model: Module, optimizer_trace: SerializableObject):
-    assert isinstance(optimizer_trace, SerializableObject), \
-        'Please use nni.trace to wrap the optimizer class before initialize the optimizer.'
-    assert isinstance(optimizer_trace, Optimizer), \
-        'It is not an instance of torch.nn.Optimizer.'
-    return OptimizerConstructHelper(model,
-                                    optimizer_trace._get_nni_attr('symbol'),
-                                    *optimizer_trace._get_nni_attr('args'),
-                                    **optimizer_trace._get_nni_attr('kwargs'))
-
-
-def lr_scheduler_construct_helper(lr_scheduler_trace: SerializableObject):
-    assert isinstance(lr_scheduler_trace, SerializableObject), \
-        'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
-    assert isinstance(lr_scheduler_trace, _LRScheduler), \
-        'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
-    return LRSchedulerConstructHelper(lr_scheduler_trace._get_nni_attr('symbol'),
-                                      *lr_scheduler_trace._get_nni_attr('args'),
-                                      **lr_scheduler_trace._get_nni_attr('kwargs'))
+    @staticmethod
+    def from_trace(lr_scheduler_trace: SerializableObject):
+        assert isinstance(lr_scheduler_trace, SerializableObject), \
+            'Please use nni.trace to wrap the lr scheduler class before initialize the scheduler.'
+        assert isinstance(lr_scheduler_trace, _LRScheduler), \
+            'It is not an instance of torch.nn.lr_scheduler._LRScheduler.'
+        return LRSchedulerConstructHelper(lr_scheduler_trace._get_nni_attr('symbol'),
+                                          *lr_scheduler_trace._get_nni_attr('args'),
+                                          **lr_scheduler_trace._get_nni_attr('kwargs'))
