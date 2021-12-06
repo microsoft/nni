@@ -18,7 +18,7 @@ import {
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
 } from 'common/utils';
-import { ExperimentConfig, LocalConfig, flattenConfig } from 'common/experimentConfig';
+import { LocalConfig } from 'common/experimentConfig';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -73,13 +73,11 @@ class LocalTrialJobDetail implements TrialJobDetail {
     }
 }
 
-interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { }
-
 /**
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
-    private readonly config: FlattenLocalConfig;
+    private readonly config: LocalConfig;
     private readonly eventEmitter: EventEmitter;
     private readonly jobMap: Map<string, LocalTrialJobDetail>;
     private readonly jobQueue: string[];
@@ -92,8 +90,8 @@ class LocalTrainingService implements TrainingService {
     private readonly log: Logger;
     private readonly jobStreamMap: Map<string, ts.Stream>;
 
-    constructor(config: ExperimentConfig) {
-        this.config = flattenConfig<FlattenLocalConfig>(config, 'local');
+    constructor(config: LocalConfig) {
+        this.config = config;
         this.eventEmitter = new EventEmitter();
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];

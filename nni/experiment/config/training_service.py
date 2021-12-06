@@ -29,6 +29,7 @@ class TrainingServiceConfig(ConfigBase):
     trial_code_directory: PathLike
     trial_gpu_number: Optional[int]
     nni_manager_ip: Optional[str]
+    debug: bool
 
     def _canonicalize(self, parents):
         """
@@ -40,6 +41,7 @@ class TrainingServiceConfig(ConfigBase):
             'trial_code_directory',
             'trial_gpu_number',
             'nni_manager_ip',
+            'debug',
         ]
         for field_name in shortcuts:
             if is_missing(getattr(self, field_name)):
