@@ -17,7 +17,7 @@ You may also want to check `Kubeflow training service doc`_.
 __all__ = ['KubeflowConfig', 'KubeflowRoleConfig']
 
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Union
 
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
@@ -29,7 +29,7 @@ class KubeflowRoleConfig(ConfigBase):
     command: str
     gpu_number: Optional[int] = 0
     cpu_number: int
-    memory_size: str
+    memory_size: Union[str, int]
     docker_image: str = 'msranni/nni:latest'
     code_directory: str
 

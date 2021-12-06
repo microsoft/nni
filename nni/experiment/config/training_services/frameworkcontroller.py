@@ -17,7 +17,7 @@ You may also want to check `FrameworkController training service doc`_.
 __all__ = ['FrameworkControllerConfig', 'FrameworkControllerRoleConfig', 'FrameworkAttemptCompletionPolicy']
 
 from dataclasses import dataclass
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from ..base import ConfigBase
 from ..training_service import TrainingServiceConfig
@@ -36,7 +36,7 @@ class FrameworkControllerRoleConfig(ConfigBase):
     command: str
     gpu_number: int
     cpu_number: int
-    memory_size: str
+    memory_size: Union[str, int]
     framework_attempt_completion_policy: FrameworkAttemptCompletionPolicy
 
 @dataclass(init=False)

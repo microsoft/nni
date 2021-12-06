@@ -18,7 +18,7 @@ __all__ = ['OpenpaiConfig']
 
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, Optional
+from typing import Dict, Optional, Union
 
 from ..training_service import TrainingServiceConfig
 from ..utils import PathLike
@@ -30,7 +30,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     username: str
     token: str
     trial_cpu_number: int
-    trial_memory_size: str
+    trial_memory_size: Union[str, int]
     storage_config_name: str
     docker_image: str = 'msranni/nni:latest'
     virtual_cluster: Optional[str]
