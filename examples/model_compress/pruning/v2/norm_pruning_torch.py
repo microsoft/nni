@@ -8,15 +8,18 @@ Note that pruners use masks to simulate the real pruning. In order to obtain a r
 
 '''
 import argparse
+import sys
 
 import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
 from nni.compression.pytorch import ModelSpeedup
-from examples.model_compress.models.cifar10.vgg import VGG
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import L1NormPruner, L2NormPruner
+
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
