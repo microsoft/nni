@@ -14,9 +14,9 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
-import nni
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPruner
+from nni.algorithms.compression.v2.pytorch.utils import trace
 
 sys.path.append('../../models')
 from cifar10.vgg import VGG
@@ -112,8 +112,8 @@ if __name__ == '__main__':
         'op_types': ['Conv2d'],
     }]
 
-    # make sure you have used nni.trace to wrap the optimizer class before initialize
-    traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
+    traced_optimizer = trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=2, training_epochs=2)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
