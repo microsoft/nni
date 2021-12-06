@@ -227,3 +227,17 @@ def write_registered_algo_meta(config):
     config_file = get_registered_algo_config_path()
     with open(config_file, 'w') as f:
         f.write(yaml.safe_dump(dict(config), default_flow_style=False))
+
+def update_algo_config(user_config_dir, default_config_dir):
+    user_config_file = user_config_dir / 'registered_algorithms.yml'
+    default_config_file = default_config_dir / 'registered_algorithms.yml'
+
+    old_config = yaml.safe_load(user_config_file.read_text())
+    config = yaml.safe_load(default_config_file.read_text())
+
+    for algo_type, algos in old_config.items():
+        for algo in algos:
+            if algo['source'] == 'user':
+                config[algo_type].append(algo)
+
+    user_config_file.write_text(yaml.dump(config))
