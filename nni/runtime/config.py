@@ -11,7 +11,8 @@ import nni
 
 # the version when default config got modified
 # don't need to update if default config does not change
-# sha1sum of last update:
+#
+# sha1sum when this is updated: (2021-12-06)
 #   cb6e0c36f61dfcba9adfc327b01becb3d86bbfb  registered_algorithms.yml
 latest_config_version = '2.6'
 
