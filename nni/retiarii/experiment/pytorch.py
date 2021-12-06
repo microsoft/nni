@@ -100,15 +100,12 @@ class RetiariiExeConfig(ConfigBase):
 
 
 _canonical_rules = {
-    'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
-    'experiment_working_directory': util.canonical_path
 }
 
 _validation_rules = {
     'trial_code_directory': lambda value: (Path(value).is_dir(), f'"{value}" does not exist or is not directory'),
     'trial_concurrency': lambda value: value > 0,
     'trial_gpu_number': lambda value: value >= 0,
-    'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')
