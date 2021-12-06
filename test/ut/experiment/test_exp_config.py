@@ -102,8 +102,6 @@ def test_all():
     assert minimal_class.json() == minimal_canon
 
     detailed = ExperimentConfig.load(expand_path('assets/config.yaml'))
-    print(detailed.json())
-    print(detailed_canon)
     assert detailed.json() == detailed_canon
 
 if __name__ == '__main__':
