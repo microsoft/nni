@@ -251,3 +251,20 @@ def _deprecate(v1, v2, key):
         if v2._deprecated is None:
             v2._deprecated = {}
         v2._deprecated[key] = v1.pop(key)
+
+def convert_algo(algo_type, v1_algo):
+    builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
+    if builtin_name is not None:
+        v2_algo = {'name': builtin_name}
+
+    else:
+        code_directory = v1_algo.pop('codeDir')
+        class_file_name = v1_algo.pop('classFileName')
+        assert class_file_name.endswith('.py')
+        class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
+        v2_algo = {'className': class_name, 'codeDirectory': code_directory}
+
+    if 'classArgs' in v1_algo:
+        v2_algo['classArgs'] = v1_algo.pop('classArgs')
+
+    return v2_algo
