@@ -4,11 +4,11 @@ Hardware-aware NAS
 .. contents::
 
 End-to-end Multi-trial SPOS Demo
-------------------------------
+--------------------------------
 
 To empower affordable DNN on the edge and mobile devices, hardware-aware NAS searches both high accuracy and low latency models. In particular, the search algorithm only considers the models within the target latency constraints during the search process.
 
-To run this demo, first install nn-Meter from by running:
+To run this demo, first install nn-Meter by running:
 
 .. code-block:: bash
 
@@ -49,7 +49,7 @@ In ``exp_config``, ``dummy_input`` is required for tracing shape info.
 
 
 End-to-end ProxylessNAS with latency constraints
------------------------------------
+------------------------------------------------
 
 `ProxylessNAS <https://arxiv.org/pdf/1812.00332.pdf>`__ is a hardware-aware one-shot NAS algorithm. ProxylessNAS applies the expected latency of the model to build a differentiable metric and design efficient neural network architectures for hardware. The latency loss is added as a regularization term for architecture parameter optimization. In this example, nn-Meter provides a latency estimator to predict expected latency for the mixed operation on other types of mobile and edge hardware. 
 
