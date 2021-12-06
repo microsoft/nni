@@ -22,7 +22,7 @@ Then run multi-trail SPOS demo:
 
 
 How the demo works
-------------------
+^^^^^^^^^^^^^^^^^^
 
 To support hardware-aware NAS, you first need a ``Strategy`` that supports filtering the models by latency. We provide such a filter named ``LatencyFilter`` in NNI and initialize a ``Random`` strategy with the filter:
 
@@ -66,7 +66,7 @@ python ${NNI_ROOT}/examples/nas/oneshot/proxylessnas/main.py --applied_hardware 
 ```
 
 How the demo works
-------------------
+^^^^^^^^^^^^^^^^^^
 
 In the implementation of ProxylessNAS ``trainer``, we provide a ``HardwareLatencyEstimator`` which currently builds a lookup table, that stores the measured latency of each candidate building block in the search space. The latency sum of all building blocks in a candidate model will be treated as the model inference latency. The latency prediction is obtained by ``nn-Meter``. ``HardwareLatencyEstimator`` predicts expected latency for the mixed operation based on the path weight of `ProxylessLayerChoice`. With leveraging ``nn-Meter`` in NNI, users can apply ProxylessNAS to search efficient DNN models on more types of edge devices. 
 
