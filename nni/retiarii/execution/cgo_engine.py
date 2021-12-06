@@ -156,7 +156,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
+            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator, {})
             placement_constraint = self._extract_placement_constaint(placement)
             trial_id = send_trial(data.dump(), placement_constraint=placement_constraint)
             # unique non-cpu devices used by the trial
