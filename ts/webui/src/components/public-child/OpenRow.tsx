@@ -2,7 +2,7 @@ import * as React from 'react';
 import * as copy from 'copy-to-clipboard';
 import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui/react';
 import { Trial } from '../../static/model/trial';
-import { MANAGER_IP } from '../../static/const';
+import { MANAGER_IP, RETIARIIPARAMETERS } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
 import { filterParameter } from '../../static/function';
 import JSONTree from 'react-json-tree';
@@ -84,7 +84,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
         const trial = TRIALS.getTrial(trialId);
         const logPathRow = trial.info.logPath || "This trial's log path is not available.";
         const originParameters = trial.description.parameters;
-        const hasVisualHyperParams = '_visual_hyper_params_' in originParameters;
+        const hasVisualHyperParams = RETIARIIPARAMETERS in originParameters;
         return (
             <Stack className='openRow'>
                 <Stack className='openRowContent'>

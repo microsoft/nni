@@ -1,7 +1,7 @@
 import * as JSON5 from 'json5';
 import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
-import { MANAGER_IP } from './const';
+import { MANAGER_IP, RETIARIIPARAMETERS } from './const';
 import { EXPERIMENT } from './datamodel';
 import { MetricDataRecord, FinalType, TableObj, Tensorboard, RetiariiParameter } from './interface';
 
@@ -375,9 +375,9 @@ const parametersType = (): Map<string, string> => {
     return parametersTypeMap;
 };
 
-// retiarii experiment parameters is in field `_visual_hyper_params_`
+// retiarii experiment parameters is in field `mutation_summary`
 const filterParameter = (parameters: RetiariiParameter): {} => {
-    return '_visual_hyper_params_' in parameters ? parameters._visual_hyper_params_ : parameters;
+    return RETIARIIPARAMETERS in parameters ? parameters[RETIARIIPARAMETERS] : parameters;
 };
 
 export {
