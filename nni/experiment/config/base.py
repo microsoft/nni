@@ -228,6 +228,15 @@ class ConfigBase:
             value = getattr(self, field.name)
             _recursive_validate_child(value)
 
+    def __setattr__(self, name, value):
+        if hasattr(self, name) or name.startswith('_'):
+            super().__setattr__(name, value)
+            return
+        if name in [field.name for field in dataclasses.fields(self)]:  # might happend during __init__
+            super().__setattr__(name, value)
+            return
+        raise AttributeError(f'{type(self).__name__} does not have field {name}')
+
 def _dict_factory(items):
     ret = {}
     for key, value in items:

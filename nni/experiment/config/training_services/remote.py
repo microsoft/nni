@@ -68,3 +68,5 @@ class RemoteConfig(TrainingServiceConfig):
         super()._validate_canonical()
         if not self.machine_list:
             raise ValueError(f'RemoteConfig: must provide at least one machine in machine_list')
+        if not self.trial_gpu_number and any(machine.max_trial_number_per_gpu != 1 for machine in self.machine_list):
+            raise ValueError('RemoteConfig: max_trial_number_per_gpu does not work without trial_gpu_number')
