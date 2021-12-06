@@ -9,7 +9,7 @@ from colorama import Fore
 import yaml
 
 from nni.experiment import Experiment, RunMode
-from nni.experiment.config import ExperimentConfig, convert
+from nni.experiment.config import ExperimentConfig, convert, utils
 from nni.tools.annotation import expand_annotations, generate_search_space
 
 def create_experiment(args):
@@ -45,7 +45,9 @@ def create_experiment(args):
         print(yaml.dump(v2_config).strip())
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
         print(Fore.YELLOW + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
+        utils.set_base_path(config_file.parent)
         config = ExperimentConfig(**v2_config)
+        utils.unset_base_path()
     else:
         config = ExperimentConfig.load(config_file)
 

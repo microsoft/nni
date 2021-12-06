@@ -23,7 +23,7 @@ class K8sStorageConfig(ConfigBase):
     path: Optional[str] = None
 
     def _validate_canonical(self):
-        super._validate_canonical()
+        super()._validate_canonical()
         if self.storage_type == 'azureStorage':
             assert self.server is None and self.path is None
         elif self.storage_type == 'nfs':

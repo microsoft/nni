@@ -42,7 +42,7 @@ class OpenpaiConfig(TrainingServiceConfig):
     openpai_config_file: Optional[PathLike] = None
 
     def _canonicalize(self, parents):
-        super._canonicalize(parents)
+        super()._canonicalize(parents)
         if '://' not in self.host:
             self.host = 'https://' + self.host
 

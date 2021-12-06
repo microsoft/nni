@@ -1,4 +1,5 @@
 import os.path
+from pathlib import Path
 
 from nni.experiment.config import ExperimentConfig
 
