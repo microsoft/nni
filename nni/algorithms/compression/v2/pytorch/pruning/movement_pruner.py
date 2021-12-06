@@ -113,22 +113,6 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
     Collect all weight_score in wrappers as data used to calculate metrics.
     """
-    def _reset_optimizer(self):
-        """
-        Weed out the weight_score from the parameters passed to optimizer, guaranteed to load the optimizer state dict.
-        """
-        if self._origin_optimizer_cls is not None:
-            optimizer_grouped_parameters = [{
-                "params": [p for n, p in self.compressor.bound_model.named_parameters() if "weight_score" not in n and p.requires_grad]
-            }]
-            if self._origin_optimizer_cls.__name__ == 'SGD':
-                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters, lr=0.001)
-            else:
-                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters)
-            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
-        else:
-            self.optimizer = None
-
     def collect(self) -> Dict[str, Tensor]:
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
