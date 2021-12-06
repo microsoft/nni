@@ -9,10 +9,16 @@ from torch.nn import Module
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import _LRScheduler
 
+from nni.common.serializer import _trace_cls
 from nni.common.serializer import SerializableObject
 
-__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper']
+__all__ = ['OptimizerConstructHelper', 'LRSchedulerConstructHelper', 'trace']
 
+
+def trace(base, kw_only=True):
+    if not isinstance(base, type):
+        raise Exception('Only class can be traced by this function.')
+    return _trace_cls(base, kw_only, call_super=False)
 
 class ConstructHelper:
     def __init__(self, callable_obj: Callable, *args, **kwargs):

@@ -344,7 +344,7 @@ def load(string: Optional[str] = None, *, fp: Optional[Any] = None, ignore_comme
         return json_tricks.load(fp, obj_pairs_hooks=hooks, **json_tricks_kwargs)
 
 
-def _trace_cls(base, kw_only):
+def _trace_cls(base, kw_only, call_super=True):
     # the implementation to trace a class is to store a copy of init arguments
     # this won't support class that defines a customized new but should work for most cases
 
@@ -354,7 +354,7 @@ def _trace_cls(base, kw_only):
             args, kwargs = _formulate_arguments(base.__init__, args, kwargs, kw_only, is_class_init=True)
 
             # calling serializable object init to initialize the full object
-            super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=True)
+            super().__init__(symbol=base, args=args, kwargs=kwargs, call_super=call_super)
 
     _copy_class_wrapper_attributes(base, wrapper)
 
