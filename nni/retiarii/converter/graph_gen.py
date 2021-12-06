@@ -637,7 +637,7 @@ class GraphConverter:
                 original_type_name not in MODULE_EXCEPT_LIST:
             # this is a basic module from pytorch, no need to parse its graph
             m_attrs = get_init_parameters_or_fail(module)
-        elif getattr(module, '_stop_parsing', False):
+        elif getattr(module, '_nni_basic_unit', False):
             # this module is marked as serialize, won't continue to parse
             m_attrs = get_init_parameters_or_fail(module)
         if m_attrs is not None:

@@ -414,7 +414,7 @@ class SlimPruner(BasicPruner):
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
             for _, wrapper in self.get_modules_wrapper().items():
-                sum_l1 += torch.norm(wrapper.module.weight.data, p=1)
+                sum_l1 += torch.norm(wrapper.module.weight, p=1)
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 

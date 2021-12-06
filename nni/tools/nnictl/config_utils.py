@@ -3,7 +3,7 @@
 
 import os
 import sqlite3
-import json_tricks
+import nni
 from .constants import NNI_HOME_DIR
 from .common_utils import get_file_lock
 
@@ -95,7 +95,7 @@ class Config:
         '''refresh to get latest config'''
         sql = 'select params from ExperimentProfile where id=? order by revision DESC'
         args = (self.experiment_id,)
-        self.config = config_v0_to_v1(json_tricks.loads(self.conn.cursor().execute(sql, args).fetchone()[0]))
+        self.config = config_v0_to_v1(nni.load(self.conn.cursor().execute(sql, args).fetchone()[0]))
 
     def get_config(self):
         '''get a value according to key'''
@@ -159,7 +159,7 @@ class Experiments:
         '''save config to local file'''
         try:
             with open(self.experiment_file, 'w') as file:
-                json_tricks.dump(self.experiments, file, indent=4)
+                nni.dump(self.experiments, file, indent=4)
         except IOError as error:
             print('Error:', error)
             return ''
@@ -169,7 +169,7 @@ class Experiments:
         if os.path.exists(self.experiment_file):
             try:
                 with open(self.experiment_file, 'r') as file:
-                    return json_tricks.load(file)
+                    return nni.load(fp=file)
             except ValueError:
                 return {}
         return {}
