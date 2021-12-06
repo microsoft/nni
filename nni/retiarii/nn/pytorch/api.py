@@ -8,8 +8,9 @@ from typing import Any, List, Union, Dict, Optional
 import torch
 import torch.nn as nn
 
-from ...serializer import Translatable, basic_unit
-from ...utils import NoContextError
+from nni.common.serializer import Translatable
+from nni.retiarii.serializer import basic_unit
+from nni.retiarii.utils import NoContextError
 from .utils import generate_new_label, get_fixed_value
 
 
