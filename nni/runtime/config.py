@@ -9,9 +9,8 @@ import sys
 
 import nni
 
-# The version when default config got modified. Don't need to update if default config does not change.
-# Default config's sha1sum on last upate:  (2021-11-25)
-#   cb6e0c36f61dfcba9adfc327b01becb3d86bbfb  registered_algorithms.yml
+# the version when default config got modified
+# don't need to update if default config does not change
 latest_config_version = '2.6'
 
 def get_config_directory() -> Path:
