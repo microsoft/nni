@@ -158,7 +158,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
    pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1)
@@ -195,7 +195,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
@@ -228,7 +228,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
@@ -265,7 +265,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
@@ -303,7 +303,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
@@ -344,7 +344,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
    pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
@@ -529,7 +529,7 @@ Usage
    from nni.algorithms.compression.v2.pytorch.utils import trace
 
    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-   traced_optimizer = trace(torch.optim.SGD)(model.parameters())
+   traced_optimizer = trace(torch.optim.Adam)(model.parameters())
 
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    admm_params = {
