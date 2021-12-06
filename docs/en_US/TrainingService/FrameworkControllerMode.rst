@@ -41,7 +41,8 @@ to the official Kubernetes documentation for `further information <https://kuber
 Setup FrameworkController
 -------------------------
 
-Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run>`__ to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. `refer <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset>`__
+Follow the `guideline <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run>`__ to set up FrameworkController in the Kubernetes cluster, NNI supports FrameworkController by the stateful set mode. If your cluster enforces authorization, you need to create a service account with granted permission for FrameworkController, and then pass the name of the FrameworkController service account to the NNI Experiment Config. `refer <https://github.com/Microsoft/frameworkcontroller/tree/master/example/run#run-by-kubernetes-statefulset>`__.  
+If the k8s cluster enforces Authorization, you also need to create a ServiceAccount with granted permission for FrameworkController, `refer <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__.  
 
 Design
 ------
@@ -108,6 +109,14 @@ If you use Azure Kubernetes Service, you should  set ``frameworkcontrollerConfig
        accountName: {your_storage_account_name}
        azureShare: {your_azure_share_name}
 
+If you set `ServiceAccount <https://github.com/microsoft/frameworkcontroller/tree/master/example/run#prerequisite>`__ in your k8s, please set ``serviceAccountName`` in your config file: 
+For example:
+
+.. code-block:: yaml
+
+   frameworkcontrollerConfig:
+     serviceAccountName: frameworkcontroller
+
 Note: You should explicitly set ``trainingServicePlatform: frameworkcontroller`` in NNI config YAML file if you want to start experiment in frameworkcontrollerConfig mode.
 
 The trial's config format for NNI frameworkcontroller mode is a simple version of FrameworkController's official config, you could refer the `Tensorflow example of FrameworkController <https://github.com/microsoft/frameworkcontroller/blob/master/example/framework/scenario/tensorflow/ps/cpu/tensorflowdistributedtrainingwithcpu.yaml>`__ for deep understanding.
@@ -166,3 +175,42 @@ version check
 -------------
 
 NNI support version check feature in since version 0.6, `refer <PaiMode.rst>`__
+
+
+FrameworkController reuse mode
+------------------------------
+NNI support setting reuse mode for trial jobs. In reuse mode, NNI will submit a long-running trial runner process to occupy the container, and start trial jobs as the subprocess of the trial runner process, it means k8s do not need to schedule new container again, it just reuse old container.
+Currently, frameworkcontroller reuse mode only support V2 config.
+Here is the example:
+
+.. code-block:: yaml
+
+   searchSpaceFile: search_space.json
+   trialCommand: python3 mnist.py
+   trialGpuNumber: 0
+   trialConcurrency: 4
+   maxTrialNumber: 20
+   tuner:
+     name: TPE
+     classArgs:
+       optimize_mode: maximize
+   trainingService:
+     reuseMode: true
+     platform: frameworkcontroller
+     taskRoles:
+       - name:
+         dockerImage: 'msranni/nni:latest'
+         taskNumber: 1
+         command:
+         gpuNumber:
+         cpuNumber:
+         memorySize:
+         frameworkAttemptCompletionPolicy:
+           minFailedTaskCount: 1
+           minSucceedTaskCount: 1
+     storage:
+       storageType: azureStorage
+       azureAccount: {your_account}
+       azureShare: {your_share}
+       keyVaultName: {your_valut_name}
+       keyVaultKey: {your_valut_key}

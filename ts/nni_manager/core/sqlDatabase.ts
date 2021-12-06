@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as sqlite3 from 'sqlite3';
+import assert from 'assert';
+import fs from 'fs';
+import path from 'path';
+import sqlite3 from 'sqlite3';
 import { Deferred } from 'ts-deferred';
 
 import {
@@ -202,7 +200,7 @@ class SqlDB implements Database {
         return deferred.promise;
     }
 
-    public storeMetricData(trialJobId: string, data: string): Promise<void> {
+    public storeMetricData(_trialJobId: string, data: string): Promise<void> {
         const sql: string = 'insert into MetricData values (?,?,?,?,?,?)';
         const json: MetricDataRecord = JSON.parse(data);
         const args: any[] = [Date.now(), json.trialJobId, json.parameterId, json.type, json.sequence, JSON.stringify(json.data)];

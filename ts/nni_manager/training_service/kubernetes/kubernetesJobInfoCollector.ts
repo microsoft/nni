@@ -1,12 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import { MethodNotImplementedError, NNIError, NNIErrorNames } from '../../common/errors';
-import { getLogger, Logger } from '../../common/log';
-import { TrialJobStatus } from '../../common/trainingService';
+import assert from 'assert';
+import { MethodNotImplementedError, NNIError, NNIErrorNames } from 'common/errors';
+import { getLogger, Logger } from 'common/log';
+import { TrialJobStatus } from 'common/trainingService';
 import { KubernetesCRDClient } from './kubernetesApiClient';
 import { KubernetesTrialJobDetail } from './kubernetesData';
 

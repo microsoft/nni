@@ -24,11 +24,14 @@ class NormalSparsityAllocator(SparsityAllocator):
             sparsity_rate = wrapper.config['total_sparsity']
 
             assert name in metrics, 'Metric of %s is not calculated.'
-            metric = metrics[name] * self._compress_mask(wrapper.weight_mask)
+            metric = metrics[name]
+            if self.continuous_mask:
+                metric *= self._compress_mask(wrapper.weight_mask)
             prune_num = int(sparsity_rate * metric.numel())
             if prune_num == 0:
-                continue
-            threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
+                threshold = metric.min() - 1
+            else:
+                threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
             mask = torch.gt(metric, threshold).type_as(metric)
             masks[name] = self._expand_mask(name, mask)
         return masks
@@ -63,21 +66,25 @@ class GlobalSparsityAllocator(SparsityAllocator):
 
         for name, metric in group_metric_dict.items():
             wrapper = self.pruner.get_modules_wrapper()[name]
-            metric = metric * self._compress_mask(wrapper.weight_mask)
+            if self.continuous_mask:
+                metric = metric * self._compress_mask(wrapper.weight_mask)
             layer_weight_num = wrapper.module.weight.data.numel()
+            total_weight_num += layer_weight_num
+            expend_times = int(layer_weight_num / metric.numel())
 
             retention_ratio = 1 - max_sparsity_per_layer.get(name, 1)
             retention_numel = math.ceil(retention_ratio * layer_weight_num)
             removed_metric_num = math.ceil(retention_numel / (wrapper.weight_mask.numel() / metric.numel()))
             stay_metric_num = metric.numel() - removed_metric_num
+            if stay_metric_num <= 0:
+                sub_thresholds[name] = metric.min().item() - 1
+                continue
             # Remove the weight parts that must be left
             stay_metric = torch.topk(metric.view(-1), stay_metric_num, largest=False)[0]
             sub_thresholds[name] = stay_metric.max()
-            expend_times = int(layer_weight_num / metric.numel())
             if expend_times > 1:
-                stay_metric = stay_metric.expand(stay_metric_num, int(layer_weight_num / metric.numel())).view(-1)
+                stay_metric = stay_metric.expand(int(layer_weight_num / metric.numel()), stay_metric_num).contiguous().view(-1)
             metric_list.append(stay_metric)
-            total_weight_num += layer_weight_num
 
         total_prune_num = int(total_sparsity * total_weight_num)
         if total_prune_num == 0:
@@ -99,15 +106,20 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
 
     def _get_dependency(self):
         graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
-        self.channel_depen = ChannelDependency(traced_model=graph.trace).dependency_sets
-        self.group_depen = GroupDependency(traced_model=graph.trace).dependency_sets
+        self.pruner._unwrap_model()
+        self.channel_depen = ChannelDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.group_depen = GroupDependency(model=self.pruner.bound_model, dummy_input=self.dummy_input, traced_model=graph.trace).dependency_sets
+        self.pruner._wrap_model()
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         self._get_dependency()
         masks = {}
         grouped_metrics = {}
         for idx, names in enumerate(self.channel_depen):
-            grouped_metric = {name: metrics[name] * self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask) for name in names if name in metrics}
+            grouped_metric = {name: metrics[name] for name in names if name in metrics}
+            if self.continuous_mask:
+                for name, metric in grouped_metric.items():
+                    metric *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
             if len(grouped_metric) > 0:
                 grouped_metrics[idx] = grouped_metric
         for _, group_metric_dict in grouped_metrics.items():

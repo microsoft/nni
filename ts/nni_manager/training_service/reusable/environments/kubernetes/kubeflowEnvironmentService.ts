@@ -1,18 +1,16 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../../common/component';
-import { ExperimentConfig, KubeflowConfig, flattenConfig } from '../../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo';
-import { EnvironmentInformation } from '../../environment';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { ExperimentConfig, KubeflowConfig, flattenConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { EnvironmentInformation } from 'training_service/reusable/environment';
 import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
-import { KubeflowOperatorClientFactory } from '../../../kubernetes/kubeflow/kubeflowApiClient';
-import { KubeflowClusterConfigAzure } from '../../../kubernetes/kubeflow/kubeflowConfig';
-import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
+import { KubeflowOperatorClientFactory } from 'training_service/kubernetes/kubeflow/kubeflowApiClient';
+import { KubeflowClusterConfigAzure } from 'training_service/kubernetes/kubeflow/kubeflowConfig';
+import { KeyVaultConfig, AzureStorage } from 'training_service/kubernetes/kubernetesConfig';
 
 interface FlattenKubeflowConfig extends ExperimentConfig, KubeflowConfig { }
 
@@ -83,13 +81,13 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         }
         const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
         environment.command = `cd ${expFolder} && ${environment.command} \
-        1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
+1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
         if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
             environment.useActiveGpu = this.config.deprecated.useActiveGpu;
         }
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
-        const kubeflowJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
+        const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), environment.command, { encoding: 'utf8' });
 
@@ -144,19 +142,6 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         const kubeflowJobConfig: any = await this.generateKubeflowJobConfig(envId, kubeflowJobName, workerPodResources, nonWorkerResources);
 
         return Promise.resolve(kubeflowJobConfig);
-    }
-
-    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
-        const resources: any = {
-            memory: `${memory}Mi`,
-            cpu: `${cpuNum}`
-        };
-
-        if (gpuNum !== 0) {
-            resources['nvidia.com/gpu'] = `${gpuNum}`;
-        }
-
-        return resources;
     }
 
     /**

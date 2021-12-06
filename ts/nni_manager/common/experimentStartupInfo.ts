@@ -1,11 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as os from 'os';
-import * as path from 'path';
+import assert from 'assert';
+import os from 'os';
+import path from 'path';
 
 const API_ROOT_URL: string = '/api/v1/nni';
 

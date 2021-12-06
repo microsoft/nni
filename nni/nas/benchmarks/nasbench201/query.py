@@ -2,7 +2,9 @@ import functools
 
 from peewee import fn
 from playhouse.shortcuts import model_to_dict
-from .model import Nb201TrialStats, Nb201TrialConfig
+
+from nni.nas.benchmarks.utils import load_benchmark
+from .model import Nb201TrialStats, Nb201TrialConfig, proxy
 
 
 def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None, include_intermediates=False):
@@ -32,6 +34,10 @@ def query_nb201_trial_stats(arch, num_epochs, dataset, reduction=None, include_i
         A generator of :class:`nni.nas.benchmark.nasbench201.Nb201TrialStats` objects,
         where each of them has been converted into a dict.
     """
+
+    if proxy.obj is None:
+        proxy.initialize(load_benchmark('nasbench201'))
+
     fields = []
     if reduction == 'none':
         reduction = None

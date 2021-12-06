@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as component from '../../../common/component';
+import * as component from 'common/component';
 import { KubernetesJobRestServer } from '../kubernetesJobRestServer';
 import { AdlTrainingService } from './adlTrainingService';
 
