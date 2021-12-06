@@ -33,7 +33,7 @@ minimal_canon = {
     'useAnnotation': False,
     'debug': False,
     'logLevel': 'info',
-    'experimentWorkingDirectory': os.path.expanduser('~/nni-experiments'),
+    'experimentWorkingDirectory': str(Path.home() / 'nni-experiments'),
     'tuner': {'name': 'random'},
     'trainingService': {
         'platform': 'local',
@@ -62,7 +62,7 @@ detailed_canon = {
     'useAnnotation': False,
     'debug': True,
     'logLevel': 'warning',
-    'experimentWorkingDirectory': os.path.expanduser('~/nni-experiments'),
+    'experimentWorkingDirectory': str(Path.home() / 'nni-experiments'),
     'tunerGpuIndices': [0],
     'assessor': {
         'name': 'assess',

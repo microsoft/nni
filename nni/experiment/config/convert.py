@@ -245,12 +245,8 @@ def _drop_field(v1, key):
         _logger.warning(f'Configuration field {key} is no longer supported and has been ignored')
         v1.pop(key)
 
-# NOTE: fields not yet supported by v2 are also (temporarily) placed here
 def _deprecate(v1, v2, key):
-    if key in v1:
-        if v2._deprecated is None:
-            v2._deprecated = {}
-        v2._deprecated[key] = v1.pop(key)
+    _drop_field(v1, key)
 
 def convert_algo(algo_type, v1_algo):
     builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
