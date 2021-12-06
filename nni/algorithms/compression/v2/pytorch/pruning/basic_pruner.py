@@ -393,7 +393,10 @@ class SlimPruner(BasicPruner):
                  training_epochs: int, scale: float = 0.0001, mode='global'):
         self.mode = mode
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        if isinstance(traced_optimizer, OptimizerConstructHelper):
+            self.optimizer_helper = traced_optimizer
+        else:
+            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self._scale = scale
@@ -495,7 +498,10 @@ class ActivationPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        if isinstance(traced_optimizer, OptimizerConstructHelper):
+            self.optimizer_helper = traced_optimizer
+        else:
+            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         self._activation = self._choose_activation(activation)
@@ -620,7 +626,10 @@ class TaylorFOWeightPruner(BasicPruner):
         self.mode = mode
         self.dummy_input = dummy_input
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        if isinstance(traced_optimizer, OptimizerConstructHelper):
+            self.optimizer_helper = traced_optimizer
+        else:
+            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_batches = training_batches
         super().__init__(model, config_list)
@@ -721,7 +730,10 @@ class ADMMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
-        self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
+        if isinstance(traced_optimizer, OptimizerConstructHelper):
+            self.optimizer_helper = traced_optimizer
+        else:
+            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs

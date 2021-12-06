@@ -25,6 +25,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
 from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name, trace
+from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
 class TorchModel(torch.nn.Module):
@@ -88,7 +89,8 @@ class PruningToolsTestCase(unittest.TestCase):
             model.conv1.module.weight.data = torch.ones(5, 1, 5, 5)
             model.conv2.module.weight.data = torch.ones(10, 5, 5, 5)
 
-        data_collector = WeightTrainerBasedDataCollector(pruner, trainer, get_optimizer(model), criterion, 1, opt_after_tasks=[opt_after])
+        optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))
+        data_collector = WeightTrainerBasedDataCollector(pruner, trainer, optimizer_helper, criterion, 1, opt_after_tasks=[opt_after])
         data = data_collector.collect()
         assert all(torch.equal(get_module_by_name(model, module_name)[1].module.weight.data, data[module_name]) for module_name in ['conv1', 'conv2'])
         assert all(t.numel() == (t == 1).type_as(t).sum().item() for t in data.values())
@@ -102,7 +104,8 @@ class PruningToolsTestCase(unittest.TestCase):
         hook_targets = {'conv1': model.conv1.module.weight, 'conv2': model.conv2.module.weight}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', _collector)
 
-        data_collector = SingleHookTrainerBasedDataCollector(pruner, trainer, get_optimizer(model), criterion, 2, collector_infos=[collector_info])
+        optimizer_helper = OptimizerConstructHelper.from_trace(model, get_optimizer(model))
+        data_collector = SingleHookTrainerBasedDataCollector(pruner, trainer, optimizer_helper, criterion, 2, collector_infos=[collector_info])
         data = data_collector.collect()
         assert all(len(t) == 2 for t in data.values())
 
