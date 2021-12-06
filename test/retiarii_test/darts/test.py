@@ -32,7 +32,7 @@ if __name__ == '__main__':
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=1, limit_train_batches=0.2,
-                                progress_bar_refresh_rate=0)
+                                enable_progress_bar=False)
 
     simple_strategy = strategy.Random()
 

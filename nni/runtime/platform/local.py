@@ -3,11 +3,10 @@
 
 import os
 import sys
-import json
 import time
 import subprocess
 
-from nni.utils import to_json
+from nni.common import dump, load
 from ..env_vars import trial_env_vars
 
 _sysdir = trial_env_vars.NNI_SYS_DIR
@@ -27,7 +26,7 @@ _multiphase = trial_env_vars.MULTI_PHASE
 _param_index = 0
 
 def request_next_parameter():
-    metric = to_json({
+    metric = dump({
         'trial_job_id': trial_env_vars.NNI_TRIAL_JOB_ID,
         'type': 'REQUEST_PARAMETER',
         'sequence': 0,
@@ -54,7 +53,7 @@ def get_next_parameter():
     while not (os.path.isfile(params_filepath) and os.path.getsize(params_filepath) > 0):
         time.sleep(3)
     params_file = open(params_filepath, 'r')
-    params = json.load(params_file)
+    params = load(fp=params_file)
     _param_index += 1
     return params
 

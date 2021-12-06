@@ -133,7 +133,8 @@ class TrainerBasedDataCollector(DataCollector):
         super().__init__(compressor)
         self.trainer = trainer
         self.training_epochs = training_epochs
-        self._origin_optimizer = optimizer
+        self._origin_optimizer_cls = optimizer.__class__ if optimizer is not None else None
+        self._origin_optimizer_state_dict = optimizer.state_dict() if optimizer is not None else None
         self._origin_criterion = criterion
         self._opt_before_tasks = opt_before_tasks
         self._opt_after_tasks = opt_after_tasks
@@ -146,22 +147,12 @@ class TrainerBasedDataCollector(DataCollector):
 
     def reset(self):
         # refresh optimizer and criterion
-        self.compressor._unwrap_model()
-        if self._origin_optimizer is not None:
-            optimizer_cls = self._origin_optimizer.__class__
-            if optimizer_cls.__name__ == 'SGD':
-                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
-            else:
-                self.optimizer = optimizer_cls(self.compressor.bound_model.parameters())
-            self.optimizer.load_state_dict(self._origin_optimizer.state_dict())
-        else:
-            self.optimizer = None
+        self._reset_optimizer()
 
         if self._criterion_patch is not None:
             self.criterion = self._criterion_patch(self._origin_criterion)
         else:
             self.criterion = self._origin_criterion
-        self.compressor._wrap_model()
 
         # patch optimizer
         self._patch_optimizer()
@@ -172,6 +163,18 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_handles = {}
         self._hook_buffer = {}
         self._add_all_hook()
+
+    def _reset_optimizer(self):
+        self.compressor._unwrap_model()
+        if self._origin_optimizer_cls is not None:
+            if self._origin_optimizer_cls.__name__ == 'SGD':
+                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
+            else:
+                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters())
+            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
+        else:
+            self.optimizer = None
+        self.compressor._wrap_model()
 
     def _patch_optimizer(self):
         def patch_step(old_step):
@@ -315,7 +318,7 @@ class SparsityAllocator:
     """
 
     def __init__(self, pruner: Compressor, dim: Optional[Union[int, List[int]]] = None,
-                 block_sparse_size: Optional[Union[int, List[int]]] = None):
+                 block_sparse_size: Optional[Union[int, List[int]]] = None, continuous_mask: bool = True):
         """
         Parameters
         ----------
@@ -339,6 +342,8 @@ class SparsityAllocator:
             Example:
 
             The metric size is (12,), and block_sparse_size=[64], then the mask will expand to (768,) at first before expand with `dim`.
+        continuous_mask
+            Inherit the mask already in the wrapper if set True.
         """
         self.pruner = pruner
         self.dim = dim if not isinstance(dim, int) else [dim]
@@ -350,6 +355,7 @@ class SparsityAllocator:
         if self.dim is not None:
             assert all(i >= 0 for i in self.dim)
             self.dim, self.block_sparse_size = (list(t) for t in zip(*sorted(zip(self.dim, self.block_sparse_size))))
+        self.continuous_mask = continuous_mask
 
     def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
         """
@@ -450,29 +456,35 @@ class SparsityAllocator:
 class TaskGenerator:
     """
     This class used to generate config list for pruner in each iteration.
-    """
-    def __init__(self, origin_model: Module, origin_masks: Dict[str, Dict[str, Tensor]] = {},
-                 origin_config_list: List[Dict] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
-        """
-        Parameters
-        ----------
-        origin_model
-            The origin unwrapped pytorch model to be pruned.
-        origin_masks
-            The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
-        origin_config_list
-            The origin config list provided by the user. Note that this config_list is directly config the origin model.
-            This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
-        log_dir
-            The log directory use to saving the task generator log.
-        keep_intermediate_result
-            If keeping the intermediate result, including intermediate model and masks during each iteration.
-        """
-        assert isinstance(origin_model, Module), 'Only support pytorch module.'
 
-        self._log_dir_root = Path(log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
-        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+    Parameters
+    ----------
+    origin_model
+        The origin unwrapped pytorch model to be pruned.
+    origin_masks
+        The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
+    origin_config_list
+        The origin config list provided by the user. Note that this config_list is directly config the origin model.
+        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+    log_dir
+        The log directory use to saving the task generator log.
+    keep_intermediate_result
+        If keeping the intermediate result, including intermediate model and masks during each iteration.
+    """
+    def __init__(self, origin_model: Optional[Module], origin_masks: Optional[Dict[str, Dict[str, Tensor]]] = {},
+                 origin_config_list: Optional[List[Dict]] = [], log_dir: str = '.', keep_intermediate_result: bool = False):
+        self._log_dir = log_dir
         self._keep_intermediate_result = keep_intermediate_result
+
+        if origin_model is not None and origin_config_list is not None and origin_masks is not None:
+            self.reset(origin_model, origin_config_list, origin_masks)
+
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        assert isinstance(model, Module), 'Only support pytorch module.'
+
+        self._log_dir_root = Path(self._log_dir, datetime.now().strftime('%Y-%m-%d-%H-%M-%S-%f')).absolute()
+        self._log_dir_root.mkdir(parents=True, exist_ok=True)
+
         self._intermediate_result_dir = Path(self._log_dir_root, 'intermediate_result')
         self._intermediate_result_dir.mkdir(parents=True, exist_ok=True)
 
@@ -480,7 +492,7 @@ class TaskGenerator:
         self._origin_model_path = Path(self._log_dir_root, 'origin', 'model.pth')
         self._origin_masks_path = Path(self._log_dir_root, 'origin', 'masks.pth')
         self._origin_config_list_path = Path(self._log_dir_root, 'origin', 'config_list.json')
-        self._save_data('origin', origin_model, origin_masks, origin_config_list)
+        self._save_data('origin', model, masks, config_list)
 
         self._task_id_candidate = 0
         self._tasks: Dict[int, Task] = {}

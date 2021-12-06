@@ -9,7 +9,18 @@ from torch import Tensor
 from .base import MetricsCalculator
 
 __all__ = ['NormMetricsCalculator', 'MultiDataNormMetricsCalculator', 'DistMetricsCalculator',
-           'APoZRankMetricsCalculator', 'MeanRankMetricsCalculator']
+           'APoZRankMetricsCalculator', 'MeanRankMetricsCalculator', 'StraightMetricsCalculator']
+
+
+class StraightMetricsCalculator(MetricsCalculator):
+    """
+    This metrics calculator directly returns a copy of data as metrics.
+    """
+    def calculate_metrics(self, data: Dict[str, Tensor]) -> Dict[str, Tensor]:
+        metrics = {}
+        for name, tensor in data.items():
+            metrics[name] = tensor.clone().detach()
+        return metrics
 
 
 class NormMetricsCalculator(MetricsCalculator):
