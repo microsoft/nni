@@ -1,3 +1,4 @@
+import sys
 from tqdm import tqdm
 
 import torch
@@ -7,7 +8,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 from nni.algorithms.compression.v2.pytorch.pruning.basic_scheduler import PruningScheduler
 
-from examples.model_compress.models.cifar10.vgg import VGG
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -90,6 +92,8 @@ if __name__ == '__main__':
     # or the result with the highest score (given by evaluator) will be the best result.
 
     # scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=evaluator)
-    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None)
+    scheduler = PruningScheduler(pruner, task_generator, finetuner=finetuner, speed_up=True, dummy_input=dummy_input, evaluator=None, reset_weight=False)
 
     scheduler.compress()
+
+    _, model, masks, _, _ = scheduler.get_best_result()

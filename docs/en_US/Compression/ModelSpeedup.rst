@@ -198,3 +198,11 @@ The latency is measured on one V100 GPU and the input tensor is  ``torch.randn(1
 
 
 .. image:: ../../img/SA_latency_accuracy.png
+
+
+User configuration for ModelSpeedup
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.compression.pytorch.ModelSpeedup
