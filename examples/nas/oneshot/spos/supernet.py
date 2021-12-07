@@ -43,7 +43,7 @@ if __name__ == "__main__":
     torch.backends.cudnn.deterministic = True
 
     model = ShuffleNetV2OneShot()
-    flops_func = model.get_candidate_flops
+    # flops_func = model.get_candidate_flops
     if args.load_checkpoint:
         if not args.spos_preprocessing:
             logger.warning("You might want to use SPOS preprocessing if you are loading their checkpoints.")
