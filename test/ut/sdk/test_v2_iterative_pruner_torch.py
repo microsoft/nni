@@ -12,7 +12,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     AGPPruner,
     LotteryTicketPruner,
     SimulatedAnnealingPruner,
-    AutoCompressPruner
+    AutoCompressPruner,
+    AMCPruner
 )
 
 from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
@@ -118,6 +119,21 @@ class IterativePrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         print(sparsity_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
+
+    def test_amc_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.5}]
+        dummy_input = torch.rand(10, 1, 28, 28)
+        env_params = {'flops_ratio': 1. - config_list[0]['sparsity'], 'lbound': 0.2, 'rbound': 1.,
+                  'n_calibration_batches': 60, 'n_points_per_layer': 10, 'channel_round': 8, 'batch_size': 128}
+        ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 100, 'discount': 1., 'bsize': 64,
+                    'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99, 'max_episode_length': 1e9, 'epsilon': 50000}
+        pruner = AMCPruner(model, config_list, 'l1', 5, dummy_input=dummy_input, keep_intermediate_result=False,
+                        speed_up=False, evaluator=evaluator, env_params=env_params, ddpg_params=ddpg_params)
+        pruner.compress()
+        _, pruned_model, masks, _, _ = pruner.get_best_result()
+        sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
+        assert 0. <= sparsity_list[0]['total_sparsity'] <= 1.
 
 if __name__ == '__main__':
     unittest.main()
