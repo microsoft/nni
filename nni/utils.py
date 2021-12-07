@@ -2,16 +2,12 @@
 # Licensed under the MIT license.
 
 import copy
-import functools
 from enum import Enum, unique
 from pathlib import Path
-import json_tricks
 from schema import And
 
 from . import parameter_expressions
 
-
-to_json = functools.partial(json_tricks.dumps, allow_nan=True)
 
 @unique
 class OptimizeMode(Enum):

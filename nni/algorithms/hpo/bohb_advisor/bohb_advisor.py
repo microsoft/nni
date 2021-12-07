@@ -7,12 +7,12 @@ bohb_advisor.py
 import sys
 import math
 import logging
-import json_tricks
 from schema import Schema, Optional
 import ConfigSpace as CS
 import ConfigSpace.hyperparameters as CSH
 from ConfigSpace.read_and_write import pcs_new
 
+import nni
 from nni import ClassArgsValidator
 from nni.runtime.protocol import CommandType, send
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
@@ -428,7 +428,7 @@ class BOHB(MsgDispatcherBase):
                 'parameter_source': 'algorithm',
                 'parameters': ''
             }
-            send(CommandType.NoMoreTrialJobs, json_tricks.dumps(ret))
+            send(CommandType.NoMoreTrialJobs, nni.dump(ret))
             return None
         assert self.generated_hyper_configs
         params = self.generated_hyper_configs.pop(0)
@@ -459,7 +459,7 @@ class BOHB(MsgDispatcherBase):
         """
         ret = self._get_one_trial_job()
         if ret is not None:
-            send(CommandType.NewTrialJob, json_tricks.dumps(ret))
+            send(CommandType.NewTrialJob, nni.dump(ret))
             self.credit -= 1
 
     def handle_update_search_space(self, data):
@@ -536,7 +536,7 @@ class BOHB(MsgDispatcherBase):
             hyper_params: the hyperparameters (a string) generated and returned by tuner
         """
         logger.debug('Tuner handle trial end, result is %s', data)
-        hyper_params = json_tricks.loads(data['hyper_params'])
+        hyper_params = nni.load(data['hyper_params'])
         self._handle_trial_end(hyper_params['parameter_id'])
         if data['trial_job_id'] in self.job_id_para_id_map:
             del self.job_id_para_id_map[data['trial_job_id']]
@@ -551,7 +551,7 @@ class BOHB(MsgDispatcherBase):
             ret['parameter_index'] = one_unsatisfied['parameter_index']
             # update parameter_id in self.job_id_para_id_map
             self.job_id_para_id_map[ret['trial_job_id']] = ret['parameter_id']
-            send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+            send(CommandType.SendTrialJobParameter, nni.dump(ret))
         for _ in range(self.credit):
             self._request_one_trial_job()
 
@@ -584,7 +584,7 @@ class BOHB(MsgDispatcherBase):
         """
         logger.debug('handle report metric data = %s', data)
         if 'value' in data:
-            data['value'] = json_tricks.loads(data['value'])
+            data['value'] = nni.load(data['value'])
         if data['type'] == MetricType.REQUEST_PARAMETER:
             assert multi_phase_enabled()
             assert data['trial_job_id'] is not None
@@ -599,7 +599,7 @@ class BOHB(MsgDispatcherBase):
                 ret['parameter_index'] = data['parameter_index']
                 # update parameter_id in self.job_id_para_id_map
                 self.job_id_para_id_map[data['trial_job_id']] = ret['parameter_id']
-                send(CommandType.SendTrialJobParameter, json_tricks.dumps(ret))
+                send(CommandType.SendTrialJobParameter, nni.dump(ret))
         else:
             assert 'value' in data
             value = extract_scalar_reward(data['value'])
@@ -655,7 +655,7 @@ class BOHB(MsgDispatcherBase):
             data doesn't have required key 'parameter' and 'value'
         """
         for entry in data:
-            entry['value'] = json_tricks.loads(entry['value'])
+            entry['value'] = nni.load(entry['value'])
         _completed_num = 0
         for trial_info in data:
             logger.info("Importing data, current processing progress %s / %s", _completed_num, len(data))

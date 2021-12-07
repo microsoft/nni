@@ -14,10 +14,9 @@ import nni
 
 from ..lightning import LightningModule, _AccuracyWithLogits, Lightning
 from .trainer import Trainer
-from ....serializer import serialize_cls
 
 
-@serialize_cls
+@nni.trace
 class _MultiModelSupervisedLearningModule(LightningModule):
     def __init__(self, criterion: nn.Module, metrics: Dict[str, torchmetrics.Metric],
                  n_models: int = 0,
@@ -126,7 +125,7 @@ class MultiModelSupervisedLearningModule(_MultiModelSupervisedLearningModule):
         super().__init__(criterion, metrics, learning_rate=learning_rate, weight_decay=weight_decay, optimizer=optimizer)
 
 
-@serialize_cls
+@nni.trace
 class _ClassificationModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -174,7 +173,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@serialize_cls
+@nni.trace
 class _RegressionModule(MultiModelSupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,

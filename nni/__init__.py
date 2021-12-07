@@ -9,7 +9,7 @@ except ModuleNotFoundError:
 from .runtime.log import init_logger
 init_logger()
 
-from .common.serializer import *
+from .common.serializer import trace, dump, load
 from .runtime.env_vars import dispatcher_env_vars
 from .utils import ClassArgsValidator
 
