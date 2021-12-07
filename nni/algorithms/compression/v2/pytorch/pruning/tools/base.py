@@ -139,11 +139,9 @@ class TrainerBasedDataCollector(DataCollector):
         self._opt_before_tasks = opt_before_tasks
         self._opt_after_tasks = opt_after_tasks
 
-        self._collector_infos = collector_infos
-
         self._criterion_patch = criterion_patch
 
-        self.reset()
+        self.reset(collector_infos)
 
     def reset(self, collector_infos: List[HookCollectorInfo] = []):
         # refresh optimizer and criterion
