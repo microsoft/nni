@@ -7,6 +7,10 @@ Under docs, run
     python tools/chineselink.py
 """
 
+import hashlib
+import os
+import shutil
+import sys
 from pathlib import Path
 
 
@@ -52,8 +56,33 @@ for path in walk(Path('en_US')):
         if is_content_table:
             content_tables.append(path.relative_to('en_US').as_posix())
 
-print(content_tables)
+print('Whitelist:' ,content_tables)
 whitelist += content_tables
+
+pipeline_mode = len(sys.argv) > 1 and sys.argv[1] == 'check'
+failed_files = []
+
+
+def need_to_translate(source, target):
+    if not target.exists():
+        failed_files.append('(missing) ' + target.as_posix())
+        if pipeline_mode:
+            return
+        shutil.copyfile(source, target)
+    target_checksum = hashlib.sha256(path.open('rb').read()).hexdigest()[:32]
+    checksum = target.open('r').readline().strip()[3:]
+    if checksum != target_checksum:
+        failed_files.append('(out-of-date) ' + target.as_posix())
+        if pipeline_mode:
+            return
+    contents = target.open('r').readlines()
+    firstline = '.. ' + target_checksum + '\n'
+    if contents[0].startswith('.. '):
+        contents = [firstline] + contents[1:]
+    else:
+        contents = [firstline, '\n'] + contents
+    target.open('w').writelines(contents)
+
 
 for path in walk(Path('en_US')):
     relative_path = path.relative_to('en_US')
@@ -62,19 +91,34 @@ for path in walk(Path('en_US')):
     if path.suffix in ('.html', '.md', '.rst'):
         target_path = (Path('zh_CN') / relative_path)
         if relative_path.as_posix() in whitelist:
-            print(f'Skipped linking for {path}')
+            # whitelist files. should be translated
+            need_to_translate(path, target_path)
+            print(f'Skipped linking for {path} as it is in whitelist.')
         else:
-            target_path.unlink(missing_ok=True)
             target_path.parent.mkdir(exist_ok=True)
             link_path = path
             for _ in range(len(list(Path(relative_path).parents))):
                 link_path = Path('..') / link_path
-            target_path.symlink_to(link_path)
+            if not target_path.is_symlink() or os.readlink(target_path) != link_path.as_posix():
+                failed_files.append('(invalid link) ' + target_path.as_posix())
+                if not pipeline_mode:
+                    target_path.unlink(missing_ok=True)
+                    target_path.symlink_to(link_path)
 
 # delete redundant files
 for path in walk(Path('zh_CN')):
     if path.suffix in ('.html', '.md', '.rst'):
         relative_path = path.relative_to('zh_CN')
         if not (Path('en_US') / relative_path).exists():
-            print(f'Deleting {path}')
-            path.unlink()
+            failed_files.append('(redundant) ' + path.as_posix())
+            if not pipeline_mode:
+                print(f'Deleting {path}')
+                path.unlink()
+
+
+if pipeline_mode and failed_files:
+    raise ValueError(
+        'The following files are not up-to-date. Please run "python3 tools/chineselink.py" under docs folder '
+        'to refresh them and update their corresponding translation.\n' + '\n'.join(['  ' + line for line in failed_files]))
+if failed_files:
+    print('Updated files:', failed_files)
