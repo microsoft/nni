@@ -11,3 +11,4 @@ NNI为用户提供了强大的API，以方便表达模型空间（或搜索空�
 
     mutation 原语 <MutationPrimitives>
     定制 mutator <Mutators>
+    Hypermodule Lib <Hypermodules>

@@ -13,4 +13,5 @@ NNI 支持的训练平台介绍
     FrameworkController<./TrainingService/FrameworkControllerMode>
     DLTS<./TrainingService/DLTSMode>
     AML<./TrainingService/AMLMode>
+    PAI-DLC<./TrainingService/DLCMode>
     混合模式 <./TrainingService/HybridMode>
