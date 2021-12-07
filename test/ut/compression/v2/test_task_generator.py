@@ -7,7 +7,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
+from nni.algorithms.compression.v2.pytorch.base import TaskResult
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     AGPTaskGenerator,
     LinearTaskGenerator,
@@ -57,7 +57,7 @@ def run_task_generator(task_generator_type):
     elif task_generator_type == 'linear':
         assert count == 6
     elif task_generator_type == 'lottery_ticket':
-        assert count == 6
+        assert count == 5
     elif task_generator_type == 'simulated_annealing':
         assert count == 17
 

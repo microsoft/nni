@@ -19,6 +19,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Activation Mean Rank Pruner <#activation-mean-rank-pruner>`__
 * `Taylor FO Weight Pruner <#taylor-fo-weight-pruner>`__
 * `ADMM Pruner <#admm-pruner>`__
+* `Movement Pruner <#movement-pruner>`__
 
 **Iterative Pruner**
 
@@ -26,6 +27,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `AGP Pruner <#agp-pruner>`__
 * `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
 * `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
+* `Auto Compress Pruner <#auto-compress-pruner>`__
 
 Level Pruner
 ------------
@@ -43,6 +45,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
    pruner = LevelPruner(model, config_list)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_torch.py <examples/model_compress/pruning/v2/level_pruning_torch.py>`
 
 User configuration for Level Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,6 +77,8 @@ Usage
    pruner = L1NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
+
 User configuration for L1 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -96,6 +102,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = L2NormPruner(model, config_list)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/norm_pruning_torch.py <examples/model_compress/pruning/v2/norm_pruning_torch.py>`
 
 User configuration for L2 Norm Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -124,6 +132,8 @@ Usage
    pruner = FPGMPruner(model, config_list)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/fpgm_pruning_torch.py <examples/model_compress/pruning/v2/fpgm_pruning_torch.py>`
+
 User configuration for FPGM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -148,6 +158,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
    pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, training_epochs=1)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_torch.py <examples/model_compress/pruning/v2/slim_pruning_torch.py>`
 
 User configuration for Slim Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -179,6 +191,8 @@ Usage
    pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
+
 User configuration for Activation APoZ Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -204,6 +218,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
 
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -234,6 +250,8 @@ Usage
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    pruner = TaylorFOWeightPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_torch.py <examples/model_compress/pruning/v2/taylorfo_pruning_torch.py>`
 
 User configuration for Activation Mean Rank Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -266,12 +284,66 @@ Usage
    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_torch.py <examples/model_compress/pruning/v2/admm_pruning_torch.py>`
+
 User configuration for ADMM Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.ADMMPruner
+
+Movement Pruner
+---------------
+
+Movement pruner is an implementation of movement pruning.
+This is a "fine-pruning" algorithm, which means the masks may change during each fine-tuning step.
+Each weight element will be scored by the opposite of the sum of the product of weight and its gradient during each step.
+This means the weight elements moving towards zero will accumulate negative scores, the weight elements moving away from zero will accumulate positive scores.
+The weight elements with low scores will be masked during inference.
+
+The following figure from the paper shows the weight pruning by movement pruning.
+
+.. image:: ../../img/movement_pruning.png
+   :target: ../../img/movement_pruning.png
+   :alt: 
+
+For more details, please refer to `Movement Pruning: Adaptive Sparsity by Fine-Tuning <https://arxiv.org/abs/2005.07683>`__.
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+   config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
+   pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
+   masked_model, masks = pruner.compress()
+
+User configuration for Movement Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.MovementPruner
+
+Reproduced Experiment
+^^^^^^^^^^^^^^^^^^^^^
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Dataset
+     - Remaining Weights
+     - MaP acc.(paper/ours)
+     - MvP acc.(paper/ours)
+   * - Bert base
+     - MNLI - Dev
+     - 10%
+     - 77.8% / 73.6%
+     - 79.3% / 78.8%
 
 Linear Pruner
 -------------
@@ -289,6 +361,8 @@ Usage
    pruner = LinearPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
 
 User configuration for Linear Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -317,6 +391,8 @@ Usage
    pruner = AGPPruner(model, config_list, pruning_algorithm='l1', total_iteration=10, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
 
 User configuration for AGP Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -357,6 +433,8 @@ Usage
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
 
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/iterative_pruning_torch.py <examples/model_compress/pruning/v2/iterative_pruning_torch.py>`
+
 User configuration for Lottery Ticket Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -387,9 +465,11 @@ Usage
 
    from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm='l1', cool_down_rate=0.9, finetuner=finetuner)
+   pruner = SimulatedAnnealingPruner(model, config_list, pruning_algorithm='l1', evaluator=evaluator, cool_down_rate=0.9, finetuner=finetuner)
    pruner.compress()
    _, model, masks, _, _ = pruner.get_best_result()
+
+For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py <examples/model_compress/pruning/v2/simulated_anealing_pruning_torch.py>`
 
 User configuration for Simulated Annealing Pruner
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -397,3 +477,45 @@ User configuration for Simulated Annealing Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
+
+Auto Compress Pruner
+--------------------
+
+For total iteration number :math:`N`, AutoCompressPruner prune the model that survive the previous iteration for a fixed sparsity ratio (e.g., :math:`1-{(1-0.8)}^{(1/N)}`) to achieve the overall sparsity (e.g., :math:`0.8`):
+
+.. code-block:: bash
+
+       1. Generate sparsities distribution using SimulatedAnnealingPruner
+       2. Perform ADMM-based pruning to generate pruning result for the next iteration.
+
+For more details, please refer to `AutoCompress: An Automatic DNN Structured Pruning Framework for Ultra-High Compression Rates <https://arxiv.org/abs/1907.03141>`__.
+
+Usage
+^^^^^^
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+   config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
+   admm_params = {
+        'trainer': trainer,
+        'optimizer': optimizer,
+        'criterion': criterion,
+        'iterations': 10,
+        'training_epochs': 1
+    }
+    sa_params = {
+        'evaluator': evaluator
+    }
+    pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params, finetuner=finetuner)
+    pruner.compress()
+    _, model, masks, _, _ = pruner.get_best_result()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/auto_compress_pruner.py>`.
+
+User configuration for Auto Compress Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+.. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AutoCompressPruner

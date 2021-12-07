@@ -347,8 +347,7 @@ class SlimPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - total_sparsity : This is to specify the total sparsity for all layers in this config,
-                each layer may have different sparsity.
+            - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Only BatchNorm2d is supported in SlimPruner.
             - op_names : Operation names to prune.
@@ -379,6 +378,8 @@ class SlimPruner(BasicPruner):
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
         The epoch number for training model to sparsify the BN weight.
+    scale : float
+        Penalty parameter for sparsification, which could reduce overfitting.
     mode : str
         'normal' or 'global'.
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
@@ -413,7 +414,7 @@ class SlimPruner(BasicPruner):
         def patched_criterion(input_tensor: Tensor, target: Tensor):
             sum_l1 = 0
             for _, wrapper in self.get_modules_wrapper().items():
-                sum_l1 += torch.norm(wrapper.module.weight.data, p=1)
+                sum_l1 += torch.norm(wrapper.module.weight, p=1)
             return criterion(input_tensor, target) + self._scale * sum_l1
         return patched_criterion
 
@@ -562,8 +563,7 @@ class TaylorFOWeightPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - total_sparsity : This is to specify the total sparsity for all layers in this config,
-                each layer may have different sparsity.
+            - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
             - op_names : Operation names to prune.
@@ -720,12 +720,15 @@ class ADMMPruner(BasicPruner):
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
                  optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], iterations: int, training_epochs: int):
         self.trainer = trainer
+        # TODO: handle optimizer here will case additional memory use, need improve, also in WeightTrainerBasedDataCollector
         self.optimizer = optimizer
         self.criterion = criterion
         self.iterations = iterations
         self.training_epochs = training_epochs
         super().__init__(model, config_list)
 
+    def reset(self, model: Optional[Module], config_list: Optional[List[Dict]]):
+        super().reset(model, config_list)
         self.Z = {name: wrapper.module.weight.data.clone().detach() for name, wrapper in self.get_modules_wrapper().items()}
         self.U = {name: torch.zeros_like(z).to(z.device) for name, z in self.Z.items()}
 
@@ -776,6 +779,10 @@ class ADMMPruner(BasicPruner):
             for name, mask in masks.items():
                 self.Z[name] = self.Z[name].mul(mask['weight'])
                 self.U[name] = self.U[name] + data[name] - self.Z[name]
+
+        self.Z = None
+        self.U = None
+        torch.cuda.empty_cache()
 
         metrics = self.metrics_calculator.calculate_metrics(data)
         masks = self.sparsity_allocator.generate_sparsity(metrics)

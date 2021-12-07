@@ -1,12 +1,9 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import json
 from typing import NewType, Any
 
 import nni
-
-from .serializer import json_loads
 
 # NOTE: this is only for passing flake8, we cannot import RetiariiAdvisor
 # because it would induce cycled import
@@ -40,7 +37,6 @@ def receive_trial_parameters() -> dict:
     Reload with our json loads because NNI didn't use Retiarii serializer to load the data.
     """
     params = nni.get_next_parameter()
-    params = json_loads(json.dumps(params))
     return params
 
 

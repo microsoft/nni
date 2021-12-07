@@ -3,7 +3,6 @@
 
 import logging
 from collections import defaultdict
-import json_tricks
 
 from nni import NoMoreTrialError
 from nni.assessor import AssessResult
@@ -12,7 +11,8 @@ from .common import multi_thread_enabled, multi_phase_enabled
 from .env_vars import dispatcher_env_vars
 from .msg_dispatcher_base import MsgDispatcherBase
 from .protocol import CommandType, send
-from ..utils import MetricType, to_json
+from ..common.serializer import dump, load
+from ..utils import MetricType
 
 _logger = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ def _pack_parameter(parameter_id, params, customized=False, trial_job_id=None, p
         ret['parameter_index'] = parameter_index
     else:
         ret['parameter_index'] = 0
-    return to_json(ret)
+    return dump(ret)
 
 
 class MsgDispatcher(MsgDispatcherBase):
@@ -115,8 +115,8 @@ class MsgDispatcher(MsgDispatcherBase):
         data: a list of dictionaries, each of which has at least two keys, 'parameter' and 'value'
         """
         for entry in data:
-            entry['value'] = entry['value'] if type(entry['value']) is str else json_tricks.dumps(entry['value'])
-            entry['value'] = json_tricks.loads(entry['value'])
+            entry['value'] = entry['value'] if type(entry['value']) is str else dump(entry['value'])
+            entry['value'] = load(entry['value'])
         self.tuner.import_data(data)
 
     def handle_add_customized_trial(self, data):
@@ -133,7 +133,7 @@ class MsgDispatcher(MsgDispatcherBase):
         """
         # metrics value is dumped as json string in trial, so we need to decode it here
         if 'value' in data:
-            data['value'] = json_tricks.loads(data['value'])
+            data['value'] = load(data['value'])
         if data['type'] == MetricType.FINAL:
             self._handle_final_metric_data(data)
         elif data['type'] == MetricType.PERIODICAL:
@@ -167,7 +167,7 @@ class MsgDispatcher(MsgDispatcherBase):
             if self.assessor is not None:
                 self.assessor.trial_end(trial_job_id, data['event'] == 'SUCCEEDED')
         if self.tuner is not None:
-            self.tuner.trial_end(json_tricks.loads(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
+            self.tuner.trial_end(load(data['hyper_params'])['parameter_id'], data['event'] == 'SUCCEEDED')
 
     def _handle_final_metric_data(self, data):
         """Call tuner to process final results
@@ -221,7 +221,7 @@ class MsgDispatcher(MsgDispatcherBase):
 
         if result is AssessResult.Bad:
             _logger.debug('BAD, kill %s', trial_job_id)
-            send(CommandType.KillTrialJob, json_tricks.dumps(trial_job_id))
+            send(CommandType.KillTrialJob, dump(trial_job_id))
             # notify tuner
             _logger.debug('env var: NNI_INCLUDE_INTERMEDIATE_RESULTS: [%s]',
                           dispatcher_env_vars.NNI_INCLUDE_INTERMEDIATE_RESULTS)
@@ -239,5 +239,5 @@ class MsgDispatcher(MsgDispatcherBase):
         if multi_thread_enabled():
             self._handle_final_metric_data(data)
         else:
-            data['value'] = to_json(data['value'])
+            data['value'] = dump(data['value'])
             self.enqueue_command(CommandType.ReportMetricData, data)

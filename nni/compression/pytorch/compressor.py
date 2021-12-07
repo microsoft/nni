@@ -281,7 +281,7 @@ class Compressor:
 class PrunerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, pruner):
         """
-        Wrap an module to enable data parallel, forward method customization and buffer registeration.
+        Wrap a module to enable data parallel, forward method customization and buffer registeration.
 
         Parameters
         ----------
@@ -495,7 +495,7 @@ class Pruner(Compressor):
 class QuantizerModuleWrapper(torch.nn.Module):
     def __init__(self, module, module_name, module_type, config, quantizer, bn_module=None):
         """
-        Wrap an module to enable data parallel, forward method customization and buffer registeration.
+        Wrap a module to enable data parallel, forward method customization and buffer registeration.
 
         Parameters
         ----------

@@ -25,6 +25,7 @@ For details, please refer to the following tutorials:
 
     Overview <Compression/Overview>
     Quick Start <Compression/QuickStart>
+    Tutorial <Compression/Tutorial>
     Pruning <Compression/pruning>
     Pruning V2 <Compression/v2_pruning>
     Quantization <Compression/quantization>
