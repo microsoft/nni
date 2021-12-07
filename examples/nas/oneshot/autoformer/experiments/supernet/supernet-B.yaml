@@ -1,0 +1,21 @@
+SUPERNET:
+  MLP_RATIO: 4.0
+  NUM_HEADS: 10
+  EMBED_DIM: 640
+  DEPTH: 16
+SEARCH_SPACE:
+  MLP_RATIO:
+    - 3.0
+    - 3.5
+    - 4.0
+  NUM_HEADS:
+    - 9
+    - 10
+  DEPTH:
+    - 14
+    - 15
+    - 16
+  EMBED_DIM:
+    - 528
+    - 576
+    - 624
