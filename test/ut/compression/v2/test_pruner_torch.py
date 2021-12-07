@@ -115,7 +115,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = ActivationAPoZRankPruner(model=model, config_list=config_list, trainer=trainer,
-                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
@@ -127,7 +127,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = ActivationMeanRankPruner(model=model, config_list=config_list, trainer=trainer,
-                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
@@ -139,7 +139,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = TaylorFOWeightPruner(model=model, config_list=config_list, trainer=trainer,
-                                      traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                      traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                       mode='dependency_aware', dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
