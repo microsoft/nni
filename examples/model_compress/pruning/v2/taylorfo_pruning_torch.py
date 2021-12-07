@@ -17,7 +17,7 @@ from torch.optim.lr_scheduler import MultiStepLR
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import TaylorFOWeightPruner
-from nni.algorithms.compression.v2.pytorch.utils import trace
+from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
 sys.path.append('../../models')
 from cifar10.vgg import VGG
@@ -110,8 +110,8 @@ if __name__ == '__main__':
         'op_types': ['Conv2d'],
     }]
 
-    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace to wrap the optimizer class before initialize
-    traced_optimizer = trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion,  training_batches=1)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()

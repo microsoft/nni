@@ -58,9 +58,9 @@ class AutoCompressPruner(IterativePruner):
         - trainer : Callable[[Module, Optimizer, Callable].
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
-        - traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
-            The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
-            E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
+        - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+            The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
+            E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
         - criterion : Callable[[Tensor, Tensor], Tensor].
             The criterion function used in trainer. Take model output and target value as input, and return the loss.
         - iterations : int.

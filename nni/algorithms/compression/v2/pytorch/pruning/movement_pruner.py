@@ -13,7 +13,7 @@ from torch.optim import Optimizer, Adam
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
 from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
-from nni.common.serializer import SerializableObject
+from nni.common.serializer import Traceable
 
 from .tools.base import TrainerBasedDataCollector
 
@@ -155,9 +155,9 @@ class MovementPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    traced_optimizer : nni.common.serializer.SerializableObject(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace(torch.nn.Adam)(model.parameters()).
+    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -172,7 +172,7 @@ class MovementPruner(BasicPruner):
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
     """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 traced_optimizer: SerializableObject, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
+                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
         self.trainer = trainer
         if isinstance(traced_optimizer, OptimizerConstructHelper):

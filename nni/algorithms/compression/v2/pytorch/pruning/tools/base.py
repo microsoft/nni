@@ -145,7 +145,7 @@ class TrainerBasedDataCollector(DataCollector):
 
         self.reset()
 
-    def reset(self):
+    def reset(self, collector_infos: List[HookCollectorInfo] = []):
         # refresh optimizer and criterion
         self._reset_optimizer()
 
@@ -162,6 +162,8 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_id = 0
         self._hook_handles = {}
         self._hook_buffer = {}
+
+        self._collector_infos = collector_infos
         self._add_all_hook()
 
     def _reset_optimizer(self):
@@ -225,7 +227,7 @@ class TrainerBasedDataCollector(DataCollector):
     def _remove_hook(self, hook_id: int):
         if hook_id not in self._hook_handles:
             raise ValueError("%s is not a valid collector id" % str(hook_id))
-        for handle in self._hook_handles[hook_id]:
+        for handle in self._hook_handles[hook_id].values():
             handle.remove()
         del self._hook_handles[hook_id]
 
