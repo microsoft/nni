@@ -13,4 +13,4 @@ One-Shot NAS 算法利用了搜索空间中模型间的权重共享来训练超�
     SPOS <SPOS>
     ProxylessNAS <Proxylessnas>
     FBNet <FBNet>
-    自定义 one-shot NAS <WriteOneshot>
+    自定义 One-shot NAS <WriteOneshot>

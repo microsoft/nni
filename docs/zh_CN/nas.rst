@@ -29,5 +29,6 @@ Retiarii 的探索性训练允许用户以高度灵活的方式表达 *神经网
     构建模型空间 <NAS/construct_space>
     Multi-trial NAS <NAS/multi_trial_nas>
     One-Shot NAS <NAS/one_shot_nas>
+    硬件相关 NAS <NAS/HardwareAwareNAS>
     NAS 基准测试 <NAS/Benchmarks>
     NAS API 参考 <NAS/ApiReference>

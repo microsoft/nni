@@ -25,6 +25,7 @@ NNI 中也内置了一些主流的模型压缩算法。
 
     概述 <Compression/Overview>
     快速入门 <Compression/QuickStart>
+    教程 <Compression/Tutorial>
     剪枝 <Compression/pruning>
     剪枝（V2版本） <Compression/v2_pruning>
     量化 <Compression/quantization>
