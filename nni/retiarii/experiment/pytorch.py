@@ -28,7 +28,7 @@ from ..codegen import model_to_pytorch_script
 from ..converter import convert_to_graph
 from ..converter.graph_gen import GraphConverterWithShape
 from ..execution import list_models, set_execution_engine
-from ..execution.python import get_mutation_dict
+from ..execution.utils import get_mutation_dict
 from ..graph import Evaluator
 from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
