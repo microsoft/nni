@@ -141,15 +141,6 @@ class ChannelPruningEnv:
 
     def step_after(self, action, preserve_idx):
         _, action, d_prime, preserve_idx = self.prune_kernel(self.prunable_idx[self.cur_ind], action, preserve_idx)
-        if not self.visited[self.cur_ind]:
-            for group in self.shared_idx:
-                if self.cur_ind in group:  # set the shared ones
-                    for g_idx in group:
-                        self.strategy_dict[self.prunable_idx[g_idx]][0] = action
-                        self.strategy_dict[self.prunable_idx[g_idx - 1]][1] = action
-                        self.visited[g_idx] = True
-                        self.index_buffer[g_idx] = preserve_idx.copy()
-
         self.strategy.append(action)  # save action to strategy
         self.d_prime_list.append(d_prime)
 
@@ -159,7 +150,6 @@ class ChannelPruningEnv:
 
         # all the actions are made
         if self._is_final_layer():
-            assert len(self.strategy) == len(self.prunable_idx)
             current_flops = self._cur_flops()
             compress_ratio = current_flops * 1. / self.org_flops
             reward = self.cur_reward
@@ -320,9 +310,6 @@ class ChannelPruningEnv:
             Each depthwise layer is always followd by a pointwise layer for both mobilenet and
             mobilenetv2. The depthwise layer's filters are pruned when its next pointwise layer's
             corresponding input channels are pruned.
-        self.shared_idx: layer indices for layers which share input.
-            For example: [[1,4], [8, 10, 15]] means layer 1 and 4 share same input, and layer
-            8, 10 and 15 share another input.
         self.org_channels: number of input channels for each layer
         self.min_strategy_dict: key is layer index, value is a tuple, the first value is the minimum
             action of input channel, the second value is the minimum action value of output channel.
@@ -352,7 +339,7 @@ class ChannelPruningEnv:
                             self.strategy_dict[i] = [self.lbound, self.lbound]
         self.strategy_dict[self.prunable_idx[0]][0] = 1  # modify the input
         self.strategy_dict[self.prunable_idx[-1]][1] = 1  # modify the output
-        self.shared_idx = []
+
         self.min_strategy_dict = copy.deepcopy(self.strategy_dict)
 
         self.buffer_idx = []

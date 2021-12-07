@@ -352,7 +352,7 @@ class AMCTaskGenerator(TaskGenerator):
                  env_params: Dict = {}, ddpg_params: Dict = {}):
 
         self.total_iteration = total_iteration
-        self.current_iteration = 0
+        self.current_iteration = 1
         self.dummy_input = dummy_input
         self.env_params = env_params
         self.ddpg_params = ddpg_params
@@ -364,6 +364,12 @@ class AMCTaskGenerator(TaskGenerator):
         self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
         self.actions = []
         self.preserv_idxes = []
+        self._temp_config_list = []
+        self._current_score = 0
+        
+        self.warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
+        self.next_action_list = []
+        self.next_preserve_idx_list = []
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
                          log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
@@ -389,51 +395,11 @@ class AMCTaskGenerator(TaskGenerator):
 
         return self.generate_tasks(task_result)
 
-
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # initial/update temp config list
-        if task_result.task_id == 'origin':
-            with open(self._origin_config_list_path, "r") as f:
-                self._temp_config_list = json_tricks.load(f)
-            self._current_score = 0
-        else:
-            origin_model = torch.load(self._origin_model_path)
-            compact_model = task_result.compact_model
-            compact_model_masks = task_result.compact_model_masks
-            current2origin_sparsity, compact2origin_sparsity, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.target_sparsity)
-            self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
-            score = self._tasks[task_result.task_id].score
-            # update environment information
-            self._current_score = score
-            done = False
-            next_action_list = []
-            next_preserve_idx_list = []
-            while not done:
-                if self.observation is None:
-                    self.observation = deepcopy(self.env.reset())
-                # agent picks action
-                warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
-                if self.current_iteration <= warmup_num:
-                    action = self.agent.random_action()
-                else:
-                    action = self.agent.select_action(self.observation, episode=self.current_iteration)
-                # collect the actions and preserv_idx each layer
-                action, preserv_idx = self.env.step_previous(action)
-                next_action_list.append(action)
-                next_preserve_idx_list.append(preserv_idx)
-
-                if self.env.cur_ind == len(self.env.prunable_idx):
-                    self.env.cur_ind = 0
-                    self.env.visited = [False] * len(self.env.prunable_idx)
-                    done = True
-            
-            # set the reward and mask of last epoch
-            self.env.set_reward(self._tasks[task_result.task_id].score)
-            self.env.set_mask(task_result.pruner_generated_masks)
-
-            if self.env.ini is False:
-                self.actions = deepcopy(next_action_list)
-                self.preserv_idxes = deepcopy(next_preserve_idx_list)
+        if task_result.task_id != 'origin':
+            self.actions = deepcopy(self.next_action_list)
+            self.preserv_idxes = deepcopy(self.next_preserve_idx_list)
 
             # use last actions
             info = None
@@ -444,8 +410,8 @@ class AMCTaskGenerator(TaskGenerator):
                 self.observation = deepcopy(observation1)
                 self.iteration_reward += reward
 
-            self.actions = deepcopy(next_action_list)
-            self.preserv_idxes = deepcopy(next_preserve_idx_list)
+            self.actions = deepcopy(self.next_action_list)
+            self.preserv_idxes = deepcopy(self.next_preserve_idx_list)
             # end of episode
             print("Generated config list: {}".format(info['config_list']))
             _logger.info(
@@ -460,13 +426,50 @@ class AMCTaskGenerator(TaskGenerator):
             # agent observe and update policy
             for _, s_t, s_t1, a_t, done in self.T:
                 self.agent.observe(final_reward, s_t, s_t1, a_t, done)
-                if self.current_iteration > warmup_num:
+                if self.current_iteration > self.warmup_num:
                     self.agent.update_policy()
 
             # reset
             self.observation = None
             self.iteration_reward = 0.
             self.T = []
+            
+            origin_model = torch.load(self._origin_model_path)
+            compact_model = task_result.compact_model
+            compact_model_masks = task_result.compact_model_masks
+            current2origin_sparsity, compact2origin_sparsity, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.target_sparsity)
+            self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
+            score = self._tasks[task_result.task_id].score
+            # update environment information
+            self._current_score = score
+
+        done = False
+        self.next_action_list = []
+        self.next_preserve_idx_list = []
+        while not done:
+            if self.observation is None:
+                self.observation = deepcopy(self.env.reset())
+            # agent picks action
+            
+            if self.current_iteration <= self.warmup_num:
+                action = self.agent.random_action()
+            else:
+                action = self.agent.select_action(self.observation, episode=self.current_iteration)
+            # collect the actions and preserv_idx each layer
+            action, preserv_idx = self.env.step_previous(action)
+            self.next_action_list.append(action)
+            self.next_preserve_idx_list.append(preserv_idx)
+
+            if self.env.cur_ind == len(self.env.prunable_idx):
+                self.env.cur_ind = 0
+                self.env.visited = [False] * len(self.env.prunable_idx)
+                done = True
+        
+        # set the reward and mask of last epoch
+        if task_result.task_id != 'origin':
+            self.env.set_reward(self._tasks[task_result.task_id].score)
+            self.env.set_mask(task_result.pruner_generated_masks)
+        
     
         if self._task_id_candidate < self.total_iteration:
             task_id = self._task_id_candidate
@@ -480,9 +483,7 @@ class AMCTaskGenerator(TaskGenerator):
             self._task_id_candidate += 1
 
             # generate task and get task result
-            if self.current_iteration < self.total_iteration:
-                self.current_iteration += 1
-                return [task]
-            else:
-                return []
-        return []
+            self.current_iteration += 1
+            return [task]
+        else:
+            return []
