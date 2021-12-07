@@ -1,10 +1,10 @@
-import json
 import os
 import threading
 import unittest
 import time
 import torch
 import torch.nn as nn
+from pytorch_lightning.utilities.seed import seed_everything
 
 from pathlib import Path
 
@@ -137,6 +137,8 @@ def _reset():
     nni.runtime.platform.test._last_metric = None
     nni.retiarii.integration_api._advisor = None
     nni.retiarii.execution.api._execution_engine = None
+    
+    seed_everything(42)
 
 
 def _new_trainer():
@@ -149,7 +151,7 @@ def _new_trainer():
     lightning = pl.Lightning(multi_module, cgo_trainer.Trainer(use_cgo=True,
                                                                max_epochs=1,
                                                                limit_train_batches=0.25,
-                                                               progress_bar_refresh_rate=0),
+                                                               enable_progress_bar=False),
                              train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100))
     return lightning
@@ -158,7 +160,7 @@ def _new_trainer():
 def _load_mnist(n_models: int = 1):
     path = Path(__file__).parent / 'mnist_pytorch.json'
     with open(path) as f:
-        mnist_model = Model._load(json.load(f))
+        mnist_model = Model._load(nni.load(fp=f))
         mnist_model.evaluator = _new_trainer()
 
     if n_models == 1:
@@ -173,12 +175,12 @@ def _load_mnist(n_models: int = 1):
 
 
 def _get_final_result():
-    result = json.loads(nni.runtime.platform.test._last_metric)['value']
+    result = nni.load(nni.runtime.platform.test._last_metric)['value']
     if isinstance(result, list):
         return [float(_) for _ in result]
     else:
         if isinstance(result, str) and '[' in result:
-            return json.loads(result)
+            return nni.load(result)
         return [float(result)]
 
 
@@ -308,7 +310,7 @@ class CGOEngineTest(unittest.TestCase):
 
         if torch.cuda.is_available() and torch.cuda.device_count() >= 2:
             cmd, data = protocol.receive()
-            params = json.loads(data)
+            params = nni.load(data)
 
             tt.init_params(params)
 
