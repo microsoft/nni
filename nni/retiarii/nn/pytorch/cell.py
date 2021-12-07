@@ -51,27 +51,27 @@ class Cell(nn.Module):
     # TODO:
     # How to dynamically create convolution with stride as the first node
 
-    # def __new__(cls,
-    #             op_candidates: Union[Callable, List[nn.Module]],
-    #             num_nodes: int,
-    #             num_ops_per_node: int = 1,
-    #             num_predecessors: int = 1,
-    #             merge_op: Literal['all', 'loose_end'] = 'all',
-    #             label: Optional[str] = None):
-    #     def make_list(x): return x if isinstance(x, list) else [x]
+    def __new__(cls,
+                op_candidates: Union[Callable, List[nn.Module]],
+                num_nodes: int,
+                num_ops_per_node: int = 1,
+                num_predecessors: int = 1,
+                merge_op: Literal['all', 'loose_end'] = 'all',
+                label: Optional[str] = None):
+        def make_list(x): return x if isinstance(x, list) else [x]
 
-    #     try:
-    #         label, selected = get_fixed_dict(label)
-    #         op_candidates = cls._make_dict(op_candidates)
-    #         num_nodes = selected[f'{label}/num_nodes']
-    #         adjacency_list = [make_list(selected[f'{label}/input{i}']) for i in range(1, num_nodes)]
-    #         if sum([len(e) for e in adjacency_list]) > max_num_edges:
-    #             raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
-    #         return _NasBench101CellFixed(
-    #             [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
-    #             adjacency_list, in_features, out_features, num_nodes, projection)
-    #     except NoContextError:
-    #         return super().__new__(cls)
+        try:
+            label, selected = get_fixed_dict(label)
+            op_candidates = cls._make_dict(op_candidates)
+            num_nodes = selected[f'{label}/num_nodes']
+            adjacency_list = [make_list(selected[f'{label}/input{i}']) for i in range(1, num_nodes)]
+            if sum([len(e) for e in adjacency_list]) > max_num_edges:
+                raise InvalidMutation(f'Expected {max_num_edges} edges, found: {adjacency_list}')
+            return _NasBench101CellFixed(
+                [op_candidates[selected[f'{label}/op{i}']] for i in range(1, num_nodes - 1)],
+                adjacency_list, in_features, out_features, num_nodes, projection)
+        except NoContextError:
+            return super().__new__(cls)
 
     def __init__(self,
                  op_candidates: Union[Callable, List[nn.Module]],
@@ -96,7 +96,7 @@ class Cell(nn.Module):
                     ops = copy.deepcopy(op_candidates)
                 else:
                     ops = op_candidates()
-                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}__op_{i}_{k}'))
+                self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
                 self.inputs[-1].append(InputChoice(i + num_predecessors, 1, label=f'{self.label}/input_{i}_{k}'))
         assert merge_op in ['all', 'str']
         self.merge_op = merge_op
