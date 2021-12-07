@@ -323,18 +323,18 @@ class AMCPruner(IterativePruner):
         If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str, total_iteration: int, dummy_input: Tensor,
-                 evaluator: Callable[[Module], float], log_dir: str = '.', keep_intermediate_result : bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
-                 env_params: dict = {}, ddpg_params: dict = {}, pruning_params: dict = {}):
-            task_generator = AMCTaskGenerator(origin_model=model,
-                                              origin_config_list=config_list,
-                                              total_iteration=total_iteration,
-                                              dummy_input=dummy_input,
-                                              log_dir=log_dir,
-                                              keep_intermediate_result=keep_intermediate_result,
-                                              env_params=env_params,
-                                              ddpg_params=ddpg_params)
-            pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
-            super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
-                             evaluator=evaluator, reset_weight=False)
+    def __init__(self, model: Module, config_list: List[Dict], total_iteration: int, dummy_input: Tensor,
+                 evaluator: Callable[[Module], float], pruning_algorithm: str = 'l1', log_dir: str = '.',
+                 keep_intermediate_result: bool = False, finetuner: Optional[Callable[[Module], None]] = None,
+                 speed_up: bool = False, env_params: dict = {}, ddpg_params: dict = {}, pruning_params: dict = {}):
+        task_generator = AMCTaskGenerator(origin_model=model,
+                                          origin_config_list=config_list,
+                                          total_iteration=total_iteration,
+                                          dummy_input=dummy_input,
+                                          log_dir=log_dir,
+                                          keep_intermediate_result=keep_intermediate_result,
+                                          env_params=env_params,
+                                          ddpg_params=ddpg_params)
+        pruner = PRUNER_DICT[pruning_algorithm](None, None, **pruning_params)
+        super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
+                         evaluator=evaluator, reset_weight=False)

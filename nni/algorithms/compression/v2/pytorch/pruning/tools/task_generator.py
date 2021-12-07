@@ -350,30 +350,15 @@ class AMCTaskGenerator(TaskGenerator):
     def __init__(self, origin_model: Module, origin_config_list: List[Dict], total_iteration: int, dummy_input: Tensor,
                  log_dir: str = '.', keep_intermediate_result: bool = False, origin_masks: Dict[str, Dict[str, Tensor]] = {},
                  env_params: Dict = {}, ddpg_params: Dict = {}):
-
         self.total_iteration = total_iteration
         self.current_iteration = 1
         self.dummy_input = dummy_input
         self.env_params = env_params
         self.ddpg_params = ddpg_params
-
-        self.best_score = 0
-        self.T = []  # trajectory
-        self.iteration_reward = 0.
-        self.observation = None
-        self.target_sparsity = config_list_canonical(origin_model, origin_config_list)
-        self.actions = []
-        self.preserv_idxes = []
-        self._temp_config_list = []
-        self._current_score = 0
-        
-        self.warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
-        self.next_action_list = []
-        self.next_preserve_idx_list = []
+        self.config_list_copy = deepcopy(origin_config_list)
 
         super().__init__(origin_model, origin_masks=origin_masks, origin_config_list=origin_config_list,
                          log_dir=log_dir, keep_intermediate_result=keep_intermediate_result)
-
 
     def init_pending_tasks(self) -> List[Task]:
         origin_model = torch.load(self._origin_model_path)
@@ -385,6 +370,15 @@ class AMCTaskGenerator(TaskGenerator):
         self.temp_masks_path = Path(self._intermediate_result_dir, 'origin_compact_model_masks.pth')
         torch.save(origin_model, self.temp_model_path)
         torch.save(origin_masks, self.temp_masks_path)
+
+        self.T = []  # trajectory
+        self.iteration_reward = 0.
+        self.observation = None
+        self.actions = []
+        self.preserv_idxes = []
+        self._temp_config_list = []
+        self._current_score = 0
+        self.warmup_num = self.ddpg_params['warmup'] if 'warmup' in self.ddpg_params.keys() else 100
 
         self.env = ChannelPruningEnv(origin_model, origin_config_list, self.dummy_input, self.env_params)
         nb_states = self.env.layer_embedding.shape[1]
@@ -398,20 +392,18 @@ class AMCTaskGenerator(TaskGenerator):
     def generate_tasks(self, task_result: TaskResult) -> List[Task]:
         # initial/update temp config list
         if task_result.task_id != 'origin':
-            self.actions = deepcopy(self.next_action_list)
-            self.preserv_idxes = deepcopy(self.next_preserve_idx_list)
+            self.env.set_reward(self._tasks[task_result.task_id].score)
+            self.env.set_mask(task_result.pruner_generated_masks)
 
             # use last actions
             info = None
             for action, preserv_idx in zip(self.actions, self.preserv_idxes):
-                observation1, reward, done, info = self.env.step_after(action, preserv_idx)
-                self.T.append([reward, deepcopy(self.observation), deepcopy(observation1), action, done])
+                observation, reward, done, info = self.env.step_after(action, preserv_idx)
+                self.T.append([reward, deepcopy(self.observation), deepcopy(observation), action, done])
                 # update
-                self.observation = deepcopy(observation1)
+                self.observation = deepcopy(observation)
                 self.iteration_reward += reward
 
-            self.actions = deepcopy(self.next_action_list)
-            self.preserv_idxes = deepcopy(self.next_preserve_idx_list)
             # end of episode
             print("Generated config list: {}".format(info['config_list']))
             _logger.info(
@@ -433,50 +425,44 @@ class AMCTaskGenerator(TaskGenerator):
             self.observation = None
             self.iteration_reward = 0.
             self.T = []
-            
+
             origin_model = torch.load(self._origin_model_path)
             compact_model = task_result.compact_model
             compact_model_masks = task_result.compact_model_masks
-            current2origin_sparsity, compact2origin_sparsity, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.target_sparsity)
+            current2origin_sparsity, _, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.config_list_copy)
             self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
             score = self._tasks[task_result.task_id].score
             # update environment information
             self._current_score = score
 
         done = False
-        self.next_action_list = []
-        self.next_preserve_idx_list = []
+        self.actions = []
+        self.preserv_idxes = []
+        self.observation = None
         while not done:
             if self.observation is None:
                 self.observation = deepcopy(self.env.reset())
             # agent picks action
-            
+
             if self.current_iteration <= self.warmup_num:
                 action = self.agent.random_action()
             else:
                 action = self.agent.select_action(self.observation, episode=self.current_iteration)
             # collect the actions and preserv_idx each layer
             action, preserv_idx = self.env.step_previous(action)
-            self.next_action_list.append(action)
-            self.next_preserve_idx_list.append(preserv_idx)
+            self.actions.append(action)
+            self.preserv_idxes.append(preserv_idx)
 
             if self.env.cur_ind == len(self.env.prunable_idx):
                 self.env.cur_ind = 0
                 self.env.visited = [False] * len(self.env.prunable_idx)
                 done = True
-        
-        # set the reward and mask of last epoch
-        if task_result.task_id != 'origin':
-            self.env.set_reward(self._tasks[task_result.task_id].score)
-            self.env.set_mask(task_result.pruner_generated_masks)
-        
-    
+
         if self._task_id_candidate < self.total_iteration:
             task_id = self._task_id_candidate
-            new_config_list = deepcopy(self._temp_config_list)
             config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
             with Path(config_list_path).open('w') as f:
-                json_tricks.dump(new_config_list, f, indent=4)
+                json_tricks.dump(self._temp_config_list, f, indent=4)
 
             task = Task(task_id, self.temp_model_path, self.temp_masks_path, config_list_path)
             self._tasks[task_id] = task
