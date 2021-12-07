@@ -69,6 +69,8 @@ def need_to_translate(source, target):
         if pipeline_mode:
             return
         shutil.copyfile(source, target)
+    if target.suffix == '.html':
+        return  # FIXME I don't know how to process html
     target_checksum = hashlib.sha256(path.open('rb').read()).hexdigest()[:32]
     checksum = target.open('r').readline().strip()[3:]
     if checksum != target_checksum:
