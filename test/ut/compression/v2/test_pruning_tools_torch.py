@@ -24,7 +24,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     GlobalSparsityAllocator
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
-from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name, trace
+from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name, trace_parameters
 from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
@@ -62,7 +62,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()

@@ -18,7 +18,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     ADMMPruner,
     MovementPruner
 )
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
 
 
 class TorchModel(torch.nn.Module):
@@ -55,7 +55,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
