@@ -9,13 +9,14 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from dataloader import get_imagenet_iter_dali
-# from nni.nas.pytorch.fixed import apply_fixed_architecture
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from nni.retiarii import fixed_arch
 from nni.retiarii.oneshot.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
 
 from network import ShuffleNetV2OneShot
-from utils import CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy, ToBGRTensor
 
 logger = logging.getLogger("nni.spos.scratch")
 
@@ -109,9 +110,9 @@ if __name__ == "__main__":
     random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
-    model = ShuffleNetV2OneShot(affine=True)
+    with fixed_arch(args.architecture):
+        model = ShuffleNetV2OneShot(affine=True)
     model.cuda()
-    apply_fixed_architecture(model, args.architecture)
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
@@ -128,14 +129,22 @@ if __name__ == "__main__":
         raise ValueError("'%s' not supported." % args.lr_decay)
     writer = SummaryWriter(log_dir=args.tb_dir)
 
-    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers,
-                                          spos_preprocessing=args.spos_preprocessing)
-    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
-                                        spos_preprocessing=args.spos_preprocessing)
-
+    if args.spos_preprocessing:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+            transforms.RandomHorizontalFlip(0.5),
+            ToBGRTensor(),
+        ])
+    else:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224)
+        ])
+    train_dataset = datasets.ImageNet(args.imagenet_dir, split='train', transform=trans)
+    val_dataset = datasets.ImageNet(args.imagenet_dir, split='val', transform=trans)
     for epoch in range(args.epochs):
-        train(epoch, model, criterion, optimizer, train_loader, writer, args)
-        validate(epoch, model, criterion, val_loader, writer, args)
+        train(epoch, model, criterion, optimizer, train_dataset, writer, args)
+        validate(epoch, model, criterion, val_dataset, writer, args)
         scheduler.step()
         dump_checkpoint(model, epoch, "scratch_checkpoints")
 
