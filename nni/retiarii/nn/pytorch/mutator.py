@@ -6,11 +6,13 @@ from typing import Any, List, Optional, Tuple
 
 import torch.nn as nn
 
-from ...mutator import Mutator
-from ...graph import Cell, Graph, Model, ModelStatus, Node
+from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node
+from nni.retiarii.mutator import Mutator
+from nni.retiarii.serializer import is_basic_unit
+from nni.retiarii.utils import uid
+
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
 from .component import Repeat, NasBench101Cell, NasBench101Mutator
-from ...utils import uid
 
 
 class LayerChoiceMutator(Mutator):
@@ -221,17 +223,17 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     graph = Graph(model, uid(), '_model', _internal=True)._register()
     model.python_class = pytorch_model.__class__
     if len(inspect.signature(model.python_class.__init__).parameters) > 1:
-        if not hasattr(pytorch_model, '_init_parameters'):
-            raise ValueError('Please annotate the model with @serialize decorator in python execution mode '
+        if not getattr(pytorch_model, '_nni_model_wrapper', False):
+            raise ValueError('Please annotate the model with @model_wrapper decorator in python execution mode '
                              'if your model has init parameters.')
-        model.python_init_params = pytorch_model._init_parameters
+        model.python_init_params = pytorch_model.trace_kwargs
     else:
         model.python_init_params = {}
 
     for name, module in pytorch_model.named_modules():
-        # tricky case: value choice that serves as parameters are stored in _init_parameters
-        if hasattr(module, '_init_parameters'):
-            for key, value in module._init_parameters.items():
+        # tricky case: value choice that serves as parameters are stored in traced arguments
+        if is_basic_unit(module):
+            for key, value in module.trace_kwargs.items():
                 if isinstance(value, ValueChoice):
                     node = graph.add_node(name + '.init.' + key, 'ValueChoice', {'candidates': value.candidates})
                     node.label = value.label

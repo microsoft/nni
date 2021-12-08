@@ -42,13 +42,14 @@ class TorchModel(torch.nn.Module):
 
 def trainer(model, optimizer, criterion):
     model.train()
-    input = torch.rand(10, 1, 28, 28)
-    label = torch.Tensor(list(range(10))).type(torch.LongTensor)
-    optimizer.zero_grad()
-    output = model(input)
-    loss = criterion(output, label)
-    loss.backward()
-    optimizer.step()
+    for _ in range(10):
+        input = torch.rand(10, 1, 28, 28)
+        label = torch.Tensor(list(range(10))).type(torch.LongTensor)
+        optimizer.zero_grad()
+        output = model(input)
+        loss = criterion(output, label)
+        loss.backward()
+        optimizer.step()
 
 
 def get_optimizer(model):
@@ -66,7 +67,7 @@ class IterativePrunerTestCase(unittest.TestCase):
     def test_linear_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = LinearPruner(model, config_list, 'level', 3, log_dir='../../logs')
+        pruner = LinearPruner(model, config_list, 'level', 3, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
@@ -75,7 +76,7 @@ class IterativePrunerTestCase(unittest.TestCase):
     def test_agp_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = AGPPruner(model, config_list, 'level', 3, log_dir='../../logs')
+        pruner = AGPPruner(model, config_list, 'level', 3, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
@@ -84,7 +85,7 @@ class IterativePrunerTestCase(unittest.TestCase):
     def test_lottery_ticket_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = LotteryTicketPruner(model, config_list, 'level', 3, log_dir='../../logs')
+        pruner = LotteryTicketPruner(model, config_list, 'level', 3, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
@@ -93,7 +94,7 @@ class IterativePrunerTestCase(unittest.TestCase):
     def test_simulated_annealing_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = SimulatedAnnealingPruner(model, config_list, evaluator, start_temperature=40, log_dir='../../logs')
+        pruner = SimulatedAnnealingPruner(model, config_list, evaluator, start_temperature=40, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
@@ -113,7 +114,7 @@ class IterativePrunerTestCase(unittest.TestCase):
             'evaluator': evaluator,
             'start_temperature': 40
         }
-        pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params=sa_params, log_dir='../../logs')
+        pruner = AutoCompressPruner(model, config_list, 10, admm_params, sa_params=sa_params, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)

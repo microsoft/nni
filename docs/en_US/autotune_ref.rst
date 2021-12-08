@@ -78,3 +78,9 @@ Utilities
 ---------
 
 ..  autofunction:: nni.utils.merge_parameter
+
+..  autofunction:: nni.trace
+
+..  autofunction:: nni.dump
+
+..  autofunction:: nni.load
