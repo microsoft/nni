@@ -50,13 +50,14 @@ class TorchModel(torch.nn.Module):
 
 def trainer(model, optimizer, criterion):
     model.train()
-    input = torch.rand(10, 1, 28, 28)
-    label = torch.Tensor(list(range(10))).type(torch.LongTensor)
-    optimizer.zero_grad()
-    output = model(input)
-    loss = criterion(output, label)
-    loss.backward()
-    optimizer.step()
+    for _ in range(10):
+        input = torch.rand(10, 1, 28, 28)
+        label = torch.Tensor(list(range(10))).type(torch.LongTensor)
+        optimizer.zero_grad()
+        output = model(input)
+        loss = criterion(output, label)
+        loss.backward()
+        optimizer.step()
 
 
 def get_optimizer(model):

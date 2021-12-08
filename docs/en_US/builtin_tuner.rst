@@ -10,7 +10,9 @@ Tuner receives metrics from `Trial` to evaluate the performance of a specific pa
     :maxdepth: 1
     
     Overview <Tuner/BuiltinTuner>
-    TPE / Random Search / Anneal <Tuner/HyperoptTuner>
+    TPE <Tuner/TpeTuner>
+    Random Search <Tuner/RandomTuner>
+    Anneal <Tuner/HyperoptTuner>
     Naive Evolution <Tuner/EvolutionTuner>
     SMAC <Tuner/SmacTuner>
     Metis Tuner <Tuner/MetisTuner>
@@ -21,3 +23,4 @@ Tuner receives metrics from `Trial` to evaluate the performance of a specific pa
     Hyperband <Tuner/HyperbandAdvisor>
     BOHB <Tuner/BohbAdvisor>
     PBT Tuner <Tuner/PBTTuner>
+    DNGO Tuner <Tuner/DngoTuner>
