@@ -270,15 +270,15 @@ class AMCPruner(IterativePruner):
         Supported keys:
         - op_types: operation type to be pruned
         - op_names: operation name to be pruned
-    pruning_algorithm : str
-        Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
-        This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
     total_iteration: int
         The total iteration number.
     dummy_input : Optional[torch.Tensor]
         `dummy_input` is required for trace the model in RL environment.
     evaluator: Callable[[Module], float]
         Evaluate the pruned model and give a score.
+    pruning_algorithm : str
+        Supported pruning algorithm ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'].
+        This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
     log_dir : str
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
@@ -327,6 +327,8 @@ class AMCPruner(IterativePruner):
                  evaluator: Callable[[Module], float], pruning_algorithm: str = 'l1', log_dir: str = '.',
                  keep_intermediate_result: bool = False, finetuner: Optional[Callable[[Module], None]] = None,
                  speed_up: bool = False, env_params: dict = {}, ddpg_params: dict = {}, pruning_params: dict = {}):
+        assert pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'], \
+            "Only support pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo']"
         task_generator = AMCTaskGenerator(origin_model=model,
                                           origin_config_list=config_list,
                                           total_iteration=total_iteration,

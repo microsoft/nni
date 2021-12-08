@@ -411,9 +411,9 @@ class AMCTaskGenerator(TaskGenerator):
             print("Generated config list: {}".format(info['config_list']))
             _logger.info(
                 '#%d: iteration_reward: %.4f reward: %.4f, ratio: %.4f\n',
-                    self.current_iteration - 1, self.iteration_reward,
-                    info['reward'],
-                    info['compress_ratio']
+                self.current_iteration - 1, self.iteration_reward,
+                info['reward'],
+                info['compress_ratio']
             )
             final_reward = self.T[-1][0]
             self._temp_config_list = deepcopy(info['config_list'])
@@ -441,7 +441,6 @@ class AMCTaskGenerator(TaskGenerator):
         done = False
         self.actions = []
         self.preserv_idxes = []
-        self.observation = None
         while not done:
             if self.observation is None:
                 self.observation = deepcopy(self.env.reset())

@@ -13,15 +13,6 @@ from typing import Dict
 from nni.algorithms.compression.v2.pytorch.utils import dedupe_config_list, unfold_config_list, get_module_by_name
 _logger = logging.getLogger(__name__)
 
-# for pruning
-def acc_reward(net, acc, flops):
-    return acc * 0.01
-
-
-def acc_flops_reward(net, acc, flops):
-    error = (100 - acc) * 0.01
-    return -error * np.log(flops)
-
 
 def measure_layer_for_pruning(layer, x):
     def get_layer_type(layer):
@@ -112,7 +103,7 @@ class ChannelPruningEnv:
         self.pruner_generated_masks = None
 
         self.org_w_size = sum(self.wsize_list)
-        
+
     def set_mask(self, pruner_generated_masks: Dict[str, Dict[str, Tensor]]):
         self.pruner_generated_masks = pruner_generated_masks
 
@@ -167,7 +158,7 @@ class ChannelPruningEnv:
             self.temp_config_list = []
             self.ini = True
             return obs, reward, done, info_set
-        
+
         reward = 0
         done = False
         self.visited[self.cur_ind] = True  # set to visited
