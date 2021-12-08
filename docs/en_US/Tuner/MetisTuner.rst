@@ -1,8 +1,8 @@
 Metis Tuner on NNI
 ==================
 
-1. Introduction
----------------
+Introduction
+------------
 
 `Metis <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ offers several benefits over other tuning algorithms. While most tools only predict the optimal configuration, Metis gives you two outputs, a prediction for the optimal configuration and a suggestion for the next trial. No more guess work!
 
@@ -23,8 +23,8 @@ Note that the only acceptable types within the search space are ``quniform``\ , 
 
 More details can be found in our `paper <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__.
 
-2. Usage
---------
+Usage
+-----
 
 classArgs requirements
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -38,6 +38,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: MetisTuner
+     name: MetisTuner
      classArgs:
        optimize_mode: maximize

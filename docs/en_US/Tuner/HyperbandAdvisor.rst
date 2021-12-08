@@ -1,13 +1,13 @@
 Hyperband on NNI
 ================
 
-1. Introduction
----------------
+Introduction
+------------
 
 `Hyperband <https://arxiv.org/pdf/1603.06560.pdf>`__ is a popular autoML algorithm. The basic idea of Hyperband is to create several buckets, each having ``n`` randomly generated hyperparameter configurations, each configuration using ``r`` resources (e.g., epoch number, batch number). After the ``n`` configurations are finished, it chooses the top ``n/eta`` configurations and runs them using increased ``r*eta`` resources. At last, it chooses the best configuration it has found so far.
 
-2. Implementation with full parallelism
----------------------------------------
+Implementation with full parallelism
+------------------------------------
 
 First, this is an example of how to write an autoML algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it Advisor.
 
@@ -31,8 +31,8 @@ Or if you want to set ``exec_mode`` with ``serial`` according to the original al
 
 If you want to reproduce these results, refer to the example under ``examples/trials/benchmarking/`` for details.
 
-3. Usage
---------
+Usage
+-----
 
 Config file
 ^^^^^^^^^^^
@@ -138,8 +138,8 @@ Example Configuration
        R: 60
        eta: 3
 
-4. Future improvements
-----------------------
+Future improvements
+-------------------
 
 The current implementation of Hyperband can be further improved by supporting a simple early stop algorithm since it's possible that not all the configurations in the top ``n/eta`` perform well. Any unpromising configurations should be stopped early.
 
