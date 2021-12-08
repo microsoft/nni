@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP, RETIARIIPARAMETERS } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, TableObj, Tensorboard, RetiariiParameter } from './interface';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -376,7 +376,7 @@ const parametersType = (): Map<string, string> => {
 };
 
 // retiarii experiment parameters is in field `mutation_summary`
-const filterParameter = (parameters: RetiariiParameter): {} => {
+const filterParameter = (parameters: any): {} => {
     return RETIARIIPARAMETERS in parameters ? parameters[RETIARIIPARAMETERS] : parameters;
 };
 
