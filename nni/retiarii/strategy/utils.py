@@ -27,7 +27,7 @@ def dry_run_for_search_space(model: Model, mutators: List[Mutator]) -> Dict[Any,
             search_space[(mutator, i)] = candidates
     return search_space
 
-def dry_run_for_formated_search_space(model: Model, mutators: List[Mutator]) -> Dict[Any, Dict[Any, Any]]:
+def dry_run_for_formatted_search_space(model: Model, mutators: List[Mutator]) -> Dict[Any, Dict[Any, Any]]:
     search_space = collections.OrderedDict()
     for mutator in mutators:
         recorded_candidates, model = mutator.dry_run(model)

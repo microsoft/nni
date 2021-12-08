@@ -35,6 +35,7 @@ from ..mutator import Mutator
 from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
 from ..oneshot.interface import BaseOneShotTrainer
 from ..strategy import BaseStrategy
+from ..strategy.utils import dry_run_for_formatted_search_space
 
 _logger = logging.getLogger(__name__)
 
@@ -193,7 +194,7 @@ class RetiariiExperiment(Experiment):
         )
 
         _logger.info('Start strategy...')
-        search_space = BaseStrategy.get_model_space(base_model_ir, self.applied_mutators)
+        search_space = dry_run_for_formatted_search_space(base_model_ir, self.applied_mutators)
         self.update_search_space(search_space)
         self.strategy.run(base_model_ir, self.applied_mutators)
         _logger.info('Strategy exit')

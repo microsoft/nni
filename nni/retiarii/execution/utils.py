@@ -6,7 +6,6 @@ def _unpack_if_only_one(ele: List[Any]):
         return ele[0]
     return ele
 
-
 def get_mutation_dict(model: Model):
     return {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
 

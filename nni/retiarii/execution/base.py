@@ -16,6 +16,16 @@ from ..integration_api import send_trial, receive_trial_parameters, get_advisor
 _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
+    """
+    Parameters
+    ----------
+    model_script
+        code of an instantiated PyTorch model
+    evaluator
+        training approach for model_script
+    mutation_summary
+        a dict of all the choices during mutations in the HPO search space format
+    """
     def __init__(self, model_script: str, evaluator: Evaluator, mutation_summary: dict) -> None:
         self.model_script = model_script
         self.evaluator = evaluator
