@@ -1,11 +1,9 @@
 import random
-
+from pathlib import Path
 import numpy as np
 import time
 import torch
 import torch.backends.cudnn as cudnn
-from pathlib import Path
-
 from lib.datasets import build_dataset
 from lib import utils
 from supernet_engine import evaluate
@@ -190,7 +188,6 @@ def get_args_parser():
     return parser
 
 def main(args):
-
     update_config_from_file(args.cfg)
     utils.init_distributed_mode(args)
 
@@ -292,8 +289,8 @@ def main(args):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('AutoFormer evolution search', parents=[get_args_parser()])
-    args = parser.parse_args()
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    main(args)
+    _parser = argparse.ArgumentParser('AutoFormer evolution search', parents=[get_args_parser()])
+    _args = _parser.parse_args()
+    if _args.output_dir:
+        Path(_args.output_dir).mkdir(parents=True, exist_ok=True)
+    main(_args)

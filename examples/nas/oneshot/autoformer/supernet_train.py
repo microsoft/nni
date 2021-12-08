@@ -1,12 +1,9 @@
 import argparse
-import datetime
+from pathlib import Path
 import numpy as np
-import time
 import torch
 import torch.backends.cudnn as cudnn
-import json
 import yaml
-from pathlib import Path
 from timm.data import Mixup
 from timm.models import create_model
 from timm.loss import LabelSmoothingCrossEntropy, SoftTargetCrossEntropy
@@ -14,7 +11,6 @@ from timm.scheduler import create_scheduler
 from timm.optim import create_optimizer
 from timm.utils import NativeScaler
 from lib.datasets import build_dataset
-# from supernet_engine import train_one_epoch, evaluate
 from lib.samplers import RASampler
 from lib import utils
 from lib.config import cfg, update_config_from_file
@@ -22,6 +18,7 @@ from model.supernet_transformer import Vision_TransformerSuper
 from nni.algorithms.nas.pytorch.autoformer import AFSupernetTrainer
 from nni.algorithms.nas.pytorch.random import RandomMutator
 from nni.algorithms.nas.pytorch.autoformer.custom_callbacks import SaveCheckpointCallback, LRSchedulerCallback
+
 
 def get_args_parser():
     parser = argparse.ArgumentParser('AutoFormer training and evaluation script', add_help=False)
@@ -38,7 +35,8 @@ def get_args_parser():
     parser.add_argument('--relative_position', action='store_true')
     parser.add_argument('--gp', action='store_true')
     parser.add_argument('--change_qkv', action='store_true')
-    parser.add_argument('--max_relative_position', type=int, default=14, help='max distance in relative position embedding')
+    parser.add_argument('--max_relative_position', type=int, default=14, 
+                            help='max distance in relative position embedding')
 
     # Model parameters
     parser.add_argument('--model', default='', type=str, metavar='MODEL',
@@ -199,7 +197,6 @@ def main(args):
     seed = args.seed + utils.get_rank()
     torch.manual_seed(seed)
     np.random.seed(seed)
-    # random.seed(seed)
     cudnn.benchmark = True
 
     dataset_train, args.nb_classes = build_dataset(is_train=True, args=args)
@@ -251,8 +248,7 @@ def main(args):
             mixup_alpha=args.mixup, cutmix_alpha=args.cutmix, cutmix_minmax=args.cutmix_minmax,
             prob=args.mixup_prob, switch_prob=args.mixup_switch_prob, mode=args.mixup_mode,
             label_smoothing=args.smoothing, num_classes=args.nb_classes)
-
-    print(f"Creating SuperVisionTransformer")
+    print("Creating SuperVisionTransformer")
     print(cfg)
     model = Vision_TransformerSuper(img_size=args.input_size,
                                     patch_size=args.patch_size,
@@ -312,7 +308,7 @@ def main(args):
     if not output_dir.exists():
         output_dir.mkdir(parents=True)
     # save config for later experiments
-    with open(output_dir / "config.yaml", 'w') as f:
+    with open(file=output_dir / "config.yaml", mode='w') as f:
         f.write(args_text)
     if args.resume:
         if args.resume.startswith('https'):
@@ -341,7 +337,7 @@ def main(args):
     trainer = AFSupernetTrainer(
         model, mutator, criterion, data_loader_train, data_loader_val,
         optimizer, device, args.epochs, loss_scaler,
-        args.clip_grad, model_ema, mixup_fn, lr_scheduler,
+        args.clip_grad, model_ema, mixup_fn,
         args.amp, teacher_model,teacher_loss,choices, args.mode, retrain_config, 0., output_dir,
         [save_model_callback, scheduler_callback]
     )
@@ -351,10 +347,9 @@ def main(args):
     trainer.train()
 
 
-
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser('AutoFormer training and evaluation script', parents=[get_args_parser()])
-    args = parser.parse_args()
-    if args.output_dir:
-        Path(args.output_dir).mkdir(parents=True, exist_ok=True)
-    main(args)
+    _parser = argparse.ArgumentParser('AutoFormer training and evaluation script', parents=[get_args_parser()])
+    _args = _parser.parse_args()
+    if _args.output_dir:
+        Path(_args.output_dir).mkdir(parents=True, exist_ok=True)
+    main(_args)

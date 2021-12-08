@@ -1,21 +1,66 @@
 import random
 import math
 import sys
-from typing import Iterable, Optional
-from timm.models.layers import config
 from timm.utils.model import unwrap_model
 import torch
 import json
-from timm.data import Mixup
-from timm.utils import accuracy, ModelEma
+from timm.utils import accuracy
 from .utils import sample_configs,MetricLogger,SmoothedValue,is_main_process
 from nni.nas.pytorch.trainer import Trainer
 
 
 class AFSupernetTrainer(Trainer):
+    """
+    This trainer trains a supernet.
+
+    Parameters
+    ----------
+    model : nn.Module
+        The Supernet model.
+    mutator : Mutator
+        A mutator object that has been initialized with the model.
+    criterion : callable
+        Called with logits and targets. Returns a loss tensor.
+    data_loader_train : callable
+        Data loader of training. Raise ``StopIteration`` when one epoch is exhausted.
+    data_loader_val : iterablez
+        Data loader of validation. Raise ``StopIteration`` when one epoch is exhausted.
+    optimizer : Optimizer
+        Optimizer that optimizes the model.
+    device : torch.device
+        The device type.
+    num_epochs : int
+        Number of epochs of training.
+    loss_scaler : callable
+        The loss scaler.
+    max_norm : float
+        The max gradients.
+    model_ema : nn.Module
+        The model with ema.
+    mixup_fn : callable
+        The mixup function.
+    amp : Bool
+        Indicator of using amp.
+    teacher_model : nn.Module
+        The teacher model.
+    teacher_loss : callable
+        Called with logits and targets. Returns a loss tensor.
+    choices : dict
+        The dict contains the config of the supernet.
+    mode : str
+        Training mode.
+    retrain_config : dict
+        The config of subnet.
+    max_accuracy : float
+        The maximum accuracy on validation set.
+    output_dir : str
+        The output path.
+    callbacks : list of Callback
+        Callbacks to plug into the trainer. See Callbacks.
+    """
     def __init__(self, model, mutator, criterion, data_loader_train, data_loader_val,
                  optimizer, device, num_epochs, loss_scaler,
-                 max_norm, model_ema, mixup_fn, lr_scheduler,
+                 max_norm, model_ema, mixup_fn,
                  amp, teacher_model, teach_loss, 
                  choices, mode, retrain_config, max_accuracy, output_dir, callbacks):
         assert torch.cuda.is_available()
@@ -34,7 +79,6 @@ class AFSupernetTrainer(Trainer):
         self.max_norm = max_norm
         self.model_ema = model_ema
         self.mixup_fn = mixup_fn
-        self.lr_scheduler = lr_scheduler
         self.amp = amp
         self.teacher_model = teacher_model
         self.teach_loss = teach_loss

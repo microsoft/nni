@@ -1,5 +1,3 @@
-import io
-import os
 import time
 from collections import defaultdict, deque
 import datetime
@@ -16,6 +14,7 @@ def is_dist_avail_and_initialized():
     if not dist.is_initialized():
         return False
     return True
+
 
 class SmoothedValue(object):
     """Track a series of values and provide access to smoothed values over a
@@ -77,6 +76,7 @@ class SmoothedValue(object):
             max=self.max,
             value=self.value)
 
+
 def sample_configs(choices):
     config = {}
     dimensions = ['mlp_ratio', 'num_heads']
@@ -88,6 +88,7 @@ def sample_configs(choices):
 
     config['layer_num'] = depth
     return config
+
 
 class MetricLogger(object):
     def __init__(self, delimiter="\t"):
@@ -169,6 +170,7 @@ class MetricLogger(object):
         total_time_str = str(datetime.timedelta(seconds=int(total_time)))
         print('{} Total time: {} ({:.4f} s / it)'.format(
             header, total_time_str, total_time / len(iterable)))
+
 
 def get_rank():
     if not is_dist_avail_and_initialized():
