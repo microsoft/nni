@@ -113,7 +113,6 @@ class Experiment:
         """
         if run_mode is not RunMode.Detach:
             atexit.register(self.stop)
-        foreground = run_mode is RunMode.Foreground
 
         config = self.config.canonical_copy()
         if config.use_annotation:
@@ -125,7 +124,7 @@ class Experiment:
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.mode, self.id, config, port, debug, foreground, self.url_prefix)
+        self._proc = launcher.start_experiment(self.mode, self.id, config, port, debug, run_mode, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed

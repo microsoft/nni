@@ -3,6 +3,7 @@
 
 import contextlib
 from dataclasses import dataclass, fields
+from datetime import datetime
 import logging
 import os.path
 from pathlib import Path
@@ -74,8 +75,8 @@ class NniManagerArgs:
                     ret.append(str(value))
         return ret
 
-def start_experiment(action, exp_id, config, port, debug, foreground, url_prefix):
-    proc = None
+def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
+    foreground = run_mode.value == 'foreground'
     nni_manager_args = NniManagerArgs(action, exp_id, config, port, debug, foreground, url_prefix)
 
     _ensure_port_idle(port)
@@ -83,11 +84,12 @@ def start_experiment(action, exp_id, config, port, debug, foreground, url_prefix
     if action != 'view' and nni_manager_args.mode in websocket_platforms:
         _ensure_port_idle(port + 1, f'{nni_manager_args.mode} requires an additional port')
 
+    proc = None
     try:
         _logger.info(
             'Creating experiment, Experiment ID: %s', colorama.Fore.CYAN + exp_id + colorama.Style.RESET_ALL
         )
-        proc = _start_rest_server(nni_manager_args)
+        proc = _start_rest_server(nni_manager_args, run_mode)
         start_time = int(time.time() * 1000)
 
         _logger.info('Starting web server...')
@@ -116,17 +118,31 @@ def start_experiment(action, exp_id, config, port, debug, foreground, url_prefix
                 proc.kill()
         raise e
 
-def _start_rest_server(nni_manager_args) -> Tuple[int, Popen]:
+def _start_rest_server(nni_manager_args, run_mode) -> Tuple[int, Popen]:
     node_dir = Path(nni_node.__path__[0])
     node = str(node_dir / ('node.exe' if sys.platform == 'win32' else 'node'))
     main_js = str(node_dir / 'main.js')
     cmd = [node, '--max-old-space-size=4096', main_js]
     cmd += nni_manager_args.to_command_line_args()
+
+    if run_mode.value == 'detach':
+        log = Path(nni_manager_args.log_dir, nni_manager_args.experiment_id, 'log')
+        out = (log / 'nnictl_stdout.log').open('a')
+        err = (log / 'nnictl_stderr.log').open('a')
+        header = f'Experiment {nni_manager_args.experiment_id} start: {datetime.now()}'
+        header = '-' * 80 + '\n' + header + '\n' + '-' * 80 + '\n'
+        out.write(header)
+        err.write(header)
+
+    else:
+        out = None
+        err = None
+
     if sys.platform == 'win32':
         from subprocess import CREATE_NEW_PROCESS_GROUP
-        return Popen(cmd, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
+        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, creationflags=CREATE_NEW_PROCESS_GROUP)
     else:
-        return Popen(cmd, cwd=node_dir, preexec_fn=os.setpgrp)
+        return Popen(cmd, stdout=out, stderr=err, cwd=node_dir, preexec_fn=os.setpgrp)
 
 
 def start_experiment_retiarii(exp_id: str, config: ExperimentConfig, port: int, debug: bool) -> Popen:
