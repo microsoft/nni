@@ -131,7 +131,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/SPOS.html">SPOS</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/FBNet.html">FBNet</a></li>
-            <li><a href="https://nni.readthedocs.io/en/stable/NAS/Autoformer.html">Autoformer</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Autoformer.html">Autoformer</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">基于强化学习</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">正则进化</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">更多...</a></li>
