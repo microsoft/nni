@@ -12,7 +12,7 @@ Tuner receives metrics from `Trial` to evaluate the performance of a specific pa
     Overview <Tuner/BuiltinTuner>
     TPE <Tuner/TpeTuner>
     Random Search <Tuner/RandomTuner>
-    Anneal <Tuner/HyperoptTuner>
+    Anneal <Tuner/AnnealTuner>
     Naive Evolution <Tuner/EvolutionTuner>
     SMAC <Tuner/SmacTuner>
     Metis Tuner <Tuner/MetisTuner>

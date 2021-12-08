@@ -1,11 +1,5 @@
-Grid Search on NNI
-==================
-
-Grid Search
------------
-
-Introduction
-------------
+Grid Search Tuner
+=================
 
 Grid Search performs an exhaustive search through a search space.
 

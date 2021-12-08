@@ -36,7 +36,7 @@ Similar to tuner and assessor. NNI needs to locate your customized Advisor class
      classArgs:
        arg1: value1
 
-**Note that** The working directory of your advisor is ``<home>/nni-experiments/<experiment_id>/log``\ , which can be retrieved with environment variable ``NNI_LOG_DIRECTORY``.
+**Note that** The working directory of your advisor is ``<home>/nni-experiments/<experiment_id>/log``, which can be retrieved with environment variable ``NNI_LOG_DIRECTORY``.
 
 Example
 -------
