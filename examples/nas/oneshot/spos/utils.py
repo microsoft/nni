@@ -54,3 +54,11 @@ class ToBGRTensor(object):
         img = np.ascontiguousarray(img)
         img = torch.from_numpy(img).float()
         return img
+
+
+def get_archchoice_by_model(model):
+    result = {}
+    for k, v in model.items():
+        assert k in v
+        result[k] = model[k].split("_")[-1]
+    return result

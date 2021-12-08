@@ -71,7 +71,8 @@ if __name__ == "__main__":
         ])
     else:
         trans = transforms.Compose([
-            transforms.RandomResizedCrop(224)
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()
         ])
     train_dataset = datasets.ImageNet(args.imagenet_dir, split='train', transform=trans)
     val_dataset = datasets.ImageNet(args.imagenet_dir, split='val', transform=trans)

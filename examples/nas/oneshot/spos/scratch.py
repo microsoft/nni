@@ -27,6 +27,7 @@ def train(epoch, model, criterion, optimizer, loader, writer, args):
     cur_lr = optimizer.param_groups[0]["lr"]
 
     for step, (x, y) in enumerate(loader):
+        x, y = x.to('cuda'), y.to('cuda')
         cur_step = len(loader) * epoch + step
         optimizer.zero_grad()
         logits = model(x)
@@ -55,6 +56,7 @@ def validate(epoch, model, criterion, loader, writer, args):
     meters = AverageMeterGroup()
     with torch.no_grad():
         for step, (x, y) in enumerate(loader):
+            x, y = x.to('cuda'), y.to('cuda')
             logits = model(x)
             loss = criterion(logits, y)
             metrics = accuracy(logits, y)
@@ -138,13 +140,16 @@ if __name__ == "__main__":
         ])
     else:
         trans = transforms.Compose([
-            transforms.RandomResizedCrop(224)
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()
         ])
     train_dataset = datasets.ImageNet(args.imagenet_dir, split='train', transform=trans)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
     val_dataset = datasets.ImageNet(args.imagenet_dir, split='val', transform=trans)
+    valid_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.workers)                      
     for epoch in range(args.epochs):
-        train(epoch, model, criterion, optimizer, train_dataset, writer, args)
-        validate(epoch, model, criterion, val_dataset, writer, args)
+        train(epoch, model, criterion, optimizer, train_loader, writer, args)
+        validate(epoch, model, criterion, valid_loader, writer, args)
         scheduler.step()
         dump_checkpoint(model, epoch, "scratch_checkpoints")
 

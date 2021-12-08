@@ -1,21 +1,17 @@
 # This file is to demo the usage of multi-trial NAS in the usage of SPOS search space.
 
 import click
+import json
 import nni.retiarii.evaluator.pytorch as pl
-import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
-import torch
 from nni.retiarii import serialize
-from nni.retiarii.nn.pytorch import LayerChoice
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment
 from torchvision import transforms
 from torchvision.datasets import CIFAR10
-from nni.retiarii.evaluator import FunctionalEvaluator
-from nni import report_final_result
-import nni
+from nn_meter import load_latency_predictor
 
 from network import ShuffleNetV2OneShot
-from nn_meter import load_latency_predictor
+from utils import get_archchoice_by_model
 
 
 class LatencyFilter:
@@ -59,14 +55,14 @@ def _main(port):
 
     trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=64),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
-                                max_epochs=2)
+                                max_epochs=2, gpus=1)
 
-    simple_strategy = strategy.RegularizedEvolution(model_filter=LatencyFilter(threshold=100, predictor=base_predictor))
+    simple_strategy = strategy.RegularizedEvolution(model_filter=LatencyFilter(threshold=100, predictor=base_predictor), population_size=2, cycles=2)
     exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
     exp_config.trial_concurrency = 2
-    exp_config.max_trial_number = 2
+    # exp_config.max_trial_number = 2
     exp_config.trial_gpu_number = 1
     exp_config.training_service.use_active_gpu = False
     exp_config.execution_engine = 'base'
@@ -75,8 +71,10 @@ def _main(port):
     exp.run(exp_config, port)
 
     print('Exported models:')
-    for model in exp.export_top_models(formatter='dict'):
+    for i, model in enumerate(exp.export_top_models(formatter='dict')):
         print(model)
+        with open(f'architecture_final_{i}.json', 'w') as f: 
+            json.dump(get_archchoice_by_model(model), f, indent=4)
 
 
 if __name__ == '__main__':
