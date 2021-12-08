@@ -1,5 +1,5 @@
 **How To** - Customize Your Own Advisor
-===========================================
+=======================================
 
 *Warning: API is subject to change in future releases.*
 

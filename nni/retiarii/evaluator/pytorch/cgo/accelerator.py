@@ -10,7 +10,7 @@ from pytorch_lightning.plugins.training_type.training_type_plugin import Trainin
 from pytorch_lightning.trainer import Trainer
 from pytorch_lightning.trainer.connectors.accelerator_connector import AcceleratorConnector
 
-from ....serializer import serialize_cls
+import nni
 
 
 class BypassPlugin(TrainingTypePlugin):
@@ -126,7 +126,7 @@ def get_accelerator_connector(
     )
 
 
-@serialize_cls
+@nni.trace
 class BypassAccelerator(Accelerator):
     def __init__(self, precision_plugin=None, device="cpu", **trainer_kwargs):
         if precision_plugin is None:

@@ -7,7 +7,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
-from nni.algorithms.compression.v2.pytorch.base import Task, TaskResult
+from nni.algorithms.compression.v2.pytorch.base import TaskResult
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     AGPTaskGenerator,
     LinearTaskGenerator,

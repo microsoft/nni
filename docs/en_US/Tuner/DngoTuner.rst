@@ -1,11 +1,11 @@
 DNGO on NNI
 ===========
 
-1. Introduction
----------------
+Introduction
+------------
 
-2. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^
@@ -25,6 +25,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: DNGOTuner
+     name: DNGOTuner
      classArgs:
        optimize_mode: maximize
