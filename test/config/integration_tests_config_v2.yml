@@ -29,7 +29,7 @@ testCases:
 
 - name: mnist-pytorch-non-local
   configFile: test/config/examples/mnist-pytorch-v2.yml
-  trainingService: remote pai dlts hybrid
+  trainingService: remote pai kubeflow frameworkcontroller dlts hybrid
 
 - name: cifar10-pytorch
   configFile: test/config/examples/cifar10-pytorch-v2.yml
