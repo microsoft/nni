@@ -114,7 +114,9 @@ CGO Execution
 Utilities
 ---------
 
-..  autofunction:: nni.retiarii.serialize
+..  autofunction:: nni.retiarii.basic_unit
+
+..  autofunction:: nni.retiarii.model_wrapper
 
 ..  autofunction:: nni.retiarii.fixed_arch
 

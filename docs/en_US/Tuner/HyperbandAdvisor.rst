@@ -1,13 +1,13 @@
 Hyperband on NNI
 ================
 
-1. Introduction
----------------
+Introduction
+------------
 
 `Hyperband <https://arxiv.org/pdf/1603.06560.pdf>`__ is a popular autoML algorithm. The basic idea of Hyperband is to create several buckets, each having ``n`` randomly generated hyperparameter configurations, each configuration using ``r`` resources (e.g., epoch number, batch number). After the ``n`` configurations are finished, it chooses the top ``n/eta`` configurations and runs them using increased ``r*eta`` resources. At last, it chooses the best configuration it has found so far.
 
-2. Implementation with full parallelism
----------------------------------------
+Implementation with full parallelism
+------------------------------------
 
 First, this is an example of how to write an autoML algorithm based on MsgDispatcherBase, rather than Tuner and Assessor. Hyperband is implemented in this way because it integrates the functions of both Tuner and Assessor, thus, we call it Advisor.
 
@@ -31,8 +31,11 @@ Or if you want to set ``exec_mode`` with ``serial`` according to the original al
 
 If you want to reproduce these results, refer to the example under ``examples/trials/benchmarking/`` for details.
 
-3. Usage
---------
+Usage
+-----
+
+Config file
+^^^^^^^^^^^
 
 To use Hyperband, you should add the following spec in your experiment's YAML config file:
 
@@ -113,8 +116,30 @@ Here is a concrete example of ``R=81`` and ``eta=3``\ :
 
 For information about writing trial code, please refer to the instructions under ``examples/trials/mnist-hyperband/``.
 
-4. Future improvements
-----------------------
+classArgs requirements
+^^^^^^^^^^^^^^^^^^^^^^
+
+
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **R** (*int, optional, default = 60*\ ) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
+* **eta** (*int, optional, default = 3*\ ) - ``(eta-1)/eta`` is the proportion of discarded trials.
+* **exec_mode** (*serial or parallelism, optional, default = parallelism*\ ) - If 'parallelism', the tuner will try to use available resources to start new bucket immediately. If 'serial', the tuner will only start new bucket after the current bucket is done.
+
+Example Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   # config.yml
+   advisor:
+     builtinAdvisorName: Hyperband
+     classArgs:
+       optimize_mode: maximize
+       R: 60
+       eta: 3
+
+Future improvements
+-------------------
 
 The current implementation of Hyperband can be further improved by supporting a simple early stop algorithm since it's possible that not all the configurations in the top ``n/eta`` perform well. Any unpromising configurations should be stopped early.
 

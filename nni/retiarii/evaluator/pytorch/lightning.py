@@ -10,17 +10,17 @@ import pytorch_lightning as pl
 import torch.nn as nn
 import torch.optim as optim
 import torchmetrics
-from torch.utils.data import DataLoader
+import torch.utils.data as torch_data
 
 import nni
+from nni.common.serializer import is_traceable
 try:
     from .cgo import trainer as cgo_trainer
     cgo_import_failed = False
 except ImportError:
     cgo_import_failed = True
 
-from ...graph import Evaluator
-from ...serializer import serialize_cls
+from nni.retiarii.graph import Evaluator
 
 
 __all__ = ['LightningModule', 'Trainer', 'DataLoader', 'Lightning', 'Classification', 'Regression']
@@ -40,9 +40,10 @@ class LightningModule(pl.LightningModule):
             self.model = model
 
 
-Trainer = serialize_cls(pl.Trainer)
-DataLoader = serialize_cls(DataLoader)
+Trainer = nni.trace(pl.Trainer)
+DataLoader = nni.trace(torch_data.DataLoader)
 
+@nni.trace
 class Lightning(Evaluator):
     """
     Delegate the whole training to PyTorch Lightning.
@@ -74,9 +75,10 @@ class Lightning(Evaluator):
                  val_dataloaders: Union[DataLoader, List[DataLoader], None] = None):
         assert isinstance(lightning_module, LightningModule), f'Lightning module must be an instance of {__name__}.LightningModule.'
         if cgo_import_failed:
-            assert isinstance(trainer, Trainer), f'Trainer must be imported from {__name__}'
+            assert isinstance(trainer, pl.Trainer) and is_traceable(trainer), f'Trainer must be imported from {__name__}'
         else:
-            assert isinstance(trainer, Trainer) or isinstance(trainer, cgo_trainer.Trainer), \
+            # this is not isinstance(trainer, Trainer) because with a different trace call, it can be different
+            assert (isinstance(trainer, pl.Trainer) and is_traceable(trainer)) or isinstance(trainer, cgo_trainer.Trainer), \
                 f'Trainer must be imported from {__name__} or nni.retiarii.evaluator.pytorch.cgo.trainer'
         assert _check_dataloader(train_dataloader), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
         assert _check_dataloader(val_dataloaders), f'Wrong dataloader type. Try import DataLoader from {__name__}.'
@@ -135,7 +137,7 @@ def _check_dataloader(dataloader):
         return True
     if isinstance(dataloader, list):
         return all([_check_dataloader(d) for d in dataloader])
-    return isinstance(dataloader, DataLoader)
+    return isinstance(dataloader, torch_data.DataLoader) and is_traceable(dataloader)
 
 
 ### The following are some commonly used Lightning modules ###
@@ -219,7 +221,7 @@ class _AccuracyWithLogits(torchmetrics.Accuracy):
         return super().update(nn.functional.softmax(pred), target)
 
 
-@serialize_cls
+@nni.trace
 class _ClassificationModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.CrossEntropyLoss,
                  learning_rate: float = 0.001,
@@ -272,7 +274,7 @@ class Classification(Lightning):
                          train_dataloader=train_dataloader, val_dataloaders=val_dataloaders)
 
 
-@serialize_cls
+@nni.trace
 class _RegressionModule(_SupervisedLearningModule):
     def __init__(self, criterion: nn.Module = nn.MSELoss,
                  learning_rate: float = 0.001,

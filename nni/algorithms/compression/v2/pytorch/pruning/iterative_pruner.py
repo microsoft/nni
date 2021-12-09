@@ -19,7 +19,7 @@ from .basic_pruner import (
     ADMMPruner
 )
 from .basic_scheduler import PruningScheduler
-from .tools.task_generator import (
+from .tools import (
     LinearTaskGenerator,
     AGPTaskGenerator,
     LotteryTicketTaskGenerator,
@@ -74,8 +74,7 @@ class LinearPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -86,22 +85,23 @@ class LinearPruner(IterativePruner):
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
+        The finetuner handled all finetune logic, use a pytorch module as input.
+        It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
-    pruning_params : dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+    pruning_params : Dict
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: dict = {}):
+                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
         task_generator = LinearTaskGenerator(total_iteration=total_iteration,
                                              origin_model=model,
                                              origin_config_list=config_list,
@@ -119,8 +119,7 @@ class AGPPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -131,22 +130,23 @@ class AGPPruner(IterativePruner):
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
+        The finetuner handled all finetune logic, use a pytorch module as input.
+        It will be called at the end of each iteration, usually for neutralizing the accuracy loss brought by the pruning in this iteration.
     speed_up : bool
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
-    pruning_params : dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+    pruning_params : Dict
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
-                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: dict = {}):
+                 evaluator: Optional[Callable[[Module], float]] = None, pruning_params: Dict = {}):
         task_generator = AGPTaskGenerator(total_iteration=total_iteration,
                                           origin_model=model,
                                           origin_config_list=config_list,
@@ -164,8 +164,7 @@ class LotteryTicketPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+        The origin config list provided by the user.
     pruning_algorithm : str
         Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
         This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
@@ -176,25 +175,26 @@ class LotteryTicketPruner(IterativePruner):
     keep_intermediate_result : bool
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
-        The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
+        The finetuner handled all finetune logic, use a pytorch module as input.
+        It will be called at the end of each iteration if reset_weight is False, will be called at the beginning of each iteration otherwise.
     speed_up : bool
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     evaluator : Optional[Callable[[Module], float]]
         Evaluate the pruned model and give a score.
         If evaluator is None, the best result refers to the latest result.
     reset_weight : bool
         If set True, the model weight will reset to the original model weight at the end of each iteration step.
-    pruning_params : dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+    pruning_params : Dict
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str,
                  total_iteration: int, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
                  evaluator: Optional[Callable[[Module], float]] = None, reset_weight: bool = True,
-                 pruning_params: dict = {}):
+                 pruning_params: Dict = {}):
         task_generator = LotteryTicketTaskGenerator(total_iteration=total_iteration,
                                                     origin_model=model,
                                                     origin_config_list=config_list,
@@ -212,11 +212,7 @@ class SimulatedAnnealingPruner(IterativePruner):
     model : Module
         The origin unwrapped pytorch model to be pruned.
     config_list : List[Dict]
-        The origin config list provided by the user. Note that this config_list is directly config the origin model.
-        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
-    pruning_algorithm : str
-        Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
-        This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
+        The origin config list provided by the user.
     evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     start_temperature : float
@@ -227,6 +223,11 @@ class SimulatedAnnealingPruner(IterativePruner):
         Cool down rate of the temperature.
     perturbation_magnitude : float
         Initial perturbation magnitude to the sparsities. The magnitude decreases with current temperature.
+    pruning_algorithm : str
+        Supported pruning algorithm ['level', 'l1', 'l2', 'fpgm', 'slim', 'apoz', 'mean_activation', 'taylorfo', 'admm'].
+        This iterative pruner will use the chosen corresponding pruner to prune the model in each iteration.
+    pruning_params : Dict
+        If the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     log_dir : str
         The log directory use to saving the result, you can find the best result under this folder.
     keep_intermediate_result : bool
@@ -234,18 +235,15 @@ class SimulatedAnnealingPruner(IterativePruner):
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
     speed_up : bool
-        If set True, speed up the model in each iteration.
+        If set True, speed up the model at the end of each iteration to make the pruned model compact.
     dummy_input : Optional[torch.Tensor]
-        If `speed_up` is True, `dummy_input` is required for trace the model in speed up.
-    pruning_params : dict
-        If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
+        If `speed_up` is True, `dummy_input` is required for tracing the model in speed up.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], pruning_algorithm: str, evaluator: Callable[[Module], float],
-                 start_temperature: float = 100, stop_temperature: float = 20, cool_down_rate: float = 0.9,
-                 perturbation_magnitude: float = 0.35, log_dir: str = '.', keep_intermediate_result: bool = False,
-                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None,
-                 pruning_params: dict = {}):
+    def __init__(self, model: Module, config_list: List[Dict], evaluator: Callable[[Module], float], start_temperature: float = 100,
+                 stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
+                 pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
+                 finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None):
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
                                                          start_temperature=start_temperature,

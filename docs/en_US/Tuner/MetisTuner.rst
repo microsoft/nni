@@ -1,8 +1,8 @@
 Metis Tuner on NNI
 ==================
 
-Metis Tuner
------------
+Introduction
+------------
 
 `Metis <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ offers several benefits over other tuning algorithms. While most tools only predict the optimal configuration, Metis gives you two outputs, a prediction for the optimal configuration and a suggestion for the next trial. No more guess work!
 
@@ -22,3 +22,22 @@ Metis belongs to the class of sequential model-based optimization (SMBO) algorit
 Note that the only acceptable types within the search space are ``quniform``\ , ``uniform``\ , ``randint``\ , and numerical ``choice``.
 
 More details can be found in our `paper <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__.
+
+Usage
+-----
+
+classArgs requirements
+^^^^^^^^^^^^^^^^^^^^^^
+
+* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+
+Example Configuration
+^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: yaml
+
+   # config.yml
+   tuner:
+     name: MetisTuner
+     classArgs:
+       optimize_mode: maximize
