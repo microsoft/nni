@@ -27,6 +27,5 @@ from .task_generator import (
     AGPTaskGenerator,
     LinearTaskGenerator,
     LotteryTicketTaskGenerator,
-    SimulatedAnnealingTaskGenerator,
-    AMCTaskGenerator
+    SimulatedAnnealingTaskGenerator
 )
