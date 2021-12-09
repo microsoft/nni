@@ -17,7 +17,7 @@ _logger = logging.getLogger(__name__)
 
 class BaseGraphData:
     """
-    Parameters
+    Attributes
     ----------
     model_script
         code of an instantiated PyTorch model
