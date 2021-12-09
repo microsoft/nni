@@ -6,12 +6,12 @@ Introduction
 
 Proposed in `Single Path One-Shot Neural Architecture Search with Uniform Sampling <https://arxiv.org/abs/1904.00420>`__ is a one-shot NAS method that addresses the difficulties in training One-Shot NAS models by constructing a simplified supernet trained with an uniform path sampling method, so that all underlying architectures (and their weights) get trained fully and equally. An evolutionary algorithm is then applied to efficiently search for the best-performing architectures without any fine tuning.
 
-Implementation on NNI is based on `official repo <https://github.com/megvii-model/SinglePathOneShot>`__. We implement a trainer that trains the supernet and a evolution tuner that leverages the power of NNI framework that speeds up the evolutionary search phase. We have also shown 
+Implementation on NNI is based on `official repo <https://github.com/megvii-model/SinglePathOneShot>`__. We implement a trainer that trains the supernet and a evolution tuner that leverages the power of NNI framework that speeds up the evolutionary search phase.
 
 Examples
 --------
 
-Here is a use case, which is the search space in paper, and the way to use flops limit to perform uniform sampling.
+Here is a use case, which is the search space in paper. However, we applied latency limit instead of flops limit to perform the architecture search phase.
 
 :githublink:`Example code <examples/nas/oneshot/spos>`
 
@@ -57,25 +57,15 @@ NOTE: The data loading used in the official repo is `slightly different from usu
 Step 2. Evolution Search
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Single Path One-Shot leverages evolution algorithm to search for the best architecture. The search module, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
+Single Path One-Shot leverages evolution algorithm to search for the best architecture. In the paper, the search module, which is responsible for testing the sampled architecture, recalculates all the batch norm for a subset of training images, and evaluates the architecture on the full validation set.
 
-To have a search space ready for NNI framework, first run
+In this example, we have an incomplete implementation of the evolution search. The example only support training from scratch. Inheriting weights from pretrained supernet is not supported yet. To search with the regularized evolution strategy, run
 
 .. code-block:: bash
 
    python search.py
 
-This will generate a file called ``nni_auto_gen_search_space.json``\ , which is a serialized representation of your search space.
-
-By default, it will use ``checkpoint-150000.pth.tar`` downloaded previously. In case you want to use the checkpoint trained by yourself from the last step, specify ``--checkpoint`` in the command in ``config_search.yml``.
-
-Then search with evolution tuner.
-
-.. code-block:: bash
-
-   nnictl create --config config_search.yml
-
-The final architecture exported from every epoch of evolution can be found in ``checkpoints`` under the working directory of your tuner, which, by default, is ``$HOME/nni-experiments/your_experiment_id/log``.
+The final architecture exported from every epoch of evolution can be found in ``trials`` under the working directory of your tuner, which, by default, is ``$HOME/nni-experiments/your_experiment_id/trials``.
 
 Step 3. Train for Evaluation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -100,8 +90,7 @@ Known Limitations
 
 
 * Block search only. Channel search is not supported yet.
-* Weight inheriting while search is not supported yet.
-* Only GPU version is provided here.
+* In the search phase, training from the pretrained checkpoint is required. Inheriting weights from supernet is not supported yet.
 
 Current Reproduction Results
 ----------------------------
