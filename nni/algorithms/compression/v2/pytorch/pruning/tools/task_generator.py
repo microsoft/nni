@@ -18,7 +18,6 @@ from nni.algorithms.compression.v2.pytorch.utils import (
     compute_sparsity,
     get_model_weights_numel
 )
-
 from .base import TaskGenerator
 
 _logger = logging.getLogger(__name__)

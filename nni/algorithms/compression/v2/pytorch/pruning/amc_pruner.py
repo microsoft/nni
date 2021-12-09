@@ -92,24 +92,26 @@ class AMCTaskGenerator(TaskGenerator):
             if self.observation is None:
                 self.observation = self.env.reset().copy()
                 self.temp_config_list = []
+                compact_model = torch.load(self._origin_model_path)
+                compact_model_masks = torch.load(self._origin_masks_path)
+            else:
+                compact_model = task_result.compact_model
+                compact_model_masks = task_result.compact_model_masks
             if self.current_episode <= self.warmup_episode:
                 action = self.agent.random_action()
             else:
                 action = self.agent.select_action(self.observation, episode=self.current_episode)
             action = action.tolist()[0]
-            self.action = self.env.correct_action(action, task_result.compact_model)
+
+            self.action = self.env.correct_action(action, compact_model)
             sub_config_list = [{'op_names': [self.env.current_op_name], 'total_sparsity': self.action}]
             self.temp_config_list.extend(sub_config_list)
 
             task_id = self._task_id_candidate
             if self.env.is_first_layer() or self.env.is_final_layer():
                 task_config_list = self.temp_config_list
-                compact_model = torch.load(self._origin_model_path)
-                compact_model_masks = torch.load(self._origin_masks_path)
             else:
                 task_config_list = sub_config_list
-                compact_model = task_result.compact_model
-                compact_model_masks = task_result.compact_model_masks
 
             config_list_path = Path(self._intermediate_result_dir, '{}_config_list.json'.format(task_id))
             with Path(config_list_path).open('w') as f:
