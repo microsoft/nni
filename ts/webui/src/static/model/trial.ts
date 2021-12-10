@@ -7,7 +7,8 @@ import {
     Parameters,
     FinalType,
     MultipleAxes,
-    SingleAxis
+    SingleAxis,
+    RetiariiParameter
 } from '../interface';
 import {
     getFinal,
@@ -31,9 +32,11 @@ function inferTrialParameters(
     space: MultipleAxes,
     prefix: string = ''
 ): [Map<SingleAxis, any>, Map<string, any>] {
+    const latestedParamObj =
+        'mutation_summary' in paramObj ? (paramObj as RetiariiParameter).mutation_summary : paramObj;
     const parameters = new Map<SingleAxis, any>();
     const unexpectedEntries = new Map<string, any>();
-    for (const [k, v] of Object.entries(paramObj)) {
+    for (const [k, v] of Object.entries(latestedParamObj)) {
         // prefix can be a good fallback when corresponding item is not found in namespace
         const axisKey = space.axes.get(k);
         if (prefix && k === '_name') continue;

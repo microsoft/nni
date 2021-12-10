@@ -1,9 +1,10 @@
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 from ..graph import Evaluator, Model
 from ..integration_api import receive_trial_parameters
 from ..utils import ContextStack, import_, get_importable_name
 from .base import BaseExecutionEngine
+from .utils import get_mutation_dict, mutation_dict_to_summary
 
 
 class PythonGraphData:
@@ -13,13 +14,15 @@ class PythonGraphData:
         self.init_parameters = init_parameters
         self.mutation = mutation
         self.evaluator = evaluator
+        self.mutation_summary = mutation_dict_to_summary(mutation)
 
     def dump(self) -> dict:
         return {
             'class_name': self.class_name,
             'init_parameters': self.init_parameters,
             'mutation': self.mutation,
-            'evaluator': self.evaluator
+            'evaluator': self.evaluator,
+            'mutation_summary': self.mutation_summary
         }
 
     @staticmethod
@@ -55,13 +58,3 @@ class PurePythonExecutionEngine(BaseExecutionEngine):
 
         with ContextStack('fixed', graph_data.mutation):
             graph_data.evaluator._execute(_model)
-
-
-def _unpack_if_only_one(ele: List[Any]):
-    if len(ele) == 1:
-        return ele[0]
-    return ele
-
-
-def get_mutation_dict(model: Model):
-    return {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model.history}
