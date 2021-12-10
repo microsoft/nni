@@ -20,7 +20,32 @@ from .tools.rl_env import DDPG, AMCEnv
 
 
 class AMCTaskGenerator(TaskGenerator):
-    def __init__(self, total_episode: int, origin_model: Module, origin_config_list: List[Dict], dummy_input: Tensor,
+    """
+    Parameters
+    ----------
+    total_episode
+        The total episode number.
+    dummy_input
+        Use to inference and count the flops.
+    origin_model
+        The origin unwrapped pytorch model to be pruned.
+    origin_config_list
+        The origin config list provided by the user. Note that this config_list is directly config the origin model.
+        This means the sparsity provided by the origin_masks should also be recorded in the origin_config_list.
+    origin_masks
+        The pre masks on the origin model. This mask maybe user-defined or maybe generate by previous pruning.
+    log_dir
+        The log directory use to saving the task generator log.
+    keep_intermediate_result
+        If keeping the intermediate result, including intermediate model and masks during each iteration.
+    ddpg_params
+        The ddpg agent parameters.
+    target : str
+        'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
+        This parameter is used to explain what the sparsity setting in config_list refers to.
+    """
+
+    def __init__(self, total_episode: int, dummy_input: Tensor, origin_model: Module, origin_config_list: List[Dict],
                  origin_masks: Dict[str, Dict[str, Tensor]] = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
                  ddpg_params: Dict = {}, target: str = 'flops'):
         self.total_episode = total_episode
@@ -136,20 +161,27 @@ class AMCTaskGenerator(TaskGenerator):
 
 class AMCPruner(IterativePruner):
     """
+    A pytorch implementation of AMC: AutoML for Model Compression and Acceleration on Mobile Devices.
+    (https://arxiv.org/pdf/1802.03494.pdf)
+    Suggust config all `total_sparsity` in `config_list` a same value.
+    AMC pruner will treat the first sparsity in `config_list` as the global sparsity.
+
     Parameters
     ----------
-    total_episode: int
+    total_episode : int
         The total episode number.
-    model: Module
-            The model to be pruned.
-    config_list: list
-        Configuration list to configure layer pruning.
-        Supported keys:
-        - op_types: operation type to be pruned
-        - op_names: operation name to be pruned
+    model : Module
+        The model to be pruned.
+    config_list : List[Dict]
+        Supported keys :
+            - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
+            - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
+            - op_types : Operation type to be pruned.
+            - op_names : Operation name to be pruned.
+            - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     dummy_input : torch.Tensor
         `dummy_input` is required for speed-up and tracing the model in RL environment.
-    evaluator: Callable[[Module], float]
+    evaluator : Callable[[Module], float]
         Evaluate the pruned model and give a score.
     pruning_algorithm : str
         Supported pruning algorithm ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'].
@@ -160,7 +192,7 @@ class AMCPruner(IterativePruner):
         If keeping the intermediate result, including intermediate model and masks during each iteration.
     finetuner : Optional[Callable[[Module], None]]
         The finetuner handled all finetune logic, use a pytorch module as input, will be called in each iteration.
-    ddpg_params: dict
+    ddpg_params : Dict
         Configuration dict to configure the DDPG agent, any key unset will be set to default implicitly.
         - hidden1: hidden num of first fully connect layer. Default: 300
         - hidden2: hidden num of second fully connect layer. Default: 300
@@ -178,7 +210,7 @@ class AMCPruner(IterativePruner):
         - max_episode_length: maximum episode length. Default: 1e9
         - epsilon: linear decay of exploration policy. Default: 50000
 
-    pruning_params : dict
+    pruning_params : Dict
         If the pruner corresponding to the chosen pruning_algorithm has extra parameters, put them as a dict to pass in.
     target : str
         'flops' or 'params'. Note that the sparsity in other pruners always means the parameters sparse, but in AMC, you can choose flops sparse.
@@ -192,9 +224,9 @@ class AMCPruner(IterativePruner):
         assert pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo'], \
             "Only support pruning_algorithm in ['l1', 'l2', 'fpgm', 'apoz', 'mean_activation', 'taylorfo']"
         task_generator = AMCTaskGenerator(total_episode=total_episode,
+                                          dummy_input=dummy_input,
                                           origin_model=model,
                                           origin_config_list=config_list,
-                                          dummy_input=dummy_input,
                                           log_dir=log_dir,
                                           keep_intermediate_result=keep_intermediate_result,
                                           ddpg_params=ddpg_params,
