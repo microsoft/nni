@@ -61,7 +61,6 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
     copyParams = (trial: Trial): void => {
         // get copy parameters
         const params = JSON.stringify(reformatRetiariiParameter(trial.description.parameters as any), null, 4);
-        // const params = JSON.stringify(trial.description.parameters, null, 4);
         if (copy.default(params)) {
             this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
         } else {
