@@ -224,7 +224,21 @@ def to_v2(v1):
 
     # hybrid mode should always use v2 schema, so no need to handle here
 
-    # don't think there is anybody using v1 shared storage
+    v1_storage = v1.pop('sharedStorage', None)
+    if v1_storage:
+        v2_storage = {}
+        v2['sharedStorage'] = v2_storage
+
+        _move_field(v1_storage, v2_storage, 'storageType')
+        _move_field(v1_storage, v2_storage, 'localMountPoint')
+        _move_field(v1_storage, v2_storage, 'remoteMountPoint')
+        _move_field(v1_storage, v2_storage, 'localMounted')
+        _move_field(v1_storage, v2_storage, 'storageAccountName')
+        _move_field(v1_storage, v2_storage, 'storageAccountKey')
+        _move_field(v1_storage, v2_storage, 'containerName')
+
+        if v1_storage:
+            _logger.error('shared storage not fully converted: %s', v1_storage)
 
     if v1_trial:
         _logger.error('trial config not fully converted: %s', v1_trial)
