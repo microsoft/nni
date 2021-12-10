@@ -376,7 +376,7 @@ const parametersType = (): Map<string, string> => {
 };
 
 // retiarii experiment parameters is in field `mutation_summary`
-const filterParameter = (parameters: any): {} => {
+const reformatRetiariiParameter = (parameters: any): {} => {
     return RETIARIIPARAMETERS in parameters ? parameters[RETIARIIPARAMETERS] : parameters;
 };
 
@@ -407,5 +407,5 @@ export {
     disableTensorboard,
     getTensorboardMenu,
     parametersType,
-    filterParameter
+    reformatRetiariiParameter
 };

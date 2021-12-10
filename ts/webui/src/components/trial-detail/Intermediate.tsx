@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { Stack, PrimaryButton, Toggle, IStackTokens } from '@fluentui/react';
 import { TooltipForIntermediate, TableObj, Intermedia, EventMap } from '../../static/interface';
-import { filterParameter } from '../../static/function';
+import { reformatRetiariiParameter } from '../../static/function';
 import ReactEcharts from 'echarts-for-react';
 import 'echarts/lib/component/tooltip';
 import 'echarts/lib/component/title';
@@ -101,7 +101,11 @@ class Intermediate extends React.Component<IntermediateProps, IntermediateState>
                                 <div>Trial No.: ${trialNum}</div> 
                                 <div>Trial ID: ${trialId}</div>
                                 <div>Intermediate: ${data.data}</div>
-                                <div>Parameters: <pre>${JSON.stringify(filterParameter(parameters), null, 4)}</pre>
+                                <div>Parameters: <pre>${JSON.stringify(
+                                    reformatRetiariiParameter(parameters),
+                                    null,
+                                    4
+                                )}</pre>
                                 </div>
                             </div>
                         `;

@@ -4,7 +4,7 @@ import { Stack, PrimaryButton, Pivot, PivotItem, DefaultButton } from '@fluentui
 import { Trial } from '../../static/model/trial';
 import { MANAGER_IP, RETIARIIPARAMETERS } from '../../static/const';
 import { EXPERIMENT, TRIALS } from '../../static/datamodel';
-import { filterParameter } from '../../static/function';
+import { reformatRetiariiParameter } from '../../static/function';
 import JSONTree from 'react-json-tree';
 import PaiTrialLog from '../public-child/PaiTrialLog';
 import TrialLog from '../public-child/TrialLog';
@@ -60,7 +60,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
 
     copyParams = (trial: Trial): void => {
         // get copy parameters
-        const params = JSON.stringify(filterParameter(trial.description.parameters as any), null, 4);
+        const params = JSON.stringify(reformatRetiariiParameter(trial.description.parameters as any), null, 4);
         // const params = JSON.stringify(trial.description.parameters, null, 4);
         if (copy.default(params)) {
             this.getCopyStatus('Success copy parameters to clipboard in form of python dict !', 'success');
@@ -97,7 +97,7 @@ class OpenRow extends React.Component<OpenRowProps, OpenRowState> {
                                             hideRoot={true}
                                             shouldExpandNode={(): boolean => true} // default expandNode
                                             getItemString={(): null => null} // remove the {} items
-                                            data={filterParameter(originParameters as any)}
+                                            data={reformatRetiariiParameter(originParameters as any)}
                                         />
                                     </Stack>
                                     <Stack horizontal className='copy'>
