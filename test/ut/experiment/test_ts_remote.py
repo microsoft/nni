@@ -115,7 +115,7 @@ detailed_canon = {
     'useAnnotation': False,
     'debug': False,
     'logLevel': 'info',
-    'experimentWorkingDirectory': os.path.expanduser('~/nni-experiments'),
+    'experimentWorkingDirectory': str(Path.home() / 'nni-experiments'),
     'tuner': {'name': 'random'},
     'trainingService': {
         'platform': 'remote',
