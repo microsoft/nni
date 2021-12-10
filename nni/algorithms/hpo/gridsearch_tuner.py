@@ -113,10 +113,12 @@ class GridSearchTuner(Tuner):
         pass
 
     def import_data(self, data):
-        # FIXME: use tuple to dedup
-        for param_data in data:
-            param_str = nni.dump(param_data['parameter'], sort_keys=True)
-            self.history.add(param_str)
+        # TODO
+        # use tuple to dedup in case of order/precision issue causes matching failed
+        # and remove `epoch_bar` to use uniform dedup mechanism
+        for trial in data:
+            params_str = nni.dump(trial['parameter'], sort_keys=True)
+            self.history.add(params_str)
 
     def _suggest(self):
         # returns next parameter set, or None if the space is already fully explored
