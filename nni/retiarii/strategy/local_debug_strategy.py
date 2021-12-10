@@ -8,6 +8,7 @@ import string
 
 from .. import Sampler, codegen, utils
 from ..execution.base import BaseGraphData
+from ..execution.utils import get_mutation_summary
 from .base import BaseStrategy
 
 _logger = logging.getLogger(__name__)
@@ -22,7 +23,8 @@ class _LocalDebugStrategy(BaseStrategy):
     """
 
     def run_one_model(self, model):
-        graph_data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator)
+        mutation_summary = get_mutation_summary(model)
+        graph_data = BaseGraphData(codegen.model_to_pytorch_script(model), model.evaluator, mutation_summary)
         random_str = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
         file_name = f'_generated_model/{random_str}.py'
         os.makedirs(os.path.dirname(file_name), exist_ok=True)
