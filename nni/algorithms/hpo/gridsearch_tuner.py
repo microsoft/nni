@@ -49,17 +49,17 @@ _logger = logging.getLogger('nni.tuner.gridsearch')
 #   grid of first epoch:
 #     x: [5, 7]
 #     y: [1/2]
-#     z: [1/2]
+#     z: [1/2]  (results in [2], because round(2.5) == 2)
 #   generated parameters:
-#     (5,0,3) (7,0,3)
+#     (5,0,2) (7,0,2)
 #
 #   grid of second epoch:
 #     x: [5, 7]
 #     y: [1/2, 1/4, 3/4]  (results in [0, -0.67, 0.67])
-#     z: [1/2, 1/4]  (results in [3, 2], 3/4 is eliminated due to duplication)
+#     z: [1/2, 3/4]  (results in [2, 3], 1/4 is eliminated due to duplication)
 #   generated parameters:
-#     (5,0,2)    (5,-0.67,3) (5,-0.67,2)    (5,0.67,3) (5,0.67,2)
-#     (7,0,2)    (7,-0.67,3) (7,-0.67,2)    (7,0.67,3) (7,0.67,2)
+#     (5,0,3)    (5,-0.67,2) (5,-0.67,3)    (5,0.67,2) (5,0.67,3)
+#     (7,0,3)    (7,-0.67,2) (7,-0.67,3)    (7,0.67,2) (7,0.67,3)
 ##
 
 class GridSearchTuner(Tuner):
@@ -72,7 +72,7 @@ class GridSearchTuner(Tuner):
 
         # a paremter set is internally expressed as a vector
         # for each dimension i, self.vector[i] is the parameter's index in self.grid[i]
-        # in second epoch of above example, vector [1, 2, 0] means parameters {x: 7, y: 0.67, z: 3}
+        # in second epoch of above example, vector [1, 2, 0] means parameters {x: 7, y: 0.67, z: 2}
         self.vector = None  # list[int]
 
         # this tells which parameters are derived from previous epoch
@@ -81,9 +81,9 @@ class GridSearchTuner(Tuner):
 
         # this stores which intervals are possibly divisible (low < high after log and q)
         # in first epoch of above example, divisions are:
-        #     {1: [(0,1/2), (1/2,1)], 2: [(0,1/2)]}
+        #     {1: [(0,1/2), (1/2,1)], 2: [(1/2,1)]}
         # in second epoch:
-        #     {1: [(0,1/4), (1/4,1/2), (1/2,3/4), (3/4,1)], 2: [(1/4,1/2)]}
+        #     {1: [(0,1/4), (1/4,1/2), (1/2,3/4), (3/4,1)], 2: [(1/2,3/4)]}
         # and in third epoch:
         #     {1: [(0,1/8), ..., (7/8,1)], 2: []}
         self.divisions = {}  # dict[int, list[tuple[float, float]]]
