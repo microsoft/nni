@@ -31,7 +31,6 @@ def send_trial(parameters: dict, placement_constraint=None) -> int:
     """
     return get_advisor().send_trial(parameters, placement_constraint)
 
-
 def receive_trial_parameters() -> dict:
     """
     Received a new trial. Executed on trial end.
