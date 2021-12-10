@@ -37,6 +37,7 @@ class ShuffleNetV2OneShot(nn.Module):
         self._last_conv_channels = last_conv_channels
         self._n_classes = n_classes
         self._affine = affine
+        self._layerchoice_count = 0
 
         # building first layer
         self.first_conv = nn.Sequential(
@@ -75,12 +76,13 @@ class ShuffleNetV2OneShot(nn.Module):
 
             base_mid_channels = channels // 2
             mid_channels = int(base_mid_channels)  # prepare for scale
+            self._layerchoice_count += 1
             choice_block = LayerChoice([
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=3, stride=stride, affine=self._affine),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=5, stride=stride, affine=self._affine),
                 ShuffleNetBlock(inp, oup, mid_channels=mid_channels, ksize=7, stride=stride, affine=self._affine),
                 ShuffleXceptionBlock(inp, oup, mid_channels=mid_channels, stride=stride, affine=self._affine)
-            ])
+            ], label="LayerChoice" + str(self._layerchoice_count))
             result.append(choice_block)
 
             # # find the corresponding flops
