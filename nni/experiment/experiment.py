@@ -6,11 +6,11 @@ from subprocess import Popen
 import time
 from typing import Optional, Union, List, overload, Any
 
-import json_tricks
 import colorama
 import psutil
 
 import nni.runtime.log
+from nni.common import dump
 
 from .config import ExperimentConfig, AlgorithmConfig
 from .data import TrialJob, TrialMetricData, TrialResult
@@ -439,7 +439,7 @@ class Experiment:
         value: dict
             New search_space.
         """
-        value = json_tricks.dumps(value)
+        value = dump(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):

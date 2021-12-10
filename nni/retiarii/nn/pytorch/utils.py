@@ -1,11 +1,11 @@
 from typing import Any, Optional, Tuple
 
-from ...utils import uid, get_current_context
+from nni.retiarii.utils import ModelNamespace, get_current_context
 
 
 def generate_new_label(label: Optional[str]):
     if label is None:
-        return '_mutation_' + str(uid('mutation'))
+        return ModelNamespace.next_label()
     return label
 
 
