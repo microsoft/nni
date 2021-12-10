@@ -28,6 +28,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
 * `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
 * `Auto Compress Pruner <#auto-compress-pruner>`__
+* `AMC Pruner <#amc-pruner>`__
 
 Level Pruner
 ------------
