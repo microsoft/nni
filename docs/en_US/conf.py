@@ -97,6 +97,9 @@ html_additional_pages = {
 
 # -- Options for HTML output -------------------------------------------------
 
+# HTML logo
+html_logo = '../img/nni_logo_dark.png'
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
@@ -107,8 +110,32 @@ html_theme = 'sphinx_material'
 # documentation.
 #
 html_theme_options = {
-    # 'logo_only': True,
+
+    # Set the name of the project to appear in the navigation.
+    'nav_title': 'Neural Network Intelligence',
+
+    # Set you GA account ID to enable tracking
+    'google_analytics_account': 'UA-136029994-1',
+
+    # Specify a base_url used to generate sitemap.xml. If not
+    # specified, then no sitemap will be built.
+    'base_url': 'https://nni.readthedocs.io/',
+
+    # Set the color and the accent color
+    'color_primary': 'indigo',
+    'color_accent': 'pink',
+
+    # Set the repo location to get a badge with stats
+    'repo_url': 'https://github.com/microsoft/nni/',
+    'repo_name': 'nni',
+
+    # Visible levels of the global TOC; -1 means unlimited
+    'globaltoc_depth': 3,
+
+    'version_dropdown': True,
+    'version_json': '../static/versions.json'
 }
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -123,9 +150,10 @@ html_static_path = ['../static']
 # default: ``['localtoc.html', 'relations.html', 'sourcelink.html',
 # 'searchbox.html']``.
 #
-# html_sidebars = {}
+html_sidebars = {
+    "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
+}
 
-html_logo = '../img/nni_logo_dark.png'
 html_title = 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning (%s %s)' % \
     (project, release)
 

@@ -11,3 +11,4 @@ pytest-azurepipelines
 coverage
 ipython
 jupyterlab
+git+https://github.com/bashtage/sphinx-material.git
