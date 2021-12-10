@@ -88,6 +88,9 @@ class GridSearchTuner(Tuner):
         #     {1: [(0,1/8), ..., (7/8,1)], 2: []}
         self.divisions = {}  # dict[int, list[tuple[float, float]]]
 
+        # dumped JSON string of all tried parameters
+        self.history = set()
+
     def update_search_space(self, space):
         self.space = format_search_space(space)
         if not self.space:  # the tuner will crash in this case, report it explicitly
@@ -95,20 +98,25 @@ class GridSearchTuner(Tuner):
         self._init_grid()
 
     def generate_parameters(self, *args, **kwargs):
-        params = self._suggest()
-        if params is None:
-            raise nni.NoMoreTrialError('Search space fully explored')
-        return deformat_parameters(params, self.space)
+        while True:
+            params = self._suggest()
+            if params is None:
+                raise nni.NoMoreTrialError('Search space fully explored')
+            params = deformat_parameters(params, self.space)
+
+            params_str = nni.dump(params, sort_keys=True)
+            if params_str not in self.history:
+                self.history.add(params_str)
+                return params
 
     def receive_trial_result(self, *args, **kwargs):
         pass
 
-    def import_data(self, data):  # for resuming
-        # this is not accurate for concurrency > 1
-        # but I believe it's not worthy to introduce complex logic to fix this
-        # instead we should support checkpoint (TODO)
-        for _ in data:
-            self._suggest()
+    def import_data(self, data):
+        # FIXME: use tuple to dedup
+        for param_data in data:
+            param_str = nni.dump(param_data['parameter'], sort_keys=True)
+            self.history.add(param_str)
 
     def _suggest(self):
         # returns next parameter set, or None if the space is already fully explored
