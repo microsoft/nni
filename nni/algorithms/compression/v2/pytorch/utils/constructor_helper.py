@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from copy import deepcopy
-from typing import Callable, Dict, List
+from typing import Callable, Dict, List, Type
 
 from torch import Tensor
 from torch.nn import Module
@@ -34,7 +34,7 @@ class ConstructHelper:
 
 
 class OptimizerConstructHelper(ConstructHelper):
-    def __init__(self, model: Module, optimizer_class: Optimizer, *args, **kwargs):
+    def __init__(self, model: Module, optimizer_class: Type[Optimizer], *args, **kwargs):
         assert isinstance(model, Module), 'Only support pytorch module.'
         assert issubclass(optimizer_class, Optimizer), 'Only support pytorch optimizer'
 
@@ -96,7 +96,7 @@ class OptimizerConstructHelper(ConstructHelper):
 
 
 class LRSchedulerConstructHelper(ConstructHelper):
-    def __init__(self, lr_scheduler_class: Callable, *args, **kwargs):
+    def __init__(self, lr_scheduler_class: Type[_LRScheduler], *args, **kwargs):
         args = list(args)
         if 'optimizer' in kwargs:
             kwargs['optimizer'] = None
