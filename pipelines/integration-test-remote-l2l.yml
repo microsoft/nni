@@ -67,7 +67,7 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: $(worker)
-      contents: interim_vision_patch.py
+      contents: interim_patch.py
       targetFolder: /tmp/nnitest/$(Build.BuildId)
       overwrite: true
     displayName: Copy vision patch to remote machine

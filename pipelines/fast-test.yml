@@ -277,8 +277,8 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
+        python interim_patch.py
+      displayName: Torch & TorchVision interim patch
 
 
     - script: |
