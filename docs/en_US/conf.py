@@ -98,7 +98,7 @@ html_additional_pages = {
 # -- Options for HTML output -------------------------------------------------
 
 # HTML logo
-html_logo = '../img/nni_logo_dark.png'
+html_logo = '../img/nni_icon.svg'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
@@ -154,8 +154,7 @@ html_sidebars = {
     "**": ["logo-text.html", "globaltoc.html", "localtoc.html", "searchbox.html"]
 }
 
-html_title = 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning (%s %s)' % \
-    (project, release)
+html_title = 'Neural Network Intelligence'
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
