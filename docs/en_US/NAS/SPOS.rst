@@ -90,7 +90,7 @@ Known Limitations
 
 
 * Block search only. Channel search is not supported yet.
-* In the search phase, training from the pretrained checkpoint is required. Inheriting weights from supernet is not supported yet.
+* In the search phase, training from the scratch is required. Inheriting weights from supernet is not supported yet.
 
 Current Reproduction Results
 ----------------------------
