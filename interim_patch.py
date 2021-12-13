@@ -9,6 +9,7 @@ if os.path.exists(file_name):
         origin_text = fr.read()
         patched_text = origin_text.replace('from setuptools import distutils', '', 1)
         patched_text = patched_text.replace('LooseVersion = distutils.version.LooseVersion', 'from distutils.version import LooseVersion', 1)
+        patched_text = origin_text.replace('del distutils', '', 1)
         fw.write(patched_text)
 
 if os.path.exists(dummy_file_name):
