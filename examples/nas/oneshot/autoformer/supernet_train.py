@@ -15,10 +15,7 @@ from lib.samplers import RASampler
 from lib import utils
 from lib.config import cfg, update_config_from_file
 from model.supernet_transformer import Vision_TransformerSuper
-from nni.algorithms.nas.pytorch.autoformer import AFSupernetTrainer
-from nni.algorithms.nas.pytorch.random import RandomMutator
-from nni.algorithms.nas.pytorch.autoformer.custom_callbacks import SaveCheckpointCallback, LRSchedulerCallback
-
+from nni.retiarii.oneshot.pytorch.autoformer import AFSupernetTrainer
 
 def get_args_parser():
     parser = argparse.ArgumentParser('AutoFormer training and evaluation script', add_help=False)
@@ -236,7 +233,7 @@ def main(args):
     )
 
     data_loader_val = torch.utils.data.DataLoader(
-        dataset_val, batch_size=args.batch_size,
+        dataset_val, batch_size=args.batch_size // 2,
         sampler=sampler_val, num_workers=args.num_workers,
         pin_memory=args.pin_mem, drop_last=False
     )
@@ -331,20 +328,16 @@ def main(args):
         retrain_config = {'layer_num': cfg.RETRAIN.DEPTH, 'embed_dim': [cfg.RETRAIN.EMBED_DIM]*cfg.RETRAIN.DEPTH,
                           'num_heads': cfg.RETRAIN.NUM_HEADS,'mlp_ratio': cfg.RETRAIN.MLP_RATIO}
 
-    save_model_callback = SaveCheckpointCallback(output_dir, optimizer, lr_scheduler, loss_scaler, args)
-    scheduler_callback = LRSchedulerCallback(lr_scheduler)  
-    mutator = RandomMutator(model)
     trainer = AFSupernetTrainer(
-        model, mutator, criterion, data_loader_train, data_loader_val,
+        model, criterion, data_loader_train, data_loader_val,
         optimizer, device, args.epochs, loss_scaler,
         args.clip_grad, model_ema, mixup_fn,
-        args.amp, teacher_model,teacher_loss,choices, args.mode, retrain_config, 0., output_dir,
-        [save_model_callback, scheduler_callback]
+        args.amp, teacher_model, teacher_loss,choices, args.mode, retrain_config, 0., output_dir, lr_scheduler,
     )
     if args.eval:
-        trainer.validate_one_epoch(-1)
+        trainer._validate_one_epoch(-1)
         return
-    trainer.train()
+    trainer.fit()
 
 
 if __name__ == '__main__':

@@ -61,6 +61,7 @@ Please run the following scripts in the example folder.
 Data Preparation
 ----------------
 
+Here, we take ImageNet as an example. 
 You need to first download the `ImageNet-2012 <http://www.image-net.org/>`__ to the folder ``./data/imagenet`` and move the validation set to the subfolder ``./data/imagenet/val``.
 To move the validation set, you cloud use `the following script <https://raw.githubusercontent.com/soumith/imagenetloader.torch/master/valprep.sh>`__.
 
@@ -80,6 +81,9 @@ The directory structure is the standard layout as following.
             class/2
                 img4.jpeg
 
+Please note that you could replace ImageNet with any dataset you need, but remember to follow the above layout.
+
+
 Quick Start
 -----------
 
@@ -98,7 +102,32 @@ First, build environments for autoformer.
 ^^^^^^^^^
 
 To train the supernet-T/S/B, we provided the corresponding supernet configuration files in ``/experiments/supernet/``. 
-For example, to train the supernet-B, you can run the following command. The default output path is ``./``, 
+Now, we support to search the ratio of MLP(MLP_RATIO), the numebr of heads(NUM_HEADS), the network depth(DEPTH) and the embedding dimension(EMBED_DIM).
+You can build your search space by creating your own supernet config. 
+Taking supernet-B as an example, the search space is as follow:
+
+.. code-block:: bash
+
+    SEARCH_SPACE:
+        MLP_RATIO:
+            - 3.0
+            - 3.5
+            - 4.0
+        NUM_HEADS:
+            - 9
+            - 10
+        DEPTH:
+            - 14
+            - 15
+            - 16
+        EMBED_DIM:
+            - 528
+            - 576
+            - 624
+The MLP_RATIO have three choices: 3.0, 3.5 and 4.0. Others follow the same format.
+
+
+To train the supernet-B, you can run the following command. The default output path is ``./``, 
 you can specify the path with argument ``--output_dir``.
 
 .. code-block:: bash
@@ -108,7 +137,7 @@ you can specify the path with argument ``--output_dir``.
     --output_dir /OUTPUT_PATH --batch-size 128
 
 
-2. Search
+1. Search
 ^^^^^^^^^
 
 We run our evolution search on part of the ImageNet training dataset and use the validation set of ImageNet as the test set for fair comparison. 
