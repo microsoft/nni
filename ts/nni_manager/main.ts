@@ -107,12 +107,12 @@ if (logDir.length > 0) {
 const logLevel: string = parseArg(['--log_level', '-ll']);
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (!['true', 'false'].includes(readonlyArg.toLowerCase())) {
+if (readonlyArg && !['true', 'false'].includes(readonlyArg.toLowerCase())) {
     console.log(`FATAL: readonly property should only be true or false`);
     usage();
     process.exit(1);
 }
-const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+const readonly = (readonlyArg && readonlyArg.toLowerCase() == 'true') ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 
