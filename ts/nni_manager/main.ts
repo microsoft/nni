@@ -72,12 +72,12 @@ if (!strPort || strPort.length === 0) {
 }
 
 const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (!['true', 'false'].includes(foregroundArg.toLowerCase())) {
+if (foregroundArg && !['true', 'false'].includes(foregroundArg.toLowerCase())) {
     console.log(`FATAL: foreground property should only be true or false`);
     usage();
     process.exit(1);
 }
-const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
+const foreground: boolean = (foregroundArg && foregroundArg.toLowerCase() === 'true') ? true : false;
 
 const port: number = parseInt(strPort, 10);
 
