@@ -14,6 +14,7 @@ from torch.nn import Module
 from torch.optim import Optimizer
 
 from nni.algorithms.compression.v2.pytorch.base import Compressor, LayerInfo, Task, TaskResult
+from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
 
 _logger = logging.getLogger(__name__)
 
@@ -76,7 +77,7 @@ class TrainerBasedDataCollector(DataCollector):
     This class includes some trainer based util functions, i.e., patch optimizer or criterion, add hooks.
     """
 
-    def __init__(self, compressor: Compressor, trainer: Callable[[Module, Optimizer, Callable], None], optimizer: Optimizer,
+    def __init__(self, compressor: Compressor, trainer: Callable[[Module, Optimizer, Callable], None], optimizer_helper: OptimizerConstructHelper,
                  criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int,
                  opt_before_tasks: List = [], opt_after_tasks: List = [],
                  collector_infos: List[HookCollectorInfo] = [], criterion_patch: Callable[[Callable], Callable] = None):
@@ -133,19 +134,16 @@ class TrainerBasedDataCollector(DataCollector):
         super().__init__(compressor)
         self.trainer = trainer
         self.training_epochs = training_epochs
-        self._origin_optimizer_cls = optimizer.__class__ if optimizer is not None else None
-        self._origin_optimizer_state_dict = optimizer.state_dict() if optimizer is not None else None
+        self.optimizer_helper = optimizer_helper
         self._origin_criterion = criterion
         self._opt_before_tasks = opt_before_tasks
         self._opt_after_tasks = opt_after_tasks
 
-        self._collector_infos = collector_infos
-
         self._criterion_patch = criterion_patch
 
-        self.reset()
+        self.reset(collector_infos)
 
-    def reset(self):
+    def reset(self, collector_infos: List[HookCollectorInfo] = []):
         # refresh optimizer and criterion
         self._reset_optimizer()
 
@@ -162,19 +160,13 @@ class TrainerBasedDataCollector(DataCollector):
         self._hook_id = 0
         self._hook_handles = {}
         self._hook_buffer = {}
+
+        self._collector_infos = collector_infos
         self._add_all_hook()
 
     def _reset_optimizer(self):
-        self.compressor._unwrap_model()
-        if self._origin_optimizer_cls is not None:
-            if self._origin_optimizer_cls.__name__ == 'SGD':
-                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters(), lr=0.001)
-            else:
-                self.optimizer = self._origin_optimizer_cls(self.compressor.bound_model.parameters())
-            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
-        else:
-            self.optimizer = None
-        self.compressor._wrap_model()
+        parameter_name_map = self.compressor.get_origin2wrapped_parameter_name_map()
+        self.optimizer = self.optimizer_helper.call(self.compressor.bound_model, parameter_name_map)
 
     def _patch_optimizer(self):
         def patch_step(old_step):
@@ -233,7 +225,7 @@ class TrainerBasedDataCollector(DataCollector):
     def _remove_hook(self, hook_id: int):
         if hook_id not in self._hook_handles:
             raise ValueError("%s is not a valid collector id" % str(hook_id))
-        for handle in self._hook_handles[hook_id]:
+        for handle in self._hook_handles[hook_id].values():
             handle.remove()
         del self._hook_handles[hook_id]
 
