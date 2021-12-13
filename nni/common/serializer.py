@@ -64,7 +64,7 @@ class Traceable(abc.ABC):
 
 class Translatable(abc.ABC):
     """
-    Inherit this class and implement ``translate`` when the inner class needs a different
+    Inherit this class and implement ``translate`` when the wrapped class needs a different
     parameter from the wrapper class in its init function.
     """
 
@@ -208,8 +208,8 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
     One exception is that if your function returns None, it will return an empty SerializableObject instead,
     which should raise your attention when you want to check whether the None ``is None``.
 
-    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to inner function.
-    This is to prevent mutable objects gets modified in the inner function.
+    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to wrapped function/class.
+    This is to prevent mutable objects gets modified in the wrapped function/class.
     When the function finished execution, we also record extra information about where this object comes from.
     That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
@@ -418,9 +418,9 @@ def _copy_class_wrapper_attributes(base, wrapper):
 def _argument_processor(arg):
     # 1) translate
     # handle cases like ValueChoice
-    # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
+    # This is needed because sometimes the recorded arguments are meant to be different from what the wrapped object receives.
     arg = Translatable._translate_argument(arg)
-    # 2) prevent the stored parameters to be mutated by inner class.
+    # 2) prevent the stored parameters to be mutated by wrapped class.
     # an example: https://github.com/microsoft/nni/issues/4329
     if isinstance(arg, (collections.abc.MutableMapping, collections.abc.MutableSequence, collections.abc.MutableSet)):
         arg = copy.copy(arg)
