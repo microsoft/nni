@@ -132,7 +132,7 @@ class RegularizedEvolution(BaseStrategy):
         model = get_targeted_model(base_model, mutators, config)
         if filter_model(self.filter, model):
             submit_models(model)
-        self._running_models.append((config, model))
+            self._running_models.append((config, model))
         return model
 
     def _move_succeeded_models_to_population(self):
