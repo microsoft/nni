@@ -67,7 +67,8 @@ class AMCEnv:
             max_current_pruning_target = min(max_current_pruning_target_1, max_current_pruning_target_2)
             min_action = min_current_pruning_target / current_statistics[op_name][self.target]
             max_action = max_current_pruning_target / current_statistics[op_name][self.target]
-            assert min_action < self.max_sparsity_per_layer[op_name]
+            if min_action > self.max_sparsity_per_layer[op_name]:
+                _logger.warning('[%s] min action > max sparsity per layer: %f > %f', op_name, min_action, self.max_sparsity_per_layer[op_name])
             action = max(0., min(max_action, max(min_action, action)))
 
             self.current_op_name = op_name
