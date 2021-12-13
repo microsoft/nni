@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens } from '@fluentui/react';
+import { Stack, DetailsList, DefaultButton, Icon, SearchBox, IColumn, IStackTokens, Selection } from '@fluentui/react';
 import { ExperimentsManager } from '../../static/model/experimentsManager';
 import { expformatTimestamp, copyAndSort } from '../../static/function';
 import { AllExperimentList, SortInfo } from '../../static/interface';
@@ -11,6 +11,7 @@ import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
+import { killExperiment } from '../../static/function';
 import '../../App.scss';
 import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
@@ -36,11 +37,20 @@ interface ExpListState {
     source: AllExperimentList[];
     originExperimentList: AllExperimentList[];
     searchSource: AllExperimentList[];
+    selectionDetails: AllExperimentList[];
 }
 
+const horizontalGapStackTokens: IStackTokens = {
+    childrenGap: 20
+};
+
 class Experiment extends React.Component<{}, ExpListState> {
+    private _selection: Selection;
     constructor(props) {
         super(props);
+        this._selection = new Selection({
+            onSelectionChanged: () => this.setState({ selectionDetails: this._getSelectionDetails() })
+        });
         this.state = {
             platform: [],
             columns: this.columns,
@@ -52,7 +62,8 @@ class Experiment extends React.Component<{}, ExpListState> {
             source: [], // data in table
             originExperimentList: [], // api /experiments-info
             searchSource: [], // search box search result
-            sortInfo: { field: '', isDescend: false }
+            sortInfo: { field: '', isDescend: false },
+            selectionDetails: this._getSelectionDetails()
         };
     }
 
@@ -95,7 +106,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                             <TitleContext.Provider value={{ text: 'All experiments', icon: 'CustomList' }}>
                                 <Title />
                             </TitleContext.Provider>
-                            <Stack className='box' horizontal>
+                            <Stack className='box' horizontal tokens={horizontalGapStackTokens}>
                                 <div className='search'>
                                     <SearchBox
                                         className='search-input'
@@ -104,6 +115,24 @@ class Experiment extends React.Component<{}, ExpListState> {
                                         onClear={this.setOriginSource.bind(this)}
                                         onChange={this.searchNameAndId.bind(this)}
                                     />
+                                </div>
+                                {/*<div className='create'>*/}
+                                {/*    <DefaultButton href='/oview'>*/}
+                                {/*        <Icon iconName='Equalizer' />*/}
+                                {/*        <span className='margin'>Create</span>*/}
+                                {/*    </DefaultButton>*/}
+                                {/*</div>*/}
+                                <div className='resume'>
+                                    <DefaultButton href='/oview'>
+                                        <Icon iconName='Equalizer' />
+                                        <span className='margin'>Resume</span>
+                                    </DefaultButton>
+                                </div>
+                                <div className='delete'>
+                                    <DefaultButton onClick={this.onDeleteClick}>
+                                        <Icon iconName='Equalizer' />
+                                        <span className='margin'>Delete</span>
+                                    </DefaultButton>
                                 </div>
                                 <div className='filter'>
                                     <DefaultButton
@@ -139,7 +168,9 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 items={source}
                                 setKey='set'
                                 compact={true}
-                                selectionMode={0} // close selector function
+                                selection={this._selection}
+                                // selectMode={0}
+                                // selection={this.onColumnClick()}
                                 className='table'
                             />
                         </Stack>
@@ -148,6 +179,16 @@ class Experiment extends React.Component<{}, ExpListState> {
             </Stack>
         );
     }
+
+    private _getSelectionDetails(): AllExperimentList[] {
+        return this._selection.getSelection() as AllExperimentList[];
+    }
+
+    private onDeleteClick = (): void => {
+        this.state.selectionDetails.forEach((val, _) => {
+            killExperiment(val.webuiUrl[1]);
+        });
+    };
 
     private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {
         const { columns, source } = this.state;

@@ -5,7 +5,7 @@ import assert from 'assert';
 import os from 'os';
 import path from 'path';
 
-const API_ROOT_URL: string = '/api/v1/nni';
+export const API_ROOT_URL: string = '/api/v1/nni';
 
 let singleton: ExperimentStartupInfo | null = null;
 

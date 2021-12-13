@@ -76,6 +76,7 @@ class NNIRestHandler {
         this.stopAllTensorboardTask(router);
         this.listTensorboardTask(router);
         this.stop(router);
+        this.stopOtherExperiment(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any): any => {
@@ -422,6 +423,23 @@ class NNIRestHandler {
                 this.nniManager.stopExperimentBottomHalf();
             });
         });
+    }
+
+    private stopOtherExperiment(router: Router): void {
+        router.delete('/manage-experiment', (req: Request, res: Response) => {
+            this.nniManager.sendDelteExperiment(req.body['url']).then(() => {
+                res.send();
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+        // router.delete('/trial-jobs/:id', async (req: Request, res: Response) => {
+        //     this.nniManager.cancelTrialJobByUser(req.params['id']).then(() => {
+        //         res.send();
+        //     }).catch((err: Error) => {
+        //         this.handleError(err, res);
+        //     });
+        // });
     }
 
     private setErrorPathForFailedJob(jobInfo: TrialJobInfo): TrialJobInfo {

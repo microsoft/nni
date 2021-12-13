@@ -218,6 +218,35 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
         });
 };
 
+// kill experiment
+const killExperiment = (webuiUrl: string): void => {
+    axios(`${MANAGER_IP}/manage-experiment`, {
+        method: 'DELETE',
+        data: {
+            url: webuiUrl
+        },
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    })
+        .then(res => {
+            if (res.status === 200) {
+                alert('Cancel the experiment successfully');
+            } else {
+                alert('fail to cancel the experiment');
+            }
+        })
+        .catch(error => {
+            if (error.response.status === 500) {
+                if (error.response.data.error) {
+                    alert(error.response.data.error);
+                } else {
+                    alert('500 error, fail to cancel the experiment');
+                }
+            }
+        });
+};
+
 const filterByStatus = (item: TableObj): boolean => {
     return item.status === 'SUCCEEDED';
 };
@@ -401,5 +430,6 @@ export {
     copyAndSort,
     disableTensorboard,
     getTensorboardMenu,
-    parametersType
+    parametersType,
+    killExperiment
 };
