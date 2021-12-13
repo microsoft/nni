@@ -7,8 +7,7 @@ import {
     Parameters,
     FinalType,
     MultipleAxes,
-    SingleAxis,
-    RetiariiParameter
+    SingleAxis
 } from '../interface';
 import {
     getFinal,
@@ -17,7 +16,8 @@ import {
     parseMetrics,
     isArrayType,
     isNaNorInfinity,
-    formatComplexTypeValue
+    formatComplexTypeValue,
+    reformatRetiariiParameter
 } from '../function';
 
 /**
@@ -32,8 +32,7 @@ function inferTrialParameters(
     space: MultipleAxes,
     prefix: string = ''
 ): [Map<SingleAxis, any>, Map<string, any>] {
-    const latestedParamObj =
-        'mutation_summary' in paramObj ? (paramObj as RetiariiParameter).mutation_summary : paramObj;
+    const latestedParamObj: object = reformatRetiariiParameter(paramObj);
     const parameters = new Map<SingleAxis, any>();
     const unexpectedEntries = new Map<string, any>();
     for (const [k, v] of Object.entries(latestedParamObj)) {
