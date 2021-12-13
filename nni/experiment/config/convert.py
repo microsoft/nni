@@ -230,8 +230,8 @@ def to_v2(v1):
         v2['sharedStorage'] = v2_storage
 
         _move_field(v1_storage, v2_storage, 'storageType')
-        _move_field(v1_storage, v2_storage, 'nfsServer'
-        _move_field(v1_storage, v2_storage, 'exportedDirectory'
+        _move_field(v1_storage, v2_storage, 'nfsServer')
+        _move_field(v1_storage, v2_storage, 'exportedDirectory')
         _move_field(v1_storage, v2_storage, 'localMountPoint')
         _move_field(v1_storage, v2_storage, 'remoteMountPoint')
         _move_field(v1_storage, v2_storage, 'localMounted')
