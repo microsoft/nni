@@ -130,7 +130,11 @@ class RegularizedEvolution(BaseStrategy):
     def _submit_config(self, config, base_model, mutators):
         _logger.debug('Model submitted to running queue: %s', config)
         model = get_targeted_model(base_model, mutators, config)
-        if filter_model(self.filter, model):
+        if not filter_model(self.filter, model):
+            if self.on_failure == "worst":
+                model.status = ModelStatus.Failed
+                self._running_models.append((config, model))
+        else:
             submit_models(model)
             self._running_models.append((config, model))
         return model
