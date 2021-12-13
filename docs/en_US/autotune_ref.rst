@@ -20,6 +20,12 @@ Tuner
 ..  autoclass:: nni.tuner.Tuner
     :members:
 
+..  autoclass:: nni.algorithms.hpo.tpe_tuner.TpeTuner
+    :members:
+
+..  autoclass:: nni.algorithms.hpo.random_tuner.RandomTuner
+    :members:
+
 ..  autoclass:: nni.algorithms.hpo.hyperopt_tuner.HyperoptTuner
     :members:
 

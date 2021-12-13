@@ -1,8 +1,8 @@
 PBT Tuner on NNI
 ================
 
-1. Introduction
----------------
+Introduction
+------------
 
 
 Population Based Training (PBT) comes from `Population Based Training of Neural Networks <https://arxiv.org/abs/1711.09846v1>`__. It's a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. Importantly, PBT discovers a schedule of hyperparameter settings rather than following the generally sub-optimal strategy of trying to find a single fixed set to use for the whole course of training. 
@@ -15,8 +15,8 @@ Population Based Training (PBT) comes from `Population Based Training of Neural 
 
 PBTTuner initializes a population with several trials (i.e., ``population_size``\ ). There are four steps in the above figure, each trial only runs by one step. How long is one step is controlled by trial code, e.g., one epoch. When a trial starts, it loads a checkpoint specified by PBTTuner and continues to run one step, then saves checkpoint to a directory specified by PBTTuner and exits. The trials in a population run steps synchronously, that is, after all the trials finish the ``i``\ -th step, the ``(i+1)``\ -th step can be started. Exploitation and exploration of PBT are executed between two consecutive steps.
 
-2. Usage
---------
+Usage
+-----
 
 Provide checkpoint directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -62,7 +62,7 @@ Below is an exmaple of PBTTuner configuration in experiment config file. **Note 
 
    # config.yml
    tuner:
-     builtinTunerName: PBTTuner
+     name: PBTTuner
      classArgs:
        optimize_mode: maximize
        all_checkpoint_dir: /the/path/to/store/checkpoints

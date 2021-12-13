@@ -56,7 +56,7 @@ jobs:
       cd test
       python3 nni_test/nnitest/generate_ts_config.py \
           --ts frameworkcontroller \
-          --keyvault_vaultname $(keyvault_vaultname) \
+          --keyvault_vaultname  $(keyvault_vaultname) \
           --keyvault_name $(keyvault_name) \
           --azs_account $(azs_account) \
           --azs_share $(azs_share) \
@@ -64,5 +64,5 @@ jobs:
           --nni_manager_ip $(manager_ip) \
           --reuse_mode True \
           --config_version v2
-      python3 nni_test/nnitest/run_tests.py --config config/integration_tests.yml --ts frameworkcontroller --reuse_mode True --exclude multi-phase,multi-thread
+      python3 nni_test/nnitest/run_tests.py --config config/integration_tests_config_v2.yml --ts frameworkcontroller --reuse_mode True --exclude multi-phase,multi-thread
     displayName: Integration test (reuse mode)

@@ -73,7 +73,7 @@ class FunctionBasedTaskGenerator(TaskGenerator):
         # get current2origin_sparsity and compact2origin_sparsity
         origin_model = torch.load(self._origin_model_path)
         current2origin_sparsity, compact2origin_sparsity, _ = compute_sparsity(origin_model, compact_model, compact_model_masks, self.target_sparsity)
-        _logger.info('\nTask %s total real sparsity compared with original model is:\n%s', str(task_result.task_id), json_tricks.dumps(current2origin_sparsity, indent=4))
+        _logger.debug('\nTask %s total real sparsity compared with original model is:\n%s', str(task_result.task_id), json_tricks.dumps(current2origin_sparsity, indent=4))
         if task_result.task_id != 'origin':
             self._tasks[task_result.task_id].state['current2origin_sparsity'] = current2origin_sparsity
 

@@ -8,14 +8,18 @@ Note that pruners use masks to simulate the real pruning. In order to obtain a r
 
 '''
 import argparse
+import sys
 
 import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
-from examples.model_compress.models.cifar10.vgg import VGG
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPruner
+from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 normalize = transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
@@ -107,8 +111,10 @@ if __name__ == '__main__':
         'sparsity': 0.92,
         'op_types': ['Conv2d'],
     }]
-    optimizer, _ = optimizer_scheduler_generator(model)
-    pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=2, training_epochs=2)
+
+    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=2, training_epochs=2)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
 

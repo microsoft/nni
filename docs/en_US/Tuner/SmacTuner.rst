@@ -2,16 +2,16 @@ SMAC Tuner on NNI
 =================
 
 
-1. Introduction
----------------
+Introduction
+------------
 
 `SMAC <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__ is based on Sequential Model-Based Optimization (SMBO). It adapts the most prominent previously used model class (Gaussian stochastic process models) and introduces the model class of random forests to SMBO in order to handle categorical parameters. The SMAC supported by nni is a wrapper on `the SMAC3 github repo <https://github.com/automl/SMAC3>`__.
 
 Note that SMAC on nni only supports a subset of the types in the `search space spec <../Tutorial/SearchSpaceSpec.rst>`__\ : ``choice``\ , ``randint``\ , ``uniform``\ , ``loguniform``\ , and ``quniform``.
 
 
-2. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^
@@ -35,6 +35,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: SMAC
+     name: SMAC
      classArgs:
        optimize_mode: maximize

@@ -14,6 +14,7 @@ from transformers import (
 )
 
 from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
 
 task_to_keys = {
@@ -108,8 +109,10 @@ if __name__ == '__main__':
 
     config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
     p_trainer = functools.partial(trainer, train_dataloader=train_dataloader)
-    optimizer = Adam(model.parameters(), lr=2e-5)
-    pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, training_epochs=10,
+
+    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+    traced_optimizer = trace_parameters(Adam)(model.parameters(), lr=2e-5)
+    pruner = MovementPruner(model, config_list, p_trainer, traced_optimizer, criterion, training_epochs=10,
                             warm_up_step=3000, cool_down_beginning_step=27000)
 
     _, masks = pruner.compress()

@@ -12,7 +12,8 @@ from torch.optim import Optimizer, Adam
 
 from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
-from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema
+from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
+from nni.common.serializer import Traceable
 
 from .tools.base import TrainerBasedDataCollector
 
@@ -50,8 +51,6 @@ class PrunerScoredModuleWrapper(Module):
         self.pruner = pruner
 
         self.weight = Parameter(torch.empty(self.module.weight.size()))
-        self.weight.data = self.module.weight.data
-
         self.weight_score = Parameter(torch.empty(self.weight.size()))
         torch.nn.init.constant_(self.weight_score, val=0.0)
 
@@ -60,7 +59,6 @@ class PrunerScoredModuleWrapper(Module):
         if hasattr(self.module, 'bias') and self.module.bias is not None:
             self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
             self.bias = Parameter(torch.empty(self.module.bias.size()))
-            self.bias.data = self.module.bias.data
         else:
             self.register_buffer("bias_mask", None)
 
@@ -69,9 +67,11 @@ class PrunerScoredModuleWrapper(Module):
         When using this wrapper to inference, call `_weight2buffer()` to make original weight untrainable.
         The best place to call this function is in `Pruner._wrap_model()`.
         """
+        self.weight.data = self.module.weight.data
         delattr(self.module, 'weight')
         self.module.register_buffer('weight', self.weight.data)
         if hasattr(self.module, 'bias') and self.module.bias is not None:
+            self.bias.data = self.module.bias.data
             delattr(self.module, 'bias')
             self.module.register_buffer('bias', self.bias.data)
 
@@ -113,22 +113,6 @@ class WeightScoreTrainerBasedDataCollector(TrainerBasedDataCollector):
     """
     Collect all weight_score in wrappers as data used to calculate metrics.
     """
-    def _reset_optimizer(self):
-        """
-        Weed out the weight_score from the parameters passed to optimizer, guaranteed to load the optimizer state dict.
-        """
-        if self._origin_optimizer_cls is not None:
-            optimizer_grouped_parameters = [{
-                "params": [p for n, p in self.compressor.bound_model.named_parameters() if "weight_score" not in n and p.requires_grad]
-            }]
-            if self._origin_optimizer_cls.__name__ == 'SGD':
-                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters, lr=0.001)
-            else:
-                self.optimizer = self._origin_optimizer_cls(optimizer_grouped_parameters)
-            self.optimizer.load_state_dict(self._origin_optimizer_state_dict)
-        else:
-            self.optimizer = None
-
     def collect(self) -> Dict[str, Tensor]:
         for _ in range(self.training_epochs):
             self.trainer(self.compressor.bound_model, self.optimizer, self.criterion)
@@ -171,9 +155,9 @@ class MovementPruner(BasicPruner):
                     # If you don't want to update the model, you can skip `optimizer.step()`, and set train mode False.
                     optimizer.step()
                 model.train(mode=training)
-    optimizer : torch.optim.Optimizer
-        The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-        so do not use this optimizer in other places.
+    traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
+        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -188,10 +172,13 @@ class MovementPruner(BasicPruner):
         total_sparsity * (1 - (1 - (current_step - warm_up_step) / (cool_down_beginning_step - warm_up_step)) ** 3).
     """
     def __init__(self, model: Module, config_list: List[Dict], trainer: Callable[[Module, Optimizer, Callable], None],
-                 optimizer: Optimizer, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
+                 traced_optimizer: Traceable, criterion: Callable[[Tensor, Tensor], Tensor], training_epochs: int, warm_up_step: int,
                  cool_down_beginning_step: int):
         self.trainer = trainer
-        self.optimizer = optimizer
+        if isinstance(traced_optimizer, OptimizerConstructHelper):
+            self.optimizer_helper = traced_optimizer
+        else:
+            self.optimizer_helper = OptimizerConstructHelper.from_trace(model, traced_optimizer)
         self.criterion = criterion
         self.training_epochs = training_epochs
         self.warm_up_step = warm_up_step
@@ -238,7 +225,7 @@ class MovementPruner(BasicPruner):
                 self.load_masks(masks)
 
         if self.data_collector is None:
-            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
+            self.data_collector = WeightScoreTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion, self.training_epochs, opt_after_tasks=[_optimizer_patch])
         else:
             self.data_collector.reset()
 
@@ -282,6 +269,15 @@ class MovementPruner(BasicPruner):
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
+
+    def get_origin2wrapped_parameter_name_map(self) -> Dict[str, str]:
+        if self.is_wrapped:
+            self._unwrap_model()
+            parameter_name_map = {name: name for name, _ in self.bound_model.named_parameters()}
+            self._wrap_model()
+            return parameter_name_map
+        else:
+            raise Exception('When only the model is wrapped can get the parameter_name_map.')
 
     def compress(self) -> Tuple[Module, Dict]:
         # sparsity grow from 0

@@ -16,8 +16,7 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.v2.pytorch.pruning import (
     LinearPruner,
     AGPPruner,
-    LotteryTicketPruner,
-    SimulatedAnnealingPruner
+    LotteryTicketPruner
 )
 
 sys.path.append('../../models')

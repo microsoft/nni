@@ -16,7 +16,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     AMCPruner
 )
 
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
 
 
 class TorchModel(torch.nn.Module):
@@ -53,7 +53,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -109,7 +109,7 @@ class IterativePrunerTestCase(unittest.TestCase):
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         admm_params = {
             'trainer': trainer,
-            'optimizer': get_optimizer(model),
+            'traced_optimizer': get_optimizer(model),
             'criterion': criterion,
             'iterations': 10,
             'training_epochs': 1

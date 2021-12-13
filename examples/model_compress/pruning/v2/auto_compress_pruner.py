@@ -1,12 +1,14 @@
+import sys
 from tqdm import tqdm
 
 import torch
 from torchvision import datasets, transforms
 
 from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
-from examples.model_compress.models.cifar10.vgg import VGG
-
+sys.path.append('../../models')
+from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -74,10 +76,11 @@ if __name__ == '__main__':
     config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
     dummy_input = torch.rand(10, 3, 32, 32).to(device)
 
-    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     admm_params = {
         'trainer': trainer,
-        'optimizer': optimizer,
+        'traced_optimizer': traced_optimizer,
         'criterion': criterion,
         'iterations': 10,
         'training_epochs': 1

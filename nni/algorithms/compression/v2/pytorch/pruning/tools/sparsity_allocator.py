@@ -23,7 +23,7 @@ class NormalSparsityAllocator(SparsityAllocator):
         for name, wrapper in self.pruner.get_modules_wrapper().items():
             sparsity_rate = wrapper.config['total_sparsity']
 
-            assert name in metrics, 'Metric of %s is not calculated.'
+            assert name in metrics, 'Metric of {} is not calculated.'.format(name)
 
             # We assume the metric value are all positive right now.
             metric = metrics[name]
