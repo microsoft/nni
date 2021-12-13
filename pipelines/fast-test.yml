@@ -178,7 +178,7 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_patch.py
+        python test/vso_tools/interim_patch.py
       displayName: Torch utils tensorboard interim patch
 
     - script: |
@@ -283,7 +283,7 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_patch.py
+        python test/vso_tools/interim_patch.py
       displayName: Torch utils tensorboard interim patch
 
 
@@ -373,7 +373,7 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_patch.py
+        python test/vso_tools/interim_patch.py
       displayName: Torch utils tensorboard interim patch
 
     - script: |
@@ -440,7 +440,7 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_patch.py
+        python test/vso_tools/interim_patch.py
       displayName: Torch utils tensorboard interim patch
 
     - script: |
