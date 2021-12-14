@@ -64,7 +64,8 @@ def evaluator(model):
 
 
 def finetuner(model):
-    trainer(model, get_optimizer(model), criterion)
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    trainer(model, optimizer, criterion)
 
 
 class IterativePrunerTestCase(unittest.TestCase):
