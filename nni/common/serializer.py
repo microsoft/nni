@@ -562,7 +562,7 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
         return obj
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
-        if len(b) > pickle_size_limit:
+        if len(b) > pickle_size_limit > 0:
             raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
                              'not decorated by @nni.trace. Another option is to force bytes pickling and '
                              'try to raise pickle_size_limit.')

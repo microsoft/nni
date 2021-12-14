@@ -2,12 +2,11 @@ import random
 
 import nni
 import torch
-import torch.nn as nn
 import torch.nn.functional as F
+# remember to import nni.retiarii.nn.pytorch as nn, instead of torch.nn as nn
+import nni.retiarii.nn.pytorch as nn
 import nni.retiarii.strategy as strategy
-import nni.retiarii.evaluator.pytorch.lightning as pl
 from nni.retiarii import model_wrapper
-from nni.retiarii.nn.pytorch import LayerChoice, ValueChoice
 from nni.retiarii.evaluator import FunctionalEvaluator
 from nni.retiarii.experiment.pytorch import RetiariiExeConfig, RetiariiExperiment, debug_mutated_model
 from torch.utils.data import DataLoader
@@ -30,13 +29,18 @@ class Net(nn.Module):
     def __init__(self):
         super().__init__()
         self.conv1 = nn.Conv2d(1, 32, 3, 1)
-        self.conv2 = LayerChoice([
+        # LayerChoice is used to select a layer between Conv2d and DwConv.
+        self.conv2 = nn.LayerChoice([
             nn.Conv2d(32, 64, 3, 1),
             DepthwiseSeparableConv(32, 64)
         ])
+        # ValueChoice is used to select a dropout rate.
+        # ValueChoice can be used as parameter of modules wrapped in `nni.retiarii.nn.pytorch`
+        # or customized modules wrapped with `@basic_unit`.
         self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
         self.dropout2 = nn.Dropout(0.5)
-        feature = ValueChoice([64, 128, 256])
+        feature = nn.ValueChoice([64, 128, 256])
+        # Same value choice can be used multiple times
         self.fc1 = nn.Linear(9216, feature)
         self.fc2 = nn.Linear(feature, 10)
 
@@ -86,7 +90,7 @@ def test_epoch(model, device, test_loader):
 
 
 def evaluate_model(model_cls):
-    # NOTE: "model_cls" is a class, need to instantiate
+    # "model_cls" is a class, need to instantiate
     model = model_cls()
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
@@ -99,10 +103,10 @@ def evaluate_model(model_cls):
     for epoch in range(3):
         train_epoch(model, device, train_loader, optimizer, epoch)
         accuracy = test_epoch(model, device, test_loader)
-        # NOTE: call report intermediate result. Result can be float or dict
+        # call report intermediate result. Result can be float or dict
         nni.report_intermediate_result(accuracy)
 
-    # NOTE: report final test result
+    # report final test result
     nni.report_final_result(accuracy)
 
 
