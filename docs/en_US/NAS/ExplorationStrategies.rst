@@ -15,7 +15,7 @@ To use an exploration strategy, users simply instantiate an exploration strategy
 Supported Exploration Strategies
 --------------------------------
 
-NNI provides the following exploration strategies for multi-trial NAS. Users could also `customize new exploration strategies <./WriteStrategy.rst>`__.
+NNI provides the following exploration strategies for multi-trial NAS.
 
 .. list-table::
    :header-rows: 1
