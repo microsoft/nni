@@ -7,7 +7,6 @@ In multi-trial NAS, users need model evaluator to evaluate the performance of ea
     :maxdepth: 1
 
     Model Evaluators <ModelEvaluators>
-    Customize Model Evaluator <WriteTrainer>
     Exploration Strategies <ExplorationStrategies>
-    Customize Exploration Strategies <WriteStrategy>
     Execution Engines <ExecutionEngines>
+    Serialization <Serialization>

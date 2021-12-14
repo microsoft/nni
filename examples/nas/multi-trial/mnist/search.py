@@ -101,7 +101,9 @@ def evaluate_model(model_cls):
     device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
     for epoch in range(3):
+        # train the model for one epoch
         train_epoch(model, device, train_loader, optimizer, epoch)
+        # test the model for one epoch
         accuracy = test_epoch(model, device, test_loader)
         # call report intermediate result. Result can be float or dict
         nni.report_intermediate_result(accuracy)
