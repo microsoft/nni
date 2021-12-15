@@ -314,6 +314,4 @@ Azure Blob Config
 
 ..  autoattribute:: nni.experiment.config.AzureBlobConfig.storage_account_key
 
-..  autoattribute:: nni.experiment.config.AzureBlobConfig.resource_group_name
-
 ..  autoattribute:: nni.experiment.config.AzureBlobConfig.container_name

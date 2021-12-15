@@ -40,7 +40,7 @@ describe('Unit test for nnimanager', function () {
 
     let ClusterMetadataKey = 'mockedMetadataKey';
 
-    let experimentParams = {
+    let experimentParams: any = {
         experimentName: 'naive_experiment',
         trialConcurrency: 3,
         maxExperimentDuration: '5s',
@@ -86,7 +86,7 @@ describe('Unit test for nnimanager', function () {
         debug: true
     }
 
-    let experimentProfile = {
+    let experimentProfile: any = {
         params: updateExperimentParams,
         id: 'test',
         execDuration: 0,

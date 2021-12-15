@@ -224,7 +224,23 @@ def to_v2(v1):
 
     # hybrid mode should always use v2 schema, so no need to handle here
 
-    # don't think there is anybody using v1 shared storage
+    v1_storage = v1.pop('sharedStorage', None)
+    if v1_storage:
+        v2_storage = {}
+        v2['sharedStorage'] = v2_storage
+
+        _move_field(v1_storage, v2_storage, 'storageType')
+        _move_field(v1_storage, v2_storage, 'nfsServer')
+        _move_field(v1_storage, v2_storage, 'exportedDirectory')
+        _move_field(v1_storage, v2_storage, 'localMountPoint')
+        _move_field(v1_storage, v2_storage, 'remoteMountPoint')
+        _move_field(v1_storage, v2_storage, 'localMounted')
+        _move_field(v1_storage, v2_storage, 'storageAccountName')
+        _move_field(v1_storage, v2_storage, 'storageAccountKey')
+        _move_field(v1_storage, v2_storage, 'containerName')
+
+        if v1_storage:
+            _logger.error('shared storage not fully converted: %s', v1_storage)
 
     if v1_trial:
         _logger.error('trial config not fully converted: %s', v1_trial)
@@ -245,9 +261,22 @@ def _drop_field(v1, key):
         _logger.warning(f'Configuration field {key} is no longer supported and has been ignored')
         v1.pop(key)
 
-# NOTE: fields not yet supported by v2 are also (temporarily) placed here
 def _deprecate(v1, v2, key):
-    if key in v1:
-        if v2._deprecated is None:
-            v2._deprecated = {}
-        v2._deprecated[key] = v1.pop(key)
+    _drop_field(v1, key)
+
+def convert_algo(algo_type, v1_algo):
+    builtin_name = v1_algo.pop(f'builtin{algo_type.title()}Name', None)
+    if builtin_name is not None:
+        v2_algo = {'name': builtin_name}
+
+    else:
+        code_directory = v1_algo.pop('codeDir')
+        class_file_name = v1_algo.pop('classFileName')
+        assert class_file_name.endswith('.py')
+        class_name = class_file_name[:-3] + '.' + v1_algo.pop('className')
+        v2_algo = {'className': class_name, 'codeDirectory': code_directory}
+
+    if 'classArgs' in v1_algo:
+        v2_algo['classArgs'] = v1_algo.pop('classArgs')
+
+    return v2_algo
