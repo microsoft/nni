@@ -20,17 +20,13 @@ class ShuffleNetV2OneShot(nn.Module):
         'xception_3x3',
     ]
 
-    def __init__(self, input_size=224, first_conv_channels=16, last_conv_channels=1024, n_classes=1000,
-                 op_flops_path="./data/op_flops_dict.pkl", affine=False):
+    def __init__(self, input_size=224, first_conv_channels=16, last_conv_channels=1024,
+                 n_classes=1000, affine=False):
         super().__init__()
 
         assert input_size % 32 == 0
-        # with open(os.path.join(os.path.dirname(__file__), op_flops_path), "rb") as fp:
-        #     self._op_flops_dict = pickle.load(fp)
-
         self.stage_blocks = [4, 4, 8, 4]
         self.stage_channels = [64, 160, 320, 640]
-        # self._parsed_flops = dict()
         self._input_size = input_size
         self._feature_map_size = input_size
         self._first_conv_channels = first_conv_channels
@@ -85,11 +81,6 @@ class ShuffleNetV2OneShot(nn.Module):
             ], label="LayerChoice" + str(self._layerchoice_count))
             result.append(choice_block)
 
-            # # find the corresponding flops
-            # flop_key = (inp, oup, mid_channels, self._feature_map_size, self._feature_map_size, stride)
-            # self._parsed_flops[choice_block.key] = [
-            #     self._op_flops_dict["{}_stride_{}".format(k, stride)][flop_key] for k in self.block_keys
-            # ]
             if stride == 2:
                 self._feature_map_size //= 2
         return result
@@ -105,22 +96,6 @@ class ShuffleNetV2OneShot(nn.Module):
         x = x.contiguous().view(bs, -1)
         x = self.classifier(x)
         return x
-
-    # def get_candidate_flops(self, candidate):
-    #     conv1_flops = self._op_flops_dict["conv1"][(3, self._first_conv_channels,
-    #                                                 self._input_size, self._input_size, 2)]
-    #     # Should use `last_conv_channels` here, but megvii insists that it's `n_classes`. Keeping it.
-    #     # https://github.com/megvii-model/SinglePathOneShot/blob/36eed6cf083497ffa9cfe7b8da25bb0b6ba5a452/src/Supernet/flops.py#L313
-    #     rest_flops = self._op_flops_dict["rest_operation"][(self.stage_channels[-1], self._n_classes,
-    #                                                         self._feature_map_size, self._feature_map_size, 1)]
-    #     total_flops = conv1_flops + rest_flops
-    #     for k, m in candidate.items():
-    #         parsed_flops_dict = self._parsed_flops[k]
-    #         if isinstance(m, dict):  # to be compatible with classical nas format
-    #             total_flops += parsed_flops_dict[m["_idx"]]
-    #         else:
-    #             total_flops += parsed_flops_dict[torch.max(m, 0)[1]]
-    #     return total_flops
 
     def _initialize_weights(self):
         for name, m in self.named_modules():
