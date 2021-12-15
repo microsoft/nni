@@ -1,9 +1,5 @@
-PBT Tuner on NNI
-================
-
-Introduction
-------------
-
+PBT Tuner
+=========
 
 Population Based Training (PBT) comes from `Population Based Training of Neural Networks <https://arxiv.org/abs/1711.09846v1>`__. It's a simple asynchronous optimization algorithm which effectively utilizes a fixed computational budget to jointly optimize a population of models and their hyperparameters to maximize performance. Importantly, PBT discovers a schedule of hyperparameter settings rather than following the generally sub-optimal strategy of trying to find a single fixed set to use for the whole course of training. 
 
@@ -13,7 +9,7 @@ Population Based Training (PBT) comes from `Population Based Training of Neural 
    :alt: 
 
 
-PBTTuner initializes a population with several trials (i.e., ``population_size``\ ). There are four steps in the above figure, each trial only runs by one step. How long is one step is controlled by trial code, e.g., one epoch. When a trial starts, it loads a checkpoint specified by PBTTuner and continues to run one step, then saves checkpoint to a directory specified by PBTTuner and exits. The trials in a population run steps synchronously, that is, after all the trials finish the ``i``\ -th step, the ``(i+1)``\ -th step can be started. Exploitation and exploration of PBT are executed between two consecutive steps.
+PBTTuner initializes a population with several trials (i.e., ``population_size``). There are four steps in the above figure, each trial only runs by one step. How long is one step is controlled by trial code, e.g., one epoch. When a trial starts, it loads a checkpoint specified by PBTTuner and continues to run one step, then saves checkpoint to a directory specified by PBTTuner and exits. The trials in a population run steps synchronously, that is, after all the trials finish the ``i``-th step, the ``(i+1)``-th step can be started. Exploitation and exploration of PBT are executed between two consecutive steps.
 
 Usage
 -----
@@ -21,7 +17,7 @@ Usage
 Provide checkpoint directory
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Since some trials need to load other trial's checkpoint, users should provide a directory (i.e., ``all_checkpoint_dir``\ ) which is accessible by every trial. It is easy for local mode, users could directly use the default directory or specify any directory on the local machine. For other training services, users should follow `the document of those training services <../TrainingService/Overview.rst>`__ to provide a directory in a shared storage, such as NFS, Azure storage.
+Since some trials need to load other trial's checkpoint, users should provide a directory (i.e., ``all_checkpoint_dir``) which is accessible by every trial. It is easy for local mode, users could directly use the default directory or specify any directory on the local machine. For other training services, users should follow `the document of those training services <../TrainingService/Overview.rst>`__ to provide a directory in a shared storage, such as NFS, Azure storage.
 
 Modify your trial code
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -47,11 +43,11 @@ The complete example code can be found :githublink:`here <examples/trials/mnist-
 classArgs requirements
 ^^^^^^^^^^^^^^^^^^^^^^
 
-* **optimize_mode** (*'maximize' or 'minimize'*\ ) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
-* **all_checkpoint_dir** (*str, optional, default = None*\ ) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/\ :raw-html:`<exp-id>`\ ". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
-* **population_size** (*int, optional, default = 10*\ ) - Number of trials in a population. Each step has this number of trials. In our implementation, one step is running each trial by specific training epochs set by users.
-* **factors** (*tuple, optional, default = (1.2, 0.8)*\ ) - Factors for perturbation of hyperparameters.
-* **fraction** (*float, optional, default = 0.2*\ ) - Fraction for selecting bottom and top trials.
+* **optimize_mode** (*'maximize' or 'minimize'*) - If 'maximize', the tuner will target to maximize metrics. If 'minimize', the tuner will target to minimize metrics.
+* **all_checkpoint_dir** (*str, optional, default = None*) - Directory for trials to load and save checkpoint, if not specified, the directory would be "~/nni/checkpoint/\ :raw-html:`<exp-id>`\ ". Note that if the experiment is not local mode, users should provide a path in a shared storage which can be accessed by all the trials.
+* **population_size** (*int, optional, default = 10*) - Number of trials in a population. Each step has this number of trials. In our implementation, one step is running each trial by specific training epochs set by users.
+* **factors** (*tuple, optional, default = (1.2, 0.8)*) - Factors for perturbation of hyperparameters.
+* **fraction** (*float, optional, default = 0.2*) - Fraction for selecting bottom and top trials.
 
 Experiment config
 ^^^^^^^^^^^^^^^^^
@@ -75,6 +71,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: PBTTuner
+     name: PBTTuner
      classArgs:
        optimize_mode: maximize
