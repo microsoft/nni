@@ -2,11 +2,13 @@
 # Licensed under the MIT license.
 
 import inspect
+from collections import defaultdict
 from typing import Any, List, Optional, Tuple
 
 import torch.nn as nn
 
-from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node
+from nni.common.serializer import is_traceable
+from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node, Evaluator
 from nni.retiarii.mutator import Mutator
 from nni.retiarii.serializer import is_basic_unit
 from nni.retiarii.utils import uid
@@ -280,6 +282,44 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         else:
             mutators.append(ManyChooseManyMutator(nodes[0].label))
     return model, mutators + mutators_final
+
+
+# mutations for evaluator
+
+class EvaluatorValueChoiceMutator(Mutator):
+    def __init__(self, candidates: List[Any], keys: List[str], label: Optional[str]):
+        self.candidates = candidates
+        self.keys = keys
+        super().__init__(label=label)
+
+    def mutate(self, model: Model):
+        model.evaluator = model.evaluator.trace_copy()
+        chosen = self.choice(self.candidates)
+        for key in self.keys:
+            model.evaluator.trace_kwargs[key] = chosen
+        return model
+
+
+def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mutator]) -> List[Mutator]:
+    if not is_traceable(evaluator):
+        return []
+    mutator_candidates = {}
+    mutator_keys = defaultdict()
+    for key, param in evaluator.trace_kwargs.items():
+        if isinstance(param, ValueChoice):
+            for mutator in existing_mutators:
+                if mutator.name == param.label:
+                    raise ValueError(f'Found duplicated labels for mutators {param.label}. When two mutators have the same name, '
+                                     'they would share choices. However, sharing choices between model and evaluator is not yet supported.')
+            if param.label in mutator_candidates and mutator_candidates[param.label][1] != param.candidates:
+                raise ValueError(f'Duplicate labels for evaluator ValueChoice {param.label}. They should share choices.'
+                                 f'But their candidate list is not equal: {mutator_candidates[param.label][1]} vs. {param.candidates}')
+            mutator_keys[param.label].append(key)
+            mutator_candidates[param.label] = param.candidates
+    mutators = []
+    for key in mutator_keys:
+        mutators.append(EvaluatorValueChoiceMutator(mutator_candidates[key], mutator_keys[key], key))
+    return mutators
 
 
 # utility functions
