@@ -221,8 +221,8 @@ class GridSearchTuner(Tuner):
         return params
 
 def _less(x, y, spec):
-    if spec.q is None:
-        return x < y
+    #if spec.q is None:  # TODO: comment out because of edge case UT uniform(99.9, 99.9)
+    #    return x < y
     real_x = _deformat_single_parameter(_cdf_inverse(x, spec), spec)
     real_y = _deformat_single_parameter(_cdf_inverse(y, spec), spec)
     return real_x < real_y
