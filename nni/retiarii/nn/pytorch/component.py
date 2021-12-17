@@ -9,14 +9,13 @@ from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import generate_new_label, get_fixed_value
-from ...utils import NoContextError
+from .utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
 
 
-class Repeat(nn.Module):
+class Repeat(Mutable):
     """
     Repeat a block by a variable number of times.
 
@@ -32,17 +31,16 @@ class Repeat(nn.Module):
         meaning that the block will be repeated at least `min` times and at most `max` times.
     """
 
-    def __new__(cls, blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
-                depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
-        try:
-            repeat = get_fixed_value(label)
-            return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
-        except NoContextError:
-            return super().__new__(cls)
+    @classmethod
+    def create_fixed_module(cls,
+                            blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module], None] = None,
+                            depth: Union[int, Tuple[int, int], None] = None, label: Optional[str] = None):
+        repeat = get_fixed_value(label)
+        return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
 
     def __init__(self,
                  blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
+                 depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
         self._label = generate_new_label(label)
         self.min_depth = depth if isinstance(depth, int) else depth[0]
