@@ -310,7 +310,7 @@ def process_evaluator_mutations(evaluator: Evaluator, existing_mutators: List[Mu
     if not is_traceable(evaluator):
         return []
     mutator_candidates = {}
-    mutator_keys = defaultdict()
+    mutator_keys = defaultdict(list)
     for key, param in evaluator.trace_kwargs.items():
         if isinstance(param, ValueChoice):
             # merge duplicate labels
