@@ -631,3 +631,15 @@ class Shared(unittest.TestCase):
         evaluator = FunctionalEvaluator(foo, t=ValueChoice([1, 2], label='x'), x=ValueChoice([1, 2], label='x'))
         mutators = process_evaluator_mutations(evaluator, [])
         assert len(mutators) == 1
+
+        # getitem
+        choice = ValueChoice([{"a": 1, "b": 2}, {"a": 3, "b": 4}])
+        evaluator = FunctionalEvaluator(foo, t=1, x=choice['a'], y=choice['b'])
+        mutators = process_evaluator_mutations(evaluator, [])
+        assert len(mutators) == 1
+        init_model = Model(_internal=True)
+        init_model.evaluator = evaluator
+        sampler = RandomSampler()
+        for _ in range(10):
+            model = mutators[0].bind_sampler(sampler).apply(init_model)
+            assert (model.evaluator.trace_kwargs['x'], model.evaluator.trace_kwargs['y']) in [(1, 2), (3, 4)]
