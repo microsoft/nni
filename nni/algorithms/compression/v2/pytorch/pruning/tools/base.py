@@ -513,7 +513,7 @@ class TaskGenerator:
         task_id = task_result.task_id
         task = self._tasks[task_id]
         task.score = score
-        if self._best_score is None or score > self._best_score:
+        if self._best_score is None or (score is not None and score > self._best_score):
             self._best_score = score
             self._best_task_id = task_id
             with Path(task.config_list_path).open('r') as fr:

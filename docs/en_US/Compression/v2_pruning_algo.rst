@@ -28,6 +28,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
 * `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
 * `Auto Compress Pruner <#auto-compress-pruner>`__
+* `AMC Pruner <#amc-pruner>`__
 
 Level Pruner
 ------------
@@ -554,3 +555,33 @@ User configuration for Auto Compress Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AutoCompressPruner
+
+AMC Pruner
+----------
+
+AMC pruner leverages reinforcement learning to provide the model compression policy.
+According to the author, this learning-based compression policy outperforms conventional rule-based compression policy by having a higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+For more details, please refer to `AMC: AutoML for Model Compression and Acceleration on Mobile Devices <https://arxiv.org/pdf/1802.03494.pdf>`__.
+
+Usage
+^^^^^
+
+PyTorch code
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
+   config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
+   pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
+   pruner.compress()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/amc_pruning_torch.py>`.
+
+User configuration for AMC Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AMCPruner
