@@ -426,13 +426,16 @@ class NNIRestHandler {
     }
 
     private stopOtherExperiment(router: Router): void {
-        router.delete('/manage-experiment', (req: Request, res: Response) => {
-            this.nniManager.sendDelteExperiment(req.body['url']).then(() => {
-                res.send();
+        router.delete('/manage-experiment/:port', (req: Request, res: Response) => {
+            // res.location(`${req.hostname}:${req.params['port']}${API_ROOT_URL}/experiment`);
+            // res.send(302);
+            this.nniManager.sendDelteExperiment(req.hostname, req.params['port']).then(() => {
+                res.send(`${req.hostname}:${req.params['port']}`);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
         });
+
         // router.delete('/trial-jobs/:id', async (req: Request, res: Response) => {
         //     this.nniManager.cancelTrialJobByUser(req.params['id']).then(() => {
         //         res.send();

@@ -186,7 +186,7 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     private onDeleteClick = (): void => {
         this.state.selectionDetails.forEach((val, _) => {
-            killExperiment(val.webuiUrl[1]);
+            killExperiment(val.port);
         });
     };
 

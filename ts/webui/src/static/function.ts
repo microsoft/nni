@@ -219,21 +219,19 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
 };
 
 // kill experiment
-const killExperiment = (webuiUrl: string): void => {
-    axios(`${MANAGER_IP}/manage-experiment`, {
+const killExperiment = (port: number): void => {
+    axios(`${MANAGER_IP}/manage-experiment/${port.toString()}`, {
         method: 'DELETE',
-        data: {
-            url: webuiUrl
-        },
         headers: {
             'Content-Type': 'application/json;charset=utf-8'
         }
     })
         .then(res => {
             if (res.status === 200) {
-                alert('Cancel the experiment successfully');
+                // TODO: use Message.txt to tooltip
+                alert('Cancel the job successfully');
             } else {
-                alert('fail to cancel the experiment');
+                alert('fail to cancel the job');
             }
         })
         .catch(error => {
@@ -241,7 +239,7 @@ const killExperiment = (webuiUrl: string): void => {
                 if (error.response.data.error) {
                     alert(error.response.data.error);
                 } else {
-                    alert('500 error, fail to cancel the experiment');
+                    alert('500 error, fail to cancel the job');
                 }
             }
         });

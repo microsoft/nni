@@ -903,33 +903,31 @@ class NNIManager implements Manager {
         return this.trainingService.fetchTrialOutput(trialJobId, subpath);
     }
 
-    public async sendDelteExperiment(webuiUrl: string): Promise<void> {
-        // var request = require('request')
-
-        axios(`${webuiUrl}${API_ROOT_URL}/experiment`, {
+    public async sendDelteExperiment(hostname: string, port: string): Promise<void> {
+        // var request = require('request'
+        axios(`${hostname}:${port}${API_ROOT_URL}/experiment`, {
           headers: {
               method: 'DELETE',
                 'Content-Type': 'application/json;charset=utf-8'
             }
-        })
-            .then(res => {
-                if (res.status === 200) {
-                    // TODO: use Message.txt to tooltip
-                    alert('Cancel the job successfully');
-                    // render the table
-                } else {
-                    alert('fail to cancel the job');
-                }
-            })
-            .catch(error => {
-                if (error.response.status === 500) {
-                    if (error.response.data.error) {
-                        alert(error.response.data.error);
-                    } else {
-                        alert('500 error, fail to cancel the job');
-                    }
-                }
-            });
+        });
+            // .then(res => {
+            //     if (res.status === 200) {
+            //         // TODO: use Message.txt to tooltip
+            //         alert('Cancel the job successfully');
+            //     } else {
+            //         alert('fail to cancel the job');
+            //     }
+            // })
+            // .catch(error => {
+            //     if (error.response.status === 500) {
+            //         if (error.response.data.error) {
+            //             alert(error.response.data.error);
+            //         } else {
+            //             alert('500 error, fail to cancel the job');
+            //         }
+            //     }
+            // });
     }
 }
 

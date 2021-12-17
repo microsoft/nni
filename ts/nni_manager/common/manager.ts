@@ -65,7 +65,7 @@ abstract class Manager {
     public abstract getTrialOutputLocalPath(trialJobId: string): Promise<string>;
     public abstract fetchTrialOutput(trialJobId: string, subpath: string): Promise<void>;
 
-    public abstract sendDelteExperiment(webuiUrl: string): Promise<void>;
+    public abstract sendDelteExperiment(hostname: string, port: string): Promise<void>;
 }
 
 export { Manager, ExperimentConfig, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };
