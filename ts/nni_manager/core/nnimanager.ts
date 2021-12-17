@@ -903,31 +903,52 @@ class NNIManager implements Manager {
         return this.trainingService.fetchTrialOutput(trialJobId, subpath);
     }
 
-    public async sendDelteExperiment(hostname: string, port: string): Promise<void> {
-        // var request = require('request'
-        axios(`${hostname}:${port}${API_ROOT_URL}/experiment`, {
-          headers: {
-              method: 'DELETE',
+    public async sendDelteExperiment(hostname: string, port: string): Promise<number> {
+        var status:number = 200
+        axios(`http://${hostname}:${port}${API_ROOT_URL}/experiment`, {
+            method: 'DELETE',
+            headers: {
                 'Content-Type': 'application/json;charset=utf-8'
             }
-        });
-            // .then(res => {
-            //     if (res.status === 200) {
-            //         // TODO: use Message.txt to tooltip
-            //         alert('Cancel the job successfully');
-            //     } else {
-            //         alert('fail to cancel the job');
-            //     }
-            // })
-            // .catch(error => {
-            //     if (error.response.status === 500) {
-            //         if (error.response.data.error) {
-            //             alert(error.response.data.error);
-            //         } else {
-            //             alert('500 error, fail to cancel the job');
-            //         }
-            //     }
-            // });
+        })
+            .then(res => {
+                status = res.status;
+                // if (res.status === 200) {
+                //     // TODO: use Message.txt to tooltip
+                //     this.log.info('Cancel the job successfully');
+                //     // alert('Cancel the job successfully');
+                //     return `Cancel the job ${port} successfully`;
+                // } else {
+                //     this.log.info('fail to cancel the job');
+                //     // alert('fail to cancel the job');
+                //     return `fail to cancel the job ${port}`;
+                // }
+            })
+            .catch(error => {
+                status = error.response.status;
+                // this.log.info(error);
+                // if (error.response.status === 500) {
+                //     if (error.response.data.error) {
+                //         return error.response.data.error;
+                //         // alert(error.response.data.error);
+                //     } else {
+                //         return `500 error, fail to cancel the job ${port}`;
+                //     }
+                // }
+            });
+
+        return status;
+        //     .then(res => {
+        //     if (res.status === 200) {
+        //         // TODO: use Message.txt to tooltip
+        //         this.log.info('Cancel the job successfully');
+        //     } else {
+        //         this.log.info('fail to cancel the job');
+        //     }
+        // })
+        //     .catch(error => {
+        //         this.log.info(error);
+        // });
     }
 }
 

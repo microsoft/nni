@@ -429,8 +429,8 @@ class NNIRestHandler {
         router.delete('/manage-experiment/:port', (req: Request, res: Response) => {
             // res.location(`${req.hostname}:${req.params['port']}${API_ROOT_URL}/experiment`);
             // res.send(302);
-            this.nniManager.sendDelteExperiment(req.hostname, req.params['port']).then(() => {
-                res.send(`${req.hostname}:${req.params['port']}`);
+            this.nniManager.sendDelteExperiment(req.hostname, req.params['port']).then((status) => {
+                res.status(status).send();
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
