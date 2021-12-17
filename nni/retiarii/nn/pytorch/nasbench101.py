@@ -8,7 +8,6 @@ import torch.nn as nn
 
 from nni.retiarii.mutator import InvalidMutation, Mutator
 from nni.retiarii.graph import Model
-from nni.retiarii.utils import NoContextError
 from .api import InputChoice, ValueChoice, LayerChoice
 from .utils import Mutable, generate_new_label, get_fixed_dict
 
