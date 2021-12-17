@@ -253,7 +253,7 @@ class BuiltinTunersTestCase(TestCase):
         logger.info("Imported data successfully at the beginning with incomplete epoch")
         shutil.rmtree(all_checkpoint_dir)
 
-    def import_data_test(self, tuner_factory, stype="choice_str"):
+    def import_data_test(self, tuner_factory, stype="choice_str", support_middle=True):
         """
         import data at the beginning with number value and dict value
         import data in the middle also with number value and dict value, and duplicate data record
@@ -298,6 +298,8 @@ class BuiltinTunersTestCase(TestCase):
         parameters = tuner.generate_multiple_parameters(list(range(3)))
         for i in range(3):
             tuner.receive_trial_result(i, parameters[i], random.uniform(-100, 100))
+        if not support_middle:
+            return
         # import data in the middle
         if stype == "choice_str":
             data = [{"parameter": {"choice_str": "cat"}, "value": 1.1},
@@ -316,9 +318,8 @@ class BuiltinTunersTestCase(TestCase):
     def test_grid_search(self):
         self.exhaustive = True
         tuner_fn = lambda: GridSearchTuner()
-        self.search_space_test_all(tuner_fn,
-                                   supported_types=["choice", "randint", "quniform"])
-        self.import_data_test(tuner_fn)
+        self.search_space_test_all(tuner_fn)
+        self.import_data_test(tuner_fn, support_middle=False)
 
     def test_tpe(self):
         tuner_fn = TpeTuner
@@ -397,6 +398,10 @@ class BuiltinTunersTestCase(TestCase):
                                                          "normal", "lognormal", "qnormal", "qlognormal"])
         self.import_data_test(tuner_fn, stype='choice_num')
 
+    def test_regularized_evolution_tuner(self):
+        tuner_fn = lambda: RegularizedEvolutionTuner()
+        self.nas_search_space_test_all(tuner_fn)
+
     def tearDown(self):
         file_list = glob.glob("smac3*") + ["param_config_space.pcs", "scenario.txt", "model_path"]
         for file in file_list:
@@ -405,10 +410,6 @@ class BuiltinTunersTestCase(TestCase):
                     shutil.rmtree(file)
                 else:
                     os.remove(file)
-
-    def test_regularized_evolution_tuner(self):
-        tuner_fn = lambda: RegularizedEvolutionTuner()
-        self.nas_search_space_test_all(tuner_fn)
 
 
 if __name__ == '__main__':
