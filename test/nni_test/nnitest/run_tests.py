@@ -25,7 +25,6 @@ it_variables = {}
 
 def update_training_service_config(config, training_service, config_file_path, nni_source_dir, reuse_mode='False'):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
-
     # hack for kubeflow trial config
     if training_service == 'kubeflow' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['worker']['command'] = config['trial']['command']
@@ -34,16 +33,18 @@ def update_training_service_config(config, training_service, config_file_path, n
             config['trial'].pop('gpuNum')
     elif training_service == 'kubeflow' and reuse_mode == 'True':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-        it_ts_config['trainingService']['worker']['command'] = config['trialCommand']
+        print(it_ts_config)
+        it_ts_config[training_service]['trainingService']['worker']['command'] = config['trialCommand']
+        it_ts_config[training_service]['trainingService']['worker']['code_directory'] = config['trialCodeDirectory']
 
-    if training_service == 'frameworkcontroller'  and reuse_mode == 'False':
+    if training_service == 'frameworkcontroller' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['taskRoles'][0]['command'] = config['trial']['command']
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
-    elif training_service == 'frameworkcontroller'  and reuse_mode == 'True':
+    elif training_service == 'frameworkcontroller' and reuse_mode == 'True':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-        it_ts_config['trainingService']['taskRoles'][0]['command'] = config['trialCommand']
+        it_ts_config[training_service]['trainingService']['taskRoles'][0]['command'] = config['trialCommand']
 
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
@@ -74,7 +75,7 @@ def update_training_service_config(config, training_service, config_file_path, n
     
     if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-    else:
+    elif reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 

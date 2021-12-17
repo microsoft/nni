@@ -62,10 +62,10 @@ jobs:
   - task: CopyFilesOverSSH@0
     inputs:
       sshEndpoint: $(worker)
-      contents: interim_vision_patch.py
+      contents: test/vso_tools/interim_patch.py
       targetFolder: /tmp/nnitest/$(Build.BuildId)
       overwrite: true
-    displayName: Copy vision patch to remote machine
+    displayName: Copy torch patch to remote machine
     timeoutInMinutes: 10
 
   - task: SSH@0

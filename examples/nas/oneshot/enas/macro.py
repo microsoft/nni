@@ -32,7 +32,7 @@ class ENASLayer(mutables.MutableScope):
         if self.skipconnect is not None:
             connection = self.skipconnect(prev_layers[:-1])
             if connection is not None:
-                out += connection
+                out = out + connection
         return self.batch_norm(out)
 
 

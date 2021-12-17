@@ -5,7 +5,8 @@ import logging
 import warnings
 
 import colorama
-import json_tricks
+from nni.common import load
+
 
 __all__ = [
     'get_next_parameter',
@@ -44,7 +45,7 @@ def get_sequence_id():
     return 0
 
 def send_metric(string):
-    metric = json_tricks.loads(string)
+    metric = load(string)
     if metric['type'] == 'FINAL':
         _logger.info('Final result: %s', metric['value'])
     elif metric['type'] == 'PERIODICAL':

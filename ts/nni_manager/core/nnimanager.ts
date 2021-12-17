@@ -513,8 +513,9 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
+        this.log.info(`Updated search space ${searchSpace}`);
         this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
-        this.experimentProfile.params.searchSpace = searchSpace;
+        this.experimentProfile.params.searchSpace = JSON.parse(searchSpace);
 
         return;
     }

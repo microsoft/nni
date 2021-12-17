@@ -18,7 +18,7 @@ __all__ = ['Pruner']
 class PrunerModuleWrapper(Module):
     def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
         """
-        Wrap an module to enable data parallel, forward method customization and buffer registeration.
+        Wrap a module to enable data parallel, forward method customization and buffer registeration.
 
         Parameters
         ----------

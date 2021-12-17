@@ -313,7 +313,7 @@ To learn more about making a contribution to NNI, please refer to our [How-to co
 
 We appreciate all contributions and thank all the contributors!
 
-<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="docs/img/contributors.png" /></a>
+<a href="https://github.com/microsoft/nni/graphs/contributors"><img src="https://contrib.rocks/image?repo=microsoft/nni" /></a>
 
 
 ## **Feedback**
