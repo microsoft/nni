@@ -483,6 +483,19 @@ class GraphIR(unittest.TestCase):
         self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
         self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
 
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(nn.LayerChoice([AddOne(), nn.Identity()]), (3, 5))
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 1)
+        assert len(mutators) == 2
+
     def test_cell(self):
         @self.get_serializer()
         class Net(nn.Module):
