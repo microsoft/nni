@@ -11,7 +11,7 @@ import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
-import { killExperiment } from '../../static/function';
+import { killExperiment, resumeExperiment } from '../../static/function';
 import '../../App.scss';
 import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
@@ -123,7 +123,7 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 {/*    </DefaultButton>*/}
                                 {/*</div>*/}
                                 <div className='resume'>
-                                    <DefaultButton href='/oview'>
+                                    <DefaultButton onClick={this.onResumeClick}>
                                         <Icon iconName='Equalizer' />
                                         <span className='margin'>Resume</span>
                                     </DefaultButton>
@@ -187,6 +187,12 @@ class Experiment extends React.Component<{}, ExpListState> {
     private onDeleteClick = (): void => {
         this.state.selectionDetails.forEach((val, _) => {
             killExperiment(val.port);
+        });
+    };
+
+    private onResumeClick = (): void => {
+        this.state.selectionDetails.forEach((val, _) => {
+            resumeExperiment(val);
         });
     };
 

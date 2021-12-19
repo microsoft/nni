@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard, AllExperimentList } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -220,8 +220,38 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
 
 // kill experiment
 const killExperiment = (port: number): void => {
-    axios(`${MANAGER_IP}/manage-experiment/${port.toString()}`, {
+    axios(`${MANAGER_IP}/manage-experiment/delete/${port.toString()}`, {
         method: 'DELETE',
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    })
+        .then(res => {
+            if (res.status === 200) {
+                // TODO: use Message.txt to tooltip
+                alert('Cancel the job successfully');
+            } else {
+                alert('fail to cancel the job');
+            }
+        })
+        .catch(error => {
+            if (error.response.status === 500) {
+                if (error.response.data.error) {
+                    alert(error.response.data.error);
+                } else {
+                    alert('500 error, fail to cancel the job');
+                }
+            }
+        });
+};
+
+//resume experiment
+const resumeExperiment = (experiment: AllExperimentList): void => {
+    axios(`${MANAGER_IP}/manage-experiment/resume`, {
+        method: 'POST',
+        data: {
+            port: experiment.port
+        },
         headers: {
             'Content-Type': 'application/json;charset=utf-8'
         }
@@ -429,5 +459,6 @@ export {
     disableTensorboard,
     getTensorboardMenu,
     parametersType,
-    killExperiment
+    killExperiment,
+    resumeExperiment
 };

@@ -7,7 +7,7 @@ import path from 'path';
 import * as component from '../common/component';
 import { DataStore, MetricDataRecord, TrialJobInfo } from '../common/datastore';
 import { NNIError, NNIErrorNames } from '../common/errors';
-import { isNewExperiment, isReadonly } from '../common/experimentStartupInfo';
+import { isNewExperiment, isReadonly, getExperimentStartupInfo } from '../common/experimentStartupInfo';
 import { getLogger, Logger } from '../common/log';
 import { ExperimentProfile, Manager, TrialJobStatistics } from '../common/manager';
 import { ExperimentManager } from '../common/experimentManager';
@@ -77,6 +77,7 @@ class NNIRestHandler {
         this.listTensorboardTask(router);
         this.stop(router);
         this.stopOtherExperiment(router);
+        this.resumeOtherExperiment(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any): any => {
@@ -174,6 +175,8 @@ class NNIRestHandler {
     private startExperiment(router: Router): void {
         router.post('/experiment', (req: Request, res: Response) => {
             if (isNewExperiment()) {
+                this.log.info(req.body);
+                this.log.info(getExperimentStartupInfo());
                 this.nniManager.startExperiment(req.body).then((eid: string) => {
                     res.send({
                         experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
@@ -183,6 +186,8 @@ class NNIRestHandler {
                     this.handleError(err, res);
                 });
             } else {
+                this.log.info(req.body);
+                this.log.info(getExperimentStartupInfo());
                 this.nniManager.resumeExperiment(isReadonly()).then(() => {
                     res.send();
                 }).catch((err: Error) => {
@@ -426,7 +431,7 @@ class NNIRestHandler {
     }
 
     private stopOtherExperiment(router: Router): void {
-        router.delete('/manage-experiment/:port', (req: Request, res: Response) => {
+        router.delete('/manage-experiment/delete/:port', (req: Request, res: Response) => {
             // res.location(`${req.hostname}:${req.params['port']}${API_ROOT_URL}/experiment`);
             // res.send(302);
             this.nniManager.sendDelteExperiment(req.hostname, req.params['port']).then((status) => {
@@ -435,14 +440,28 @@ class NNIRestHandler {
                 this.handleError(err, res);
             });
         });
+    }
 
-        // router.delete('/trial-jobs/:id', async (req: Request, res: Response) => {
-        //     this.nniManager.cancelTrialJobByUser(req.params['id']).then(() => {
-        //         res.send();
-        //     }).catch((err: Error) => {
-        //         this.handleError(err, res);
-        //     });
-        // });
+    private  resumeOtherExperiment(router: Router): void {
+        router.post('/manage-experiment/resume/:id', (req: Request, res: Response) => {
+            if (isNewExperiment()) {
+                this.nniManager.startExperiment(req.body).then((eid: string) => {
+                    res.send({
+                        experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
+                    });
+                }).catch((err: Error) => {
+                    // Start experiment is a step of initialization, so any exception thrown is a fatal
+                    this.handleError(err, res);
+                });
+            } else {
+                this.nniManager.resumeExperiment(isReadonly()).then(() => {
+                    res.send();
+                }).catch((err: Error) => {
+                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
+                    this.handleError(err, res);
+                });
+            }
+        });
     }
 
     private setErrorPathForFailedJob(jobInfo: TrialJobInfo): TrialJobInfo {
