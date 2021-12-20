@@ -6,7 +6,7 @@ import logging
 import os
 
 from schema import And, Optional, Or, Regex, Schema, SchemaError
-from nni.tools.package_utils import (
+from nni.tools.package_utils.tuner_factory import (
     create_validator_instance,
     get_all_builtin_names,
     get_registered_algo_meta,
