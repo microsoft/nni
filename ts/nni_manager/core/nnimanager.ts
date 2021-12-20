@@ -28,6 +28,7 @@ import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface 
 import { NNIRestServer } from '../rest_server/nniRestServer';
 import axios from 'axios';
 import { API_ROOT_URL } from '../common/experimentStartupInfo'
+import { runNNIctlScript } from '../common/pythonScript'
 
 /**
  * NNIManager which implements Manager interface
@@ -165,6 +166,11 @@ class NNIManager implements Manager {
     }
 
     public async startExperiment(config: ExperimentConfig): Promise<string> {
+        // const script = 'import nni.runtime.config ; print(nni.runtime.config.get_config_directory())';
+        const script = '-h'
+        const configDir = (await runNNIctlScript(script)).trim();
+        this.log.info(configDir)
+
         this.experimentProfile = {
             params: config,
             id: getExperimentId(),
