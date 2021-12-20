@@ -28,7 +28,7 @@ def get_all_builtin_names(algo_type):
     all builtin tuner names.
     """
     algos = config_manager.get_all_algo_meta()
-    return [meta.name for meta in algos if meta.algo_type == algo_type]
+    return [meta.name for meta in algos if meta.algo_type == algo_type.rstrip('s')]
 
 def get_registered_algo_meta(builtin_name, algo_type=None):
     """ Get meta information of registered algorithms.
@@ -52,7 +52,7 @@ def get_registered_algo_meta(builtin_name, algo_type=None):
     algo = config_manager.get_algo_meta(builtin_name)
     if algo is None:
         return None
-    if algo_type is not None and algo.algo_type != algo_type:
+    if algo_type is not None and algo.algo_type != algo_type.rstrip('s'):
         return None
     return algo.dump()
 
