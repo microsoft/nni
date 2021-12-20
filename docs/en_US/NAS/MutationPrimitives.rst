@@ -116,6 +116,7 @@ Repeat a block by a variable number of times.
   self.blocks = nn.Repeat(nn.LayerChoice([...]), (1, 3))
 
   # To make the three layer choices independently
+  # Need a factory function that accepts index (0, 1, 2, ...) and returns the module of the `index`-th layer.
   self.blocks = nn.Repeat(lambda index: nn.LayerChoice([...], label=f'layer{index}'), (1, 3))
 
 ``nn.Cell``
