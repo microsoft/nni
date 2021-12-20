@@ -17,7 +17,7 @@ def read_reg_meta_list(meta_path):
         assert meta['algoType'] in ['tuner', 'assessor', 'advisor']
         assert 'builtinName' in meta
         assert 'className' in meta
-    return [AlgoMeta.load(meta) for meta in meta_list]
+    return [package_utils.AlgoMeta.load(meta) for meta in meta_list]
 
 def verify_algo_import(meta):
     def _do_verify_import(full_name):
