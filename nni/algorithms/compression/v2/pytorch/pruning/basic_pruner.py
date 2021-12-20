@@ -524,10 +524,7 @@ class ActivationPruner(BasicPruner):
             raise 'Unsupported activatoin {}'.format(activation)
 
     def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
-        def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            if len(buffer) < self.training_batches:
-                buffer.append(self._activation(output.detach()))
-        return collect_activation
+        raise NotImplementedError()
 
     def reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
@@ -551,11 +548,35 @@ class ActivationPruner(BasicPruner):
 
 
 class ActivationAPoZRankPruner(ActivationPruner):
+    def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
+        assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
+        buffer.append(0)
+
+        def collect_activation(_module: Module, _input: Tensor, output: Tensor):
+            if len(buffer) == 1:
+                buffer.append(torch.zeros_like(output))
+            if buffer[0] < self.training_batches:
+                buffer[1] += torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
+                buffer[0] += 1
+        return collect_activation
+
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(dim=1)
 
 
 class ActivationMeanRankPruner(ActivationPruner):
+    def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
+        assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
+        buffer.append(0)
+
+        def collect_activation(_module: Module, _input: Tensor, output: Tensor):
+            if len(buffer) == 1:
+                buffer.append(torch.zeros_like(output))
+            if buffer[0] < self.training_batches:
+                buffer[1] += self._activation(output.detach())
+                buffer[0] += 1
+        return collect_activation
+
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(dim=1)
 
@@ -647,9 +668,14 @@ class TaylorFOWeightPruner(BasicPruner):
         schema.validate(config_list)
 
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
+        assert len(buffer) == 0, 'Buffer pass to taylor pruner collector is not empty.'
+        buffer.append(0)
+        buffer.append(torch.zeros_like(weight_tensor))
+
         def collect_taylor(grad: Tensor):
-            if len(buffer) < self.training_batches:
-                buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
+            if buffer[0] < self.training_batches:
+                buffer[1] += self._calculate_taylor_expansion(weight_tensor, grad)
+                buffer[0] += 1
         return collect_taylor
 
     def _calculate_taylor_expansion(self, weight_tensor: Tensor, grad: Tensor) -> Tensor:

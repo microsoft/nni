@@ -80,7 +80,7 @@ class MultiDataNormMetricsCalculator(NormMetricsCalculator):
     """
 
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
-        new_data = {name: sum(list_tensor) for name, list_tensor in data.items()}
+        new_data = {name: buffer[1] for name, buffer in data.items()}
         return super().calculate_metrics(new_data)
 
 
@@ -158,21 +158,18 @@ class APoZRankMetricsCalculator(MetricsCalculator):
     Note that the metric we return is (1 - apoz), because we assume a higher metric value has higher importance.
     APoZRank pruner use this to calculate metric.
     """
-    def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
+    def calculate_metrics(self, data: Dict[str, List]) -> Dict[str, Tensor]:
         metrics = {}
-        for name, tensor_list in data.items():
-            # NOTE: dim=0 means the batch dim is 0
-            activations = torch.cat(tensor_list, dim=0)
-            _eq_zero = torch.eq(activations, torch.zeros_like(activations))
-            keeped_dim = list(range(len(_eq_zero.size()))) if self.dim is None else self.dim
-            across_dim = list(range(len(_eq_zero.size())))
+        for name, (num, zero_counts) in data.items():
+            keeped_dim = list(range(len(zero_counts.size()))) if self.dim is None else self.dim
+            across_dim = list(range(len(zero_counts.size())))
             [across_dim.pop(i) for i in reversed(keeped_dim)]
-            # The element number on each [keeped_dim + 1] in _eq_zero
-            total_size = 1
-            for dim, dim_size in enumerate(_eq_zero.size()):
+            # The element number on each keeped_dim in zero_counts
+            total_size = num
+            for dim, dim_size in enumerate(zero_counts.size()):
                 if dim not in keeped_dim:
                     total_size *= dim_size
-            _apoz = torch.sum(_eq_zero, dim=across_dim).type_as(activations) / total_size
+            _apoz = torch.sum(zero_counts, dim=across_dim).type_as(zero_counts) / total_size
             # NOTE: the metric is (1 - apoz) because we assume the smaller metric value is more needed to be pruned.
             metrics[name] = torch.ones_like(_apoz) - _apoz
         return metrics
@@ -185,11 +182,9 @@ class MeanRankMetricsCalculator(MetricsCalculator):
     """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
-        for name, tensor_list in data.items():
-            # NOTE: dim=0 means the batch dim is 0
-            activations = torch.cat(tensor_list, dim=0)
-            keeped_dim = list(range(len(activations.size()))) if self.dim is None else self.dim
-            across_dim = list(range(len(activations.size())))
+        for name, (num, zero_counts) in data.items():
+            keeped_dim = list(range(len(zero_counts.size()))) if self.dim is None else self.dim
+            across_dim = list(range(len(zero_counts.size())))
             [across_dim.pop(i) for i in reversed(keeped_dim)]
-            metrics[name] = torch.mean(activations, across_dim)
+            metrics[name] = torch.mean(zero_counts, across_dim) / num
         return metrics
