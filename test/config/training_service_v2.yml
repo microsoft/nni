@@ -13,7 +13,7 @@ hybrid:
     workspaceName:
     computeTarget:
 kubeflow:
-  trialGpuNumber: 0
+  trialGpuNumber: 1
   trialConcurrency: 2
   maxTrialNumber: 2
   nniManagerIp:
@@ -37,7 +37,7 @@ kubeflow:
       keyVaultKey:
     apiVersion: v1
 frameworkcontroller:
-  trialGpuNumber: 0
+  trialGpuNumber: 1
   trialConcurrency: 2
   maxTrialNumber: 2
   nniManagerIp:

@@ -28,6 +28,7 @@ and how to schedule sparsity in each iteration are implemented as iterative prun
 * `Lottery Ticket Pruner <#lottery-ticket-pruner>`__
 * `Simulated Annealing Pruner <#simulated-annealing-pruner>`__
 * `Auto Compress Pruner <#auto-compress-pruner>`__
+* `AMC Pruner <#amc-pruner>`__
 
 Level Pruner
 ------------
@@ -155,8 +156,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import SlimPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['BatchNorm2d'] }]
-   pruner = SlimPruner(model, config_list, trainer, optimizer, criterion, training_epochs=1)
+   pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1)
    masked_model, masks = pruner.compress()
 
 For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/slim_pruning_torch.py <examples/model_compress/pruning/v2/slim_pruning_torch.py>`
@@ -187,8 +193,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ActivationAPoZRankPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = ActivationAPoZRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
+   pruner = ActivationAPoZRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
 For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
@@ -215,8 +226,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ActivationMeanRankPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = ActivationMeanRankPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
+   pruner = ActivationMeanRankPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
 For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/activation_pruning_torch.py <examples/model_compress/pruning/v2/activation_pruning_torch.py>`
@@ -247,8 +263,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import TaylorFOWeightPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = TaylorFOWeightPruner(model, config_list, trainer, optimizer, criterion, training_batches=20)
+   pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
    masked_model, masks = pruner.compress()
 
 For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/taylorfo_pruning_torch.py <examples/model_compress/pruning/v2/taylorfo_pruning_torch.py>`
@@ -280,8 +301,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import ADMMPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
-   pruner = ADMMPruner(model, config_list, trainer, optimizer, criterion, iterations=10, training_epochs=1)
+   pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=10, training_epochs=1)
    masked_model, masks = pruner.compress()
 
 For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/admm_pruning_torch.py <examples/model_compress/pruning/v2/admm_pruning_torch.py>`
@@ -316,8 +342,13 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import MovementPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{'op_types': ['Linear'], 'op_partial_names': ['bert.encoder'], 'sparsity': 0.9}]
-   pruner = MovementPruner(model, config_list, p_trainer, optimizer, criterion, 10, 3000, 27000)
+   pruner = MovementPruner(model, config_list, trainer, traced_optimizer, criterion, 10, 3000, 27000)
    masked_model, masks = pruner.compress()
 
 User configuration for Movement Pruner
@@ -496,10 +527,15 @@ Usage
 .. code-block:: python
 
    from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
+   from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+
+   # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
+   traced_optimizer = trace_parameters(torch.optim.Adam)(model.parameters())
+
    config_list = [{ 'sparsity': 0.8, 'op_types': ['Conv2d'] }]
    admm_params = {
         'trainer': trainer,
-        'optimizer': optimizer,
+        'traced_optimizer': traced_optimizer,
         'criterion': criterion,
         'iterations': 10,
         'training_epochs': 1
@@ -519,3 +555,33 @@ User configuration for Auto Compress Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AutoCompressPruner
+
+AMC Pruner
+----------
+
+AMC pruner leverages reinforcement learning to provide the model compression policy.
+According to the author, this learning-based compression policy outperforms conventional rule-based compression policy by having a higher compression ratio,
+better preserving the accuracy and freeing human labor.
+
+For more details, please refer to `AMC: AutoML for Model Compression and Acceleration on Mobile Devices <https://arxiv.org/pdf/1802.03494.pdf>`__.
+
+Usage
+^^^^^
+
+PyTorch code
+
+.. code-block:: python
+
+   from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
+   config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
+   pruner = AMCPruner(400, model, config_list, dummy_input, evaluator, finetuner=finetuner)
+   pruner.compress()
+
+The full script can be found :githublink:`here <examples/model_compress/pruning/v2/amc_pruning_torch.py>`.
+
+User configuration for AMC Pruner
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+**PyTorch**
+
+..  autoclass:: nni.algorithms.compression.v2.pytorch.pruning.AMCPruner

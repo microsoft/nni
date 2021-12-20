@@ -1,15 +1,12 @@
-Network Morphism Tuner on NNI
-=============================
+Network Morphism Tuner
+======================
 
-1. Introduction
----------------
-
-`Autokeras <https://arxiv.org/abs/1806.10282>`__ is a popular autoML tool using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its `code <https://github.com/jhfjhfj1/autokeras>`__\ , we implemented our Network Morphism method on the NNI platform.
+`Autokeras <https://arxiv.org/abs/1806.10282>`__ is a popular autoML tool using Network Morphism. The basic idea of Autokeras is to use Bayesian Regression to estimate the metric of the Neural Network Architecture. Each time, it generates several child networks from father networks. Then it uses a naïve Bayesian regression to estimate its metric value from the history of trained results of network and metric value pairs. Next, it chooses the child which has the best, estimated performance and adds it to the training queue. Inspired by the work of Autokeras and referring to its `code <https://github.com/jhfjhfj1/autokeras>`__, we implemented our Network Morphism method on the NNI platform.
 
 If you want to know more about network morphism trial usage, please see the :githublink:`Readme.md <examples/trials/network_morphism/README.rst>`.
 
-2. Usage
---------
+Usage
+-----
 
 Installation
 ^^^^^^^^^^^^
@@ -19,11 +16,11 @@ NetworkMorphism requires :githublink:`PyTorch <examples/trials/network_morphism/
 classArgs Requirements
 ^^^^^^^^^^^^^^^^^^^^^^
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **task** (*('cv'), optional, default = 'cv'*\ ) - The domain of the experiment. For now, this tuner only supports the computer vision (CV) domain.
-* **input_width** (*int, optional, default = 32*\ ) - input image width
-* **input_channel** (*int, optional, default = 3*\ ) - input image channel
-* **n_output_node** (*int, optional, default = 10*\ ) - number of classes
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **task** (*('cv'), optional, default = 'cv'*) - The domain of the experiment. For now, this tuner only supports the computer vision (CV) domain.
+* **input_width** (*int, optional, default = 32*) - input image width
+* **input_channel** (*int, optional, default = 3*) - input image channel
+* **n_output_node** (*int, optional, default = 10*) - number of classes
 
 
 
@@ -36,7 +33,7 @@ To use Network Morphism, you should modify the following spec in your ``config.y
 
    tuner:
      #choice: NetworkMorphism
-     builtinTunerName: NetworkMorphism
+     name: NetworkMorphism
      classArgs:
        #choice: maximize, minimize
        optimize_mode: maximize
@@ -56,7 +53,7 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: NetworkMorphism
+     name: NetworkMorphism
        classArgs:
          optimize_mode: maximize
          task: cv
@@ -89,7 +86,7 @@ In the training procedure, it generates a JSON file which represents a Network G
    # report the final accuracy to NNI
    nni.report_final_result(best_acc)
 
-If you want to save and load the **best model**\ , the following methods are recommended.
+If you want to save and load the **best model**, the following methods are recommended.
 
 .. code-block:: python
 
@@ -134,8 +131,8 @@ If you want to save and load the **best model**\ , the following methods are rec
    model_id = "" # id of the model you want to reuse
    loaded_model = torch.load("model-{}.pt".format(model_id))
 
-3. File Structure
------------------
+File Structure
+--------------
 
 The tuner has a lot of different files, functions, and classes. Here, we will give most of those files only a brief introduction:
 
@@ -164,8 +161,8 @@ The tuner has a lot of different files, functions, and classes. Here, we will gi
 * ``metric.py`` some metric classes including Accuracy and MSE.
 * ``utils.py`` is the example search network architectures for the ``cifar10`` dataset, using Keras.
 
-4. The Network Representation Json Example
-------------------------------------------
+The Network Representation Json Example
+---------------------------------------
 
 Here is an example of the intermediate representation JSON file we defined, which is passed from the tuner to the trial in the architecture search procedure. Users can call the "json_to_graph()" function in the trial code to build a PyTorch or Keras model from this JSON file.
 
@@ -276,24 +273,24 @@ You can consider the model to be a `directed acyclic graph <https://en.wikipedia
 
 
   * 
-    For ``StubConv (StubConv1d, StubConv2d, StubConv3d)``\ , the numbering follows the format: its node input id (or id list), node output id, input_channel, filters, kernel_size, stride, and padding.
+    For ``StubConv (StubConv1d, StubConv2d, StubConv3d)``, the numbering follows the format: its node input id (or id list), node output id, input_channel, filters, kernel_size, stride, and padding.
 
   * 
-    For ``StubDense``\ , the numbering follows the format: its node input id (or id list), node output id, input_units, and units.
+    For ``StubDense``, the numbering follows the format: its node input id (or id list), node output id, input_units, and units.
 
   * 
-    For ``StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)``\ ,  the numbering follows the format: its node input id (or id list), node output id, and features numbers.
+    For ``StubBatchNormalization (StubBatchNormalization1d, StubBatchNormalization2d, StubBatchNormalization3d)``, the numbering follows the format: its node input id (or id list), node output id, and features numbers.
 
   * 
-    For ``StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)``\ , the numbering follows the format: its node input id (or id list), node output id, and dropout rate.
+    For ``StubDropout(StubDropout1d, StubDropout2d, StubDropout3d)``, the numbering follows the format: its node input id (or id list), node output id, and dropout rate.
 
   * 
-    For ``StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)``\ , the numbering follows the format: its node input id (or id list), node output id, kernel_size, stride, and padding.
+    For ``StubPooling (StubPooling1d, StubPooling2d, StubPooling3d)``, the numbering follows the format: its node input id (or id list), node output id, kernel_size, stride, and padding.
 
   * 
     For else layers, the numbering follows the format: its node input id (or id list) and node output id.
 
-5. TODO
--------
+TODO
+----
 
 Next step, we will change the API from s fixed network generator to a network generator with more available operators. We will use ONNX instead of JSON later as the intermediate representation spec in the future.

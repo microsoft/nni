@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from nni.retiarii import InvalidMutation, Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.execution.python import _unpack_if_only_one
+from nni.retiarii.execution.utils import _unpack_if_only_one
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.serializer import model_wrapper
 from nni.retiarii.utils import ContextStack

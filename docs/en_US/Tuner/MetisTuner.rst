@@ -1,8 +1,5 @@
-Metis Tuner on NNI
-==================
-
-1. Introduction
----------------
+Metis Tuner
+===========
 
 `Metis <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__ offers several benefits over other tuning algorithms. While most tools only predict the optimal configuration, Metis gives you two outputs, a prediction for the optimal configuration and a suggestion for the next trial. No more guess work!
 
@@ -19,17 +16,17 @@ Metis belongs to the class of sequential model-based optimization (SMBO) algorit
 * 
   It identifies the next hyper-parameter candidate. This is achieved by inferring the potential information gain of exploration, exploitation, and resampling.
 
-Note that the only acceptable types within the search space are ``quniform``\ , ``uniform``\ , ``randint``\ , and numerical ``choice``.
+Note that the only acceptable types within the search space are ``quniform``, ``uniform``, ``randint``, and numerical ``choice``.
 
 More details can be found in our `paper <https://www.microsoft.com/en-us/research/publication/metis-robustly-tuning-tail-latencies-cloud-systems/>`__.
 
-2. Usage
---------
+Usage
+-----
 
 classArgs requirements
 ^^^^^^^^^^^^^^^^^^^^^^
 
-* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **optimize_mode** (*'maximize' or 'minimize', optional, default = 'maximize'*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
 
 Example Configuration
 ^^^^^^^^^^^^^^^^^^^^^
@@ -38,6 +35,6 @@ Example Configuration
 
    # config.yml
    tuner:
-     builtinTunerName: MetisTuner
+     name: MetisTuner
      classArgs:
        optimize_mode: maximize

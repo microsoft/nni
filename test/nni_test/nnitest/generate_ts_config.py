@@ -55,8 +55,8 @@ def update_training_service_config(args):
         config[args.ts]['trainingService']['worker']['dockerImage'] = args.nni_docker_image
         config[args.ts]['trainingService']['storage']['azureAccount'] = args.azs_account
         config[args.ts]['trainingService']['storage']['azureShare'] = args.azs_share
-        config[args.ts]['trainingService']['storage']['keyVaultName'] = args.keyvault_name
-        config[args.ts]['trainingService']['storage']['keyVaultKey'] = args.keyvault_vaultname
+        config[args.ts]['trainingService']['storage']['keyVaultName'] = args.keyvault_vaultname
+        config[args.ts]['trainingService']['storage']['keyVaultKey'] = args.keyvault_name
         config[args.ts]['nni_manager_ip'] = args.nni_manager_ip
         dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
     elif args.ts == 'frameworkcontroller' and args.reuse_mode == 'False':
@@ -79,8 +79,8 @@ def update_training_service_config(args):
         config[args.ts]['trainingService']['taskRoles'][0]['dockerImage'] = args.nni_docker_image
         config[args.ts]['trainingService']['storage']['azureAccount'] = args.azs_account
         config[args.ts]['trainingService']['storage']['azureShare'] = args.azs_share
-        config[args.ts]['trainingService']['storage']['keyVaultName'] = args.keyvault_name
-        config[args.ts]['trainingService']['storage']['keyVaultKey'] = args.keyvault_vaultname
+        config[args.ts]['trainingService']['storage']['keyVaultName'] = args.keyvault_vaultname
+        config[args.ts]['trainingService']['storage']['keyVaultKey'] = args.keyvault_name
         config[args.ts]['nni_manager_ip'] = args.nni_manager_ip
         dump_yml_content(TRAINING_SERVICE_FILE_V2, config)
     elif args.ts == 'remote':

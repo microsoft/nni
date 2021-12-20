@@ -16,7 +16,7 @@ import {
     TrialJobApplicationForm, TrialJobDetail, TrialJobMetric
 } from 'common/trainingService';
 import { delay } from 'common/utils';
-import { ExperimentConfig, OpenpaiConfig, flattenConfig, toMegaBytes } from 'common/experimentConfig';
+import { OpenpaiConfig, toMegaBytes } from 'common/experimentConfig';
 import { PAIJobInfoCollector } from './paiJobInfoCollector';
 import { PAIJobRestServer } from './paiJobRestServer';
 import { PAITrialJobDetail, PAI_TRIAL_COMMAND_FORMAT } from './paiConfig';
@@ -26,8 +26,6 @@ import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { execMkdir, validateCodeDir, execCopydir } from '../common/util';
 
 const yaml = require('js-yaml');
-
-interface FlattenOpenpaiConfig extends ExperimentConfig, OpenpaiConfig { }
 
 /**
  * Training Service implementation for OpenPAI (Open Platform for AI)
@@ -55,9 +53,9 @@ class PAITrainingService implements TrainingService {
     private copyExpCodeDirPromise?: Promise<void>;
     private paiJobConfig: any;
     private nniVersion: string | undefined;
-    private config: FlattenOpenpaiConfig;
+    private config: OpenpaiConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(config: OpenpaiConfig) {
         this.log = getLogger('PAITrainingService');
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, PAITrialJobDetail>();
@@ -67,7 +65,7 @@ class PAITrainingService implements TrainingService {
         this.paiJobCollector = new PAIJobInfoCollector(this.trialJobsMap);
         this.paiTokenUpdateInterval = 7200000; //2hours
         this.log.info('Construct paiBase training service.');
-        this.config = flattenConfig(config, 'openpai');
+        this.config = config;
         this.versionCheck = !this.config.debug;
         this.paiJobRestServer = new PAIJobRestServer(this);
         this.paiToken = this.config.token;
@@ -221,13 +219,6 @@ class PAITrainingService implements TrainingService {
 
     protected async statusCheckingLoop(): Promise<void> {
         while (!this.stopping) {
-            if (this.config.deprecated && this.config.deprecated.password) {
-                try {
-                    await this.updatePaiToken();
-                } catch (error) {
-                    this.log.error(`${error}`);
-                }
-            }
             await this.paiJobCollector.retrieveTrialStatus(this.protocol, this.paiToken, this.config);
             if (this.paiJobRestServer === undefined) {
                 throw new Error('paiBaseJobRestServer not implemented!');
@@ -237,55 +228,6 @@ class PAITrainingService implements TrainingService {
             }
             await delay(3000);
         }
-    }
-
-    /**
-     * Update pai token by the interval time or initialize the pai token
-     */
-    protected async updatePaiToken(): Promise<void> {
-        const deferred: Deferred<void> = new Deferred<void>();
-
-        const currentTime: number = new Date().getTime();
-        //If pai token initialized and not reach the interval time, do not update
-        if (this.paiTokenUpdateTime !== undefined && (currentTime - this.paiTokenUpdateTime) < this.paiTokenUpdateInterval) {
-            return Promise.resolve();
-        }
-
-        const authenticationReq: request.Options = {
-            uri: `${this.config.host}/rest-server/api/v1/token`,
-            method: 'POST',
-            json: true,
-            body: {
-                username: this.config.username,
-                password: this.config.deprecated.password
-            }
-        };
-
-        request(authenticationReq, (error: Error, response: request.Response, body: any) => {
-            if (error !== undefined && error !== null) {
-                this.log.error(`Get PAI token failed: ${error.message}`);
-                deferred.reject(new Error(`Get PAI token failed: ${error.message}`));
-            } else {
-                if (response.statusCode !== 200) {
-                    this.log.error(`Get PAI token failed: get PAI Rest return code ${response.statusCode}`);
-                    deferred.reject(new Error(`Get PAI token failed: ${response.body}, please check paiConfig username or password`));
-                }
-                this.paiToken = body.token;
-                this.paiTokenUpdateTime = new Date().getTime();
-                deferred.resolve();
-            }
-        });
-
-        let timeoutId: NodeJS.Timer;
-        const timeoutDelay: Promise<void> = new Promise<void>((_resolve: Function, reject: Function): void => {
-            // Set timeout and reject the promise once reach timeout (5 seconds)
-            timeoutId = setTimeout(
-                () => reject(new Error('Get PAI token timeout. Please check your PAI cluster.')),
-                5000);
-        });
-
-        return Promise.race([timeoutDelay, deferred.promise])
-            .finally(() => { clearTimeout(timeoutId); });
     }
 
     public async setClusterMetadata(_key: string, _value: string): Promise<void> { return; }

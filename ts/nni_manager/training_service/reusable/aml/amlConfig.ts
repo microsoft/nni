@@ -10,16 +10,14 @@ export class AMLClusterConfig {
     public readonly resourceGroup: string;
     public readonly workspaceName: string;
     public readonly computeTarget: string;
-    public useActiveGpu?: boolean;
     public maxTrialNumPerGpu?: number;
 
     constructor(subscriptionId: string, resourceGroup: string, workspaceName: string, computeTarget: string,
-                useActiveGpu?: boolean, maxTrialNumPerGpu?: number) {
+                maxTrialNumPerGpu?: number) {
         this.subscriptionId = subscriptionId;
         this.resourceGroup = resourceGroup;
         this.workspaceName = workspaceName;
         this.computeTarget = computeTarget;
-        this.useActiveGpu = useActiveGpu;
         this.maxTrialNumPerGpu = maxTrialNumPerGpu;
     }
 }

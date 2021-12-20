@@ -18,7 +18,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     ADMMPruner,
     MovementPruner
 )
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
 
 
 class TorchModel(torch.nn.Module):
@@ -55,7 +55,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -104,7 +104,7 @@ class PrunerTestCase(unittest.TestCase):
     def test_slim_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['BatchNorm2d'], 'total_sparsity': 0.8}]
-        pruner = SlimPruner(model=model, config_list=config_list, trainer=trainer, optimizer=get_optimizer(model),
+        pruner = SlimPruner(model=model, config_list=config_list, trainer=trainer, traced_optimizer=get_optimizer(model),
                             criterion=criterion, training_epochs=1, scale=0.001, mode='global')
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
@@ -115,7 +115,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = ActivationAPoZRankPruner(model=model, config_list=config_list, trainer=trainer,
-                                          optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
@@ -127,7 +127,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = ActivationMeanRankPruner(model=model, config_list=config_list, trainer=trainer,
-                                          optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                          traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                           activation='relu', mode='dependency_aware',
                                           dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
@@ -139,7 +139,7 @@ class PrunerTestCase(unittest.TestCase):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
         pruner = TaylorFOWeightPruner(model=model, config_list=config_list, trainer=trainer,
-                                      optimizer=get_optimizer(model), criterion=criterion, training_batches=1,
+                                      traced_optimizer=get_optimizer(model), criterion=criterion, training_batches=5,
                                       mode='dependency_aware', dummy_input=torch.rand(10, 1, 28, 28))
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
@@ -149,7 +149,7 @@ class PrunerTestCase(unittest.TestCase):
     def test_admm_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8, 'rho': 1e-3}]
-        pruner = ADMMPruner(model=model, config_list=config_list, trainer=trainer, optimizer=get_optimizer(model),
+        pruner = ADMMPruner(model=model, config_list=config_list, trainer=trainer, traced_optimizer=get_optimizer(model),
                             criterion=criterion, iterations=2, training_epochs=1)
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
@@ -159,7 +159,7 @@ class PrunerTestCase(unittest.TestCase):
     def test_movement_pruner(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
-        pruner = MovementPruner(model=model, config_list=config_list, trainer=trainer, optimizer=get_optimizer(model),
+        pruner = MovementPruner(model=model, config_list=config_list, trainer=trainer, traced_optimizer=get_optimizer(model),
                                 criterion=criterion, training_epochs=5, warm_up_step=0, cool_down_beginning_step=4)
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()

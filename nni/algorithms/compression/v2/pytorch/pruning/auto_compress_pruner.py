@@ -7,6 +7,8 @@ from typing import Dict, List, Callable, Optional
 from torch import Tensor
 from torch.nn import Module
 
+from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
+
 from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
@@ -56,9 +58,9 @@ class AutoCompressPruner(IterativePruner):
         - trainer : Callable[[Module, Optimizer, Callable].
             A callable function used to train model or just inference. Take model, optimizer, criterion as input.
             The model will be trained or inferenced `training_epochs` epochs.
-        - optimizer : torch.optim.Optimizer.
-            The optimizer instance used in trainer. Note that this optimizer might be patched during collect data,
-            so do not use this optimizer in other places.
+        - traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
+            The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
+            E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
         - criterion : Callable[[Tensor, Tensor], Tensor].
             The criterion function used in trainer. Take model output and target value as input, and return the loss.
         - iterations : int.
@@ -107,6 +109,8 @@ class AutoCompressPruner(IterativePruner):
                                                    sa_params=sa_params,
                                                    log_dir=log_dir,
                                                    keep_intermediate_result=keep_intermediate_result)
+        if 'traced_optimizer' in admm_params:
+            admm_params['traced_optimizer'] = OptimizerConstructHelper.from_trace(model, admm_params['traced_optimizer'])
         pruner = ADMMPruner(None, None, **admm_params)
         super().__init__(pruner, task_generator, finetuner=finetuner, speed_up=speed_up, dummy_input=dummy_input,
                          evaluator=evaluator, reset_weight=False)
