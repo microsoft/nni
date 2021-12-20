@@ -13,7 +13,7 @@ schedules:
 jobs:
 - job: remote_linux2linux
   pool: NNI CI REMOTE CLI
-  timeoutInMinutes: 120
+  timeoutInMinutes: 140
 
   steps:
   - script: |
