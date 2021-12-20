@@ -289,9 +289,8 @@ class NasBench101Cell(Mutable):
         return OrderedDict(x)
 
     @classmethod
-    def create_fixed_module(cls, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]], None] = None,
-                            in_features: Optional[int] = None, out_features: Optional[int] = None,
-                            projection: Optional[Callable[[int, int], nn.Module]] = None,
+    def create_fixed_module(cls, op_candidates: Union[Dict[str, Callable[[int], nn.Module]], List[Callable[[int], nn.Module]]],
+                            in_features: int, out_features: int, projection: Callable[[int, int], nn.Module],
                             max_num_nodes: int = 7, max_num_edges: int = 9, label: Optional[str] = None):
         def make_list(x): return x if isinstance(x, list) else [x]
 

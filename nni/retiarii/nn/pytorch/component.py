@@ -33,13 +33,19 @@ class Repeat(Mutable):
 
     @classmethod
     def create_fixed_module(cls,
-                            blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module], None] = None,
-                            depth: Union[int, Tuple[int, int], None] = None, label: Optional[str] = None):
+                            blocks: Union[Callable[[int], nn.Module],
+                                          List[Callable[[int], nn.Module]],
+                                          nn.Module,
+                                          List[nn.Module]],
+                            depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         repeat = get_fixed_value(label)
         return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
 
     def __init__(self,
-                 blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
+                 blocks: Union[Callable[[int], nn.Module],
+                               List[Callable[[int], nn.Module]],
+                               nn.Module,
+                               List[nn.Module]],
                  depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
         self._label = generate_new_label(label)

@@ -297,7 +297,7 @@ class ValueChoice(Translatable, Mutable):
     # FIXME: prior is designed but not supported yet
 
     @classmethod
-    def create_fixed_module(cls, candidates: Optional[List[Any]] = None, *, label: Optional[str] = None, **kwargs):
+    def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
         return get_fixed_value(label)
 
     def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
