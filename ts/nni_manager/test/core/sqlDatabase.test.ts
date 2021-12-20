@@ -14,7 +14,7 @@ import { ExperimentConfig, ExperimentProfile } from '../../common/manager';
 import { cleanupUnitTest, getDefaultDatabaseDir, mkDirP, prepareUnitTest } from '../../common/utils';
 import { SqlDB } from '../../core/sqlDatabase';
 
-const expParams1: ExperimentConfig = {
+const expParams1: ExperimentConfig = <any>{
     experimentName: 'Exp1',
     trialConcurrency: 3,
     maxExperimentDuration: '100s',
@@ -31,7 +31,7 @@ const expParams1: ExperimentConfig = {
     debug: true
 };
 
-const expParams2: ExperimentConfig = {
+const expParams2: ExperimentConfig = <any>{
     experimentName: 'Exp2',
     trialConcurrency: 5,
     maxExperimentDuration: '1000s',

@@ -1,4 +1,5 @@
 import atexit
+from enum import Enum
 import logging
 from pathlib import Path
 import socket
@@ -12,7 +13,7 @@ import psutil
 import nni.runtime.log
 from nni.common import dump
 
-from .config import ExperimentConfig, AlgorithmConfig
+from .config import ExperimentConfig
 from .data import TrialJob, TrialMetricData, TrialResult
 from . import launcher
 from . import management
@@ -21,6 +22,17 @@ from ..tools.nnictl.command_utils import kill_command
 
 _logger = logging.getLogger('nni.experiment')
 
+class RunMode(Enum):
+    """
+    Config lifecycle and ouput redirection of NNI manager process.
+
+      - Background: stop NNI manager when Python script exits; do not print NNI manager log. (default)
+      - Foreground: stop NNI manager when Python script exits; print NNI manager log to stdout.
+      - Detach: do not stop NNI manager when Python script exits.
+    """
+    Background = 'background'
+    Foreground = 'foreground'
+    Detach = 'detach'
 
 class Experiment:
     """
@@ -73,21 +85,19 @@ class Experiment:
         nni.runtime.log.init_logger_experiment()
 
         self.config: Optional[ExperimentConfig] = None
-        self.id: Optional[str] = None
+        self.id: str = management.generate_experiment_id()
         self.port: Optional[int] = None
         self._proc: Optional[Popen] = None
         self.mode = 'new'
+        self.url_prefix: Optional[str] = None
 
         args = [config, training_service]  # deal with overloading
         if isinstance(args[0], (str, list)):
             self.config = ExperimentConfig(args[0])
-            self.config.tuner = AlgorithmConfig(name='_none_', class_args={})
-            self.config.assessor = AlgorithmConfig(name='_none_', class_args={})
-            self.config.advisor = AlgorithmConfig(name='_none_', class_args={})
         else:
             self.config = args[0]
 
-    def start(self, port: int = 8080, debug: bool = False) -> None:
+    def start(self, port: int = 8080, debug: bool = False, run_mode: RunMode = RunMode.Background) -> None:
         """
         Start the experiment in background.
 
@@ -101,25 +111,25 @@ class Experiment:
         debug
             Whether to start in debug mode.
         """
-        atexit.register(self.stop)
+        if run_mode is not RunMode.Detach:
+            atexit.register(self.stop)
 
-        if self.mode == 'new':
-            self.id = management.generate_experiment_id()
-        else:
-            self.config = launcher.get_stopped_experiment_config(self.id, self.mode)
+        config = self.config.canonical_copy()
+        if config.use_annotation:
+            raise RuntimeError('NNI annotation is not supported by Python experiment API.')
 
-        if self.config.experiment_working_directory is not None:
-            log_dir = Path(self.config.experiment_working_directory, self.id, 'log')
-        else:
+        if config.experiment_working_directory is not None:
+            log_dir = Path(config.experiment_working_directory, self.id, 'log')
+        else:  # this should never happen in latest version, keep it until v2.7 for potential compatibility
             log_dir = Path.home() / f'nni-experiments/{self.id}/log'
         nni.runtime.log.start_experiment_log(self.id, log_dir, debug)
 
-        self._proc = launcher.start_experiment(self.id, self.config, port, debug, mode=self.mode)
+        self._proc = launcher.start_experiment(self.mode, self.id, config, port, debug, run_mode, self.url_prefix)
         assert self._proc is not None
 
         self.port = port  # port will be None if start up failed
 
-        ips = [self.config.nni_manager_ip]
+        ips = [config.nni_manager_ip]
         for interfaces in psutil.net_if_addrs().values():
             for interface in interfaces:
                 if interface.family == socket.AF_INET:
@@ -135,11 +145,10 @@ class Experiment:
         _logger.info('Stopping experiment, please wait...')
         atexit.unregister(self.stop)
 
-        if self.id is not None:
-            nni.runtime.log.stop_experiment_log(self.id)
+        nni.runtime.log.stop_experiment_log(self.id)
         if self._proc is not None:
             try:
-                rest.delete(self.port, '/experiment')
+                rest.delete(self.port, '/experiment', self.url_prefix)
             except Exception as e:
                 _logger.exception(e)
                 _logger.warning('Cannot gracefully stop experiment, killing NNI process...')
@@ -197,8 +206,8 @@ class Experiment:
         _logger.info('Connect to port %d success, experiment id is %s, status is %s.', port, experiment.id, status)
         return experiment
 
-    @classmethod
-    def resume(cls, experiment_id: str, port: int = 8080, wait_completion: bool = True, debug: bool = False):
+    @staticmethod
+    def resume(experiment_id: str, port: int = 8080, wait_completion: bool = True, debug: bool = False):
         """
         Resume a stopped experiment.
 
@@ -213,15 +222,13 @@ class Experiment:
         debug
             Whether to start in debug mode.
         """
-        experiment = Experiment()
-        experiment.id = experiment_id
-        experiment.mode = 'resume'
+        experiment = Experiment._resume(experiment_id)
         experiment.run(port=port, wait_completion=wait_completion, debug=debug)
         if not wait_completion:
             return experiment
 
-    @classmethod
-    def view(cls, experiment_id: str, port: int = 8080, non_blocking: bool = False):
+    @staticmethod
+    def view(experiment_id: str, port: int = 8080, non_blocking: bool = False):
         """
         View a stopped experiment.
 
@@ -234,11 +241,8 @@ class Experiment:
         non_blocking
             If false, run in the foreground. If true, run in the background.
         """
-        debug = False
-        experiment = Experiment()
-        experiment.id = experiment_id
-        experiment.mode = 'view'
-        experiment.start(port=port, debug=debug)
+        experiment = Experiment._view(experiment_id)
+        experiment.start(port=port, debug=False)
         if non_blocking:
             return experiment
         else:
@@ -250,6 +254,22 @@ class Experiment:
             finally:
                 experiment.stop()
 
+    @staticmethod
+    def _resume(exp_id, exp_dir=None):
+        exp = Experiment()
+        exp.id = exp_id
+        exp.mode = 'resume'
+        exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
+        return exp
+
+    @staticmethod
+    def _view(exp_id, exp_dir=None):
+        exp = Experiment()
+        exp.id = exp_id
+        exp.mode = 'view'
+        exp.config = launcher.get_stopped_experiment_config(exp_id, exp_dir)
+        return exp
+
     def get_status(self) -> str:
         """
         Return experiment status as a str.
@@ -259,7 +279,7 @@ class Experiment:
         str
             Experiment status.
         """
-        resp = rest.get(self.port, '/check-status')
+        resp = rest.get(self.port, '/check-status', self.url_prefix)
         return resp['status']
 
     def get_trial_job(self, trial_job_id: str):
@@ -276,7 +296,7 @@ class Experiment:
         TrialJob
             A `TrialJob` instance corresponding to `trial_job_id`.
         """
-        resp = rest.get(self.port, '/trial-jobs/{}'.format(trial_job_id))
+        resp = rest.get(self.port, '/trial-jobs/{}'.format(trial_job_id), self.url_prefix)
         return TrialJob(**resp)
 
     def list_trial_jobs(self):
@@ -288,7 +308,7 @@ class Experiment:
         list
             List of `TrialJob`.
         """
-        resp = rest.get(self.port, '/trial-jobs')
+        resp = rest.get(self.port, '/trial-jobs', self.url_prefix)
         return [TrialJob(**trial_job) for trial_job in resp]
 
     def get_job_statistics(self):
@@ -300,7 +320,7 @@ class Experiment:
         dict
             Job statistics information.
         """
-        resp = rest.get(self.port, '/job-statistics')
+        resp = rest.get(self.port, '/job-statistics', self.url_prefix)
         return resp
 
     def get_job_metrics(self, trial_job_id=None):
@@ -318,7 +338,7 @@ class Experiment:
             Each key is a trialJobId, the corresponding value is a list of `TrialMetricData`.
         """
         api = '/metric-data/{}'.format(trial_job_id) if trial_job_id else '/metric-data'
-        resp = rest.get(self.port, api)
+        resp = rest.get(self.port, api, self.url_prefix)
         metric_dict = {}
         for metric in resp:
             trial_id = metric["trialJobId"]
@@ -337,7 +357,7 @@ class Experiment:
         dict
             The profile of the experiment.
         """
-        resp = rest.get(self.port, '/experiment')
+        resp = rest.get(self.port, '/experiment', self.url_prefix)
         return resp
 
     def get_experiment_metadata(self, exp_id: str):
@@ -364,7 +384,7 @@ class Experiment:
         list
             The experiments metadata.
         """
-        resp = rest.get(self.port, '/experiments-info')
+        resp = rest.get(self.port, '/experiments-info', self.url_prefix)
         return resp
 
     def export_data(self):
@@ -376,7 +396,7 @@ class Experiment:
         list
             List of `TrialResult`.
         """
-        resp = rest.get(self.port, '/export-data')
+        resp = rest.get(self.port, '/export-data', self.url_prefix)
         return [TrialResult(**trial_result) for trial_result in resp]
 
     def _get_query_type(self, key: str):
@@ -403,7 +423,7 @@ class Experiment:
         api = '/experiment{}'.format(self._get_query_type(key))
         experiment_profile = self.get_experiment_profile()
         experiment_profile['params'][key] = value
-        rest.put(self.port, api, experiment_profile)
+        rest.put(self.port, api, experiment_profile, self.url_prefix)
         logging.info('Successfully update %s.', key)
 
     def update_trial_concurrency(self, value: int):

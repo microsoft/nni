@@ -18,9 +18,10 @@ import torch
 import torch.nn as nn
 import nni.runtime.log
 from nni.common.device import GPUDevice
-from nni.experiment import Experiment, TrainingServiceConfig, launcher, management, rest
-from nni.experiment.config import util
-from nni.experiment.config.base import ConfigBase, PathLike
+from nni.experiment import Experiment, launcher, management, rest
+from nni.experiment.config import utils
+from nni.experiment.config.base import ConfigBase
+from nni.experiment.config.training_service import TrainingServiceConfig
 from nni.experiment.pipe import Pipe
 from nni.tools.nnictl.command_utils import kill_command
 
@@ -45,7 +46,7 @@ class RetiariiExeConfig(ConfigBase):
     experiment_name: Optional[str] = None
     search_space: Any = ''  # TODO: remove
     trial_command: str = '_reserved'
-    trial_code_directory: PathLike = '.'
+    trial_code_directory: utils.PathLike = '.'
     trial_concurrency: int
     trial_gpu_number: int = 0
     devices: Optional[List[Union[str, GPUDevice]]] = None
@@ -56,7 +57,7 @@ class RetiariiExeConfig(ConfigBase):
     nni_manager_ip: Optional[str] = None
     debug: bool = False
     log_level: Optional[str] = None
-    experiment_working_directory: PathLike = '~/nni-experiments'
+    experiment_working_directory: utils.PathLike = '~/nni-experiments'
     # remove configuration of tuner/assessor/advisor
     training_service: TrainingServiceConfig
     execution_engine: str = 'py'
@@ -71,7 +72,7 @@ class RetiariiExeConfig(ConfigBase):
         super().__init__(**kwargs)
         if training_service_platform is not None:
             assert 'training_service' not in kwargs
-            self.training_service = util.training_service_config_factory(platform=training_service_platform)
+            self.training_service = utils.training_service_config_factory(platform=training_service_platform)
         self.__dict__['trial_command'] = 'python3 -m nni.retiarii.trial_entry py'
 
     def __setattr__(self, key, value):
@@ -100,16 +101,12 @@ class RetiariiExeConfig(ConfigBase):
 
 
 _canonical_rules = {
-    'trial_code_directory': util.canonical_path,
-    'max_experiment_duration': lambda value: f'{util.parse_time(value)}s' if value is not None else None,
-    'experiment_working_directory': util.canonical_path
 }
 
 _validation_rules = {
     'trial_code_directory': lambda value: (Path(value).is_dir(), f'"{value}" does not exist or is not directory'),
     'trial_concurrency': lambda value: value > 0,
     'trial_gpu_number': lambda value: value >= 0,
-    'max_experiment_duration': lambda value: util.parse_time(value) > 0,
     'max_trial_number': lambda value: value > 0,
     'log_level': lambda value: value in ["trace", "debug", "info", "warning", "error", "fatal"],
     'training_service': lambda value: (type(value) is not TrainingServiceConfig, 'cannot be abstract base class')

@@ -4,9 +4,22 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from .common import SharedStorageConfig
+from .base import ConfigBase
+from .utils import PathLike
 
 __all__ = ['NfsConfig', 'AzureBlobConfig']
+
+@dataclass(init=False)
+class SharedStorageConfig(ConfigBase):
+    storage_type: str
+    local_mount_point: PathLike
+    remote_mount_point: str
+    local_mounted: str
+    storage_account_name: Optional[str] = None
+    storage_account_key: Optional[str] = None
+    container_name: Optional[str] = None
+    nfs_server: Optional[str] = None
+    exported_directory: Optional[str] = None
 
 @dataclass(init=False)
 class NfsConfig(SharedStorageConfig):
@@ -19,5 +32,4 @@ class AzureBlobConfig(SharedStorageConfig):
     storage_type: str = 'AzureBlob'
     storage_account_name: str
     storage_account_key: Optional[str] = None
-    resource_group_name: Optional[str] = None
     container_name: str

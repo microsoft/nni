@@ -20,7 +20,7 @@ function startProcess(): void {
 
     const dispatcherCmd: string = getMsgDispatcherCommand(
         // Mock tuner config
-        {
+        <any>{
             experimentName: 'exp1',
             maxExperimentDuration: '1h',
             searchSpace: '',
