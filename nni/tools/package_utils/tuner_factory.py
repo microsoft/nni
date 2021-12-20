@@ -6,13 +6,10 @@ __all__ = [
     'create_customized_class_instance',
 ]
 
-from collections import defaultdict
 import importlib
 import os
-from pathlib import Path
 import sys
-import yaml
-from nni.runtime.config import get_builtin_config_file, get_config_file
+
 from . import config_manager
 
 ALGO_TYPES = ['tuners', 'assessors', 'advisors']
@@ -199,31 +196,3 @@ def create_customized_class_instance(class_params):
     instance = class_constructor(**class_args)
 
     return instance
-
-def _using_conda_or_virtual_environment():
-    return sys.prefix != sys.base_prefix or os.path.isdir(os.path.join(sys.prefix, 'conda-meta'))
-
-def get_registered_algo_config_path():
-    return str(get_config_file('registered_algorithms.yml'))
-
-def read_registerd_algo_meta():
-    config = defaultdict(list)
-
-    builtin_file = get_builtin_config_file('builtin_algorithms.yml')
-    with builtin_file.open() as f:
-        builtin_config = yaml.safe_load(f)
-    for algo_type, algos in builtin_config.items():
-        config[algo_type] += algos
-
-    custom_file = get_config_file('registered_algorithms.yml')
-    with custom_file.open() as f:
-        custom_config = yaml.safe_load(f)
-    for algo_type, algos in custom_config.items():
-        config[algo_type] += algos
-
-    return config
-
-def write_registered_algo_meta(config):
-    config_file = get_registered_algo_config_path()
-    with open(config_file, 'w') as f:
-        f.write(yaml.safe_dump(dict(config), default_flow_style=False))

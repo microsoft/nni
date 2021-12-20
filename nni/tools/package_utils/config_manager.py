@@ -35,17 +35,18 @@ def get_all_algo_meta() -> List[AlgoMeta]:
 def register_algo_meta(algo_meta: AlgoMeta) -> None:
     """
     Register a custom algorithm.
+    If it already exists, overwrite it.
     """
-    algos = _load_custom_config()
+    algos = {algo.name: algo for algo in _load_custom_config()}
     algos[algo_meta.name] = algo_meta
-    _save_custom_config(algos)
+    _save_custom_config(algos.values())
 
 def unregister_algo_meta(algo_name: str) -> None:
     """
     Unregister a custom algorithm.
+    If it does not exist, do nothing.
     """
-    algos = _load_custom_config()
-    algos.pop(algo_name)
+    algos = [algo for algo in _load_custom_config() if algo.name != algo_name]
     _save_custom_config(algos)
 
 def _load_builtin_config():
@@ -68,7 +69,7 @@ def _load_config_file(path):
 
 def _save_custom_config(algos):
     config = defaultdict(list)
-    for algo in algos.values():
+    for algo in algos:
         config[algo.algo_type + 's'].append(algo.dump())
     text = yaml.dump(dict(config), default_flow_style=False)
     get_config_file('registered_algorithms.yml').write_text(text)
