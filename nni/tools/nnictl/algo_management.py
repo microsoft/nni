@@ -3,7 +3,7 @@
 
 import importlib
 import json
-from nni.tools.package_utils import *
+from nni.tools import package_utils
 from .common_utils import print_error, print_green, get_yml_content
 
 def read_reg_meta_list(meta_path):
@@ -33,7 +33,7 @@ def verify_algo_import(meta):
 def algo_reg(args):
     meta_list = read_reg_meta_list(args.meta_path)
     for meta in meta_list:
-        old = get_algo_meta(meta.name)
+        old = package_utils.get_algo_meta(meta.name)
         if old is not None and old.is_builtin:
             print_error(f'Cannot overwrite builtin algorithm {meta.name}')
             continue
@@ -41,24 +41,24 @@ def algo_reg(args):
         verify_algo_import(meta)
         if old is not None:
             print_green(f'Updating exist algorithm')
-        register_algo_meta(meta)
+        package_utils.register_algo_meta(meta)
         print_green(f'{meta.name} registered sucessfully!')
 
 def algo_unreg(args):
     name = args.name[0]
-    meta = get_algo_meta(name)
+    meta = package_utils.get_algo_meta(name)
     if meta is None:
         print_error('builtin algorithms {} not found!'.format(name))
         return
     if meta.is_builtin:
         print_error('{} is provided by nni, can not be unregistered!'.format(name))
         return
-    unregister_algo_meta(name)
+    package_utils.unregister_algo_meta(name)
     print_green('{} unregistered sucessfully!'.format(name))
 
 def algo_show(args):
     builtin_name = args.name[0]
-    meta = get_algo_meta(builtin_name)
+    meta = package_utils.get_algo_meta(builtin_name)
     if meta is not None:
         print(json.dumps(meta.dump(), indent=4))
     else:
@@ -69,7 +69,7 @@ def algo_list(args):
     print('|      Name       |    Type    |   source  |      Class Name      |               Module Name                |')
     print('+-----------------+------------+-----------+----------------------+------------------------------------------+')
     MAX_MODULE_NAME = 38
-    for meta in get_all_algo_meta():
+    for meta in package_utils.get_all_algo_meta():
         module_name, class_name = meta.class_name.rsplit('.', 1)
         if len(module_name) > MAX_MODULE_NAME:
             module_name = module_name[:MAX_MODULE_NAME-3] + '...'
