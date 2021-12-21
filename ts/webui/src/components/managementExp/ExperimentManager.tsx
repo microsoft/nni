@@ -11,7 +11,7 @@ import NameColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
-import { killExperiment, resumeExperiment } from '../../static/function';
+import { killExperiment, resumeExperiment, viewExperiment } from '../../static/function';
 import '../../App.scss';
 import '../../static/style/common.scss';
 import '../../static/style/nav/nav.scss';
@@ -122,6 +122,12 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 {/*        <span className='margin'>Create</span>*/}
                                 {/*    </DefaultButton>*/}
                                 {/*</div>*/}
+                                <div className='view'>
+                                    <DefaultButton onClick={this.onViewClick}>
+                                        <Icon iconName='Equalizer' />
+                                        <span className='margin'>View</span>
+                                    </DefaultButton>
+                                </div>
                                 <div className='resume'>
                                     <DefaultButton onClick={this.onResumeClick}>
                                         <Icon iconName='Equalizer' />
@@ -186,7 +192,7 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     private onDeleteClick = (): void => {
         this.state.selectionDetails.forEach((val, _) => {
-            if (val.status === 'RUNNING') {
+            if (val.status === 'RUNNING' || val.status === 'VIEWED') {
                 killExperiment(val.id, val.port);
             } else {
                 alert(`Experiment ${val.id} status is ${val.status}. Only RUNNING experiment can be deleted.`);
@@ -205,6 +211,19 @@ class Experiment extends React.Component<{}, ExpListState> {
             }
         });
         resumeExperiment(idList);
+    };
+
+    private onViewClick = (): void => {
+        const idList: string[] = [];
+        this.state.selectionDetails.forEach((val, _) => {
+            if (val.status === 'STOPPED') {
+                // resumeExperiment(val.id);
+                idList.push(val.id);
+            } else {
+                alert(`Experiment ${val.id} status is ${val.status}. Only STOPPED experiment can be viewed.`);
+            }
+        });
+        viewExperiment(idList);
     };
 
     private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {

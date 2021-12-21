@@ -78,6 +78,7 @@ class NNIRestHandler {
         this.stop(router);
         this.stopOtherExperiment(router);
         this.resumeOtherExperiment(router);
+        this.viewOtherExperiment(router);
 
         // Express-joi-validator configuration
         router.use((err: any, _req: Request, res: Response, _next: any): any => {
@@ -444,20 +445,17 @@ class NNIRestHandler {
 
     private  resumeOtherExperiment(router: Router): void {
         router.post('/manage-experiment/resume', (req: Request, res: Response) => {
-            // res.location(`${req.hostname}:${req.params['port']}${API_ROOT_URL}/experiment`);
-            // res.send(302);
-            // const idList = req.body['idList'];
-            // const success: string[] = [];
-            // const fail: string[] = [];
-            // idList.forEach((value) =>{
-            //     this.nniManager.sendResumeExperiment(req.hostname, value).then((status) => {
-            //         if (status === 500) {
-            //
-            //         }
-            //     })
-            // })
             this.nniManager.sendResumeExperiment(req.hostname, req.body['idList']).then((status) => {
-                // this.log.info(req.body['idList']);
+                res.status(status).send();
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
+        });
+    }
+
+    private  viewOtherExperiment(router: Router): void {
+        router.post('/manage-experiment/view', (req: Request, res: Response) => {
+            this.nniManager.sendViewExperiment(req.hostname, req.body['idList']).then((status) => {
                 res.status(status).send();
             }).catch((err: Error) => {
                 this.handleError(err, res);

@@ -952,40 +952,26 @@ class NNIManager implements Manager {
         // });
     }
 
-    // private async onResumeCommand(hostname: string, id: string): Promise<number> {
-    //     var status:number = 200;
-    //     const returnData = await runNNIctlScript(hostname, 'resume', id);
-    //     if (returnData) {
-    //         this.log.info(returnData.stdout);
-    //         this.log.info(returnData.stderr);
-    //         if (returnData.stderr) {
-    //             status = 500;
-    //         }
-    //     } else {
-    //         status = 500;
-    //     }
-    //     return status;
-    // }
-
     public async sendResumeExperiment(hostname: string, idList: string[]): Promise<number> {
         var status:number = 200;
-        // // idList.forEach( async function (value) {
-        //     const returnData = await runNNIctlScript(hostname, 'resume', value);
-        //     if (returnData) {
-        //         // this.log.info(returnData.stdout);
-        //         // this.log.info(returnData.stderr);
-        //         if (returnData.stderr) {
-        //             status = 500;
-        //         }
-        //     } else {
-        //         status = 500;
-        //     }
-        // // })
         for (let i = 0; i < idList.length; i++) {
             const returnData = await runNNIctlScript(hostname, 'resume', idList[i]);
             if (returnData) {
-                // this.log.info(returnData.stdout);
-                // this.log.info(returnData.stderr);
+                if (returnData.stderr) {
+                    status = 500;
+                }
+            } else {
+                status = 500;
+            }
+        }
+        return status;
+    }
+
+    public async sendViewExperiment(hostname: string, idList: string[]): Promise<number> {
+        var status:number = 200;
+        for (let i = 0; i < idList.length; i++) {
+            const returnData = await runNNIctlScript(hostname, 'view', idList[i]);
+            if (returnData) {
                 if (returnData.stderr) {
                     status = 500;
                 }

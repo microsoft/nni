@@ -259,9 +259,9 @@ const resumeExperiment = (idList: string[]): void => {
         .then(res => {
             if (res.status === 200) {
                 // TODO: use Message.txt to tooltip
-                alert(`Resume the experiment successfully`);
+                alert(`Resume the experiment ${idList} successfully`);
             } else {
-                alert(`fail to resume the experiment`);
+                alert(`fail to resume all selected experiment`);
             }
         })
         .catch(error => {
@@ -269,7 +269,36 @@ const resumeExperiment = (idList: string[]): void => {
                 if (error.response.data.error) {
                     alert(error.response.data.error);
                 } else {
-                    alert(`500 error, fail to resume the experiment`);
+                    alert(`500 error, fail to resume all selected experiment`);
+                }
+            }
+        });
+};
+
+const viewExperiment = (idList: string[]): void => {
+    axios(`${MANAGER_IP}/manage-experiment/view`, {
+        method: 'POST',
+        data: {
+            idList: idList
+        },
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        }
+    })
+        .then(res => {
+            if (res.status === 200) {
+                // TODO: use Message.txt to tooltip
+                alert(`View the experiment ${idList} successfully`);
+            } else {
+                alert(`fail to view all selected experiment`);
+            }
+        })
+        .catch(error => {
+            if (error.response.status === 500) {
+                if (error.response.data.error) {
+                    alert(error.response.data.error);
+                } else {
+                    alert(`500 error, fail to view all selected experiment`);
                 }
             }
         });
@@ -460,5 +489,6 @@ export {
     getTensorboardMenu,
     parametersType,
     killExperiment,
-    resumeExperiment
+    resumeExperiment,
+    viewExperiment
 };
