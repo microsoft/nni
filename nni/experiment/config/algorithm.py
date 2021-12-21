@@ -39,9 +39,6 @@ class _AlgorithmConfig(ConfigBase):
     code_directory: Optional[PathLike] = None
     class_args: Optional[Dict[str, Any]] = None
 
-    def _canonicalize(self, parents):
-        super()._canonicalize(parents)
-
     def _validate_canonical(self):
         super()._validate_canonical()
         if self.class_name is None:  # assume it's built-in algorithm by default
