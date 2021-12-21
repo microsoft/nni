@@ -3,7 +3,7 @@ import axios from 'axios';
 import { IContextualMenuProps } from '@fluentui/react';
 import { MANAGER_IP } from './const';
 import { EXPERIMENT } from './datamodel';
-import { MetricDataRecord, FinalType, TableObj, Tensorboard, AllExperimentList } from './interface';
+import { MetricDataRecord, FinalType, TableObj, Tensorboard } from './interface';
 
 function getPrefix(): string | undefined {
     const pathName = window.location.pathname;
@@ -219,7 +219,7 @@ const killJob = (key: number, id: string, status: string, updateList?: Function)
 };
 
 // kill experiment
-const killExperiment = (port: number): void => {
+const killExperiment = (id: string, port: number): void => {
     axios(`${MANAGER_IP}/manage-experiment/delete/${port.toString()}`, {
         method: 'DELETE',
         headers: {
@@ -229,9 +229,9 @@ const killExperiment = (port: number): void => {
         .then(res => {
             if (res.status === 200) {
                 // TODO: use Message.txt to tooltip
-                alert('Cancel the job successfully');
+                alert(`Cancel the experiment ${id} successfully`);
             } else {
-                alert('fail to cancel the job');
+                alert(`fail to cancel the experiment ${id}`);
             }
         })
         .catch(error => {
@@ -239,18 +239,18 @@ const killExperiment = (port: number): void => {
                 if (error.response.data.error) {
                     alert(error.response.data.error);
                 } else {
-                    alert('500 error, fail to cancel the job');
+                    alert(`500 error, fail to cancel the experiment ${id}`);
                 }
             }
         });
 };
 
 //resume experiment
-const resumeExperiment = (experiment: AllExperimentList): void => {
+const resumeExperiment = (idList: string[]): void => {
     axios(`${MANAGER_IP}/manage-experiment/resume`, {
         method: 'POST',
         data: {
-            port: experiment.port
+            idList: idList
         },
         headers: {
             'Content-Type': 'application/json;charset=utf-8'
@@ -259,9 +259,9 @@ const resumeExperiment = (experiment: AllExperimentList): void => {
         .then(res => {
             if (res.status === 200) {
                 // TODO: use Message.txt to tooltip
-                alert('Cancel the job successfully');
+                alert(`Resume the experiment successfully`);
             } else {
-                alert('fail to cancel the job');
+                alert(`fail to resume the experiment`);
             }
         })
         .catch(error => {
@@ -269,7 +269,7 @@ const resumeExperiment = (experiment: AllExperimentList): void => {
                 if (error.response.data.error) {
                     alert(error.response.data.error);
                 } else {
-                    alert('500 error, fail to cancel the job');
+                    alert(`500 error, fail to resume the experiment`);
                 }
             }
         });

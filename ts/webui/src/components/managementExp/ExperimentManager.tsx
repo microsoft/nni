@@ -186,14 +186,25 @@ class Experiment extends React.Component<{}, ExpListState> {
 
     private onDeleteClick = (): void => {
         this.state.selectionDetails.forEach((val, _) => {
-            killExperiment(val.port);
+            if (val.status === 'RUNNING') {
+                killExperiment(val.id, val.port);
+            } else {
+                alert(`Experiment ${val.id} status is ${val.status}. Only RUNNING experiment can be deleted.`);
+            }
         });
     };
 
     private onResumeClick = (): void => {
+        const idList: string[] = [];
         this.state.selectionDetails.forEach((val, _) => {
-            resumeExperiment(val);
+            if (val.status === 'STOPPED') {
+                // resumeExperiment(val.id);
+                idList.push(val.id);
+            } else {
+                alert(`Experiment ${val.id} status is ${val.status}. Only STOPPED experiment can be resumed.`);
+            }
         });
+        resumeExperiment(idList);
     };
 
     private onColumnClick = (_ev: React.MouseEvent<HTMLElement>, getColumn: IColumn): void => {

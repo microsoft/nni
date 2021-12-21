@@ -3,10 +3,16 @@
 
 import { spawn } from 'child_process';
 import { Logger, getLogger } from './log';
+import { getFreePort } from './utils';
 
 const logger: Logger = getLogger('pythonScript');
 
 const python: string = process.platform === 'win32' ? 'python.exe' : 'python3';
+
+interface NNIctlScriptReturnData {
+    stdout: string;
+    stderr: string;
+}
 
 export async function runPythonScript(script: string, logTag?: string): Promise<string> {
     const proc = spawn(python, [ '-c', script ]);
@@ -35,9 +41,10 @@ export async function runPythonScript(script: string, logTag?: string): Promise<
     return stdout;
 }
 
-export async function runNNIctlScript(script: string, logTag?: string): Promise<string> {
+export async function runNNIctlScript(host: string, ops: string, script: string, logTag?: string): Promise<NNIctlScriptReturnData | null> {
     // const proc = spawn(python, [ '-c', script ]);
-    const proc = spawn('nnictl', [ script ]);
+    const port = await getFreePort(host, 8080, 10000);
+    const proc = spawn(`nnictl`, [ ops, script, '-p', `${port}` ]);
 
     let stdout: string = '';
     let stderr: string = '';
@@ -60,5 +67,8 @@ export async function runNNIctlScript(script: string, logTag?: string): Promise<
         }
     }
 
-    return stdout;
+    return {
+        stdout: stdout.trim(),
+        stderr: stderr.trim(),
+    };
 }

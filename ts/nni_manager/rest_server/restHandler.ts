@@ -443,24 +443,25 @@ class NNIRestHandler {
     }
 
     private  resumeOtherExperiment(router: Router): void {
-        router.post('/manage-experiment/resume/:id', (req: Request, res: Response) => {
-            if (isNewExperiment()) {
-                this.nniManager.startExperiment(req.body).then((eid: string) => {
-                    res.send({
-                        experiment_id: eid // eslint-disable-line @typescript-eslint/camelcase
-                    });
-                }).catch((err: Error) => {
-                    // Start experiment is a step of initialization, so any exception thrown is a fatal
-                    this.handleError(err, res);
-                });
-            } else {
-                this.nniManager.resumeExperiment(isReadonly()).then(() => {
-                    res.send();
-                }).catch((err: Error) => {
-                    // Resume experiment is a step of initialization, so any exception thrown is a fatal
-                    this.handleError(err, res);
-                });
-            }
+        router.post('/manage-experiment/resume', (req: Request, res: Response) => {
+            // res.location(`${req.hostname}:${req.params['port']}${API_ROOT_URL}/experiment`);
+            // res.send(302);
+            // const idList = req.body['idList'];
+            // const success: string[] = [];
+            // const fail: string[] = [];
+            // idList.forEach((value) =>{
+            //     this.nniManager.sendResumeExperiment(req.hostname, value).then((status) => {
+            //         if (status === 500) {
+            //
+            //         }
+            //     })
+            // })
+            this.nniManager.sendResumeExperiment(req.hostname, req.body['idList']).then((status) => {
+                // this.log.info(req.body['idList']);
+                res.status(status).send();
+            }).catch((err: Error) => {
+                this.handleError(err, res);
+            });
         });
     }
 
