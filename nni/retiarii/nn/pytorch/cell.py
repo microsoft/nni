@@ -120,7 +120,11 @@ class Cell(nn.Module):
                 current_state.append(op(inp(states)))
             current_state = torch.sum(torch.stack(current_state), 0)
             states.append(current_state)
-        return torch.cat([states[k] for k in self.output_node_indices], 1)
+        if self.merge_op == 'all':
+            # a special case for graph engine
+            return torch.cat(states[self.num_predecessors:], 1)
+        else:
+            return torch.cat([states[k] for k in self.output_node_indices], 1)
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
