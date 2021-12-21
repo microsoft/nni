@@ -67,9 +67,9 @@ def _load_config_file(path):
             algos.append(AlgoMeta.load(algo, algo_type))
     return algos
 
-def _save_custom_config(algos):
+def _save_custom_config(custom_algos):
     config = defaultdict(list)
-    for algo in algos:
+    for algo in custom_algos:
         config[algo.algo_type + 's'].append(algo.dump())
     text = yaml.dump(dict(config), default_flow_style=False)
     get_config_file('registered_algorithms.yml').write_text(text)
