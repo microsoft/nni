@@ -1,3 +1,4 @@
+import copy
 import os.path
 from pathlib import Path
 
@@ -45,6 +46,9 @@ minimal_canon = {
         'reuseMode': False,
     },
 }
+
+minimal_canon_2 = copy.deepcopy(minimal_canon)
+minimal_canon_2['tuner']['classArgs'] = {}
 
 ## detailed config ##
 
@@ -100,7 +104,7 @@ def test_all():
     minimal = ExperimentConfig(**minimal_json)
     assert minimal.json() == minimal_canon
 
-    assert minimal_class.json() == minimal_canon
+    assert minimal_class.json() == minimal_canon_2
 
     detailed = ExperimentConfig.load(expand_path('assets/config.yaml'))
     assert detailed.json() == detailed_canon
