@@ -29,6 +29,7 @@ class Cell(nn.Module):
         For example, (2, 3, 0) means the 3rd op in the 2nd node, accepts the 0th node as input.
         The index are enumerated for all nodes including predecessors from 0.
         When first created, the input index is ``None``, meaning unknown.
+        Note that in graph execution engine, support of function in ``op_candidates`` is limited.
     num_nodes : int
         Number of nodes in the cell.
     num_ops_per_node: int
@@ -95,7 +96,8 @@ class Cell(nn.Module):
 
                 if isinstance(input, ChosenInputs):
                     # now we are in the fixed mode
-                    chosen = input.chosen
+                    # the length of chosen should be 1
+                    chosen = input.chosen[0]
                     if self.merge_op == 'loose_end' and chosen in self.output_node_indices:
                         # remove it from concat indices
                         self.output_node_indices.remove(chosen)
@@ -132,7 +134,8 @@ class Cell(nn.Module):
         def convert_single_op(op):
             if isinstance(op, nn.Module):
                 return copy.deepcopy(op)
-            elif callable(op_candidates):
+            elif callable(op):
+                # FIXME: I don't know how to check whether we are in graph engine.
                 return op(node_index, op_index, chosen)
             else:
                 raise TypeError(f'Unrecognized type {type(op)} for op {op}')

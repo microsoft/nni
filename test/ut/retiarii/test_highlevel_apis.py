@@ -633,6 +633,54 @@ class Python(GraphIR):
     @unittest.skip
     def test_valuechoice_access_functional_expression(self): ...
 
+    def test_cell_loose_end(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell([nn.Linear(16, 16), nn.Linear(16, 16, bias=False)],
+                                    num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='loose_end')
+
+            def forward(self, x, y):
+                return self.cell([x, y])
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        any_not_all = False
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            model = self._get_converted_pytorch_model(model)
+            indices = model.cell.output_node_indices
+            assert all(i > 2 for i in indices)
+            self.assertTrue(model(torch.randn(1, 16), torch.randn(1, 16)).size() == torch.Size([1, 16 * len(indices)]))
+            if len(indices) < 4:
+                any_not_all = True
+        self.assertTrue(any_not_all)
+
+    def test_cell_complex(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.cell = nn.Cell({
+                    'first': lambda _, __, chosen: nn.Linear(3 if chosen == 0 else 16, 16),
+                    'second': lambda _, __, chosen: nn.Linear(3 if chosen == 0 else 16, 16, bias=False)
+                }, num_nodes=4, num_ops_per_node=2, num_predecessors=2, merge_op='all')
+
+            def forward(self, x, y):
+                return self.cell([x, y])
+
+        raw_model, mutators = self._get_model_with_mutators(Net())
+        for _ in range(10):
+            sampler = EnumerateSampler()
+            model = raw_model
+            for mutator in mutators:
+                model = mutator.bind_sampler(sampler).apply(model)
+            self.assertTrue(self._get_converted_pytorch_model(model)(
+                torch.randn(1, 3), torch.randn(1, 16)).size() == torch.Size([1, 64]))
+
     def test_nasbench101_cell(self):
         # this is only supported in python engine for now.
         @self.get_serializer()
