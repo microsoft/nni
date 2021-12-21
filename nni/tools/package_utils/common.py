@@ -11,7 +11,7 @@ class AlgoMeta(NamedTuple):
     accept_class_args: bool
     class_args: Optional[dict]
     validator_class_name: Optional[str]
-    algo_type: str
+    algo_type: str  # 'tuner' | 'assessor' | 'advisor'
     is_builtin: bool
 
     @staticmethod
