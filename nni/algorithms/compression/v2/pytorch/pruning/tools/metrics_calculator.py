@@ -182,9 +182,9 @@ class MeanRankMetricsCalculator(MetricsCalculator):
     """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
-        for name, (num, zero_counts) in data.items():
-            keeped_dim = list(range(len(zero_counts.size()))) if self.dim is None else self.dim
-            across_dim = list(range(len(zero_counts.size())))
+        for name, (num, activation_sum) in data.items():
+            keeped_dim = list(range(len(activation_sum.size()))) if self.dim is None else self.dim
+            across_dim = list(range(len(activation_sum.size())))
             [across_dim.pop(i) for i in reversed(keeped_dim)]
-            metrics[name] = torch.mean(zero_counts, across_dim) / num
+            metrics[name] = torch.mean(activation_sum, across_dim) / num
         return metrics
