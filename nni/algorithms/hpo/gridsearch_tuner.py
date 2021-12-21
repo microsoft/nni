@@ -213,11 +213,12 @@ class GridSearchTuner(Tuner):
         # convert self.vector to "formatted" parameters
         params = {}
         for i, spec in enumerate(self.space.values()):
-            x = self.grid[i][self.vector[i]]
-            if spec.categorical:
-                params[spec.key] = x
-            else:
-                params[spec.key] = _cdf_inverse(x, spec)
+            if spec.is_activated_in(params):
+                x = self.grid[i][self.vector[i]]
+                if spec.categorical:
+                    params[spec.key] = x
+                else:
+                    params[spec.key] = _cdf_inverse(x, spec)
         return params
 
 def _less(x, y, spec):
@@ -247,6 +248,6 @@ def _grid_size_info(grid):
     if len(grid) == 1:
         return str(len(grid[0]))
     sizes = [len(candidates) for candidates in grid]
-    mul = 'x'.join(str(s) for s in sizes)
+    mul = '×'.join(str(s) for s in sizes)
     total = np.prod(sizes)
     return f'({mul}) = {total}'
