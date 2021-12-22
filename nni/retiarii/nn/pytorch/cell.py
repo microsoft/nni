@@ -17,6 +17,7 @@ from .utils import generate_new_label
 class Cell(nn.Module):
     """
     Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS literature.
+    [nds]_ is a good summary of how this structure works in practice.
 
     A cell consists of multiple "nodes". Each node is a sum of multiple operators. Each operator is chosen from
     ``op_candidates``, and takes one input from previous nodes and predecessors. Predecessor means the input of cell.
@@ -91,13 +92,13 @@ class Cell(nn.Module):
             self.ops.append(ModuleList())
             self.inputs.append(ModuleList())
             for k in range(self.num_ops_per_node):
-                input = InputChoice(i, 1, label=f'{self.label}/input_{i}_{k}')
+                inp = InputChoice(i, 1, label=f'{self.label}/input_{i}_{k}')
                 chosen = None
 
-                if isinstance(input, ChosenInputs):
+                if isinstance(inp, ChosenInputs):
                     # now we are in the fixed mode
                     # the length of chosen should be 1
-                    chosen = input.chosen[0]
+                    chosen = inp.chosen[0]
                     if self.merge_op == 'loose_end' and chosen in self.output_node_indices:
                         # remove it from concat indices
                         self.output_node_indices.remove(chosen)
@@ -108,7 +109,7 @@ class Cell(nn.Module):
 
                 # though it's layer choice and input choice here, in fixed mode, the chosen module will be created.
                 self.ops[-1].append(LayerChoice(ops, label=f'{self.label}/op_{i}_{k}'))
-                self.inputs[-1].append(input)
+                self.inputs[-1].append(inp)
 
     @property
     def label(self):
