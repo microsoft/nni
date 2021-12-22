@@ -112,7 +112,7 @@ if __name__ == '__main__':
 
     # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
     traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
-    pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=1)
+    pruner = TaylorFOWeightPruner(model, config_list, trainer, traced_optimizer, criterion, training_batches=20)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
     pruner._unwrap_model()
