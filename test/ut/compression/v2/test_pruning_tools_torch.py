@@ -139,12 +139,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test MultiDataNormMetricsCalculator
         metrics_calculator = MultiDataNormMetricsCalculator(dim=0, p=1)
         data = {
-            '1': [torch.ones(3, 3, 3), torch.ones(3, 3, 3) * 2],
-            '2': [torch.ones(4, 4), torch.ones(4, 4) * 2]
+            '1': [2, torch.ones(3, 3, 3) * 2],
+            '2': [2, torch.ones(4, 4) * 2]
         }
         result = {
-            '1': torch.ones(3) * 27,
-            '2': torch.ones(4) * 12
+            '1': torch.ones(3) * 18,
+            '2': torch.ones(4) * 8
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
@@ -152,12 +152,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test APoZRankMetricsCalculator
         metrics_calculator = APoZRankMetricsCalculator(dim=1)
         data = {
-            '1': [torch.tensor([[1, 0], [0, 1]], dtype=torch.float32), torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
-            '2': [torch.tensor([[1, 0, 1], [0, 1, 0]], dtype=torch.float32), torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': [2, torch.tensor([[1, 1], [1, 1]], dtype=torch.float32)],
+            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
         }
         result = {
             '1': torch.tensor([0.5, 0.5], dtype=torch.float32),
-            '2': torch.tensor([0.25, 0.25, 0.5], dtype=torch.float32)
+            '2': torch.tensor([1, 1, 0.75], dtype=torch.float32)
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
@@ -165,12 +165,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test MeanRankMetricsCalculator
         metrics_calculator = MeanRankMetricsCalculator(dim=1)
         data = {
-            '1': [torch.tensor([[1, 0], [0, 1]], dtype=torch.float32), torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
-            '2': [torch.tensor([[1, 0, 1], [0, 1, 0]], dtype=torch.float32), torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': [2, torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
+            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
         }
         result = {
-            '1': torch.tensor([0.5, 0.5], dtype=torch.float32),
-            '2': torch.tensor([0.25, 0.25, 0.5], dtype=torch.float32)
+            '1': torch.tensor([0.25, 0.25], dtype=torch.float32),
+            '2': torch.tensor([0, 0, 0.25], dtype=torch.float32)
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())

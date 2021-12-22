@@ -75,8 +75,9 @@ class NormMetricsCalculator(MetricsCalculator):
 
 class MultiDataNormMetricsCalculator(NormMetricsCalculator):
     """
-    Sum each list of tensor in data at first, then calculate the specify norm for each sumed tensor.
-    TaylorFO pruner use this to calculate metric.
+    The data value format is a two-element list [batch_number, cumulative_data].
+    Directly use the cumulative_data as new_data to calculate norm metric.
+    TaylorFO pruner uses this to calculate metric.
     """
 
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
@@ -87,7 +88,7 @@ class MultiDataNormMetricsCalculator(NormMetricsCalculator):
 class DistMetricsCalculator(MetricsCalculator):
     """
     Calculate the sum of specify distance for each element with all other elements in specify `dim` in each tensor in data.
-    FPGM pruner use this to calculate metric.
+    FPGM pruner uses this to calculate metric.
     """
 
     def __init__(self, p: float, dim: Union[int, List[int]]):
@@ -153,10 +154,10 @@ class DistMetricsCalculator(MetricsCalculator):
 
 class APoZRankMetricsCalculator(MetricsCalculator):
     """
-    This metric counts the zero number at the same position in the tensor list in data,
-    then sum the zero number on `dim` and calculate the non-zero rate.
+    The data value format is a two-element list [batch_number, batch_wise_zeros_count_sum].
+    This metric sum the zero number on `dim` then devide the (batch_number * across_dim_size) to calculate the non-zero rate.
     Note that the metric we return is (1 - apoz), because we assume a higher metric value has higher importance.
-    APoZRank pruner use this to calculate metric.
+    APoZRank pruner uses this to calculate metric.
     """
     def calculate_metrics(self, data: Dict[str, List]) -> Dict[str, Tensor]:
         metrics = {}
@@ -177,8 +178,9 @@ class APoZRankMetricsCalculator(MetricsCalculator):
 
 class MeanRankMetricsCalculator(MetricsCalculator):
     """
-    This metric simply concat the list of tensor on dim 0, and average on `dim`.
-    MeanRank pruner use this to calculate metric.
+    The data value format is a two-element list [batch_number, batch_wise_activation_sum].
+    This metric simply calculate the average on `self.dim`, then divide by the batch_number.
+    MeanRank pruner uses this to calculate metric.
     """
     def calculate_metrics(self, data: Dict[str, List[Tensor]]) -> Dict[str, Tensor]:
         metrics = {}
