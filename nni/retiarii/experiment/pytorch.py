@@ -81,7 +81,7 @@ class RetiariiExeConfig(ConfigBase):
         if key in fixed_attrs and fixed_attrs[key] != value:
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         # 'trial_code_directory' is handled differently because the path will be converted to absolute path by us
-        if key == 'trial_code_directory' and not (value == Path('.') or os.path.isabs(value)):
+        if key == 'trial_code_directory' and not (str(value) == '.' or os.path.isabs(value)):
             raise AttributeError(f'{key} is not supposed to be set in Retiarii mode by users!')
         if key == 'execution_engine':
             assert value in ['base', 'py', 'cgo', 'benchmark'], f'The specified execution engine "{value}" is not supported.'
@@ -183,6 +183,8 @@ class RetiariiExperiment(Experiment):
         self._proc: Optional[Popen] = None
         self._pipe: Optional[Pipe] = None
 
+        self.url_prefix = None
+
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(
             self.base_model, self.trainer, self.applied_mutators,
@@ -211,6 +213,8 @@ class RetiariiExperiment(Experiment):
             Whether to start in debug mode.
         """
         atexit.register(self.stop)
+
+        self.config = self.config.canonical_copy()
 
         # we will probably need a execution engine factory to make this clean and elegant
         if self.config.execution_engine == 'base':
