@@ -3,7 +3,7 @@
 
 import copy
 import warnings
-from typing import Any, List, Union, Dict, Optional
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable
 
 import torch
 import torch.nn as nn
@@ -398,3 +398,31 @@ class ChosenInputs(nn.Module):
         if reduction_type == 'concat':
             return torch.cat(tensor_list, dim=1)
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
+
+
+class ValueChoiceGroup(Mutable):
+
+    def __init__(self, function: Callable[...], repr_template: str, arguments: List[Any]):
+        self.function = function
+        self.repr_template = repr_template
+        self.arguments = arguments
+
+        assert any(isinstance(arg, (ValueChoice, ValueChoiceGroup)) for arg in self.arguments)
+
+    def inner_choices(self) -> Iterable[ValueChoice]:
+        """
+        Return an iterable of all leaf value choices.
+        No deduplication.
+        """
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoice):
+                # this is leaf node
+                yield arg
+            elif isinstance(arg, ValueChoiceGroup):
+                yield from arg.inner_choices()
+
+    def evaluate(self, values) -> Any:
+        ...
+
+    def __repr__(self):
+        return self.repr_template.format(*self.arguments)
