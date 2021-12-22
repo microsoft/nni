@@ -42,7 +42,7 @@ def create_experiment(args):
             exit(1)
         print(Fore.YELLOW + f'WARNING: You are using legacy config file, please update it to latest format:' + Fore.RESET)
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
-        print(yaml.dump(v2_config).strip())
+        print(yaml.dump(v2_config, sort_keys=False).strip())
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
         print(Fore.YELLOW + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
         utils.set_base_path(config_file.parent)
