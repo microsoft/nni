@@ -234,6 +234,10 @@ def to_v2(v1):
             if v1_role:
                 _logger.error('frameworkcontroller role not fully converted: %s', v1_role)
 
+            # this is required, seems a bug in nni manager
+            if not v2.get('trialCommand'):
+                v2['trialCommand'] = v2_role['command']
+
     # hybrid mode should always use v2 schema, so no need to handle here
 
     v1_storage = v1.pop('sharedStorage', None)
