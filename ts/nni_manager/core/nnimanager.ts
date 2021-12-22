@@ -29,6 +29,7 @@ import { NNIRestServer } from '../rest_server/nniRestServer';
 import axios from 'axios';
 import { API_ROOT_URL } from '../common/experimentStartupInfo'
 import { runNNIctlScript } from '../common/pythonScript'
+import { responseData } from '../common/component'
 
 /**
  * NNIManager which implements Manager interface
@@ -952,34 +953,42 @@ class NNIManager implements Manager {
         // });
     }
 
-    public async sendResumeExperiment(hostname: string, idList: string[]): Promise<number> {
-        var status:number = 200;
+    public async sendResumeExperiment(hostname: string, idList: string[]): Promise<responseData> {
+        var resp: responseData = {
+            status: 200,
+            data: "",
+        };
         for (let i = 0; i < idList.length; i++) {
             const returnData = await runNNIctlScript(hostname, 'resume', idList[i]);
             if (returnData) {
                 if (returnData.stderr) {
-                    status = 500;
+                    resp.status = 500;
+                    resp.data = resp.data + `ERROR ${idList[i]}, INFO ${returnData.stderr}`;
                 }
             } else {
-                status = 500;
+                resp.status = 500;
             }
         }
-        return status;
+        return resp;
     }
 
-    public async sendViewExperiment(hostname: string, idList: string[]): Promise<number> {
-        var status:number = 200;
+    public async sendViewExperiment(hostname: string, idList: string[]): Promise<responseData> {
+        var resp: responseData = {
+            status: 200,
+            data: "",
+        };
         for (let i = 0; i < idList.length; i++) {
             const returnData = await runNNIctlScript(hostname, 'view', idList[i]);
             if (returnData) {
                 if (returnData.stderr) {
-                    status = 500;
+                    resp.status = 500;
+                    resp.data = resp.data + `ERROR ${idList[i]}, INFO ${returnData.stderr}`;
                 }
             } else {
-                status = 500;
+                resp.status = 500;
             }
         }
-        return status;
+        return resp;
     }
 }
 

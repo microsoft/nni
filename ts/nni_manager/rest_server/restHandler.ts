@@ -18,6 +18,7 @@ import { getVersion } from '../common/utils';
 import { MetricType } from '../common/datastore';
 import { ProfileUpdateType } from '../common/manager';
 import { TrialJobStatus } from '../common/trainingService';
+import { responseData } from '../common/component'
 
 // TODO: fix expressJoi
 //const expressJoi = require('express-joi-validator');
@@ -445,8 +446,8 @@ class NNIRestHandler {
 
     private  resumeOtherExperiment(router: Router): void {
         router.post('/manage-experiment/resume', (req: Request, res: Response) => {
-            this.nniManager.sendResumeExperiment(req.hostname, req.body['idList']).then((status) => {
-                res.status(status).send();
+            this.nniManager.sendResumeExperiment(req.hostname, req.body['idList']).then((resp) => {
+                res.status(resp.status).send(resp.data);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });
@@ -455,8 +456,8 @@ class NNIRestHandler {
 
     private  viewOtherExperiment(router: Router): void {
         router.post('/manage-experiment/view', (req: Request, res: Response) => {
-            this.nniManager.sendViewExperiment(req.hostname, req.body['idList']).then((status) => {
-                res.status(status).send();
+            this.nniManager.sendViewExperiment(req.hostname, req.body['idList']).then((resp) => {
+                res.status(resp.status).send(resp.data);
             }).catch((err: Error) => {
                 this.handleError(err, res);
             });

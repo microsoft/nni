@@ -261,7 +261,7 @@ const resumeExperiment = (idList: string[]): void => {
                 // TODO: use Message.txt to tooltip
                 alert(`Resume the experiment ${idList} successfully`);
             } else {
-                alert(`fail to resume all selected experiment`);
+                alert(`fail to resume all selected experiment, ${res.data}`);
             }
         })
         .catch(error => {
@@ -269,7 +269,7 @@ const resumeExperiment = (idList: string[]): void => {
                 if (error.response.data.error) {
                     alert(error.response.data.error);
                 } else {
-                    alert(`500 error, fail to resume all selected experiment`);
+                    alert('500 error, fail to resume all selected experiment');
                 }
             }
         });
@@ -290,7 +290,7 @@ const viewExperiment = (idList: string[]): void => {
                 // TODO: use Message.txt to tooltip
                 alert(`View the experiment ${idList} successfully`);
             } else {
-                alert(`fail to view all selected experiment`);
+                alert(`fail to view all selected experiment, ${res.data}`);
             }
         })
         .catch(error => {

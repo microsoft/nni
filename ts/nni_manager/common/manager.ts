@@ -4,6 +4,7 @@
 import { MetricDataRecord, MetricType, TrialJobInfo } from './datastore';
 import { TrialJobStatus } from './trainingService';
 import { ExperimentConfig } from './experimentConfig';
+import { responseData } from './component'
 
 type ProfileUpdateType = 'TRIAL_CONCURRENCY' | 'MAX_EXEC_DURATION' | 'SEARCH_SPACE' | 'MAX_TRIAL_NUM';
 type ExperimentStatus = 'INITIALIZED' | 'RUNNING' | 'ERROR' | 'STOPPING' | 'STOPPED' | 'DONE' | 'NO_MORE_TRIAL' | 'TUNER_NO_MORE_TRIAL' | 'VIEWED';
@@ -66,8 +67,8 @@ abstract class Manager {
     public abstract fetchTrialOutput(trialJobId: string, subpath: string): Promise<void>;
 
     public abstract sendDelteExperiment(hostname: string, port: string): Promise<number>;
-    public abstract sendResumeExperiment(hostname: string, idList: string[]): Promise<number>;
-    public abstract sendViewExperiment(hostname: string, idList: string[]): Promise<number>;
+    public abstract sendResumeExperiment(hostname: string, idList: string[]): Promise<responseData>;
+    public abstract sendViewExperiment(hostname: string, idList: string[]): Promise<responseData>;
 }
 
 export { Manager, ExperimentConfig, ExperimentProfile, TrialJobStatistics, ProfileUpdateType, NNIManagerStatus, ExperimentStatus, ExperimentStartUpMode };

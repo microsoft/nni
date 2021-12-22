@@ -12,4 +12,9 @@ function get<T>(source: Function): T {
     return ioc.Container.get(source) as T;
 }
 
-export { Provides, Container, Inject, Singleton, get };
+interface responseData {
+    status: number;
+    data: string;
+}
+
+export { Provides, Container, Inject, Singleton, get, responseData };

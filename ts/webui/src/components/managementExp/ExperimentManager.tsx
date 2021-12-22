@@ -124,19 +124,19 @@ class Experiment extends React.Component<{}, ExpListState> {
                                 {/*</div>*/}
                                 <div className='view'>
                                     <DefaultButton onClick={this.onViewClick}>
-                                        <Icon iconName='Equalizer' />
+                                        <Icon iconName='View' />
                                         <span className='margin'>View</span>
                                     </DefaultButton>
                                 </div>
                                 <div className='resume'>
                                     <DefaultButton onClick={this.onResumeClick}>
-                                        <Icon iconName='Equalizer' />
+                                        <Icon iconName='PlayResume' />
                                         <span className='margin'>Resume</span>
                                     </DefaultButton>
                                 </div>
                                 <div className='delete'>
                                     <DefaultButton onClick={this.onDeleteClick}>
-                                        <Icon iconName='Equalizer' />
+                                        <Icon iconName='Cancel' />
                                         <span className='margin'>Delete</span>
                                     </DefaultButton>
                                 </div>
