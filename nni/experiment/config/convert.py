@@ -176,6 +176,9 @@ def to_v2(v1):
             _move_field(v1_role, v2_role, 'memoryMB', 'memorySize')
             _move_field(v1_role, v2_role, 'image', 'dockerImage')
             _deprecate(v1_role, v2, 'privateRegistryAuthPath')
+
+            v2_role['codeDirectory'] = v2['trialCodeDirectory']
+
             if v1_role:
                 _logger.error('kubeflow role not fully converted: %s', v1_role)
 

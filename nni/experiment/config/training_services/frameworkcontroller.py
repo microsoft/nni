@@ -49,6 +49,6 @@ class FrameworkControllerConfig(TrainingServiceConfig):
 
     def _canonicalize(self, parents):
         super()._canonicalize(parents)
-        # framework controller does not support these fields, set empty string for type check
-        self.trial_command = ''
-        self.trial_code_directory = ''
+        # framework controller does not need these fields, set empty string for type check
+        if self.trial_command is None:
+            self.trial_command = ''
