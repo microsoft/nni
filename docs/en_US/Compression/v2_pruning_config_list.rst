@@ -1,8 +1,8 @@
 Pruning Config List Interpretation
-=================================
+==================================
 
 The Keys in Config List
-----------------------
+-----------------------
 
 Each sub-config in the config list is a dict, and the scope of each setting (key) is only internal to each sub-config.
 If multiple sub-configs are configured with the same module, the later ones will overwrite the previous ones.
