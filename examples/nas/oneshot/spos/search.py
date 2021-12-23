@@ -50,6 +50,9 @@ def _main(port):
         transforms.ToTensor(),
         transforms.Normalize([0.49139968, 0.48215827, 0.44653124], [0.24703233, 0.24348505, 0.26158768])
     ]
+    # FIXME
+    # CIFAR10 is used here temporarily.
+    # Actually we should load weight from supernet and evaluate on imagenet.
     train_dataset = serialize(CIFAR10, 'data', train=True, download=True, transform=transforms.Compose(transf + normalize))
     test_dataset = serialize(CIFAR10, 'data', train=False, transform=transforms.Compose(normalize))
 
@@ -57,7 +60,8 @@ def _main(port):
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=64),
                                 max_epochs=2, gpus=1)
 
-    simple_strategy = strategy.RegularizedEvolution(model_filter=LatencyFilter(threshold=100, predictor=base_predictor), population_size=2, cycles=2)
+    simple_strategy = strategy.RegularizedEvolution(model_filter=LatencyFilter(threshold=100, predictor=base_predictor),
+                                                    sample_size=1, population_size=2, cycles=2)
     exp = RetiariiExperiment(base_model, trainer, strategy=simple_strategy)
 
     exp_config = RetiariiExeConfig('local')
