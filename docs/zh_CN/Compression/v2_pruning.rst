@@ -26,3 +26,4 @@
 
     剪枝算法 <../en_US/Compression/v2_pruning_algo>
     剪枝调度器接口 <../en_US/Compression/v2_scheduler>
+    剪枝配置 <../en_US/Compression/v2_pruning_config_list>
