@@ -1,21 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
-import * as cpp from 'child-process-promise';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import {getExperimentId} from '../../../common/experimentStartupInfo';
+import assert from 'assert';
+import cpp from 'child-process-promise';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import {getExperimentId} from 'common/experimentStartupInfo';
 import {
     NNIManagerIpConfig, TrialJobApplicationForm, TrialJobDetail, TrialJobStatus
-} from '../../../common/trainingService';
-import {delay, generateParamFileName, getExperimentRootDir, uniqueString} from '../../../common/utils';
-import {CONTAINER_INSTALL_NNI_SHELL_FORMAT} from '../../common/containerJobData';
-import {TrialConfigMetadataKey} from '../../common/trialConfigMetadataKey';
-import {validateCodeDir} from '../../common/util';
+} from 'common/trainingService';
+import {delay, generateParamFileName, getExperimentRootDir, uniqueString} from 'common/utils';
+import {CONTAINER_INSTALL_NNI_SHELL_FORMAT} from 'training_service/common/containerJobData';
+import {TrialConfigMetadataKey} from 'training_service/common/trialConfigMetadataKey';
+import {validateCodeDir} from 'training_service/common/util';
 import {NFSConfig} from '../kubernetesConfig';
 import {KubernetesTrialJobDetail} from '../kubernetesData';
 import {KubernetesTrainingService} from '../kubernetesTrainingService';
@@ -28,7 +26,6 @@ import {
     FrameworkControllerClusterConfigNFS,
     FrameworkControllerTrialConfig,
     FrameworkControllerTrialConfigTemplate,
-    FrameworkControllerClusterConfigPVC,
 } from './frameworkcontrollerConfig';
 import {FrameworkControllerJobInfoCollector} from './frameworkcontrollerJobInfoCollector';
 import {FrameworkControllerJobRestServer} from './frameworkcontrollerJobRestServer';
@@ -241,19 +238,6 @@ class FrameworkControllerTrainingService extends KubernetesTrainingService imple
                         nfsFrameworkControllerClusterConfig.nfs.path
                     );
                     namespace = nfsFrameworkControllerClusterConfig.namespace
-                } else if (this.fcClusterConfig.storageType === 'pvc') {
-                    const pvcFrameworkControllerClusterConfig: FrameworkControllerClusterConfigPVC =
-                        <FrameworkControllerClusterConfigPVC>this.fcClusterConfig;
-                    this.fcTemplate = yaml.safeLoad(
-                        fs.readFileSync(
-                            pvcFrameworkControllerClusterConfig.configPath,
-                            'utf8'
-                        )
-                    );
-                    await this.createPVCStorage(
-                        pvcFrameworkControllerClusterConfig.pvc.path
-                    );
-                    namespace = pvcFrameworkControllerClusterConfig.namespace;
                 }
                 namespace = namespace ? namespace : "default";
                 this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(namespace);

@@ -1,10 +1,10 @@
 import torch
-import torch.nn as nn
+import nni.retiarii.nn.pytorch as nn
 import math
 
 import ops
 import putils
-from nni.nas import pytorch as nas
+from nni.retiarii.nn.pytorch import LayerChoice
 
 class SearchMobileNet(nn.Module):
     def __init__(self,
@@ -57,11 +57,9 @@ class SearchMobileNet(nn.Module):
                 if stride == 1 and input_channel == width:
                     # if it is not the first one
                     op_candidates += [ops.OPS['Zero'](input_channel, width, stride)]
-                    conv_op = nas.mutables.LayerChoice(op_candidates,
-                                                       key="s{}_c{}".format(stage_cnt, i))
+                    conv_op = LayerChoice(op_candidates, label="s{}_c{}".format(stage_cnt, i))
                 else:
-                    conv_op = nas.mutables.LayerChoice(op_candidates,
-                                                       key="s{}_c{}".format(stage_cnt, i))
+                    conv_op = LayerChoice(op_candidates, label="s{}_c{}".format(stage_cnt, i))
                 # shortcut
                 if stride == 1 and input_channel == width:
                     # if not first cell

@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
 import { Deferred } from 'ts-deferred';
 import { PythonShell } from 'python-shell';
 
@@ -62,11 +60,21 @@ export class AMLClient {
         return deferred.promise;
     }
 
-    public stop(): void {
+    public stop(): Promise<boolean> {
         if (this.pythonShellClient === undefined) {
             throw Error('python shell client not initialized!');
         }
+        const deferred: Deferred<boolean> = new Deferred<boolean>();
         this.pythonShellClient.send('stop');
+        this.pythonShellClient.on('message', (result: any) => {
+            const stopResult = this.parseContent('stop_result', result);
+            if (stopResult === 'success') {
+                deferred.resolve(true);
+            } else if (stopResult === 'failed') {
+                deferred.resolve(false);
+            }
+        });
+        return deferred.promise;
     }
 
     public getTrackingUrl(): Promise<string> {

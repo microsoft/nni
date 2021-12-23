@@ -1,25 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-import * as cp from 'child_process';
+import cp from 'child_process';
 import { EventEmitter } from 'events';
-import * as fs from 'fs';
-import * as path from 'path';
-import * as ts from 'tail-stream';
-import * as tkill from 'tree-kill';
-import { NNIError, NNIErrorNames } from '../../common/errors';
-import { getExperimentId } from '../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../common/log';
-import { powershellString } from '../../common/shellUtils';
+import fs from 'fs';
+import path from 'path';
+import ts from 'tail-stream';
+import tkill from 'tree-kill';
+import { NNIError, NNIErrorNames } from 'common/errors';
+import { getExperimentId } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { powershellString } from 'common/shellUtils';
 import {
     HyperParameters, TrainingService, TrialJobApplicationForm,
     TrialJobDetail, TrialJobMetric, TrialJobStatus
-} from '../../common/trainingService';
+} from 'common/trainingService';
 import {
     delay, generateParamFileName, getExperimentRootDir, getJobCancelStatus, getNewLine, isAlive, uniqueString
-} from '../../common/utils';
-import { ExperimentConfig, LocalConfig, flattenConfig } from '../../common/experimentConfig';
+} from 'common/utils';
+import { LocalConfig } from 'common/experimentConfig';
 import { execMkdir, execNewFile, getScriptName, runScript, setEnvironmentVariable } from '../common/util';
 import { GPUScheduler } from './gpuScheduler';
 
@@ -74,13 +73,11 @@ class LocalTrialJobDetail implements TrialJobDetail {
     }
 }
 
-interface FlattenLocalConfig extends ExperimentConfig, LocalConfig { }
-
 /**
  * Local machine training service
  */
 class LocalTrainingService implements TrainingService {
-    private readonly config: FlattenLocalConfig;
+    private readonly config: LocalConfig;
     private readonly eventEmitter: EventEmitter;
     private readonly jobMap: Map<string, LocalTrialJobDetail>;
     private readonly jobQueue: string[];
@@ -93,8 +90,8 @@ class LocalTrainingService implements TrainingService {
     private readonly log: Logger;
     private readonly jobStreamMap: Map<string, ts.Stream>;
 
-    constructor(config: ExperimentConfig) {
-        this.config = flattenConfig<FlattenLocalConfig>(config, 'local');
+    constructor(config: LocalConfig) {
+        this.config = config;
         this.eventEmitter = new EventEmitter();
         this.jobMap = new Map<string, LocalTrialJobDetail>();
         this.jobQueue = [];
@@ -447,7 +444,7 @@ class LocalTrainingService implements TrainingService {
         if (process.platform !== 'win32') {
             runScriptContent.push('#!/bin/bash');
         } else {
-            runScriptContent.push(`$env:PATH=${powershellString(process.env.path!)}`)
+            runScriptContent.push(`$env:PATH=${powershellString(process.env['path']!)}`)
         }
         for (const variable of variables) {
             runScriptContent.push(setEnvironmentVariable(variable));

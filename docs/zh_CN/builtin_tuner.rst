@@ -1,3 +1,5 @@
+.. 1ff18ebada0efec66cd793f1a000f3fe
+
 内置 Tuner
 ==============
 
@@ -21,3 +23,4 @@ Tuner 从 Trial 接收指标结果，来评估一组超参或网络结构的性�
     Hyperband<Tuner/HyperbandAdvisor>
     BOHB<Tuner/BohbAdvisor>
     PBT Tuner <Tuner/PBTTuner>
+    DNGO Tuner <Tuner/DngoTuner>

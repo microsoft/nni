@@ -1,8 +1,8 @@
 # Build result
-dist/
+/dist
 
 # node modules
-node_modules/
+/node_modules
 
 # test files
 .experiment.test

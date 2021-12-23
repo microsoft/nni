@@ -5,10 +5,10 @@ import threading
 import logging
 from multiprocessing.dummy import Pool as ThreadPool
 from queue import Queue, Empty
-import json_tricks
 
 from .common import multi_thread_enabled
 from .env_vars import dispatcher_env_vars
+from ..common import load
 from ..recoverable import Recoverable
 from .protocol import CommandType, receive
 
@@ -50,7 +50,7 @@ class MsgDispatcherBase(Recoverable):
         while not self.stopping:
             command, data = receive()
             if data:
-                data = json_tricks.loads(data)
+                data = load(data)
 
             if command is None or command is CommandType.Terminate:
                 break
@@ -162,7 +162,7 @@ class MsgDispatcherBase(Recoverable):
 
     def handle_request_trial_jobs(self, data):
         """The message dispatcher is demanded to generate ``data`` trial jobs.
-        These trial jobs should be sent via ``send(CommandType.NewTrialJob, json_tricks.dumps(parameter))``,
+        These trial jobs should be sent via ``send(CommandType.NewTrialJob, nni.dump(parameter))``,
         where ``parameter`` will be received by NNI Manager and eventually accessible to trial jobs as "next parameter".
         Semantically, message dispatcher should do this ``send`` exactly ``data`` times.
 

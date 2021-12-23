@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
+import 'app-module-path/register';
 import { Container, Scope } from 'typescript-ioc';
 
 import * as fs from 'fs';
@@ -30,7 +29,7 @@ function initStartupInfo(
     setExperimentStartupInfo(createNew, experimentId, basePort, platform, logDirectory, experimentLogLevel, readonly, dispatcherPipe, urlprefix);
 }
 
-async function initContainer(foreground: boolean, platformMode: string, logFileName?: string): Promise<void> {
+async function initContainer(foreground: boolean, _platformMode: string, logFileName?: string): Promise<void> {
     Container.bind(Manager)
         .to(NNIManager)
         .scope(Scope.Singleton);
@@ -73,12 +72,12 @@ if (!strPort || strPort.length === 0) {
 }
 
 const foregroundArg: string = parseArg(['--foreground', '-f']);
-if (!('true' || 'false').includes(foregroundArg.toLowerCase())) {
+if (foregroundArg && !['true', 'false'].includes(foregroundArg.toLowerCase())) {
     console.log(`FATAL: foreground property should only be true or false`);
     usage();
     process.exit(1);
 }
-const foreground: boolean = foregroundArg.toLowerCase() === 'true' ? true : false;
+const foreground: boolean = (foregroundArg && foregroundArg.toLowerCase() === 'true') ? true : false;
 
 const port: number = parseInt(strPort, 10);
 
@@ -108,12 +107,12 @@ if (logDir.length > 0) {
 const logLevel: string = parseArg(['--log_level', '-ll']);
 
 const readonlyArg: string = parseArg(['--readonly', '-r']);
-if (!('true' || 'false').includes(readonlyArg.toLowerCase())) {
+if (readonlyArg && !['true', 'false'].includes(readonlyArg.toLowerCase())) {
     console.log(`FATAL: readonly property should only be true or false`);
     usage();
     process.exit(1);
 }
-const readonly = readonlyArg.toLowerCase() == 'true' ? true : false;
+const readonly = (readonlyArg && readonlyArg.toLowerCase() == 'true') ? true : false;
 
 const dispatcherPipe: string = parseArg(['--dispatcher_pipe']);
 

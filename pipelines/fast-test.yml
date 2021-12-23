@@ -37,6 +37,10 @@ stages:
         python -m pip install -r dependencies/required_extra.txt
       displayName: Install requirements
     - script: |
+        cd docs
+        python tools/chineselink.py check
+      displayName: Translation up-to-date
+    - script: |
         cd docs/en_US
         sphinx-build -M html . _build -W --keep-going -T
       displayName: Sphinx  # TODO: rstcheck
@@ -71,6 +75,7 @@ stages:
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -r dependencies/required_extra.txt
+        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
       displayName: Install requirements
     - script: python -m pylint --rcfile pylintrc nni
       displayName: pylint
@@ -165,6 +170,7 @@ stages:
 
     - script: |
         python setup.py develop
+        mkdir -p coverage
       displayName: Install NNI
 
     - script: |
@@ -173,24 +179,32 @@ stages:
         python -m pip install -e .[PPOTuner,DNGO]
       displayName: Install extra dependencies
 
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
     - script: |
         set -e
         cd test
         python -m pytest ut --cov-config=.coveragerc \
-          --ignore=ut/sdk/test_pruners.py \
-          --ignore=ut/sdk/test_compressor_tf.py \
-          --ignore=ut/sdk/test_compressor_torch.py \
-          --ignore=ut/sdk/test_model_speedup.py
-        python -m pytest ut/sdk/test_pruners.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/sdk/test_compressor_tf.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/sdk/test_compressor_torch.py --cov-config=.coveragerc --cov-append
-        python -m pytest ut/sdk/test_model_speedup.py --cov-config=.coveragerc --cov-append
+          --ignore=ut/compression/v1/test_pruners.py \
+          --ignore=ut/compression/v1/test_compressor_tf.py \
+          --ignore=ut/compression/v1/test_compressor_torch.py \
+          --ignore=ut/compression/v1/test_model_speedup.py
+        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
+        cp coverage.xml ../coverage/python.xml
       displayName: Python unit test
 
     - script: |
         set -e
         cd ts/nni_manager
         yarn test
+        cp coverage/cobertura-coverage.xml ../../coverage/typescript.xml
       displayName: TypeScript unit test
 
     - task: PublishTestResults@2
@@ -203,7 +217,7 @@ stages:
     - task: PublishCodeCoverageResults@1
       inputs:
         codeCoverageTool: Cobertura
-        summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/*coverage.xml'
+        summaryFileLocation: coverage/*
       displayName: Publish code coverage results
 
     - script: |
@@ -273,8 +287,8 @@ stages:
     # Need del later
     - script: |
         set -e
-        python interim_vision_patch.py
-      displayName: Vision MNIST Patch
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
 
 
     - script: |
@@ -360,6 +374,12 @@ stages:
         python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
       displayName: Install extra dependencies
 
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
     - script: |
         cd test
         python -m pytest ut
@@ -420,6 +440,12 @@ stages:
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[DNGO]
       displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
 
     - script: |
         cd test

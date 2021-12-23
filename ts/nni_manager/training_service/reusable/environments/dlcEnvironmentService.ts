@@ -1,14 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
-import { ExperimentConfig, DlcConfig, flattenConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
+import { DlcConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { DlcClient } from '../dlc/dlcClient';
 import { DlcEnvironmentInformation } from '../dlc/dlcConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
@@ -18,8 +16,6 @@ import { MountedStorageService } from '../storages/mountedStorageService';
 import { Scope } from 'typescript-ioc';
 import { StorageService } from '../storageService';
 
-interface FlattenDlcConfig extends ExperimentConfig, DlcConfig { }
-
 /**
  * Collector DLC jobs info from DLC cluster, and update dlc job status locally
  */
@@ -28,12 +24,12 @@ export class DlcEnvironmentService extends EnvironmentService {
 
     private readonly log: Logger = getLogger('dlcEnvironmentService');
     private experimentId: string;
-    private config: FlattenDlcConfig;
+    private config: DlcConfig;
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(config: DlcConfig, info: ExperimentStartupInfo) {
         super();
         this.experimentId = info.experimentId;
-        this.config = flattenConfig(config, 'dlc');
+        this.config = config;
         component.Container.bind(StorageService).to(MountedStorageService).scope(Scope.Singleton);
         const storageService = component.get<StorageService>(StorageService)
         const remoteRoot = storageService.joinPath(this.config.localStorageMountPoint, 'nni-experiments', this.experimentId);

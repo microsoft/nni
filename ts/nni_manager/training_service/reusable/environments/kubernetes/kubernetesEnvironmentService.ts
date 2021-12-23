@@ -1,21 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as cpp from 'child-process-promise';
-import * as path from 'path';
-import * as azureStorage from 'azure-storage';
+import cpp from 'child-process-promise';
+import path from 'path';
+import azureStorage from 'azure-storage';
 import {Base64} from 'js-base64';
 import {String} from 'typescript-string-operations';
-import { ExperimentConfig } from '../../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo';
-import { getLogger, Logger } from '../../../../common/log';
-import { EnvironmentInformation, EnvironmentService } from '../../environment';
-import {GeneralK8sClient, KubernetesCRDClient} from '../../../kubernetes/kubernetesApiClient';
-import {AzureStorageClientUtility} from '../../../kubernetes/azureStorageClientUtils';
-import { KubeflowJobStatus } from '../../../kubernetes/kubeflow/kubeflowConfig';
-import {delay, uniqueString} from '../../../../common/utils';
+import { ExperimentConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { getLogger, Logger } from 'common/log';
+import { EnvironmentInformation, EnvironmentService } from 'training_service/reusable/environment';
+import {GeneralK8sClient, KubernetesCRDClient} from 'training_service/kubernetes/kubernetesApiClient';
+import {AzureStorageClientUtility} from 'training_service/kubernetes/azureStorageClientUtils';
+import { KubeflowJobStatus } from 'training_service/kubernetes/kubeflow/kubeflowConfig';
+import {delay, uniqueString} from 'common/utils';
 const fs = require('fs');
 
 export class KubernetesEnvironmentService extends EnvironmentService {
@@ -35,7 +33,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
     protected log: Logger = getLogger('KubernetesEnvironmentService');
     protected environmentWorkingFolder: string;
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(_config: any, info: ExperimentStartupInfo) {
         super();
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
@@ -210,7 +208,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
             if (this.kubernetesCRDClient === undefined) {
                 throw new Error("kubernetesCRDClient undefined")
             }
-            const kubeflowJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
+            const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
             const kubernetesJobInfo = await this.kubernetesCRDClient.getKubernetesJob(kubeflowJobName);
             if (kubernetesJobInfo.status && kubernetesJobInfo.status.conditions) {
                 const latestCondition: any = kubernetesJobInfo.status.conditions[kubernetesJobInfo.status.conditions.length - 1];
@@ -234,7 +232,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
         });
     }
 
-    public async startEnvironment(environment: EnvironmentInformation): Promise<void> {
+    public async startEnvironment(_environment: EnvironmentInformation): Promise<void> {
         throw new Error("Not implemented");
     }
 
@@ -256,5 +254,18 @@ export class KubernetesEnvironmentService extends EnvironmentService {
 
             return Promise.reject(errorMessage);
         }
+    }
+
+    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
+        const resources: any = {
+            memory: `${memory}Mi`,
+            cpu: `${cpuNum}`
+        };
+
+        if (gpuNum !== 0) {
+            resources['nvidia.com/gpu'] = `${gpuNum}`;
+        }
+
+        return resources;
     }
 }

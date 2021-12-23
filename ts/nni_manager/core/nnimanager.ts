@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as assert from 'assert';
+import assert from 'assert';
 import { ChildProcess, StdioOptions } from 'child_process';
 import { Deferred } from 'ts-deferred';
 import * as component from '../common/component';
@@ -15,7 +13,7 @@ import {
     ExperimentProfile, Manager, ExperimentStatus,
     NNIManagerStatus, ProfileUpdateType, TrialJobStatistics
 } from '../common/manager';
-import { ExperimentConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
+import { ExperimentConfig, LocalConfig, toSeconds, toCudaVisibleDevices } from '../common/experimentConfig';
 import { ExperimentManager } from '../common/experimentManager';
 import { TensorboardManager } from '../common/tensorboardManager';
 import {
@@ -456,7 +454,7 @@ class NNIManager implements Manager {
             return await module_.RouterTrainingService.construct(config);
         } else if (platform === 'local') {
             const module_ = await import('../training_service/local/localTrainingService');
-            return new module_.LocalTrainingService(config);
+            return new module_.LocalTrainingService(<LocalConfig>config.trainingService);
         } else if (platform === 'kubeflow') {
             const module_ = await import('../training_service/kubernetes/kubeflow/kubeflowTrainingService');
             return new module_.KubeflowTrainingService();
@@ -470,8 +468,6 @@ class NNIManager implements Manager {
             const module_ = await import('../training_service/reusable/routerTrainingService');
             return await module_.RouterTrainingService.construct(config);
         }
-
-        throw new Error(`Unsupported training service platform "${platform}"`);
     }
 
     private setupTuner(command: string, cwd: string | undefined, mode: 'start' | 'resume', dataDirectory: string): void {
@@ -517,8 +513,9 @@ class NNIManager implements Manager {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
+        this.log.info(`Updated search space ${searchSpace}`);
         this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
-        this.experimentProfile.params.searchSpace = searchSpace;
+        this.experimentProfile.params.searchSpace = JSON.parse(searchSpace);
 
         return;
     }

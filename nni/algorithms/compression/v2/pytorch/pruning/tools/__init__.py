@@ -2,7 +2,8 @@ from .base import (
     HookCollectorInfo,
     DataCollector,
     MetricsCalculator,
-    SparsityAllocator
+    SparsityAllocator,
+    TaskGenerator
 )
 from .data_collector import (
     WeightDataCollector,
@@ -10,6 +11,7 @@ from .data_collector import (
     SingleHookTrainerBasedDataCollector
 )
 from .metrics_calculator import (
+    StraightMetricsCalculator,
     NormMetricsCalculator,
     MultiDataNormMetricsCalculator,
     DistMetricsCalculator,
@@ -20,4 +22,10 @@ from .sparsity_allocator import (
     NormalSparsityAllocator,
     GlobalSparsityAllocator,
     Conv2dDependencyAwareAllocator
+)
+from .task_generator import (
+    AGPTaskGenerator,
+    LinearTaskGenerator,
+    LotteryTicketTaskGenerator,
+    SimulatedAnnealingTaskGenerator
 )

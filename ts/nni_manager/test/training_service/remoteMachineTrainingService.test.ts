@@ -3,11 +3,11 @@
 
 'use strict';
 
-import * as assert from 'assert';
-import * as chai from 'chai';
-import * as chaiAsPromised from 'chai-as-promised';
-import * as fs from 'fs';
-import * as tmp from 'tmp';
+import assert from 'assert';
+import chai from 'chai';
+import chaiAsPromised from 'chai-as-promised';
+import fs from 'fs';
+import tmp from 'tmp';
 import * as component from '../../common/component';
 import { TrialJobApplicationForm, TrialJobDetail, TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, delay, prepareUnitTest } from '../../common/utils';
@@ -133,10 +133,10 @@ describe('Unit Test for RemoteMachineTrainingService', () => {
         };
         const jobDetail: TrialJobDetail = await remoteMachineTrainingService.submitTrialJob(form);
         // Add metrics listeners
-        const listener1 = function f1(metric: any) {
+        const listener1 = function f1(_metric: any) {
         }
 
-        const listener2 = function f1(metric: any) {
+        const listener2 = function f1(_metric: any) {
         }
 
         remoteMachineTrainingService.addTrialJobMetricListener(listener1);

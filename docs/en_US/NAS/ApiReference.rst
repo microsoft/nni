@@ -102,9 +102,22 @@ Retiarii Experiments
 ..  autoclass:: nni.retiarii.experiment.pytorch.RetiariiExeConfig
     :members:
 
+CGO Execution
+-------------
+
+..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule
+
+..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification
+
+..  autofunction:: nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression
+
 Utilities
 ---------
 
-..  autofunction:: nni.retiarii.serialize
+..  autofunction:: nni.retiarii.basic_unit
+
+..  autofunction:: nni.retiarii.model_wrapper
 
 ..  autofunction:: nni.retiarii.fixed_arch
+
+

@@ -66,7 +66,7 @@ to the weight parameter of modules. 'input' means applying quantization operatio
 
 bits length of quantization, key is the quantization type, value is the quantization bits length, eg. 
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_bits: {
@@ -77,36 +77,102 @@ bits length of quantization, key is the quantization type, value is the quantiza
 
 when the value is int type, all quantization types share same bits length. eg. 
 
-.. code-block:: bash
+.. code-block:: python
 
    {
       quant_bits: 8, # weight or output quantization are all 8 bits
    }
 
+* **quant_dtype** : str or dict of {str : str}
+
+quantization dtype, used to determine the range of quantized value. Two choices can be used:
+
+- int: the range is singed
+- uint: the range is unsigned
+
+Two ways to set it. One is that the key is the quantization type, and the value is the quantization dtype, eg.
+
+.. code-block:: python
+
+   {
+      quant_dtype: {
+         'weight': 'int',
+         'output': 'uint,
+         },
+   }
+
+The other is that the value is str type, and all quantization types share the same dtype. eg.
+
+.. code-block:: python
+
+   {
+      'quant_dtype': 'int', # the dtype of weight and output quantization are all 'int'
+   }
+
+There are totally two kinds of `quant_dtype` you can set, they are 'int' and 'uint'.
+
+* **quant_scheme** : str or dict of {str : str}
+
+quantization scheme, used to determine the quantization manners. Four choices can used:
+
+- per_tensor_affine: per tensor, asymmetric quantization
+- per_tensor_symmetric: per tensor, symmetric quantization
+- per_channel_affine: per channel, asymmetric quantization
+- per_channel_symmetric: per channel, symmetric quantization
+
+Two ways to set it. One is that the key is the quantization type, value is the quantization scheme, eg.
+
+.. code-block:: python
+
+   {
+      quant_scheme: {
+         'weight': 'per_channel_symmetric',
+         'output': 'per_tensor_affine',
+         },
+   }
+
+The other is that the value is str type, all quantization types share the same quant_scheme. eg.
+
+.. code-block:: python
+
+   {
+      quant_scheme: 'per_channel_symmetric', # the quant_scheme of weight and output quantization are all 'per_channel_symmetric'
+   }
+
+There are totally four kinds of `quant_scheme` you can set, they are 'per_tensor_affine', 'per_tensor_symmetric', 'per_channel_affine' and 'per_channel_symmetric'.
+
 The following example shows a more complete ``config_list``\ , it uses ``op_names`` (or ``op_types``\ ) to specify the target layers along with the quantization bits for those layers.
 
-.. code-block:: bash
+.. code-block:: python
 
    config_list = [{
-      'quant_types': ['weight'],        
-      'quant_bits': 8, 
-      'op_names': ['conv1']
-   }, 
+      'quant_types': ['weight'],
+      'quant_bits': 8,
+      'op_names': ['conv1'],
+      'quant_dtype': 'int',
+      'quant_scheme': 'per_channel_symmetric'
+   },
    {
       'quant_types': ['weight'],
       'quant_bits': 4,
       'quant_start_step': 0,
-      'op_names': ['conv2']
-   }, 
+      'op_names': ['conv2'],
+      'quant_dtype': 'int',
+      'quant_scheme': 'per_tensor_symmetric'
+   },
    {
       'quant_types': ['weight'],
       'quant_bits': 3,
-      'op_names': ['fc1']
-   }, 
+      'op_names': ['fc1'],
+      'quant_dtype': 'int',
+      'quant_scheme': 'per_tensor_symmetric'
+   },
    {
       'quant_types': ['weight'],
       'quant_bits': 2,
-      'op_names': ['fc2']
+      'op_names': ['fc2'],
+      'quant_dtype': 'int',
+      'quant_scheme': 'per_channel_symmetric'
    }]
 
 In this example, 'op_names' is the name of layer and four layers will be quantized to different quant_bits.

@@ -132,9 +132,6 @@ testCases:
   launchCommand: nnictl view $resumeExpId
   experimentStatusCheck: False
 
-- name: multi-thread
-  configFile: test/config/multi_thread/config.yml
-
 #########################################################################
 # nni assessor test
 #########################################################################

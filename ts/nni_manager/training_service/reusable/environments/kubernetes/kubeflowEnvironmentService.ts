@@ -1,32 +1,28 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../../common/component';
-import { ExperimentConfig, KubeflowConfig, flattenConfig } from '../../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo';
-import { EnvironmentInformation } from '../../environment';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { KubeflowConfig, toMegaBytes } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { EnvironmentInformation } from 'training_service/reusable/environment';
 import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
-import { KubeflowOperatorClientFactory } from '../../../kubernetes/kubeflow/kubeflowApiClient';
-import { KubeflowClusterConfigAzure } from '../../../kubernetes/kubeflow/kubeflowConfig';
-import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
-
-interface FlattenKubeflowConfig extends ExperimentConfig, KubeflowConfig { }
+import { KubeflowOperatorClientFactory } from 'training_service/kubernetes/kubeflow/kubeflowApiClient';
+import { KubeflowClusterConfigAzure } from 'training_service/kubernetes/kubeflow/kubeflowConfig';
+import { KeyVaultConfig, AzureStorage } from 'training_service/kubernetes/kubernetesConfig';
 
 @component.Singleton
 export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
 
-    private config: FlattenKubeflowConfig;
+    private config: KubeflowConfig;
     private createStoragePromise?: Promise<void>;
     
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(config: KubeflowConfig, info: ExperimentStartupInfo) {
         super(config, info);
         this.experimentId = info.experimentId;
-        this.config = flattenConfig(config, 'kubeflow');
+        this.config = config;
         // Create kubernetesCRDClient
         this.kubernetesCRDClient = KubeflowOperatorClientFactory.createClient(
             this.config.operator, this.config.apiVersion);
@@ -83,13 +79,10 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         }
         const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
         environment.command = `cd ${expFolder} && ${environment.command} \
-        1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
-        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
-            environment.useActiveGpu = this.config.deprecated.useActiveGpu;
-        }
+1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
-        const kubeflowJobName: string = `nni-exp-${this.experimentId}-env-${environment.id}`.toLowerCase();
+        const kubeflowJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
         
         await fs.promises.writeFile(path.join(this.environmentLocalTempFolder, "run.sh"), environment.command, { encoding: 'utf8' });
 
@@ -120,22 +113,22 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
     private async prepareKubeflowConfig(envId: string, kubeflowJobName: string): Promise<any> {
         const workerPodResources: any = {};
         if (this.config.worker !== undefined) {
-            workerPodResources.requests = this.generatePodResource(this.config.worker.memorySize, this.config.worker.cpuNumber,
-                                                                   this.config.worker.gpuNumber);
+            workerPodResources.requests = this.generatePodResource(toMegaBytes(this.config.worker.memorySize),
+                                                                   this.config.worker.cpuNumber, this.config.worker.gpuNumber);
         }
         workerPodResources.limits = {...workerPodResources.requests};
 
         const nonWorkerResources: any = {};
         if (this.config.operator === 'tf-operator') {
             if (this.config.ps !== undefined) {
-                nonWorkerResources.requests = this.generatePodResource(this.config.ps.memorySize, this.config.ps.cpuNumber,
-                                                                       this.config.ps.gpuNumber);
+                nonWorkerResources.requests = this.generatePodResource(toMegaBytes(this.config.ps.memorySize),
+                                                                       this.config.ps.cpuNumber, this.config.ps.gpuNumber);
                 nonWorkerResources.limits = {...nonWorkerResources.requests};
             }
         } else if (this.config.operator === 'pytorch-operator') {
             if (this.config.master !== undefined) {
-                nonWorkerResources.requests = this.generatePodResource(this.config.master.memorySize, this.config.master.cpuNumber,
-                                                                       this.config.master.gpuNumber);
+                nonWorkerResources.requests = this.generatePodResource(toMegaBytes(this.config.master.memorySize),
+                                                                       this.config.master.cpuNumber, this.config.master.gpuNumber);
                 nonWorkerResources.limits = {...nonWorkerResources.requests};
             }
         }
@@ -144,19 +137,6 @@ export class KubeflowEnvironmentService extends KubernetesEnvironmentService {
         const kubeflowJobConfig: any = await this.generateKubeflowJobConfig(envId, kubeflowJobName, workerPodResources, nonWorkerResources);
 
         return Promise.resolve(kubeflowJobConfig);
-    }
-
-    public generatePodResource(memory: number, cpuNum: number, gpuNum: number): any {
-        const resources: any = {
-            memory: `${memory}Mi`,
-            cpu: `${cpuNum}`
-        };
-
-        if (gpuNum !== 0) {
-            resources['nvidia.com/gpu'] = `${gpuNum}`;
-        }
-
-        return resources;
     }
 
     /**

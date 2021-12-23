@@ -1,23 +1,19 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-'use strict';
-
-import * as fs from 'fs';
-import * as path from 'path';
-import * as component from '../../../common/component';
-import { getLogger, Logger } from '../../../common/log';
-import { ExperimentConfig, AmlConfig, flattenConfig } from '../../../common/experimentConfig';
-import { ExperimentStartupInfo } from '../../../common/experimentStartupInfo';
-import { validateCodeDir } from '../../common/util';
+import fs from 'fs';
+import path from 'path';
+import * as component from 'common/component';
+import { getLogger, Logger } from 'common/log';
+import { AmlConfig } from 'common/experimentConfig';
+import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
+import { validateCodeDir } from 'training_service/common/util';
 import { AMLClient } from '../aml/amlClient';
 import { AMLEnvironmentInformation } from '../aml/amlConfig';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { EventEmitter } from "events";
 import { AMLCommandChannel } from '../channels/amlCommandChannel';
 import { SharedStorageService } from '../sharedStorage'
-
-interface FlattenAmlConfig extends ExperimentConfig, AmlConfig { }
 
 /**
  * Collector AML jobs info from AML cluster, and update aml job status locally
@@ -28,13 +24,13 @@ export class AMLEnvironmentService extends EnvironmentService {
     private readonly log: Logger = getLogger('AMLEnvironmentService');
     private experimentId: string;
     private experimentRootDir: string;
-    private config: FlattenAmlConfig;
+    private config: AmlConfig;
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(config: AmlConfig, info: ExperimentStartupInfo) {
         super();
         this.experimentId = info.experimentId;
         this.experimentRootDir = info.logDir;
-        this.config = flattenConfig(config, 'aml');
+        this.config = config;
         validateCodeDir(this.config.trialCodeDirectory);
     }
 
@@ -100,9 +96,6 @@ export class AMLEnvironmentService extends EnvironmentService {
             amlEnvironment.command = `mv envs outputs/envs && cd outputs && ${amlEnvironment.command}`;
         }
         amlEnvironment.command = `import os\nos.system('${amlEnvironment.command}')`;
-        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
-            amlEnvironment.useActiveGpu = this.config.deprecated.useActiveGpu;
-        }
         amlEnvironment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         await fs.promises.writeFile(path.join(environmentLocalTempFolder, 'nni_script.py'), amlEnvironment.command, { encoding: 'utf8' });
@@ -129,6 +122,11 @@ export class AMLEnvironmentService extends EnvironmentService {
         if (!amlClient) {
             throw new Error('AML client not initialized!');
         }
-        amlClient.stop();
+        const result = await amlClient.stop();
+        if (result) {
+            this.log.info(`Stop aml run ${environment.id} success!`);
+        } else {
+            this.log.info(`Stop aml run ${environment.id} failed!`);
+        }
     }
 }
