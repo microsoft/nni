@@ -12,6 +12,10 @@ from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
 from nni.tools.annotation import expand_annotations, generate_search_space
 
+# used for v1-only legacy setup, remove them later
+from nni.experiment.launcher import get_stopped_experiment_config_json
+from . import legacy_launcher
+
 def create_experiment(args):
     # to make it clear what are inside args
     config_file = Path(args.config)
@@ -37,7 +41,6 @@ def create_experiment(args):
             can_convert = (reuse != False)  # if user does not explicitly specify it, convert to reuse mode
 
         if not can_convert:
-            from . import legacy_launcher
             legacy_launcher.create_experiment(args)
             exit()
 
@@ -79,6 +82,11 @@ def resume_experiment(args):
     debug = args.debug
     foreground = args.foreground
     exp_dir = args.experiment_dir
+
+    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
+    if config_json.get('trainingServicePlatform'):
+        legacy_launcher.resume_experiment(args)
+        exit()
 
     exp = Experiment._resume(exp_id, exp_dir)
     run_mode = RunMode.Foreground if foreground else RunMode.Detach
