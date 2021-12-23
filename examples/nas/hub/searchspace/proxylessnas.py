@@ -1,47 +1,12 @@
 import functools
 import math
 import random
-
-import torch
-import torch.nn as nn
-import tqdm
-from mmcv.utils.logging import print_log
-
-
-
-from common.searchspace import BiasedMixedOp, MixedOp, SearchSpace
-from configs.searchspace import ProxylessConfig, ProxylessStageConfig
-from .utils import ConvBNReLU, InvertedResidual, make_divisible
-
-
-from typing import Callable, Optional, List
+from typing import Optional, Callable, List
 
 import torch
 import torch.nn as nn
 
-
-def shuffle_layer(x, groups):
-    batchsize, num_channels, height, width = x.size()
-    channels_per_group = num_channels // groups
-    # reshape
-    x = x.view(batchsize, groups, channels_per_group, height, width)
-    # transpose
-    x = torch.transpose(x, 1, 2).contiguous()
-    # flatten
-    x = x.view(batchsize, -1, height, width)
-    return x
-
-
-def get_same_padding(kernel_size):
-    if isinstance(kernel_size, tuple):
-        assert len(kernel_size) == 2, 'invalid kernel size: %s' % kernel_size
-        p1 = get_same_padding(kernel_size[0])
-        p2 = get_same_padding(kernel_size[1])
-        return p1, p2
-    assert isinstance(
-        kernel_size, int), 'kernel size should be either `int` or `tuple`'
-    assert kernel_size % 2 > 0, 'kernel size should be odd number'
-    return kernel_size // 2
+from nni.retiarii.serializer import model_wrapper
 
 
 def make_divisible(v, divisor, min_val=None):
@@ -60,38 +25,15 @@ def make_divisible(v, divisor, min_val=None):
     return new_v
 
 
-def tf_indices_to_pytorch_spec(tf_indices, pytorch_space):
-    tf_indices = list(map(int, tf_indices.split(':')))
-    if len(tf_indices) == 22:
-        assert len(tf_indices) == len(pytorch_space)
-        return {k: v[i] if isinstance(v, list) else v[0][i] for i, (k, v) in zip(tf_indices, pytorch_space.items())}
-
-    indices = [3, 6, 9, 12, 16, 19, 22, 25, 29, 32, 35, 38, 42, 45, 48, 51, 55, 58, 61, 64, 68]
-    assert len(indices) == 21
-    assert len(pytorch_space) == 22
-    result = {}
-    for i, key in zip([None] + indices, pytorch_space.keys()):
-        if i is None:
-            assert len(pytorch_space[key]) == 1
-            chosen = pytorch_space[key][0]
-        else:
-            kernel_size = [3, 5, 7][tf_indices[i]]
-            expand_ratio = [3, 6][tf_indices[i + 1]]
-            skip = tf_indices[i + 2]
-            if skip:
-                chosen = 'skip'
-            else:
-                chosen = f'k{kernel_size}e{expand_ratio}'
-        assert chosen in pytorch_space[key] or chosen in pytorch_space[key][0], f'{i}, {chosen}, {pytorch_space[key]}'
-        result[key] = chosen
-    return result
-
-
 class ConvBNReLU(nn.Sequential):
+    """
+    The template for a conv-bn-relu block.
+    """
+
     def __init__(
         self,
-        in_planes: int,
-        out_planes: int,
+        in_channels: int,
+        out_channels: int,
         kernel_size: int = 3,
         stride: int = 1,
         groups: int = 1,
@@ -104,24 +46,41 @@ class ConvBNReLU(nn.Sequential):
             norm_layer = nn.BatchNorm2d
         if activation_layer is None:
             activation_layer = nn.ReLU6
-        super(ConvBNReLU, self).__init__(
-            nn.Conv2d(in_planes, out_planes, kernel_size, stride, padding, dilation=dilation, groups=groups,
+        super().__init__(
+            nn.Conv2d(in_channels, out_channels, kernel_size, stride, padding, dilation=dilation, groups=groups,
                       bias=False),
-            norm_layer(out_planes),
+            norm_layer(out_channels),
             activation_layer(inplace=True)
         )
-        self.out_channels = out_planes
+        self.out_channels = out_channels
 
 
-class InvertedResidual(nn.Module):
+class InvertedResidual(nn.Sequential):
+    """
+    An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
+    that uses an inverted structure for efficiency reasons.
+    It was originally proposed for the MobileNetV2 CNN architecture [mobilenetv2]_ .
+    It has since been reused for several mobile-optimized CNNs.
+    It follows a narrow -> wide -> narrow approach, hence the inversion.
+    It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
+    then a 1x1 convolution is used to reduce the number of channels so input and output can be added.
+
+    References
+    ----------
+    .. [mobilenetv2] Sandler, Mark, et al. "Mobilenetv2: Inverted residuals and linear bottlenecks."
+        Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
+    """
+
+
     def __init__(
         self,
-        inp: int,
-        oup: int,
+        in_channels: int,
+        out_channels: int,
         stride: int,
         expand_ratio: int,
         kernel_size: int = 3,
-        norm_layer: Optional[Callable[..., nn.Module]] = None
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        omit_expansion: bool = True,
     ) -> None:
         super(InvertedResidual, self).__init__()
         self.stride = stride
@@ -130,29 +89,45 @@ class InvertedResidual(nn.Module):
         if norm_layer is None:
             norm_layer = nn.BatchNorm2d
 
-        hidden_dim = int(round(inp * expand_ratio))
-        self.use_res_connect = self.stride == 1 and inp == oup
+        hidden_ch = int(round(in_channels * expand_ratio))
+
+        # Residual connection is added here stride = 1 and input channels and output channels are the same.
+        self.residual_connection = self.stride == 1 and in_channels == out_channels
 
         layers: List[nn.Module] = []
-        if expand_ratio != 1:
-            # pw
-            layers.append(ConvBNReLU(inp, hidden_dim, kernel_size=1, norm_layer=norm_layer))
+
+        # if weight sharing is enabled, this expansion can not be omitted, otherwise weights won't be able to be shared.
+        if expand_ratio != 1 or not omit_expansion:
+            # point-wise convolution
+            layers.append(ConvBNReLU(in_channels, hidden_ch, kernel_size=1, norm_layer=norm_layer))
+
         layers.extend([
-            # dw
-            ConvBNReLU(hidden_dim, hidden_dim, stride=stride, kernel_size=kernel_size, groups=hidden_dim, norm_layer=norm_layer),
+            # depth-wise
+            ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch, norm_layer=norm_layer),
             # pw-linear
-            nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-            norm_layer(oup),
+            nn.Conv2d(hidden_ch, out_channels, 1, 1, 0, bias=False),
+            norm_layer(out_channels),
         ])
-        self.conv = nn.Sequential(*layers)
-        self.out_channels = oup
-        self._is_cn = stride > 1
+        super().__init__(*layers)
+        self.out_channels = out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.use_res_connect:
-            return x + self.conv(x)
+        if self.residual_connection:
+            return x + super().forward(x)
         else:
-            return self.conv(x)
+            return super().forward(x)
+
+
+@model_wrapper
+class ProxylessSpace(nn.Module):
+    """
+    The search space proposed by ProxylessNAS [proxylessnas]_ .
+
+    References
+    ----------
+    .. [proxylessnas] Cai, Han, Ligeng Zhu, and Song Han. "ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware."
+        International Conference on Learning Representations. 2018.
+    """
 
 
 class _MbNet(nn.Module):
@@ -201,14 +176,6 @@ class _MbNet(nn.Module):
                 m.bias.data.zero_()
                 m.momentum = bn_momentum
                 m.eps = bn_eps
-                if not track_running_stats and m.track_running_stats:
-                    m.track_running_stats = False
-                    delattr(m, 'running_mean')
-                    delattr(m, 'running_var')
-                    delattr(m, 'num_batches_tracked')
-                    m.register_parameter('running_mean', None)
-                    m.register_parameter('running_var', None)
-                    m.register_parameter('num_batches_tracked', None)
             elif isinstance(m, nn.Linear):
                 m.weight.data.normal_(0, 0.01)
                 if m.bias is not None:
@@ -216,45 +183,6 @@ class _MbNet(nn.Module):
             elif isinstance(m, nn.BatchNorm1d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-
-        # zero out gradients
-        if zero_grad:
-            for p in self.parameters():
-                p.grad = torch.zeros_like(p)
-
-
-class _MbMixLayer(nn.Module):
-    def __init__(self, ops, **metainfo):
-        super().__init__()
-        for name, op in ops.items():
-            self.add_module(name, op)
-        self.ops = list(ops.keys())
-        self.metainfo = metainfo
-        if torch.distributed.is_available() and torch.distributed.is_initialized():
-            self.world_rank = torch.distributed.get_rank()
-            self.world_size = torch.distributed.get_world_size()
-        else:
-            self.world_rank = 0
-            self.world_size = 1
-
-        self.fixed = None
-
-    def _sample(self):
-        chosen = None
-        for i in range(self.world_size):
-            tmp = random.choice(self.ops)
-            if i == self.world_rank:
-                chosen = tmp
-        assert chosen is not None
-        return chosen
-
-    def forward(self, x):
-        if self.fixed is not None:
-            return getattr(self, self.fixed)(x)
-        return getattr(self, self._sample())(x)
-
-    def summary(self):
-        return 'MbMixLayer(' + ', '.join([f'{k}={v}' for k, v in {'ops': self.ops, **self.metainfo}.items()]) + ')'
 
 
 class ProxylessNAS(_MbNet, SearchSpace):
@@ -299,64 +227,3 @@ class ProxylessNAS(_MbNet, SearchSpace):
             print_log(f'Created block: {blocks[-1].key}: {blocks[-1].op_candidates}', __name__)
             input_width = output_width
         return blocks
-
-    def reset_running_stats(self, dataloader, max_steps=200):
-        bn_mean = {}
-        bn_var = {}
-
-        def bn_forward_hook(bn, inputs, outputs, mean_est, var_est):
-            aggregate_dimensions = (0, 2, 3)
-            inputs = inputs[0]  # input is a tuple of arguments
-            batch_mean = inputs.mean(aggregate_dimensions, keepdim=True)  # 1, C, 1, 1
-            batch_var = (inputs - batch_mean) ** 2
-            batch_var = batch_var.mean(aggregate_dimensions, keepdim=True)
-
-            batch_mean = torch.squeeze(batch_mean)
-            batch_var = torch.squeeze(batch_var)
-
-            mean_est.append(batch_mean.data)
-            var_est.append(batch_var.data)
-
-        handles = []
-        for name, m in self.named_modules():
-            if isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d)):
-                bn_mean[name] = []
-                bn_var[name] = []
-                handle = m.register_forward_hook(functools.partial(bn_forward_hook, mean_est=bn_mean[name], var_est=bn_var[name]))
-                handles.append(handle)
-
-        self.train()
-        with torch.no_grad():
-            pbar = tqdm.tqdm(range(max_steps), desc='Calibrating BatchNorm')
-            for _ in pbar:
-                images, _ = next(dataloader)
-                self(images)
-
-            for name, m in self.named_modules():
-                if name in bn_mean and len(bn_mean[name]) > 0:
-                    feature_dim = bn_mean[name][0].size(0)
-                    assert isinstance(m, (nn.BatchNorm1d, nn.BatchNorm2d))
-                    m.running_mean.data[:feature_dim].copy_(sum(bn_mean[name]) / len(bn_mean[name]))
-                    m.running_var.data[:feature_dim].copy_(sum(bn_var[name]) / len(bn_var[name]))
-
-        for handle in handles:
-            handle.remove()
-
-    def fix_sample(self, sample):
-        if isinstance(sample, list):
-            search_space = self.export_search_space()
-            assert len(search_space) == len(sample)
-            sample = {k: v for k, v in zip(search_space.keys(), sample)}
-        else:
-            assert len(self.export_search_space()) == len(sample)
-        for name, module in self.named_modules():
-            if isinstance(module, _MbMixLayer) and name in sample:
-                module.fixed = sample[name]
-        return sample
-
-    def export_search_space(self):
-        result = {}
-        for name, module in self.named_modules():
-            if isinstance(module, _MbMixLayer) and len(module.ops) > 1:
-                result[name] = module.ops
-        return result

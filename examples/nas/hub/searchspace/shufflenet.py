@@ -143,7 +143,11 @@ class ShuffleNetSpace(nn.Module):
         self.num_labels = num_labels
         self.channel_search = channel_search
         self.affine = affine
+
+        # the block number in each stage. 4 stages in total. 20 blocks in total.
         self.stage_repeats = [4, 4, 8, 4]
+
+        # output channels for all stages, including the very first layer and the very last layer
         self.stage_out_channels = [-1, 16, 64, 160, 320, 640, 1024]
 
         # building first layer
