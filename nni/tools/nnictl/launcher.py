@@ -36,8 +36,8 @@ def create_experiment(args):
         can_convert = True
         if v1_platform == 'adl':
             can_convert = False
-        if v1_platform == 'frameworkcontroller':
-            reuse = config_content.get('frameworkcontrollerConfig', {}).get('reuse')
+        if v1_platform in ['kubeflow', 'frameworkcontroller']:
+            reuse = config_content.get(v1_platform + 'Config', {}).get('reuse')
             can_convert = (reuse != False)  # if user does not explicitly specify it, convert to reuse mode
 
         if not can_convert:
@@ -55,9 +55,11 @@ def create_experiment(args):
         print(yaml.dump(v2_config, sort_keys=False).strip())
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
         print(Fore.YELLOW + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
+
         utils.set_base_path(config_file.parent)
         config = ExperimentConfig(**v2_config)
         utils.unset_base_path()
+
     else:
         config = ExperimentConfig.load(config_file)
 
