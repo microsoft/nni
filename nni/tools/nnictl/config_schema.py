@@ -408,12 +408,14 @@ frameworkcontroller_config_schema = {
         },
         Optional('namespace'): setType('namespace', str),
         Optional('configPath'): setType('configPath', str),
+        Optional('reuse'): setType('reuse', bool),
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'configPath': setType('configPath', str),
         'pvc': {'path': setType('server', str)},
         Optional('namespace'): setType('namespace', str),
+        Optional('reuse'): setType('reuse', bool),
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
@@ -432,6 +434,7 @@ frameworkcontroller_config_schema = {
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
         Optional('namespace'): setType('namespace', str),
         Optional('configPath'): setType('configPath', str),
+        Optional('reuse'): setType('reuse', bool),
     })
 }
 

@@ -28,12 +28,19 @@ def create_experiment(args):
         config_content = yaml.safe_load(config)
 
     v1_platform = config_content.get('trainingServicePlatform')
-    if v1_platform == 'adl':
-        from . import legacy_launcher
-        legacy_launcher.create_experiment(args)
-        exit()
-
     if v1_platform:
+        can_convert = True
+        if v1_platform == 'adl':
+            can_convert = False
+        if v1_platform == 'frameworkcontroller':
+            reuse = config_content.get('frameworkcontrollerConfig', {}).get('reuse')
+            can_convert = (reuse != False)  # if user does not explicitly specify it, convert to reuse mode
+
+        if not can_convert:
+            from . import legacy_launcher
+            legacy_launcher.create_experiment(args)
+            exit()
+
         try:
             v2_config = convert.to_v2(config_content)
         except Exception:
