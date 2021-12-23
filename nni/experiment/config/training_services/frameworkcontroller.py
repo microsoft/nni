@@ -46,3 +46,9 @@ class FrameworkControllerConfig(TrainingServiceConfig):
     service_account_name: Optional[str]
     task_roles: List[FrameworkControllerRoleConfig]
     reuse_mode: Optional[bool] = True
+
+    def _canonicalize(self, parents):
+        super()._canonicalize(parents)
+        # framework controller does not need these fields, set empty string for type check
+        if self.trial_command is None:
+            self.trial_command = ''

@@ -89,7 +89,7 @@ class ExperimentConfig(ConfigBase):
             for algo_type in ['tuner', 'assessor', 'advisor']:
                 # add placeholder items, so users can write `config.tuner.name = 'random'`
                 if getattr(self, algo_type) is None:
-                    setattr(self, algo_type, _AlgorithmConfig(name='_none_'))
+                    setattr(self, algo_type, _AlgorithmConfig(name='_none_', class_args={}))
         elif not utils.is_missing(self.training_service):
             # training service is set via json or constructor
             if isinstance(self.training_service, list):
