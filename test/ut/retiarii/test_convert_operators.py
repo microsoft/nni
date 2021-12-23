@@ -1387,5 +1387,13 @@ class TestOperators(unittest.TestCase, ConvertMixin):
         x = torch.randn(20, 5, 10, 10)
         self.checkExportImport(SimpleOp(), (x, ))
 
+    def test_basic_abs(self):
+        class SimpleOp(nn.Module):
+            def forward(self, x):
+                out = torch.abs(x)
+                return out
+        x = torch.randn(1, 2, 3, 1, requires_grad=False).int()
+        self.checkExportImport(SimpleOp(), (x, ))
+
 class TestOperatorsWithShape(TestOperators, ConvertWithShapeMixin):
     pass

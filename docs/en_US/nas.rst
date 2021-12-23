@@ -29,5 +29,6 @@ Follow the instructions below to start your journey with Retiarii.
     Construct Model Space <NAS/construct_space>
     Multi-trial NAS <NAS/multi_trial_nas>
     One-shot NAS <NAS/one_shot_nas>
+    Hardware-aware NAS <NAS/HardwareAwareNAS>
     NAS Benchmarks <NAS/Benchmarks>
     NAS API References <NAS/ApiReference>

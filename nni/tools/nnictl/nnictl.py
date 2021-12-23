@@ -62,7 +62,7 @@ def parse_args():
 
     # parse resume command
     parser_resume = subparsers.add_parser('resume', help='resume a new experiment')
-    parser_resume.add_argument('id', nargs='?', help='The id of the experiment you want to resume')
+    parser_resume.add_argument('id', help='The id of the experiment you want to resume')
     parser_resume.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_resume.add_argument('--debug', '-d', action='store_true', help=' set debug mode')
     parser_resume.add_argument('--foreground', '-f', action='store_true', help=' set foreground mode, print log content to terminal')
@@ -72,7 +72,7 @@ def parse_args():
 
     # parse view command
     parser_view = subparsers.add_parser('view', help='view a stopped experiment')
-    parser_view.add_argument('id', nargs='?', help='The id of the experiment you want to view')
+    parser_view.add_argument('id', help='The id of the experiment you want to view')
     parser_view.add_argument('--port', '-p', default=DEFAULT_REST_PORT, dest='port', type=int, help='the port of restful server')
     parser_view.add_argument('--experiment_dir', '-e', help='view experiment from external folder, specify the full path of ' \
                              'experiment folder')

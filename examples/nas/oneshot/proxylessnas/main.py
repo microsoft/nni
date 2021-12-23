@@ -26,6 +26,12 @@ if __name__ == "__main__":
     parser.add_argument("--bn_eps", default=1e-3, type=float)
     parser.add_argument("--dropout_rate", default=0, type=float)
     parser.add_argument("--no_decay_keys", default='bn', type=str, choices=[None, 'bn', 'bn#bias'])
+    parser.add_argument('--grad_reg_loss_type', default='add#linear', type=str, choices=['add#linear', 'mul#log'])
+    parser.add_argument('--grad_reg_loss_lambda', default=1e-1, type=float)  # grad_reg_loss_params
+    parser.add_argument('--grad_reg_loss_alpha', default=0.2, type=float)  # grad_reg_loss_params
+    parser.add_argument('--grad_reg_loss_beta',  default=0.3, type=float)  # grad_reg_loss_params
+    parser.add_argument("--applied_hardware", default=None, type=str, help='the hardware to predict model latency')
+    parser.add_argument("--reference_latency", default=None, type=float, help='the reference latency in specified hardware')
     # configurations of imagenet dataset
     parser.add_argument("--data_path", default='/data/imagenet/', type=str)
     parser.add_argument("--train_batch_size", default=256, type=int)
@@ -81,7 +87,18 @@ if __name__ == "__main__":
             {'params': get_parameters(model, keys, mode='include'), 'weight_decay': 0},
         ], lr=0.05, momentum=momentum, nesterov=nesterov)
     else:
+        momentum, nesterov = 0.9, True
         optimizer = torch.optim.SGD(get_parameters(model), lr=0.05, momentum=momentum, nesterov=nesterov, weight_decay=4e-5)
+
+    if args.grad_reg_loss_type == 'add#linear':
+        grad_reg_loss_params = {'lambda': args.grad_reg_loss_lambda}
+    elif args.grad_reg_loss_type == 'mul#log':
+        grad_reg_loss_params = {
+            'alpha': args.grad_reg_loss_alpha,
+            'beta': args.grad_reg_loss_beta,
+        }
+    else:
+        args.grad_reg_loss_params = None
 
     if args.train_mode == 'search':
         from nni.retiarii.oneshot.pytorch import ProxylessTrainer
@@ -100,7 +117,11 @@ if __name__ == "__main__":
                                    optimizer=optimizer,
                                    metrics=lambda output, target: accuracy(output, target, topk=(1, 5,)),
                                    num_epochs=120,
-                                   log_frequency=10)
+                                   log_frequency=10,
+                                   grad_reg_loss_type=args.grad_reg_loss_type, 
+                                   grad_reg_loss_params=grad_reg_loss_params, 
+                                   applied_hardware=args.applied_hardware, dummy_input=(1, 3, 224, 224),
+                                   ref_latency=args.reference_latency)
         trainer.fit()
         print('Final architecture:', trainer.export())
         json.dump(trainer.export(), open('checkpoint.json', 'w'))

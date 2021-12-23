@@ -25,6 +25,8 @@ def version_larger_equal(a: str, b: str) -> bool:
 
 _last_uid = defaultdict(int)
 
+_DEFAULT_MODEL_NAMESPACE = 'model'
+
 
 def uid(namespace: str = 'default') -> int:
     _last_uid[namespace] += 1
@@ -77,6 +79,8 @@ class ContextStack:
 
     Use ``with ContextStack(namespace, value):`` to initiate, and use ``get_current_context(namespace)`` to
     get the corresponding value in the namespace.
+
+    Note that this is not multi-processing safe. Also, the values will get cleared for a new process.
     """
 
     _stack: Dict[str, List[Any]] = defaultdict(list)
@@ -105,6 +109,47 @@ class ContextStack:
         if not cls._stack[key]:
             raise NoContextError('Context is empty.')
         return cls._stack[key][-1]
+
+
+class ModelNamespace:
+    """
+    To create an individual namespace for models to enable automatic numbering.
+    """
+
+    def __init__(self, key: str = _DEFAULT_MODEL_NAMESPACE):
+        # for example, key: "model_wrapper"
+        self.key = key
+
+    def __enter__(self):
+        # For example, currently the top of stack is [1, 2, 2], and [1, 2, 2, 3] is used,
+        # the next thing up is [1, 2, 2, 4].
+        # `reset_uid` to count from zero for "model_wrapper_1_2_2_4"
+        try:
+            current_context = ContextStack.top(self.key)
+            next_uid = uid(self._simple_name(self.key, current_context))
+            ContextStack.push(self.key, current_context + [next_uid])
+            reset_uid(self._simple_name(self.key, current_context + [next_uid]))
+        except NoContextError:
+            ContextStack.push(self.key, [])
+            reset_uid(self._simple_name(self.key, []))
+
+    def __exit__(self, *args, **kwargs):
+        ContextStack.pop(self.key)
+
+    @staticmethod
+    def next_label(key: str = _DEFAULT_MODEL_NAMESPACE) -> str:
+        try:
+            current_context = ContextStack.top(key)
+        except NoContextError:
+            # fallback to use "default" namespace
+            return ModelNamespace._simple_name('default', [uid()])
+
+        next_uid = uid(ModelNamespace._simple_name(key, current_context))
+        return ModelNamespace._simple_name(key, current_context + [next_uid])
+
+    @staticmethod
+    def _simple_name(key: str, lst: List[Any]) -> str:
+        return key + ''.join(['_' + str(k) for k in lst])
 
 
 def get_current_context(key: str) -> Any:

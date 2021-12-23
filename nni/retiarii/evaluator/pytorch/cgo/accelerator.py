@@ -1,15 +1,16 @@
-from typing import Any, Union, Optional, List
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+from typing import Any, List, Optional, Union
+
 import torch
-
 from pytorch_lightning.accelerators.accelerator import Accelerator
-from pytorch_lightning.plugins.training_type.training_type_plugin import TrainingTypePlugin
-from pytorch_lightning.trainer.connectors.accelerator_connector import AcceleratorConnector
-from pytorch_lightning.trainer import Trainer
-
-from pytorch_lightning.plugins import Plugin
 from pytorch_lightning.plugins.environments import ClusterEnvironment
+from pytorch_lightning.plugins.training_type.training_type_plugin import TrainingTypePlugin
+from pytorch_lightning.trainer import Trainer
+from pytorch_lightning.trainer.connectors.accelerator_connector import AcceleratorConnector
 
-from ....serializer import serialize_cls
+import nni
 
 
 class BypassPlugin(TrainingTypePlugin):
@@ -69,9 +70,8 @@ class BypassPlugin(TrainingTypePlugin):
         # bypass device placement from pytorch lightning
         pass
 
-    def setup(self, model: torch.nn.Module) -> torch.nn.Module:
-        self.model_to_device()
-        return self.model
+    def setup(self) -> None:
+        pass
 
     @property
     def is_global_zero(self) -> bool:
@@ -100,8 +100,9 @@ def get_accelerator_connector(
         deterministic: bool = False,
         precision: int = 32,
         amp_backend: str = 'native',
-        amp_level: str = 'O2',
-        plugins: Optional[Union[List[Union[Plugin, ClusterEnvironment, str]], Plugin, ClusterEnvironment, str]] = None,
+        amp_level: Optional[str] = None,
+        plugins: Optional[Union[List[Union[TrainingTypePlugin, ClusterEnvironment, str]],
+                                TrainingTypePlugin, ClusterEnvironment, str]] = None,
         **other_trainier_kwargs) -> AcceleratorConnector:
     gpu_ids = Trainer()._parse_devices(gpus, auto_select_gpus, tpu_cores)
     return AcceleratorConnector(
@@ -125,7 +126,7 @@ def get_accelerator_connector(
     )
 
 
-@serialize_cls
+@nni.trace
 class BypassAccelerator(Accelerator):
     def __init__(self, precision_plugin=None, device="cpu", **trainer_kwargs):
         if precision_plugin is None:

@@ -13,22 +13,23 @@ import { DlcEnvironmentService } from './dlcEnvironmentService';
 
 export async function createEnvironmentService(name: string, config: ExperimentConfig): Promise<EnvironmentService> {
     const info = ExperimentStartupInfo.getInstance();
+    const tsConfig: any = config.trainingService;
 
-    switch(name) {
+    switch (name) {
         case 'local':
-            return new LocalEnvironmentService(config, info);
+            return new LocalEnvironmentService(tsConfig, info);
         case 'remote':
-            return new RemoteEnvironmentService(config, info);
+            return new RemoteEnvironmentService(tsConfig, info);
         case 'aml':
-            return new AMLEnvironmentService(config, info);
+            return new AMLEnvironmentService(tsConfig, info);
         case 'openpai':
-            return new OpenPaiEnvironmentService(config, info);
+            return new OpenPaiEnvironmentService(tsConfig, info);
         case 'kubeflow':
-            return new KubeflowEnvironmentService(config, info);
+            return new KubeflowEnvironmentService(tsConfig, info);
         case 'frameworkcontroller':
-            return new FrameworkControllerEnvironmentService(config, info);
+            return new FrameworkControllerEnvironmentService(tsConfig, info);
         case 'dlc':
-            return new DlcEnvironmentService(config, info);
+            return new DlcEnvironmentService(tsConfig, info);
     }
 
     const esConfig = await getCustomEnvironmentServiceConfig(name);
@@ -37,5 +38,5 @@ export async function createEnvironmentService(name: string, config: ExperimentC
     }
     const esModule = importModule(esConfig.nodeModulePath);
     const esClass = esModule[esConfig.nodeClassName] as any;
-    return new esClass(config, info);
+    return new esClass(tsConfig, info);
 }

@@ -9,14 +9,13 @@ from .api import LayerChoice, InputChoice
 from .nn import ModuleList
 
 from .nasbench101 import NasBench101Cell, NasBench101Mutator
-from .utils import generate_new_label, get_fixed_value
-from ...utils import NoContextError
+from .utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['Repeat', 'Cell', 'NasBench101Cell', 'NasBench101Mutator', 'NasBench201Cell']
 
 
-class Repeat(nn.Module):
+class Repeat(Mutable):
     """
     Repeat a block by a variable number of times.
 
@@ -25,23 +24,29 @@ class Repeat(nn.Module):
     blocks : function, list of function, module or list of module
         The block to be repeated. If not a list, it will be replicated into a list.
         If a list, it should be of length ``max_depth``, the modules will be instantiated in order and a prefix will be taken.
-        If a function, it will be called to instantiate a module. Otherwise the module will be deep-copied.
+        If a function, it will be called (the argument is the index) to instantiate a module.
+        Otherwise the module will be deep-copied.
     depth : int or tuple of int
         If one number, the block will be repeated by a fixed number of times. If a tuple, it should be (min, max),
         meaning that the block will be repeated at least `min` times and at most `max` times.
     """
 
-    def __new__(cls, blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
-                depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
-        try:
-            repeat = get_fixed_value(label)
-            return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
-        except NoContextError:
-            return super().__new__(cls)
+    @classmethod
+    def create_fixed_module(cls,
+                            blocks: Union[Callable[[int], nn.Module],
+                                          List[Callable[[int], nn.Module]],
+                                          nn.Module,
+                                          List[nn.Module]],
+                            depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
+        repeat = get_fixed_value(label)
+        return nn.Sequential(*cls._replicate_and_instantiate(blocks, repeat))
 
     def __init__(self,
-                 blocks: Union[Callable[[], nn.Module], List[Callable[[], nn.Module]], nn.Module, List[nn.Module]],
-                 depth: Union[int, Tuple[int, int]], label: Optional[str] = None):
+                 blocks: Union[Callable[[int], nn.Module],
+                               List[Callable[[int], nn.Module]],
+                               nn.Module,
+                               List[nn.Module]],
+                 depth: Union[int, Tuple[int, int]], *, label: Optional[str] = None):
         super().__init__()
         self._label = generate_new_label(label)
         self.min_depth = depth if isinstance(depth, int) else depth[0]
@@ -69,7 +74,7 @@ class Repeat(nn.Module):
         assert repeat <= len(blocks), f'Not enough blocks to be used. {repeat} expected, only found {len(blocks)}.'
         blocks = blocks[:repeat]
         if not isinstance(blocks[0], nn.Module):
-            blocks = [b() for b in blocks]
+            blocks = [b(i) for i, b in enumerate(blocks)]
         return blocks
 
 

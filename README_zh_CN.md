@@ -8,7 +8,7 @@
 
 [NNI 文档](https://nni.readthedocs.io/zh/stable/) | [English](README.md)
 
-**NNI (Neural Network Intelligence)** 是一个轻量但强大的工具包，帮助用户**自动**的进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.rst)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.rst)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.rst)以及[模型压缩](docs/zh_CN/Compression/Overview.rst)。
+**NNI (Neural Network Intelligence)** 是一个帮助用户**自动**进行[特征工程](docs/zh_CN/FeatureEngineering/Overview.rst)，[神经网络架构搜索](docs/zh_CN/NAS/Overview.rst)，[超参调优](docs/zh_CN/Tuner/BuiltinTuner.rst)以及[模型压缩](docs/zh_CN/Compression/Overview.rst)的轻量且强大的工具包。
 
 NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优算法生成的 Trial 任务来找到最好的神经网络架构和/或超参，支持**各种训练环境**，如[本机](docs/zh_CN/TrainingService/LocalMode.rst)，[远程服务器](docs/zh_CN/TrainingService/RemoteMachineMode.rst)，[OpenPAI](docs/zh_CN/TrainingService/PaiMode.rst)，[Kubeflow](docs/zh_CN/TrainingService/KubeflowMode.rst)，[基于 K8S 的 FrameworkController（如，AKS 等）](docs/zh_CN/TrainingService/FrameworkControllerMode.rst)， [DLWorkspace (又称 DLTS)](docs/zh_CN/TrainingService/DLTSMode.rst), [AML (Azure Machine Learning)](docs/zh_CN/TrainingService/AMLMode.rst), [AdaptDL（又称 ADL）](docs/zh_CN/TrainingService/AdaptDLMode.rst) ，和其他的云平台甚至 [混合模式](docs/zh_CN/TrainingService/HybridMode.rst) 。 DLTS)</a>，[AML (Azure Machine Learning)](https://nni.readthedocs.io/zh/stable/TrainingService/AMLMode.html)[AdaptDL（又称 ADL）](https://nni.readthedocs.io/zh/stable/TrainingService/AdaptDLMode.html) ，和其他的云平台甚至[混合模式](https://nni.readthedocs.io/zh/stable/TrainingService/HybridMode.html) 。
 
@@ -21,10 +21,14 @@ NNI 管理自动机器学习 (AutoML) 的 Experiment，**调度运行**由调优
 
 ## **最新消息！** &nbsp;[<img width="48" src="docs/img/release_icon.png" />](#nni-released-reminder)
 
-* **最新版本**：[v2.0 已发布](https://github.com/microsoft/nni/releases) - *2021年1月14日*
-* **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年2月19日*
+* **最新版本**：[v2.5 已发布](https://github.com/microsoft/nni/releases/tag/v2.5) - *2021年11月04日*
+* **最新视频 demo**：[Youtube 入口](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - *上次更新：2021年5月26日*
 * **最新网络研讨会**: [介绍Retiarii：NNI 上的深度学习探索性训练框架](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - *2021年6月24日*
 * **最新互动渠道**: [Discussions](https://github.com/microsoft/nni/discussions)
+* **最新粉丝福利表情包上线**： [nnSpider](./docs/en_US/Tutorial/NNSpider.md)
+<p align="center">
+  <a href="#nni-spider"><img width="100%" src="docs/img/emoicons/home.svg" /></a>
+</p>
 
 ## **NNI 功能一览**
 
@@ -126,7 +130,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/DARTS.html">DARTS</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/SPOS.html">SPOS</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Proxylessnas.html">ProxylessNAS</a></li>
-            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/FBNet.html">微信</a></li>
+            <li><a href="https://nni.readthedocs.io/zh/stable/NAS/FBNet.html">FBNet</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">基于强化学习</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ExplorationStrategies.html">正则进化</a></li>
             <li><a href="https://nni.readthedocs.io/zh/stable/NAS/Overview.html">更多...</a></li>
@@ -199,7 +203,7 @@ NNI 提供命令行工具以及友好的 WebUI 来管理训练的 Experiment。 
         <li><a href="https://nni.readthedocs.io/zh/stable/Assessor/CustomizeAssessor.html">自定义 Assessor</a></li>
         <li><a href="https://nni.readthedocs.io/zh/stable/Tutorial/InstallCustomizedAlgos.html">安装自定义的 Tuner，Assessor，Advisor</a></li>
         <li><a href="https://nni.readthedocs.io/zh/stable/NAS/QuickStart.html#define-your-model-space">定义模型空间</a></li>
-        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ApiReference.html">docs/zh_CN/NAS/ENAS.rst</a></li>
+        <li><a href="https://nni.readthedocs.io/zh/stable/NAS/ApiReference.html">NAS/Retiarii接口</a></li>
       </ul>
       </td>
         <td style="border-top:#FF0000 solid 0px;">
@@ -245,7 +249,7 @@ Linux 和 macOS 下 NNI 系统需求[参考这里](https://nni.readthedocs.io/zh
 * 通过克隆源代码下载示例。
     
     ```bash
-    git clone -b v2.0 https://github.com/Microsoft/nni.git
+    git clone -b v2.5 https://github.com/Microsoft/nni.git
     ```
 
 * 运行 MNIST 示例。
@@ -321,7 +325,7 @@ NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以
 | -------------------------------------------------------------------------------------------------------------- | - | ----------------------------------------------------------------------- |
 | ![image](https://user-images.githubusercontent.com/39592018/80665738-e0574a80-8acc-11ea-91bc-0836dc4cbf89.png) | 或 | ![image](https://github.com/scarlett2018/nniutil/raw/master/wechat.png) |
 
-## 相关项目
+## 测试状态
 
 ### 必需
 
@@ -346,14 +350,14 @@ NNI 有一个月度发布周期（主要发布）。 如果您遇到问题可以
 
 ## 相关项目
 
-我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
+针对开放性和推进最先进的技术，[微软研究院（MSR)](https://www.microsoft.com/en-us/research/group/systems-and-networking-research-group-asia/) 还发布了其他几个开源项目。
 
 * [OpenPAI](https://github.com/Microsoft/pai)：作为开源平台，提供了完整的 AI 模型训练和资源管理能力，能轻松扩展，并支持各种规模的私有部署、云和混合环境。
 * [FrameworkController](https://github.com/Microsoft/frameworkcontroller)：开源的通用 Kubernetes Pod 控制器，通过单个控制器来编排 Kubernetes 上所有类型的应用。
 * [MMdnn](https://github.com/Microsoft/MMdnn)：一个完整、跨框架的解决方案，能够转换、可视化、诊断深度神经网络模型。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。 MMdnn 中的 "MM" 表示 model management（模型管理），而 "dnn" 是 deep neural network（深度神经网络）的缩写。
 * [SPTAG](https://github.com/Microsoft/SPTAG) : Space Partition Tree And Graph (SPTAG) 是用于大规模向量的最近邻搜索场景的开源库。
 
-代码库遵循 [MIT 许可协议](LICENSE)
+我们鼓励研究人员和学生利用这些项目来加速 AI 开发和研究。
 
 ## **许可协议**
 

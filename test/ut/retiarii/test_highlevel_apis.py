@@ -8,7 +8,7 @@ import torch.nn.functional as F
 from nni.retiarii import InvalidMutation, Sampler, basic_unit
 from nni.retiarii.converter import convert_to_graph
 from nni.retiarii.codegen import model_to_pytorch_script
-from nni.retiarii.execution.python import _unpack_if_only_one
+from nni.retiarii.execution.utils import _unpack_if_only_one
 from nni.retiarii.nn.pytorch.mutator import process_inline_mutation, extract_mutation_from_pt_module
 from nni.retiarii.serializer import model_wrapper
 from nni.retiarii.utils import ContextStack
@@ -482,6 +482,54 @@ class GraphIR(unittest.TestCase):
         self.assertTrue((self._get_converted_pytorch_model(model1)(torch.zeros(1, 16)) == 3).all())
         self.assertTrue((self._get_converted_pytorch_model(model2)(torch.zeros(1, 16)) == 4).all())
         self.assertTrue((self._get_converted_pytorch_model(model3)(torch.zeros(1, 16)) == 5).all())
+
+    def test_repeat_complex(self):
+        class AddOne(nn.Module):
+            def forward(self, x):
+                return x + 1
+
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(nn.LayerChoice([AddOne(), nn.Identity()], label='lc'), (3, 5), label='rep')
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 2)
+        self.assertEqual(set([mutator.label for mutator in mutators]), {'lc', 'rep'})
+
+        sampler = RandomSampler()
+        for _ in range(10):
+            new_model = model
+            for mutator in mutators:
+                new_model = mutator.bind_sampler(sampler).apply(new_model)
+            result = self._get_converted_pytorch_model(new_model)(torch.zeros(1, 1)).item()
+            self.assertIn(result, [0., 3., 4., 5.])
+
+        # independent layer choice
+        @model_wrapper
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.block = nn.Repeat(lambda index: nn.LayerChoice([AddOne(), nn.Identity()]), (2, 3), label='rep')
+
+            def forward(self, x):
+                return self.block(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 4)
+
+        result = []
+        for _ in range(20):
+            new_model = model
+            for mutator in mutators:
+                new_model = mutator.bind_sampler(sampler).apply(new_model)
+            result.append(self._get_converted_pytorch_model(new_model)(torch.zeros(1, 1)).item())
+
+        self.assertIn(1., result)
 
     def test_cell(self):
         @self.get_serializer()

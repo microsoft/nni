@@ -23,21 +23,28 @@ from utils import (CLEAR, EXPERIMENT_URL, GREEN, RED, REST_ENDPOINT,
 it_variables = {}
 
 
-def update_training_service_config(config, training_service, config_file_path, nni_source_dir):
+def update_training_service_config(config, training_service, config_file_path, nni_source_dir, reuse_mode='False'):
     it_ts_config = get_yml_content(os.path.join('config', 'training_service.yml'))
-
     # hack for kubeflow trial config
-    if training_service == 'kubeflow':
+    if training_service == 'kubeflow' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['worker']['command'] = config['trial']['command']
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
+    elif training_service == 'kubeflow' and reuse_mode == 'True':
+        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+        print(it_ts_config)
+        it_ts_config[training_service]['trainingService']['worker']['command'] = config['trialCommand']
+        it_ts_config[training_service]['trainingService']['worker']['code_directory'] = config['trialCodeDirectory']
 
-    if training_service == 'frameworkcontroller':
+    if training_service == 'frameworkcontroller' and reuse_mode == 'False':
         it_ts_config[training_service]['trial']['taskRoles'][0]['command'] = config['trial']['command']
         config['trial'].pop('command')
         if 'gpuNum' in config['trial']:
             config['trial'].pop('gpuNum')
+    elif training_service == 'frameworkcontroller' and reuse_mode == 'True':
+        it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
+        it_ts_config[training_service]['trainingService']['taskRoles'][0]['command'] = config['trialCommand']
 
     if training_service == 'adl':
         # hack for adl trial config, codeDir in adl mode refers to path in container
@@ -68,7 +75,7 @@ def update_training_service_config(config, training_service, config_file_path, n
     
     if training_service == 'hybrid':
         it_ts_config = get_yml_content(os.path.join('config', 'training_service_v2.yml'))
-    else:
+    elif reuse_mode != 'True':
         deep_update(config, it_ts_config['all'])
     deep_update(config, it_ts_config[training_service])
 
@@ -88,7 +95,7 @@ def prepare_config_file(test_case_config, it_config, args):
     # apply training service config
     # user's gpuNum, logCollection config is overwritten by the config in training_service.yml
     # the hack for kubeflow should be applied at last step
-    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'], args.nni_source_dir)
+    update_training_service_config(test_yml_config, args.ts, test_case_config['configFile'], args.nni_source_dir, args.reuse_mode)
 
     # generate temporary config yml file to launch experiment
     new_config_file = config_path + '.tmp'
@@ -313,6 +320,7 @@ if __name__ == '__main__':
     parser.add_argument("--nni_source_dir", type=str, default='../')
     parser.add_argument("--cases", type=str, default=None)
     parser.add_argument("--exclude", type=str, default=None)
+    parser.add_argument("--reuse_mode", type=str, default='False')
     parser.add_argument("--ts", type=str, choices=['local', 'remote', 'pai',
                                                    'kubeflow', 'frameworkcontroller', 'adl', 'aml', 'hybrid'], default='local')
     args = parser.parse_args()

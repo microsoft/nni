@@ -156,7 +156,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
         phy_models_and_placements = self._assemble(logical)
         for model, placement, grouped_models in phy_models_and_placements:
-            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator)
+            data = BaseGraphData(codegen.model_to_pytorch_script(model, placement=placement), model.evaluator, {})
             placement_constraint = self._extract_placement_constaint(placement)
             trial_id = send_trial(data.dump(), placement_constraint=placement_constraint)
             # unique non-cpu devices used by the trial
@@ -200,7 +200,7 @@ class CGOExecutionEngine(AbstractExecutionEngine):
 
             # replace the module with a new instance whose n_models is set
             # n_models must be set in __init__, otherwise it cannot be captured by serialize_cls
-            new_module_init_params = model.evaluator.module._init_parameters.copy()
+            new_module_init_params = model.evaluator.module.trace_kwargs.copy()
 
             # MultiModelSupervisedLearningModule hides n_models of _MultiModelSupervisedLearningModule from users
             new_module_init_params['n_models'] = len(multi_model)

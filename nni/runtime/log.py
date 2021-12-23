@@ -66,7 +66,9 @@ def start_experiment_log(experiment_id: str, log_directory: Path, debug: bool) -
 
 def stop_experiment_log(experiment_id: str) -> None:
     if experiment_id in handlers:
-        logging.getLogger().removeHandler(handlers.pop(experiment_id))
+        handler = handlers.pop(experiment_id, None)
+        if handler is not None:
+            logging.getLogger().removeHandler(handler)
 
 
 def _init_logger_dispatcher() -> None:

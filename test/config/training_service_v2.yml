@@ -12,3 +12,53 @@ hybrid:
     resourceGroup:
     workspaceName:
     computeTarget:
+kubeflow:
+  trialGpuNumber: 1
+  trialConcurrency: 2
+  maxTrialNumber: 2
+  nniManagerIp:
+  trainingService:
+    reuseMode: true
+    platform: kubeflow
+    worker:
+      command:
+      code_directory:
+      dockerImage:
+      cpuNumber: 1
+      gpuNumber: 0
+      memorySize: 8192
+      replicas: 1
+    operator: tf-operator
+    storage:
+      storageType: azureStorage
+      azureAccount:
+      azureShare:
+      keyVaultName:
+      keyVaultKey:
+    apiVersion: v1
+frameworkcontroller:
+  trialGpuNumber: 1
+  trialConcurrency: 2
+  maxTrialNumber: 2
+  nniManagerIp:
+  trainingService:
+    reuseMode: true
+    platform: frameworkcontroller
+    serviceAccountName: frameworkcontroller
+    taskRoles:
+      - name: worker
+        dockerImage: 
+        taskNumber: 1
+        command:
+        gpuNumber: 0
+        cpuNumber: 1
+        memorySize: 8192
+        framework_attempt_completion_policy:
+          min_failed_task_count: 1
+          minSucceedTaskCount: 1
+    storage:
+      storageType: azureStorage
+      azureAccount:
+      azureShare:
+      keyVaultName:
+      keyVaultKey:

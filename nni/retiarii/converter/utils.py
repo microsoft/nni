@@ -2,7 +2,7 @@
 # Licensed under the MIT license.
 
 from ..operation import Cell
-from ..graph import Model, Node
+from ..graph import Model, Graph, Node, Edge
 
 
 def build_full_name(prefix, name, seq=None):
@@ -12,6 +12,15 @@ def build_full_name(prefix, name, seq=None):
         return '{}__{}'.format(prefix, name)
     else:
         return '{}__{}{}'.format(prefix, name, str(seq))
+
+
+def build_python_name(prefix, name):
+    if isinstance(name, list):
+        name = '.'.join(name)
+    if prefix:
+        return '{}.{}'.format(prefix, name)
+    else: # predix could be None
+        return name
 
 
 def build_cand_name(name, label):
@@ -110,3 +119,138 @@ def match_node(ir_model: Model, torch_node, prefix=''):
 
 def _without_shape_info(node: Node):
     return not node.operation.attributes['input_shape'] and not node.operation.attributes['output_shape']
+
+
+def flatten_model_graph(ir_model: Model):
+    """
+    Flatten the subgraph into root graph.
+    """
+    def _flatten(graph: Graph):
+        """
+        flatten this graph
+        """
+        model = graph.model
+        node_to_remove = []
+
+        for node in graph.hidden_nodes:
+            node_graph = model.graphs.get(node.name)
+            if node_graph is not None:
+                _flatten(node_graph)
+
+                # flatten node graph into this graph
+                id_to_new_node = {}
+                for node_graph_node in node_graph.hidden_nodes:
+                    new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
+                    new_node.update_label(node_graph_node.label)
+                    new_node._register()
+                    id_to_new_node[new_node.id] = new_node
+
+                # reconnect node edges
+                for in_edge in node.incoming_edges:
+                    graph.del_edge(in_edge)
+                    for input_node_edge in node_graph.input_node.outgoing_edges:
+                        if input_node_edge.head_slot == in_edge.tail_slot:
+                            graph.add_edge(
+                                head=(in_edge.head, in_edge.head_slot),
+                                tail=(id_to_new_node[input_node_edge.tail.id], input_node_edge.tail_slot))
+
+                for out_edge in node.outgoing_edges:
+                    graph.del_edge(out_edge)
+                    for output_node_edge in node_graph.output_node.incoming_edges:
+                        if output_node_edge.head_slot == out_edge.tail_slot:
+                            graph.add_edge(
+                                head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
+                                tail=(out_edge.tail, out_edge.tail_slot))
+
+                for edge in node_graph.edges:
+                    if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
+                        continue
+                    new_head = id_to_new_node[edge.head.id]
+                    new_tail = id_to_new_node[edge.tail.id]
+                    Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
+
+                node_to_remove.append(node)
+                del model.graphs[node.name]
+
+        for node in node_to_remove:
+            node.remove()
+
+    new_ir_model = ir_model.fork()
+    _flatten(new_ir_model.root_graph)
+
+    # remove subgraphs
+    new_ir_model.graphs = {new_ir_model._root_graph_name: new_ir_model.root_graph}
+    return new_ir_model
+
+
+def flatten_model_graph_without_layerchoice(ir_model: Model):
+    """
+    Flatten the subgraph into root graph and jump all layerchoice
+    """
+    def _flatten_without_layerchoice(graph: Graph):
+        """
+        flatten this graph
+        """
+        model = graph.model
+        node_to_remove = []
+
+        for node in graph.hidden_nodes:
+            if is_layerchoice_node(node):
+                for in_edge in node.incoming_edges:
+                    graph.del_edge(in_edge)
+                for out_edge in node.outgoing_edges:
+                    graph.del_edge(out_edge)
+                del model.graphs[node.name]
+                node.remove()
+                return
+
+            node_graph = model.graphs.get(node.name)
+            if node_graph is not None:
+                _flatten_without_layerchoice(node_graph)
+
+                # flatten node graph into this graph
+                id_to_new_node = {}
+                for node_graph_node in node_graph.hidden_nodes:
+                    new_node = Node(graph, node_graph_node.id, node_graph_node.name, node_graph_node.operation, _internal=True)
+                    new_node.update_label(node_graph_node.label)
+                    new_node._register()
+                    id_to_new_node[new_node.id] = new_node
+
+                # reconnect node edges
+                for in_edge in node.incoming_edges:
+                    graph.del_edge(in_edge)
+                    for input_node_edge in node_graph.input_node.outgoing_edges:
+                        if input_node_edge.head_slot == in_edge.tail_slot:
+                            graph.add_edge(
+                                head=(in_edge.head, in_edge.head_slot),
+                                tail=(id_to_new_node[input_node_edge.tail.id], input_node_edge.tail_slot))
+
+                for out_edge in node.outgoing_edges:
+                    graph.del_edge(out_edge)
+                    for output_node_edge in node_graph.output_node.incoming_edges:
+                        if output_node_edge.head_slot == out_edge.tail_slot:
+                            graph.add_edge(
+                                head=(id_to_new_node[output_node_edge.head.id], output_node_edge.head_slot),
+                                tail=(out_edge.tail, out_edge.tail_slot))
+
+
+                for edge in node_graph.edges:
+                    if edge.head == node_graph.input_node or edge.tail == node_graph.output_node:
+                        continue
+                    new_head = id_to_new_node[edge.head.id]
+                    new_tail = id_to_new_node[edge.tail.id]
+                    Edge((new_head, edge.head_slot), (new_tail, edge.tail_slot), _internal=True)._register()
+
+                node_to_remove.append(node)
+                del model.graphs[node.name]
+
+        for node in node_to_remove:
+            node.remove()
+
+    new_ir_model = ir_model.fork()
+    _flatten_without_layerchoice(new_ir_model.root_graph)
+
+    # remove subgraphs
+    new_ir_model.graphs = {new_ir_model._root_graph_name: new_ir_model.root_graph}
+    return new_ir_model
+

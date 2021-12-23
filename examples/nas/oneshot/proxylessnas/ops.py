@@ -1,6 +1,7 @@
 from collections import OrderedDict
+from nni.retiarii.serializer import basic_unit
 import torch
-import torch.nn as nn
+import nni.retiarii.nn.pytorch as nn
 
 from putils import get_same_padding, build_activation
 
@@ -35,14 +36,25 @@ class MobileInvertedResidualBlock(nn.Module):
         super(MobileInvertedResidualBlock, self).__init__()
 
         self.mobile_inverted_conv = mobile_inverted_conv
-        self.shortcut = shortcut
         self.op_candidates_list = op_candidates_list
+        self.zero_layer_module = ZeroLayerModule(shortcut)
 
     def forward(self, x):
         out = self.mobile_inverted_conv(x)
-        if torch.sum(torch.abs(out)).item() == 0 and x.size() == out.size():
-            # is zero layer
-            return x
+        return self.zero_layer_module(x, out)
+        
+
+@basic_unit
+class ZeroLayerModule(nn.Module):
+    def __init__(self, shortcut):
+        super().__init__()
+        self.shortcut = shortcut
+        
+    def forward(self, x, out):
+        if torch.sum(torch.abs(out)).item() == 0:
+            if x.size() == out.size():
+                # is zero layer
+                return x
         if self.shortcut is None:
             return out
         return out + self.shortcut(x)
@@ -108,6 +120,7 @@ class Base2DLayer(nn.Module):
                     self.add_module(key, modules['weight'][key])
             else:
                 self.add_module(op, modules[op])
+        self.sequence = nn.Sequential(self._modules)
 
     @property
     def ops_list(self):
@@ -120,14 +133,13 @@ class Base2DLayer(nn.Module):
                 return True
             elif op == 'weight':
                 return False
-        raise ValueError('Invalid ops_order: %s' % self.ops_order)
+        raise ValueError(f'Invalid ops_order: {self.ops_order}')
 
     def weight_op(self):
         raise NotImplementedError
 
     def forward(self, x):
-        for module in self._modules.values():
-            x = module(x)
+        x = self.sequence(x)
         return x
 
     @staticmethod
@@ -224,6 +236,7 @@ class LinearLayer(nn.Module):
                     self.add_module(key, modules['weight'][key])
             else:
                 self.add_module(op, modules[op])
+        self.sequence = nn.Sequential(self._modules)
 
     @property
     def ops_list(self):
@@ -236,11 +249,10 @@ class LinearLayer(nn.Module):
                 return True
             elif op == 'weight':
                 return False
-        raise ValueError('Invalid ops_order: %s' % self.ops_order)
+        raise ValueError(f'Invalid ops_order: {self.ops_order}')
 
     def forward(self, x):
-        for module in self._modules.values():
-            x = module(x)
+        x = self.sequence(x)
         return x
 
     @staticmethod
@@ -270,7 +282,7 @@ class MBInvertedConvLayer(nn.Module):
             feature_dim = self.mid_channels
 
         if self.expand_ratio == 1:
-            self.inverted_bottleneck = None
+            self.inverted_bottleneck = nn.Sequential()
         else:
             self.inverted_bottleneck = nn.Sequential(OrderedDict([
                 ('conv', nn.Conv2d(self.in_channels, feature_dim, 1, 1, 0, bias=False)),
@@ -291,8 +303,7 @@ class MBInvertedConvLayer(nn.Module):
         ]))
 
     def forward(self, x):
-        if self.inverted_bottleneck:
-            x = self.inverted_bottleneck(x)
+        x = self.inverted_bottleneck(x)
         x = self.depth_conv(x)
         x = self.point_linear(x)
         return x

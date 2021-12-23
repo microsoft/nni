@@ -1,0 +1,32 @@
+experimentName: test case
+searchSpaceFile: search_space.json
+trialCommand: python main.py
+trialCodeDirectory: ../assets
+trialConcurrency: 2
+trialGpuNumber: 1
+maxExperimentDuration: 1.5h
+maxTrialNumber: 10
+maxTrialDuration: 60
+nniManagerIp: 1.2.3.4
+debug: true
+logLevel: warning
+tunerGpuIndices: 0
+assessor:
+    name: assess
+advisor:
+    className: Advisor
+    codeDirectory: .
+    classArgs: {random_seed: 0}
+trainingService:
+    platform: local
+    useActiveGpu: false
+    maxTrialNumberPerGpu: 2
+    gpuIndices: 1,2
+    reuseMode: true
+sharedStorage:
+    storageType: NFS
+    localMountPoint: .  # git cannot commit empty dir, so just use this
+    remoteMountPoint: /tmp
+    localMounted: usermount
+    nfsServer: nfs.test.case
+    exportedDirectory: root
