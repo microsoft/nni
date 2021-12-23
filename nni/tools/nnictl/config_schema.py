@@ -357,7 +357,8 @@ kubeflow_config_schema = {
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
-        }
+        },
+        Optional('reuse'): setType('reuse', bool),
     }, {
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
@@ -374,7 +375,8 @@ kubeflow_config_schema = {
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
                               error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
-        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
+        Optional('reuse'): setType('reuse', bool),
     })
 }
 
