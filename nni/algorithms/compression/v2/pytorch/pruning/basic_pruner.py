@@ -550,6 +550,10 @@ class ActivationPruner(BasicPruner):
 class ActivationAPoZRankPruner(ActivationPruner):
     def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
         assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
+        # The length of the buffer used in this pruner will always be 2.
+        # buffer[0] is the number of how many batches are counted in buffer[1].
+        # buffer[1] is a tensor and the size of buffer[1] is same as the activation,
+        # each element in buffer[1] means the sum of zero counts of the same activation position cross each batch.
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
@@ -567,6 +571,10 @@ class ActivationAPoZRankPruner(ActivationPruner):
 class ActivationMeanRankPruner(ActivationPruner):
     def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
         assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
+        # The length of the buffer used in this pruner will always be 2.
+        # buffer[0] is the number of how many batches are counted in buffer[1].
+        # buffer[1] is a tensor and the size of buffer[1] is same as the activation,
+        # each element in buffer[1] means the sum of the same activation position cross each batch.
         buffer.append(0)
 
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
