@@ -97,5 +97,10 @@ def view_experiment(args):
     port = args.port
     exp_dir = args.experiment_dir
 
+    config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
+    if config_json.get('trainingServicePlatform'):
+        legacy_launcher.view_experiment(args)
+        exit()
+
     exp = Experiment._view(exp_id, exp_dir)
     exp.start(port, run_mode=RunMode.Detach)
