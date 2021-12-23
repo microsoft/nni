@@ -74,6 +74,7 @@ def update_training_service_config(args):
             config[args.ts]['frameworkcontrollerConfig']['azureStorage']['azureShare'] = args.azs_share
         if args.nni_docker_image is not None:
             config[args.ts]['trial']['taskRoles'][0]['image'] = args.nni_docker_image
+        config[args.ts]['frameworkcontrollerConfig']['reuse'] = False
     elif args.ts == 'frameworkcontroller' and args.reuse_mode == 'True':
         config = get_yml_content(TRAINING_SERVICE_FILE_V2)
         config[args.ts]['trainingService']['taskRoles'][0]['dockerImage'] = args.nni_docker_image

@@ -185,6 +185,7 @@ def to_v2(v1):
     if platform == 'frameworkcontroller':
         fc_config = v1.pop('frameworkcontrollerConfig')
         _move_field(fc_config, ts, 'serviceAccountName')
+        _move_field(fc_config, ts, 'reuse', 'reuseMode')
 
         storage_name = fc_config.pop('storage', None)
         if storage_name is None:
