@@ -19,8 +19,13 @@ from torchvision import datasets, transforms
 
 sys.path.append('../models')
 from mnist.lenet import LeNet
-from cifar10.vgg import VGG
-from cifar10.resnet import ResNet18
+try:
+    from cifar10.vgg import VGG
+    from cifar10.resnet import ResNet18
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 from nni.compression.pytorch.utils.counter import count_flops_params
 

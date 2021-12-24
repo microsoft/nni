@@ -6,6 +6,7 @@ NNI example for supported iterative pruning algorithms.
 In this example, we show the end-to-end iterative pruning process: pre-training -> pruning -> fine-tuning.
 
 '''
+import functools
 import sys
 import argparse
 from tqdm import tqdm
@@ -20,7 +21,12 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
 )
 
 sys.path.append('../../models')
-from cifar10.vgg import VGG
+try:
+    from cifar10.vgg import VGG
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -46,19 +52,22 @@ criterion = torch.nn.CrossEntropyLoss()
 
 def trainer(model, optimizer, criterion, epoch):
     model.train()
-    for data, target in tqdm(iterable=train_loader, desc='Epoch {}'.format(epoch)):
+    # for data, target in tqdm(iterable=train_loader, desc='Epoch {}'.format(epoch)):
+    for data, target in train_loader:
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
+    evaluator(model)
 
 def finetuner(model):
     model.train()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     criterion = torch.nn.CrossEntropyLoss()
-    for data, target in tqdm(iterable=train_loader, desc='Epoch PFs'):
+    # for data, target in tqdm(iterable=train_loader, desc='Epoch PFs'):
+    for data, target in train_loader:
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -70,7 +79,7 @@ def evaluator(model):
     model.eval()
     correct = 0
     with torch.no_grad():
-        for data, target in tqdm(iterable=test_loader, desc='Test'):
+        for data, target in test_loader:
             data, target = data.to(device), target.to(device)
             output = model(data)
             pred = output.argmax(dim=1, keepdim=True)
@@ -117,7 +126,17 @@ if __name__ == '__main__':
     kw_args = {'pruning_algorithm': args.pruning_algo,
                'total_iteration': args.total_iteration,
                'evaluator': None,
-               'finetuner': finetuner}
+               'finetuner': None}
+
+    from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
+    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    pruning_params = {
+        'trainer': functools.partial(trainer, epoch='PRUNING'),
+        'traced_optimizer': traced_optimizer,
+        'criterion': criterion,
+        'training_batches': 100
+    }
+    kw_args['pruning_params'] = pruning_params
 
     if args.speed_up:
         kw_args['speed_up'] = args.speed_up
@@ -130,7 +149,7 @@ if __name__ == '__main__':
     elif args.pruner == 'lottery':
         kw_args['reset_weight'] = args.reset_weight
         iterative_pruner = LotteryTicketPruner
-    
+
     pruner = iterative_pruner(model, config_list, **kw_args)
     pruner.compress()
     _, model, masks, _, _ = pruner.get_best_result()

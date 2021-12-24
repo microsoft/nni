@@ -23,8 +23,13 @@ from data import get_dataset
 from utils import AverageMeter, accuracy, progress_bar
 
 sys.path.append('../../models')
-from mobilenet import MobileNet
-from mobilenet_v2 import MobileNetV2
+try:
+    from mobilenet import MobileNet
+    from mobilenet_v2 import MobileNetV2
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 def parse_args():
     parser = argparse.ArgumentParser(description='AMC train / fine-tune script')

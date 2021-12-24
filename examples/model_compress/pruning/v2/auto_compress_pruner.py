@@ -8,7 +8,12 @@ from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
 from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
 sys.path.append('../../models')
-from cifar10.vgg import VGG
+try:
+    from cifar10.vgg import VGG
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 

@@ -23,8 +23,13 @@ from basic_pruners_torch import get_data
 
 import sys
 sys.path.append('../models')
-from cifar10.vgg import VGG
-from mnist.lenet import LeNet
+try:
+    from cifar10.vgg import VGG
+    from mnist.lenet import LeNet
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 class DistillKL(nn.Module):
     """Distilling the Knowledge in a Neural Network"""

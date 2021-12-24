@@ -10,8 +10,13 @@ from nni.compression.pytorch.utils.counter import count_flops_params
 
 import sys
 sys.path.append('../../models')
-from mobilenet import MobileNet
-from mobilenet_v2 import MobileNetV2
+try:
+    from mobilenet import MobileNet
+    from mobilenet_v2 import MobileNetV2
+except ModuleNotFoundError as e:
+    print(e)
+    print('Please check whether the current working path is the path where this file is located.')
+    exit()
 
 
 def create_model(model_type=None, n_classes=120, input_size=224, checkpoint=None, pretrained=False, width_mult=1.):
