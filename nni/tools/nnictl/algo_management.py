@@ -3,6 +3,7 @@
 
 import importlib
 import json
+import nni
 from nni.tools import package_utils
 from .common_utils import print_error, print_green, get_yml_content
 
@@ -17,6 +18,7 @@ def read_reg_meta_list(meta_path):
         assert meta['algoType'] in ['tuner', 'assessor', 'advisor']
         assert 'builtinName' in meta
         assert 'className' in meta
+        meta['nniVersion'] = nni.__version__
     return [package_utils.AlgoMeta.load(meta) for meta in meta_list]
 
 def verify_algo_import(meta):

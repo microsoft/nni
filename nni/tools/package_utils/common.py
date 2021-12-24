@@ -5,6 +5,8 @@ __all__ = ['AlgoMeta']
 
 from typing import Dict, NamedTuple, Optional
 
+import nni
+
 class AlgoMeta(NamedTuple):
     name: str
     class_name: Optional[str]
@@ -13,6 +15,7 @@ class AlgoMeta(NamedTuple):
     validator_class_name: Optional[str]
     algo_type: str  # 'tuner' | 'assessor' | 'advisor'
     is_builtin: bool
+    nni_version: Optional[str]
 
     @staticmethod
     def load(meta: Dict, algo_type: Optional[str] = None) -> 'AlgoMeta':
@@ -25,7 +28,8 @@ class AlgoMeta(NamedTuple):
             class_args=meta.get('classArgs'),
             validator_class_name=meta.get('classArgsValidator'),
             algo_type=algo_type,
-            is_builtin=(meta.get('source') == 'nni')
+            is_builtin=(meta.get('source') == 'nni'),
+            nni_version=meta.get('nniVersion')
         )
 
     def dump(self) -> Dict:
@@ -39,4 +43,6 @@ class AlgoMeta(NamedTuple):
         if self.validator_class_name is not None:
             ret['classArgsValidator'] = self.validator_class_name
         ret['source'] = 'nni' if self.is_builtin else 'user'
+        if self.nni_version is not None:
+            ret['nniVersion'] = self.nni_version
         return ret
