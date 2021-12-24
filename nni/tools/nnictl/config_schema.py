@@ -357,7 +357,8 @@ kubeflow_config_schema = {
         'nfs': {
             'server': setType('server', str),
             'path': setType('path', str)
-        }
+        },
+        Optional('reuse'): setType('reuse', bool),
     }, {
         'operator': setChoice('operator', 'tf-operator', 'pytorch-operator'),
         'apiVersion': setType('apiVersion', str),
@@ -374,7 +375,8 @@ kubeflow_config_schema = {
             'azureShare': And(Regex('([0-9]|[a-z]|[A-Z]|-){3,63}'),
                               error='ERROR: azureShare format error, azureShare support using (0-9|a-z|A-Z|-)')
         },
-        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999)
+        Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
+        Optional('reuse'): setType('reuse', bool),
     })
 }
 
@@ -408,12 +410,14 @@ frameworkcontroller_config_schema = {
         },
         Optional('namespace'): setType('namespace', str),
         Optional('configPath'): setType('configPath', str),
+        Optional('reuse'): setType('reuse', bool),
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
         'configPath': setType('configPath', str),
         'pvc': {'path': setType('server', str)},
         Optional('namespace'): setType('namespace', str),
+        Optional('reuse'): setType('reuse', bool),
     }, {
         Optional('storage'): setChoice('storage', 'nfs', 'azureStorage', 'pvc'),
         Optional('serviceAccountName'): setType('serviceAccountName', str),
@@ -432,6 +436,7 @@ frameworkcontroller_config_schema = {
         Optional('uploadRetryCount'): setNumberRange('uploadRetryCount', int, 1, 99999),
         Optional('namespace'): setType('namespace', str),
         Optional('configPath'): setType('configPath', str),
+        Optional('reuse'): setType('reuse', bool),
     })
 }
 
