@@ -5,8 +5,6 @@ __all__ = ['AlgoMeta']
 
 from typing import Dict, NamedTuple, Optional
 
-import nni
-
 class AlgoMeta(NamedTuple):
     name: str
     class_name: Optional[str]
