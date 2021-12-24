@@ -10,6 +10,7 @@ import yaml
 
 from nni.experiment import Experiment, RunMode
 from nni.experiment.config import ExperimentConfig, convert, utils
+from nni.runtime.log import init_logger_for_command_line
 from nni.tools.annotation import expand_annotations, generate_search_space
 
 # used for v1-only legacy setup, remove them later
@@ -23,6 +24,12 @@ def create_experiment(args):
     debug = args.debug
     url_prefix = args.url_prefix
     foreground = args.foreground
+
+    # this will get invoked again in Experiment class,
+    # which is ok because the function is designed to support invoking more than once.
+    # it should be better to do this in nnictl main function,
+    # but I'm afraid it may break routines I'm not familiar with.
+    init_logger_for_command_line()
 
     if not config_file.is_file():
         print(Fore.RED + 'ERROR: "{config_file}" is not a valid file.' + Fore.RESET)
@@ -76,6 +83,7 @@ def create_experiment(args):
     exp = Experiment(config)
     exp.url_prefix = url_prefix
     run_mode = RunMode.Foreground if foreground else RunMode.Detach
+    exit()
     exp.start(port, debug, run_mode)
 
 def resume_experiment(args):
@@ -84,6 +92,8 @@ def resume_experiment(args):
     debug = args.debug
     foreground = args.foreground
     exp_dir = args.experiment_dir
+
+    init_logger_for_command_line()
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):
@@ -98,6 +108,8 @@ def view_experiment(args):
     exp_id = args.id
     port = args.port
     exp_dir = args.experiment_dir
+
+    init_logger_for_command_line()
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):

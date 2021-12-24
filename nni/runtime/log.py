@@ -44,17 +44,21 @@ def init_logger() -> None:
 
     logging.getLogger('filelock').setLevel(logging.WARNING)
 
-_exp_log_initialized = False
+_cli_log_initialized = False
 
-def init_logger_experiment() -> None:
+def init_logger_for_command_line() -> None:
     """
-    Initialize logger for `nni.experiment.Experiment`.
+    Initialize logger for command line usage.
+    This means that NNI is used as "main function" rather than underlying library or background service,
+    so it should print log to stdout.
+
+    It is used by nnictl and `nni.experiment.Experiment`.
 
     This function will get invoked after `init_logger()`.
     """
-    global _exp_log_initialized
-    if not _exp_log_initialized:
-        _exp_log_initialized = True
+    global _cli_log_initialized
+    if not _cli_log_initialized:
+        _cli_log_initialized = True
         colorful_formatter = Formatter(log_format, time_format)
         colorful_formatter.format = _colorful_format
         handlers['_default_'].setFormatter(colorful_formatter)

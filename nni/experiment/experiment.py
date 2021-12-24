@@ -82,7 +82,7 @@ class Experiment:
         ...
 
     def __init__(self, config=None, training_service=None):
-        nni.runtime.log.init_logger_experiment()
+        nni.runtime.log.init_logger_for_command_line()
 
         self.config: Optional[ExperimentConfig] = None
         self.id: str = management.generate_experiment_id()
