@@ -12,7 +12,7 @@
   "license": "MIT",
   "dependencies": {
     "app-module-path": "^2.2.0",
-    "azure-storage": "^2.10.4",
+    "azure-storage": "^2.10.6",
     "child-process-promise": "^2.2.1",
     "express": "^4.17.1",
     "express-joi-validator": "^2.0.1",
@@ -21,13 +21,14 @@
     "js-base64": "^3.6.1",
     "kubernetes-client": "^6.12.1",
     "lockfile": "^1.0.4",
+    "npm": ">=8.3.0",
     "python-shell": "^3.0.0",
     "rx": "^4.1.0",
     "sqlite3": "5.0.2",
     "ssh2": "^1.4.0",
     "stream-buffers": "^3.0.2",
     "tail-stream": "^0.3.4",
-    "tar": "^6.1.9",
+    "tar": "^6.1.11",
     "tree-kill": "^1.2.2",
     "ts-deferred": "^1.0.4",
     "typescript-ioc": "^1.2.6",
@@ -60,7 +61,6 @@
     "eslint": "^7.28.0",
     "glob": "^7.1.7",
     "mocha": "^9.0.2",
-    "npx": "^10.2.2",
     "nyc": "^15.1.0",
     "request": "^2.88.2",
     "rmdir": "^1.2.0",
@@ -72,12 +72,13 @@
     "acorn": ">=8.3.0",
     "hoek": ">=6.1.3",
     "node.extend": ">=1.1.8",
-    "npm": ">=7.16.0",
     "y18n": ">=5.0.8",
     "yargs-parser": ">=20.2.7",
     "joi": ">=17.4.0",
     "node-forge": ">=0.10.0",
-    "glob-parent": ">=6.0.0"
+    "glob-parent": ">=6.0.0",
+    "node-gyp": ">=8.4.1",
+    "strip-ansi": "=6.0.1"
   },
   "engines": {
     "node": "^16.3.0"
