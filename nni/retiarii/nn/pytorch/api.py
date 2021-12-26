@@ -2,6 +2,8 @@
 # Licensed under the MIT license.
 
 import copy
+import math
+import operator
 import warnings
 from typing import Any, List, Union, Dict, Optional, Callable, Iterable
 
@@ -228,7 +230,250 @@ class InputChoice(Mutable):
             f'reduction={repr(self.reduction)}, label={repr(self.label)})'
 
 
-class ValueChoice(Translatable, Mutable):
+class ValueChoiceX(Translatable, Mutable):
+    """
+    Internal API.
+
+    The transformed (X) version of value choice.
+    It can be the result of transformation of one or several value choices. For example,
+
+    .. code-block:: python
+
+        nn.ValueChoice([1, 2]) + nn.ValueChoice([3, 4]) + 5
+    """
+
+    def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = False):
+        self.function = function
+        self.repr_template = repr_template
+        self.arguments = arguments
+
+        assert any(isinstance(arg, ValueChoiceX) for arg in self.arguments)
+
+        # TODO: dry run to check sanity
+
+    def inner_choices(self) -> Iterable['ValueChoice']:
+        """
+        Return an iterable of all leaf value choices.
+        No deduplication on labels. Mutators should take care.
+        """
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoice):
+                # this is leaf node
+                yield arg
+            elif isinstance(arg, ValueChoiceX):
+                yield from arg.inner_choices()
+
+    def evaluate(self, values: Iterable[Any]) -> Any:
+        """
+        Evaluate the result of this group.
+        ``values`` should in the same order of ``inner_choices()``.
+        """
+        return self._evaluate(iter(values))
+
+    def _evaluate(self, values: Iterable[Any]) -> Any:
+        # same function, in case some one forget to "iter" values
+        eval_args = []
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoice):
+                # fill-in a value
+                eval_args.append(next(values))
+            elif isinstance(arg, ValueChoice):
+                # recursive evaluation
+                eval_args.append(arg._evaluate(values))
+            else:
+                # constant value
+                eval_args.append(arg)
+        return self.function(*eval_args)
+
+    def __repr__(self):
+        reprs = []
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoiceX) and not isinstance(arg, ValueChoice):
+                reprs.append('(' + repr(arg) + ')')  # add parenthesis for operator priority
+            else:
+                reprs.append(repr(arg))
+        return self.repr_template.format(*reprs)
+
+    # the following are a series of methods to create "ValueChoiceX"
+    # which is a transformed version of value choice
+    # https://docs.python.org/3/reference/datamodel.html#special-method-names
+
+    def __getitem__(self, key: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: x[y], '{}[{}]', [self, key])
+
+    # region implement int, float, round, trunc, floor, ceil
+    # because I believe sometimes we need them to calculate #channels
+    def __int__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: int(x), 'int({})', [self])
+
+    def __float__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: float(x), 'float({})', [self])
+
+    def __round__(self, ndigits: Optional[Any] = None) -> 'ValueChoiceX':
+        if ndigits is not None:
+            return ValueChoiceX(lambda x, y: round(x, y), 'round({}, {})', [self, ndigits])
+        return ValueChoiceX(lambda x: round(x), 'round({})', [self])
+
+    def __trunc__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: math.trunc(x), 'math.trunc({})', [self])
+
+    def __floor__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: math.floor(x), 'math.floor({})', [self])
+
+    def __ceil__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: math.ceil(x), 'math.ceil({})', [self])
+
+    def __add__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: x + y, '{} + {}', [self, other])
+    # endregion
+
+    # region the following code is generated with codegen
+    # Annotated with "region" because I want to collapse them in vscode
+    def __neg__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.neg(x), '-{}', [self])
+
+    def __pos__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.pos(x), '+{}', [self])
+
+    def __invert__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.invert(x, y), '{} ~ {}', [self, other])
+
+    def __rinvert__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.invert(y, x), '{} ~ {}', [other, self])
+
+    def __add__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.add(x, y), '{} + {}', [self, other])
+
+    def __radd__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.add(y, x), '{} + {}', [other, self])
+
+    def __sub__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.sub(x, y), '{} - {}', [self, other])
+
+    def __rsub__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.sub(y, x), '{} - {}', [other, self])
+
+    def __mul__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.mul(x, y), '{} * {}', [self, other])
+
+    def __rmul__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.mul(y, x), '{} * {}', [other, self])
+
+    def __matmul__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.matmul(x, y), '{} @ {}', [self, other])
+
+    def __rmatmul__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.matmul(y, x), '{} @ {}', [other, self])
+
+    def __truediv__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.truediv(x, y), '{} // {}', [self, other])
+
+    def __rtruediv__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.truediv(y, x), '{} // {}', [other, self])
+
+    def __floordiv__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.floordiv(x, y), '{} / {}', [self, other])
+
+    def __rfloordiv__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.floordiv(y, x), '{} / {}', [other, self])
+
+    def __mod__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.mod(x, y), '{} % {}', [self, other])
+
+    def __rmod__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.mod(y, x), '{} % {}', [other, self])
+
+    def __lshift__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.lshift(x, y), '{} << {}', [self, other])
+
+    def __rlshift__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.lshift(y, x), '{} << {}', [other, self])
+
+    def __rshift__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.rshift(x, y), '{} >> {}', [self, other])
+
+    def __rrshift__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.rshift(y, x), '{} >> {}', [other, self])
+
+    def __and__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.and_(x, y), '{} & {}', [self, other])
+
+    def __rand__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.and_(y, x), '{} & {}', [other, self])
+
+    def __xor__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.xor(x, y), '{} ^ {}', [self, other])
+
+    def __rxor__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.xor(y, x), '{} ^ {}', [other, self])
+
+    def __or__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.or_(x, y), '{} | {}', [self, other])
+
+    def __ror__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.or_(y, x), '{} | {}', [other, self])
+    # endregion
+
+    # the above code can be generated with this codegen
+    # this is not done online because because I want to have type-hint supports
+    # $ python -c "from nni.retiarii.nn.pytorch.api import ValueChoiceX; ValueChoiceX._codegen(_internal=True)"
+    @staticmethod
+    def _codegen(*, _internal=True):
+        MAPPING = {
+            # unary
+            'neg': '-', 'pos': '+', 'invert': '~',
+            # binary
+            'add': '+', 'sub': '-', 'mul': '*', 'matmul': '@',
+            'truediv': '//', 'floordiv': '/', 'mod': '%',
+            'lshift': '<<', 'rshift': '>>',
+            'and': '&', 'xor': '^', 'or': '|',
+            # NOTE
+            # don't support operators like __contains__ (if b in a),
+            # because I think we rarely need them,
+            # and it's NOT effortless to support them.
+            # inplace operators are also not supported
+        }
+
+        binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.{opt}(x, y), '{{}} {sym} {{}}', [self, other])"""
+
+        binary_r_template = """    def __r{op}__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.{opt}(y, x), '{{}} {sym} {{}}', [other, self])"""
+
+        unary_template = """    def __{op}__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.{op}(x), '{sym}{{}}', [self])"""
+
+        for op, sym in MAPPING.items():
+            if op in ['neg', 'pos', 'abs']:
+                print(unary_template.format(op=op, sym=sym) + '\n')
+            else:
+                opt = op + '_' if op in ['and', 'or'] else op
+                print(binary_template.format(op=op, opt=opt, sym=sym) + '\n')
+                print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
+
+    # __pow__, __divmod__, __abs__ are special ones
+    # not easy to cover those cases with codegen
+    def __pow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
+        if modulo is not None:
+            return ValueChoiceX(lambda a, b, c: pow(a, b, c), 'pow({}, {}, {})', [self, other, modulo])
+        return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [self, other])
+
+    def __rpow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
+        if modulo is not None:
+            return ValueChoiceX(lambda a, b, c: pow(a, b, c), 'pow({}, {}, {})', [other, self, modulo])
+        return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [other, self])
+
+    def __divmod__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda a, b: divmod(a, b), 'divmod({}, {})', [self, other])
+
+    def __rdivmod__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda a, b: divmod(a, b), 'divmod({}, {})', [other, self])
+
+    def __abs__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x: abs(x), 'abs({})', [self])
+
+
+class ValueChoice(ValueChoiceX):
     """
     ValueChoice is to choose one from ``candidates``.
 
@@ -398,31 +643,3 @@ class ChosenInputs(nn.Module):
         if reduction_type == 'concat':
             return torch.cat(tensor_list, dim=1)
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
-
-
-class ValueChoiceGroup(Mutable):
-
-    def __init__(self, function: Callable[...], repr_template: str, arguments: List[Any]):
-        self.function = function
-        self.repr_template = repr_template
-        self.arguments = arguments
-
-        assert any(isinstance(arg, (ValueChoice, ValueChoiceGroup)) for arg in self.arguments)
-
-    def inner_choices(self) -> Iterable[ValueChoice]:
-        """
-        Return an iterable of all leaf value choices.
-        No deduplication.
-        """
-        for arg in self.arguments:
-            if isinstance(arg, ValueChoice):
-                # this is leaf node
-                yield arg
-            elif isinstance(arg, ValueChoiceGroup):
-                yield from arg.inner_choices()
-
-    def evaluate(self, values) -> Any:
-        ...
-
-    def __repr__(self):
-        return self.repr_template.format(*self.arguments)
