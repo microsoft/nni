@@ -8,15 +8,11 @@ import torchvision.transforms as transforms
 import numpy as np
 from nni.compression.pytorch.utils.counter import count_flops_params
 
+from pathlib import Path
 import sys
-sys.path.append('../../models')
-try:
-    from mobilenet import MobileNet
-    from mobilenet_v2 import MobileNetV2
-except ModuleNotFoundError as e:
-    print(e)
-    print('Please check whether the current working path is the path where this file is located.')
-    exit()
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+from mobilenet import MobileNet
+from mobilenet_v2 import MobileNetV2
 
 
 def create_model(model_type=None, n_classes=120, input_size=224, checkpoint=None, pretrained=False, width_mult=1.):

@@ -2,19 +2,12 @@ import os
 import argparse
 import time
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
-from torchvision import datasets, transforms
 
+from pathlib import Path
 import sys
-sys.path.append('../models')
-try:
-    from cifar10.vgg import VGG
-    from mnist.lenet import LeNet
-except ModuleNotFoundError as e:
-    print(e)
-    print('Please check whether the current working path is the path where this file is located.')
-    exit()
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
+from cifar10.vgg import VGG
+from mnist.lenet import LeNet
 
 from nni.compression.pytorch import apply_compression_results, ModelSpeedup
 

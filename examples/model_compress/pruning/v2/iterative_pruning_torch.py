@@ -20,13 +20,10 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     LotteryTicketPruner
 )
 
-sys.path.append('../../models')
-try:
-    from cifar10.vgg import VGG
-except ModuleNotFoundError as e:
-    print(e)
-    print('Please check whether the current working path is the path where this file is located.')
-    exit()
+from pathlib import Path
+import sys
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
+from cifar10.vgg import VGG
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

@@ -18,16 +18,13 @@ from nni.algorithms.compression.pytorch.pruning import SimulatedAnnealingPruner,
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 
+from pathlib import Path
 import sys
-sys.path.append('../models')
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from mnist.lenet import LeNet
-try:
-    from cifar10.vgg import VGG
-    from cifar10.resnet import ResNet18, ResNet50
-except ModuleNotFoundError as e:
-    print(e)
-    print('Please check whether the current working path is the path where this file is located.')
-    exit()
+from cifar10.vgg import VGG
+from cifar10.resnet import ResNet18, ResNet50
+
 
 def get_data(dataset, data_dir, batch_size, test_batch_size):
     '''
