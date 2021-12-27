@@ -64,8 +64,7 @@ class ModelSpeedup:
         # load the mask tensor to the same device with the dummy_input
         # self.masks save the mask tensors pruned by the user and the infered
         # masks of the others modules
-        if (isinstance(masks_file, str) and os.path.exists(masks_file)) or \
-                (isinstance(masks_file, Path) and masks_file.exists()):
+        if isinstance(masks_file, (str, Path)) and Path(masks_file).exists():
             self.masks = torch.load(
                 masks_file, map_location if map_location is not None else str(self.device))
         elif isinstance(masks_file, dict):
