@@ -13,7 +13,8 @@ scikit-learn >= 0.24.1 ; python_version >= "3.7"
 scikit-learn < 1.0 ; python_version < "3.7"
 websockets >= 10.1 ; python_version >= "3.7"
 websockets <= 10.0 ; python_version < "3.7"
-filelock
+filelock ; python_version >="3.7"
+filelock < 3.4 ; python_version < "3.7"
 prettytable
 cloudpickle
 dataclasses ; python_version < "3.7"
