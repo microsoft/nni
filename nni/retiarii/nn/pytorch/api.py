@@ -230,12 +230,42 @@ class InputChoice(Mutable):
             f'reduction={repr(self.reduction)}, label={repr(self.label)})'
 
 
+class ChosenInputs(nn.Module):
+    """
+    A module that chooses from a tensor list and outputs a reduced tensor.
+    The already-chosen version of InputChoice.
+    """
+
+    def __init__(self, chosen: Union[List[int], int], reduction: str):
+        super().__init__()
+        self.chosen = chosen if isinstance(chosen, list) else [chosen]
+        self.reduction = reduction
+
+    def forward(self, candidate_inputs):
+        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
+
+    def _tensor_reduction(self, reduction_type, tensor_list):
+        if reduction_type == 'none':
+            return tensor_list
+        if not tensor_list:
+            return None  # empty. return None for now
+        if len(tensor_list) == 1:
+            return tensor_list[0]
+        if reduction_type == 'sum':
+            return sum(tensor_list)
+        if reduction_type == 'mean':
+            return sum(tensor_list) / len(tensor_list)
+        if reduction_type == 'concat':
+            return torch.cat(tensor_list, dim=1)
+        raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
+
+
 class ValueChoiceX(Translatable, Mutable):
     """
     Internal API. Implementation note:
 
     The transformed (X) version of value choice.
-    It can be the result of transformation of one or several value choices. For example,
+    It can be the result of composition (transformation) of one or several value choices. For example,
 
     .. code-block:: python
 
@@ -250,51 +280,64 @@ class ValueChoiceX(Translatable, Mutable):
     """
 
     def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
+        super().__init__()
+
+        if function is None:
+            # this case is a hack for ValueChoice subclass
+            # it will reach here only because ``__init__`` in ``nn.Module`` is useful.
+            return
+
         self.function = function
         self.repr_template = repr_template
         self.arguments = arguments
 
         assert any(isinstance(arg, ValueChoiceX) for arg in self.arguments)
 
-        # TODO: dry run to check sanity
+        if dry_run:
+            # for sanity check
+            self.dry_run()
 
     def inner_choices(self) -> Iterable['ValueChoice']:
         """
         Return an iterable of all leaf value choices.
+        Useful for composition of value choices.
         No deduplication on labels. Mutators should take care.
         """
         for arg in self.arguments:
             yield from arg.inner_choices()
-            if isinstance(arg, ValueChoice):
-                # this is leaf node
-                yield arg
-            elif isinstance(arg, ValueChoiceX):
-                yield from arg.inner_choices()
+
+    def dry_run(self) -> Any:
+        """
+        Dry run the value choice to get one of its possible evaluation results.
+        """
+        # values are not used
+        return self._evaluate(iter([]), True)
 
     def evaluate(self, values: Iterable[Any]) -> Any:
         """
         Evaluate the result of this group.
         ``values`` should in the same order of ``inner_choices()``.
         """
-        return self._evaluate(iter(values))
+        return self._evaluate(iter(values), False)
 
-    def _evaluate(self, values: Iterable[Any]) -> Any:
-        # same function, in case some one forget to "iter" values
+    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+        # "values" iterates in the recursion
         eval_args = []
         for arg in self.arguments:
-            if isinstance(arg, ValueChoice):
-                # fill-in a value
-                eval_args.append(next(values))
-            elif isinstance(arg, ValueChoice):
+            if isinstance(arg, ValueChoiceX):
                 # recursive evaluation
-                eval_args.append(arg._evaluate(values))
+                eval_args.append(arg._evaluate(values, dry_run))
+                # the recursion will stop when it hits a leaf node (value choice)
+                # the implementation is in `ValueChoice`
             else:
                 # constant value
                 eval_args.append(arg)
         return self.function(*eval_args)
 
     def _translate(self):
-        # Will function as a value when used in serializer.
+        """
+        Try to behave like one of its candidates when used in ``basic_unit``.
+        """
         return self.dry_run()
 
     def __repr__(self):
@@ -306,19 +349,15 @@ class ValueChoiceX(Translatable, Mutable):
                 reprs.append(repr(arg))
         return self.repr_template.format(*reprs)
 
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self, memo):
-        return ValueChoiceX(
-            copy.deepcopy(self.function),
-            self.repr_template,
-            [copy.deepcopy(arg) for arg in self.arguments]
-        )
-
     # the following are a series of methods to create "ValueChoiceX"
     # which is a transformed version of value choice
     # https://docs.python.org/3/reference/datamodel.html#special-method-names
+
+    # NOTE:
+    # Write operations are not supported. Reasons follow:
+    # - Semantics are not clear. It can be applied to "all" the inner candidates, or only the chosen one.
+    # - Implementation effort is too huge.
+    # As a result, inplace operators like +=, *=, magic methods like `__getattr__` are not included in this list.
 
     def __getitem__(self, key: Any) -> 'ValueChoiceX':
         return ValueChoiceX(lambda x, y: x[y], '{}[{}]', [self, key])
@@ -447,7 +486,6 @@ class ValueChoiceX(Translatable, Mutable):
             # don't support operators like __contains__ (if b in a),
             # because I think we rarely need them,
             # and it's NOT effortless to support them.
-            # inplace operators are also not supported
         }
 
         binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
@@ -559,10 +597,13 @@ class ValueChoice(ValueChoiceX):
 
     @classmethod
     def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
-        return get_fixed_value(label)
+        value = get_fixed_value(label)
+        if value not in candidates:
+            raise ValueError(f'Value {value} does not belong to the candidates: {candidates}.')
+        return value
 
     def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
-        super().__init__()
+        super().__init__(None, None, None)
         self.candidates = candidates
         self.prior = prior or [1 / len(candidates) for _ in range(len(candidates))]
         assert abs(sum(self.prior) - 1) < 1e-5, 'Sum of prior distribution is not 1.'
@@ -577,26 +618,21 @@ class ValueChoice(ValueChoiceX):
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
-
     def inner_choices(self) -> Iterable['ValueChoice']:
-        """
-        Return an iterable of all leaf value choices.
-        No deduplication on labels. Mutators should take care.
-        """
-        for arg in self.arguments:
-            yield from arg.inner_choices()
-            if isinstance(arg, ValueChoice):
-                # this is leaf node
-                yield arg
-            elif isinstance(arg, ValueChoiceX):
-                yield from arg.inner_choices()
+        # yield self because self is the only value choice here
+        yield self
 
-    def evaluate(self, values: Iterable[Any]) -> Any:
-        """
-        Evaluate the result of this group.
-        ``values`` should in the same order of ``inner_choices()``.
-        """
-        return self._evaluate(iter(values))
+    def dry_run(self) -> Any:
+        return self.candidates[0]
+
+    def _evaluate(self, values: Iterable[Any]) -> Any:
+        try:
+            value = next(values)
+        except StopIteration:
+            raise ValueError(f'Value list {values} is exhausted when trying to get a chosen value of {self}.')
+        if value not in self.candidates:
+            raise ValueError(f'Value {value} does not belong to the candidates of {self}.')
+        return value
 
     def _evaluate(self, values: Iterable[Any]) -> Any:
         # same function, in case some one forget to "iter" values
@@ -614,44 +650,15 @@ class ValueChoice(ValueChoiceX):
         return self.function(*eval_args)
 
     def __repr__(self):
-        reprs = []
-        for arg in self.arguments:
-            if isinstance(arg, ValueChoiceX) and not isinstance(arg, ValueChoice):
-                reprs.append('(' + repr(arg) + ')')  # add parenthesis for operator priority
-            else:
-                reprs.append(repr(arg))
-        return self.repr_template.format(*reprs)
-
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self, memo):
-        return ValueChoiceX(
-            copy.deepcopy(self.function),
-            self.repr_template,
-            [copy.deepcopy(arg) for arg in self.arguments]
-        )
-
-
-    def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
-
-    def access(self, value):
-        if not self._accessor:
-            return value
-        try:
-            v = value
-            for a in self._accessor:
-                v = v[a]
-        except KeyError:
-            raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
-        return v
-
 
 
 @basic_unit
 class Placeholder(nn.Module):
-    # TODO: docstring
+    """
+    The API that creates an empty module for later mutations.
+    For advanced usages only.
+    """
 
     def __init__(self, label, **related_info):
         self.label = label
@@ -660,33 +667,3 @@ class Placeholder(nn.Module):
 
     def forward(self, x):
         return x
-
-
-class ChosenInputs(nn.Module):
-    """
-    A module that chooses from a tensor list and outputs a reduced tensor.
-    The already-chosen version of InputChoice.
-    """
-
-    def __init__(self, chosen: Union[List[int], int], reduction: str):
-        super().__init__()
-        self.chosen = chosen if isinstance(chosen, list) else [chosen]
-        self.reduction = reduction
-
-    def forward(self, candidate_inputs):
-        return self._tensor_reduction(self.reduction, [candidate_inputs[i] for i in self.chosen])
-
-    def _tensor_reduction(self, reduction_type, tensor_list):
-        if reduction_type == 'none':
-            return tensor_list
-        if not tensor_list:
-            return None  # empty. return None for now
-        if len(tensor_list) == 1:
-            return tensor_list[0]
-        if reduction_type == 'sum':
-            return sum(tensor_list)
-        if reduction_type == 'mean':
-            return sum(tensor_list) / len(tensor_list)
-        if reduction_type == 'concat':
-            return torch.cat(tensor_list, dim=1)
-        raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')

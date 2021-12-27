@@ -11,7 +11,7 @@ from nni.retiarii.mutator import Mutator
 from nni.retiarii.serializer import is_basic_unit
 from nni.retiarii.utils import uid
 
-from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
+from .api import LayerChoice, InputChoice, ValueChoice, ValueChoiceX, Placeholder
 from .component import Repeat, NasBench101Cell, NasBench101Mutator
 
 
@@ -234,8 +234,9 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
         # tricky case: value choice that serves as parameters are stored in traced arguments
         if is_basic_unit(module):
             for key, value in module.trace_kwargs.items():
-                if isinstance(value, ValueChoice):
-                    node = graph.add_node(name + '.init.' + key, 'ValueChoice', {'candidates': value.candidates})
+                if isinstance(value, ValueChoiceX):
+                    for i, choice in enumerate(value.inner_choices()):
+                        node = graph.add_node(f'{name}.init.{key}.{i}', 'ValueChoice', {'candidates': choice.candidates})
                     node.label = value.label
 
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
