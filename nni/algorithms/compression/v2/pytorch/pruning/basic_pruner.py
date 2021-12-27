@@ -564,7 +564,7 @@ class ActivationPruner(BasicPruner):
 
 class ActivationAPoZRankPruner(ActivationPruner):
     def _activation_trans(self, output: Tensor) -> Tensor:
-        # return the sum of zero counts of the same activation position cross each batch.
+        # return a matrix that the position of zero in `output` is one, others is zero.
         return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
 
     def _get_metrics_calculator(self) -> MetricsCalculator:
@@ -573,7 +573,7 @@ class ActivationAPoZRankPruner(ActivationPruner):
 
 class ActivationMeanRankPruner(ActivationPruner):
     def _activation_trans(self, output: Tensor) -> Tensor:
-        # return the sum of zero counts of the same activation position cross each batch.
+        # return the activation of `output` directly.
         return self._activation(output.detach())
 
     def _get_metrics_calculator(self) -> MetricsCalculator:
