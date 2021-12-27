@@ -1,10 +1,10 @@
 import os
+import sys
 import argparse
 import time
 import torch
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from cifar10.vgg import VGG
 from mnist.lenet import LeNet

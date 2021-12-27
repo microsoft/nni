@@ -19,7 +19,6 @@ from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPrune
 from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 

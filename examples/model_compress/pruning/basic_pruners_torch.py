@@ -18,7 +18,6 @@ from torch.optim.lr_scheduler import StepLR, MultiStepLR
 from torchvision import datasets, transforms
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG

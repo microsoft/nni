@@ -9,7 +9,6 @@ from nni.algorithms.compression.v2.pytorch.pruning import AMCPruner
 from nni.compression.pytorch.utils.counter import count_flops_params
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 

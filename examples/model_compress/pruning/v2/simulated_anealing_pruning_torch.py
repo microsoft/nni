@@ -16,7 +16,6 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.v2.pytorch.pruning import SimulatedAnnealingPruner
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 

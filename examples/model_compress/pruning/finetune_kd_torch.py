@@ -8,6 +8,7 @@ Run basic_pruners_torch.py first to get the masks of the pruned model. Then pass
 
 import argparse
 import os
+import sys
 from copy import deepcopy
 
 import torch
@@ -18,7 +19,6 @@ from torch.optim.lr_scheduler import MultiStepLR
 from basic_pruners_torch import get_data
 
 from pathlib import Path
-import sys
 sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from mnist.lenet import LeNet
 from cifar10.vgg import VGG
