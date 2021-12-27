@@ -124,13 +124,17 @@ def _colorful_format(record):
         return '[{}] ({}) {}'.format(time, record.name, record.msg % record.args)
     if record.levelno >= logging.ERROR:
         color = colorama.Fore.RED
+        level = 'ERROR: '
     elif record.levelno >= logging.WARNING:
         color = colorama.Fore.YELLOW
+        level = 'WARNING: '
     elif record.levelno >= logging.INFO:
         color = colorama.Fore.GREEN
+        level = ''
     else:
         color = colorama.Fore.BLUE
-    msg = color + (record.msg % record.args) + colorama.Style.RESET_ALL
+        level = ''
+    msg = color + level + (record.msg % record.args) + colorama.Style.RESET_ALL
     if record.levelno < logging.INFO:
         return '[{}] {}:{} {}'.format(time, record.threadName, record.name, msg)
     else:

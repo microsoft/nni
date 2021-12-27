@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from getpass import getuser
+import logging
 from pathlib import Path
 import tempfile
 
@@ -17,6 +18,8 @@ from nni.tools.annotation import expand_annotations, generate_search_space
 from nni.experiment.launcher import get_stopped_experiment_config_json
 from . import legacy_launcher
 
+_logger = logging.getLogger(__name__)
+
 def create_experiment(args):
     # to make it clear what are inside args
     config_file = Path(args.config)
@@ -25,14 +28,13 @@ def create_experiment(args):
     url_prefix = args.url_prefix
     foreground = args.foreground
 
-    # this will get invoked again in Experiment class,
-    # which is ok because the function is designed to support invoking more than once.
-    # it should be better to do this in nnictl main function,
-    # but I'm afraid it may break routines I'm not familiar with.
+    # it should finally be done in nnictl main function
+    # but for now don't break routines without logging support
     init_logger_for_command_line()
+    logging.getLogger('nni').setLevel(logging.INFO)
 
     if not config_file.is_file():
-        print(Fore.RED + 'ERROR: "{config_file}" is not a valid file.' + Fore.RESET)
+        _logger.error('"{config_file}" is not a valid file.')
         exit(1)
 
     with config_file.open() as config:
@@ -54,10 +56,14 @@ def create_experiment(args):
         try:
             v2_config = convert.to_v2(config_content)
         except Exception:
-            print(Fore.RED + 'ERROR: You are using legacy config file, please update it to latest format.' + Fore.RESET)
-            print(Fore.RED + 'Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html' + Fore.RESET)
+            _logger.error(
+                'You are using legacy config format with incorrect fields or values, '
+                'to get more accurate error message please update it to the new format.'
+            )
+            _logger.error('Reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html')
             exit(1)
-        print(Fore.YELLOW + f'WARNING: You are using legacy config file, please update it to latest format:' + Fore.RESET)
+        _logger.warning(f'You are using legacy config file, please update it to latest format:')
+        # use `print` here because logging will add timestamp and make it hard to copy paste
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
         print(yaml.dump(v2_config, sort_keys=False).strip())
         print(Fore.YELLOW + '=' * 80 + Fore.RESET)
@@ -83,7 +89,6 @@ def create_experiment(args):
     exp = Experiment(config)
     exp.url_prefix = url_prefix
     run_mode = RunMode.Foreground if foreground else RunMode.Detach
-    exit()
     exp.start(port, debug, run_mode)
 
 def resume_experiment(args):
@@ -94,6 +99,7 @@ def resume_experiment(args):
     exp_dir = args.experiment_dir
 
     init_logger_for_command_line()
+    logging.getLogger('nni').setLevel(logging.INFO)
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):
@@ -110,6 +116,7 @@ def view_experiment(args):
     exp_dir = args.experiment_dir
 
     init_logger_for_command_line()
+    logging.getLogger('nni').setLevel(logging.INFO)
 
     config_json = get_stopped_experiment_config_json(exp_id, exp_dir)
     if config_json.get('trainingServicePlatform'):

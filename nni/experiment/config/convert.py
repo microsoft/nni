@@ -262,7 +262,7 @@ def to_v2(v1):
     if v1_trial:
         _logger.error('trial config not fully converted: %s', v1_trial)
     if v1:
-        _logger.error('config not fully converted: %s', v1)
+        _logger.error('Config not fully converted: %s', v1)
     return v2
 
 def _move_field(v1, v2, v1_key, v2_key=None):
@@ -275,7 +275,7 @@ def _move_field(v1, v2, v1_key, v2_key=None):
 
 def _drop_field(v1, key):
     if key in v1:
-        _logger.warning(f'Configuration field {key} is no longer supported and has been ignored')
+        _logger.warning(f'Config field "{key}" is no longer supported and has been ignored')
         v1.pop(key)
 
 def _deprecate(v1, v2, key):
