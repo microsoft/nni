@@ -232,7 +232,7 @@ class InputChoice(Mutable):
 
 class ValueChoiceX(Translatable, Mutable):
     """
-    Internal API.
+    Internal API. Implementation note:
 
     The transformed (X) version of value choice.
     It can be the result of transformation of one or several value choices. For example,
@@ -240,9 +240,16 @@ class ValueChoiceX(Translatable, Mutable):
     .. code-block:: python
 
         nn.ValueChoice([1, 2]) + nn.ValueChoice([3, 4]) + 5
+
+    The instance of base class cannot be created directly. Instead, they should be only the result of transformation of value choice.
+    Therefore, there is no need to implement ``create_fixed_module`` in this class, because,
+    1. For python-engine, value choice itself has create fixed module. Consequently, the transformation is born to be fixed.
+    2. For graph-engine, it uses evaluate to calculate the result.
+
+    Potentially, we have to implement the evaluation logic in oneshot algorithms. I believe we can postpone the discussion till then.
     """
 
-    def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = False):
+    def __init__(self, function: Callable[..., Any], repr_template: str, arguments: List[Any], dry_run: bool = True):
         self.function = function
         self.repr_template = repr_template
         self.arguments = arguments
@@ -257,6 +264,7 @@ class ValueChoiceX(Translatable, Mutable):
         No deduplication on labels. Mutators should take care.
         """
         for arg in self.arguments:
+            yield from arg.inner_choices()
             if isinstance(arg, ValueChoice):
                 # this is leaf node
                 yield arg
@@ -285,6 +293,10 @@ class ValueChoiceX(Translatable, Mutable):
                 eval_args.append(arg)
         return self.function(*eval_args)
 
+    def _translate(self):
+        # Will function as a value when used in serializer.
+        return self.dry_run()
+
     def __repr__(self):
         reprs = []
         for arg in self.arguments:
@@ -293,6 +305,16 @@ class ValueChoiceX(Translatable, Mutable):
             else:
                 reprs.append(repr(arg))
         return self.repr_template.format(*reprs)
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return ValueChoiceX(
+            copy.deepcopy(self.function),
+            self.repr_template,
+            [copy.deepcopy(arg) for arg in self.arguments]
+        )
 
     # the following are a series of methods to create "ValueChoiceX"
     # which is a transformed version of value choice
@@ -322,12 +344,9 @@ class ValueChoiceX(Translatable, Mutable):
 
     def __ceil__(self) -> 'ValueChoiceX':
         return ValueChoiceX(lambda x: math.ceil(x), 'math.ceil({})', [self])
-
-    def __add__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: x + y, '{} + {}', [self, other])
     # endregion
 
-    # region the following code is generated with codegen
+    # region the following code is generated with codegen (see below)
     # Annotated with "region" because I want to collapse them in vscode
     def __neg__(self) -> 'ValueChoiceX':
         return ValueChoiceX(lambda x, y: operator.neg(x), '-{}', [self])
@@ -335,11 +354,8 @@ class ValueChoiceX(Translatable, Mutable):
     def __pos__(self) -> 'ValueChoiceX':
         return ValueChoiceX(lambda x, y: operator.pos(x), '+{}', [self])
 
-    def __invert__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.invert(x, y), '{} ~ {}', [self, other])
-
-    def __rinvert__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.invert(y, x), '{} ~ {}', [other, self])
+    def __invert__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(lambda x, y: operator.invert(x), '~{}', [self])
 
     def __add__(self, other: Any) -> 'ValueChoiceX':
         return ValueChoiceX(lambda x, y: operator.add(x, y), '{} + {}', [self, other])
@@ -444,7 +460,7 @@ class ValueChoiceX(Translatable, Mutable):
         return ValueChoiceX(lambda x, y: operator.{op}(x), '{sym}{{}}', [self])"""
 
         for op, sym in MAPPING.items():
-            if op in ['neg', 'pos', 'abs']:
+            if op in ['neg', 'pos', 'invert']:
                 print(unary_template.format(op=op, sym=sym) + '\n')
             else:
                 opt = op + '_' if op in ['and', 'or'] else op
@@ -561,9 +577,61 @@ class ValueChoice(ValueChoiceX):
         warnings.warn('You should not run forward of this module directly.')
         return self.candidates[0]
 
-    def _translate(self):
-        # Will function as a value when used in serializer.
-        return self.access(self.candidates[0])
+
+    def inner_choices(self) -> Iterable['ValueChoice']:
+        """
+        Return an iterable of all leaf value choices.
+        No deduplication on labels. Mutators should take care.
+        """
+        for arg in self.arguments:
+            yield from arg.inner_choices()
+            if isinstance(arg, ValueChoice):
+                # this is leaf node
+                yield arg
+            elif isinstance(arg, ValueChoiceX):
+                yield from arg.inner_choices()
+
+    def evaluate(self, values: Iterable[Any]) -> Any:
+        """
+        Evaluate the result of this group.
+        ``values`` should in the same order of ``inner_choices()``.
+        """
+        return self._evaluate(iter(values))
+
+    def _evaluate(self, values: Iterable[Any]) -> Any:
+        # same function, in case some one forget to "iter" values
+        eval_args = []
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoice):
+                # fill-in a value
+                eval_args.append(next(values))
+            elif isinstance(arg, ValueChoice):
+                # recursive evaluation
+                eval_args.append(arg._evaluate(values))
+            else:
+                # constant value
+                eval_args.append(arg)
+        return self.function(*eval_args)
+
+    def __repr__(self):
+        reprs = []
+        for arg in self.arguments:
+            if isinstance(arg, ValueChoiceX) and not isinstance(arg, ValueChoice):
+                reprs.append('(' + repr(arg) + ')')  # add parenthesis for operator priority
+            else:
+                reprs.append(repr(arg))
+        return self.repr_template.format(*reprs)
+
+    def __copy__(self):
+        return self
+
+    def __deepcopy__(self, memo):
+        return ValueChoiceX(
+            copy.deepcopy(self.function),
+            self.repr_template,
+            [copy.deepcopy(arg) for arg in self.arguments]
+        )
+
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'
@@ -579,27 +647,6 @@ class ValueChoice(ValueChoiceX):
             raise KeyError(''.join([f'[{a}]' for a in self._accessor]) + f' does not work on {value}')
         return v
 
-    def __copy__(self):
-        return self
-
-    def __deepcopy__(self, memo):
-        new_item = ValueChoice(self.candidates, label=self.label)
-        new_item._accessor = [*self._accessor]
-        return new_item
-
-    def __getitem__(self, item):
-        """
-        Get a sub-element of value choice.
-
-        The underlying implementation is to clone the current instance, and append item to "accessor", which records all
-        the history getitem calls. For example, when accessor is ``[a, b, c]``, the value choice will return ``vc[a][b][c]``
-        where ``vc`` is the original value choice.
-        """
-        access = copy.deepcopy(self)
-        access._accessor.append(item)
-        for candidate in self.candidates:
-            access.access(candidate)
-        return access
 
 
 @basic_unit
