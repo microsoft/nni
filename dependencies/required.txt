@@ -1,6 +1,6 @@
 astor
 hyperopt == 0.1.2
-json_tricks
+json_tricks >= 3.15.5
 psutil
 pyyaml >= 5.4
 requests
