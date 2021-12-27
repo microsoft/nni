@@ -7,7 +7,8 @@ from torchvision import datasets, transforms
 from nni.algorithms.compression.v2.pytorch.pruning import AutoCompressPruner
 from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
