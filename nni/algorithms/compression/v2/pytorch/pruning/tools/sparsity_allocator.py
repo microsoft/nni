@@ -36,8 +36,6 @@ class NormalSparsityAllocator(SparsityAllocator):
                 threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
             mask = torch.gt(metric, threshold).type_as(metric)
             masks[name] = self._expand_mask(name, mask)
-            if self.continuous_mask:
-                masks[name]['weight'] *= wrapper.weight_mask
         return masks
 
 
@@ -57,8 +55,6 @@ class GlobalSparsityAllocator(SparsityAllocator):
             for name, metric in group_metric_dict.items():
                 mask = torch.gt(metric, min(threshold, sub_thresholds[name])).type_as(metric)
                 masks[name] = self._expand_mask(name, mask)
-                if self.continuous_mask:
-                    masks[name]['weight'] *= self.pruner.get_modules_wrapper()[name].weight_mask
         return masks
 
     def _calculate_threshold(self, group_metric_dict: Dict[str, Tensor]) -> Tuple[float, Dict[str, float]]:
@@ -162,8 +158,7 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
                 threshold = torch.topk(metric, pruned_num, largest=False)[0].max()
                 mask = torch.gt(metric, threshold).type_as(metric)
                 masks[name] = self._expand_mask(name, mask)
-                if self.continuous_mask:
-                    masks[name]['weight'] *= self.pruner.get_modules_wrapper()[name].weight_mask
+
         return masks
 
     def _group_metric_calculate(self, group_metrics: Union[Dict[str, Tensor], List[Tensor]]) -> Tensor:
