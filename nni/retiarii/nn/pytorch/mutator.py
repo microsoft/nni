@@ -69,6 +69,8 @@ class ValueChoiceMutator(Mutator):
 
     def mutate(self, model):
         chosen = self.choice(self.candidates)
+        # no need to support transformation here,
+        # because it is naturally done in forward loop
         for node in self.nodes:
             target = model.get_node_by_name(node.name)
             target.update_operation('prim::Constant', {'type': type(chosen).__name__, 'value': chosen})
@@ -76,6 +78,9 @@ class ValueChoiceMutator(Mutator):
 
 class ParameterChoiceMutator(Mutator):
     def __init__(self, nodes: List[Tuple[Node, str]], candidates: List[Any]):
+        # argname is the location of the argument
+        # e.g., Conv2d(out_channels=nn.ValueChoice([1, 2, 3])) => argname = "out_channels"
+        # use nodes[0] as an example to get label
         node, argname = nodes[0]
         super().__init__(label=node.operation.parameters[argname].label)
         self.nodes = nodes
