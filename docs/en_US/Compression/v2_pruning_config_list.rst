@@ -26,19 +26,14 @@ op_partial_names
 This key is for the layers to be pruned with names that have the same sub-string. NNI will find all names in the model,
 find names that contain one of ``op_partial_names``, and append them into the ``op_names``.
 
-sparsity
-^^^^^^^^
-
-The sparsity ratio of each selected layer.
-
-e.g., the ``sparsity`` is 0.8 means each selected layer will mask 80% values on the weight.
-If ``layer_1`` (500 parameters) and ``layer_2`` (1000 parameters) are selected in this sub-config,
-then ``layer_1`` will be masked 400 parameters and ``layer_2`` will be masked 800 parameters.
-
 sparsity_per_layer
 ^^^^^^^^^^^^^^^^^^
 
-Another name for ``sparsity``.
+The sparsity ratio of each selected layer.
+
+e.g., the ``sparsity_per_layer`` is 0.8 means each selected layer will mask 80% values on the weight.
+If ``layer_1`` (500 parameters) and ``layer_2`` (1000 parameters) are selected in this sub-config,
+then ``layer_1`` will be masked 400 parameters and ``layer_2`` will be masked 800 parameters.
 
 total_sparsity
 ^^^^^^^^^^^^^^
@@ -49,6 +44,12 @@ e.g., the ``total_sparsity`` is 0.8 means 80% of parameters in this sub-config w
 If ``layer_1`` (500 parameters) and ``layer_2`` (1000 parameters) are selected in this sub-config,
 then ``layer_1`` and ``layer_2`` will be masked a total of 1200 parameters,
 how these total parameters are distributed between the two layers is determined by the pruning algorithm.
+
+sparsity
+^^^^^^^^
+
+``sparsity`` is an old config key from the pruning v1, it has the same meaning as ``sparsity_per_layer``.
+You can also use ``sparsity`` right now, but it will be deprecated in the future.
 
 max_sparsity_per_layer
 ^^^^^^^^^^^^^^^^^^^^^^
