@@ -411,7 +411,7 @@ def _copy_class_wrapper_attributes(base, wrapper):
         # the module name will look ugly
         # but we don't have better options
         # https://stackoverflow.com/questions/1412787/picklingerror-cant-pickle-class-decimal-decimal-its-not-the-same-object
-        if k == '__module__':
+        if k == '__module__' and sys.platform != 'linux':
             continue
 
         v = getattr(base, k, _MISSING)

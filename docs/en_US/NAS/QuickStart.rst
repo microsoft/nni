@@ -97,7 +97,7 @@ Based on the above base model, we can define a model space as below.
 
 This example uses two mutation APIs, ``nn.LayerChoice`` and ``nn.ValueChoice``. ``nn.LayerChoice`` takes a list of candidate modules (two in this example), one will be chosen for each sampled model. It can be used like normal PyTorch module. ``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
 
-More detailed API description and usage can be found `here <./construct_space.rst>`__\.
+More detailed API description and usage can be found `here <./construct_space.rst>`__ .
 
 .. note:: We are actively enriching the mutation APIs, to facilitate easy construction of model space. If the currently supported mutation APIs cannot express your model space, please refer to `this doc <./Mutators.rst>`__ for customizing mutators.
 
@@ -183,7 +183,7 @@ Visualize the Experiment
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../Tutorial/WebUI.rst>`__ for details.
 
-We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ . Built-in evaluators (e.g., Classification) will automatically export the model into a file, for your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
+We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ , thus visualization is not feasible if the model cannot be exported into onnx. Built-in evaluators (e.g., Classification) will automatically export the model into a file. For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
 
 Export Top Models
 -----------------
