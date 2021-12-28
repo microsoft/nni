@@ -190,7 +190,7 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
-@pytest.mark.skipIf(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
+@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
     # it's possible to have pickle errors
