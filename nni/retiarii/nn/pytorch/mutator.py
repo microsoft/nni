@@ -105,8 +105,8 @@ class ParameterChoiceMutator(Mutator):
         # looks like {"label1": "cat", "label2": 123}
         value_choice_decisions = {}
         for mutation in model.history:
-            if isinstance(mutation.mutator, ValueChoiceMutator):
-                value_choice_decisions[mutation.mutator.label] = mutation.sample[0]
+            if isinstance(mutation.mutator, ParameterChoiceLeafMutator):
+                value_choice_decisions[mutation.mutator.label] = mutation.samples[0]
 
         for node, argname in self.nodes:
             # argname is the location of the argument
@@ -199,7 +199,8 @@ def process_inline_mutation(model: Model) -> Optional[List[Mutator]]:
         applied_mutators.append(ParameterChoiceLeafMutator(candidates, label))
 
     # in the end, add another parameter choice mutator for "real" mutations
-    applied_mutators.append(ParameterChoiceMutator([(node, name) for node, name, _ in pc_nodes]))
+    if pc_nodes:
+        applied_mutators.append(ParameterChoiceMutator([(node, name) for node, name, _ in pc_nodes]))
 
     # apply layer choice at last as it will delete some nodes
     lc_nodes = _group_by_label(filter(lambda d: d.operation.parameters.get('mutation') == 'layerchoice',
@@ -282,7 +283,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
                 if isinstance(value, ValueChoiceX):
                     for i, choice in enumerate(value.inner_choices()):
                         node = graph.add_node(f'{name}.init.{key}.{i}', 'ValueChoice', {'candidates': choice.candidates})
-                    node.label = value.label
+                        node.label = choice.label
 
         if isinstance(module, (LayerChoice, InputChoice, ValueChoice)):
             # TODO: check the label of module and warn if it's auto-generated

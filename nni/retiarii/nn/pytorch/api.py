@@ -260,7 +260,7 @@ class ChosenInputs(nn.Module):
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
 
 
-class ValueChoiceX(Translatable, Mutable):
+class ValueChoiceX(Translatable):
     """
     Internal API. Implementation note:
 
@@ -304,7 +304,8 @@ class ValueChoiceX(Translatable, Mutable):
         No deduplication on labels. Mutators should take care.
         """
         for arg in self.arguments:
-            yield from arg.inner_choices()
+            if isinstance(arg, ValueChoiceX):
+                yield from arg.inner_choices()
 
     def dry_run(self) -> Any:
         """
@@ -364,109 +365,104 @@ class ValueChoiceX(Translatable, Mutable):
 
     # region implement int, float, round, trunc, floor, ceil
     # because I believe sometimes we need them to calculate #channels
-    def __int__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: int(x), 'int({})', [self])
-
-    def __float__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: float(x), 'float({})', [self])
-
+    # `__int__` and `__float__` are not supported because `__int__` is required to return int.
     def __round__(self, ndigits: Optional[Any] = None) -> 'ValueChoiceX':
         if ndigits is not None:
-            return ValueChoiceX(lambda x, y: round(x, y), 'round({}, {})', [self, ndigits])
-        return ValueChoiceX(lambda x: round(x), 'round({})', [self])
+            return ValueChoiceX(round, 'round({}, {})', [self, ndigits])
+        return ValueChoiceX(round, 'round({})', [self])
 
     def __trunc__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: math.trunc(x), 'math.trunc({})', [self])
+        return ValueChoiceX(math.trunc, 'math.trunc({})', [self])
 
     def __floor__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: math.floor(x), 'math.floor({})', [self])
+        return ValueChoiceX(math.floor, 'math.floor({})', [self])
 
     def __ceil__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: math.ceil(x), 'math.ceil({})', [self])
+        return ValueChoiceX(math.ceil, 'math.ceil({})', [self])
     # endregion
 
     # region the following code is generated with codegen (see below)
     # Annotated with "region" because I want to collapse them in vscode
     def __neg__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.neg(x), '-{}', [self])
+        return ValueChoiceX(operator.neg, '-{}', [self])
 
     def __pos__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.pos(x), '+{}', [self])
+        return ValueChoiceX(operator.pos, '+{}', [self])
 
     def __invert__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.invert(x), '~{}', [self])
+        return ValueChoiceX(operator.invert, '~{}', [self])
 
     def __add__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.add(x, y), '{} + {}', [self, other])
+        return ValueChoiceX(operator.add, '{} + {}', [self, other])
 
     def __radd__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.add(y, x), '{} + {}', [other, self])
+        return ValueChoiceX(operator.add, '{} + {}', [other, self])
 
     def __sub__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.sub(x, y), '{} - {}', [self, other])
+        return ValueChoiceX(operator.sub, '{} - {}', [self, other])
 
     def __rsub__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.sub(y, x), '{} - {}', [other, self])
+        return ValueChoiceX(operator.sub, '{} - {}', [other, self])
 
     def __mul__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.mul(x, y), '{} * {}', [self, other])
+        return ValueChoiceX(operator.mul, '{} * {}', [self, other])
 
     def __rmul__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.mul(y, x), '{} * {}', [other, self])
+        return ValueChoiceX(operator.mul, '{} * {}', [other, self])
 
     def __matmul__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.matmul(x, y), '{} @ {}', [self, other])
+        return ValueChoiceX(operator.matmul, '{} @ {}', [self, other])
 
     def __rmatmul__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.matmul(y, x), '{} @ {}', [other, self])
+        return ValueChoiceX(operator.matmul, '{} @ {}', [other, self])
 
     def __truediv__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.truediv(x, y), '{} // {}', [self, other])
+        return ValueChoiceX(operator.truediv, '{} // {}', [self, other])
 
     def __rtruediv__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.truediv(y, x), '{} // {}', [other, self])
+        return ValueChoiceX(operator.truediv, '{} // {}', [other, self])
 
     def __floordiv__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.floordiv(x, y), '{} / {}', [self, other])
+        return ValueChoiceX(operator.floordiv, '{} / {}', [self, other])
 
     def __rfloordiv__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.floordiv(y, x), '{} / {}', [other, self])
+        return ValueChoiceX(operator.floordiv, '{} / {}', [other, self])
 
     def __mod__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.mod(x, y), '{} % {}', [self, other])
+        return ValueChoiceX(operator.mod, '{} % {}', [self, other])
 
     def __rmod__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.mod(y, x), '{} % {}', [other, self])
+        return ValueChoiceX(operator.mod, '{} % {}', [other, self])
 
     def __lshift__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.lshift(x, y), '{} << {}', [self, other])
+        return ValueChoiceX(operator.lshift, '{} << {}', [self, other])
 
     def __rlshift__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.lshift(y, x), '{} << {}', [other, self])
+        return ValueChoiceX(operator.lshift, '{} << {}', [other, self])
 
     def __rshift__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.rshift(x, y), '{} >> {}', [self, other])
+        return ValueChoiceX(operator.rshift, '{} >> {}', [self, other])
 
     def __rrshift__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.rshift(y, x), '{} >> {}', [other, self])
+        return ValueChoiceX(operator.rshift, '{} >> {}', [other, self])
 
     def __and__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.and_(x, y), '{} & {}', [self, other])
+        return ValueChoiceX(operator.and_, '{} & {}', [self, other])
 
     def __rand__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.and_(y, x), '{} & {}', [other, self])
+        return ValueChoiceX(operator.and_, '{} & {}', [other, self])
 
     def __xor__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.xor(x, y), '{} ^ {}', [self, other])
+        return ValueChoiceX(operator.xor, '{} ^ {}', [self, other])
 
     def __rxor__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.xor(y, x), '{} ^ {}', [other, self])
+        return ValueChoiceX(operator.xor, '{} ^ {}', [other, self])
 
     def __or__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.or_(x, y), '{} | {}', [self, other])
+        return ValueChoiceX(operator.or_, '{} | {}', [self, other])
 
     def __ror__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.or_(y, x), '{} | {}', [other, self])
+        return ValueChoiceX(operator.or_, '{} | {}', [other, self])
     # endregion
 
     # the above code can be generated with this codegen
@@ -489,13 +485,13 @@ class ValueChoiceX(Translatable, Mutable):
         }
 
         binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.{opt}(x, y), '{{}} {sym} {{}}', [self, other])"""
+        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [self, other])"""
 
         binary_r_template = """    def __r{op}__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.{opt}(y, x), '{{}} {sym} {{}}', [other, self])"""
+        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [other, self])"""
 
         unary_template = """    def __{op}__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x, y: operator.{op}(x), '{sym}{{}}', [self])"""
+        return ValueChoiceX(operator.{op}, '{sym}{{}}', [self])"""
 
         for op, sym in MAPPING.items():
             if op in ['neg', 'pos', 'invert']:
@@ -505,29 +501,29 @@ class ValueChoiceX(Translatable, Mutable):
                 print(binary_template.format(op=op, opt=opt, sym=sym) + '\n')
                 print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
 
-    # __pow__, __divmod__, __abs__ are special ones
-    # not easy to cover those cases with codegen
+    # __pow__, __divmod__, __abs__ are special ones.
+    # Not easy to cover those cases with codegen.
     def __pow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
         if modulo is not None:
-            return ValueChoiceX(lambda a, b, c: pow(a, b, c), 'pow({}, {}, {})', [self, other, modulo])
+            return ValueChoiceX(pow, 'pow({}, {}, {})', [self, other, modulo])
         return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [self, other])
 
     def __rpow__(self, other: Any, modulo: Optional[Any] = None) -> 'ValueChoiceX':
         if modulo is not None:
-            return ValueChoiceX(lambda a, b, c: pow(a, b, c), 'pow({}, {}, {})', [other, self, modulo])
+            return ValueChoiceX(pow, 'pow({}, {}, {})', [other, self, modulo])
         return ValueChoiceX(lambda a, b: a ** b, '{} ** {}', [other, self])
 
     def __divmod__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda a, b: divmod(a, b), 'divmod({}, {})', [self, other])
+        return ValueChoiceX(divmod, 'divmod({}, {})', [self, other])
 
     def __rdivmod__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda a, b: divmod(a, b), 'divmod({}, {})', [other, self])
+        return ValueChoiceX(divmod, 'divmod({}, {})', [other, self])
 
     def __abs__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(lambda x: abs(x), 'abs({})', [self])
+        return ValueChoiceX(abs, 'abs({})', [self])
 
 
-class ValueChoice(ValueChoiceX):
+class ValueChoice(ValueChoiceX, Mutable):
     """
     ValueChoice is to choose one from ``candidates``.
 
@@ -625,7 +621,9 @@ class ValueChoice(ValueChoiceX):
     def dry_run(self) -> Any:
         return self.candidates[0]
 
-    def _evaluate(self, values: Iterable[Any]) -> Any:
+    def _evaluate(self, values: Iterable[Any], dry_run: bool = False) -> Any:
+        if dry_run:
+            return self.candidates[0]
         try:
             value = next(values)
         except StopIteration:
@@ -633,21 +631,6 @@ class ValueChoice(ValueChoiceX):
         if value not in self.candidates:
             raise ValueError(f'Value {value} does not belong to the candidates of {self}.')
         return value
-
-    def _evaluate(self, values: Iterable[Any]) -> Any:
-        # same function, in case some one forget to "iter" values
-        eval_args = []
-        for arg in self.arguments:
-            if isinstance(arg, ValueChoice):
-                # fill-in a value
-                eval_args.append(next(values))
-            elif isinstance(arg, ValueChoice):
-                # recursive evaluation
-                eval_args.append(arg._evaluate(values))
-            else:
-                # constant value
-                eval_args.append(arg)
-        return self.function(*eval_args)
 
     def __repr__(self):
         return f'ValueChoice({self.candidates}, label={repr(self.label)})'

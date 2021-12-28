@@ -1,6 +1,9 @@
+import math
 import random
 import unittest
 from collections import Counter
+
+import pytest
 
 import nni.retiarii.nn.pytorch as nn
 import torch
@@ -63,6 +66,15 @@ class GraphIR(unittest.TestCase):
         model = self._convert_to_ir(pytorch_model)
         mutators = process_inline_mutation(model)
         return model, mutators
+
+    def _apply_all_mutators(self, model, mutators, samplers):
+        if not isinstance(samplers, list):
+            samplers = [samplers for _ in range(len(mutators))]
+        assert len(samplers) == len(mutators)
+        model_new = model
+        for mutator, sampler in zip(mutators, samplers):
+            model_new = mutator.bind_sampler(sampler).apply(model_new)
+        return model_new
 
     def get_serializer(self):
         def dummy(cls):
@@ -223,36 +235,16 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
-        model1 = mutator.apply(model)
-        model2 = mutator.apply(model)
+        self.assertEqual(len(mutators), 2)
+        sampler = EnumerateSampler()
+        model1 = self._apply_all_mutators(model, mutators, sampler)
+        model2 = self._apply_all_mutators(model, mutators, sampler)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
                          torch.Size([1, 5, 3, 3]))
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
                          torch.Size([1, 5, 1, 1]))
 
-    def test_value_choice_as_parameter(self):
-        @self.get_serializer()
-        class Net(nn.Module):
-            def __init__(self):
-                super().__init__()
-                self.conv = nn.Conv2d(3, 5, kernel_size=nn.ValueChoice([3, 5]))
-
-            def forward(self, x):
-                return self.conv(x)
-
-        model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
-        model1 = mutator.apply(model)
-        model2 = mutator.apply(model)
-        self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
-                         torch.Size([1, 5, 3, 3]))
-        self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
-                         torch.Size([1, 5, 1, 1]))
-
-    def test_value_choice_as_parameter(self):
+    def test_value_choice_as_two_parameters(self):
         @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
@@ -263,13 +255,14 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2)
-        mutators[0].bind_sampler(EnumerateSampler())
-        mutators[1].bind_sampler(EnumerateSampler())
+        self.assertEqual(len(mutators), 3)
+        samplers = [EnumerateSampler() for _ in range(3)]
+        model1 = self._apply_all_mutators(model, mutators, samplers)
+        model2 = self._apply_all_mutators(model, mutators, samplers)
         input = torch.randn(1, 3, 5, 5)
-        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(model1)(input).size(),
                          torch.Size([1, 6, 3, 3]))
-        self.assertEqual(self._get_converted_pytorch_model(mutators[1].apply(mutators[0].apply(model)))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(model2)(input).size(),
                          torch.Size([1, 8, 1, 1]))
 
     def test_value_choice_as_parameter_shared(self):
@@ -284,10 +277,10 @@ class GraphIR(unittest.TestCase):
                 return self.conv1(x) + self.conv2(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutator = mutators[0].bind_sampler(EnumerateSampler())
-        model1 = mutator.apply(model)
-        model2 = mutator.apply(model)
+        self.assertEqual(len(mutators), 2)
+        sampler = EnumerateSampler()
+        model1 = self._apply_all_mutators(model, mutators, sampler)
+        model2 = self._apply_all_mutators(model, mutators, sampler)
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 5, 5)).size(),
                          torch.Size([1, 6, 5, 5]))
         self.assertEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 5, 5)).size(),
@@ -326,13 +319,11 @@ class GraphIR(unittest.TestCase):
                 return self.linear(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 3)
+        self.assertEqual(len(mutators), 4)
         sz_counter = Counter()
         sampler = RandomSampler()
         for i in range(100):
-            model_new = model
-            for mutator in mutators:
-                model_new = mutator.bind_sampler(sampler).apply(model_new)
+            model_new = self._apply_all_mutators(model, mutators, sampler)
             sz_counter[self._get_converted_pytorch_model(model_new)(torch.randn(1, 3)).size(1)] += 1
         self.assertEqual(len(sz_counter), 4)
 
@@ -378,7 +369,7 @@ class GraphIR(unittest.TestCase):
         self.assertGreater(failed_count, 0)
         self.assertLess(failed_count, 30)
 
-    def test_valuechoice_access(self):
+    def test_valuechoice_getitem(self):
         @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
@@ -390,12 +381,12 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 1)
-        mutators[0].bind_sampler(EnumerateSampler())
+        self.assertEqual(len(mutators), 2)
+        sampler = EnumerateSampler()
         input = torch.randn(1, 3, 5, 5)
-        self.assertEqual(self._get_converted_pytorch_model(mutators[0].apply(model))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, sampler))(input).size(),
                          torch.Size([1, 6, 3, 3]))
-        self.assertEqual(self._get_converted_pytorch_model(mutators[0].apply(model))(input).size(),
+        self.assertEqual(self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, sampler))(input).size(),
                          torch.Size([1, 8, 1, 1]))
 
         @self.get_serializer()
@@ -414,12 +405,11 @@ class GraphIR(unittest.TestCase):
                 return self.conv1(torch.cat((x, x), 1))
 
         model, mutators = self._get_model_with_mutators(Net2())
-        self.assertEqual(len(mutators), 1)
-        mutators[0].bind_sampler(EnumerateSampler())
+        self.assertEqual(len(mutators), 2)
         input = torch.randn(1, 3, 5, 5)
-        self._get_converted_pytorch_model(mutators[0].apply(model))(input)
+        self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, EnumerateSampler()))(input)
 
-    def test_valuechoice_access_functional(self):
+    def test_valuechoice_getitem_functional(self):
         @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
@@ -438,7 +428,7 @@ class GraphIR(unittest.TestCase):
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
 
-    def test_valuechoice_access_functional_expression(self):
+    def test_valuechoice_getitem_functional_expression(self):
         @self.get_serializer()
         class Net(nn.Module):
             def __init__(self):
@@ -458,6 +448,20 @@ class GraphIR(unittest.TestCase):
         self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
+
+    def test_valuechoice_inconsistent_label(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                self.conv1 = nn.Conv2d(3, nn.ValueChoice([3, 5], label='a'), 1)
+                self.conv2 = nn.Conv2d(3, nn.ValueChoice([3, 6], label='a'), 1)
+
+            def forward(self, x):
+                return torch.cat([self.conv1(x), self.conv2(x)], 1)
+
+        with pytest.raises(AssertionError):
+            self._get_model_with_mutators(Net())
 
     def test_repeat(self):
         class AddOne(nn.Module):
@@ -628,10 +632,10 @@ class Python(GraphIR):
     def test_value_choice_in_functional(self): ...
 
     @unittest.skip
-    def test_valuechoice_access_functional(self): ...
+    def test_valuechoice_getitem_functional(self): ...
 
     @unittest.skip
-    def test_valuechoice_access_functional_expression(self): ...
+    def test_valuechoice_getitem_functional_expression(self): ...
 
     def test_nasbench101_cell(self):
         # this is only supported in python engine for now.
@@ -658,3 +662,45 @@ class Python(GraphIR):
             except InvalidMutation:
                 continue
             self.assertTrue(self._get_converted_pytorch_model(model)(torch.randn(2, 10)).size() == torch.Size([2, 16]))
+
+    def test_value_choice_api_purely(self):
+        a = nn.ValueChoice([1, 2], label='a')
+        b = nn.ValueChoice([3, 4], label='b')
+        c = nn.ValueChoice([5, 6], label='c')
+        d = a + b + 3 * c
+        for i, choice in enumerate(d.inner_choices()):
+            if i == 0:
+                assert choice.candidates == [1, 2]
+            elif i == 1:
+                assert choice.candidates == [3, 4]
+            elif i == 2:
+                assert choice.candidates == [5, 6]
+        assert d.evaluate([2, 3, 5]) == 20
+
+        a = nn.ValueChoice(['cat', 'dog'])
+        b = nn.ValueChoice(['milk', 'coffee'])
+        assert (a + b).evaluate(['dog', 'coffee']) == 'dogcoffee'
+        assert (a + 2 * b).evaluate(['cat', 'milk']) == 'catmilkmilk'
+
+        assert (3 - nn.ValueChoice([1, 2])).evaluate([1]) == 2
+
+        with pytest.raises(TypeError):
+            a + nn.ValueChoice([1, 3])
+
+        a = nn.ValueChoice([1, 17])
+        a = (abs(-a * 3) % 11) ** 5
+        assert 'abs' in repr(a)
+        with pytest.raises(ValueError):
+            a.evaluate([42])
+        assert a.evaluate([17]) == 7 ** 5
+
+        a = round(7 / nn.ValueChoice([2, 5]))
+        assert a.evaluate([2]) == 4
+
+        a = ~(77 ^ (nn.ValueChoice([1, 4]) & 5))
+        assert a.evaluate([4]) == ~(77 ^ (4 & 5))
+
+        a = nn.ValueChoice([5, 3]) * nn.ValueChoice([6.5, 7.5])
+        assert math.floor(a.evaluate([5, 7.5])) == int(5 * 7.5)
+
+        # a complex one
