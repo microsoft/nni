@@ -51,6 +51,8 @@ class MutableConv(nn.Module):
 
 
 class GraphIR(unittest.TestCase):
+    # graph engine will have an extra mutator for parameter choices
+    value_choice_incr = 1
 
     def _convert_to_ir(self, model):
         script_module = torch.jit.script(model)
@@ -235,7 +237,7 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2)
+        self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         sampler = EnumerateSampler()
         model1 = self._apply_all_mutators(model, mutators, sampler)
         model2 = self._apply_all_mutators(model, mutators, sampler)
@@ -255,8 +257,8 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 3)
-        samplers = [EnumerateSampler() for _ in range(3)]
+        self.assertEqual(len(mutators), 2 + self.value_choice_incr)
+        samplers = [EnumerateSampler() for _ in range(len(mutators))]
         model1 = self._apply_all_mutators(model, mutators, samplers)
         model2 = self._apply_all_mutators(model, mutators, samplers)
         input = torch.randn(1, 3, 5, 5)
@@ -277,7 +279,7 @@ class GraphIR(unittest.TestCase):
                 return self.conv1(x) + self.conv2(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2)
+        self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         sampler = EnumerateSampler()
         model1 = self._apply_all_mutators(model, mutators, sampler)
         model2 = self._apply_all_mutators(model, mutators, sampler)
@@ -319,7 +321,7 @@ class GraphIR(unittest.TestCase):
                 return self.linear(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 4)
+        self.assertEqual(len(mutators), 3 + self.value_choice_incr)
         sz_counter = Counter()
         sampler = RandomSampler()
         for i in range(100):
@@ -381,7 +383,7 @@ class GraphIR(unittest.TestCase):
                 return self.conv(x)
 
         model, mutators = self._get_model_with_mutators(Net())
-        self.assertEqual(len(mutators), 2)
+        self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         sampler = EnumerateSampler()
         input = torch.randn(1, 3, 5, 5)
         self.assertEqual(self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, sampler))(input).size(),
@@ -405,7 +407,7 @@ class GraphIR(unittest.TestCase):
                 return self.conv1(torch.cat((x, x), 1))
 
         model, mutators = self._get_model_with_mutators(Net2())
-        self.assertEqual(len(mutators), 2)
+        self.assertEqual(len(mutators), 1 + self.value_choice_incr)
         input = torch.randn(1, 3, 5, 5)
         self._get_converted_pytorch_model(self._apply_all_mutators(model, mutators, EnumerateSampler()))(input)
 
@@ -448,6 +450,29 @@ class GraphIR(unittest.TestCase):
         self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3))
         self.assertEqual(self._get_converted_pytorch_model(model1)(torch.randn(1, 3, 3, 3)).size(), torch.Size([1, 3, 3, 3]))
         self.assertAlmostEqual(self._get_converted_pytorch_model(model2)(torch.randn(1, 3, 3, 3)).abs().sum().item(), 0)
+
+    def test_valuechoice_multi(self):
+        @self.get_serializer()
+        class Net(nn.Module):
+            def __init__(self):
+                super().__init__()
+                choice1 = nn.ValueChoice([{"in": 1, "out": 3}, {"in": 2, "out": 6}, {"in": 3, "out": 9}])
+                choice2 = nn.ValueChoice([2.5, 3.0, 3.5], label='multi')
+                choice3 = nn.ValueChoice([2.5, 3.0, 3.5], label='multi')
+                self.conv1 = nn.Conv2d(choice1["in"], round(choice1["out"] * choice2), 1)
+                self.conv2 = nn.Conv2d(choice1["in"], round(choice1["out"] * choice3), 1)
+
+            def forward(self, x):
+                return self.conv1(x) + self.conv2(x)
+
+        model, mutators = self._get_model_with_mutators(Net())
+        self.assertEqual(len(mutators), 2 + self.value_choice_incr)
+        samplers = [EnumerateSampler()] + [RandomSampler() for _ in range(self.value_choice_incr + 1)]
+
+        for i in range(10):
+            model_new = self._apply_all_mutators(model, mutators, samplers)
+            result = self._get_converted_pytorch_model(model_new)(torch.randn(1, i % 3 + 1, 3, 3))
+            self.assertIn(result.size(), [torch.Size([1, round((i % 3 + 1) * 3 * k), 3, 3]) for k in [2.5, 3.0, 3.5]])
 
     def test_valuechoice_inconsistent_label(self):
         @self.get_serializer()
@@ -613,6 +638,9 @@ class GraphIR(unittest.TestCase):
 
 
 class Python(GraphIR):
+    # Python engine doesn't have the extra mutator
+    value_choice_incr = 0
+
     def _get_converted_pytorch_model(self, model_ir):
         mutation = {mut.mutator.label: _unpack_if_only_one(mut.samples) for mut in model_ir.history}
         with ContextStack('fixed', mutation):
@@ -702,5 +730,3 @@ class Python(GraphIR):
 
         a = nn.ValueChoice([5, 3]) * nn.ValueChoice([6.5, 7.5])
         assert math.floor(a.evaluate([5, 7.5])) == int(5 * 7.5)
-
-        # a complex one
