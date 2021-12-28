@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 import logging
+import warnings
 from typing import Any, Callable
 
 import nni
@@ -121,7 +122,19 @@ class RetiariiAdvisor(MsgDispatcherBase):
             'placement_constraint': placement_constraint
         }
         _logger.debug('New trial sent: %s', new_trial)
-        send(CommandType.NewTrialJob, nni.dump(new_trial))
+
+        send_payload = nni.dump(new_trial, pickle_size_limit=-1)
+        if len(send_payload) > 256 * 1024:
+            warnings.warn(
+                'The total payload of the trial is larger than 50 KB. '
+                'This can cause performance issues and even the crash of NNI experiment. '
+                'This is usually caused by pickling large objects (like datasets) by mistake. '
+                'See https://nni.readthedocs.io/en/stable/NAS/Serialization.html for details.'
+            )
+        # trial parameters can be super large, disable pickle size limit here
+        # nevertheless, there could still be blocked by pipe / nni-manager
+        send(CommandType.NewTrialJob, send_payload)
+
         if self.send_trial_callback is not None:
             self.send_trial_callback(parameters)  # pylint: disable=not-callable
         return self.parameters_count

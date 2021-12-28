@@ -1,18 +1,17 @@
 import abc
-import copy
-import collections.abc
 import base64
+import collections.abc
+import copy
 import functools
 import inspect
 import numbers
 import types
 import warnings
 from io import IOBase
-from typing import Any, Union, Dict, Optional, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
-import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
-
+import json_tricks  # use json_tricks as serializer backend
 
 __all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
 
@@ -64,7 +63,7 @@ class Traceable(abc.ABC):
 
 class Translatable(abc.ABC):
     """
-    Inherit this class and implement ``translate`` when the inner class needs a different
+    Inherit this class and implement ``translate`` when the wrapped class needs a different
     parameter from the wrapper class in its init function.
     """
 
@@ -205,11 +204,11 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     When a class/function is annotated, all the instances/calls will return a object as it normally will.
     Although the object might act like a normal object, it's actually a different object with NNI-specific properties.
-    One exception is that if your function returns None, it will return an empty SerializableObject instead,
+    One exception is that if your function returns None, it will return an empty traceable object instead,
     which should raise your attention when you want to check whether the None ``is None``.
 
-    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to inner function.
-    This is to prevent mutable objects gets modified in the inner function.
+    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to wrapped function/class.
+    This is to prevent mutable objects gets modified in the wrapped function/class.
     When the function finished execution, we also record extra information about where this object comes from.
     That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
@@ -403,8 +402,9 @@ def _trace_func(func, kw_only):
 
 def _copy_class_wrapper_attributes(base, wrapper):
     _MISSING = '_missing'
+
+    # assign magic attributes like __module__, __qualname__, __doc__
     for k in functools.WRAPPER_ASSIGNMENTS:
-        # assign magic attributes like __module__, __qualname__, __doc__
         v = getattr(base, k, _MISSING)
         if v is not _MISSING:
             try:
@@ -418,9 +418,9 @@ def _copy_class_wrapper_attributes(base, wrapper):
 def _argument_processor(arg):
     # 1) translate
     # handle cases like ValueChoice
-    # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
+    # This is needed because sometimes the recorded arguments are meant to be different from what the wrapped object receives.
     arg = Translatable._translate_argument(arg)
-    # 2) prevent the stored parameters to be mutated by inner class.
+    # 2) prevent the stored parameters to be mutated by wrapped class.
     # an example: https://github.com/microsoft/nni/issues/4329
     if isinstance(arg, (collections.abc.MutableMapping, collections.abc.MutableSequence, collections.abc.MutableSet)):
         arg = copy.copy(arg)
@@ -562,7 +562,7 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
         return obj
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
-        if len(b) > pickle_size_limit:
+        if len(b) > pickle_size_limit > 0:
             raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
                              'not decorated by @nni.trace. Another option is to force bytes pickling and '
                              'try to raise pickle_size_limit.')

@@ -1,4 +1,4 @@
-.. 579c410263c842f4541cbdad14723328
+.. 51734c9945d4eca0f9b5633929d8fadf
 
 Multi-trial NAS
 ===============
@@ -9,7 +9,6 @@ Multi-trial NAS
     :maxdepth: 1
 
     模型评估器 <ModelEvaluators>
-    自定义模型评估器 <WriteTrainer>
     探索策略 <ExplorationStrategies>
-    自定义探索策略 <WriteStrategy>
     执行引擎 <ExecutionEngines>
+    序列化 <Serialization>
