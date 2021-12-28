@@ -1,4 +1,4 @@
-.. 83ce1769eb03248c40c61ccae8afe4cd
+.. a4f78c1228b3d6c0b00277fd5236d106
 
 快速入门 Retiarii
 ==============================
@@ -14,7 +14,7 @@
 
 One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
-.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.6 和 1.7** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
+.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.7 和 1.10** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
 
 定义模型空间
 -----------------------
@@ -30,32 +30,31 @@ One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
 .. code-block:: python
 
+  import torch
   import torch.nn.functional as F
   import nni.retiarii.nn.pytorch as nn
   from nni.retiarii import model_wrapper
 
-  class BasicBlock(nn.Module):
-    def __init__(self, const):
-      self.const = const
-    def forward(self, x):
-      return x + self.const
-
-  class ConvPool(nn.Module):
+  @model_wrapper      # this decorator should be put on the out most
+  class Net(nn.Module):
     def __init__(self):
       super().__init__()
-      self.conv = nn.Conv2d(32, 1, 5)  # possibly mutate this conv
-      self.pool = nn.MaxPool2d(kernel_size=2)
-    def forward(self, x):
-      return self.pool(self.conv(x))
+      self.conv1 = nn.Conv2d(1, 32, 3, 1)
+      self.conv2 = nn.Conv2d(32, 64, 3, 1)
+      self.dropout1 = nn.Dropout(0.25)
+      self.dropout2 = nn.Dropout(0.5)
+      self.fc1 = nn.Linear(9216, 128)
+      self.fc2 = nn.Linear(128, 10)
 
-  @model_wrapper      # 这个装饰器应该放在最外面的 PyTorch 模块上
-  class Model(nn.Module):
-    def __init__(self):
-      super().__init__()
-      self.convpool = ConvPool()
-      self.mymodule = BasicBlock(2.)
     def forward(self, x):
-      return F.relu(self.convpool(self.mymodule(x)))
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(self.conv2(x), 2)
+      x = torch.flatten(self.dropout1(x), 1)
+      x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+      output = F.log_softmax(x, dim=1)
+      return output
+
+.. tip:: 记得使用 ``import nni.retiarii.nn.pytorch as nn`` 和 ``@model_wrapper``. 许多错误都源于忘记使用它们。同时，对于 ``nn`` 的子模块（例如 ``nn.init``）请使用 ``torch.nn``，比如，``torch.nn.init`` 而不是 ``nn.init``。
 
 定义模型突变
 ^^^^^^^^^^^^^^^^^^^^^^
