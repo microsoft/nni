@@ -69,7 +69,7 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
@@ -79,7 +79,7 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - 93.74%
      - 14.98M
      - 313.46M
-     - 0.8
+     - 80%
 
 L1 Norm Pruner
 --------------
@@ -125,14 +125,17 @@ The seed was set to 1024, sparsity was 0.5. You can reproduct the result(the fol
    * - Model
      - Accuracy(paper/ours)
      - Parameters(paper/ours)
-     - Pruned(paper/ours)
+     - Sparsity Before Speedup(paper/ours)
+     - Sparsity After Speedup(paper/ours)
    * - VGG-16
      - 93.25% / 93.86%
      - 15M / 14.98M
-     - 
+     -
+     -
    * - Pruned VGG-16
      - 93.40% / 92.93%
      - 5.40M / 3.81M
+     - / 50%
      - 64.0% / 74.57%
 
 L2 Norm Pruner
@@ -175,17 +178,20 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
-     - 
+     -
+     -
    * - Pruned VGG-16
      - 93.40%
      - 3.81M
      - 78.88M
-     - 0.5
+     - 50%
+     - 74.57%
 
 FPGM Pruner
 -----------
@@ -230,17 +236,20 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
-     - 
+     -
+     -
    * - Pruned VGG-16
      - 92.24%
      - 2.47M
      - 51.39M
-     - 0.6
+     - 60%
+     - 83.51%
 
 Slim Pruner
 -----------
@@ -282,14 +291,17 @@ The seed was set to 1024, sparsity was 0.7. You can reproduct the result(the fol
    * - Model
      - Accuracy(paper/ours)
      - Parameters(paper/ours)
-     - Pruned(paper/ours)
+     - Sparsity Before Speedup(paper/ours)
+     - Sparsity After Speedup(paper/ours)
    * - VGGNet
      - 93.66% / 92.80%
      - 20.04M / 20.29M
-     - 
+     -
+     -
    * - Pruned VGGNet
      - 93.80% / 93.37%
      - 2.03M / 2.08M
+     - / 70%
      - 88.5% / 89.7%
 
 Activation APoZ Rank Pruner
@@ -338,17 +350,20 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
-     - 
+     -
+     -
    * - Pruned VGG-16
-     - 87.24%
-     - 0.64M
-     - 12.98M
-     - 0.8
+     - 92.70%
+     - 3.81M
+     - 78.88M
+     - 50%
+     - 74.57%
 
 Activation Mean Rank Pruner
 ---------------------------
@@ -392,17 +407,20 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
-     - 
+     -
+     -
    * - Pruned VGG-16
-     - 87.61%
-     - 0.66M
-     - 13.18M
-     - 0.8
+     - 92.63%
+     - 3.81M
+     - 78.88M
+     - 50%
+     - 74.57%
 
 Taylor FO Weight Pruner
 -----------------------
@@ -450,17 +468,20 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity Before Speedup
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
-     - 
+     -
+     -
    * - Pruned VGG-16
-     - 87.97%
-     - 0.66M
-     - 13.18M
-     - 0.8
+     - 93.01%
+     - 3.81M
+     - 78.88M
+     - 50%
+     - 74.57%
 
 ADMM Pruner
 -----------
