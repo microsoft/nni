@@ -1,18 +1,18 @@
 import abc
-import copy
-import collections.abc
 import base64
+import collections.abc
+import copy
 import functools
 import inspect
 import numbers
+import sys
 import types
 import warnings
 from io import IOBase
-from typing import Any, Union, Dict, Optional, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
-import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
-
+import json_tricks  # use json_tricks as serializer backend
 
 __all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
 
@@ -403,8 +403,17 @@ def _trace_func(func, kw_only):
 
 def _copy_class_wrapper_attributes(base, wrapper):
     _MISSING = '_missing'
+
+    # assign magic attributes like __module__, __qualname__, __doc__
     for k in functools.WRAPPER_ASSIGNMENTS:
-        # assign magic attributes like __module__, __qualname__, __doc__
+        # otherwise pickle will complain:
+        # _pickle.PicklingError: Can't pickle <class 'xxx.xxx'>: it's not the same object as xxx.xxx
+        # the module name will look ugly
+        # but we don't have better options
+        # https://stackoverflow.com/questions/1412787/picklingerror-cant-pickle-class-decimal-decimal-its-not-the-same-object
+        if k == '__module__':
+            continue
+
         v = getattr(base, k, _MISSING)
         if v is not _MISSING:
             try:
