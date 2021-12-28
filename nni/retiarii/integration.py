@@ -124,7 +124,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         _logger.debug('New trial sent: %s', new_trial)
 
         send_payload = nni.dump(new_trial, pickle_size_limit=-1)
-        if len(send_payload) > 50 * 1024:
+        if len(send_payload) > 256 * 1024:
             warnings.warn(
                 'The total payload of the trial is larger than 50 KB. '
                 'This can cause performance issues and even the crash of NNI experiment. '

@@ -5,7 +5,7 @@ In multi-trial NAS, a sampled model should be able to be executed on a remote ma
 
 Serialization is implemented as a combination of `json-tricks <https://json-tricks.readthedocs.io/en/latest/>`_ and `cloudpickle <https://github.com/cloudpipe/cloudpickle>`_. Essentially, it is json-tricks, that is a enhanced version of Python JSON, enabling handling of serialization of numpy arrays, date/times, decimal, fraction and etc. The difference lies in the handling of class instances. Json-tricks deals with class instances with ``__dict__`` and ``__class__``, which in most of our cases are not reliable (e.g., datasets, dataloaders). Rather, our serialization deals with class instances with two methods:
 
-1. If the class / factory that creates the object is decorated with ``nni.trace``, we can serialize the type / factory function, along with the parameters, such that the instance can be re-instantiated.
+1. If the class / factory that creates the object is decorated with ``nni.trace``, we can serialize the class / factory function, along with the parameters, such that the instance can be re-instantiated.
 2. Otherwise, cloudpickle is used to serialize the object into a binary.
 
 The recommendation is, unless you are absolutely certain that there is no problem and extra burden to serialize the object into binary, always add ``nni.trace``. In most cases, it will be more clean and neat, and enables possibilities such as mutation of parameters (will be supported in future).
@@ -24,7 +24,7 @@ To trace a function or class, users can use decorator like,
     class MyClass:
         ...
 
-Inline trace that traces instantly before being used is also acceptable: ``nni.trace(MyClass)(parameters)``.
+Inline trace that traces instantly on the object instantiation or function invoke is also acceptable: ``nni.trace(MyClass)(parameters)``.
 
 Assuming a class ``cls`` is already traced, when it is serialized, its class type along with initialization parameters will be dumped. As the parameters are possibly class instances (if not primitive types like ``int`` and ``str``), their serialization will be a similar problem. We recommend decorate them with ``nni.trace`` as well. In other words, ``nni.trace`` should be applied recursively if necessary.
 

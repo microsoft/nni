@@ -6,7 +6,7 @@ A model evaluator is for training and validating each generated model. They are 
 Customize Evaluator with Any Function
 -------------------------------------
 
-The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model.. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters (note that they will be `serialized <./Serialization.rst>`__). In this way, users get everything under their control, but expose less information to the framework and thus fewer opportunities for possible optimization. An example is as belows:
+The simplest way to customize a new evaluator is with functional APIs, which is very easy when training code is already available. Users only need to write a fit function that wraps everything, which usually includes training, validating and testing of a single model. This function takes one positional arguments (``model_cls``) and possible keyword arguments. The keyword arguments (other than ``model_cls``) are fed to FunctionEvaluator as its initialization parameters (note that they will be `serialized <./Serialization.rst>`__). In this way, users get everything under their control, but expose less information to the framework and as a result, further optimizations like `CGO <./ExecutionEngines.rst#cgo-execution-engine-experimental>`__ might be not feasible. An example is as belows:
 
 .. code-block:: python
 
@@ -24,7 +24,21 @@ The simplest way to customize a new evaluator is with functional APIs, which is 
     evaluator = FunctionalEvaluator(fit, dataloader=nni.trace(DataLoader)(foo, bar))
     experiment = RetiariiExperiment(base_model, evaluator, mutators, strategy)
 
-.. tip:: When using customized evaluators, if you want to visualize models, you need to export your model and save it into ``$NNI_OUTPUT_DIR/model.onnx`` in your evaluator.
+.. tip::
+
+    When using customized evaluators, if you want to visualize models, you need to export your model and save it into ``$NNI_OUTPUT_DIR/model.onnx`` in your evaluator. An example here:
+
+    .. code-block:: python
+
+        def fit(model_cls):
+            model = model_cls()
+            onnx_path = Path(os.environ.get('NNI_OUTPUT_DIR', '.')) / 'model.onnx'
+            onnx_path.parent.mkdir(exist_ok=True)
+            dummy_input = torch.randn(10, 3, 224, 224)
+            torch.onnx.export(model, dummy_input, onnx_path)
+            # the rest of training code here
+
+    If the conversion is successful, the model will be able to be visualized with powerful tools `Netron <https://netron.app/>`__.
 
 Evaluators with PyTorch-Lightning
 ---------------------------------
@@ -44,12 +58,11 @@ For example,
 .. code-block:: python
 
   import nni.retiarii.evaluator.pytorch.lightning as pl
-  from nni.retiarii import serialize
   from torchvision import transforms
 
-  transform = serialize(transforms.Compose, [serialize(transforms.ToTensor()), serialize(transforms.Normalize, (0.1307,), (0.3081,))])
-  train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
-  test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
+  transform = nni.trace(transforms.Compose, [nni.trace(transforms.ToTensor()), nni.trace(transforms.Normalize, (0.1307,), (0.3081,))])
+  train_dataset = nni.trace(MNIST, root='data/mnist', train=True, download=True, transform=transform)
+  test_dataset = nni.trace(MNIST, root='data/mnist', train=False, download=True, transform=transform)
 
   # pl.DataLoader and pl.Classification is already traced and supports serialization.
   evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
