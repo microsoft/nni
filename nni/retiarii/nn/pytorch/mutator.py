@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-import collections
 import inspect
 from typing import Any, List, Optional, Tuple, Dict
 
