@@ -5,7 +5,6 @@ import copy
 import functools
 import inspect
 import numbers
-import sys
 import types
 import warnings
 from io import IOBase
@@ -205,7 +204,7 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     When a class/function is annotated, all the instances/calls will return a object as it normally will.
     Although the object might act like a normal object, it's actually a different object with NNI-specific properties.
-    One exception is that if your function returns None, it will return an empty SerializableObject instead,
+    One exception is that if your function returns None, it will return an empty traceable object instead,
     which should raise your attention when you want to check whether the None ``is None``.
 
     When parameters of functions are received, it is first stored, and then a shallow copy will be passed to wrapped function/class.
@@ -406,14 +405,6 @@ def _copy_class_wrapper_attributes(base, wrapper):
 
     # assign magic attributes like __module__, __qualname__, __doc__
     for k in functools.WRAPPER_ASSIGNMENTS:
-        # otherwise pickle will complain:
-        # _pickle.PicklingError: Can't pickle <class 'xxx.xxx'>: it's not the same object as xxx.xxx
-        # the module name will look ugly
-        # but we don't have better options
-        # https://stackoverflow.com/questions/1412787/picklingerror-cant-pickle-class-decimal-decimal-its-not-the-same-object
-        if k == '__module__' and sys.platform != 'linux':
-            continue
-
         v = getattr(base, k, _MISSING)
         if v is not _MISSING:
             try:

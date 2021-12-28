@@ -1,4 +1,4 @@
-.. 19a3023cd1050b0a4ed9075f7ed63ce3
+.. 2cbe7334076be1841320c31208c338ff
 
 快速入门 Retiarii
 ==============================
@@ -54,7 +54,7 @@ One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
       output = F.log_softmax(x, dim=1)
       return output
 
-.. tip:: 记得使用 ``import nni.retiarii.nn.pytorch as nn`` 和 ``@model_wrapper``. 许多错误都源于忘记使用它们。同时，对于 ``nn`` 的子模块（例如 ``nn.init``）请使用 ``torch.nn``，比如，``torch.nn.init`` 而不是 ``nn.init``。
+.. tip:: 记得使用 ``import nni.retiarii.nn.pytorch as nn`` 和 :meth:`nni.retiarii.model_wrapper`. 许多错误都源于忘记使用它们。同时，对于 ``nn`` 的子模块（例如 ``nn.init``）请使用 ``torch.nn``，比如，``torch.nn.init`` 而不是 ``nn.init``。
 
 定义模型突变
 ^^^^^^^^^^^^^^^^^^^^^^

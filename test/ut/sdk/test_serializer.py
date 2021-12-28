@@ -1,8 +1,9 @@
 import math
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 
+import pytest
 import nni
 import torch
 from torch.utils.data import DataLoader
@@ -189,6 +190,7 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
+@pytest.mark.skipIf(sys.platform != 'linux')
 def test_multiprocessing_dataloader():
     # check whether multi-processing works
     # it's possible to have pickle errors

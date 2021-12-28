@@ -50,3 +50,11 @@ Below is an example, ``transforms.Compose``, ``transforms.Normalize``, and ``MNI
   evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
                                 val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
                                 max_epochs=10)
+
+.. note::
+
+    **What's the relationship between model_wrapper, basic_unit and nni.trace?**
+
+    They are fundamentally different. ``model_wrapper`` is used to wrap a base model (search space), ``basic_unit`` to annotate a module as primitive. ``nni.trace`` is to enable serialization of general objects. Though they share similar underlying implementations, but do keep in mind that you will experience errors if you mix them up.
+
+    .. seealso:: Please refer to API reference of :meth:`nni.retiarii.model_wrapper`, :meth:`nni.retiarii.basic_unit`, and :meth:`nni.trace`.

@@ -52,7 +52,7 @@ Below is a very simple example of defining a base model.
       output = F.log_softmax(x, dim=1)
       return output
 
-.. tip:: Always keep in mind that you should use ``import nni.retiarii.nn.pytorch as nn`` and ``@model_wrapper``. Many mistakes are a result of forgetting one of those. Also, please use ``torch.nn`` for submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of ``nn.init``. 
+.. tip:: Always keep in mind that you should use ``import nni.retiarii.nn.pytorch as nn`` and :meth:`nni.retiarii.model_wrapper`. Many mistakes are a result of forgetting one of those. Also, please use ``torch.nn`` for submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of ``nn.init``. 
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
