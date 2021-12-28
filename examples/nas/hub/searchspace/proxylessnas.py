@@ -1,12 +1,9 @@
-import functools
 import math
-import random
 from typing import Optional, Callable, List
 
 import torch
-import torch.nn as nn
-
-from nni.retiarii.serializer import model_wrapper
+import nni.retiarii.nn.pytorch as nn
+from nni.retiarii import model_wrapper
 
 
 def make_divisible(v, divisor, min_val=None):
@@ -71,7 +68,6 @@ class InvertedResidual(nn.Sequential):
         Proceedings of the IEEE conference on computer vision and pattern recognition. 2018.
     """
 
-
     def __init__(
         self,
         in_channels: int,
@@ -118,6 +114,34 @@ class InvertedResidual(nn.Sequential):
             return super().forward(x)
 
 
+def inverted_residual_choice_builder(
+    expand_ratios: List[int],
+    kernel_sizes: List[int],
+    downsample: bool,
+    stage_input_width: int,
+    stage_output_width: int,
+    label: str
+):
+    def builder(index):
+        if index == 0 and downsample:
+            # first layer in stage
+            # do downsample and width reshape
+            stride, inp = 2, stage_input_width
+        else:
+            # otherwise keep shape
+            stride, inp = 1, stage_input_width
+        oup = stage_output_width
+
+        op_choices = {}
+        for exp_ratio in expand_ratios:
+            for kernel_size in kernel_sizes:
+                op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(inp, oup, stride, exp_ratio, kernel_size)
+
+        return nn.LayerChoice(op_choices, label=f'{label}_i{index}')
+
+    return builder
+
+
 @model_wrapper
 class ProxylessSpace(nn.Module):
     """
@@ -129,16 +153,54 @@ class ProxylessSpace(nn.Module):
         International Conference on Learning Representations. 2018.
     """
 
+    def __init__(self, num_labels: int = 1000,
+                 widths: Optional[List[int]] = None,
+                 dropout_rate: float = 0.,
+                 stem_width: int = 32,
+                 width_mult: float = 1.0,
+                 bn_eps: float = 1e-3,
+                 bn_momentum: float = 0.1):
+        if widths is None:
+            widths = [16, 32, 40, 80, 96, 192, 320, 1280]
 
-class _MbNet(nn.Module):
-    def __init__(self, first_conv, blocks, feature_mix_layer, dropout_layer, classifier):
-        super().__init__()
-        self.first_conv = first_conv
+        assert len(widths) == 8
+        # include the last stage info widths here
+        widths = [make_divisible(width * width_mult, 8) for width in widths]
+        downsamples = [False, True, True, True, False, True, False]
+
+        self.num_labels = num_labels
+        self.dropout_rate = dropout_rate
+        self.stem_width = stem_width
+        self.bn_eps = bn_eps
+        self.bn_momentum = bn_momentum
+
+        self.first_conv = ConvBNReLU(3, stem_width, stride=2, norm_layer=nn.BatchNorm2d)
+
+        blocks = []
+
+        # https://github.com/ultmaster/AceNAS/blob/46c8895fd8a05ffbc61a6b44f1e813f64b4f66b7/searchspace/proxylessnas/__init__.py#L21
+        for stage in range(7):
+            if stage == 0:
+                # first stage is fixed
+                blocks.append(InvertedResidual(stem_width, widths[0], 1, 1, 3))
+            else:
+                builder = inverted_residual_choice_builder(
+                    [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
+                if stage < 6:
+                    blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
+                else:
+                    # not choosing depth for last stage
+                    blocks.append(builder())
+
         self.blocks = nn.Sequential(*blocks)
-        self.feature_mix_layer = feature_mix_layer
+
+        # final layers
+        self.feature_mix_layer = ConvBNReLU(widths[6], widths[7], kernel_size=1, norm_layer=nn.BatchNorm2d)
         self.global_avg_pooling = nn.AdaptiveAvgPool2d(1)
-        self.dropout_layer = dropout_layer
-        self.classifier = classifier
+        self.dropout_layer = nn.Dropout(dropout_rate)
+        self.classifier = nn.Linear(widths[-1], num_labels)
+
+        self.reset_parameters(bn_momentum=bn_momentum, bn_eps=bn_eps)
 
     def forward(self, x):
         x = self.first_conv(x)
@@ -151,12 +213,12 @@ class _MbNet(nn.Module):
         return x
 
     def no_weight_decay(self):
+        # this is useful for timm optimizer
         # no regularizer to linear layer
         return {'classifier.weight', 'classifier.bias'}
 
     def reset_parameters(self, model_init='he_fout', init_div_groups=False,
-                         bn_momentum=0.1, bn_eps=1e-5,
-                         track_running_stats=True, zero_grad=False):
+                         bn_momentum=0.1, bn_eps=1e-5):
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 if model_init == 'he_fout':
@@ -183,47 +245,3 @@ class _MbNet(nn.Module):
             elif isinstance(m, nn.BatchNorm1d):
                 m.weight.data.fill_(1)
                 m.bias.data.zero_()
-
-
-class ProxylessNAS(_MbNet, SearchSpace):
-    def __init__(self, config: ProxylessConfig, reset_parameters=True):
-        stem_width = make_divisible(config.width_mult * config.stem_width, 8)
-
-        first_conv = ConvBNReLU(3, stem_width, stride=2, norm_layer=nn.BatchNorm2d)
-
-        last_width = stem_width
-        blocks = []
-        for i, stage_config in enumerate(config.stages, start=1):
-            print_log(f'Building stage #{i}...', __name__)
-            width = make_divisible(stage_config.width * config.width_mult, 8)
-            blocks += self._build_stage(i, stage_config, last_width, width)
-            last_width = width
-
-        final_width = make_divisible(1280 * config.width_mult, 8) if config.width_mult > 1 else 1280
-        dropout_layer = nn.Dropout(config.dropout_rate)
-        feature_mix_layer = ConvBNReLU(last_width, final_width, kernel_size=1, norm_layer=nn.BatchNorm2d)
-        classifier = nn.Linear(final_width, config.num_labels)
-        super().__init__(first_conv, blocks, feature_mix_layer, dropout_layer, classifier)
-
-        if reset_parameters:
-            self.reset_parameters(track_running_stats=False, zero_grad=True)
-
-    def _build_stage(self, stage_idx: int, config: ProxylessStageConfig, input_width: int, output_width: int):
-        depth_min, depth_max = config.depth_range
-        blocks = []
-        for i in range(depth_max):
-            stride = 2 if config.downsample and i == 0 else 1
-            op_choices = {}
-            for exp_ratio in config.exp_ratio_range:
-                for kernel_size in config.kernel_size_range:
-                    op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(input_width, output_width, stride, exp_ratio, kernel_size)
-            if i >= depth_min:
-                prior = [0.5 / len(op_choices)] * len(op_choices) + [0.5]
-                op_choices['skip'] = nn.Identity()
-                blocks.append(BiasedMixedOp(f's{stage_idx}b{i + 1}_i{input_width}o{output_width}', op_choices, prior))
-                assert blocks[-1].op_candidates[-1] == 'skip'
-            else:
-                blocks.append(MixedOp(f's{stage_idx}b{i + 1}_i{input_width}o{output_width}', op_choices))
-            print_log(f'Created block: {blocks[-1].key}: {blocks[-1].op_candidates}', __name__)
-            input_width = output_width
-        return blocks
