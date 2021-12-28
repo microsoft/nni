@@ -119,7 +119,8 @@
     "browserslist": ">=4.16.6",
     "trim-newlines": ">=4.0.2",
     "glob-parent": ">=6.0.0",
-    "strip-ansi": "=6.0.1"
+    "strip-ansi": "=6.0.1",
+    "immer": ">=9.0.7"
   },
   "jest": {
     "verbose": true
