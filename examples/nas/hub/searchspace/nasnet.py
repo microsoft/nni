@@ -7,7 +7,7 @@ import collections
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from typing import List
+from typing import List, Union
 
 try:
     from typing import Literal
@@ -182,70 +182,40 @@ class FactorizedReduce(nn.Module):
         return out
 
 
-#### utility layers ####
-
 class DropPath_(nn.Module):
     # https://github.com/khanrc/pt.darts/blob/0.1/models/ops.py
     def __init__(self, drop_prob=0.):
-        super(DropPath_, self).__init__()
+        super().__init__()
         self.drop_prob = drop_prob
 
     def forward(self, x):
         if self.training and self.drop_prob > 0.:
             keep_prob = 1. - self.drop_prob
-            mask = torch.cuda.FloatTensor(x.size(0), 1, 1, 1).bernoulli_(keep_prob)
+            mask = torch.zeros((x.size(0), 1, 1, 1), dtype=torch.float, device=x.device).bernoulli_(keep_prob)
             return x.div(keep_prob).mul(mask)
         return x
 
 
-class ReLUConvBN(nn.Module):
-    def __init__(self, max_in_channels, max_out_channels, kernel_size, padding):
-        super(ReLUConvBN, self).__init__()
-        self.relu = nn.ReLU(inplace=False)
-        self.conv = DynamicConv2d(max_in_channels, max_out_channels, kernel_size, padding=padding, bias=False)
-        self.bn = DynamicBatchNorm2d(max_out_channels)
-
-    def forward(self, x, out_channels):
-        x = self.relu(x)
-        x = self.conv(x, out_channels=out_channels)
-        x = self.bn(x)
-        return x
-
-
-logger = logging.getLogger(__name__)
-
-
 class AuxiliaryHead(nn.Module):
-    def __init__(self, C, num_classes):
-        super(AuxiliaryHead, self).__init__()
-        if num_classes == 1000:
+    def __init__(self, C: int, num_labels: int, dataset: Literal['imagenet', 'cifar']):
+        super().__init__()
+        if dataset == 'imagenet':
             # assuming input size 14x14
-            self.features = nn.Sequential(
-                nn.ReLU(inplace=True),
-                nn.AvgPool2d(5, stride=2, padding=0, count_include_pad=False),
-                DynamicConv2d(C, 128, 1, bias=False),
-                nn.BatchNorm2d(128),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(128, 768, 2, bias=False),
-                nn.BatchNorm2d(768),
-                nn.ReLU(inplace=True)
-            )
-        else:
-            # assuming input size 8x8
-            self.features = nn.Sequential(
-                nn.ReLU(inplace=True),
-                nn.AvgPool2d(5, stride=3, padding=0, count_include_pad=False),  # image size = 2 x 2
-                DynamicConv2d(C, 128, 1, bias=False),
-                nn.BatchNorm2d(128),
-                nn.ReLU(inplace=True),
-                nn.Conv2d(128, 768, 2, bias=False),
-                nn.BatchNorm2d(768),
-                nn.ReLU(inplace=True)
-            )
-        self.classifier = nn.Linear(768, num_classes)
-        for module in self.modules():
-            if isinstance(module, DynamicConv2d):
-                module.allow_static_op = True
+            stride = 2
+        elif dataset == 'cifar':
+            stride = 3
+
+        self.features = nn.Sequential(
+            nn.ReLU(inplace=True),
+            nn.AvgPool2d(5, stride=stride, padding=0, count_include_pad=False),
+            nn.Conv2d(C, 128, 1, bias=False),
+            nn.BatchNorm2d(128),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(128, 768, 2, bias=False),
+            nn.BatchNorm2d(768),
+            nn.ReLU(inplace=True)
+        )
+        self.classifier = nn.Linear(768, num_labels)
 
     def forward(self, x):
         x = self.features(x)
@@ -253,7 +223,12 @@ class AuxiliaryHead(nn.Module):
         return x
 
 
-class Cell(nn.Module):
+class NdsCell(nn.Module):
+    """
+    This cell is `nni.retiarii.nn.pytorch.Cell` + shape alignment.
+
+    """
+
     def __init__(self, n_nodes, primitives, C_prev_prev, C_prev, C, reduction, concat_all):
         super(Cell, self).__init__()
         self.n_nodes = n_nodes
@@ -261,8 +236,6 @@ class Cell(nn.Module):
         self.cell_type = 'reduce' if reduction else 'normal'
         self.concat_all = concat_all
         self.primitives = primitives
-        logger.info('Cell %s created: channels %d -> %d -> %d, %d nodes',
-                    self.cell_type, C_prev_prev, C_prev, C, self.n_nodes)
 
         self.preprocess0_reduce = FactorizedReduce(C_prev_prev, C)
         self.preprocess0 = ReLUConvBN(C_prev_prev, C, 1, 0)
@@ -311,19 +284,40 @@ class Cell(nn.Module):
 
 @model_wrapper
 class NDS(nn.Module):
+    """
+    The unified version of NASNet search space, implemented in
+    `unnas <https://github.com/facebookresearch/unnas/blob/main/pycls/models/nas/nas.py>`__.
+    See [nds] for details.
+
+    Different NAS papers usually differ in the way that they specify ``op_candidates`` and ``merge_op``.
+    ``dataset`` here is to give a hint about input resolution, so as to create reasonable stem and auxiliary heads.
+
+    [nds] has a speciality that it has mutable depths/widths.
+    This is implemented by accepting a list of int as ``num_cells`` / ``width``.
+
+    .. [nds] Radosavovic, Ilija and Johnson, Justin and Xie, Saining and Lo, Wan-Yen and Dollar, Piotr,
+         "On Network Design Spaces for Visual Recognition". https://arxiv.org/abs/1905.13214
+    """
 
     def __init__(self,
                  op_candidates: List[str],
                  merge_op: Literal['all', 'loose_end'] = 'all',
                  num_labels: int = 10,
-                 init_channels: int = 16,
-                 num_layers: int = 20,
-                 auxiliary: Literal['cifar', 'imagenet', 'none'] = 'none'):
-        self.num_labels = num_labels
-        self.num_layers = num_layers
-        C = init_channels
+                 width: Union[List[int], int] = 16,
+                 num_cells: Union[List[int], int] = 20,
+                 dataset: Literal['cifar', 'imagenet'] = 'imagenet'):
 
-        if auxiliary == 'imagenet':
+        if isinstance(width, list):
+            C = nn.ValueChoice(width, label='width')
+        else:
+            C = width
+
+        if isinstance(num_cells, list):
+            num_cells = nn.ValueChoice(num_cells, label='depth')
+        num_cells_per_stage = [i * num_cells // 3 - (i - 1) * num_cells // 3 for i in range(3)]
+
+        # auxiliary head is different for network targetted at different datasets
+        if dataset == 'imagenet':
             self.stem0 = nn.Sequential(
                 nn.Conv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),
                 nn.BatchNorm2d(C // 2),
@@ -337,7 +331,7 @@ class NDS(nn.Module):
                 nn.BatchNorm2d(C),
             )
             C_prev_prev, C_prev, C_curr = C, C, C
-        elif auxiliary == 'cifar':
+        elif dataset == 'cifar':
             self.stem = nn.Sequential(
                 nn.Conv2d(3, 3 * C, 3, padding=1, bias=False),
                 nn.BatchNorm2d(3 * C)
@@ -346,11 +340,13 @@ class NDS(nn.Module):
 
         self.stages = nn.ModuleList()
         for stage_idx in range(3):
+            builder = 
+            self.stages.append(nn.Repeat(cell_builder, num_cells_per_stage[stage_idx]))
             if stage_idx > 0:
                 C_curr *= 2
             stage = nn.ModuleList()
-            for i in range((self.max_num_layers + 2) // 3):  # div and ceil
-                cell = Cell(config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
+            for i in range((self.max_num_cells + 2) // 3):  # div and ceil
+                cell = nn.Cell(config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
                             stage_idx > 0 and i == 0, )
                 stage.append(cell)
                 C_prev_prev, C_prev = C_prev, cell.n_nodes * C_curr
