@@ -182,14 +182,15 @@ class ProxylessSpace(nn.Module):
         for stage in range(7):
             if stage == 0:
                 # first stage is fixed
-                blocks.append(InvertedResidual(stem_width, widths[0], 1, 1, 3))
+                blocks.append(InvertedResidual(stem_width, widths[0], stride=1, expand_ratio=1, kernel_size=3))
             else:
                 builder = inverted_residual_choice_builder(
                     [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
                 if stage < 6:
                     blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
                 else:
-                    # not choosing depth for last stage
+                    # not mutating depth for last stage
+                    # therefore directly call builder to 
                     blocks.append(builder())
 
         self.blocks = nn.Sequential(*blocks)
@@ -215,7 +216,9 @@ class ProxylessSpace(nn.Module):
     def no_weight_decay(self):
         # this is useful for timm optimizer
         # no regularizer to linear layer
-        return {'classifier.weight', 'classifier.bias'}
+        if hasattr(self, 'classifier'):
+            return {'classifier.weight', 'classifier.bias'}
+        return set()
 
     def reset_parameters(self, model_init='he_fout', init_div_groups=False,
                          bn_momentum=0.1, bn_eps=1e-5):

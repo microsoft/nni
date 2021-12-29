@@ -18,9 +18,9 @@ def truncated_normal_(tensor, mean=0, std=1):
     tensor.data.mul_(std).add_(mean)
 
 
-class ConvBnRelu(nn.Module):
+class ConvBNReLU(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=1, stride=1, padding=0):
-        super(ConvBnRelu, self).__init__()
+        super(ConvBNReLU, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.conv_bn_relu = nn.Sequential(
@@ -43,17 +43,17 @@ class ConvBnRelu(nn.Module):
         return self.conv_bn_relu(x)
 
 
-class Conv3x3BnRelu(ConvBnRelu):
+class Conv3x3BNReLU(ConvBNReLU):
     def __init__(self, in_channels, out_channels):
-        super(Conv3x3BnRelu, self).__init__(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
+        super(Conv3x3BNReLU, self).__init__(in_channels, out_channels, kernel_size=3, stride=1, padding=1)
 
 
-class Conv1x1BnRelu(ConvBnRelu):
+class Conv1x1BNReLU(ConvBNReLU):
     def __init__(self, in_channels, out_channels):
-        super(Conv1x1BnRelu, self).__init__(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
+        super(Conv1x1BNReLU, self).__init__(in_channels, out_channels, kernel_size=1, stride=1, padding=0)
 
 
-Projection = Conv1x1BnRelu
+Projection = Conv1x1BNReLU
 
 
 @model_wrapper
@@ -70,13 +70,13 @@ class NasBench101(nn.Module):
         super().__init__()
 
         op_candidates = {
-            'conv3x3-bn-relu': lambda num_features: Conv3x3BnRelu(num_features, num_features),
-            'conv1x1-bn-relu': lambda num_features: Conv1x1BnRelu(num_features, num_features),
+            'conv3x3-bn-relu': lambda num_features: Conv3x3BNReLU(num_features, num_features),
+            'conv1x1-bn-relu': lambda num_features: Conv1x1BNReLU(num_features, num_features),
             'maxpool3x3': lambda num_features: nn.MaxPool2d(3, 1, 1)
         }
 
         # initial stem convolution
-        self.stem_conv = Conv3x3BnRelu(3, stem_out_channels)
+        self.stem_conv = Conv3x3BNReLU(3, stem_out_channels)
 
         layers = []
         in_channels = out_channels = stem_out_channels

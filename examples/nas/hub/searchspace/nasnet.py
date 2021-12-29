@@ -1,218 +1,185 @@
+from .layers import OPS, DropPath_, FactorizedReduce, ReLUConvBN
+from configs import NdsConfig, NdsModelType
+from common.searchspace import SearchSpace, MixedOp, MixedInput, HyperParameter
+from common.dynamic_ops import DynamicBatchNorm2d, DynamicConv2d, DynamicLinear, ResizableSequential
+import logging
+import collections
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from typing import List
 
-from common.dynamic_ops import DynamicBatchNorm2d, DynamicConv2d
+try:
+    from typing import Literal
+except ImportError:
+    from typing_extensions import Literal
 
+import torch
+import nni.retiarii.nn.pytorch as nn
+from nni.retiarii import model_wrapper
+
+
+# the following are NAS operations from
+# https://github.com/facebookresearch/unnas/blob/main/pycls/models/nas/operations.py
 
 OPS = {
-    'avg_pool_3x3': lambda C: Pool('avg', C, 3, 1),
-    'max_pool_2x2': lambda C: Pool('max', C, 2, 0),
-    'max_pool_3x3': lambda C: Pool('max', C, 3, 1),
-    'max_pool_5x5': lambda C: Pool('max', C, 5, 2),
-    'max_pool_7x7': lambda C: Pool('max', C, 7, 3),
-    'skip_connect': lambda C: SkipConnection(C, C),
-    'sep_conv_3x3': lambda C: StackedSepConv(C, C, 3, 1),
-    'sep_conv_5x5': lambda C: StackedSepConv(C, C, 5, 2),
-    'sep_conv_7x7': lambda C: StackedSepConv(C, C, 7, 3),
-    'dil_conv_3x3': lambda C: DilConv(C, C, 3, 2, 2),
-    'dil_conv_5x5': lambda C: DilConv(C, C, 5, 4, 2),
-    'dil_sep_conv_3x3': lambda C: DilSepConv(C, C, 3, 2, 2),
-    'conv_1x1': lambda C: StdConv(C, C, 1, 0),
-    'conv_3x1_1x3': lambda C: FacConv(C, C, 3, 1),
-    'conv_3x3': lambda C: StdConv(C, C, 3, 1),
-    'conv_7x1_1x7': lambda C: FacConv(C, C, 7, 3),
-    'none': lambda C: Zero(),
+    'none': lambda C, stride, affine:
+        Zero(stride),
+    'avg_pool_2x2': lambda C, stride, affine:
+        nn.AvgPool2d(2, stride=stride, padding=0, count_include_pad=False),
+    'avg_pool_3x3': lambda C, stride, affine:
+        nn.AvgPool2d(3, stride=stride, padding=1, count_include_pad=False),
+    'avg_pool_5x5': lambda C, stride, affine:
+        nn.AvgPool2d(5, stride=stride, padding=2, count_include_pad=False),
+    'max_pool_2x2': lambda C, stride, affine:
+        nn.MaxPool2d(2, stride=stride, padding=0),
+    'max_pool_3x3': lambda C, stride, affine:
+        nn.MaxPool2d(3, stride=stride, padding=1),
+    'max_pool_5x5': lambda C, stride, affine:
+        nn.MaxPool2d(5, stride=stride, padding=2),
+    'max_pool_7x7': lambda C, stride, affine:
+        nn.MaxPool2d(7, stride=stride, padding=3),
+    'skip_connect': lambda C, stride, affine:
+        nn.Identity() if stride == 1 else FactorizedReduce(C, C, affine=affine),
+    'conv_1x1': lambda C, stride, affine:
+        nn.Sequential(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(C, C, 1, stride=stride, padding=0, bias=False),
+            nn.BatchNorm2d(C, affine=affine)
+        ),
+    'conv_3x3': lambda C, stride, affine:
+        nn.Sequential(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(C, C, 3, stride=stride, padding=1, bias=False),
+            nn.BatchNorm2d(C, affine=affine)
+        ),
+    'sep_conv_3x3': lambda C, stride, affine:
+        SepConv(C, C, 3, stride, 1, affine=affine),
+    'sep_conv_5x5': lambda C, stride, affine:
+        SepConv(C, C, 5, stride, 2, affine=affine),
+    'sep_conv_7x7': lambda C, stride, affine:
+        SepConv(C, C, 7, stride, 3, affine=affine),
+    'dil_conv_3x3': lambda C, stride, affine:
+        DilConv(C, C, 3, stride, 2, 2, affine=affine),
+    'dil_conv_5x5': lambda C, stride, affine:
+        DilConv(C, C, 5, stride, 4, 2, affine=affine),
+    'dil_sep_conv_3x3': lambda C, stride, affine:
+        DilSepConv(C, C, 3, stride, 2, 2, affine=affine),
+    'conv_3x1_1x3': lambda C, stride, affine:
+        nn.Sequential(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(C, C, (1, 3), stride=(1, stride), padding=(0, 1), bias=False),
+            nn.Conv2d(C, C, (3, 1), stride=(stride, 1), padding=(1, 0), bias=False),
+            nn.BatchNorm2d(C, affine=affine)
+        ),
+    'conv_7x1_1x7': lambda C, stride, affine:
+        nn.Sequential(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(C, C, (1, 7), stride=(1, stride), padding=(0, 3), bias=False),
+            nn.Conv2d(C, C, (7, 1), stride=(stride, 1), padding=(3, 0), bias=False),
+            nn.BatchNorm2d(C, affine=affine)
+        ),
 }
 
 
-class Zero(nn.Module):
-    def forward(self, x, out_channels, stride):
-        in_channels = x.size(1)
-        if in_channels == out_channels:
-            if stride == 1:
-                return x.mul(0.)
-            else:
-                return x[:, :, ::stride, ::stride].mul(0.)
-        else:
-            shape = list(x.size())
-            shape[1] = out_channels
-            zeros = x.new_zeros(shape, dtype=x.dtype, device=x.device)
-            return zeros
+class ReLUConvBN(nn.Sequential):
+
+    def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
+        super().__init__(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_out, kernel_size, stride=stride,
+                padding=padding, bias=False
+            ),
+            nn.BatchNorm2d(C_out, affine=affine)
+        )
 
 
-class StdConv(nn.Module):
-    def __init__(self, max_in_channels, max_out_channels, kernel_size, padding, affine=True):
-        super(StdConv, self).__init__()
-        self.drop_path = DropPath_()
-        self.relu = nn.ReLU()
-        self.conv = DynamicConv2d(max_in_channels, max_out_channels, kernel_size, 1, padding, bias=False)
-        self.bn = DynamicBatchNorm2d(max_out_channels, affine=affine)
+class DilConv(nn.Sequential):
 
-    def forward(self, x, out_channels, stride):
-        x = self.drop_path(x)
-        x = self.relu(x)
-        x = self.conv(x, out_channels=out_channels, stride=stride)
-        x = self.bn(x)
-        return x
+    def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
+        super().__init__(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_in, kernel_size=kernel_size, stride=stride,
+                padding=padding, dilation=dilation, groups=C_in, bias=False
+            ),
+            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(C_out, affine=affine),
+        )
 
 
-class FactorizedReduce(nn.Module):
-    def __init__(self, max_in_channels, max_out_channels):
-        super(FactorizedReduce, self).__init__()
-        assert max_out_channels % 2 == 0
-        self.relu = nn.ReLU(inplace=False)
-        self.conv_1 = DynamicConv2d(max_in_channels, max_out_channels // 2, 1, stride=2, padding=0, bias=False)
-        self.conv_2 = DynamicConv2d(max_in_channels, max_out_channels // 2, 1, stride=2, padding=0, bias=False)
-        self.bn = DynamicBatchNorm2d(max_out_channels)
+class SepConv(nn.Module):
 
-    def forward(self, x, out_channels):
-        x = self.relu(x)
-        assert out_channels % 2 == 0
-        out = torch.cat([self.conv_1(x, out_channels=out_channels // 2),
-                         self.conv_2(x[:, :, 1:, 1:], out_channels=out_channels // 2)], dim=1)
-        out = self.bn(out)
-        return out
-
-
-class Pool(nn.Module):
-    def __init__(self, pool_type, channels, kernel_size, padding, affine=True):
-        super(Pool, self).__init__()
-        self.pool_type = pool_type.lower()
-        self.kernel_size = kernel_size
-        self.padding = padding
-        self.channels = channels
-        # self.bn = nn.BatchNorm2d(channels, affine=affine)
-        self.drop_path = DropPath_()
-
-    def forward(self, x, out_channels, stride):
-        assert out_channels <= self.channels
-        if self.pool_type == 'max':
-            out = F.max_pool2d(x, self.kernel_size, stride, self.padding)
-        elif self.pool_type == 'avg':
-            out = F.avg_pool2d(x, self.kernel_size, stride, self.padding, count_include_pad=False)
-        else:
-            raise ValueError
-        # out = self.bn(out)
-        return self.drop_path(out)
-
-
-class DilConv(nn.Module):
-    def __init__(self, max_in_channels, max_out_channels, kernel_size, padding, dilation, affine=True):
-        super(DilConv, self).__init__()
-        self.relu = nn.ReLU()
-        self.dw = DynamicConv2d(max_in_channels, max_in_channels, kernel_size, 1, padding,
-                                dilation=dilation, groups=max_in_channels, bias=False)
-        self.pw = DynamicConv2d(max_in_channels, max_out_channels, 1, stride=1, padding=0, bias=False)
-        self.bn = DynamicBatchNorm2d(max_out_channels, affine=affine)
-        self.drop_path = DropPath_()
-
-    def forward(self, x, out_channels, stride):
-        x = self.relu(x)
-        x = self.dw(x, out_channels=x.size(1), stride=stride)
-        x = self.pw(x, out_channels=out_channels)
-        x = self.bn(x)
-        return self.drop_path(x)
-
-
-class FacConv(nn.Module):
-    """
-    Factorized conv
-    ReLU - Conv(Kx1) - Conv(1xK) - BN
-    """
-
-    def __init__(self, max_in_channels, max_out_channels, kernel_length, padding, affine=True):
-        super(FacConv, self).__init__()
-        self.relu = nn.ReLU()
-        self.conv1 = DynamicConv2d(max_in_channels, max_in_channels, (1, kernel_length), 1, (0, padding), bias=False)
-        self.conv2 = DynamicConv2d(max_in_channels, max_out_channels, (kernel_length, 1), 1, (padding, 0), bias=False)
-        self.bn = DynamicBatchNorm2d(max_out_channels, affine=affine)
-        self.drop_path = DropPath_()
-
-    def forward(self, x, out_channels, stride):
-        x = self.relu(x)
-        x = self.conv1(x, out_channels=x.size(1), stride=(1, stride))
-        x = self.conv2(x, out_channels=out_channels, stride=(stride, 1))
-        x = self.bn(x)
-        return self.drop_path(x)
-
-
-class StackedSepConv(nn.Module):
-    """
-    Separable convolution stacked twice.
-    """
-
-    def __init__(self, max_in_channels, max_out_channels, kernel_size, padding, affine=True):
-        super(StackedSepConv, self).__init__()
-        self.relu1 = nn.ReLU(inplace=False)
-        self.dw1 = DynamicConv2d(max_in_channels, max_in_channels, kernel_size=kernel_size,
-                                 stride=1, padding=padding, groups=max_in_channels, bias=False)
-        self.pw1 = DynamicConv2d(max_in_channels, max_in_channels, kernel_size=1, padding=0, bias=False)
-        self.bn1 = DynamicBatchNorm2d(max_in_channels, affine=affine)
-        self.relu2 = nn.ReLU(inplace=False)
-        self.dw2 = DynamicConv2d(max_in_channels, max_in_channels, kernel_size=kernel_size,
-                                 stride=1, padding=padding, groups=max_in_channels, bias=False)
-        self.pw2 = DynamicConv2d(max_in_channels, max_out_channels, kernel_size=1, padding=0, bias=False)
-        self.bn2 = DynamicBatchNorm2d(max_out_channels, affine=affine)
-        self.drop_path = DropPath_()
-
-    def forward(self, x, out_channels, stride):
-        x = self.relu1(x)
-        x = self.dw1(x, out_channels=x.size(1), stride=stride)
-        x = self.pw1(x, out_channels=x.size(1))
-        x = self.bn1(x)
-        x = self.relu2(x)
-        x = self.dw2(x, out_channels=x.size(1))
-        x = self.pw2(x, out_channels=out_channels)
-        x = self.bn2(x)
-        return self.drop_path(x)
+    def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
+        super().__init__(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_in, kernel_size=kernel_size, stride=stride,
+                padding=padding, groups=C_in, bias=False
+            ),
+            nn.Conv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(C_in, affine=affine),
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_in, kernel_size=kernel_size, stride=1,
+                padding=padding, groups=C_in, bias=False
+            ),
+            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(C_out, affine=affine),
+        )
 
 
 class DilSepConv(nn.Module):
 
-    def __init__(self, max_in_channels, max_out_channels, kernel_size, padding, dilation, affine=True):
-        super(DilSepConv, self).__init__()
-        C_in = max_in_channels
-        C_out = max_out_channels
-        self.relu1 = nn.ReLU(inplace=False)
-        self.conv1 = DynamicConv2d(
-            C_in, C_in, kernel_size=kernel_size,
-            padding=padding, dilation=dilation, groups=C_in, bias=False
+    def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
+        super().__init__(
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_in, kernel_size=kernel_size, stride=stride,
+                padding=padding, dilation=dilation, groups=C_in, bias=False
+            ),
+            nn.Conv2d(C_in, C_in, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(C_in, affine=affine),
+            nn.ReLU(inplace=False),
+            nn.Conv2d(
+                C_in, C_in, kernel_size=kernel_size, stride=1,
+                padding=padding, dilation=dilation, groups=C_in, bias=False
+            ),
+            nn.Conv2d(C_in, C_out, kernel_size=1, padding=0, bias=False),
+            nn.BatchNorm2d(C_out, affine=affine),
         )
-        self.conv2 = DynamicConv2d(C_in, C_in, kernel_size=1, padding=0, bias=False)
-        self.bn1 = DynamicBatchNorm2d(C_in, affine=affine)
-        self.relu2 = nn.ReLU(inplace=False)
-        self.conv3 = DynamicConv2d(
-            C_in, C_in, kernel_size=kernel_size,
-            padding=padding, dilation=dilation, groups=C_in, bias=False
-        )
-        self.conv4 = DynamicConv2d(C_in, C_out, kernel_size=1, padding=0, bias=False)
-        self.bn2 = DynamicBatchNorm2d(C_out, affine=affine)
-        self.drop_path = DropPath_()
-
-    def forward(self, x, out_channels, stride):
-        in_channels = x.size(1)
-        x = self.relu1(x)
-        x = self.conv1(x, stride=stride, out_channels=in_channels)
-        x = self.conv2(x, out_channels=in_channels)
-        x = self.bn1(x)
-        x = self.relu2(x)
-        x = self.conv3(x, out_channels=in_channels)
-        x = self.conv4(x, out_channels=out_channels)
-        x = self.bn2(x)
-        return self.drop_path(x)
 
 
-class SkipConnection(FactorizedReduce):
-    def __init__(self, max_in_channels, max_out_channels):
-        super().__init__(max_in_channels, max_out_channels)
-        self.drop_path = DropPath_()
+class Zero(nn.Module):
 
-    def forward(self, x, out_channels, stride):
-        if stride > 1:
-            out = super(SkipConnection, self).forward(x, out_channels=out_channels)
-            return self.drop_path(out)
-        return x
+    def __init__(self, stride):
+        super().__init__()
+        self.stride = stride
+
+    def forward(self, x):
+        if self.stride == 1:
+            return x.mul(0.)
+        return x[:, :, ::self.stride, ::self.stride].mul(0.)
+
+
+class FactorizedReduce(nn.Module):
+
+    def __init__(self, C_in, C_out, affine=True):
+        super().__init__()
+        assert C_out % 2 == 0
+        self.relu = nn.ReLU(inplace=False)
+        self.conv_1 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.conv_2 = nn.Conv2d(C_in, C_out // 2, 1, stride=2, padding=0, bias=False)
+        self.bn = nn.BatchNorm2d(C_out, affine=affine)
+        self.pad = nn.ConstantPad2d((0, 1, 0, 1), 0)
+
+    def forward(self, x):
+        x = self.relu(x)
+        y = self.pad(x)
+        out = torch.cat([self.conv_1(x), self.conv_2(y[:, :, 1:, 1:])], dim=1)
+        out = self.bn(out)
+        return out
 
 
 #### utility layers ####
@@ -243,18 +210,6 @@ class ReLUConvBN(nn.Module):
         x = self.conv(x, out_channels=out_channels)
         x = self.bn(x)
         return x
-
-
-import collections
-import logging
-
-import torch
-import torch.nn as nn
-
-from common.dynamic_ops import DynamicBatchNorm2d, DynamicConv2d, DynamicLinear, ResizableSequential
-from common.searchspace import SearchSpace, MixedOp, MixedInput, HyperParameter
-from configs import NdsConfig, NdsModelType
-from .layers import OPS, DropPath_, FactorizedReduce, ReLUConvBN
 
 
 logger = logging.getLogger(__name__)
@@ -354,37 +309,38 @@ class Cell(nn.Module):
             return torch.cat([states[i] for i in unused_indices], 1)
 
 
-class NDS(SearchSpace):
+@model_wrapper
+class NDS(nn.Module):
 
-    def __init__(self, config: NdsConfig):
-        super(NDS, self).__init__()
-        self.model_type = config.model_type
-        self.num_labels = 10 if self.model_type == NdsModelType.CIFAR else 1000
-        self.max_init_channels = max(config.init_channels)
-        self.max_num_layers = max(config.num_layers)
-        self.depth_selector = HyperParameter('depth', config.num_layers)
-        self.width_selector = HyperParameter('width', config.init_channels)
-        self.use_aux = config.use_aux
-        C = self.max_init_channels
+    def __init__(self,
+                 op_candidates: List[str],
+                 merge_op: Literal['all', 'loose_end'] = 'all',
+                 num_labels: int = 10,
+                 init_channels: int = 16,
+                 num_layers: int = 20,
+                 auxiliary: Literal['cifar', 'imagenet', 'none'] = 'none'):
+        self.num_labels = num_labels
+        self.num_layers = num_layers
+        C = init_channels
 
-        if self.model_type == NdsModelType.ImageNet:
-            self.stem0 = ResizableSequential(
-                DynamicConv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),
-                DynamicBatchNorm2d(C // 2),
+        if auxiliary == 'imagenet':
+            self.stem0 = nn.Sequential(
+                nn.Conv2d(3, C // 2, kernel_size=3, stride=2, padding=1, bias=False),
+                nn.BatchNorm2d(C // 2),
                 nn.ReLU(inplace=True),
-                DynamicConv2d(C // 2, C, 3, stride=2, padding=1, bias=False),
-                DynamicBatchNorm2d(C),
+                nn.Conv2d(C // 2, C, 3, stride=2, padding=1, bias=False),
+                nn.BatchNorm2d(C),
             )
-            self.stem1 = ResizableSequential(
+            self.stem1 = nn.Sequential(
                 nn.ReLU(inplace=True),
-                DynamicConv2d(C, C, 3, stride=2, padding=1, bias=False),
-                DynamicBatchNorm2d(C),
+                nn.Conv2d(C, C, 3, stride=2, padding=1, bias=False),
+                nn.BatchNorm2d(C),
             )
             C_prev_prev, C_prev, C_curr = C, C, C
-        elif self.model_type == NdsModelType.CIFAR:
-            self.stem = ResizableSequential(
-                DynamicConv2d(3, 3 * C, 3, padding=1, bias=False),
-                DynamicBatchNorm2d(3 * C)
+        elif auxiliary == 'cifar':
+            self.stem = nn.Sequential(
+                nn.Conv2d(3, 3 * C, 3, padding=1, bias=False),
+                nn.BatchNorm2d(3 * C)
             )
             C_prev_prev, C_prev, C_curr = 3 * C, 3 * C, C
 
@@ -393,9 +349,9 @@ class NDS(SearchSpace):
             if stage_idx > 0:
                 C_curr *= 2
             stage = nn.ModuleList()
-            for i in range((self.max_num_layers + 2) // 3):
-                cell = Cell(config.n_nodes, config.op_candidates, C_prev_prev, C_prev, C_curr,
-                            stage_idx > 0 and i == 0, config.concat_all)
+            for i in range((self.max_num_layers + 2) // 3):  # div and ceil
+                cell = Cell(config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
+                            stage_idx > 0 and i == 0, )
                 stage.append(cell)
                 C_prev_prev, C_prev = C_prev, cell.n_nodes * C_curr
             if stage_idx == 2:
