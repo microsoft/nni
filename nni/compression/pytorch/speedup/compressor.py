@@ -1,12 +1,13 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
-import os
-import queue
-import logging
+
 import copy
+import logging
+from pathlib import Path
+import queue
+
 import torch
 import torch.nn as nn
-from pathlib import Path
 
 from nni.common.graph_utils import build_module_graph
 from nni.compression.pytorch.utils.mask_conflict import fix_mask_conflict
