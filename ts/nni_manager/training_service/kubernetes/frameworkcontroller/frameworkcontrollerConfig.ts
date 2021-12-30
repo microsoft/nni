@@ -5,8 +5,7 @@ import assert from 'assert';
 
 import {
     AzureStorage, KeyVaultConfig, KubernetesClusterConfig, KubernetesClusterConfigAzure, KubernetesClusterConfigNFS,
-    KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig, KubernetesClusterConfigPVC,
-    PVCConfig,
+    KubernetesStorageKind, KubernetesTrialConfig, KubernetesTrialConfigTemplate, NFSConfig, StorageConfig
 } from '../kubernetesConfig';
 
 export class FrameworkAttemptCompletionPolicy {
@@ -50,31 +49,6 @@ export class FrameworkControllerClusterConfig extends KubernetesClusterConfig {
     constructor(apiVersion: string, serviceAccountName: string, _configPath?: string, namespace?: string) {
         super(apiVersion, undefined, namespace);
         this.serviceAccountName = serviceAccountName;
-    }
-}
-
-export class FrameworkControllerClusterConfigPVC extends KubernetesClusterConfigPVC {
-    public readonly serviceAccountName: string;
-    public readonly configPath: string;
-    constructor(serviceAccountName: string, apiVersion: string, pvc: PVCConfig, configPath: string,
-        storage?: KubernetesStorageKind, namespace?: string) {
-        super(apiVersion, pvc, storage, namespace);
-        this.serviceAccountName = serviceAccountName;
-        this.configPath = configPath
-    }
-
-    public static getInstance(jsonObject: object): FrameworkControllerClusterConfigPVC {
-        const kubernetesClusterConfigObjectPVC: FrameworkControllerClusterConfigPVC = <FrameworkControllerClusterConfigPVC>jsonObject;
-        assert(kubernetesClusterConfigObjectPVC !== undefined);
-
-        return new FrameworkControllerClusterConfigPVC(
-            kubernetesClusterConfigObjectPVC.serviceAccountName,
-            kubernetesClusterConfigObjectPVC.apiVersion,
-            kubernetesClusterConfigObjectPVC.pvc,
-            kubernetesClusterConfigObjectPVC.configPath,
-            kubernetesClusterConfigObjectPVC.storage,
-            kubernetesClusterConfigObjectPVC.namespace
-        );
     }
 }
 
@@ -153,8 +127,6 @@ export class FrameworkControllerClusterConfigFactory {
             return FrameworkControllerClusterConfigAzure.getInstance(jsonObject);
         } else if (storageConfig.storage === undefined || storageConfig.storage === 'nfs') {
             return FrameworkControllerClusterConfigNFS.getInstance(jsonObject);
-        } else if (storageConfig.storage !== undefined && storageConfig.storage === 'pvc') {
-            return FrameworkControllerClusterConfigPVC.getInstance(jsonObject);
         }
         throw new Error(`Invalid json object ${jsonObject}`);
     }

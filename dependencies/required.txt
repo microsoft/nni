@@ -1,18 +1,20 @@
 astor
 hyperopt == 0.1.2
-json_tricks
+json_tricks >= 3.15.5
 psutil
 pyyaml >= 5.4
 requests
 responses
 schema
+typeguard
 PythonWebHDFS
 colorama
 scikit-learn >= 0.24.1 ; python_version >= "3.7"
 scikit-learn < 1.0 ; python_version < "3.7"
 websockets >= 10.1 ; python_version >= "3.7"
 websockets <= 10.0 ; python_version < "3.7"
-filelock
+filelock ; python_version >= "3.7"
+filelock < 3.4 ; python_version < "3.7"
 prettytable
 cloudpickle
 dataclasses ; python_version < "3.7"

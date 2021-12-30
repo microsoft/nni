@@ -12,7 +12,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     AGPPruner,
     LotteryTicketPruner,
     SimulatedAnnealingPruner,
-    AutoCompressPruner
+    AutoCompressPruner,
+    AMCPruner
 )
 
 from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
@@ -21,9 +22,9 @@ from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2co
 class TorchModel(torch.nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = torch.nn.Conv2d(1, 5, 5, 1)
-        self.bn1 = torch.nn.BatchNorm2d(5)
-        self.conv2 = torch.nn.Conv2d(5, 10, 5, 1)
+        self.conv1 = torch.nn.Conv2d(1, 10, 5, 1)
+        self.bn1 = torch.nn.BatchNorm2d(10)
+        self.conv2 = torch.nn.Conv2d(10, 10, 5, 1)
         self.bn2 = torch.nn.BatchNorm2d(10)
         self.fc1 = torch.nn.Linear(4 * 4 * 10, 100)
         self.fc2 = torch.nn.Linear(100, 10)
@@ -33,7 +34,7 @@ class TorchModel(torch.nn.Module):
         x = F.max_pool2d(x, 2, 2)
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.max_pool2d(x, 2, 2)
-        x = x.view(-1, 4 * 4 * 10)
+        x = x.view(x.size(0), -1)
         x = F.relu(self.fc1(x))
         x = self.fc2(x)
         return F.log_softmax(x, dim=1)
@@ -60,6 +61,11 @@ criterion = torch.nn.CrossEntropyLoss()
 
 def evaluator(model):
     return random.random()
+
+
+def finetuner(model):
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    trainer(model, optimizer, criterion)
 
 
 class IterativePrunerTestCase(unittest.TestCase):
@@ -119,6 +125,16 @@ class IterativePrunerTestCase(unittest.TestCase):
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
         print(sparsity_list)
         assert 0.78 < sparsity_list[0]['total_sparsity'] < 0.82
+
+    def test_amc_pruner(self):
+        model = TorchModel()
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.5, 'max_sparsity_per_layer': 0.8}]
+        dummy_input = torch.rand(10, 1, 28, 28)
+        ddpg_params = {'hidden1': 300, 'hidden2': 300, 'lr_c': 1e-3, 'lr_a': 1e-4, 'warmup': 5, 'discount': 1.,
+                       'bsize': 64, 'rmsize': 100, 'window_length': 1, 'tau': 0.01, 'init_delta': 0.5, 'delta_decay': 0.99,
+                       'max_episode_length': 1e9, 'epsilon': 50000}
+        pruner = AMCPruner(10, model, config_list, dummy_input, evaluator, finetuner=finetuner, ddpg_params=ddpg_params, target='flops', log_dir='../../../logs')
+        pruner.compress()
 
 if __name__ == '__main__':
     unittest.main()

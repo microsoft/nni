@@ -6,7 +6,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import * as component from '../../../../common/component';
-import { ExperimentConfig, FrameworkControllerConfig, flattenConfig, FrameworkControllerTaskRoleConfig } from '../../../../common/experimentConfig';
+import { FrameworkControllerConfig, FrameworkControllerTaskRoleConfig, toMegaBytes } from '../../../../common/experimentConfig';
 import { ExperimentStartupInfo } from '../../../../common/experimentStartupInfo';
 import { EnvironmentInformation } from '../../environment';
 import { KubernetesEnvironmentService } from './kubernetesEnvironmentService';
@@ -15,23 +15,20 @@ import { FrameworkControllerClusterConfigAzure, FrameworkControllerJobStatus, Fr
      FrameworkControllerJobCompleteStatus } from '../../../kubernetes/frameworkcontroller/frameworkcontrollerConfig';
 import { KeyVaultConfig, AzureStorage } from '../../../kubernetes/kubernetesConfig';
 
-interface FlattenKubeflowConfig extends ExperimentConfig, FrameworkControllerConfig { }
-
 @component.Singleton
 export class FrameworkControllerEnvironmentService extends KubernetesEnvironmentService {
 
-    private config: FlattenKubeflowConfig;
+    private config: FrameworkControllerConfig;
     private createStoragePromise?: Promise<void>;
     private readonly fcContainerPortMap: Map<string, number> = new Map<string, number>(); // store frameworkcontroller container port
     
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(config: FrameworkControllerConfig, info: ExperimentStartupInfo) {
         super(config, info);
         this.experimentId = info.experimentId;
-        this.config = flattenConfig(config, 'frameworkcontroller');
+        this.config = config;
         // Create kubernetesCRDClient
-        this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(
-            this.config.namespace);
+        this.kubernetesCRDClient = FrameworkControllerClientFactory.createClient(this.config.namespace);
         // Create storage
         if (this.config.storage.storageType === 'azureStorage') {
             if (this.config.storage.azureShare === undefined ||
@@ -40,27 +37,15 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                 this.config.storage.keyVaultKey === undefined) {
                 throw new Error("Azure storage configuration error!");
             }
-
-            const azureStorage: AzureStorage = new AzureStorage(this.config.storage.azureShare, this.config.storage.azureAccount);
-            const keyValutConfig: KeyVaultConfig = new KeyVaultConfig(this.config.storage.keyVaultName, this.config.storage.keyVaultKey);
-            const azureKubeflowClusterConfig: FrameworkControllerClusterConfigAzure = new FrameworkControllerClusterConfigAzure(
-                this.config.namespace, this.config.apiVersion, keyValutConfig, azureStorage);
-            this.azureStorageAccountName = azureKubeflowClusterConfig.azureStorage.accountName;
-            this.azureStorageShare = azureKubeflowClusterConfig.azureStorage.azureShare;
-            
-            this.createStoragePromise = this.createAzureStorage(
-                azureKubeflowClusterConfig.keyVault.vaultName,
-                azureKubeflowClusterConfig.keyVault.name
-            );
+            this.azureStorageAccountName = this.config.storage.azureAccount;
+            this.azureStorageShare = this.config.storage.azureShare;
+            this.createStoragePromise = this.createAzureStorage(this.config.storage.keyVaultName, this.config.storage.keyVaultKey);
         } else if (this.config.storage.storageType === 'nfs') {
             if (this.config.storage.server === undefined ||
                 this.config.storage.path === undefined) {
                     throw new Error("NFS storage configuration error!");
                 }
-            this.createStoragePromise = this.createNFSStorage(
-                this.config.storage.server,
-                this.config.storage.path
-            );
+            this.createStoragePromise = this.createNFSStorage(this.config.storage.server, this.config.storage.path);
         }
     }
 
@@ -91,9 +76,6 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         const expFolder = `${this.CONTAINER_MOUNT_PATH}/nni/${this.experimentId}`;
         environment.command = `cd ${expFolder} && ${environment.command} \
 1>${expFolder}/envs/${environment.id}/trialrunner_stdout 2>${expFolder}/envs/${environment.id}/trialrunner_stderr`;
-        if (this.config.deprecated && this.config.deprecated.useActiveGpu !== undefined) {
-            environment.useActiveGpu = this.config.deprecated.useActiveGpu;
-        }
         environment.maxTrialNumberPerGpu = this.config.maxTrialNumberPerGpu;
 
         const frameworkcontrollerJobName: string = `nniexp${this.experimentId}env${environment.id}`.toLowerCase();
@@ -143,18 +125,18 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
         return `${portScript} . /mnt/frameworkbarrier/injector.sh && ${command}`;
     }
     
-    private async prepareFrameworkControllerConfig(trialJobId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
+    private async prepareFrameworkControllerConfig(envId: string, trialWorkingFolder: string, frameworkcontrollerJobName: string):
             Promise<any> {
         const podResources: any = [];
         for (const taskRole of this.config.taskRoles) {
             const resource: any = {};
-            resource.requests = this.generatePodResource(taskRole.memorySize, taskRole.cpuNumber, taskRole.gpuNumber);
+            resource.requests = this.generatePodResource(toMegaBytes(taskRole.memorySize), taskRole.cpuNumber, taskRole.gpuNumber);
             resource.limits = {...resource.requests};
             podResources.push(resource);
         }
         // Generate frameworkcontroller job resource config object
         const frameworkcontrollerJobConfig: any =
-            await this.generateFrameworkControllerJobConfig(trialJobId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
+            await this.generateFrameworkControllerJobConfig(envId, trialWorkingFolder, frameworkcontrollerJobName, podResources);
 
         return Promise.resolve(frameworkcontrollerJobConfig);
     }
@@ -178,7 +160,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
      * @param frameworkcontrollerJobName job name
      * @param podResources  pod template
      */
-    private async generateFrameworkControllerJobConfig(trialJobId: string, trialWorkingFolder: string,
+    private async generateFrameworkControllerJobConfig(envId: string, trialWorkingFolder: string,
         frameworkcontrollerJobName: string, podResources: any): Promise<any> {
 
         const taskRoles: any = [];
@@ -216,7 +198,7 @@ export class FrameworkControllerEnvironmentService extends KubernetesEnvironment
                 labels: {
                     app: this.NNI_KUBERNETES_TRIAL_LABEL,
                     expId: this.experimentId,
-                    trialId: trialJobId
+                    envId: envId
                 }
             },
             spec: {

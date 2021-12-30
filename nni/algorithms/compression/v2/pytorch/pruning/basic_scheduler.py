@@ -73,12 +73,12 @@ class PruningScheduler(BasePruningScheduler):
         self.pruner._unwrap_model()
 
         # speed up
-        if self.speed_up:
+        if self.speed_up and task.speed_up:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
 
         # finetune
-        if self.finetuner is not None:
+        if self.finetuner is not None and task.finetune:
             if self.speed_up:
                 self.finetuner(compact_model)
             else:
@@ -87,7 +87,7 @@ class PruningScheduler(BasePruningScheduler):
                 self.pruner._unwrap_model()
 
         # evaluate
-        if self.evaluator is not None:
+        if self.evaluator is not None and task.evaluate:
             if self.speed_up:
                 score = self.evaluator(compact_model)
             else:
@@ -112,7 +112,7 @@ class PruningScheduler(BasePruningScheduler):
         self.pruner.load_masks(masks)
 
         # finetune
-        if self.finetuner is not None:
+        if self.finetuner is not None and task.finetune:
             self.finetuner(model)
 
         # pruning model
@@ -127,12 +127,12 @@ class PruningScheduler(BasePruningScheduler):
         compact_model.load_state_dict(checkpoint)
 
         # speed up
-        if self.speed_up:
+        if self.speed_up and task.speed_up:
             ModelSpeedup(compact_model, self.dummy_input, pruner_generated_masks).speedup_model()
             compact_model_masks = {}
 
         # evaluate
-        if self.evaluator is not None:
+        if self.evaluator is not None and task.evaluate:
             if self.speed_up:
                 score = self.evaluator(compact_model)
             else:

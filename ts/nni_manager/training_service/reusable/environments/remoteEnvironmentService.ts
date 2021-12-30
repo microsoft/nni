@@ -7,15 +7,13 @@ import * as component from 'common/component';
 import { getLogger, Logger } from 'common/log';
 import { EnvironmentInformation, EnvironmentService } from '../environment';
 import { getLogLevel } from 'common/utils';
-import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from 'common/experimentConfig';
+import { RemoteConfig, RemoteMachineConfig } from 'common/experimentConfig';
 import { ExperimentStartupInfo } from 'common/experimentStartupInfo';
 import { execMkdir } from 'training_service/common/util';
 import { ExecutorManager } from 'training_service/remote_machine/remoteMachineData';
 import { ShellExecutor } from 'training_service/remote_machine/shellExecutor';
 import { RemoteMachineEnvironmentInformation } from '../remote/remoteConfig';
 import { SharedStorageService } from '../sharedStorage'
-
-interface FlattenRemoteConfig extends ExperimentConfig, RemoteConfig { }
 
 @component.Singleton
 export class RemoteEnvironmentService extends EnvironmentService {
@@ -29,9 +27,9 @@ export class RemoteEnvironmentService extends EnvironmentService {
     private experimentRootDir: string;
     private remoteExperimentRootDir: string = "";
     private experimentId: string;
-    private config: FlattenRemoteConfig;
+    private config: RemoteConfig;
 
-    constructor(config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(config: RemoteConfig, info: ExperimentStartupInfo) {
         super();
         this.experimentId = info.experimentId;
         this.environmentExecutorManagerMap = new Map<string, ExecutorManager>();
@@ -39,7 +37,7 @@ export class RemoteEnvironmentService extends EnvironmentService {
         this.remoteMachineMetaOccupiedMap = new Map<RemoteMachineConfig, boolean>();
         this.experimentRootDir = info.logDir;
         this.log = getLogger('RemoteEnvironmentService');
-        this.config = flattenConfig(config, 'remote');
+        this.config = config;
 
         // codeDir is not a valid directory, throw Error
         if (!fs.lstatSync(this.config.trialCodeDirectory).isDirectory()) {

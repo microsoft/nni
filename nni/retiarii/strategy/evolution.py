@@ -10,7 +10,7 @@ import time
 from ..execution import query_available_resources, submit_models
 from ..graph import ModelStatus
 from .base import BaseStrategy
-from .utils import dry_run_for_search_space, get_targeted_model
+from .utils import dry_run_for_search_space, get_targeted_model, filter_model
 
 
 _logger = logging.getLogger(__name__)
@@ -47,10 +47,12 @@ class RegularizedEvolution(BaseStrategy):
         Can be one of "ignore" and "worst". If "ignore", simply give up the model and find a new one.
         If "worst", mark the model as -inf (if maximize, inf if minimize), so that the algorithm "learns" to avoid such model.
         Default: ignore.
+    model_filter: Callable[[Model], bool]
+        Feed the model and return a bool. This will filter the models in search space and select which to submit.
     """
 
     def __init__(self, optimize_mode='maximize', population_size=100, sample_size=25, cycles=20000,
-                 mutation_prob=0.05, on_failure='ignore'):
+                 mutation_prob=0.05, on_failure='ignore', model_filter=None):
         assert optimize_mode in ['maximize', 'minimize']
         assert on_failure in ['ignore', 'worst']
         assert sample_size < population_size
@@ -67,6 +69,7 @@ class RegularizedEvolution(BaseStrategy):
         self._population = collections.deque()
         self._running_models = []
         self._polling_interval = 2.
+        self.filter = model_filter
 
     def random(self, search_space):
         return {k: random.choice(v) for k, v in search_space.items()}
@@ -127,8 +130,13 @@ class RegularizedEvolution(BaseStrategy):
     def _submit_config(self, config, base_model, mutators):
         _logger.debug('Model submitted to running queue: %s', config)
         model = get_targeted_model(base_model, mutators, config)
-        submit_models(model)
-        self._running_models.append((config, model))
+        if not filter_model(self.filter, model):
+            if self.on_failure == "worst":
+                model.status = ModelStatus.Failed
+                self._running_models.append((config, model))
+        else:
+            submit_models(model)
+            self._running_models.append((config, model))
         return model
 
     def _move_succeeded_models_to_population(self):

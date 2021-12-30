@@ -9,13 +9,14 @@ import random
 import numpy as np
 import torch
 import torch.nn as nn
-from dataloader import get_imagenet_iter_dali
-from nni.nas.pytorch.fixed import apply_fixed_architecture
-from nni.nas.pytorch.utils import AverageMeterGroup
+import torchvision.transforms as transforms
+import torchvision.datasets as datasets
+from nni.retiarii import fixed_arch
+from nni.retiarii.oneshot.pytorch.utils import AverageMeterGroup
 from torch.utils.tensorboard import SummaryWriter
 
 from network import ShuffleNetV2OneShot
-from utils import CrossEntropyLabelSmooth, accuracy
+from utils import CrossEntropyLabelSmooth, accuracy, ToBGRTensor
 
 logger = logging.getLogger("nni.spos.scratch")
 
@@ -26,6 +27,7 @@ def train(epoch, model, criterion, optimizer, loader, writer, args):
     cur_lr = optimizer.param_groups[0]["lr"]
 
     for step, (x, y) in enumerate(loader):
+        x, y = x.to('cuda'), y.to('cuda')
         cur_step = len(loader) * epoch + step
         optimizer.zero_grad()
         logits = model(x)
@@ -54,6 +56,7 @@ def validate(epoch, model, criterion, loader, writer, args):
     meters = AverageMeterGroup()
     with torch.no_grad():
         for step, (x, y) in enumerate(loader):
+            x, y = x.to('cuda'), y.to('cuda')
             logits = model(x)
             loss = criterion(logits, y)
             metrics = accuracy(logits, y)
@@ -109,9 +112,9 @@ if __name__ == "__main__":
     random.seed(args.seed)
     torch.backends.cudnn.deterministic = True
 
-    model = ShuffleNetV2OneShot(affine=True)
+    with fixed_arch(args.architecture):
+        model = ShuffleNetV2OneShot(affine=True)
     model.cuda()
-    apply_fixed_architecture(model, args.architecture)
     if torch.cuda.device_count() > 1:  # exclude last gpu, saving for data preprocessing on gpu
         model = nn.DataParallel(model, device_ids=list(range(0, torch.cuda.device_count() - 1)))
     criterion = CrossEntropyLabelSmooth(1000, args.label_smoothing)
@@ -128,14 +131,25 @@ if __name__ == "__main__":
         raise ValueError("'%s' not supported." % args.lr_decay)
     writer = SummaryWriter(log_dir=args.tb_dir)
 
-    train_loader = get_imagenet_iter_dali("train", args.imagenet_dir, args.batch_size, args.workers,
-                                          spos_preprocessing=args.spos_preprocessing)
-    val_loader = get_imagenet_iter_dali("val", args.imagenet_dir, args.batch_size, args.workers,
-                                        spos_preprocessing=args.spos_preprocessing)
-
+    if args.spos_preprocessing:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4),
+            transforms.RandomHorizontalFlip(0.5),
+            ToBGRTensor(),
+        ])
+    else:
+        trans = transforms.Compose([
+            transforms.RandomResizedCrop(224),
+            transforms.ToTensor()
+        ])
+    train_dataset = datasets.ImageNet(args.imagenet_dir, split='train', transform=trans)
+    train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, num_workers=args.workers)
+    val_dataset = datasets.ImageNet(args.imagenet_dir, split='val', transform=trans)
+    valid_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, num_workers=args.workers)                      
     for epoch in range(args.epochs):
         train(epoch, model, criterion, optimizer, train_loader, writer, args)
-        validate(epoch, model, criterion, val_loader, writer, args)
+        validate(epoch, model, criterion, valid_loader, writer, args)
         scheduler.step()
         dump_checkpoint(model, epoch, "scratch_checkpoints")
 

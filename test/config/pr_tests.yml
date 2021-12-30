@@ -42,9 +42,6 @@ testCases:
     kwargs:
       expected_result_file: expected_metrics_dict.json
 
-- name: multi-thread
-  configFile: test/config/multi_thread/config.yml
-
 #########################################################################
 # nni assessor test
 #########################################################################

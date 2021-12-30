@@ -1,8 +1,5 @@
-Hyperband on NNI
-================
-
-Introduction
-------------
+Hyperband Advisor
+=================
 
 `Hyperband <https://arxiv.org/pdf/1603.06560.pdf>`__ is a popular autoML algorithm. The basic idea of Hyperband is to create several buckets, each having ``n`` randomly generated hyperparameter configurations, each configuration using ``r`` resources (e.g., epoch number, batch number). After the ``n`` configurations are finished, it chooses the top ``n/eta`` configurations and runs them using increased ``r*eta`` resources. At last, it chooses the best configuration it has found so far.
 
@@ -15,7 +12,7 @@ Second, this implementation fully leverages Hyperband's internal parallelism. Sp
 
 Or if you want to set ``exec_mode`` with ``serial`` according to the original algorithm. In this mode, the next bucket will start strictly after the current bucket.
 
-``parallelism`` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under ``serial`` mode. The advantage of ``parallelism`` mode is to make full use of resources, which may reduce the experiment duration multiple times. The following two pictures are the results of quick verification using `nas-bench-201 <../NAS/Benchmarks.rst>`__\ , picture above is in ``parallelism`` mode, picture below is in ``serial`` mode.
+``parallelism`` mode may lead to multiple unfinished buckets, and there is at most one unfinished bucket under ``serial`` mode. The advantage of ``parallelism`` mode is to make full use of resources, which may reduce the experiment duration multiple times. The following two pictures are the results of quick verification using `nas-bench-201 <../NAS/Benchmarks.rst>`__, picture above is in ``parallelism`` mode, picture below is in ``serial`` mode.
 
 
 .. image:: ../../img/hyperband_parallelism.png
@@ -54,15 +51,15 @@ To use Hyperband, you should add the following spec in your experiment's YAML co
        #choice: serial, parallelism
        exec_mode: parallelism
 
-Note that once you use Advisor, you are not allowed to add a Tuner and Assessor spec in the config file. If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there will be one more key called ``TRIAL_BUDGET`` defined by user. **By using this ``TRIAL_BUDGET``\ , the trial can control how long it runs**.
+Note that once you use Advisor, you are not allowed to add a Tuner and Assessor spec in the config file. If you use Hyperband, among the hyperparameters (i.e., key-value pairs) received by a trial, there will be one more key called ``TRIAL_BUDGET`` defined by user. **By using this ``TRIAL_BUDGET``, the trial can control how long it runs**.
 
-For ``report_intermediate_result(metric)`` and ``report_final_result(metric)`` in your trial code, **\ ``metric`` should be either a number or a dict which has a key ``default`` with a number as its value**. This number is the one you want to maximize or minimize, for example, accuracy or loss.
+For ``report_intermediate_result(metric)`` and ``report_final_result(metric)`` in your trial code, **``metric`` should be either a number or a dict which has a key ``default`` with a number as its value**. This number is the one you want to maximize or minimize, for example, accuracy or loss.
 
 ``R`` and ``eta`` are the parameters of Hyperband that you can change. ``R`` means the maximum trial budget that can be allocated to a configuration. Here, trial budget could mean the number of epochs or mini-batches. This ``TRIAL_BUDGET`` should be used by the trial to control how long it runs. Refer to the example under ``examples/trials/mnist-advisor/`` for details.
 
 ``eta`` means ``n/eta`` configurations from ``n`` configurations will survive and rerun using more budgets.
 
-Here is a concrete example of ``R=81`` and ``eta=3``\ :
+Here is a concrete example of ``R=81`` and ``eta=3``:
 
 .. list-table::
    :header-rows: 1
@@ -120,10 +117,10 @@ classArgs requirements
 ^^^^^^^^^^^^^^^^^^^^^^
 
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
-* **R** (*int, optional, default = 60*\ ) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
-* **eta** (*int, optional, default = 3*\ ) - ``(eta-1)/eta`` is the proportion of discarded trials.
-* **exec_mode** (*serial or parallelism, optional, default = parallelism*\ ) - If 'parallelism', the tuner will try to use available resources to start new bucket immediately. If 'serial', the tuner will only start new bucket after the current bucket is done.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', the tuner will try to maximize metrics. If 'minimize', the tuner will try to minimize metrics.
+* **R** (*int, optional, default = 60*) - the maximum budget given to a trial (could be the number of mini-batches or epochs). Each trial should use TRIAL_BUDGET to control how long they run.
+* **eta** (*int, optional, default = 3*) - ``(eta-1)/eta`` is the proportion of discarded trials.
+* **exec_mode** (*serial or parallelism, optional, default = parallelism*) - If 'parallelism', the tuner will try to use available resources to start new bucket immediately. If 'serial', the tuner will only start new bucket after the current bucket is done.
 
 Example Configuration
 ^^^^^^^^^^^^^^^^^^^^^
