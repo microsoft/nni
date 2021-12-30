@@ -125,7 +125,7 @@ class RetiariiAdvisor(MsgDispatcherBase):
         _logger.debug('New trial sent: %s', new_trial)
 
         try:
-            send_payload = nni.dump(new_trial, pickle_size_limit=os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024))
+            send_payload = nni.dump(new_trial, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
         except PayloadTooLarge:
             raise ValueError(
                 'Serialization failed when trying to dump the model because payload too large (larger than 64 KB). '
