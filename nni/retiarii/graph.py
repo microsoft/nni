@@ -44,6 +44,12 @@ class Evaluator(abc.ABC):
     @staticmethod
     def _load(ir: Any) -> 'Evaluator':
         evaluator_type = ir.get('type_name')
+        if isinstance(evaluator_type, str):
+            # for debug purposes only
+            for subclass in Evaluator.__subclasses__():
+                if subclass.__name__ == evaluator_type:
+                    evaluator_type = subclass
+                    break
         assert issubclass(evaluator_type, Evaluator)
         return evaluator_type._load(ir)
 
@@ -153,7 +159,7 @@ class Model:
             if graph_name != '_evaluator':
                 Graph._load(model, graph_name, graph_data)._register()
         if '_evaluator' in ir:
-            model.evaluator = Evaluator._load(ir['evaluator'])
+            model.evaluator = Evaluator._load(ir['_evaluator'])
         return model
 
     def _dump(self) -> Any:
