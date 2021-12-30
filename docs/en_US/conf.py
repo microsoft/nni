@@ -122,6 +122,7 @@ html_theme_options = {
     'base_url': 'https://nni.readthedocs.io/',
 
     # Set the color and the accent color
+    # We can't have our customized themes currently
     'color_primary': 'indigo',
     'color_accent': 'pink',
 
