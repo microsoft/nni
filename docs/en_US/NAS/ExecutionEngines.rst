@@ -88,9 +88,9 @@ To enable CGO execution engine, you need to follow these steps:
     config.training_service.machine_list = [rm_conf]
     exp.run(config, 8099)
 
-CGO Execution Engine only supports pytorch-lightning trainer that inherits `MultiModelSupervisedLearningModule <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule>`__.
-For a trial running multiple models, the trainers inheriting ``MultiModelSupervisedLearningModule`` can handle the multiple outputs from the merged model for training, test and validation.
-We have already implemented two trainers: `Classification <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification>`__ and `Regression <./ApiReference.rst#nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression>`__.
+CGO Execution Engine only supports pytorch-lightning trainer that inherits :class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule`.
+For a trial running multiple models, the trainers inheriting :class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.MultiModelSupervisedLearningModule` can handle the multiple outputs from the merged model for training, test and validation.
+We have already implemented two trainers: :class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.Classification` and :class:`nni.retiarii.evaluator.pytorch.cgo.evaluator.Regression`.
 
 .. code-block:: python
 

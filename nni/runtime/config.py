@@ -31,6 +31,12 @@ def get_config_file(name: str) -> Path:
     """
     config_file = get_config_directory() / name
     if not config_file.exists():
-        default = Path(nni.__path__[0], 'runtime/default_config', name)
+        default = get_builtin_config_file(name)
         shutil.copyfile(default, config_file)
     return config_file
+
+def get_builtin_config_file(name: str) -> Path:
+    """
+    Get a readonly builtin config file.
+    """
+    return Path(nni.__path__[0], 'runtime/default_config', name)

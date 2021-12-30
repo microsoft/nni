@@ -10,14 +10,13 @@ import torch.nn as nn
 
 from nni.common.serializer import Translatable
 from nni.retiarii.serializer import basic_unit
-from nni.retiarii.utils import NoContextError
-from .utils import generate_new_label, get_fixed_value
+from .utils import Mutable, generate_new_label, get_fixed_value
 
 
 __all__ = ['LayerChoice', 'InputChoice', 'ValueChoice', 'Placeholder', 'ChosenInputs']
 
 
-class LayerChoice(nn.Module):
+class LayerChoice(Mutable):
     """
     Layer choice selects one of the ``candidates``, then apply it on inputs and return results.
 
@@ -60,16 +59,14 @@ class LayerChoice(nn.Module):
 
     # FIXME: prior is designed but not supported yet
 
-    def __new__(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
-                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
-        try:
-            chosen = get_fixed_value(label)
-            if isinstance(candidates, list):
-                return candidates[int(chosen)]
-            else:
-                return candidates[chosen]
-        except NoContextError:
-            return super().__new__(cls)
+    @classmethod
+    def create_fixed_module(cls, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
+                            label: Optional[str] = None, **kwargs):
+        chosen = get_fixed_value(label)
+        if isinstance(candidates, list):
+            return candidates[int(chosen)]
+        else:
+            return candidates[chosen]
 
     def __init__(self, candidates: Union[Dict[str, nn.Module], List[nn.Module]], *,
                  prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
@@ -159,7 +156,7 @@ class LayerChoice(nn.Module):
         return f'LayerChoice({self.candidates}, label={repr(self.label)})'
 
 
-class InputChoice(nn.Module):
+class InputChoice(Mutable):
     """
     Input choice selects ``n_chosen`` inputs from ``choose_from`` (contains ``n_candidates`` keys).
     Use ``reduction`` to specify how chosen inputs are reduced into one output. A few options are:
@@ -185,13 +182,10 @@ class InputChoice(nn.Module):
         Identifier of the input choice.
     """
 
-    def __new__(cls, n_candidates: int, n_chosen: Optional[int] = 1,
-                reduction: str = 'sum', *,
-                prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
-        try:
-            return ChosenInputs(get_fixed_value(label), reduction=reduction)
-        except NoContextError:
-            return super().__new__(cls)
+    @classmethod
+    def create_fixed_module(cls, n_candidates: int, n_chosen: Optional[int] = 1, reduction: str = 'sum', *,
+                            prior: Optional[List[float]] = None, label: Optional[str] = None, **kwargs):
+        return ChosenInputs(get_fixed_value(label), reduction=reduction)
 
     def __init__(self, n_candidates: int, n_chosen: Optional[int] = 1,
                  reduction: str = 'sum', *,
@@ -234,7 +228,7 @@ class InputChoice(nn.Module):
             f'reduction={repr(self.reduction)}, label={repr(self.label)})'
 
 
-class ValueChoice(Translatable, nn.Module):
+class ValueChoice(Translatable, Mutable):
     """
     ValueChoice is to choose one from ``candidates``.
 
@@ -302,11 +296,9 @@ class ValueChoice(Translatable, nn.Module):
 
     # FIXME: prior is designed but not supported yet
 
-    def __new__(cls, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
-        try:
-            return get_fixed_value(label)
-        except NoContextError:
-            return super().__new__(cls)
+    @classmethod
+    def create_fixed_module(cls, candidates: List[Any], *, label: Optional[str] = None, **kwargs):
+        return get_fixed_value(label)
 
     def __init__(self, candidates: List[Any], *, prior: Optional[List[float]] = None, label: Optional[str] = None):
         super().__init__()

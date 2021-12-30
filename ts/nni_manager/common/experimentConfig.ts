@@ -8,16 +8,27 @@ import { KubernetesStorageKind } from '../training_service/kubernetes/kubernetes
 
 export interface TrainingServiceConfig {
     platform: string;
+    trialCommand: string;
+    trialCodeDirectory: string;
+    trialGpuNumber?: number;
+    nniManagerIp?: string;
+
+    // FIXME
+    // "debug" is only used by openpai to decide whether to check remote nni version
+    // it should be better to check when local nni version is not "dev"
+    // it should be even better to check version before launching the experiment and let user to confirm
+    // log level is currently handled by global logging module and has nothing to do with this
+    debug?: boolean;
 }
 
 /* Local */
 
 export interface LocalConfig extends TrainingServiceConfig {
     platform: 'local';
-    reuseMode: boolean;
     useActiveGpu?: boolean;
     maxTrialNumberPerGpu: number;
     gpuIndices?: number[];
+    reuseMode: boolean;
 }
 
 /* Remote */
@@ -37,8 +48,8 @@ export interface RemoteMachineConfig {
 
 export interface RemoteConfig extends TrainingServiceConfig {
     platform: 'remote';
-    reuseMode: boolean;
     machineList: RemoteMachineConfig[];
+    reuseMode: boolean;
 }
 
 /* OpenPAI */
@@ -52,11 +63,11 @@ export interface OpenpaiConfig extends TrainingServiceConfig {
     trialMemorySize: string;
     storageConfigName: string;
     dockerImage: string;
+    virtualCluster?: string;
     localStorageMountPoint: string;
     containerStorageMountPoint: string;
     reuseMode: boolean;
     openpaiConfig?: object;
-    virtualCluster?: string;
 }
 
 /* AML */
@@ -89,10 +100,8 @@ export interface DlcConfig extends TrainingServiceConfig {
 }
 /* Kubeflow */
 
-// FIXME: merge with shared storage config
 export interface KubernetesStorageConfig {
     storageType: string;
-    maxTrialNumberPerGpu?: number;
     server?: string;
     path?: string;
     azureAccount?: string;
@@ -103,51 +112,51 @@ export interface KubernetesStorageConfig {
 
 export interface KubeflowRoleConfig {
     replicas: number;
-    codeDirectory: string;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: number;
+    memorySize: string | number;
     dockerImage: string;
+    codeDirectory: string;
     privateRegistryAuthPath?: string;
 }
 
 export interface KubeflowConfig extends TrainingServiceConfig {
     platform: 'kubeflow';
-    ps?: KubeflowRoleConfig;
-    master?: KubeflowRoleConfig;
-    worker?: KubeflowRoleConfig;
-    maxTrialNumberPerGpu: number;
     operator: KubeflowOperator;
     apiVersion: OperatorApiVersion;
     storage: KubernetesStorageConfig;
+    worker?: KubeflowRoleConfig;
+    ps?: KubeflowRoleConfig;
+    master?: KubeflowRoleConfig;
     reuseMode: boolean;
+    maxTrialNumberPerGpu?: number;
 }
 
 export interface FrameworkControllerTaskRoleConfig {
     name: string;
+    dockerImage: string;
     taskNumber: number;
     command: string;
     gpuNumber: number;
     cpuNumber: number;
-    memorySize: number;
-    dockerImage: string;
-    privateRegistryAuthPath?: string;
+    memorySize: string | number;
     frameworkAttemptCompletionPolicy: {
         minFailedTaskCount: number;
         minSucceedTaskCount: number;
     };
+    privateRegistryAuthPath?: string;
 }
 
 export interface FrameworkControllerConfig extends TrainingServiceConfig {
     platform: 'frameworkcontroller';
-    taskRoles: FrameworkControllerTaskRoleConfig[];
-    maxTrialNumberPerGpu: number;
     storage: KubernetesStorageConfig;
-    reuseMode: boolean;
-    namespace: 'default';
-    apiVersion: string;
     serviceAccountName: string;
+    taskRoles: FrameworkControllerTaskRoleConfig[];
+    reuseMode: boolean;
+    maxTrialNumberPerGpu?: number;
+    namespace?: 'default';
+    apiVersion?: string;
 }
 
 /* shared storage */
@@ -182,16 +191,17 @@ export interface AlgorithmConfig {
 
 export interface ExperimentConfig {
     experimentName?: string;
+    // searchSpaceFile  (handled in python part)
     searchSpace: any;
     trialCommand: string;
     trialCodeDirectory: string;
     trialConcurrency: number;
     trialGpuNumber?: number;
-    maxExperimentDuration?: string;
-    maxTrialDuration?: string;
+    maxExperimentDuration?: string | number;
     maxTrialNumber?: number;
+    maxTrialDuration?: string | number;
     nniManagerIp?: string;
-    //useAnnotation: boolean;  // dealed inside nnictl
+    // useAnnotation  (handled in python part)
     debug: boolean;
     logLevel?: string;
     experimentWorkingDirectory?: string;
@@ -207,45 +217,31 @@ export interface ExperimentConfig {
 /* util functions */
 
 const timeUnits = { d: 24 * 3600, h: 3600, m: 60, s: 1 };
+const sizeUnits = { tb: 1024 ** 4, gb: 1024 ** 3, mb: 1024 ** 2, kb: 1024, b: 1 };
 
-export function toSeconds(time: string): number {
-    for (const [unit, factor] of Object.entries(timeUnits)) {
-        if (time.toLowerCase().endsWith(unit)) {
-            const digits = time.slice(0, -1);
-            return Number(digits) * factor;
+function toUnit(value: string | number, targetUnit: string, allUnits: any): number {
+    if (typeof value === 'number') {
+        return value;
+    }
+    value = value.toLowerCase();
+    for (const [unit, factor] of Object.entries(allUnits)) {
+        if (value.endsWith(unit)) {
+            const digits = value.slice(0, -unit.length);
+            const num = Number(digits) * (factor as number);
+            return Math.ceil(num / allUnits[targetUnit]);
         }
     }
-    throw new Error(`Bad time string "${time}"`);
+    throw new Error(`Bad unit in "${value}"`);
 }
 
-const sizeUnits = { tb: 1024 * 1024, gb: 1024, mb: 1, kb: 1 / 1024 };
+export function toSeconds(time: string | number): number {
+    return toUnit(time, 's', timeUnits);
+}
 
-export function toMegaBytes(size: string): number {
-    for (const [unit, factor] of Object.entries(sizeUnits)) {
-        if (size.toLowerCase().endsWith(unit)) {
-            const digits = size.slice(0, -2);
-            return Math.floor(Number(digits) * factor);
-        }
-    }
-    throw new Error(`Bad size string "${size}"`);
+export function toMegaBytes(size: string | number): number {
+    return toUnit(size, 'mb', sizeUnits);
 }
 
 export function toCudaVisibleDevices(gpuIndices?: number[]): string {
-    return gpuIndices === undefined ? '' : gpuIndices.join(',');
-}
-
-export function flattenConfig<T>(config: ExperimentConfig, platform: string): T {
-    const flattened = { };
-    Object.assign(flattened, config);
-    if (Array.isArray(config.trainingService)) {
-        for (const trainingService of config.trainingService) {
-            if (trainingService.platform === platform) {
-                Object.assign(flattened, trainingService);
-            }
-        }
-    } else {
-        assert(config.trainingService.platform === platform);
-        Object.assign(flattened, config.trainingService);
-    }
-    return <T>flattened;
+        return gpuIndices === undefined ? '' : gpuIndices.join(',');
 }

@@ -37,6 +37,8 @@ def config_list_canonical(model: Module, config_list: List[Dict]) -> List[Dict]:
         'layer2.0.conv1', 'layer2.1.conv1', 'layer3.0.conv1', 'layer3.1.conv1',
         'layer4.0.conv1', 'layer4.1.conv1']}]
     '''
+    config_list = deepcopy(config_list)
+
     for config in config_list:
         if 'sparsity' in config:
             if 'sparsity_per_layer' in config:

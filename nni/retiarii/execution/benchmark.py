@@ -5,7 +5,7 @@ from typing import Dict, Any, List, Optional, Union, Tuple, Callable, Iterable
 from ..graph import Model
 from ..integration_api import receive_trial_parameters
 from .base import BaseExecutionEngine
-from .python import get_mutation_dict
+from .utils import get_mutation_dict
 
 
 class BenchmarkGraphData:

@@ -20,7 +20,7 @@ import {
     delay, generateParamFileName, getExperimentRootDir, getIPV4Address, getJobCancelStatus,
     getVersion, uniqueString
 } from 'common/utils';
-import { ExperimentConfig, RemoteConfig, RemoteMachineConfig, flattenConfig } from 'common/experimentConfig';
+import { RemoteConfig, RemoteMachineConfig } from 'common/experimentConfig';
 import { CONTAINER_INSTALL_NNI_SHELL_FORMAT } from '../common/containerJobData';
 import { GPUSummary, ScheduleResultType } from '../common/gpuData';
 import { execMkdir, validateCodeDir } from '../common/util';
@@ -29,8 +29,6 @@ import {
     ExecutorManager, RemoteMachineScheduleInfo, RemoteMachineScheduleResult, RemoteMachineTrialJobDetail
 } from './remoteMachineData';
 import { RemoteMachineJobRestServer } from './remoteMachineJobRestServer';
-
-interface FlattenRemoteConfig extends ExperimentConfig, RemoteConfig { }
 
 /**
  * Training Service implementation for Remote Machine (Linux)
@@ -53,9 +51,9 @@ class RemoteMachineTrainingService implements TrainingService {
     private versionCheck: boolean = true;
     private logCollection: string = 'none';
     private sshConnectionPromises: any[];
-    private config: FlattenRemoteConfig;
+    private config: RemoteConfig;
 
-    constructor(config: ExperimentConfig) {
+    constructor(config: RemoteConfig) {
         this.metricsEmitter = new EventEmitter();
         this.trialJobsMap = new Map<string, RemoteMachineTrialJobDetail>();
         this.trialExecutorManagerMap = new Map<string, ExecutorManager>();
@@ -67,7 +65,7 @@ class RemoteMachineTrainingService implements TrainingService {
         this.timer = component.get(ObservableTimer);
         this.log = getLogger('RemoteMachineTrainingService');
         this.log.info('Construct remote machine training service.');
-        this.config = flattenConfig(config, 'remote');
+        this.config = config;
 
         if (!fs.lstatSync(this.config.trialCodeDirectory).isDirectory()) {
             throw new Error(`codeDir ${this.config.trialCodeDirectory} is not a directory`);

@@ -133,7 +133,7 @@ export class MockedNNIManager extends Manager {
         throw new MethodNotImplementedError();
     }
     public getExperimentProfile(): Promise<ExperimentProfile> {
-        const profile: ExperimentProfile = {
+        const profile: ExperimentProfile = <any>{
             params: {
                 experimentName: 'exp1',
                 trialConcurrency: 2,

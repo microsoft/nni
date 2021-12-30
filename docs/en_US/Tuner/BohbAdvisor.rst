@@ -1,8 +1,5 @@
-BOHB Advisor on NNI
-===================
-
-Introduction
-------------
+BOHB Advisor
+============
 
 BOHB is a robust and efficient hyperparameter tuning algorithm mentioned in `this reference paper <https://arxiv.org/abs/1807.01774>`__. BO is an abbreviation for "Bayesian Optimization" and HB is an abbreviation for "Hyperband".
 
@@ -81,16 +78,16 @@ BOHB advisor requires the `ConfigSpace <https://github.com/automl/ConfigSpace>`_
 classArgs Requirements
 ^^^^^^^^^^^^^^^^^^^^^^
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', tuners will try to maximize metrics. If 'minimize', tuner will try to minimize metrics.
-* **min_budget** (*int, optional, default = 1*\ ) - The smallest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be positive.
-* **max_budget** (*int, optional, default = 3*\ ) - The largest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be larger than min_budget.
-* **eta** (*int, optional, default = 3*\ ) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
-* **min_points_in_model**\ (*int, optional, default = None*\ ): number of observations to start building a KDE. Default 'None' means dim+1; when the number of completed trials in this budget is equal to or larger than ``max{dim+1, min_points_in_model}``\ , BOHB will start to build a KDE model of this budget then use said KDE model to guide configuration selection. Needs to be positive. (dim means the number of hyperparameters in search space)
-* **top_n_percent**\ (*int, optional, default = 15*\ ): percentage (between 1 and 99) of the observations which are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then the top 15% of points will be used for building the good points models "l(x)". The remaining 85% of points will be used for building the bad point models "g(x)".
-* **num_samples**\ (*int, optional, default = 64*\ ): number of samples to optimize EI (default 64). In this case, we will sample "num_samples" points and compare the result of l(x)/g(x). Then we will return the one with the maximum l(x)/g(x) value as the next configuration if the optimize_mode is ``maximize``. Otherwise, we return the smallest one.
-* **random_fraction**\ (*float, optional, default = 0.33*\ ): fraction of purely random configurations that are sampled from the prior without the model.
-* **bandwidth_factor**\ (*float, optional, default = 3.0*\ ): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
-* **min_bandwidth**\ (*float, optional, default = 0.001*\ ): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will try to maximize metrics. If 'minimize', tuner will try to minimize metrics.
+* **min_budget** (*int, optional, default = 1*) - The smallest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be positive.
+* **max_budget** (*int, optional, default = 3*) - The largest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be larger than min_budget.
+* **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
+* **min_points_in_model** (*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1; when the number of completed trials in this budget is equal to or larger than ``max{dim+1, min_points_in_model}``, BOHB will start to build a KDE model of this budget then use said KDE model to guide configuration selection. Needs to be positive. (dim means the number of hyperparameters in search space)
+* **top_n_percent** (*int, optional, default = 15*): percentage (between 1 and 99) of the observations which are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then the top 15% of points will be used for building the good points models "l(x)". The remaining 85% of points will be used for building the bad point models "g(x)".
+* **num_samples** (*int, optional, default = 64*): number of samples to optimize EI (default 64). In this case, we will sample "num_samples" points and compare the result of l(x)/g(x). Then we will return the one with the maximum l(x)/g(x) value as the next configuration if the optimize_mode is ``maximize``. Otherwise, we return the smallest one.
+* **random_fraction** (*float, optional, default = 0.33*): fraction of purely random configurations that are sampled from the prior without the model.
+* **bandwidth_factor** (*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
+* **min_bandwidth** (*float, optional, default = 0.001*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
 
 *Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*
 
@@ -119,16 +116,16 @@ To use BOHB, you should add the following spec in your experiment's YAML config 
 **classArgs Requirements:**
 
 
-* **optimize_mode** (*maximize or minimize, optional, default = maximize*\ ) - If 'maximize', tuners will try to maximize metrics. If 'minimize', tuner will try to minimize metrics.
-* **min_budget** (*int, optional, default = 1*\ ) - The smallest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be positive.
-* **max_budget** (*int, optional, default = 3*\ ) - The largest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be larger than min_budget.
-* **eta** (*int, optional, default = 3*\ ) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
-* **min_points_in_model**\ (*int, optional, default = None*\ ): number of observations to start building a KDE. Default 'None' means dim+1; when the number of completed trials in this budget is equal to or larger than ``max{dim+1, min_points_in_model}``\ , BOHB will start to build a KDE model of this budget then use said KDE model to guide configuration selection. Needs to be positive. (dim means the number of hyperparameters in search space)
-* **top_n_percent**\ (*int, optional, default = 15*\ ): percentage (between 1 and 99) of the observations which are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then the top 15% of points will be used for building the good points models "l(x)". The remaining 85% of points will be used for building the bad point models "g(x)".
-* **num_samples**\ (*int, optional, default = 64*\ ): number of samples to optimize EI (default 64). In this case, we will sample "num_samples" points and compare the result of l(x)/g(x). Then we will return the one with the maximum l(x)/g(x) value as the next configuration if the optimize_mode is ``maximize``. Otherwise, we return the smallest one.
-* **random_fraction**\ (*float, optional, default = 0.33*\ ): fraction of purely random configurations that are sampled from the prior without the model.
-* **bandwidth_factor**\ (*float, optional, default = 3.0*\ ): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
-* **min_bandwidth**\ (*float, optional, default = 0.001*\ ): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
+* **optimize_mode** (*maximize or minimize, optional, default = maximize*) - If 'maximize', tuners will try to maximize metrics. If 'minimize', tuner will try to minimize metrics.
+* **min_budget** (*int, optional, default = 1*) - The smallest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be positive.
+* **max_budget** (*int, optional, default = 3*) - The largest budget to assign to a trial job, (budget can be the number of mini-batches or epochs). Needs to be larger than min_budget.
+* **eta** (*int, optional, default = 3*) - In each iteration, a complete run of sequential halving is executed. In it, after evaluating each configuration on the same subset size, only a fraction of 1/eta of them 'advances' to the next round. Must be greater or equal to 2.
+* **min_points_in_model** (*int, optional, default = None*): number of observations to start building a KDE. Default 'None' means dim+1; when the number of completed trials in this budget is equal to or larger than ``max{dim+1, min_points_in_model}``, BOHB will start to build a KDE model of this budget then use said KDE model to guide configuration selection. Needs to be positive. (dim means the number of hyperparameters in search space)
+* **top_n_percent** (*int, optional, default = 15*): percentage (between 1 and 99) of the observations which are considered good. Good points and bad points are used for building KDE models. For example, if you have 100 observed trials and top_n_percent is 15, then the top 15% of points will be used for building the good points models "l(x)". The remaining 85% of points will be used for building the bad point models "g(x)".
+* **num_samples** (*int, optional, default = 64*): number of samples to optimize EI (default 64). In this case, we will sample "num_samples" points and compare the result of l(x)/g(x). Then we will return the one with the maximum l(x)/g(x) value as the next configuration if the optimize_mode is ``maximize``. Otherwise, we return the smallest one.
+* **random_fraction** (*float, optional, default = 0.33*): fraction of purely random configurations that are sampled from the prior without the model.
+* **bandwidth_factor** (*float, optional, default = 3.0*): to encourage diversity, the points proposed to optimize EI are sampled from a 'widened' KDE where the bandwidth is multiplied by this factor. We suggest using the default value if you are not familiar with KDE.
+* **min_bandwidth** (*float, optional, default = 0.001*): to keep diversity, even when all (good) samples have the same value for one of the parameters, a minimum bandwidth (default: 1e-3) is used instead of zero. We suggest using the default value if you are not familiar with KDE.
 * **config_space** (*str, optional*): directly use a .pcs file serialized by `ConfigSpace <https://automl.github.io/ConfigSpace/>` in "pcs new" format. In this case, search space file (if provided in config) will be ignored. Note that this path needs to be an absolute path. Relative path is currently not supported.
 
 *Please note that the float type currently only supports decimal representations. You have to use 0.333 instead of 1/3 and 0.001 instead of 1e-3.*

@@ -1,4 +1,4 @@
-.. 83ce1769eb03248c40c61ccae8afe4cd
+.. 2cbe7334076be1841320c31208c338ff
 
 快速入门 Retiarii
 ==============================
@@ -14,7 +14,7 @@
 
 One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
-.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.6 和 1.7** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
+.. note:: 目前，PyTorch 是 Retiarii 唯一支持的框架，我们只用 **PyTorch 1.7 和 1.10** 进行了测试。 本文档基于 PyTorch 的背景，但它也应该适用于其他框架，这在我们未来的计划中。
 
 定义模型空间
 -----------------------
@@ -30,90 +30,85 @@ One-shot NAS 教程在 `这里 <./OneshotTrainer.rst>`__。
 
 .. code-block:: python
 
+  import torch
   import torch.nn.functional as F
   import nni.retiarii.nn.pytorch as nn
   from nni.retiarii import model_wrapper
 
-  class BasicBlock(nn.Module):
-    def __init__(self, const):
-      self.const = const
-    def forward(self, x):
-      return x + self.const
-
-  class ConvPool(nn.Module):
+  @model_wrapper      # this decorator should be put on the out most
+  class Net(nn.Module):
     def __init__(self):
       super().__init__()
-      self.conv = nn.Conv2d(32, 1, 5)  # possibly mutate this conv
-      self.pool = nn.MaxPool2d(kernel_size=2)
-    def forward(self, x):
-      return self.pool(self.conv(x))
+      self.conv1 = nn.Conv2d(1, 32, 3, 1)
+      self.conv2 = nn.Conv2d(32, 64, 3, 1)
+      self.dropout1 = nn.Dropout(0.25)
+      self.dropout2 = nn.Dropout(0.5)
+      self.fc1 = nn.Linear(9216, 128)
+      self.fc2 = nn.Linear(128, 10)
 
-  @model_wrapper      # 这个装饰器应该放在最外面的 PyTorch 模块上
-  class Model(nn.Module):
-    def __init__(self):
-      super().__init__()
-      self.convpool = ConvPool()
-      self.mymodule = BasicBlock(2.)
     def forward(self, x):
-      return F.relu(self.convpool(self.mymodule(x)))
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(self.conv2(x), 2)
+      x = torch.flatten(self.dropout1(x), 1)
+      x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+      output = F.log_softmax(x, dim=1)
+      return output
+
+.. tip:: 记得使用 ``import nni.retiarii.nn.pytorch as nn`` 和 :meth:`nni.retiarii.model_wrapper`. 许多错误都源于忘记使用它们。同时，对于 ``nn`` 的子模块（例如 ``nn.init``）请使用 ``torch.nn``，比如，``torch.nn.init`` 而不是 ``nn.init``。
 
 定义模型突变
 ^^^^^^^^^^^^^^^^^^^^^^
 
-基本模型只是一个具体模型，而不是模型空间。 我们为用户提供 API 和原语，用于把基本模型变形成包含多个模型的模型空间。
+基本模型只是一个具体模型，而不是模型空间。 我们为用户提供 `API 和原语 <./MutationPrimitives.rst>`__，用于把基本模型变形成包含多个模型的模型空间。
 
-用户可以按以下方式实例化多个 Mutator，这些 Mutator 将依次依次应用于基本模型来对新模型进行采样。 API 可以像 PyTorch 模块一样使用。 这种方法也被称为内联突变。
+基于上面定义的基本模型，我们可以这样定义一个模型空间：
 
-* ``nn.LayerChoice``， 它允许用户放置多个候选操作（例如，PyTorch 模块），在每个探索的模型中选择其中一个。
+.. code-block:: diff
 
-  .. code-block:: python
+  import torch
+  import torch.nn.functional as F
+  import nni.retiarii.nn.pytorch as nn
+  from nni.retiarii import model_wrapper
 
-    # import nni.retiarii.nn.pytorch as nn
-    # 在 `__init__` 中声明
-    self.layer = nn.LayerChoice([
-      ops.PoolBN('max', channels, 3, stride, 1),
-      ops.SepConv(channels, channels, 3, stride, 1),
-      nn.Identity()
-    ]))
-    # 在 `forward` 函数中调用
-    out = self.layer(x)
+  @model_wrapper
+  class Net(nn.Module):
+    def __init__(self):
+      super().__init__()
+      self.conv1 = nn.Conv2d(1, 32, 3, 1)
+  -   self.conv2 = nn.Conv2d(32, 64, 3, 1)
+  +   self.conv2 = nn.LayerChoice([
+  +       nn.Conv2d(32, 64, 3, 1),
+  +       DepthwiseSeparableConv(32, 64)
+  +   ])
+  -   self.dropout1 = nn.Dropout(0.25)
+  +   self.dropout1 = nn.Dropout(nn.ValueChoice([0.25, 0.5, 0.75]))
+      self.dropout2 = nn.Dropout(0.5)
+  -   self.fc1 = nn.Linear(9216, 128)
+  -   self.fc2 = nn.Linear(128, 10)
+  +   feature = nn.ValueChoice([64, 128, 256])
+  +   self.fc1 = nn.Linear(9216, feature)
+  +   self.fc2 = nn.Linear(feature, 10)
 
-* ``nn.InputChoice``， 它主要用于选择（或尝试）不同的连接。 它会从设置的几个张量中，选择 ``n_chosen`` 个张量。
+    def forward(self, x):
+      x = F.relu(self.conv1(x))
+      x = F.max_pool2d(self.conv2(x), 2)
+      x = torch.flatten(self.dropout1(x), 1)
+      x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
+      output = F.log_softmax(x, dim=1)
+      return output
 
-  .. code-block:: python
+在这个例子中我们使用了两个突变 API， ``nn.LayerChoice`` 和 ``nn.ValueChoice``。 ``nn.LayerChoice`` 的输入参数是一个候选模块的列表（在这个例子中是两个），每个采样到的模型会选择其中的一个，然后它就可以像一般的 PyTorch 模块一样被使用。 ``nn.ValueChoice`` 输入一系列候选的值，然后对于每个采样到的模型，其中的一个值会生效。
 
-    # import nni.retiarii.nn.pytorch as nn
-    # 在 `__init__` 中声明
-    self.input_switch = nn.InputChoice(n_chosen=1)
-    # 在 `forward` 函数中调用，三者选一
-    out = self.input_switch([tensor1, tensor2, tensor3])
+更多的 API 描述和用法可以请阅读 `这里 <./construct_space.rst>`__ 。
 
-* ``nn.ValueChoice``， 它用于从一些候选值中选择一个值。 它只能作为基本单元的输入参数，即 ``nni.retiarii.nn.pytorch`` 中的模块和用 ``@basic_unit`` 装饰的用户定义的模块。
-
-  .. code-block:: python
-
-    # import nni.retiarii.nn.pytorch as nn
-    # 在 `__init__` 中声明
-    self.conv = nn.Conv2d(XX, XX, kernel_size=nn.ValueChoice([1, 3, 5])
-    self.op = MyOp(nn.ValueChoice([0, 1], nn.ValueChoice([-1, 1]))
-
-所有的API都有一个可选的参数，叫做 ``label``，具有相同标签的突变将共享相同的选择。 一个典型示例：
-
-  .. code-block:: python
-
-    self.net = nn.Sequential(
-        nn.Linear(10, nn.ValueChoice([32, 64, 128], label='hidden_dim'),
-        nn.Linear(nn.ValueChoice([32, 64, 128], label='hidden_dim'), 3)
-    )
-
-使用说明和 API 文档在 `这里 <./ApiReference>`__。 详细的 API 描述和使用说明在 `这里 <./ApiReference.rst>`__。 使用这些 API 的示例在 :githublink:`Darts base model <test/retiarii_test/darts/darts_model.py>`。 我们正在积极丰富内联突变 API，使其更容易表达一个新的搜索空间。 参考 `这里 <./construct_space.rst>`__ 获取更多关于表达复杂模型空间的教程。
+.. note:: 我们正在积极的丰富突变 API，以简化模型空间的构建。如果我们提供的 API 不能满足您表达模型空间的需求，请阅读 `这个文档 <./Mutators.rst>`__ 以获得更多定制突变的资讯。
 
 探索定义的模型空间
 -------------------------------
 
-基本上有两种探索方法：(1)通过独立评估每个采样模型进行搜索；(2)基于 One-Shot 的权重共享式搜索。 我们在本教程中演示了下面的第一种方法。 第二种方法可以参考 `这里 <./OneshotTrainer.rst>`__。
+简单来说，探索模型空间有两种方法：(1) 通过独立评估每个采样模型进行搜索；(2) 基于 One-Shot 的权重共享式搜索。 我们在本教程中演示了下面的第一种方法。 第二种方法可以参考 `这里 <./OneshotTrainer.rst>`__。
 
-用户可以选择合适的探索策略来探索模型空间，并选择或自定义模型评估器来评估每个采样模型的性能。
+首先，用户需要选择合适的探索策略来探索模型空间。然后，用户需要选择或自定义模型评估器来评估每个采样模型的性能。
 
 选择搜索策略
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -133,56 +128,64 @@ Retiarii 支持许多 `探索策略（exploration strategies） <./ExplorationSt
 
 在 NAS 过程中，探索策略反复生成新模型。 模型评估器用于训练和验证每个生成的模型。 生成的模型所获得的性能被收集起来，并送至探索策略以生成更好的模型。
 
-在 PyTorch 的上下文中，Retiarii 提供了两个内置模型评估器，为简单用例而设计：分类和回归。 这两个评估器是建立在强大的库 PyTorch-Lightning 之上。
+Retiarii 提供了诸多的 `内置模型评估器 <./ModelEvaluators.rst>`__，但是作为第一步，我们还是推荐使用 ``FunctionalEvaluator``，也就是说，将您自己的训练和测试代码用一个函数包起来。这个函数的输入参数是一个模型的类，然后使用 ``nni.report_final_result`` 来汇报模型的效果。
 
-这里的一个例子创建了一个简单的评估器，它在 MNIST 数据集上运行，训练 10 个 Epoch，并报告其验证准确性。
+这里的一个例子创建了一个简单的评估器，它在 MNIST 数据集上运行，训练 2 个 Epoch，并报告其在验证集上的准确率。
 
-.. code-block:: python
+..  code-block:: python
 
-  import nni.retiarii.evaluator.pytorch.lightning as pl
-  from nni.retiarii import serialize
-  from torchvision import transforms
+    def evaluate_model(model_cls):
+      # "model_cls" 是一个类，需要初始化
+      model = model_cls()
 
-  transform = serialize(transforms.Compose, [serialize(transforms.ToTensor()), serialize(transforms.Normalize, (0.1307,), (0.3081,))])
-  train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
-  test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-  evaluator = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                                val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                                max_epochs=10)
+      optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+      transf = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+      train_loader = DataLoader(MNIST('data/mnist', download=True, transform=transf), batch_size=64, shuffle=True)
+      test_loader = DataLoader(MNIST('data/mnist', download=True, train=False, transform=transf), batch_size=64)
 
-由于模型评估器是在另一个进程中运行的（可能是在一些远程机器中），定义的评估器以及它的所有参数都需要被正确序列化。 例如，用户应该使用已经被包装为在 ``nni.retiarii.evaluator.pytorch.lightning`` 中的可序列化类的 dataloader。 对于 dataloader 中使用的参数，需要进行递归序列化，直到参数为 int、str、float 等简单类型。
+      device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-模型评价器的详细描述和使用方法可以在 `这里 <./ApiReference.rst>`__ 找到。
+      for epoch in range(3):
+        # 训练模型，1 个 epoch
+        train_epoch(model, device, train_loader, optimizer, epoch)
+        # 测试模型，1 个 epoch
+        accuracy = test_epoch(model, device, test_loader)
+        # 汇报中间结果，可以是 float 或者 dict 类型
+        nni.report_intermediate_result(accuracy)
 
-如果内置的模型评估器不符合您的要求，或者您已经编写了训练代码只是想使用它，您可以参考 `编写新模型评估器的指南 <./WriteTrainer.rst>`__ 。
+      # 汇报最终结果
+      nni.report_final_result(accuracy)
 
-.. note:: 如果您想在本地运行模型评估器以进行调试，您可以通过 ``evaluator._execute(Net)`` 直接运行评估器（注意它必须是 ``Net``，而不是 ``Net()``）。 但是，此 API 目前是内部的，可能会发生变化。
+    # 创建模型评估器
+    evaluator = nni.retiarii.evaluator.FunctionalEvaluator(evaluate_model)
 
-.. warning:: 目前不支持模型评估器参数的突变（也就是超参数调整），但将未来会支持。
+在这里 ``train_epoch`` 和 ``test_epoch`` 可以是任意自定义的函数，用户可以写自己的训练流程。完整的样例可以参见 :githublink:`examples/nas/multi-trial/mnist/search.py`。
 
-.. warning:: 要在 Retiarii中 使用 PyTorch-lightning，目前你需要安装 PyTorch-lightning v1.1.x（不支持 v1.2）。
+我们建议 ``evaluate_model`` 不接受 ``model_cls`` 以外的其他参数。但是，我们在 `高级教程 <./ModelEvaluators.rst>`__ 中展示了其他参数的用法，如果您真的需要的话。另外，我们会在未来支持这些参数的突变（这通常会成为 "超参调优"）。
 
 发起 Experiment
 --------------------
 
-上述内容准备就绪之后，就可以发起 Experiment 以进行模型搜索了。 样例如下：
+一切准备就绪，就可以发起 Experiment 以进行模型搜索了。 样例如下：
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, None, simple_strategy)
+  exp = RetiariiExperiment(base_model, evaluator, [], search_strategy)
   exp_config = RetiariiExeConfig('local')
-  exp_config.experiment_name = 'mnasnet_search'
+  exp_config.experiment_name = 'mnist_search'
   exp_config.trial_concurrency = 2
-  exp_config.max_trial_number = 10
+  exp_config.max_trial_number = 20
   exp_config.training_service.use_active_gpu = False
   exp.run(exp_config, 8081)
 
-一个简单 MNIST 示例的完整代码在 :githublink:`这里 <test/retiarii_test/mnist/test.py>`。 除了本地训练平台，用户还可以在 `不同的训练平台 <../training_services.rst>`__ 上运行 Retiarii 的实验。
+一个简单 MNIST 示例的完整代码在 :githublink:`这里 <examples/nas/multi-trial/mnist/search.py>`。 除了本地训练平台，用户还可以在除了本地机器以外的 `不同的训练平台 <../training_services.rst>`__ 上运行 Retiarii 的实验。
 
 可视化 Experiment
 ------------------------
 
 用户可以像可视化普通的超参数调优 Experiment 一样可视化他们的 Experiment。 例如，在浏览器里打开 ``localhost::8081``，8081 是在 ``exp.run`` 里设置的端口。 参考 `这里 <../Tutorial/WebUI.rst>`__ 了解更多细节。
+
+我们支持使用第三方工具（例如 `Netron <https://netron.app/>`__）可视化搜索过程中采样到的模型。您可以点击每个 trial 面板下的 ``Visualization``。注意，目前的可视化是基于导出成 `onnx <https://onnx.ai/>`__ 格式的模型实现的，所以如果模型无法导出成 onnx，那么可视化就无法进行。内置的模型评估器（比如 Classification）已经自动将模型导出成了一个文件。如果您自定义了模型，您需要将模型导出到 ``$NNI_OUTPUT_DIR/model.onnx``。
 
 导出最佳模型
 -----------------

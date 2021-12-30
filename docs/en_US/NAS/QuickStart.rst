@@ -12,7 +12,7 @@ In this quick start, we use multi-trial NAS as an example to show how to constru
 
 The tutorial for One-shot NAS can be found `here <./OneshotTrainer.rst>`__.
 
-.. note:: Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.6 to 1.9**. This documentation assumes PyTorch context but it should also apply to other frameworks, which is in our future plan.
+Currently, PyTorch is the only supported framework by Retiarii, and we have only tested **PyTorch 1.7 to 1.10**. This documentation assumes PyTorch context but it should also apply to other frameworks, which is in our future plan.
 
 Define your Model Space
 -----------------------
@@ -51,6 +51,8 @@ Below is a very simple example of defining a base model.
       x = self.fc2(self.dropout2(F.relu(self.fc1(x))))
       output = F.log_softmax(x, dim=1)
       return output
+
+.. tip:: Always keep in mind that you should use ``import nni.retiarii.nn.pytorch as nn`` and :meth:`nni.retiarii.model_wrapper`. Many mistakes are a result of forgetting one of those. Also, please use ``torch.nn`` for submodules of ``nn.init``, e.g., ``torch.nn.init`` instead of ``nn.init``. 
 
 Define Model Mutations
 ^^^^^^^^^^^^^^^^^^^^^^
@@ -95,7 +97,7 @@ Based on the above base model, we can define a model space as below.
 
 This example uses two mutation APIs, ``nn.LayerChoice`` and ``nn.ValueChoice``. ``nn.LayerChoice`` takes a list of candidate modules (two in this example), one will be chosen for each sampled model. It can be used like normal PyTorch module. ``nn.ValueChoice`` takes a list of candidate values, one will be chosen to take effect for each sampled model.
 
-More detailed API description and usage can be found `here <./construct_space.rst>`__\.
+More detailed API description and usage can be found `here <./construct_space.rst>`__ .
 
 .. note:: We are actively enriching the mutation APIs, to facilitate easy construction of model space. If the currently supported mutation APIs cannot express your model space, please refer to `this doc <./Mutators.rst>`__ for customizing mutators.
 
@@ -124,30 +126,40 @@ Pick or customize a model evaluator
 
 In the exploration process, the exploration strategy repeatedly generates new models. A model evaluator is for training and validating each generated model to obtain the model's performance. The performance is sent to the exploration strategy for the strategy to generate better models.
 
-Retiarii has provided two built-in model evaluators, designed for simple use cases: classification and regression. These two evaluators are built upon the awesome library PyTorch-Lightning.
+Retiarii has provided `built-in model evaluators <./ModelEvaluators.rst>`__, but to start with, it is recommended to use ``FunctionalEvaluator``, that is, to wrap your own training and evaluation code with one single function. This function should receive one single model class and uses ``nni.report_final_result`` to report the final score of this model.
 
 An example here creates a simple evaluator that runs on MNIST dataset, trains for 2 epochs, and reports its validation accuracy.
 
-.. code-block:: python
+..  code-block:: python
 
-  import nni.retiarii.evaluator.pytorch.lightning as pl
-  from nni.retiarii import serialize
-  from torchvision import transforms
+    def evaluate_model(model_cls):
+      # "model_cls" is a class, need to instantiate
+      model = model_cls()
 
-  transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-  train_dataset = serialize(MNIST, root='data/mnist', train=True, download=True, transform=transform)
-  test_dataset = serialize(MNIST, root='data/mnist', train=False, download=True, transform=transform)
-  trainer = pl.Classification(train_dataloader=pl.DataLoader(train_dataset, batch_size=100),
-                              val_dataloaders=pl.DataLoader(test_dataset, batch_size=100),
-                              max_epochs=2)
+      optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
+      transf = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
+      train_loader = DataLoader(MNIST('data/mnist', download=True, transform=transf), batch_size=64, shuffle=True)
+      test_loader = DataLoader(MNIST('data/mnist', download=True, train=False, transform=transf), batch_size=64)
 
-``serialize`` is for serializing the objects to make model evaluator executable on another process or another machine (e.g., on remote training service). Retiarii provided model evaluators and other classes are already serializable. Other objects should be applied ``serialize``, for example, ``MNIST`` in the above example.
+      device = torch.device('cuda') if torch.cuda.is_available() else torch.device('cpu')
 
-Detailed descriptions and usages of model evaluators can be found `here <./ApiReference.rst>`__ .
+      for epoch in range(3):
+        # train the model for one epoch
+        train_epoch(model, device, train_loader, optimizer, epoch)
+        # test the model for one epoch
+        accuracy = test_epoch(model, device, test_loader)
+        # call report intermediate result. Result can be float or dict
+        nni.report_intermediate_result(accuracy)
 
-If the built-in model evaluators do not meet your requirement, or you already wrote the training code and just want to use it, you can follow `the guide to write a new model evaluator <./WriteTrainer.rst>`__ .
+      # report final test result
+      nni.report_final_result(accuracy)
 
-.. warning:: Mutations on the parameters of model evaluator is currently not supported but will be supported in the future.
+    # Create the evaluator
+    evaluator = nni.retiarii.evaluator.FunctionalEvaluator(evaluate_model)
+
+The ``train_epoch`` and ``test_epoch`` here can be any customized function, where users can write their own training recipe. See :githublink:`examples/nas/multi-trial/mnist/search.py` for the full example.
+
+It is recommended that the ``evaluate_model`` here accepts no additional arguments other than ``model_cls``. However, in the `advanced tutorial <./ModelEvaluators.rst>`__, we will show how to use additional arguments in case you actually need those. In future, we will support mutation on the arguments of evaluators, which is commonly called "Hyper-parmeter tuning".
 
 Launch an Experiment
 --------------------
@@ -156,7 +168,7 @@ After all the above are prepared, it is time to start an experiment to do the mo
 
 .. code-block:: python
 
-  exp = RetiariiExperiment(base_model, trainer, [], simple_strategy)
+  exp = RetiariiExperiment(base_model, evaluator, [], search_strategy)
   exp_config = RetiariiExeConfig('local')
   exp_config.experiment_name = 'mnist_search'
   exp_config.trial_concurrency = 2
@@ -171,7 +183,7 @@ Visualize the Experiment
 
 Users can visualize their experiment in the same way as visualizing a normal hyper-parameter tuning experiment. For example, open ``localhost::8081`` in your browser, 8081 is the port that you set in ``exp.run``. Please refer to `here <../Tutorial/WebUI.rst>`__ for details.
 
-We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ . Built-in evaluators (e.g., Classification) will automatically export the model into a file, for your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
+We support visualizing models with 3rd-party visualization engines (like `Netron <https://netron.app/>`__). This can be used by clicking ``Visualization`` in detail panel for each trial. Note that current visualization is based on `onnx <https://onnx.ai/>`__ , thus visualization is not feasible if the model cannot be exported into onnx. Built-in evaluators (e.g., Classification) will automatically export the model into a file. For your own evaluator, you need to save your file into ``$NNI_OUTPUT_DIR/model.onnx`` to make this work.
 
 Export Top Models
 -----------------

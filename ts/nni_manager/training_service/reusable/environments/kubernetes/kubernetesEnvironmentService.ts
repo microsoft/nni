@@ -33,7 +33,7 @@ export class KubernetesEnvironmentService extends EnvironmentService {
     protected log: Logger = getLogger('KubernetesEnvironmentService');
     protected environmentWorkingFolder: string;
 
-    constructor(_config: ExperimentConfig, info: ExperimentStartupInfo) {
+    constructor(_config: any, info: ExperimentStartupInfo) {
         super();
         this.CONTAINER_MOUNT_PATH = '/tmp/mount';
         this.genericK8sClient = new GeneralK8sClient();
