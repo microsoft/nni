@@ -34,13 +34,13 @@ class BaseGraphData:
     def dump(self) -> dict:
         return {
             'model_script': self.model_script,
-            'evaluator': self.evaluator,
+            'evaluator': self.evaluator._dump(),
             'mutation_summary': self.mutation_summary
         }
 
     @staticmethod
     def load(data) -> 'BaseGraphData':
-        return BaseGraphData(data['model_script'], data['evaluator'], data['mutation_summary'])
+        return BaseGraphData(data['model_script'], Evaluator._load(data['evaluator']), data['mutation_summary'])
 
 
 class BaseExecutionEngine(AbstractExecutionEngine):
