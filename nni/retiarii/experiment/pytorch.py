@@ -189,7 +189,7 @@ class RetiariiExperiment(Experiment):
 
         # check for sanity
         if not is_model_wrapped(base_model):
-            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED + 
+            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
                           '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
                           'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
                           RuntimeWarning)
