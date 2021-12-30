@@ -25,7 +25,8 @@ class PythonGraphData:
             'mutation': self.mutation,
             # engine needs to call dump here,
             # otherwise, evaluator will become binary
-            'evaluator': self.evaluator._dump(),
+            # also, evaluator can be none in tests
+            'evaluator': self.evaluator._dump() if self.evaluator is not None else None,
             'mutation_summary': self.mutation_summary
         }
 
