@@ -1,5 +1,7 @@
 from typing import Dict, Any, Type
 
+import torch.nn as nn
+
 from ..graph import Evaluator, Model
 from ..integration_api import receive_trial_parameters
 from ..utils import ContextStack
@@ -8,7 +10,7 @@ from .utils import get_mutation_dict, mutation_dict_to_summary
 
 
 class PythonGraphData:
-    def __init__(self, class_: Type, init_parameters: Dict[str, Any],
+    def __init__(self, class_: Type[nn.Module], init_parameters: Dict[str, Any],
                  mutation: Dict[str, Any], evaluator: Evaluator) -> None:
         self.class_ = class_
         self.init_parameters = init_parameters
