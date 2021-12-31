@@ -459,7 +459,6 @@ class Experiment:
         value: dict
             New search_space.
         """
-        value = dump(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):
