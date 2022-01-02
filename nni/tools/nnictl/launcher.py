@@ -91,6 +91,9 @@ def create_experiment(args):
     run_mode = RunMode.Foreground if foreground else RunMode.Detach
     exp.start(port, debug, run_mode)
 
+    print(f'To stop experiment run "nnictl stop {exp.id}" or "nnictl stop --all"')
+    print('Reference: https://nni.readthedocs.io/en/stable/Tutorial/Nnictl.html')
+
 def resume_experiment(args):
     exp_id = args.id
     port = args.port
