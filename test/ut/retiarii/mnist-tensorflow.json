@@ -39,6 +39,6 @@
     },
 
     "_evaluator": {
-        "type_name": "DebugEvaluator"
+        "type": "DebugEvaluator"
     }
 }

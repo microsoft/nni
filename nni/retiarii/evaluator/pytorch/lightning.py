@@ -93,7 +93,7 @@ class Lightning(Evaluator):
 
     def _dump(self):
         return {
-            'type_name': self.__class__,
+            'type': self.__class__,
             'module': self.module,
             'trainer': self.trainer,
             'train_dataloader': self.train_dataloader,

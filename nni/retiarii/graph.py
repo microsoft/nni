@@ -43,7 +43,7 @@ class Evaluator(abc.ABC):
 
     @staticmethod
     def _load(ir: Any) -> 'Evaluator':
-        evaluator_type = ir.get('type_name')
+        evaluator_type = ir.get('type')
         if isinstance(evaluator_type, str):
             # for debug purposes only
             for subclass in Evaluator.__subclasses__():
@@ -57,7 +57,7 @@ class Evaluator(abc.ABC):
     def _dump(self) -> Any:
         """
         Subclass implements ``_dump`` for their own serialization.
-        They should return a dict, with a key ``type_name`` which equals ``self.__class__``,
+        They should return a dict, with a key ``type`` which equals ``self.__class__``,
         and optionally other keys.
         """
         pass
@@ -789,7 +789,7 @@ class DebugEvaluator(Evaluator):
         return DebugEvaluator()
 
     def _dump(self) -> Any:
-        return {'type_name': DebugEvaluator}
+        return {'type': DebugEvaluator}
 
     def _execute(self, model_cls: type) -> Any:
         pass
