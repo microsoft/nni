@@ -22,7 +22,7 @@ stages:
       inputs:
         vstsFeed: NNIOpenSource/sandbox
         vstsFeedPackage: dependencies-ubuntu-latest
-        vstsPackageVersion: *
+        vstsPackageVersion: '*'
       displayName: Download cache
     - script: |
         set -e
@@ -100,7 +100,7 @@ stages:
       inputs:
         vstsFeed: NNIOpenSource/sandbox
         vstsFeedPackage: dependencies-ubuntu-latest
-        vstsPackageVersion: *
+        vstsPackageVersion: '*'
       displayName: Download cache
     - script: |
         set -e
