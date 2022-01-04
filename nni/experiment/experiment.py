@@ -11,7 +11,6 @@ import colorama
 import psutil
 
 import nni.runtime.log
-from nni.common import dump
 
 from .config import ExperimentConfig
 from .data import TrialJob, TrialMetricData, TrialResult
