@@ -41,7 +41,9 @@ jobs:
       mkdir cache
       mv -T ~/.cache/pip/wheels cache/wheels
       mv -T ~/.cache/yarn cache/yarn
-      zip -r -9 dependencies-ubuntu-latest.zip cache
+      zip -r -9 cache.zip cache
+      mv -T cache.zip '$(Build.ArtifactStagingDirectory)/cache.zip'
+    displayName: Create archive
 
   - task: UniversalPackages@0
     inputs:
