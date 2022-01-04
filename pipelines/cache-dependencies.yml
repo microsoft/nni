@@ -1,0 +1,50 @@
+jobs:
+- job: ubuntu_latest
+  pool:
+    vmImage: ubuntu-latest
+
+  steps:
+  - task: UsePythonVersion@0
+    inputs:
+      versionSpec: 3.9
+    displayName: Configure Python version
+
+  - task: NodeTool@0
+    inputs:
+      versionSpec: 16.3.0
+    displayName: Configure Node.js version
+
+  - script: |
+      set -e
+      sudo apt-get remove -y swig
+      sudo apt-get install -y pandoc swig3.0
+      sudo ln -s swig3.0 /usr/bin/swig
+    displayName: Install apt packages
+
+  - script: |
+      set -e
+      python -m pip install -U -r dependencies/setup.txt
+      python -m pip install -r dependencies/develop.txt
+      python -m pip install -r dependencies/required.txt
+      python -m pip install -r dependencies/required_extra.txt
+      python -m pip install -r dependencies/recommended.txt
+    displayName: Install Python packages
+
+  - script: |
+      set -e
+      yarn --cwd ts/nni_manager install
+      yarn --cwd ts/webui install
+    displayName: Install Node.js packages
+
+  - script: |
+      set -e
+      mkdir cache
+      mv -T ~/.cache/pip/wheels cache/wheels
+      mv -T ~/.cache/yarn cache/yarn
+      zip -r -9 dependencies-ubuntu-latest.zip cache
+
+  - task: UniversalPackages@0
+    inputs:
+      command: publish
+      vstsFeedPublish: NNIOpenSource/sandbox
+      vstsFeedPackagePublish: dependencies-ubuntu-latest
