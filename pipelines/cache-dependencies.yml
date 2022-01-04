@@ -50,3 +50,4 @@ jobs:
       command: publish
       vstsFeedPublish: NNIOpenSource/sandbox
       vstsFeedPackagePublish: dependencies-ubuntu-latest
+    displayName: Upload cache

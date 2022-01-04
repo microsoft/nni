@@ -7,8 +7,6 @@ stages:
   - job: docs
     pool:
       vmImage: ubuntu-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
     steps:
     - task: UsePythonVersion@0
       inputs:
@@ -20,14 +18,17 @@ stages:
         sudo apt-get install swig3.0 -y
         sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
       displayName: Install apt packages
-    - task: Cache@2
+    - task: UniversalPackages@0
       inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+      displayName: Download cache
+    - script: |
+        set -e
+        unzip cache.zip
+        mv -T cache/wheels ~/.cache/pip/wheels
+        mv -T cache/yarn ~/.cache/yarn
+      displayName: Apply cache
     - script: |
         set -e
         python -m pip install -U -r dependencies/setup.txt
@@ -45,64 +46,66 @@ stages:
         sphinx-build -M html . _build -W --keep-going -T
       displayName: Sphinx  # TODO: rstcheck
 
-  - job: python
-    pool:
-      vmImage: ubuntu-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-    steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.8
-      displayName: Configure Python version
-    - script: |
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        python -m pip install -r dependencies/required.txt
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -r dependencies/required_extra.txt
-        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
-      displayName: Install requirements
-    - script: python -m pylint --rcfile pylintrc nni
-      displayName: pylint
-    - script: |
-        set -e
-        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-      displayName: flake8
+  #- job: python
+  #  pool:
+  #    vmImage: ubuntu-latest
+  #  variables:
+  #    PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
+  #  steps:
+  #  - task: UsePythonVersion@0
+  #    inputs:
+  #      versionSpec: 3.8
+  #    displayName: Configure Python version
+  #  - script: |
+  #      sudo apt-get remove swig -y
+  #      sudo apt-get install swig3.0 -y
+  #      sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+  #    displayName: Install apt packages
+  #  - task: Cache@2
+  #    inputs:
+  #      key: 'python | "$(Agent.OS)" | dependencies/*.txt'
+  #      restoreKeys: | 
+  #        python | "$(Agent.OS)"
+  #        python
+  #      path: $(PIP_CACHE_DIR)
+  #    displayName: Cache pip packages
+  #  - script: |
+  #      set -e
+  #      python -m pip install -U -r dependencies/setup.txt
+  #      python -m pip install -r dependencies/develop.txt
+  #      python -m pip install -r dependencies/required.txt
+  #      python -m pip install -r dependencies/recommended.txt
+  #      python -m pip install -r dependencies/required_extra.txt
+  #      python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
+  #    displayName: Install requirements
+  #  - script: python -m pylint --rcfile pylintrc nni
+  #    displayName: pylint
+  #  - script: |
+  #      set -e
+  #      python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+  #      EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+  #      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+  #    displayName: flake8
 
   - job: typescript
     pool:
       vmImage: ubuntu-latest
-    variables:
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
     steps:
     - task: NodeTool@0
       inputs:
         versionSpec: 16.3.0
       displayName: Configure Node.js version
-    - task: Cache@2
+    - task: UniversalPackages@0
       inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+      displayName: Download cache
+    - script: |
+        set -e
+        unzip cache.zip
+        mv -T cache/wheels ~/.cache/pip/wheels
+        mv -T cache/yarn ~/.cache/yarn
+      displayName: Apply cache
     - script: |
         set -e
         cd ts/nni_manager
