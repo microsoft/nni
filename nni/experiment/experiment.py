@@ -11,7 +11,6 @@ import colorama
 import psutil
 
 import nni.runtime.log
-from nni.common import dump
 
 from .config import ExperimentConfig
 from .data import TrialJob, TrialMetricData, TrialResult
@@ -463,7 +462,6 @@ class Experiment:
         value: dict
             New search_space.
         """
-        value = dump(value)
         self._update_experiment_profile('searchSpace', value)
 
     def update_max_trial_number(self, value: int):

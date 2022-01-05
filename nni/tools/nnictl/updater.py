@@ -41,7 +41,7 @@ def validate_dispatcher(args):
 
 def load_search_space(path):
     '''load search space content'''
-    content = json.dumps(get_json_content(path))
+    content = get_json_content(path)
     if not content:
         raise ValueError('searchSpace file should not be empty')
     return content
@@ -112,11 +112,18 @@ def update_trialnum(args):
     else:
         print_error('Update %s failed!' % 'trialnum')
 
+def load_imported_data(path):
+    '''load the trial data that will be imported'''
+    content = json.dumps(get_json_content(path))
+    if not content:
+        raise ValueError('Imported data should not be empty')
+    return content
+
 def import_data(args):
     '''import additional data to the experiment'''
     validate_file(args.filename)
     validate_dispatcher(args)
-    content = load_search_space(args.filename)
+    content = load_imported_data(args.filename)
 
     experiments_dict = Experiments().get_all_experiments()
     experiment_id = get_config_filename(args)

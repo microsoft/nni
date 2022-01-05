@@ -509,13 +509,13 @@ class NNIManager implements Manager {
         return;
     }
 
-    private updateSearchSpace(searchSpace: string): void {
+    private updateSearchSpace(searchSpace: object): void {
         if (this.dispatcher === undefined) {
             throw new Error('Error: tuner has not been setup');
         }
         this.log.info(`Updated search space ${searchSpace}`);
-        this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, searchSpace);
-        this.experimentProfile.params.searchSpace = JSON.parse(searchSpace);
+        this.dispatcher.sendCommand(UPDATE_SEARCH_SPACE, JSON.stringify(searchSpace));
+        this.experimentProfile.params.searchSpace = searchSpace;
 
         return;
     }
