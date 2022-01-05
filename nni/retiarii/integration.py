@@ -2,10 +2,11 @@
 # Licensed under the MIT license.
 
 import logging
-import warnings
+import os
 from typing import Any, Callable
 
 import nni
+from nni.common.serializer import PayloadTooLarge
 from nni.runtime.msg_dispatcher_base import MsgDispatcherBase
 from nni.runtime.protocol import CommandType, send
 from nni.utils import MetricType
@@ -123,14 +124,16 @@ class RetiariiAdvisor(MsgDispatcherBase):
         }
         _logger.debug('New trial sent: %s', new_trial)
 
-        send_payload = nni.dump(new_trial, pickle_size_limit=-1)
-        if len(send_payload) > 256 * 1024:
-            warnings.warn(
-                'The total payload of the trial is larger than 50 KB. '
-                'This can cause performance issues and even the crash of NNI experiment. '
+        try:
+            send_payload = nni.dump(new_trial, pickle_size_limit=int(os.getenv('PICKLE_SIZE_LIMIT', 64 * 1024)))
+        except PayloadTooLarge:
+            raise ValueError(
+                'Serialization failed when trying to dump the model because payload too large (larger than 64 KB). '
                 'This is usually caused by pickling large objects (like datasets) by mistake. '
-                'See https://nni.readthedocs.io/en/stable/NAS/Serialization.html for details.'
+                'See the full error traceback for details and https://nni.readthedocs.io/en/stable/NAS/Serialization.html '
+                'for how to resolve such issue. '
             )
+
         # trial parameters can be super large, disable pickle size limit here
         # nevertheless, there could still be blocked by pipe / nni-manager
         send(CommandType.NewTrialJob, send_payload)
