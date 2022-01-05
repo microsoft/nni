@@ -594,6 +594,33 @@ User configuration for Linear Pruner
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.LinearPruner
 
+Performance Test
+^^^^^^^^^^^^^^^^
+
+We train the model for 160 epochs with SGD and MultiStepLR.
+In pruning, the ``total_iteration`` was set to 100 and the base pruner used L1NormPruner. And we finetune for 60 epochs.
+The seed was set to 1024. You can reproduct the result by corresponding example.
+
+.. list-table::
+   :header-rows: 1
+   :widths: auto
+
+   * - Model
+     - Accucacy
+     - Parameters
+     - FLOPs
+     - Sparsity After Speedup
+   * - VGG-16
+     - 93.86%
+     - 14.98M
+     - 313.46M
+     - 
+   * - Pruned VGG-16
+     - 92.53%
+     - 2.97M
+     - 61.34M
+     - 80.17%
+
 AGP Pruner
 ----------
 
@@ -628,7 +655,7 @@ Performance Test
 ^^^^^^^^^^^^^^^^
 
 We train the model for 160 epochs with SGD and MultiStepLR.
-In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
+In pruning, the ``total_iteration`` was set to 100 and the base pruner used L1NormPruner. And we finetune for 60 epochs.
 The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
@@ -639,17 +666,17 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
+     - Sparsity After Speedup
    * - VGG-16
      - 93.86%
      - 14.98M
      - 313.46M
      - 
    * - Pruned VGG-16
-     - 87.81%
-     - 0.66M
-     - 13.18M
-     - 0.8
+     - 92.70%
+     - 2.99M
+     - 62.06M
+     - 80.04%
 
 Lottery Ticket Pruner
 ---------------------
@@ -696,7 +723,7 @@ Performance Test
 ^^^^^^^^^^^^^^^^
 
 We train the model for 160 epochs with SGD and MultiStepLR.
-In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
+In pruning, the ``total_iteration`` was set to 100 and the base pruner used L1NormPruner. And we finetune for 60 epochs.
 The seed was set to 1024. You can reproduct the result by corresponding example.
 
 .. list-table::
@@ -707,17 +734,17 @@ The seed was set to 1024. You can reproduct the result by corresponding example.
      - Accucacy
      - Parameters
      - FLOPs
-     - Sparsity
-   * - VGGNet
+     - Sparsity After Speedup
+   * - VGG-16
      - 93.86%
-     - 20.29M
-     - 398.40M
+     - 14.98M
+     - 313.46M
      - 
-   * - Pruned VGGNet
-     - 84.84%
-     - 0.66M
-     - 13.18M
-     - 0.8
+   * - Pruned VGG-16
+     - 92.39%
+     - 3.00M
+     - 61.91M
+     - 79.97%
 
 Simulated Annealing Pruner
 --------------------------
@@ -754,33 +781,6 @@ User configuration for Simulated Annealing Pruner
 **PyTorch**
 
 .. autoclass:: nni.algorithms.compression.v2.pytorch.pruning.SimulatedAnnealingPruner
-
-Performance Test
-^^^^^^^^^^^^^^^^
-
-We train the model for 160 epochs with SGD and MultiStepLR.
-In pruning, the ``total_iteration`` was set to 160. And we finetune for 100 epochs.
-The seed was set to 1024. You can reproduct the result by corresponding example.
-
-.. list-table::
-   :header-rows: 1
-   :widths: auto
-
-   * - Model
-     - Accucacy
-     - Parameters
-     - FLOPs
-     - Sparsity
-   * - VGG-16
-     - 93.86%
-     - 14.98M
-     - 313.46M
-     - 
-   * - Pruned VGG-16
-     - 81.66%
-     - 0.66M
-     - 13.18M
-     - 0.8
 
 Auto Compress Pruner
 --------------------
