@@ -26,31 +26,21 @@ jobs:
 
   - script: |
       set -e
+
+      echo '### A ###'
+      ls -a ~
+      
       # Do not cache setup dependencies. PR pipeline should use more stable version.
       # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
       python -m pip install -U -r dependencies/setup.txt
-      mkdir piproot
-      export PYTHONPATH="$PWD/piproot/usr/lib/python3.9/site-packages"
-      python -m pip install --root piproot -r dependencies/develop.txt
+      # Pre-installed packages are installed globally, so "--user" will use a clean directory.
+      python -m pip install --user -r dependencies/develop.txt
+      python -m pip install --user -r dependencies/required.txt
+      python -m pip install --user -r dependencies/required_extra.txt
+      python -m pip install --user -r dependencies/recommended.txt
 
-      echo '## develop installed ##'
-      find piproot
-      echo "$PYTHONPATH"
-
-      python -m pip install --root piproot -r dependencies/required.txt
-      echo '## required installed ##'
-      find piproot
-      echo "$PYTHONPATH"
-
-      python -m pip install --root piproot -r dependencies/required_extra.txt
-      echo '## required extra installed ##'
-      find piproot
-      echo "$PYTHONPATH"
-
-      python -m pip install --root piproot -r dependencies/recommended.txt
-      echo '## recommended installed ##'
-      find piproot
-      echo "$PYTHONPATH"
+      echo '### B ###'
+      ls ~/.local
     displayName: Install Python packages
 
   - script: |
@@ -62,7 +52,7 @@ jobs:
   - script: |
       set -e
       mkdir cache
-      mv -T piproot/usr/lib cache/python-packages
+      mv -T ~/.local cache/python-packages
       mv -T ts/nni_manager/node_modules cache/nni-manager-packages
       mv -T ts/webui/node_modules cache/webui-packages
       zip -r -9 cache.zip cache
