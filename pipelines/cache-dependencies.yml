@@ -32,17 +32,25 @@ jobs:
       mkdir piproot
       export PYTHONPATH="$PWD/piproot/usr/lib/python3.9/site-packages"
       python -m pip install --root piproot -r dependencies/develop.txt
+
       echo '## develop installed ##'
-      ls "$PYTHONPATH"
+      find piproot
+      echo "$PYTHONPATH"
+
       python -m pip install --root piproot -r dependencies/required.txt
       echo '## required installed ##'
-      ls "$PYTHONPATH"
+      find piproot
+      echo "$PYTHONPATH"
+
       python -m pip install --root piproot -r dependencies/required_extra.txt
       echo '## required extra installed ##'
-      ls "$PYTHONPATH"
+      find piproot
+      echo "$PYTHONPATH"
+
       python -m pip install --root piproot -r dependencies/recommended.txt
       echo '## recommended installed ##'
-      ls "$PYTHONPATH"
+      find piproot
+      echo "$PYTHONPATH"
     displayName: Install Python packages
 
   - script: |
