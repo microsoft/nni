@@ -23,11 +23,14 @@ jobs:
 
   - script: |
       set -e
+      # Do not cache setup dependencies. PR pipeline should use more stable version.
+      # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
       python -m pip install -U -r dependencies/setup.txt
-      python -m pip install -r dependencies/develop.txt
-      python -m pip install -r dependencies/required.txt
-      python -m pip install -r dependencies/required_extra.txt
-      python -m pip install -r dependencies/recommended.txt
+      mkdir piproot
+      python -m pip install --root piproot -r dependencies/develop.txt
+      python -m pip install --root piproot -r dependencies/required.txt
+      python -m pip install --root piproot -r dependencies/required_extra.txt
+      python -m pip install --root piproot -r dependencies/recommended.txt
     displayName: Install Python packages
 
   - script: |
@@ -39,8 +42,9 @@ jobs:
   - script: |
       set -e
       mkdir cache
-      mv -T ~/.cache/pip/wheels cache/wheels
-      mv -T ~/.cache/yarn cache/yarn
+      mv -T piproot/usr/lib cache/python-packages
+      mv -T ts/nni_manager/node_modules cache/nni-manager-packages
+      mv -T ts/webui/node_modules cache/webui-packages
       zip -r -9 cache.zip cache
       mv -T cache.zip '$(Build.ArtifactStagingDirectory)/cache.zip'
     displayName: Create archive

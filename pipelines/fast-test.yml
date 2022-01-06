@@ -27,9 +27,7 @@ stages:
     - script: |
         set -e
         unzip cache.zip
-        mkdir -p ~/.cache/pip
-        mv -T cache/wheels ~/.cache/pip/wheels
-        mv -T cache/yarn ~/.cache/yarn
+        mv -T cache/python-packages ~/.local/lib
       displayName: Apply cache
     - script: |
         set -e
@@ -106,9 +104,8 @@ stages:
     - script: |
         set -e
         unzip cache.zip
-        mkdir -p ~/.cache/pip
-        mv -T cache/wheels ~/.cache/pip/wheels
-        mv -T cache/yarn ~/.cache/yarn
+        mv -T cache/nni-manager-packages ts/nni_manager/node_modules
+        mv -T cache/webui-packages ts/webui/node_modules
       displayName: Apply cache
     - script: |
         set -e
