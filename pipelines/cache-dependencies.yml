@@ -1,3 +1,6 @@
+trigger: none
+pr: none
+
 jobs:
 - job: ubuntu_latest
   pool:
@@ -23,10 +26,12 @@ jobs:
 
   - script: |
       set -e
+      echo "PYTHONPATH 1: ${PYTHONPATH}"
       # Do not cache setup dependencies. PR pipeline should use more stable version.
       # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
       python -m pip install -U -r dependencies/setup.txt
       mkdir piproot
+      export PYTHONPATH="$PWD/piproot/usr/lib/python3.9/site-packages"
       python -m pip install --root piproot -r dependencies/develop.txt
       python -m pip install --root piproot -r dependencies/required.txt
       python -m pip install --root piproot -r dependencies/required_extra.txt
