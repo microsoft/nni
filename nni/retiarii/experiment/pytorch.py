@@ -6,6 +6,7 @@ import logging
 import os
 import socket
 import time
+import warnings
 from dataclasses import dataclass
 from pathlib import Path
 from subprocess import Popen
@@ -35,6 +36,7 @@ from ..integration import RetiariiAdvisor
 from ..mutator import Mutator
 from ..nn.pytorch.mutator import extract_mutation_from_pt_module, process_inline_mutation
 from ..oneshot.interface import BaseOneShotTrainer
+from ..serializer import is_model_wrapped
 from ..strategy import BaseStrategy
 from ..strategy.utils import dry_run_for_formatted_search_space
 
@@ -184,6 +186,13 @@ class RetiariiExperiment(Experiment):
         self._pipe: Optional[Pipe] = None
 
         self.url_prefix = None
+
+        # check for sanity
+        if not is_model_wrapped(base_model):
+            warnings.warn(colorama.Style.BRIGHT + colorama.Fore.RED +
+                          '`@model_wrapper` is missing for the base model. The experiment might still be able to run, '
+                          'but it may cause inconsistent behavior compared to the time when you add it.' + colorama.Style.RESET_ALL,
+                          RuntimeWarning)
 
     def _start_strategy(self):
         base_model_ir, self.applied_mutators = preprocess_model(

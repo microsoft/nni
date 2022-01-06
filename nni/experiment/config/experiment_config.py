@@ -47,12 +47,16 @@ class ExperimentConfig(ConfigBase):
             )
         )
 
-    Fields commented as "training service field" acts like shortcut for all training services.
-    Users can either specify them here or inside training service config.
-    In latter case hybrid training services can have different settings.
-
     .. _reference: https://nni.readthedocs.io/en/stable/reference/experiment_config.html
     """
+    # TODO:
+    # The behavior described below is expected but does not work,
+    # because some fields are consumed by TrialDispatcher outside environment service.
+    # Add the lines to docstr when we fix this issue.
+
+    # Fields commented as "training service field" acts like shortcut for all training services.
+    # Users can either specify them here or inside training service config.
+    # In latter case hybrid training services can have different settings.
 
     experiment_name: Optional[str] = None
     search_space_file: Optional[utils.PathLike] = None

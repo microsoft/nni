@@ -37,6 +37,9 @@ stages:
         python -m pip install -r dependencies/required_extra.txt
       displayName: Install requirements
     - script: |
+        python test/vso_tools/interim_patch.py
+      displayName: Apply patch
+    - script: |
         cd docs
         python tools/chineselink.py check
       displayName: Translation up-to-date
@@ -181,7 +184,6 @@ stages:
 
     # Need del later
     - script: |
-        set -e
         python test/vso_tools/interim_patch.py
       displayName: Torch utils tensorboard interim patch
 

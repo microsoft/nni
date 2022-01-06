@@ -1,9 +1,8 @@
 # Recommended because some non-commonly-used modules/examples depend on those packages.
 
 -f https://download.pytorch.org/whl/torch_stable.html
-tensorflow == 2.5.0
-keras == 2.4.3
-tensorboard == 2.5.0
+tensorflow == 2.7.0
+tensorboard == 2.7.0
 torch == 1.10.0+cpu ; sys_platform != "darwin"
 torch == 1.10.0 ; sys_platform == "darwin"
 torchvision == 0.11.1+cpu ; sys_platform != "darwin"
