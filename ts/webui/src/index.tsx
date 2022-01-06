@@ -4,6 +4,7 @@ import App from './App';
 import { getPrefix } from './static/function';
 import { BrowserRouter as Router, Route, Switch } from 'react-router-dom';
 const Overview = lazy(() => import('./components/Overview'));
+const Create = lazy(() => import('./components/Create'));
 const TrialsDetail = lazy(() => import('./components/TrialsDetail'));
 const Experiment = lazy(() => import('./components/managementExp/ExperimentManager'));
 import './index.css';
@@ -27,6 +28,7 @@ ReactDOM.render(
                     <Route path='/' component={Overview} exact />
                     <Route path='/oview' component={Overview} />
                     <Route path='/detail' component={TrialsDetail} />
+                    <Route path='/create' component={Create} />
                 </App>
             </Switch>
         </Suspense>

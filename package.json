@@ -1,0 +1,7 @@
+{
+    "dependencies": {
+      "@fluentui/example-data": "^8.3.0",
+      "@fluentui/react-hooks": "^8.3.8"
+    }
+  }
+  

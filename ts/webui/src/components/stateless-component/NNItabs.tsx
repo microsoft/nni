@@ -15,10 +15,16 @@ const DETAILTABS = (
     </NavLink>
 );
 
+const CREATETABS = (
+    <NavLink to='/create' activeClassName='selected' className='common-tabs'>
+        Create experiment
+    </NavLink>
+);
+
 const NNILOGO = (
     <NavLink to='/oview'>
         <img src={(getPrefix() || '') + '/logo.png'} alt='NNI logo' style={{ height: 40 }} />
     </NavLink>
 );
 
-export { OVERVIEWTABS, DETAILTABS, NNILOGO };
+export { OVERVIEWTABS, DETAILTABS, CREATETABS, NNILOGO };

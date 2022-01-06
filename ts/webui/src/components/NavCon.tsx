@@ -5,7 +5,7 @@ import { Stack, StackItem, CommandBarButton, IContextualMenuProps } from '@fluen
 import { Link } from 'react-router-dom';
 import { infoIconAbout, timeIcon, disableUpdates, requency, closeTimer, ChevronRightMed } from './buttons/Icon';
 import ExperimentSummaryPanel from './modals/ExperimentSummaryPanel';
-import { OVERVIEWTABS, DETAILTABS, NNILOGO } from './stateless-component/NNItabs';
+import { OVERVIEWTABS, DETAILTABS, CREATETABS, NNILOGO } from './stateless-component/NNItabs';
 import { EXPERIMENT } from '../static/datamodel';
 import { stackTokens, stackStyle } from './NavConst';
 import '../static/style/nav/nav.scss';
@@ -118,7 +118,8 @@ class NavCon extends React.Component<NavProps, NavState> {
                     <StackItem grow={30} styles={{ root: { minWidth: 300, display: 'flex', verticalAlign: 'center' } }}>
                         <span className='desktop-logo'>{NNILOGO}</span>
                         <span className='left-right-margin'>{OVERVIEWTABS}</span>
-                        <span>{DETAILTABS}</span>
+                        <span className='right-margin'>{DETAILTABS}</span>
+                        <span>{CREATETABS}</span>
                     </StackItem>
                     <StackItem grow={70} className='navOptions'>
                         <Stack horizontal horizontalAlign='end' tokens={stackTokens} styles={stackStyle}>
