@@ -27,7 +27,7 @@ stages:
     - script: |
         set -e
         unzip cache.zip
-        mv -T cache/python-packages ~/.local/lib
+        mv -T cache/python-packages ~/.local
       displayName: Apply cache
     - script: |
         set -e
