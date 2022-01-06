@@ -13,10 +13,14 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
 
-__all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
+__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable']
 
 
 T = TypeVar('T')
+
+
+class PayloadTooLarge(Exception):
+    pass
 
 
 class Traceable(abc.ABC):
@@ -563,9 +567,9 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
         if len(b) > pickle_size_limit > 0:
-            raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
-                             'not decorated by @nni.trace. Another option is to force bytes pickling and '
-                             'try to raise pickle_size_limit.')
+            raise PayloadTooLarge(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
+                                  'not decorated by @nni.trace. Another option is to force bytes pickling and '
+                                  'try to raise pickle_size_limit.')
         # use base64 to dump a bytes array
         return {
             '__nni_obj__': base64.b64encode(b).decode()

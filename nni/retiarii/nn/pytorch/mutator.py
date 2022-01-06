@@ -8,7 +8,7 @@ import torch.nn as nn
 
 from nni.retiarii.graph import Cell, Graph, Model, ModelStatus, Node
 from nni.retiarii.mutator import Mutator
-from nni.retiarii.serializer import is_basic_unit
+from nni.retiarii.serializer import is_basic_unit, is_model_wrapped
 from nni.retiarii.utils import uid
 
 from .api import LayerChoice, InputChoice, ValueChoice, Placeholder
@@ -223,7 +223,7 @@ def extract_mutation_from_pt_module(pytorch_model: nn.Module) -> Tuple[Model, Op
     graph = Graph(model, uid(), '_model', _internal=True)._register()
     model.python_class = pytorch_model.__class__
     if len(inspect.signature(model.python_class.__init__).parameters) > 1:
-        if not getattr(pytorch_model, '_nni_model_wrapper', False):
+        if not is_model_wrapped(pytorch_model):
             raise ValueError('Please annotate the model with @model_wrapper decorator in python execution mode '
                              'if your model has init parameters.')
         model.python_init_params = pytorch_model.trace_kwargs
