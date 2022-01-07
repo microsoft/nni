@@ -31,7 +31,7 @@
   * - `SMAC <./SmacTuner.rst>`__
     - SMAC 是基于序列模型的优化方法 (SMBO)。它利用使用过的最突出的模型（高斯随机过程模型），并将随机森林引入到SMBO中，来处理分类参数。NNI 的 SMAC tuner 封装了 GitHub 上的 `SMAC3 <https://github.com/automl/SMAC3>`__。`参考论文 <https://www.cs.ubc.ca/~hutter/papers/10-TR-SMAC.pdf>`__
 
-      注意：SMAC 算法需要使用 `pip install nni[SMAC]` 安装依赖，暂不支持 Windows 操作系统。
+      注意：SMAC 算法需要使用 ``pip install nni[SMAC]`` 安装依赖，暂不支持 Windows 操作系统。
 
   * - `Batch（批处理） <./BatchTuner.rst>`__
     - 批处理允许用户直接提供若干组配置，为每种配置运行一个 trial。
