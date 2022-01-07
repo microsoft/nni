@@ -4,7 +4,7 @@
 import os
 import warnings
 from pathlib import Path
-from typing import Dict, NoReturn, Union, Optional, List, Type
+from typing import Dict, Union, Optional, List, Type
 
 import pytorch_lightning as pl
 import torch.nn as nn
