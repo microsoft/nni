@@ -116,8 +116,6 @@ class ExperimentConfig(ConfigBase):
         super()._canonicalize([self])
 
         if self.search_space_file is not None:
-            if self.search_space is not None:
-                raise ValueError('ExperimentConfig: search_space and search_space_file cannot be set at same time')
             yaml_error = None
             try:
                 self.search_space = _load_search_space_file(self.search_space_file)
