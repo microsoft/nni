@@ -169,7 +169,7 @@ def _load_search_space_file(search_space_path):
     # FIXME
     # we need this because PyYAML 6.0 does not support YAML 1.2,
     # which means it is not fully compatible with JSON
-    content = Path(search_space_path).read_text()
+    content = Path(search_space_path).read_text(encoding='utf8')
     try:
         return json.loads(content)
     except Exception:
