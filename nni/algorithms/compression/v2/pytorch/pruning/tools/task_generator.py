@@ -269,7 +269,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         sparsity = sorted(sparsity)
         op_names = [k for k, _ in sorted(self.weights_numel.items(), key=lambda item: item[1]) if k in config['op_names']]
         assert len(sparsity) == len(op_names)
-        sub_temp_config_list = [deepcopy(config) for i in range(op_names)]
+        sub_temp_config_list = [deepcopy(config) for i in range(len(op_names))]
         for temp_config, sp, op_name in zip(sub_temp_config_list, sparsity, op_names):
             temp_config.update({'total_sparsity': sp, 'op_names': [op_name]})
         return sub_temp_config_list
