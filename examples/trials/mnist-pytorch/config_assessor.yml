@@ -1,8 +1,7 @@
-experimentName: MNIST with assessor
 searchSpaceFile: search_space.json
-trialCommand: python3 mnist.py
+trialCommand: python3 mnist.py  # NOTE: change "python3" to "python" if you are using Windows
 trialGpuNumber: 0
-trialConcurrency: 1
+trialConcurrency: 4
 maxTrialNumber: 20
 tuner:
   name: TPE
