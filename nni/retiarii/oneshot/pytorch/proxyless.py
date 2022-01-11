@@ -297,6 +297,7 @@ class ProxylessTrainer(BaseOneShotTrainer):
 
             # 2) train model parameters
             for _, module in self.nas_modules:
+                
                 module.resample()
             self.optimizer.zero_grad()
             logits, loss = self._logits_and_loss_for_weight_update(trn_X, trn_y)

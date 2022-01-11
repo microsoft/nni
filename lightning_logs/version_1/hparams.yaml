@@ -1,0 +1,4 @@
+criterion: !!python/name:torch.nn.modules.loss.CrossEntropyLoss ''
+learning_rate: 0.001
+optimizer: !!python/name:torch.optim.adam.Adam ''
+weight_decay: 0.0
