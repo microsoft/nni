@@ -40,6 +40,13 @@ whitelist = [
     'Compression/QuickStart.rst',
 ]
 
+suffix_list = [
+    '.html',
+    '.md',
+    '.rst',
+    '.ipynb',
+]
+
 for path in whitelist:
     assert (Path('zh_CN') / path).exists(), path
 
@@ -90,7 +97,7 @@ for path in walk(Path('en_US')):
     relative_path = path.relative_to('en_US')
     if relative_path.as_posix().startswith('_build'):
         continue
-    if path.suffix in ('.html', '.md', '.rst'):
+    if path.suffix in suffix_list:
         target_path = (Path('zh_CN') / relative_path)
         if relative_path.as_posix() in whitelist:
             # whitelist files. should be translated
@@ -109,7 +116,7 @@ for path in walk(Path('en_US')):
 
 # delete redundant files
 for path in walk(Path('zh_CN')):
-    if path.suffix in ('.html', '.md', '.rst'):
+    if path.suffix in suffix_list:
         relative_path = path.relative_to('zh_CN')
         if not (Path('en_US') / relative_path).exists():
             failed_files.append('(redundant) ' + path.as_posix())
