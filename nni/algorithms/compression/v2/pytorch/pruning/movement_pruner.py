@@ -133,8 +133,9 @@ class MovementPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.

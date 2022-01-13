@@ -8,7 +8,8 @@ from nni.algorithms.compression.v2.pytorch.pruning import L1NormPruner
 from nni.algorithms.compression.v2.pytorch.pruning.tools import AGPTaskGenerator
 from nni.algorithms.compression.v2.pytorch.pruning.basic_scheduler import PruningScheduler
 
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 
 
