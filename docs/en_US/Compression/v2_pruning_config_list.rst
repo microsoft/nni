@@ -63,5 +63,5 @@ and 900 parameters can be masked in ``layer_2``.
 exclude
 ^^^^^^^
 
-This key cannot exist in a sub-config at the same time with keys containing ``sparsity``.
+The ``exclude`` and ``sparsity`` keyword are mutually exclusive and cannot exist in the same sub-config.
 If ``exclude`` is set in sub-config, the layers selected by this config will not be pruned.
