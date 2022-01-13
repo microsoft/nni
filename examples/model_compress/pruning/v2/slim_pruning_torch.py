@@ -14,10 +14,10 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
+import nni
 from nni.compression.pytorch import ModelSpeedup
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import SlimPruner
-from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
 from pathlib import Path
 sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
@@ -112,8 +112,8 @@ if __name__ == '__main__':
         'max_sparsity_per_layer': 0.9
     }]
 
-    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
-    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    # make sure you have used nni.trace to wrap the optimizer class before initialize
+    traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     pruner = SlimPruner(model, config_list, trainer, traced_optimizer, criterion, training_epochs=1, scale=0.0001, mode='global')
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
