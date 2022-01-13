@@ -133,8 +133,9 @@ class LevelPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     """
 
@@ -168,7 +169,8 @@ class NormPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     p : int
         The order of norm.
@@ -228,7 +230,8 @@ class L1NormPruner(NormPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in L1NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -260,7 +263,8 @@ class L2NormPruner(NormPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in L1NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -292,7 +296,8 @@ class FPGMPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in FPGMPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -351,7 +356,8 @@ class SlimPruner(BasicPruner):
             - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Only BatchNorm2d is supported in SlimPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -455,7 +461,8 @@ class ActivationPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in ActivationPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -598,7 +605,8 @@ class TaylorFOWeightPruner(BasicPruner):
             - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -729,8 +737,9 @@ class ADMMPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - rho : Penalty parameters in ADMM algorithm.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
