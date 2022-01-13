@@ -6,4 +6,5 @@ from .enas import EnasTrainer
 from .proxyless import ProxylessTrainer
 from .random import SinglePathTrainer, RandomTrainer
 from .utils import replace_input_choice, replace_layer_choice
-from .differentiable import DartsModel, DartsDataset
+from .differentiable import MergeTrainValDataset, DartsModel, ProxylessModel
+from .sampling import EnasModel,RandomSampleModel
