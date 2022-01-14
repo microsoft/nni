@@ -221,10 +221,28 @@ def test_lightning_earlystop():
     assert any(isinstance(callback, EarlyStopping) for callback in trainer.callbacks)
 
 
+def test_generator():
+    import torch.nn as nn
+    import torch.optim as optim
+
+    class Net(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv = nn.Conv2d(3, 10, 1)
+
+        def forward(self, x):
+            return self.conv(x)
+
+    model = Net()
+    optimizer = nni.trace(optim.Adam)(model.parameters())
+    print(optimizer.trace_kwargs)
+
+
+
 if __name__ == '__main__':
     # test_simple_class()
     # test_external_class()
     # test_nested_class()
     # test_unserializable()
     # test_basic_unit()
-    test_multiprocessing_dataloader()
+    test_generator()
