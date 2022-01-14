@@ -180,7 +180,6 @@ stages:
         set -e
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[PPOTuner,DNGO]
-        python -m pip install "scipy<1.8"  # enforce scipy version for DNGO on pipeline
       displayName: Install extra dependencies
 
     # Need del later
@@ -375,7 +374,6 @@ stages:
         set -e
         python -m pip install -r dependencies/recommended.txt
         python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-        python -m pip install "scipy<1.8"  # enforce scipy version for DNGO on pipeline
       displayName: Install extra dependencies
 
     # Need del later
