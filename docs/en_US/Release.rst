@@ -21,27 +21,27 @@ Experiment
   * If you are still using legacy format, nnictl will show equivalent new config on start. Please save it to replace the old one.
 
 * nnictl now uses ``nni.experiment.Experiment`` `APIs <https://nni.readthedocs.io/en/stable/Tutorial/HowToLaunchFromPython.html>`__ as backend. The output message of create, resume, and view commands have changed.
-* Added Kubeflow and Frameworkcontroller support to hybrid mode.  `(doc) <https://nni.readthedocs.io/en/v2.6/TrainingService/HybridMode.html`__
+* Added Kubeflow and Frameworkcontroller support to hybrid mode.  `(doc) <https://nni.readthedocs.io/en/v2.6/TrainingService/HybridMode.html>`__
 * The hidden tuner manifest file has been updated. This should be transparent to users, but if you encounter issues like failed to find tuner, please try to remove ``~/.config/nni``.
 
 Algorithms
 """"""""""
 
-* Random tuner now supports classArgs ``seed``. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/RandomTuner.html`__
-* TPE tuner is refactored: `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/TpeTuner.html`__
+* Random tuner now supports classArgs ``seed``. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/RandomTuner.html>`__
+* TPE tuner is refactored: `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/TpeTuner.html>`__
 
   * Support classArgs ``seed``.
   * Support classArgs ``tpe_args`` for expert users to customize algorithm behavior.
   * Parallel optimization has been turned on by default. To turn it off set ``tpe_args.constant_liar_type`` to ``null`` (or ``None`` in Python).
   * ``constant_liar_type`` has been moved into ``tpe_args``. If you are using it please update your config.
 
-* Grid search tuner now supports all search space types, including uniform, normal, and nested choice. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/GridsearchTuner.html`__
+* Grid search tuner now supports all search space types, including uniform, normal, and nested choice. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/GridsearchTuner.html>`__
 
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Enhancement to serialization utilities `(doc) <https://nni.readthedocs.io/en/v2.7/NAS/Serialization.html`__ and changes to recommended practice of customizing evaluators. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/QuickStart.html#pick-or-customize-a-model-evaluator`__
-* Support latency constraint on edge device for ProxylessNAS based on nn-Meter. `(doc) <https://github.com/microsoft/nni/blob/v2.6/docs/en_US/NAS/Proxylessnas.rst`__
+* Enhancement to serialization utilities `(doc) <https://nni.readthedocs.io/en/v2.7/NAS/Serialization.html>`__ and changes to recommended practice of customizing evaluators. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/QuickStart.html#pick-or-customize-a-model-evaluator>`__
+* Support latency constraint on edge device for ProxylessNAS based on nn-Meter. `(doc) <https://github.com/microsoft/nni/blob/v2.6/docs/en_US/NAS/Proxylessnas.rst>`__
 * Trial parameters are showed more friendly in Retiarii experiments.
 * Refactor NAS examples of ProxylessNAS and SPOS.
 
@@ -50,15 +50,15 @@ Model Compression
 
 * New Pruner Supported in Pruning V2
 
-  * Auto-Compress Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#auto-compress-pruner`__
-  * AMC Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#amc-pruner`__
-  * Movement Pruning Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#movement-pruner`__
+  * Auto-Compress Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#auto-compress-pruner>`__
+  * AMC Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#amc-pruner>`__
+  * Movement Pruning Pruner `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html#movement-pruner>`__
 
-* Support ``nni.trace`` wrapped ``Optimizer`` in Pruning V2. In the case of not affecting the user experience as much as possible, trace the input parameters of the optimizer. `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html`__
+* Support ``nni.trace`` wrapped ``Optimizer`` in Pruning V2. In the case of not affecting the user experience as much as possible, trace the input parameters of the optimizer. `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_algo.html>`__
 * Optimize Taylor Pruner, APoZ Activation Pruner, Mean Activation Pruner in V2 memory usage.
 * Add more examples for Pruning V2.
-* Add document for pruning config list.  `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_config_list.html`__
-* Parameter ``masks_file`` of ``ModelSpeedup`` now accepts `pathlib.Path` object. (Thanks to @dosemeion) `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/ModelSpeedup.html#user-configuration-for-modelspeedup`__
+* Add document for pruning config list.  `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/v2_pruning_config_list.html>`__
+* Parameter ``masks_file`` of ``ModelSpeedup`` now accepts `pathlib.Path` object. (Thanks to @dosemeion) `(doc) <https://nni.readthedocs.io/en/v2.6/Compression/ModelSpeedup.html#user-configuration-for-modelspeedup>`__
 * Bug Fix
 
   * Fix Slim Pruner in V2 not sparsify the BN weight.
