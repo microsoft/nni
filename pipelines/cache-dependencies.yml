@@ -5,59 +5,35 @@ jobs:
 - job: ubuntu_latest
   pool:
     vmImage: ubuntu-latest
-
   steps:
-  - task: UsePythonVersion@0
-    inputs:
-      versionSpec: 3.9
-    displayName: Configure Python version
+  - template: templates/cache-deps.yml
+    parameters:
+      feed: dependencies-ubuntu-latest
+    displayName: Cache dependencies
 
-  - task: NodeTool@0
-    inputs:
-      versionSpec: 16.3.0
-    displayName: Configure Node.js version
+- job: ubuntu_legacy
+  pool:
+    vmImage: ubuntu-18.04
+  steps:
+  - template: templates/cache-deps.yml
+    parameters:
+      feed: dependencies-ubuntu-legacy
+    displayName: Cache dependencies
 
-  - script: |
-      set -e
-      sudo apt-get remove -y swig
-      sudo apt-get install -y pandoc swig3.0
-      sudo ln -s swig3.0 /usr/bin/swig
-    displayName: Install apt packages
+- job: windows
+  pool:
+    vmImage: windows-latest
+  steps:
+  - template: templates/cache-deps.yml
+    parameters:
+      feed: dependencies-windows
+    displayName: Cache dependencies
 
-  - script: |
-      set -e
-      # Do not cache pycache files. It's faster to generate on the fly than download + unzip + copy.
-      export PYTHONPYCACHEPREFIX=$HOME/pycache
-      # Do not cache setup dependencies. PR pipeline should use more stable version.
-      # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
-      python -m pip install -U -r dependencies/setup.txt
-      # Pre-installed packages and setup dependencies are global.
-      # "~/.local" has not been created at this point.
-      python -m pip install --user -r dependencies/develop.txt
-      python -m pip install --user -r dependencies/required.txt
-      python -m pip install --user -r dependencies/required_extra.txt
-      python -m pip install --user -r dependencies/recommended.txt
-    displayName: Install Python packages
-
-  - script: |
-      set -e
-      yarn --cwd ts/nni_manager install
-      yarn --cwd ts/webui install
-    displayName: Install Node.js packages
-
-  - script: |
-      set -e
-      mkdir cache
-      mv -T ~/.local cache/python-packages
-      mv -T ts/nni_manager/node_modules cache/nni-manager-packages
-      mv -T ts/webui/node_modules cache/webui-packages
-      zip -r --symlinks cache.zip cache
-      mv -T cache.zip '$(Build.ArtifactStagingDirectory)/cache.zip'
-    displayName: Create archive
-
-  - task: UniversalPackages@0
-    inputs:
-      command: publish
-      vstsFeedPublish: NNIOpenSource/sandbox
-      vstsFeedPackagePublish: dependencies-ubuntu-latest
-    displayName: Upload cache
+- job: macos
+  pool:
+    vmImage: macOS-latest
+  steps:
+  - template: templates/cache-deps.yml
+    parameters:
+      feed: dependencies-macos
+    displayName: Cache dependencies
