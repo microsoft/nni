@@ -11,7 +11,7 @@ Neural Network Intelligence
     Overview <Overview>
     Get Started <GetStarted>
     Tutorial <Tutorial/Welcome>
-    Experiment <Experiment/>
+    Experiment <Experiment/Overview>
     Auto (Hyper-parameter) Tuning <HPO/Overview>
     Neural Architecture Search <NAS/Overview>
     Model Compression <Compression/Overview>

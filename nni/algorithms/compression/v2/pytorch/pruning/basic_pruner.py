@@ -122,21 +122,33 @@ class BasicPruner(Pruner):
         self.load_masks(masks)
         return self.bound_model, masks
 
-
 class LevelPruner(BasicPruner):
-    """
+    r"""This is a basic pruner, and in some papers called it magnitude pruning or fine-grained pruning.
+    It will mask the weight in each specified layer with smaller absolute value by a ratio configured in the config list.
+
     Parameters
     ----------
-    model : torch.nn.Module
-        Model to be pruned
-    config_list : List[Dict]
-        Supported keys:
-            - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
-            - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to be pruned.
-            - op_names : Operation names to be pruned.
-            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
-            - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+        model: torch.nn.Module
+            Model to be pruned
+        config_list: List[Dict]
+            Supported keys:
+                - sparsity: This is to specify the sparsity for each layer in this config to be compressed.
+                - sparsity_per_layer: Equals to sparsity.
+                - op_types: Operation types to be pruned.
+                - op_names: Operation names to be pruned.
+                - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
+                - exclude: Set True then the layers setting by op_types and op_names will be excluded from pruning.
+
+    Examples
+    --------
+
+        >>> model = ...
+        >>> from nni.algorithms.compression.v2.pytorch.pruning import LevelPruner
+        >>> config_list = [{ 'sparsity': 0.8, 'op_types': ['default'] }]
+        >>> pruner = LevelPruner(model, config_list)
+        >>> masked_model, masks = pruner.compress()
+
+    For detailed example please refer to :githublink:`examples/model_compress/pruning/v2/level_pruning_torch.py <examples/model_compress/pruning/v2/level_pruning_torch.py>`
     """
 
     def __init__(self, model: Module, config_list: List[Dict]):

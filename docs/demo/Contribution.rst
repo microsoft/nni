@@ -2,5 +2,7 @@
 Contribute to NNI
 #################
 
-Development Setup<./Tutorial/SetupNniDeveloperEnvironment>
-Contribution Guide<./Tutorial/Contributing>
+
+..  toctree::
+    Development Setup <./Tutorial/SetupNniDeveloperEnvironment>
+    Contribution Guide <./Tutorial/Contributing>

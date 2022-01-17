@@ -10,3 +10,4 @@ Introduction for pruning specific concept.
     :hidden:
 
     Quick Start <QuickStartPruning>
+    Pruner <Pruner>
