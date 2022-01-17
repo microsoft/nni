@@ -40,7 +40,7 @@ Algorithms
 Neural Architecture Search
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* Enhancement to serialization utilities `(doc) <https://nni.readthedocs.io/en/v2.7/NAS/Serialization.html>`__ and changes to recommended practice of customizing evaluators. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/QuickStart.html#pick-or-customize-a-model-evaluator>`__
+* Enhancement to serialization utilities `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/Serialization.html>`__ and changes to recommended practice of customizing evaluators. `(doc) <https://nni.readthedocs.io/en/v2.6/NAS/QuickStart.html#pick-or-customize-a-model-evaluator>`__
 * Support latency constraint on edge device for ProxylessNAS based on nn-Meter. `(doc) <https://github.com/microsoft/nni/blob/v2.6/docs/en_US/NAS/Proxylessnas.rst>`__
 * Trial parameters are showed more friendly in Retiarii experiments.
 * Refactor NAS examples of ProxylessNAS and SPOS.
@@ -878,7 +878,7 @@ Neural Architecture Search
 
 
 * Support `C-DARTS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/CDARTS.md>`__ algorithm and add `the example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/cdarts>`__ using it
-* Support a preliminary version of `ProxylessNAS <https://github.com/microsoft/nni/blob/v1.4/docs/en_US/NAS/Proxylessnas.md>`__ and the corresponding `example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas>`__
+* Support a preliminary version of `ProxylessNAS <https://nni.readthedocs.io/en/v2.6/NAS/Proxylessnas.html>`__ and the corresponding `example <https://github.com/microsoft/nni/tree/v1.4/examples/nas/proxylessnas>`__
 * Add unit tests for the NAS framework
 
 Model Compression
