@@ -1,11 +1,8 @@
 from collections import OrderedDict
 import torch
-from torch import optim
 import torch.nn as nn
 import torch.nn.functional as F
-import random
 
-from nni.retiarii.oneshot.pytorch.random import PathSamplingInputChoice, PathSamplingLayerChoice
 from .base_lightning import BaseOneShotLightningModule
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 
@@ -65,8 +62,69 @@ class DartsInputChoice(nn.Module):
     def r_forward(self, x):
         return super().r_forward(x)
 
-class DartsRepeat(nn.Module):
-    pass
+DARTS_REPLACE_DICT = {
+    LayerChoice : DartsLayerChoice,
+    InputChoice : DartsInputChoice
+}
+
+class DartsModel(BaseOneShotLightningModule):
+    '''
+        choice_replace_dict 是一个 xxxChoice 类到用户自己实现的 ChoiceReplace 的类的字典。可以改个名字。
+    '''
+    def __init__(self, model, custom_replace_dict = None):
+        super().__init__(model, custom_replace_dict)
+        self.automatic_optimization = False
+    
+    def on_train_start(self) -> None:
+        return super().on_train_start()
+        
+    def training_step(self, batch, batch_idx):
+        # grad manually
+        opts = self.optimizers()
+        arc_optim = opts[0]
+        w_optim = opts[1:]
+
+        # MergeTrainValDataset will yield both train and val data in a batch
+        trn_batch, val_batch = batch
+
+        # phase 1. architecture step
+        self.resample_architecture()
+        arc_optim.zero_grad()
+        arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
+        self.manual_backward(arc_step_loss)
+        arc_optim.step()
+
+        # phase 2: child network step
+        self.resample_architecture()
+        for opt in w_optim:
+            opt.zero_grad()
+        w_step_loss = self.model.training_step(trn_batch, 2 * batch_idx + 1)
+        self.manual_backward(w_step_loss)
+        for opt in w_optim:
+            opt.step()
+        return w_step_loss
+
+    def validation_step(self, batch, batch_idx):
+        return
+
+    def resample_architecture(self):
+        pass
+    
+    @property
+    def default_replace_dict(self):
+        return DARTS_REPLACE_DICT
+
+    def configure_architecture_optimizers(self):
+        ctrl_params = {}
+        for _, m in self.nas_modules:
+            if m.name in ctrl_params:
+                assert m.alpha.size() == ctrl_params[m.name].size(), 'Size of parameters with the same label should be same.'
+                m.alpha = ctrl_params[m.name]
+            else:
+                ctrl_params[m.name] = m.alpha
+        ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), 3.e-4, betas=(0.5, 0.999),
+                                           weight_decay=1.0E-3)
+        return ctrl_optim
 
 class _ArchGradientFunction(torch.autograd.Function):
     @staticmethod
@@ -100,32 +158,34 @@ class ProxylessLayerChoice(nn.Module):
         self.sampled = None
 
     def forward(self, *args, **kwargs):
-        def run_function(ops, active_id, **kwargs):
-            def forward(_x):
-                return ops[active_id](_x, **kwargs)
-            return forward
+        if self.training:
+            def run_function(ops, active_id, **kwargs):
+                def forward(_x):
+                    return ops[active_id](_x, **kwargs)
+                return forward
 
-        def backward_function(ops, active_id, binary_gates, **kwargs):
-            def backward(_x, _output, grad_output):
-                binary_grads = torch.zeros_like(binary_gates.data)
-                with torch.no_grad():
-                    for k in range(len(ops)):
-                        if k != active_id:
-                            out_k = ops[k](_x.data, **kwargs)
-                        else:
-                            out_k = _output.data
-                        grad_k = torch.sum(out_k * grad_output)
-                        binary_grads[k] = grad_k
-                return binary_grads
-            return backward
+            def backward_function(ops, active_id, binary_gates, **kwargs):
+                def backward(_x, _output, grad_output):
+                    binary_grads = torch.zeros_like(binary_gates.data)
+                    with torch.no_grad():
+                        for k in range(len(ops)):
+                            if k != active_id:
+                                out_k = ops[k](_x.data, **kwargs)
+                            else:
+                                out_k = _output.data
+                            grad_k = torch.sum(out_k * grad_output)
+                            binary_grads[k] = grad_k
+                    return binary_grads
+                return backward
 
-        assert len(args) == 1
-        x = args[0]
-        return _ArchGradientFunction.apply(
-            x, self._binary_gates, run_function(self.ops, self.sampled, **kwargs),
-            backward_function(self.ops, self.sampled, self._binary_gates, **kwargs)
-        )
+            assert len(args) == 1
+            x = args[0]
+            return _ArchGradientFunction.apply(
+                x, self._binary_gates, run_function(self.ops, self.sampled, **kwargs),
+                backward_function(self.ops, self.sampled, self._binary_gates, **kwargs)
+            )
         
+        return super().forward(*args, **kwargs)
 
     def resample(self):
         probs = F.softmax(self.alpha, dim=-1)
@@ -161,25 +221,28 @@ class ProxylessInputChoice(nn.Module):
         self.sampled = None
 
     def forward(self, inputs):
-        def run_function(active_sample):
-            return lambda x: x[active_sample]
+        if self.training:
+            def run_function(active_sample):
+                return lambda x: x[active_sample]
 
-        def backward_function(binary_gates):
-            def backward(_x, _output, grad_output):
-                binary_grads = torch.zeros_like(binary_gates.data)
-                with torch.no_grad():
-                    for k in range(self.num_input_candidates):
-                        out_k = _x[k].data
-                        grad_k = torch.sum(out_k * grad_output)
-                        binary_grads[k] = grad_k
-                return binary_grads
-            return backward
+            def backward_function(binary_gates):
+                def backward(_x, _output, grad_output):
+                    binary_grads = torch.zeros_like(binary_gates.data)
+                    with torch.no_grad():
+                        for k in range(self.num_input_candidates):
+                            out_k = _x[k].data
+                            grad_k = torch.sum(out_k * grad_output)
+                            binary_grads[k] = grad_k
+                    return binary_grads
+                return backward
 
-        inputs = torch.stack(inputs, 0)
-        return _ArchGradientFunction.apply(
-            inputs, self._binary_gates, run_function(self.sampled),
-            backward_function(self._binary_gates)
-        )
+            inputs = torch.stack(inputs, 0)
+            return _ArchGradientFunction.apply(
+                inputs, self._binary_gates, run_function(self.sampled),
+                backward_function(self._binary_gates)
+            )
+        
+        return super().forward(inputs)
 
 
     def resample(self, sample=None):
@@ -202,129 +265,27 @@ class ProxylessInputChoice(nn.Module):
             for i in range(self.num_input_candidates):
                 for j in range(self.num_input_candidates):
                     self.alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
-# val 改成 function 
-DARTS_REPLACE_DICT = {
-    LayerChoice : DartsLayerChoice,
-    InputChoice : DartsInputChoice
-}
-
-class DartsModel(BaseOneShotLightningModule):
-    '''
-        choice_replace_dict 是一个 xxxChoice 类到用户自己实现的 ChoiceReplace 的类的字典。可以改个名字。
-    '''
-    def __init__(self, model, arc_lr = 3.e-4, custom_replace_dict = None):
-        
-        super().__init__(model, DARTS_REPLACE_DICT, custom_replace_dict)
-
-        self.automatic_optimization = False
-        ctrl_params = {}
-        for _, m in self.nas_modules:
-            if m.name in ctrl_params:
-                assert m.alpha.size() == ctrl_params[m.name].size(), 'Size of parameters with the same label should be same.'
-                m.alpha = ctrl_params[m.name]
-            else:
-                ctrl_params[m.name] = m.alpha
-        self.ctrl_optim = torch.optim.Adam(list(ctrl_params.values()), arc_lr, betas=(0.5, 0.999),
-                                           weight_decay=1.0E-3)
-
-    def training_step(self, batch, batch_idx):
-        # grad manually
-        opts = self.optimizers()
-        arc_optim = opts[0]
-        w_optim = opts[1:]
-
-        # MergeTrainValDataset will yield both train and val data in a batch
-        trn_batch, val_batch = batch
-
-        # phase 1. architecture step
-        arc_optim.zero_grad()
-        arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
-        self.manual_backward(arc_step_loss)
-        arc_optim.step()
-
-        # phase 2: child network step
-        for opt in w_optim:
-            opt.zero_grad()
-        w_step_loss = self.model.training_step(trn_batch, 2 * batch_idx + 1)
-        self.manual_backward(w_step_loss)
-        for opt in w_optim:
-            opt.step()
-        return w_step_loss
-
-    def validation_step(self, batch, batch_idx):
-        return
-
-    def configure_optimizers(self):
-        model_optimizers = self.model.configure_optimizers()
-        if isinstance(model_optimizers, optim.Optimizer):
-            return [self.ctrl_optim, model_optimizers]
-        if isinstance(model_optimizers, list):
-            return [self.ctrl_optim] + model_optimizers
-        if isinstance(model_optimizers, tuple):
-            return (self.ctrl_optim,) + model_optimizers
-
-    def on_train_end(self) -> None:
-        print(self.export())
-        return self.model.on_train_end()
 
 PROXYLESS_REPLACE_DICT = {
     LayerChoice : ProxylessLayerChoice,
     InputChoice : ProxylessInputChoice
 }
 
-class ProxylessModel(BaseOneShotLightningModule):
-    def __init__(self, base_model, arc_learning_rate = 1e-3, custom_replace_dict = None):
-        super().__init__(base_model, PROXYLESS_REPLACE_DICT, custom_replace_dict)
+class ProxylessModel(DartsModel):
+    def __init__(self, base_model, custom_replace_dict = None):
+        super().__init__(base_model, custom_replace_dict)
 
-        self.automatic_optimization = False
-        self.ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], arc_learning_rate,
+    
+    def configure_architecture_optimizers(self):
+        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
                                            weight_decay=0, betas=(0, 0.999), eps=1e-8)
+        return ctrl_optim
     
-    def training_step(self, batch, batch_idx):
-        #grad manually
-        opts = self.optimizers()
-        arc_opt = opts[0]
-        w_opt = opts[1:]
-
-        # MergeTranValDataset will yield both train data and val data each batch
-        train_batch, val_batch = batch
-        
-        # arch step
-        for _, module in self.nas_modules:
-            module.resample()
-        arc_opt.zero_grad()
-        arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
-        self.manual_backward(arc_step_loss)
-        for _, module in self.nas_modules:
-            module.finalize_grad()
-        arc_opt.step()
-
-        # w step
-        for _, module in self.nas_modules:
-            module.resample()
-        for opt in w_opt:
-            opt.zero_grad()
-        w_step_loss = self.model.training_step(train_batch, 2 * batch_idx + 1)
-        self.manual_backward(w_step_loss)
-        for opt in w_opt:
-            opt.step()
-
-        return w_step_loss
+    @property
+    def default_replace_dict(self):
+        return PROXYLESS_REPLACE_DICT
     
-    def validation_step(self, batch, batch_idx):
-        return
-
-    def configure_optimizers(self):
-        model_optimizers = self.model.configure_optimizers()
-        if isinstance(model_optimizers, optim.Optimizer):
-            return [self.ctrl_optim, model_optimizers]
-        if isinstance(model_optimizers, list):
-            return [self.ctrl_optim] + model_optimizers
-        if isinstance(model_optimizers, tuple):
-            return (self.ctrl_optim,) + model_optimizers
-
-    def on_train_end(self) -> None:
-        print(self.export())
-        return self.model.on_train_end()
-
+    def resample_architecture(self):
+        for _, m in self.nas_modules:
+            m.resample()
 

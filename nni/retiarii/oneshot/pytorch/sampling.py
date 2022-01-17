@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from tracemalloc import is_tracing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -10,7 +11,7 @@ import random
 from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
 
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
-from .base_lightning import BaseOneShotLightningModule
+from .base_lightning import BaseOneShotLightningModule, ConcatenateTrainValDataLoader
 
 
 class StackedLSTMCell(nn.Module):
@@ -173,8 +174,6 @@ class EnasModel(BaseOneShotLightningModule):
         Weight of skip penalty loss.
     baseline_decay : float
         Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
-    ctrl_lr : float
-        Learning rate for RL controller.
     ctrl_steps_aggregate : int
         Number of steps that will be aggregated into one mini-batch for RL controller.
     ctrl_steps : int
@@ -183,10 +182,10 @@ class EnasModel(BaseOneShotLightningModule):
         Optional kwargs that will be passed to :class:`ReinforceController`.
     """
 
-    def __init__(self, base_model, reward_function, ctrl_kwargs = None, ctrl_lr = 3.5e-4,
+    def __init__(self, base_model, reward_function, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999, 
                  ctrl_steps_aggregate = 20, grad_clip = 0, custom_replace_dict = None):
-        super().__init__(base_model, ENAS_REPLACE_DICT, custom_replace_dict)
+        super().__init__(base_model, custom_replace_dict)
 
         self.nas_fields = [ReinforceField(name, len(module),
                                           isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
@@ -194,7 +193,6 @@ class EnasModel(BaseOneShotLightningModule):
         self.controller = ReinforceController(self.nas_fields, **(ctrl_kwargs or {}))
 
         self.reward_function = reward_function
-        self.ctrl_optim = optim.Adam(self.controller.parameters(), lr=ctrl_lr)
         
         self.entropy_weight = entropy_weight
         self.skip_weight = skip_weight
@@ -204,15 +202,19 @@ class EnasModel(BaseOneShotLightningModule):
         self.grad_clip = grad_clip
 
         self.automatic_optimization = False
+    
+    def on_train_start(self) -> None:
+        train_loader = self.trainer.train_dataloader
+        val_loader = self.trainer.val_dataloaders[0]
+        self.trainer.train_dataloader = ConcatenateTrainValDataLoader(train_loader, val_loader)
+        self.trainer.val_dataloaders = None
 
-    def configure_optimizers(self):
-        model_optimizers = self.model.configure_optimizers()
-        if isinstance(model_optimizers, optim.Optimizer):
-            return [self.ctrl_optim, model_optimizers]
-        if isinstance(model_optimizers, list):
-            return [self.ctrl_optim] + model_optimizers
-        if isinstance(model_optimizers, tuple):
-            return (self.ctrl_optim,) + model_optimizers
+    def configure_architecture_optimizers(self):
+        return optim.Adam(self.controller.parameters(), lr=3.5e-4)
+    
+    @property
+    def default_replace_dict(self):
+        return ENAS_REPLACE_DICT
 
     def training_step(self, batch, batch_idx):
         # grad manually
@@ -220,38 +222,48 @@ class EnasModel(BaseOneShotLightningModule):
         arc_opt = opts[0]
         w_opt = opts[1:]
 
-        train_batch, (val_x, val_y) = batch
+        # optimize rnn after the model
+        batch, is_train_batch = batch
 
-        # step1: train rnn
-        arc_opt.zero_grad()
-        self._resample()
-        with torch.no_grad():
-            logits = self.model(val_x)
-        reward = self.reward_function(logits, val_y)
-
-        if self.entropy_weight:
-            reward = reward + self.entropy_weight * self.controller.sample_entropy.item()
-        self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
-        rnn_step_loss = self.controller.sample_log_prob * (reward - self.baseline)
-        if self.skip_weight:
-            rnn_step_loss = rnn_step_loss + self.skip_weight * self.controller.sample_skip_penalty
-
-        rnn_step_loss = rnn_step_loss / self.ctrl_steps_aggregate
-        self.manual_backward(rnn_step_loss)
-
-        if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
-            if self.grad_clip > 0:
-                nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
-            arc_opt.step()
+        if is_train_batch:
+            # step 1 : train model params
+            self._resample()
+            for opt in w_opt:
+                opt.zero_grad()
+            w_step_loss = self.model.training_step(batch, batch_idx)
+            self.manual_backward(w_step_loss)
+            for opt in w_opt:
+                opt.step()
+        else:
+            # step2: train rnn
+            print('from val batch')
+            breakpoint()
+            x, y = batch
             arc_opt.zero_grad()
+            self._resample()
+            with torch.no_grad():
+                logits = self.model(x)
+            reward = self.reward_function(logits, y)
+            
+            if self.entropy_weight:
+                reward = reward + self.entropy_weight * self.controller.sample_entropy.item()
+            self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
+            rnn_step_loss = self.controller.sample_log_prob * (reward - self.baseline)
+            if self.skip_weight:
+                rnn_step_loss = rnn_step_loss + self.skip_weight * self.controller.sample_skip_penalty
+
+            rnn_step_loss = rnn_step_loss / self.ctrl_steps_aggregate
+            self.manual_backward(rnn_step_loss)
+
+            if (batch_idx + 1) % self.ctrl_steps_aggregate == 0:
+                if self.grad_clip > 0:
+                    nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
+                arc_opt.step()
+                arc_opt.zero_grad()
+
         
-        self._resample()
-        for opt in w_opt:
-            opt.zero_grad()
-        w_step_loss = self.model.training_step(train_batch, batch_idx)
-        self.manual_backward(w_step_loss)
-        for opt in w_opt:
-            opt.step()
+    def validation_step(self, batch, batch_idx):
+        pass
 
     def on_train_end(self) -> None:
         print(self.export())
@@ -272,22 +284,25 @@ RANDOM_REPLACE_DICT = {
     InputChoice : PathSamplingInputChoice
 }
 
-
 class RandomSampleModel(BaseOneShotLightningModule):
+    ''' Random Sampling Nas Algorithm.
+        Each xxxChoice is random sampled every batch.
+        See baseclass for args description.
+    '''
     def __init__(self, base_model, custom_replace_dict = None):
-        super().__init__(base_model, RANDOM_REPLACE_DICT, custom_replace_dict)
+        super().__init__(base_model, custom_replace_dict)
 
     def training_step(self, batch, batch_idx):
         self._resample()
         return self.model.training_step(batch, batch_idx)
     
-    def vallidation_step(self, batch, batch_idx):
+    def validation_step(self, batch, batch_idx):
         self._resample()
         return self.model.validation_step(batch, batch_idx)
-
-    def on_train_end(self) -> None:
-        print(self.export())
-        return self.model.on_train_end()
+    
+    @property
+    def default_replace_dict(self):
+        return RANDOM_REPLACE_DICT
 
     def _resample(self):
         result = {}
