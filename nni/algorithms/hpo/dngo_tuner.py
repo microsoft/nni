@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import numpy as np
 import torch
@@ -112,7 +113,10 @@ class DNGOTuner(Tuner):
         x_arr = []
         for x in self.x:
             x_arr.append([x[k] for k in sorted(x.keys())])
-        self.model.train(np.array(x_arr), np.array(self.y), do_optimize=True)
+        try:
+            self.model.train(np.array(x_arr), np.array(self.y), do_optimize=True)
+        except np.linalg.LinAlgError as e:
+            warnings.warn(f'numpy linalg error encountered in DNGO model training: {e}')
         self._model_initialized = True
 
     def _get_default_value(self, value):
