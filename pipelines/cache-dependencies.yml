@@ -9,7 +9,6 @@ jobs:
   - template: templates/cache-deps.yml
     parameters:
       feed: dependencies-ubuntu-latest
-    displayName: Cache dependencies
 
 - job: ubuntu_legacy
   pool:
@@ -18,7 +17,6 @@ jobs:
   - template: templates/cache-deps.yml
     parameters:
       feed: dependencies-ubuntu-legacy
-    displayName: Cache dependencies
 
 - job: windows
   pool:
@@ -27,7 +25,6 @@ jobs:
   - template: templates/cache-deps.yml
     parameters:
       feed: dependencies-windows
-    displayName: Cache dependencies
 
 - job: macos
   pool:
@@ -36,4 +33,3 @@ jobs:
   - template: templates/cache-deps.yml
     parameters:
       feed: dependencies-macos
-    displayName: Cache dependencies
