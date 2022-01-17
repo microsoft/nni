@@ -8,6 +8,8 @@ import numpy as np
 import torch
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
+from torch.utils.data import DataLoader, Dataset
+from nni.retiarii.evaluator.pytorch.lightning import DataLoader as nniDataLoader
 
 _logger = logging.getLogger(__name__)
 
@@ -127,7 +129,6 @@ class AverageMeter:
 def _replace_module_with_type(root_module, init_fn, type_name, modules):
     if modules is None:
         modules = []
-
     def apply(m):
         for name, child in m.named_children():
             if isinstance(child, type_name):
@@ -180,3 +181,114 @@ def replace_input_choice(root_module, init_fn, modules=None):
         A list from layer choice keys (names) and replaced modules.
     """
     return _replace_module_with_type(root_module, init_fn, (InputChoice, nn.InputChoice), modules)
+
+def replace_module_with_type(root_module, init_fn, type_name, modules):
+
+    return _replace_module_with_type(root_module, init_fn, type_name, modules)
+
+class ParallelTrainValDataset(Dataset):
+    ''' Dataset used by NAS algorithms. Some NAS algs may require both train_batch
+        and val_bath at the training_step. 
+        In this implement, the shorter one is upsampled to match the longer one.
+    '''
+    def __init__(self, train_data, val_data):
+        super().__init__()
+        self.train_dataset = train_data.dataset if isinstance(train_data, DataLoader) else train_data
+        self.val_dataset = val_data.dataset if isinstance(val_data, DataLoader) else val_data
+        if len(self.train_dataset) / len(self.val_dataset) > 1.5 or len(self.val_dataset) / len(self.train_dataset) > 1.5 :
+            logging.warning(f'The length difference betweeen the training dataset({len(self.train_dataset)})' \
+                f' and the validation dataset({len(self.val_dataset)}) is too large. The shorter one will be upsampled.')
+    
+    def __getitem__(self, index):
+        # The shorter one is upsampled
+        return self.train_dataset[index % len(self.train_dataset)], self.val_dataset[index % len(self.val_dataset)]
+    
+    def __len__(self):
+        return max(len(self.train_dataset), len(self.val_dataset))
+
+class ConcatenateTrainValDataset(Dataset):
+    ''' Dataset used by NAS algorithms. Some NAS algs may require both train_batch
+        and val_bath at the training_step. 
+        In this implement, the validation batches come after the train ones.
+    '''
+    def __init__(self, train_data, val_data):
+        super().__init__()
+        self.train_dataset = train_data if isinstance(train_data, Dataset) else train_data.dataset
+        self.val_dataset = val_data if isinstance(val_data, Dataset) else val_data.dataset
+        
+    def __getitem__(self, index):
+        if index < len(self.train_dataset):
+            return (self.train_dataset[index], True)
+        return (self.val_dataset[index - len(self.train_dataset)], False)
+    
+    def __len__(self):
+        return len(self.train_dataset)+ len(self.val_dataset)
+
+class ParallelTrainValDataLoader(DataLoader):
+    def __init__(self, train_dataloader, val_dataloader):
+        self.train_loader = train_dataloader
+        self.val_loader = val_dataloader
+        self.equal_len = len(train_dataloader) == len(val_dataloader)
+        self.train_longger = len(train_dataloader) > len(val_dataloader)
+        super().__init__(None)
+    
+    def __iter__(self):
+        self.train_iter = iter(self.train_loader)
+        self.val_iter = iter(self.val_loader)
+        return self
+    
+    def __next__(self):
+        try:
+            train_batch = next(self.train_iter)
+        except StopIteration:
+            if self.equal_len or self.train_longger:
+                raise StopIteration()
+            # val is the longger one
+            self.train_iter = iter(self.train_loader)
+            train_batch = next(self.train_iter)
+        try:
+            val_batch = next(self.val_iter)
+        except StopIteration:
+            if not self.train_longger:
+                raise StopIteration()
+            self.val_iter = iter(self.val_loader)
+            val_batch = next(self.val_iter)
+        return train_batch, val_batch
+    
+    def __len__(self) -> int:
+        return max(len(self.train_loader), len(self.val_loader))
+
+class ConcatenateTrainValDataLoader(DataLoader):
+    def __init__(self, train_dataloader, val_dataloader):
+        self.train_loader = train_dataloader
+        self.val_loader = val_dataloader
+        super().__init__(None)
+    
+    def __iter__(self):
+        self.cur_iter = iter(self.train_loader)
+        self.is_train = True
+        return self
+    
+    def __next__(self):
+        try:
+            batch = next(self.cur_iter)
+        except StopIteration:
+            if self.is_train:
+                self.cur_iter = iter(self.val_loader)
+                self.is_train = False
+                return next(self)
+            raise StopIteration()
+        else:
+            return batch, self.is_train
+
+    def __len__(self):
+        return len(self.train_loader) + len(self.val_loader)
+
+def get_parallel_dataloader(train_dataset, val_dataset, batch_size = 1, shuffle = False, num_workers = 1):
+    parallel_dataset = ParallelTrainValDataset(train_dataset, val_dataset)
+    return nniDataLoader(parallel_dataset, batch_size, shuffle, num_workers=num_workers)
+
+def get_concatenate_dataloader(train_dataset, val_dataset, batch_size = 1, shuffle = False, num_workers = 1):
+    concat_dataset = ConcatenateTrainValDataset(train_dataset, val_dataset)
+    return nniDataLoader(concat_dataset, batch_size, shuffle, num_workers=num_workers)
+
