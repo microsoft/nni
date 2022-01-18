@@ -14,9 +14,9 @@ from zipfile import ZIP_DEFLATED, ZipFile
 def main():
     cache = Path('cache')
     cache.mkdir()
-    shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
+    #shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
-    shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
+    #shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
 
     archive = ZipFile('cache.zip', 'w', ZIP_DEFLATED, compresslevel=9)
     symlinks = {}
@@ -34,7 +34,7 @@ def main():
     archive.writestr('symlinks.json', json.dumps(symlinks, indent=4))
     archive.writestr('directories.json', json.dumps(list(empty_dirs), indent=4))
 
-    assert Path(sys.argv[1]).is_dir()
+    Path(sys.argv[1]).mkdir(parents=True, exist_ok=True)
     shutil.move('cache.zip', sys.argv[1])
 
 if __name__ == '__main__':
