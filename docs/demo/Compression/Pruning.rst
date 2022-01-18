@@ -11,3 +11,4 @@ Introduction for pruning specific concept.
 
     Quick Start <QuickStartPruning>
     Pruner <Pruner>
+    Speed Up <PruningSpeedUp>
