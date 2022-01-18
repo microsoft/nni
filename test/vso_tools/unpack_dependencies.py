@@ -7,7 +7,6 @@ import os
 from pathlib import Path
 import shutil
 import site
-import sys
 from zipfile import ZipFile
 
 def main() -> None:
@@ -19,16 +18,10 @@ def main() -> None:
     for link, target in symlinks.items():
         Path(link).symlink_to(target)  # hopefully nobody uses symlink on windows
 
-    site_packages = Path(site.getusersitepackages())
-    assert not site_packages.exists()
-    site_packages.parent.mkdir(parents=True, exist_ok=True)
-
-    script_dir = get_user_script_directory()
-    assert not script_dir.exists()
-    script_dir.parent.mkdir(parents=True, exist_ok=True)
-
-    shutil.move('cache/python-dependencies', site_packages)
-    #shutil.move('cache/python-scripts', script_dir)
+    user_base = Path(site.getuserbase())
+    assert not user_base.exists()
+    user_base.parent.mkdir(parents=True, exist_ok=True)
+    shutil.move('cache/python-dependencies', user_base)
     shutil.move('cache/nni-manager-dependencies', 'ts/nni_manager/node_modules')
     shutil.move('cache/webui-dependencies', 'ts/webui/node_modules')
 
@@ -39,13 +32,6 @@ def extract_all(zf: ZipFile) -> None:
         path = zf.extract(info)
         if info.external_attr > 0xffff:
             os.chmod(path, info.external_attr >> 16)
-
-def get_user_script_directory() -> Path:
-    # strangely this is not a site api
-    if sys.platform == 'win32':
-        return Path(site.getuserbase(), f'Python{sys.version_info.major}{sys.version_info.minor}', 'Scripts')
-    else:
-        return Path(site.getuserbase(), 'bin')
 
 if __name__ == '__main__':
     main()

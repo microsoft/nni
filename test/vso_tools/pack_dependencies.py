@@ -14,8 +14,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 def main() -> None:
     cache = Path('cache')
     cache.mkdir()
-    shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
-    shutil.move(get_user_script_directory(), 'cache/python-scripts')
+    shutil.move(site.getuserbase(), 'cache/python-dependencies')
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
     shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
 
@@ -39,13 +38,6 @@ def main() -> None:
 
     assert Path(sys.argv[1]).is_dir()
     shutil.move('cache.zip', sys.argv[1])
-
-def get_user_script_directory() -> Path:
-    # strangely this is not a site api
-    if sys.platform == 'win32':
-        return Path(site.getuserbase(), f'Python{sys.version_info.major}{sys.version_info.minor}', 'Scripts')
-    else:
-        return Path(site.getuserbase(), 'bin')
 
 if __name__ == '__main__':
     main()
