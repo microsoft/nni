@@ -41,7 +41,8 @@ steps:
   displayName: Install Node.js packages
 
 - script: |
-    python test/vso_tools/pack_dependencies.py '$(Build.ArtifactStagingDirectory)'
+    # do not add quotes, because they will be included in argv on windows
+    python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
   displayName: Create cache archive
 
 - task: UniversalPackages@0
