@@ -178,6 +178,7 @@ class AMCPruner(IterativePruner):
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Operation type to be pruned.
             - op_names : Operation name to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude  : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     dummy_input : torch.Tensor
         `dummy_input` is required for speed-up and tracing the model in RL environment.

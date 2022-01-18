@@ -13,10 +13,14 @@ from typing import Any, Dict, List, Optional, TypeVar, Union
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
 import json_tricks  # use json_tricks as serializer backend
 
-__all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
+__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable']
 
 
 T = TypeVar('T')
+
+
+class PayloadTooLarge(Exception):
+    pass
 
 
 class Traceable(abc.ABC):
@@ -215,6 +219,11 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
+
+    .. warning::
+
+        Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
+        This might hang when generators produce an infinite sequence. We might introduce an API to control this behavior in future.
 
     Example:
 
@@ -427,6 +436,18 @@ def _argument_processor(arg):
     return arg
 
 
+def _formulate_single_argument(arg):
+    # this is different from argument processor
+    # it directly apply the transformation on the stored arguments
+
+    # expand generator into list
+    # Note that some types that are generator (such as range(10)) may not be identified as generator here.
+    if isinstance(arg, types.GeneratorType):
+        arg = list(arg)
+
+    return arg
+
+
 def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
     # This is to formulate the arguments and make them well-formed.
     if kw_only:
@@ -446,6 +467,9 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
         full_args.update(kwargs)
 
         args, kwargs = [], full_args
+
+    args = [_formulate_single_argument(arg) for arg in args]
+    kwargs = {k: _formulate_single_argument(arg) for k, arg in kwargs.items()}
 
     return list(args), kwargs
 
@@ -563,9 +587,9 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
         if len(b) > pickle_size_limit > 0:
-            raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
-                             'not decorated by @nni.trace. Another option is to force bytes pickling and '
-                             'try to raise pickle_size_limit.')
+            raise PayloadTooLarge(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
+                                  'not decorated by @nni.trace. Another option is to force bytes pickling and '
+                                  'try to raise pickle_size_limit.')
         # use base64 to dump a bytes array
         return {
             '__nni_obj__': base64.b64encode(b).decode()

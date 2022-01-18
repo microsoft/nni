@@ -14,7 +14,9 @@ The recommendation is, unless you are absolutely certain that there is no proble
 
     **What will happen if I forget to "trace" my objects?**
 
-    It is likely that the program can still run. NNI will try to serialize the untraced object into a binary. If might fail in complicated cases (e.g., circular dependency). Even if it succeeds, the result might be a substantially large object. For example, if you forgot to add ``nni.trace`` on ``MNIST``, the MNIST dataset object wil be serialized into binary, which will be dozens of megabytes because the object has the whole 60k images stored inside. You might see warnings and even errors when running experiments. To avoid such issues, the easiest way is to always remember to add ``nni.trace`` to non-primitive objects.
+    It is likely that the program can still run. NNI will try to serialize the untraced object into a binary. It might fail in complex cases. For example, when the object is too large. Even if it succeeds, the result might be a substantially large object. For example, if you forgot to add ``nni.trace`` on ``MNIST``, the MNIST dataset object wil be serialized into binary, which will be dozens of megabytes because the object has the whole 60k images stored inside. You might see warnings and even errors when running experiments. To avoid such issues, the easiest way is to always remember to add ``nni.trace`` to non-primitive objects.
+
+.. note:: In Retiarii, serializer will throw exception when one of an single object in the recursive serialization is larger than 64 KB when binary serialized. This indicates that such object needs to be wrapped by ``nni.trace``. In rare cases, if you insist on pickling large data, the limit can be overridden by setting an environment variable ``PICKLE_SIZE_LIMIT``, whose unit is byte. Please note that even if the experiment might be able to run, this can still cause performance issues and even the crash of NNI experiment.
 
 To trace a function or class, users can use decorator like,
 
