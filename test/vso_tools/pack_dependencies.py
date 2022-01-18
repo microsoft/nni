@@ -23,7 +23,7 @@ def main():
     empty_dirs = set()
     for file in sorted(cache.rglob('*')):
         if file.parent.parent == cache:
-            print('Compress', file)
+            print('Compress', file, flush=True)
         if file.is_symlink():
             symlinks[str(file)] = str(file.readlink())
             continue
