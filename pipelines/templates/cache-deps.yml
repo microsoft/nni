@@ -13,6 +13,11 @@ steps:
     versionSpec: 16.3.0
   displayName: Configure Node.js version
 
+- script: |
+    mv ~/.local backup-local
+  displayName: Backup .local for macOS
+  condition: contains('${{ parameters.feed }}', 'macos')
+
 # Do not cache setup dependencies. PR pipeline should use more stable version.
 # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
 # Pre-installed packages are global and "~/.local" has not been created at this point.
@@ -38,6 +43,11 @@ steps:
 - script: |
     python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
   displayName: Create cache archive
+
+- script: |
+    mv backup-local ~/.local
+  displayName: Restore .local for macOS
+  condition: contains('${{ parameters.feed }}', 'macos')
 
 - task: UniversalPackages@0
   inputs:
