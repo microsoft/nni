@@ -2,20 +2,20 @@
    :format: html
 
 
-实现 NNI 的 Trial（尝试）代码
-===========================================
+实现 NNI 的 Trial（试验）代码
+=================================
 
-**Trial（尝试）** 是将一组参数组合（例如，超参）在模型上独立的一次尝试。
+**Trial（试验）** 是将一组参数组合（例如，超参）在模型上独立的一次尝试。
 
-定义 NNI 的 Trial，需要首先定义参数组（例如，搜索空间），并更新模型代码。 有两种方法来定义一个 Trial：`NNI API <#nni-api>`__ 和 `NNI Python annotation <#nni-annotation>`__。 参考 `这里 <#more-examples>`__ 更多 Trial 示例。
+定义 NNI 的 Trial，需要首先定义参数组（例如，搜索空间），并更新模型代码。 有两种方法来定义一个 Trial：`NNI Python API <#nni-api>`__ 和 `NNI Python annotation <#nni-annotation>`__。 参考 `这里 <#more-examples>`__ 更多 Trial 示例。
 
 :raw-html:`<a name="nni-api"></a>`
 
-NNI API
--------
+NNI Trial API
+-------------
 
 第一步：准备搜索空间参数文件。
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 样例如下：
 
@@ -34,13 +34,11 @@ NNI API
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-* 
-  Import NNI
+* Import NNI
 
-    在 Trial 代码中加上 ``import nni`` 。
+在 Trial 代码中加上 ``import nni`` 。
 
-* 
-  从 Tuner 获得参数值
+* 从 Tuner 获得参数值
 
 .. code-block:: python
 
@@ -57,7 +55,7 @@ NNI API
 
    nni.report_intermediate_result(metrics)
 
-``指标`` 可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，``指标`` 只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须由键名为 ``default`` ，值为数值的项目。 ``指标`` 会发送给 `assessor <../Assessor/BuiltinAssessor.rst>`__。 通常，``指标`` 包含了定期评估的损失值或精度。
+``指标`` 可以是任意的 Python 对象。 如果使用了 NNI 内置的 Tuner/Assessor，``指标`` 只可以是两种类型：1) 数值类型，如 float、int， 2) dict 对象，其中必须有键名为 ``default`` ，值为数值的项目。 ``指标`` 会发送给 `assessor <../Assessor/BuiltinAssessor.rst>`__。 通常，``指标`` 包含了定期评估的损失值或精度。
 
 
 * 返回配置的最终性能
@@ -68,26 +66,25 @@ NNI API
 
 ``指标`` 可以是任意的 Python 对象。 如果使用了内置的 Tuner/Assessor，``指标`` 格式和 ``report_intermediate_result`` 中一样，这个数值表示模型的性能，如精度、损失值等。 ``指标`` 会发送给 `tuner <../Tuner/BuiltinTuner.rst>`__。
 
-第三步：启用 NNI API
-^^^^^^^^^^^^^^^^^^^^^^^
+第三步：启动 NNI Experiment (实验)
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-要启用 NNI 的 API 模式，需要将 useAnnotation 设置为 *false*，并提供搜索空间文件的路径，即第一步中定义的文件：
+启动 NNI 实验，提供搜索空间文件的路径，即第一步中定义的文件：
 
 .. code-block:: yaml
 
-   useAnnotation: false
    searchSpacePath: /path/to/your/search_space.json
 
 参考 `这里 <../Tutorial/ExperimentConfig.rst>`__ 进一步了解如何配置 Experiment。
 
-参考 `这里 <../sdk_reference.rst>`__ ，了解更多 NNI API （例如：``nni.get_sequence_id()``）。
+参考 `这里 <../sdk_reference.rst>`__ ，了解更多 NNI Trial API （例如：``nni.get_sequence_id()``）。
 
 :raw-html:`<a name="nni-annotation"></a>`
 
 NNI Annotation
 ---------------------
 
-另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NN Annotation 很简单，类似于注释。 不必对现有代码进行结构更改。 只需要添加一些 NNI Annotation，就能够：
+另一种实现 Trial 的方法是使用 Python 注释来标记 NNI。 NNI Annotation 很简单，类似于注释。 不必对现有代码进行结构更改。 只需要添加一些 NNI Annotation，就能够：
 
 
 * 标记需要调整的参数变量

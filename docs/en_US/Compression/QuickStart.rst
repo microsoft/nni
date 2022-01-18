@@ -28,7 +28,7 @@ Write a configuration to specify the layers that you want to prune. The followin
        'op_types': ['default'],
    }]
 
-The specification of configuration can be found `here <./Tutorial.rst#specify-the-configuration>`__. Note that different pruners may have their own defined fields in configuration, for exmaple ``start_epoch`` in AGP pruner. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
+The specification of configuration can be found `here <./Tutorial.rst#specify-the-configuration>`__. Note that different pruners may have their own defined fields in configuration. Please refer to each pruner's `usage <./Pruner.rst>`__ for details, and adjust the configuration accordingly.
 
 Step2. Choose a pruner and compress the model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -80,9 +80,10 @@ Step1. Write configuration
 .. code-block:: python
 
    config_list = [{
-       'quant_types': ['weight'],
+       'quant_types': ['weight', 'input'],
        'quant_bits': {
            'weight': 8,
+           'input': 8,
        }, # you can just use `int` here because all `quan_types` share same bits length, see config for `ReLu6` below.
        'op_types':['Conv2d', 'Linear'],
        'quant_dtype': 'int',

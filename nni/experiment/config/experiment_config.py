@@ -8,7 +8,9 @@ Top level experiement configuration class, ``ExperimentConfig``.
 __all__ = ['ExperimentConfig']
 
 from dataclasses import dataclass
+import json
 import logging
+from pathlib import Path
 from typing import Any, List, Optional, Union
 
 import yaml
@@ -113,6 +115,16 @@ class ExperimentConfig(ConfigBase):
 
         super()._canonicalize([self])
 
+        if self.search_space_file is not None:
+            yaml_error = None
+            try:
+                self.search_space = _load_search_space_file(self.search_space_file)
+            except Exception as e:
+                yaml_error = repr(e)
+            if yaml_error is not None:  # raise it outside except block to make stack trace clear
+                msg = f'ExperimentConfig: Failed to load search space file "{self.search_space_file}": {yaml_error}'
+                raise ValueError(msg)
+
         if self.nni_manager_ip is None:
             # show a warning if user does not set nni_manager_ip. we have many issues caused by this
             # the simple detection logic won't work for hybrid, but advanced users should not need it
@@ -133,10 +145,6 @@ class ExperimentConfig(ConfigBase):
         if not self.use_annotation and space_cnt < 1:
             raise ValueError('ExperimentConfig: search_space and search_space_file must be set one')
 
-        if self.search_space_file is not None:
-            with open(self.search_space_file) as ss_file:
-                self.search_space = yaml.safe_load(ss_file)
-
         # to make the error message clear, ideally it should be:
         # `if concurrency < 0: raise ValueError('trial_concurrency ({concurrency}) must greater than 0')`
         # but I believe there will be hardy few users make this kind of mistakes, so let's keep it simple
@@ -156,3 +164,13 @@ class ExperimentConfig(ConfigBase):
         tuner_cnt = (self.tuner is not None) + (self.advisor is not None)
         if tuner_cnt != 1:
             raise ValueError('ExperimentConfig: tuner and advisor must be set one')
+
+def _load_search_space_file(search_space_path):
+    # FIXME
+    # we need this because PyYAML 6.0 does not support YAML 1.2,
+    # which means it is not fully compatible with JSON
+    content = Path(search_space_path).read_text(encoding='utf8')
+    try:
+        return json.loads(content)
+    except Exception:
+        return yaml.safe_load(content)
