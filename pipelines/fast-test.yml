@@ -24,6 +24,17 @@ stages:
         vstsPackageVersion: '*'
       displayName: Download cache
     - script: |
+        python -c 'from zipfile import ZipFile ; ZipFile("cache.zip").extractall()'
+        echo '##############################'
+        find -maxdepth 3 cache
+        echo '##############################'
+        ls -la cache
+        echo '##############################'
+        ls -la cache/nni-manager-dependencies
+        echo '##############################'
+        ls -la cache/nni-manager-dependencies/.bin
+        echo '##############################'
+        python -c 'from pathlib import Path ; Path("cache/nni-manager-dependencies/.bin/_mocha").symlink_to("_test_")'
         python test/vso_tools/unpack_dependencies.py
       displayName: Unpack cache
     - script: |
