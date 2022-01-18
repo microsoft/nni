@@ -43,7 +43,8 @@ stages:
       displayName: Translation up-to-date
     - script: |
         cd docs/en_US
-        sphinx-build -M html . _build -W --keep-going -T
+        # TODO: the cache package does not contain .local/bin
+        python -m sphinx.cmd.build -M html . _build -W --keep-going -T
       displayName: Sphinx  # TODO: rstcheck
 
   - job: python
