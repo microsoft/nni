@@ -12,42 +12,42 @@ stages:
       inputs:
         versionSpec: 3.9
       displayName: Configure Python version
-    - script: |
-        sudo apt-get install -y pandoc
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-    - task: UniversalPackages@0
-      inputs:
-        vstsFeed: NNIOpenSource/sandbox
-        vstsFeedPackage: dependencies-ubuntu-latest
-        vstsPackageVersion: '*'
-      displayName: Download cache
-    - script: |
-        set -e
-        unzip cache.zip
-        mv -T cache/python-packages ~/.local
-      displayName: Apply cache
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        python -m pip install -r dependencies/required.txt
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -r dependencies/required_extra.txt
-      displayName: Install requirements
-    - script: |
-        python test/vso_tools/interim_patch.py
-      displayName: Apply patch
-    - script: |
-        cd docs
-        python tools/chineselink.py check
-      displayName: Translation up-to-date
-    - script: |
-        cd docs/en_US
-        sphinx-build -M html . _build -W --keep-going -T
-      displayName: Sphinx  # TODO: rstcheck
+#    - script: |
+#        sudo apt-get install -y pandoc
+#        sudo apt-get remove swig -y
+#        sudo apt-get install swig3.0 -y
+#        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
+#      displayName: Install apt packages
+#    - task: UniversalPackages@0
+#      inputs:
+#        vstsFeed: NNIOpenSource/sandbox
+#        vstsFeedPackage: dependencies-ubuntu-latest
+#        vstsPackageVersion: '*'
+#      displayName: Download cache
+#    - script: |
+#        set -e
+#        unzip cache.zip
+#        mv -T cache/python-packages ~/.local
+#      displayName: Apply cache
+#    - script: |
+#        set -e
+#        python -m pip install -U -r dependencies/setup.txt
+#        python -m pip install -r dependencies/develop.txt
+#        python -m pip install -r dependencies/required.txt
+#        python -m pip install -r dependencies/recommended.txt
+#        python -m pip install -r dependencies/required_extra.txt
+#      displayName: Install requirements
+#    - script: |
+#        python test/vso_tools/interim_patch.py
+#      displayName: Apply patch
+#    - script: |
+#        cd docs
+#        python tools/chineselink.py check
+#      displayName: Translation up-to-date
+#    - script: |
+#        cd docs/en_US
+#        sphinx-build -M html . _build -W --keep-going -T
+#      displayName: Sphinx  # TODO: rstcheck
 
   #- job: python
   #  pool:
@@ -90,38 +90,38 @@ stages:
   #      python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
   #    displayName: flake8
 
-  - job: typescript
-    pool:
-      vmImage: ubuntu-latest
-    steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-    - task: UniversalPackages@0
-      inputs:
-        vstsFeed: NNIOpenSource/sandbox
-        vstsFeedPackage: dependencies-ubuntu-latest
-        vstsPackageVersion: '*'
-      displayName: Download cache
-    - script: |
-        set -e
-        unzip cache.zip
-        mv -T cache/nni-manager-packages ts/nni_manager/node_modules
-        mv -T cache/webui-packages ts/webui/node_modules
-      displayName: Apply cache
-    - script: |
-        set -e
-        cd ts/nni_manager
-        yarn
-        yarn eslint
-      displayName: ESLint (NNI Manager)
-    - script: |
-        set -e
-        cd ts/webui
-        yarn
-        yarn eslint
-      displayName: ESLint (WebUI)
+  #- job: typescript
+  #  pool:
+  #    vmImage: ubuntu-latest
+  #  steps:
+  #  - task: NodeTool@0
+  #    inputs:
+  #      versionSpec: 16.3.0
+  #    displayName: Configure Node.js version
+  #  - task: UniversalPackages@0
+  #    inputs:
+  #      vstsFeed: NNIOpenSource/sandbox
+  #      vstsFeedPackage: dependencies-ubuntu-latest
+  #      vstsPackageVersion: '*'
+  #    displayName: Download cache
+  #  - script: |
+  #      set -e
+  #      unzip cache.zip
+  #      mv -T cache/nni-manager-packages ts/nni_manager/node_modules
+  #      mv -T cache/webui-packages ts/webui/node_modules
+  #    displayName: Apply cache
+  #  - script: |
+  #      set -e
+  #      cd ts/nni_manager
+  #      yarn
+  #      yarn eslint
+  #    displayName: ESLint (NNI Manager)
+  #  - script: |
+  #      set -e
+  #      cd ts/webui
+  #      yarn
+  #      yarn eslint
+  #    displayName: ESLint (WebUI)
 
 
 #- stage: test

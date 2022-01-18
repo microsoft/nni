@@ -3,6 +3,12 @@ parameters:
   type: string
 
 steps:
+- powershell: |
+    python -c 'x'
+    echo 'after fail'
+  errorActionPreference: 'stop'
+  displayName: debug
+
 - script: |
     set -e
     sudo apt-get remove -y swig
