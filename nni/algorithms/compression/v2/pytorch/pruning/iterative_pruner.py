@@ -252,6 +252,10 @@ class SimulatedAnnealingPruner(IterativePruner):
                  stop_temperature: float = 20, cool_down_rate: float = 0.9, perturbation_magnitude: float = 0.35,
                  pruning_algorithm: str = 'level', pruning_params: Dict = {}, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False, dummy_input: Optional[Tensor] = None):
+        # TODO: replace with validation here
+        for config in config_list:
+            if 'sparsity' in config or 'sparsity_per_layer' in config:
+                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
         task_generator = SimulatedAnnealingTaskGenerator(origin_model=model,
                                                          origin_config_list=config_list,
                                                          start_temperature=start_temperature,

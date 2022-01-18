@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+import logging
 from pathlib import Path
 from typing import Dict, List, Callable, Optional
 
@@ -12,6 +13,8 @@ from nni.algorithms.compression.v2.pytorch.utils import OptimizerConstructHelper
 from .basic_pruner import ADMMPruner
 from .iterative_pruner import IterativePruner, SimulatedAnnealingPruner
 from .tools import LotteryTicketTaskGenerator
+
+_logger = logging.getLogger(__name__)
 
 
 class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
@@ -103,6 +106,10 @@ class AutoCompressPruner(IterativePruner):
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
                  dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
+        # TODO: replace with validation here
+        for config in config_list:
+            if 'sparsity' in config or 'sparsity_per_layer' in config:
+                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,
