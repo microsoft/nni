@@ -97,7 +97,7 @@ def evaluate_model(model_cls):
 
     # export model for visualization
     if 'NNI_OUTPUT_DIR' in os.environ:
-        torch.onnx.export(model, (torch.randn(1, 1, 32, 32), ),
+        torch.onnx.export(model, (torch.randn(1, 1, 28, 28), ),
                           Path(os.environ['NNI_OUTPUT_DIR']) / 'model.onnx')
 
     optimizer = torch.optim.Adam(model.parameters(), lr=1e-3)
