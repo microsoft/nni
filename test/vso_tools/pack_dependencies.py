@@ -22,7 +22,7 @@ def main():
     symlinks = {}
     empty_dirs = set()
     for file in sorted(cache.rglob('*')):
-        if file.parent == cache:
+        if file.parent.parent == cache:
             print('Compress', file)
         empty_dirs.discard(str(file.parent))
         if file.is_symlink():
