@@ -24,13 +24,14 @@ def main():
     for file in sorted(cache.rglob('*')):
         if file.parent.parent == cache:
             print('Compress', file)
-        empty_dirs.discard(str(file.parent))
         if file.is_symlink():
             symlinks[str(file)] = str(file.readlink())
-        elif file.is_dir():
+            continue
+        if file.is_dir():
             empty_dirs.add(str(file))
         else:
             archive.write(file)
+        empty_dirs.discard(str(file.parent))
     archive.writestr('symlinks.json', json.dumps(symlinks, indent=4))
     archive.writestr('directories.json', json.dumps(list(empty_dirs), indent=4))
     archive.close()
