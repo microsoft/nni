@@ -48,383 +48,383 @@ stages:
         # so if python version has updated after caching, the shebang will not work
         python `which sphinx-build` -M html . _build -W --keep-going -T
       displayName: Sphinx  # TODO: rstcheck
-        #
-        #  - job: python
-        #    pool:
-        #      vmImage: ubuntu-latest
-        #    steps:
-        #    - task: UsePythonVersion@0
-        #      inputs:
-        #        versionSpec: 3.9
-        #      displayName: Configure Python version
-        #    - script: |
-        #        sudo apt-get remove swig -y
-        #        sudo apt-get install swig3.0 -y
-        #        sudo ln -s swig3.0 /usr/bin/swig
-        #      displayName: Install apt packages
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-ubuntu-latest
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #        python -m pip install -r dependencies/required.txt
-        #        python -m pip install -r dependencies/recommended.txt
-        #        python -m pip install -r dependencies/required_extra.txt
-        #        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
-        #      displayName: Install requirements
-        #    - script: python -m pylint --rcfile pylintrc nni
-        #      displayName: pylint
-        #    - script: |
-        #        set -e
-        #        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
-        #        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
-        #        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
-        #      displayName: flake8
-        #
-        #  - job: typescript
-        #    pool:
-        #      vmImage: ubuntu-latest
-        #    variables:
-        #      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-        #    steps:
-        #    - task: NodeTool@0
-        #      inputs:
-        #        versionSpec: 16.3.0
-        #      displayName: Configure Node.js version
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-ubuntu-latest
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #    - script: |
-        #        set -e
-        #        cd ts/nni_manager
-        #        yarn
-        #        yarn eslint
-        #      displayName: ESLint (NNI Manager)
-        #    - script: |
-        #        set -e
-        #        cd ts/webui
-        #        yarn
-        #        yarn eslint
-        #      displayName: ESLint (WebUI)
-        #
-        #
-        #- stage: test
-        #  jobs:
-        #  - job: ubuntu_latest
-        #    pool:
-        #      vmImage: ubuntu-latest
-        #
-        #    steps:
-        #    - task: UsePythonVersion@0
-        #      inputs:
-        #        versionSpec: 3.9
-        #      displayName: Configure Python version
-        #
-        #    - task: NodeTool@0
-        #      inputs:
-        #        versionSpec: 16.3.0
-        #      displayName: Configure Node.js version
-        #
-        #    - script: |
-        #        sudo apt-get remove -y swig
-        #        sudo apt-get install -y pandoc swig3.0
-        #        sudo ln -s swig3.0 /usr/bin/swig
-        #      displayName: Install apt packages
-        #
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-ubuntu-latest
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-        #      displayName: Install Python tools
-        #
-        #    - script: |
-        #        python setup.py develop
-        #        mkdir -p coverage
-        #      displayName: Install NNI
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -r dependencies/recommended.txt
-        #        python -m pip install -e .[PPOTuner,DNGO]
-        #      displayName: Install extra dependencies
-        #
-        #    # Need del later
-        #    - script: |
-        #        python test/vso_tools/interim_patch.py
-        #      displayName: Torch utils tensorboard interim patch
-        #
-        #    - script: |
-        #        set -e
-        #        cd test
-        #        python -m pytest ut --cov-config=.coveragerc \
-        #          --ignore=ut/compression/v1/test_pruners.py \
-        #          --ignore=ut/compression/v1/test_compressor_tf.py \
-        #          --ignore=ut/compression/v1/test_compressor_torch.py \
-        #          --ignore=ut/compression/v1/test_model_speedup.py
-        #        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
-        #        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
-        #        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
-        #        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
-        #        cp coverage.xml ../coverage/python.xml
-        #      displayName: Python unit test
-        #
-        #    - script: |
-        #        set -e
-        #        cd ts/nni_manager
-        #        yarn test
-        #        cp coverage/cobertura-coverage.xml ../../coverage/typescript.xml
-        #      displayName: TypeScript unit test
-        #
-        #    - task: PublishTestResults@2
-        #      condition: succeededOrFailed()
-        #      inputs:
-        #        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
-        #        testRunTitle: 'Publish test results for Python $(python.version)'
-        #      displayName: Publish test results
-        #
-        #    - task: PublishCodeCoverageResults@1
-        #      inputs:
-        #        codeCoverageTool: Cobertura
-        #        summaryFileLocation: coverage/*
-        #      displayName: Publish code coverage results
-        #
-        #    - script: |
-        #        cd test
-        #        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-        #      displayName: Simple integration test
-        #
-        #  - job: ubuntu_legacy
-        #    pool:
-        #      vmImage: ubuntu-18.04
-        #
-        #    steps:
-        #    - task: UsePythonVersion@0
-        #      inputs:
-        #        versionSpec: 3.7
-        #      displayName: Configure Python version
-        #
-        #    - task: NodeTool@0
-        #      inputs:
-        #        versionSpec: 16.3.0
-        #      displayName: Configure Node.js version
-        #
-        #    - script: |
-        #        sudo apt-get remove -y swig
-        #        sudo apt-get install -y pandoc swig3.0
-        #        sudo ln -s swig3.0 /usr/bin/swig
-        #      displayName: Install apt packages
-        #
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-ubuntu-legacy
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-        #      displayName: Install Python tools
-        #
-        #    - script: |
-        #        python setup.py develop
-        #      displayName: Install NNI
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -r dependencies/recommended_legacy.txt
-        #        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-        #      displayName: Install extra dependencies
-        #
-        #    # Need del later
-        #    - script: |
-        #        set -e
-        #        python test/vso_tools/interim_patch.py
-        #      displayName: Torch utils tensorboard interim patch
-        #
-        #
-        #    - script: |
-        #        cd test
-        #        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-        #      displayName: Simple integration test
-        #
-        #    - script: |
-        #        cd test
-        #        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
-        #          --ignore=ut/retiarii/test_convert_operators.py \
-        #          --ignore=ut/retiarii/test_convert_pytorch.py
-        #      displayName: Python unit test
-        #
-        #    - script: |
-        #        set -e
-        #        cd ts/nni_manager
-        #        yarn test
-        #      displayName: TypeScript unit test
-        #
-        #  - job: macos
-        #    pool:
-        #      vmImage: macOS-latest
-        #    timeoutInMinutes: 90  # macos test need extra time
-        #
-        #    steps:
-        #    - task: UsePythonVersion@0
-        #      inputs:
-        #        versionSpec: 3.9
-        #      displayName: Configure Python version
-        #
-        #    - task: NodeTool@0
-        #      inputs:
-        #        versionSpec: 16.3.0
-        #      displayName: Configure Node.js version
-        #
-        #    - script: |
-        #        brew install swig@3
-        #        rm -f /usr/local/bin/swig
-        #        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-        #      displayName: Install brew packages
-        #
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-macos
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #        echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-        #      displayName: Install Python tools
-        #
-        #    - script: |
-        #        python setup.py develop
-        #      displayName: Install NNI
-        #
-        #    - script: |
-        #        set -e
-        #        export CI=true
-        #        (cd ts/nni_manager && yarn test --exclude test/core/nnimanager.test.ts)
-        #      displayName: TypeScript unit test
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -r dependencies/recommended.txt
-        #        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-        #      displayName: Install extra dependencies
-        #
-        #    # Need del later
-        #    - script: |
-        #        set -e
-        #        python test/vso_tools/interim_patch.py
-        #      displayName: Torch utils tensorboard interim patch
-        #
-        #    - script: |
-        #        cd test
-        #        python -m pytest ut
-        #      displayName: Python unit test
-        #
-        #    - script: |
-        #        cd test
-        #        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-        #      displayName: Simple integration test
-        #
-        #  - job: windows
-        #    pool:
-        #      vmImage: windows-latest
-        #    timeoutInMinutes: 120  # windows test need extra time
-        #
-        #    steps:
-        #    - task: UsePythonVersion@0
-        #      inputs:
-        #        versionSpec: 3.9
-        #      displayName: Configure Python version
-        #
-        #    - task: NodeTool@0
-        #      inputs:
-        #        versionSpec: 16.3.0
-        #      displayName: Configure Node.js version
-        #
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-windows
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #      displayName: Install Python tools
-        #
-        #    - script: |
-        #        python setup.py develop --no-user
-        #      displayName: Install NNI
-        #
-        #    - script: |
-        #        python -m pip install -r dependencies/recommended.txt
-        #        python -m pip install -e .[DNGO]
-        #      displayName: Install extra dependencies
-        #
-        #    # Need del later
-        #    - script: |
-        #        set -e
-        #        python test/vso_tools/interim_patch.py
-        #      displayName: Torch utils tensorboard interim patch
-        #
-        #    - script: |
-        #        cd test
-        #        python -m pytest ut
-        #      displayName: Python unit test
-        #
-        #    - script: |
-        #        cd ts/nni_manager
-        #        yarn test
-        #      displayName: TypeScript unit test
-        #
-        #    - script: |
-        #        cd test
-        #        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-        #      displayName: Simple integration test
-        #
-        #
-        #trigger:
-        #  branches:
-        #    exclude: [ l10n_master ]
+
+  - job: python
+    pool:
+      vmImage: ubuntu-latest
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.9
+      displayName: Configure Python version
+    - script: |
+        sudo apt-get remove swig -y
+        sudo apt-get install swig3.0 -y
+        sudo ln -s swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        python -m pip install -r dependencies/required.txt
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
+        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
+      displayName: Install requirements
+    - script: python -m pylint --rcfile pylintrc nni
+      displayName: pylint
+    - script: |
+        set -e
+        python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
+        EXCLUDES=examples/trials/mnist-nas/*/mnist*.py,examples/trials/nas_cifar10/src/cifar10/general_child.py
+        python -m flake8 examples --count --exclude=$EXCLUDES --select=E9,F63,F72,F82 --show-source --statistics
+      displayName: flake8
+
+  - job: typescript
+    pool:
+      vmImage: ubuntu-latest
+    variables:
+      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn
+        yarn eslint
+      displayName: ESLint (NNI Manager)
+    - script: |
+        set -e
+        cd ts/webui
+        yarn
+        yarn eslint
+      displayName: ESLint (WebUI)
+
+
+- stage: test
+  jobs:
+  - job: ubuntu_latest
+    pool:
+      vmImage: ubuntu-latest
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.9
+      displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
+
+    - script: |
+        sudo apt-get remove -y swig
+        sudo apt-get install -y pandoc swig3.0
+        sudo ln -s swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop
+        mkdir -p coverage
+      displayName: Install NNI
+
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[PPOTuner,DNGO]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
+    - script: |
+        set -e
+        cd test
+        python -m pytest ut --cov-config=.coveragerc \
+          --ignore=ut/compression/v1/test_pruners.py \
+          --ignore=ut/compression/v1/test_compressor_tf.py \
+          --ignore=ut/compression/v1/test_compressor_torch.py \
+          --ignore=ut/compression/v1/test_model_speedup.py
+        python -m pytest ut/compression/v1/test_pruners.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_compressor_tf.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_compressor_torch.py --cov-config=.coveragerc --cov-append
+        python -m pytest ut/compression/v1/test_model_speedup.py --cov-config=.coveragerc --cov-append
+        cp coverage.xml ../coverage/python.xml
+      displayName: Python unit test
+
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn test
+        cp coverage/cobertura-coverage.xml ../../coverage/typescript.xml
+      displayName: TypeScript unit test
+
+    - task: PublishTestResults@2
+      condition: succeededOrFailed()
+      inputs:
+        testResultsFiles: '$(System.DefaultWorkingDirectory)/**/test-*.xml'
+        testRunTitle: 'Publish test results for Python $(python.version)'
+      displayName: Publish test results
+
+    - task: PublishCodeCoverageResults@1
+      inputs:
+        codeCoverageTool: Cobertura
+        summaryFileLocation: coverage/*
+      displayName: Publish code coverage results
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+  - job: ubuntu_legacy
+    pool:
+      vmImage: ubuntu-18.04
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.7
+      displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
+
+    - script: |
+        sudo apt-get remove -y swig
+        sudo apt-get install -y pandoc swig3.0
+        sudo ln -s swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-legacy
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop
+      displayName: Install NNI
+
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended_legacy.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+    - script: |
+        cd test
+        python -m pytest ut --ignore=ut/retiarii/test_convert_basic.py \
+          --ignore=ut/retiarii/test_convert_operators.py \
+          --ignore=ut/retiarii/test_convert_pytorch.py
+      displayName: Python unit test
+
+    - script: |
+        set -e
+        cd ts/nni_manager
+        yarn test
+      displayName: TypeScript unit test
+
+  - job: macos
+    pool:
+      vmImage: macOS-latest
+    timeoutInMinutes: 90  # macos test need extra time
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.9
+      displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
+
+    - script: |
+        brew install swig@3
+        rm -f /usr/local/bin/swig
+        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
+      displayName: Install brew packages
+
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-macos
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop
+      displayName: Install NNI
+
+    - script: |
+        set -e
+        export CI=true
+        (cd ts/nni_manager && yarn test --exclude test/core/nnimanager.test.ts)
+      displayName: TypeScript unit test
+
+    - script: |
+        set -e
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+  - job: windows
+    pool:
+      vmImage: windows-latest
+    timeoutInMinutes: 120  # windows test need extra time
+
+    steps:
+    - task: UsePythonVersion@0
+      inputs:
+        versionSpec: 3.9
+      displayName: Configure Python version
+
+    - task: NodeTool@0
+      inputs:
+        versionSpec: 16.3.0
+      displayName: Configure Node.js version
+
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-windows
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+      displayName: Install Python tools
+
+    - script: |
+        python setup.py develop --no-user
+      displayName: Install NNI
+
+    - script: |
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -e .[DNGO]
+      displayName: Install extra dependencies
+
+    # Need del later
+    - script: |
+        set -e
+        python test/vso_tools/interim_patch.py
+      displayName: Torch utils tensorboard interim patch
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        cd ts/nni_manager
+        yarn test
+      displayName: TypeScript unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
+
+trigger:
+  branches:
+    exclude: [ l10n_master ]
