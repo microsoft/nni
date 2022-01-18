@@ -94,17 +94,15 @@ train_loader = DataLoader(train_dataset, 64, shuffle= True, num_workers=4)
 val_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
 valid_loader = DataLoader(val_dataset, 64, num_workers=4)
 
-# wrap model :
-from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression, DataLoader # 用这个 DataLoader
-from nni.retiarii.oneshot.pytorch.utils import get_concatenate_dataloader
-concat_loader = get_concatenate_dataloader(train_dataset, val_dataset)
-cls = Classification(train_dataloader = concat_loader, **{'max_epochs':1})
-cls.module.set_model(base_model)
-
 def test_enas():
+    from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression, DataLoader # 用这个 DataLoader
+    cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    cls.module.set_model(base_model)
     from nni.retiarii.oneshot.pytorch.sampling import EnasModel
     enas_model = EnasModel(cls.module, reward_function=reward_accuracy)#, custom_choice_replace_dict = d)
-    cls.trainer.fit(enas_model, cls.train_dataloader, cls.val_dataloaders)
+    from nni.retiarii.oneshot.pytorch.utils import ConcatenateTrainValDataLoader
+    concat_loader = ConcatenateTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    cls.trainer.fit(enas_model, concat_loader)
 
 if __name__ == '__main__':
     test_enas()

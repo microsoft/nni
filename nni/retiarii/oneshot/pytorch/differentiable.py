@@ -69,9 +69,31 @@ DARTS_REPLACE_DICT = {
 
 class DartsModel(BaseOneShotLightningModule):
     '''
-        choice_replace_dict 是一个 xxxChoice 类到用户自己实现的 ChoiceReplace 的类的字典。可以改个名字。
+    The DARTS model. In each iteration, there are 2 training phases. The phase 1 is architecture
+    step, in which the model parameters are frozen and the alphas are optimized. The phase 2 is model
+    step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
+    out put of each choice are sumed up with respect to their alpha value. The result of DARTS
+    is argmax in alpha.
+    The DARTS Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    See base class for more attributes.
+
+    Reference
+    ----------
+    [1]H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
+    International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
     '''
     def __init__(self, model, custom_replace_dict = None):
+        '''
+        Parameters
+        ----------
+        base_model : pl.LightningModule
+            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+            is wrapped by base_model, and base_model will be wrapped by this model.
+        custom_replace_dict : dict{ type : callable }, default = None
+            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
+            return an nn.module. This custom replace dict will override the default replace
+            dict of each nas method.
+        '''
         super().__init__(model, custom_replace_dict)
         self.automatic_optimization = False
     
@@ -79,22 +101,25 @@ class DartsModel(BaseOneShotLightningModule):
         return super().on_train_start()
         
     def training_step(self, batch, batch_idx):
-        # grad manually
+        # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
         arc_optim = opts[0]
         w_optim = opts[1:]
 
-        # MergeTrainValDataset will yield both train and val data in a batch
+        # ParallelTrainValDataLoader will yield both train and val data in a batch
         trn_batch, val_batch = batch
 
         # phase 1. architecture step
+        # The resample_architecture hook is kept for some following darts-based nas
+        # methods such as proxyless. See code of those methods for details. 
         self.resample_architecture()
         arc_optim.zero_grad()
         arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
         self.manual_backward(arc_step_loss)
+        self.finalize_grad()
         arc_optim.step()
 
-        # phase 2: child network step
+        # phase 2: model step
         self.resample_architecture()
         for opt in w_optim:
             opt.zero_grad()
@@ -104,10 +129,18 @@ class DartsModel(BaseOneShotLightningModule):
             opt.step()
         return w_step_loss
 
-    def validation_step(self, batch, batch_idx):
-        return
-
     def resample_architecture(self):
+        '''
+        Hook kept for darts-based methods. Some following works resample the architecture to
+        reduce the memory consumption during training to fit the method to bigger models. Details
+        are provided in code of those algorithms.
+        '''
+        pass
+
+    def finalize_grad(self):
+        '''
+        Hook kept for Proxyless NAS.
+        '''
         pass
     
     @property
@@ -115,6 +148,9 @@ class DartsModel(BaseOneShotLightningModule):
         return DARTS_REPLACE_DICT
 
     def configure_architecture_optimizers(self):
+        '''
+        The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
+        '''
         ctrl_params = {}
         for _, m in self.nas_modules:
             if m.name in ctrl_params:
@@ -272,12 +308,35 @@ PROXYLESS_REPLACE_DICT = {
 }
 
 class ProxylessModel(DartsModel):
+    '''
+    The Proxyless Model. This is a darts-based method. What it differs from darts is that it resample
+    the architecture according to alphas to select only one path a time to reduce memory consumption.
+    The Proxyless Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    See base class for more attributes.
+
+    Reference
+    ----------
+    [1]H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,”
+    presented at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
+
+    '''
     def __init__(self, base_model, custom_replace_dict = None):
+        '''
+        Parameters
+        ----------
+        base_model : pl.LightningModule
+            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+            is wrapped by base_model, and base_model will be wrapped by this model.
+        custom_replace_dict : dict{ type : callable }, default = None
+            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
+            return an nn.module. This custom replace dict will override the default replace
+            dict of each nas method.
+        '''
         super().__init__(base_model, custom_replace_dict)
 
     
     def configure_architecture_optimizers(self):
-        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
+        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], lr=3.e-4,
                                            weight_decay=0, betas=(0, 0.999), eps=1e-8)
         return ctrl_optim
     
@@ -288,4 +347,8 @@ class ProxylessModel(DartsModel):
     def resample_architecture(self):
         for _, m in self.nas_modules:
             m.resample()
+    
+    def finalize_grad(self):
+        for _, m in self.nas_modules:
+            m.finalize_grad()
 

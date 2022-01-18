@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from nni.retiarii.nn.pytorch import LayerChoice
 import pytorch_lightning as pl
-from nni.retiarii.oneshot.pytorch.utils import get_parallel_dataloader
+from nni.retiarii.oneshot.pytorch.utils import ParallelTrainValDataLoader
 
 class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -94,12 +94,13 @@ valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
 
 def test_darts():
     from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression
-    darts_loader = get_parallel_dataloader(train_dataset, valid_dataset, 64)
-    cls = Classification(train_dataloader=darts_loader,**{'max_epochs':1})
+  #  darts_loader = get_parallel_dataloader(train_dataset, valid_dataset, 64)
+    cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader,**{'max_epochs':1})
     cls.module.set_model(base_model)
     from nni.retiarii.oneshot.pytorch.differentiable import DartsModel
     darts_model = DartsModel(cls.module)
-    cls.trainer.fit(darts_model, cls.train_dataloader)
+    darts_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    cls.trainer.fit(darts_model, darts_loader)
 
 if __name__ == '__main__':
     test_darts()

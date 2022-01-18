@@ -7,7 +7,6 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from nni.retiarii.nn.pytorch import LayerChoice
 import pytorch_lightning as pl
-from nni.retiarii.oneshot.pytorch.utils import get_parallel_dataloader
 
 class DepthwiseSeparableConv(nn.Module):
     def __init__(self, in_ch, out_ch):
@@ -89,15 +88,15 @@ train_loader = DataLoader(train_dataset, 32, shuffle= True)
 valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
 valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
 
-from nni.retiarii.oneshot.pytorch.differentiable import ProxylessModel
-from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression
-darts_loader = get_parallel_dataloader(train_dataset, valid_dataset, 64)
-cls = Classification(train_dataloader=darts_loader,**{'max_epochs':1})
-cls.module.set_model(base_model)
-
 def test_proxyless():
+    from nni.retiarii.evaluator.pytorch.lightning import Classification, Regression
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    cls.module.set_model(base_model)
+    from nni.retiarii.oneshot.pytorch.differentiable import ProxylessModel
     proxyless_model = ProxylessModel(cls.module)
-    cls.trainer.fit(proxyless_model, cls.train_dataloader)
+    from nni.retiarii.oneshot.pytorch.utils import ParallelTrainValDataLoader
+    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    cls.trainer.fit(proxyless_model, para_loader)
 
 if __name__ == '__main__':
     test_proxyless()
