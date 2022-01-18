@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import site
+import sys
 from zipfile import ZipFile
 
 def main() -> None:
@@ -27,7 +28,7 @@ def main() -> None:
     script_dir.parent.mkdir(parents=True, exist_ok=True)
 
     shutil.move('cache/python-dependencies', site_packages)
-    shutil.move('cache/python-scripts', script_dir)
+    #shutil.move('cache/python-scripts', script_dir)
     shutil.move('cache/nni-manager-dependencies', 'ts/nni_manager/node_modules')
     shutil.move('cache/webui-dependencies', 'ts/webui/node_modules')
 
