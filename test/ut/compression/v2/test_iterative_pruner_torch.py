@@ -98,7 +98,7 @@ class IterativePrunerTestCase(unittest.TestCase):
 
     def test_simulated_annealing_pruner(self):
         model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         pruner = SimulatedAnnealingPruner(model, config_list, evaluator, start_temperature=40, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
@@ -107,7 +107,7 @@ class IterativePrunerTestCase(unittest.TestCase):
 
     def test_auto_compress_pruner(self):
         model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         admm_params = {
             'trainer': trainer,
             'traced_optimizer': get_optimizer(model),
