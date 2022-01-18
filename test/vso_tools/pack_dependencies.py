@@ -14,9 +14,9 @@ from zipfile import ZIP_DEFLATED, ZipFile
 def main():
     cache = Path('cache')
     cache.mkdir()
-    #shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
+    shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
-    #shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
+    shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
 
     archive = ZipFile('cache.zip', 'w', ZIP_DEFLATED, compresslevel=9)
     symlinks = {}

@@ -21,23 +21,23 @@ steps:
     versionSpec: 16.3.0
   displayName: Configure Node.js version
 
-#- script: |
-#    rem || set -e
-#    # Do not cache setup dependencies. PR pipeline should use more stable version.
-#    # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
-#    python -m pip install -U -r dependencies/setup.txt
-#    # Pre-installed packages are global and "~/.local" has not been created at this point.
-#    # So we can use user site-packages as a clean environment, to avoid tricky virtualenv.
-#    python -m pip install --user -r dependencies/develop.txt
-#    python -m pip install --user -r dependencies/required.txt
-#    python -m pip install --user -r dependencies/required_extra.txt
-#    python -m pip install --user -r dependencies/recommended.txt
-#  displayName: Install Python packages
+- script: |
+    rem || set -e
+    # Do not cache setup dependencies. PR pipeline should use more stable version.
+    # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
+    python -m pip install -U -r dependencies/setup.txt
+    # Pre-installed packages are global and "~/.local" has not been created at this point.
+    # So we can use user site-packages as a clean environment, to avoid tricky virtualenv.
+    python -m pip install --user -r dependencies/develop.txt
+    python -m pip install --user -r dependencies/required.txt
+    python -m pip install --user -r dependencies/required_extra.txt
+    python -m pip install --user -r dependencies/recommended.txt
+  displayName: Install Python packages
 
 - script: |
     rem || set -e
     yarn --cwd ts/nni_manager install
-#    yarn --cwd ts/webui install
+    yarn --cwd ts/webui install
   displayName: Install Node.js packages
 
 - script: |
