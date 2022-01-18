@@ -3,12 +3,6 @@ parameters:
   type: string
 
 steps:
-- powershell: |
-    python -c 'x'
-    echo 'after fail'
-  errorActionPreference: 'stop'
-  displayName: debug
-
 - script: |
     set -e
     sudo apt-get remove -y swig
@@ -27,26 +21,27 @@ steps:
     versionSpec: 16.3.0
   displayName: Configure Node.js version
 
-- powershell: |
-    # Do not cache setup dependencies. PR pipeline should use more stable version.
-    # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
-    python -m pip install -U -r dependencies/setup.txt
-    # Pre-installed packages are global and "~/.local" has not been created at this point.
-    # So we can use user site-packages as a clean environment, to avoid tricky virtualenv.
-    python -m pip install --user -r dependencies/develop.txt
-    python -m pip install --user -r dependencies/required.txt
-    python -m pip install --user -r dependencies/required_extra.txt
-    python -m pip install --user -r dependencies/recommended.txt
-  displayName: Install Python packages
+#- script: |
+#    python test/vso_tools/is_windows.py || set -e
+#    # Do not cache setup dependencies. PR pipeline should use more stable version.
+#    # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
+#    python -m pip install -U -r dependencies/setup.txt
+#    # Pre-installed packages are global and "~/.local" has not been created at this point.
+#    # So we can use user site-packages as a clean environment, to avoid tricky virtualenv.
+#    python -m pip install --user -r dependencies/develop.txt
+#    python -m pip install --user -r dependencies/required.txt
+#    python -m pip install --user -r dependencies/required_extra.txt
+#    python -m pip install --user -r dependencies/recommended.txt
+#  displayName: Install Python packages
 
-- powershell: |
+- script: |
+    python test/vso_tools/is_windows.py || set -e
     yarn --cwd ts/nni_manager install
-    yarn --cwd ts/webui install
+#    yarn --cwd ts/webui install
   displayName: Install Node.js packages
 
-- powershell: |
-    python test/vso_tools/pack_dependencies.py
-    Move-Item cache.zip $(Build.ArtifactStagingDirectory)
+- script: |
+    python test/vso_tools/pack_dependencies.py '$(Build.ArtifactStagingDirectory)'
   displayName: Create cache archive
 
 - task: UniversalPackages@0
