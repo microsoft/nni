@@ -1,4 +1,4 @@
-.. 9f6356515c6d61bd4fc181248802970d
+.. 1ec93e31648291b0c881655304116b50
 
 #################
 剪枝（V2版本）
@@ -26,3 +26,4 @@
 
     剪枝算法 <../en_US/Compression/v2_pruning_algo>
     剪枝调度器接口 <../en_US/Compression/v2_scheduler>
+    剪枝配置 <../en_US/Compression/v2_pruning_config_list>

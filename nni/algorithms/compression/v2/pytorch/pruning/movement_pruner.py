@@ -133,8 +133,9 @@ class MovementPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -156,8 +157,8 @@ class MovementPruner(BasicPruner):
                     optimizer.step()
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int

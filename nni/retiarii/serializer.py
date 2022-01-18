@@ -54,6 +54,10 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
     ``basic_unit_tag`` is true by default. If set to false, it will not be explicitly mark as a basic unit, and
     graph parser will continue to parse. Currently, this is to handle a special case in ``nn.Sequential``.
 
+    Although ``basic_unit`` calls ``trace`` in its implementation, it is not for serialization. Rather, it is meant
+    to capture the initialization arguments for mutation. Also, graph execution engine will stop digging into the inner
+    modules when it reaches a module that is decorated with ``basic_unit``.
+
     .. code-block:: python
 
         @basic_unit
@@ -83,7 +87,7 @@ def basic_unit(cls: T, basic_unit_tag: bool = True) -> Union[T, Traceable]:
 
 def model_wrapper(cls: T) -> Union[T, Traceable]:
     """
-    Wrap the model if you are using pure-python execution engine. For example
+    Wrap the base model (search space). For example,
 
     .. code-block:: python
 
@@ -94,8 +98,10 @@ def model_wrapper(cls: T) -> Union[T, Traceable]:
     The wrapper serves two purposes:
 
         1. Capture the init parameters of python class so that it can be re-instantiated in another process.
-        2. Reset uid in ``mutation`` namespace so that each model counts from zero.
-           Can be useful in unittest and other multi-model scenarios.
+        2. Reset uid in namespace so that the auto label counting in each model stably starts from zero.
+
+    Currently, NNI might not complain in simple cases where ``@model_wrapper`` is actually not needed.
+    But in future, we might enforce ``@model_wrapper`` to be required for base model.
     """
     _check_wrapped(cls)
 

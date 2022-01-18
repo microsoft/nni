@@ -1,23 +1,26 @@
 import abc
-import copy
-import collections.abc
 import base64
+import collections.abc
+import copy
 import functools
 import inspect
 import numbers
 import types
 import warnings
 from io import IOBase
-from typing import Any, Union, Dict, Optional, List, TypeVar
+from typing import Any, Dict, List, Optional, TypeVar, Union
 
-import json_tricks  # use json_tricks as serializer backend
 import cloudpickle  # use cloudpickle as backend for unserializable types and instances
+import json_tricks  # use json_tricks as serializer backend
 
-
-__all__ = ['trace', 'dump', 'load', 'Translatable', 'Traceable', 'is_traceable']
+__all__ = ['trace', 'dump', 'load', 'PayloadTooLarge', 'Translatable', 'Traceable', 'is_traceable']
 
 
 T = TypeVar('T')
+
+
+class PayloadTooLarge(Exception):
+    pass
 
 
 class Traceable(abc.ABC):
@@ -64,7 +67,7 @@ class Traceable(abc.ABC):
 
 class Translatable(abc.ABC):
     """
-    Inherit this class and implement ``translate`` when the inner class needs a different
+    Inherit this class and implement ``translate`` when the wrapped class needs a different
     parameter from the wrapper class in its init function.
     """
 
@@ -205,17 +208,22 @@ def trace(cls_or_func: T = None, *, kw_only: bool = True) -> Union[T, Traceable]
 
     When a class/function is annotated, all the instances/calls will return a object as it normally will.
     Although the object might act like a normal object, it's actually a different object with NNI-specific properties.
-    One exception is that if your function returns None, it will return an empty SerializableObject instead,
+    One exception is that if your function returns None, it will return an empty traceable object instead,
     which should raise your attention when you want to check whether the None ``is None``.
 
-    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to inner function.
-    This is to prevent mutable objects gets modified in the inner function.
+    When parameters of functions are received, it is first stored, and then a shallow copy will be passed to wrapped function/class.
+    This is to prevent mutable objects gets modified in the wrapped function/class.
     When the function finished execution, we also record extra information about where this object comes from.
     That's why it's called "trace".
     When call ``nni.dump``, that information will be used, by default.
 
     If ``kw_only`` is true, try to convert all parameters into kwargs type. This is done by inspecting the argument
     list and types. This can be useful to extract semantics, but can be tricky in some corner cases.
+
+    .. warning::
+
+        Generators will be first expanded into a list, and the resulting list will be further passed into the wrapped function/class.
+        This might hang when generators produce an infinite sequence. We might introduce an API to control this behavior in future.
 
     Example:
 
@@ -403,8 +411,9 @@ def _trace_func(func, kw_only):
 
 def _copy_class_wrapper_attributes(base, wrapper):
     _MISSING = '_missing'
+
+    # assign magic attributes like __module__, __qualname__, __doc__
     for k in functools.WRAPPER_ASSIGNMENTS:
-        # assign magic attributes like __module__, __qualname__, __doc__
         v = getattr(base, k, _MISSING)
         if v is not _MISSING:
             try:
@@ -418,12 +427,24 @@ def _copy_class_wrapper_attributes(base, wrapper):
 def _argument_processor(arg):
     # 1) translate
     # handle cases like ValueChoice
-    # This is needed because sometimes the recorded arguments are meant to be different from what the inner object receives.
+    # This is needed because sometimes the recorded arguments are meant to be different from what the wrapped object receives.
     arg = Translatable._translate_argument(arg)
-    # 2) prevent the stored parameters to be mutated by inner class.
+    # 2) prevent the stored parameters to be mutated by wrapped class.
     # an example: https://github.com/microsoft/nni/issues/4329
     if isinstance(arg, (collections.abc.MutableMapping, collections.abc.MutableSequence, collections.abc.MutableSet)):
         arg = copy.copy(arg)
+    return arg
+
+
+def _formulate_single_argument(arg):
+    # this is different from argument processor
+    # it directly apply the transformation on the stored arguments
+
+    # expand generator into list
+    # Note that some types that are generator (such as range(10)) may not be identified as generator here.
+    if isinstance(arg, types.GeneratorType):
+        arg = list(arg)
+
     return arg
 
 
@@ -446,6 +467,9 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
         full_args.update(kwargs)
 
         args, kwargs = [], full_args
+
+    args = [_formulate_single_argument(arg) for arg in args]
+    kwargs = {k: _formulate_single_argument(arg) for k, arg in kwargs.items()}
 
     return list(args), kwargs
 
@@ -562,10 +586,10 @@ def _json_tricks_any_object_encode(obj: Any, primitives: bool = False, pickle_si
         return obj
     if hasattr(obj, '__class__') and (hasattr(obj, '__dict__') or hasattr(obj, '__slots__')):
         b = cloudpickle.dumps(obj)
-        if len(b) > pickle_size_limit:
-            raise ValueError(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
-                             'not decorated by @nni.trace. Another option is to force bytes pickling and '
-                             'try to raise pickle_size_limit.')
+        if len(b) > pickle_size_limit > 0:
+            raise PayloadTooLarge(f'Pickle too large when trying to dump {obj}. This might be caused by classes that are '
+                                  'not decorated by @nni.trace. Another option is to force bytes pickling and '
+                                  'try to raise pickle_size_limit.')
         # use base64 to dump a bytes array
         return {
             '__nni_obj__': base64.b64encode(b).decode()

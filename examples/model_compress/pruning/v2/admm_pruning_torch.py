@@ -14,11 +14,12 @@ import torch
 from torchvision import datasets, transforms
 from torch.optim.lr_scheduler import MultiStepLR
 
+import nni
 from nni.compression.pytorch.utils.counter import count_flops_params
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import ADMMPruner
-from nni.algorithms.compression.v2.pytorch.utils import trace_parameters
 
-sys.path.append('../../models')
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[2] / 'models'))
 from cifar10.vgg import VGG
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -70,9 +71,9 @@ def evaluator(model):
     print('Accuracy: {}%\n'.format(acc))
     return acc
 
-def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4):
+def optimizer_scheduler_generator(model, _lr=0.1, _momentum=0.9, _weight_decay=5e-4, total_epoch=160):
     optimizer = torch.optim.SGD(model.parameters(), lr=_lr, momentum=_momentum, weight_decay=_weight_decay)
-    scheduler = MultiStepLR(optimizer, milestones=[int(args.pretrain_epochs * 0.5), int(args.pretrain_epochs * 0.75)], gamma=0.1)
+    scheduler = MultiStepLR(optimizer, milestones=[int(total_epoch * 0.5), int(total_epoch * 0.75)], gamma=0.1)
     return optimizer, scheduler
 
 if __name__ == '__main__':
@@ -85,7 +86,7 @@ if __name__ == '__main__':
 
     print('\n' + '=' * 50 + ' START TO TRAIN THE MODEL ' + '=' * 50)
     model = VGG().to(device)
-    optimizer, scheduler = optimizer_scheduler_generator(model)
+    optimizer, scheduler = optimizer_scheduler_generator(model, total_epoch=args.pretrain_epochs)
     criterion = torch.nn.CrossEntropyLoss()
     pre_best_acc = 0.0
     best_state_dict = None
@@ -112,8 +113,8 @@ if __name__ == '__main__':
         'op_types': ['Conv2d'],
     }]
 
-    # make sure you have used nni.algorithms.compression.v2.pytorch.utils.trace_parameters to wrap the optimizer class before initialize
-    traced_optimizer = trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
+    # make sure you have used nni.trace to wrap the optimizer class before initialize
+    traced_optimizer = nni.trace(torch.optim.SGD)(model.parameters(), lr=0.01, momentum=0.9, weight_decay=5e-4)
     pruner = ADMMPruner(model, config_list, trainer, traced_optimizer, criterion, iterations=2, training_epochs=2)
     _, masks = pruner.compress()
     pruner.show_pruned_weights()
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 
     # Optimizer used in the pruner might be patched, so recommend to new an optimizer for fine-tuning stage.
     print('\n' + '=' * 50 + ' START TO FINE TUNE THE MODEL ' + '=' * 50)
-    optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01)
+    optimizer, scheduler = optimizer_scheduler_generator(model, _lr=0.01, total_epoch=args.fine_tune_epochs)
 
     best_acc = 0.0
     g_epoch = 0

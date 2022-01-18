@@ -8,23 +8,20 @@ Run basic_pruners_torch.py first to get the masks of the pruned model. Then pass
 
 import argparse
 import os
-import time
+import sys
 from copy import deepcopy
 
-import nni
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-import torch.optim as optim
 from nni.compression.pytorch import ModelSpeedup
-from torch.optim.lr_scheduler import MultiStepLR, StepLR
-from torchvision import datasets, transforms
+from torch.optim.lr_scheduler import MultiStepLR
 from basic_pruners_torch import get_data
 
-import sys
-sys.path.append('../models')
-from cifar10.vgg import VGG
+from pathlib import Path
+sys.path.append(str(Path(__file__).absolute().parents[1] / 'models'))
 from mnist.lenet import LeNet
+from cifar10.vgg import VGG
 
 class DistillKL(nn.Module):
     """Distilling the Knowledge in a Neural Network"""
@@ -72,7 +69,6 @@ def get_model_optimizer_scheduler(args, device, test_loader, criterion):
     dummy_input = get_dummy_input(args, device)
     m_speedup = ModelSpeedup(model_s, dummy_input, args.mask_path, device)
     m_speedup.speedup_model()
-
 
     module_list = nn.ModuleList([])
     module_list.append(model_s)
