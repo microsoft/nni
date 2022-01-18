@@ -22,7 +22,7 @@ steps:
   displayName: Configure Node.js version
 
 #- script: |
-#    python test/vso_tools/is_windows.py || set -e
+#    rem || set -e
 #    # Do not cache setup dependencies. PR pipeline should use more stable version.
 #    # If they are corrupted, this pipeline should fail and PR pipeline will use yesterday's cache.
 #    python -m pip install -U -r dependencies/setup.txt
@@ -35,7 +35,7 @@ steps:
 #  displayName: Install Python packages
 
 - script: |
-    python test/vso_tools/is_windows.py || set -e
+    rem || set -e
     yarn --cwd ts/nni_manager install
 #    yarn --cwd ts/webui install
   displayName: Install Node.js packages
