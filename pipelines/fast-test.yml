@@ -14,49 +14,40 @@ stages:
       displayName: Configure Python version
 
     - script: |
-        python -m pip install --user nbsphinx
-        python -m pip install --user sphinx
-        python -m pip install --user sphinx-argparse
-        python -m pip install --user sphinx-rtd-theme
-        python -m pip install --user sphinxcontrib-websupport
-        echo '####################'
-        cat ~/.local/bin/sphinx-build
-        echo '####################'
-        find -maxdepth 4 /opt/hostedtoolcache
-
-        #    - script: |
-        #        sudo apt-get remove -y swig
-        #        sudo apt-get install -y pandoc swig3.0
-        #        sudo ln -s swig3.0 /usr/bin/swig
-        #      displayName: Install apt packages
-        #    - task: UniversalPackages@0
-        #      inputs:
-        #        vstsFeed: NNIOpenSource/sandbox
-        #        vstsFeedPackage: dependencies-ubuntu-latest
-        #        vstsPackageVersion: '*'
-        #      displayName: Download cache
-        #    - script: |
-        #        python test/vso_tools/unpack_dependencies.py
-        #      displayName: Unpack cache
-        #    - script: |
-        #        set -e
-        #        python -m pip install -U -r dependencies/setup.txt
-        #        python -m pip install -r dependencies/develop.txt
-        #        python -m pip install -r dependencies/required.txt
-        #        python -m pip install -r dependencies/recommended.txt
-        #        python -m pip install -r dependencies/required_extra.txt
-        #      displayName: Install requirements
-        #    - script: |
-        #        python test/vso_tools/interim_patch.py
-        #      displayName: Apply patch
-        #    - script: |
-        #        cd docs
-        #        python tools/chineselink.py check
-        #      displayName: Translation up-to-date
-        #    - script: |
-        #        cd docs/en_US
-        #        sphinx-build -M html . _build -W --keep-going -T
-        #      displayName: Sphinx  # TODO: rstcheck
+        sudo apt-get remove -y swig
+        sudo apt-get install -y pandoc swig3.0
+        sudo ln -s swig3.0 /usr/bin/swig
+      displayName: Install apt packages
+    - task: UniversalPackages@0
+      inputs:
+        vstsFeed: NNIOpenSource/sandbox
+        vstsFeedPackage: dependencies-ubuntu-latest
+        vstsPackageVersion: '*'
+      displayName: Download cache
+    - script: |
+        python test/vso_tools/unpack_dependencies.py
+      displayName: Unpack cache
+    - script: |
+        set -e
+        python -m pip install -U -r dependencies/setup.txt
+        python -m pip install -r dependencies/develop.txt
+        python -m pip install -r dependencies/required.txt
+        python -m pip install -r dependencies/recommended.txt
+        python -m pip install -r dependencies/required_extra.txt
+      displayName: Install requirements
+    - script: |
+        python test/vso_tools/interim_patch.py
+      displayName: Apply patch
+    - script: |
+        cd docs
+        python tools/chineselink.py check
+      displayName: Translation up-to-date
+    - script: |
+        cd docs/en_US
+        # wheel adds absolute python path to scripts' shebang
+        # so if python version has updated after caching, the shebang will not work
+        python `which sphinx-build` -M html . _build -W --keep-going -T
+      displayName: Sphinx  # TODO: rstcheck
         #
         #  - job: python
         #    pool:
