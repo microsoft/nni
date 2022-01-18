@@ -2,7 +2,7 @@
 # please follow the logic in setup.py.
 
 # SMAC
-ConfigSpaceNNI
+ConfigSpaceNNI>=0.4.7.2
 smac4nni
 
 # BOHB
