@@ -36,7 +36,7 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
         # TODO: replace with validation here
         for config in config_list:
             if 'sparsity' in config or 'sparsity_per_layer' in config:
-                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+                _logger.warning('Only `total_sparsity` can be differentially allocated sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
         return super().reset(model, config_list, masks)
 
     def _iterative_pruner_reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):

@@ -190,7 +190,7 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         # TODO: replace with validation here
         for config in config_list:
             if 'sparsity' in config or 'sparsity_per_layer' in config:
-                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+                _logger.warning('Only `total_sparsity` can be differentially allocated sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
 
         self.weights_numel, self.masked_rate = get_model_weights_numel(model, config_list, masks)
         self.target_sparsity_list = config_list_canonical(model, config_list)
