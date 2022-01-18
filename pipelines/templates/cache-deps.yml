@@ -9,7 +9,7 @@ steps:
     sudo apt-get install -y swig3.0
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: Downgrade swig
-  condition: contains(parameters.feed, 'ubuntu')
+  condition: contains('${{ parameters.feed }}', 'ubuntu')
 
 - task: UsePythonVersion@0
   inputs:
