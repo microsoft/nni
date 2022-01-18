@@ -32,6 +32,13 @@ class AutoCompressTaskGenerator(LotteryTicketTaskGenerator):
                          log_dir=log_dir,
                          keep_intermediate_result=keep_intermediate_result)
 
+    def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
+        # TODO: replace with validation here
+        for config in config_list:
+            if 'sparsity' in config or 'sparsity_per_layer' in config:
+                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+        return super().reset(model, config_list, masks)
+
     def _iterative_pruner_reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.iterative_pruner.task_generator._log_dir = Path(self._log_dir_root, 'SA')
         self.iterative_pruner.reset(model, config_list=config_list, masks=masks)
@@ -106,10 +113,6 @@ class AutoCompressPruner(IterativePruner):
                  sa_params: Dict, log_dir: str = '.', keep_intermediate_result: bool = False,
                  finetuner: Optional[Callable[[Module], None]] = None, speed_up: bool = False,
                  dummy_input: Optional[Tensor] = None, evaluator: Callable[[Module], float] = None):
-        # TODO: replace with validation here
-        for config in config_list:
-            if 'sparsity' in config or 'sparsity_per_layer' in config:
-                _logger.warning('Only `total_sparsity` can be differentially allocate sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fix sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
         task_generator = AutoCompressTaskGenerator(total_iteration=total_iteration,
                                                    origin_model=model,
                                                    origin_config_list=config_list,
