@@ -3,14 +3,6 @@ parameters:
   type: string
 
 steps:
-- script: |
-    set -e
-    sudo apt-get remove -y swig
-    sudo apt-get install -y swig3.0
-    sudo ln -s swig3.0 /usr/bin/swig
-  displayName: Downgrade swig
-  condition: contains('${{ parameters.feed }}', 'ubuntu')
-
 - task: UsePythonVersion@0
   inputs:
     versionSpec: 3.9
@@ -32,13 +24,15 @@ steps:
     python -m pip install --user -r dependencies/required.txt
     python -m pip install --user -r dependencies/required_extra.txt
     python -m pip install --user -r dependencies/recommended.txt
-  displayName: Install Python packages
+  displayName: Install Python dependencies
 
 - script: |
-    rem || set -e
     yarn --cwd ts/nni_manager install
+  displayName: Install NNI Manager dependencies
+
+- script: |
     yarn --cwd ts/webui install
-  displayName: Install Node.js packages
+  displayName: Install Web UI dependencies
 
 - script: |
     # do not add quotes, because they will be included in argv on windows
