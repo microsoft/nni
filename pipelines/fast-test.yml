@@ -12,8 +12,12 @@ stages:
       inputs:
         versionSpec: 3.9
     - script: |
+        echo '## 1 ##'
         python -c 'import site ; print(site.getuserbase())'
-        find ~/Library/Python/3.9
+        echo '## 2 ##'
+        find /Users/runner/.local
+        echo '## 3 ##'
+        python -c 'import site ; print(site.getusersitepackages())'
 
 #  - job: docs
 #    pool:
