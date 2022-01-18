@@ -48,5 +48,5 @@ steps:
   inputs:
     command: publish
     vstsFeedPublish: NNIOpenSource/sandbox
-    vstsFeedPackagePublish: $(feed)
+    vstsFeedPackagePublish: ${{ parameters.feed }}
   displayName: Upload cache archive

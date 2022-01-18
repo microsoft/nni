@@ -12,7 +12,8 @@ import sys
 from zipfile import ZIP_DEFLATED, ZipFile
 
 def main():
-    Path('cache').mkdir()
+    cache = Path('cache')
+    cache.mkdir()
     #shutil.move(site.getusersitepackages(), 'cache/python-dependencies')
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
     #shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
@@ -20,7 +21,9 @@ def main():
     archive = ZipFile('cache.zip', 'w', ZIP_DEFLATED, compresslevel=9)
     symlinks = {}
     empty_dirs = set()
-    for file in sorted(Path('cache').rglob('*')):
+    for file in sorted(cache.rglob('*')):
+        if file.parent == cache:
+            print('Compress', file)
         empty_dirs.discard(str(file.parent))
         if file.is_symlink():
             symlinks[str(file)] = str(file.readlink())
