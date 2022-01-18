@@ -116,8 +116,8 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
                 proc.kill()
         raise e
 
+    link = Path(config.experiment_working_directory, 'latest')
     try:
-        link = Path(config.experiment_working_directory, 'latest')
         link.unlink(missing_ok=True)
         link.symlink_to(exp_id, target_is_directory=True)
     except Exception:
