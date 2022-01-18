@@ -33,6 +33,7 @@ def main():
             archive.write(file)
     archive.writestr('symlinks.json', json.dumps(symlinks, indent=4))
     archive.writestr('directories.json', json.dumps(list(empty_dirs), indent=4))
+    archive.close()
 
     assert Path(sys.argv[1]).is_dir()
     shutil.move('cache.zip', sys.argv[1])
