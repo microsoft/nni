@@ -281,7 +281,10 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         magnitude = self.current_temperature / self.start_temperature * self.perturbation_magnitude
         for config, current_sparsity in zip(self.target_sparsity_list, self._current_sparsity_list):
             if len(current_sparsity) == 0:
-                self._temp_config_list.append(deepcopy(config))
+                sub_temp_config_list = [deepcopy(config) for i in range(len(config['op_names']))]
+                for temp_config, op_name in zip(sub_temp_config_list, config['op_names']):
+                    temp_config.update({'total_sparsity': 0, 'op_names': [op_name]})
+                self._temp_config_list.extend(sub_temp_config_list)
                 self._temp_sparsity_list.append([])
                 continue
             while True:
