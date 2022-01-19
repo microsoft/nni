@@ -271,12 +271,11 @@ stages:
 
     - script: |
         set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        # setuptools "develop" mode is buggy and it's safer to install dependencies manually
-        python -m pip install -r dependencies/required.txt
-        python -m pip install -r dependencies/required_extra.txt
-        python -m pip install -r dependencies/recommended_legacy.txt
+        cd dependencies
+        python -m pip install -U -r setup.txt
+        # if we do not put them in one line, pip may implicitly downgrade previously installed packages
+        # this caused ConfigSpaceNNI to have incompatible numpy versions at compile-time and runtime
+        python -m pip install -r develop.txt -r required.txt -r required_extra.txt -r recommended_legacy.txt
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python dependencies
 
