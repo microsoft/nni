@@ -15,7 +15,7 @@ steps:
 
 - script: |
     mv ~/.local backup-local
-  displayName: Backup .local for macOS
+  displayName: (macOS) Backup .local
   condition: contains('${{ parameters.feed }}', 'macos')
 
 # Do not cache setup dependencies. PR pipeline should use more stable version.
@@ -29,6 +29,9 @@ steps:
     python -m pip install --user -r dependencies/required.txt
     python -m pip install --user -r dependencies/required_extra.txt
     python -m pip install --user -r dependencies/recommended.txt
+    echo "================================================================================"
+    python -c 'from ConfigSpaceNNI.configuration_space import Configuration'
+    echo "OK"
   displayName: Install Python dependencies
 
 - script: |
@@ -46,7 +49,7 @@ steps:
 
 - script: |
     mv backup-local ~/.local
-  displayName: Restore .local for macOS
+  displayName: (macOS) Restore .local
   condition: contains('${{ parameters.feed }}', 'macos')
 
 - task: UniversalPackages@0
