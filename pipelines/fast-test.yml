@@ -273,6 +273,8 @@ stages:
         set -e
         cd dependencies
         python -m pip install -U -r setup.txt
+        # FIXME: due to pip's limitation ConfigSpaceNNI will not build without this
+        python -m pip install numpy<1.22
         # if we do not put them in one line, pip may implicitly downgrade previously installed packages
         # this caused ConfigSpaceNNI to have incompatible numpy versions at compile-time and runtime
         python -m pip install -r develop.txt -r required.txt -r required_extra.txt -r recommended_legacy.txt
