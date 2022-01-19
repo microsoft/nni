@@ -26,6 +26,7 @@ class FunctionalEvaluator(Evaluator):
 
     def _dump(self):
         return {
+            'type': self.__class__,
             'function': self.function,
             'arguments': self.arguments
         }

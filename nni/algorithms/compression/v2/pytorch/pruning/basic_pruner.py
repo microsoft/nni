@@ -5,7 +5,7 @@ from copy import deepcopy
 import logging
 from typing import List, Dict, Tuple, Callable, Optional
 
-from schema import And, Or, Optional as SchemaOptional
+from schema import And, Or, Optional as SchemaOptional, SchemaError
 import torch
 from torch import Tensor
 import torch.nn as nn
@@ -133,8 +133,9 @@ class LevelPruner(BasicPruner):
         Supported keys:
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     """
 
@@ -168,7 +169,8 @@ class NormPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     p : int
         The order of norm.
@@ -228,7 +230,8 @@ class L1NormPruner(NormPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in L1NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -260,7 +263,8 @@ class L2NormPruner(NormPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in L1NormPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -292,7 +296,8 @@ class FPGMPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in FPGMPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     mode : str
         'normal' or 'dependency_aware'.
@@ -351,7 +356,8 @@ class SlimPruner(BasicPruner):
             - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Only BatchNorm2d is supported in SlimPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -373,8 +379,8 @@ class SlimPruner(BasicPruner):
                     optimizer.step()
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_epochs : int
@@ -412,7 +418,12 @@ class SlimPruner(BasicPruner):
             sub_shcema[SchemaOptional('op_types')] = ['BatchNorm2d']
         schema = CompressorSchema(schema_list, model, _logger)
 
-        schema.validate(config_list)
+        try:
+            schema.validate(config_list)
+        except SchemaError as e:
+            if "Missing key: 'total_sparsity'" in str(e):
+                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+            raise e
 
     def criterion_patch(self, criterion: Callable[[Tensor, Tensor], Tensor]) -> Callable[[Tensor, Tensor], Tensor]:
         def patched_criterion(input_tensor: Tensor, target: Tensor):
@@ -450,7 +461,8 @@ class ActivationPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - op_types : Conv2d and Linear are supported in ActivationPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable], None]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -472,8 +484,8 @@ class ActivationPruner(BasicPruner):
                     optimizer.step()
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches
@@ -524,10 +536,22 @@ class ActivationPruner(BasicPruner):
             raise 'Unsupported activatoin {}'.format(activation)
 
     def _collector(self, buffer: List) -> Callable[[Module, Tensor, Tensor], None]:
+        assert len(buffer) == 0, 'Buffer pass to activation pruner collector is not empty.'
+        # The length of the buffer used in this pruner will always be 2.
+        # buffer[0] is the number of how many batches are counted in buffer[1].
+        # buffer[1] is a tensor and the size of buffer[1] is same as the activation.
+        buffer.append(0)
+
         def collect_activation(_module: Module, _input: Tensor, output: Tensor):
-            if len(buffer) < self.training_batches:
-                buffer.append(self._activation(output.detach()))
+            if len(buffer) == 1:
+                buffer.append(torch.zeros_like(output))
+            if buffer[0] < self.training_batches:
+                buffer[1] += self._activation_trans(output)
+                buffer[0] += 1
         return collect_activation
+
+    def _activation_trans(self, output: Tensor) -> Tensor:
+        raise NotImplementedError()
 
     def reset_tools(self):
         collector_info = HookCollectorInfo([layer_info for layer_info, _ in self._detect_modules_to_compress()], 'forward', self._collector)
@@ -551,11 +575,19 @@ class ActivationPruner(BasicPruner):
 
 
 class ActivationAPoZRankPruner(ActivationPruner):
+    def _activation_trans(self, output: Tensor) -> Tensor:
+        # return a matrix that the position of zero in `output` is one, others is zero.
+        return torch.eq(self._activation(output.detach()), torch.zeros_like(output)).type_as(output)
+
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return APoZRankMetricsCalculator(dim=1)
 
 
 class ActivationMeanRankPruner(ActivationPruner):
+    def _activation_trans(self, output: Tensor) -> Tensor:
+        # return the activation of `output` directly.
+        return self._activation(output.detach())
+
     def _get_metrics_calculator(self) -> MetricsCalculator:
         return MeanRankMetricsCalculator(dim=1)
 
@@ -573,7 +605,8 @@ class TaylorFOWeightPruner(BasicPruner):
             - total_sparsity : This is to specify the total sparsity for all layers in this config, each layer may have different sparsity.
             - max_sparsity_per_layer : Always used with total_sparsity. Limit the max sparsity of each layer.
             - op_types : Conv2d and Linear are supported in TaylorFOWeightPruner.
-            - op_names : Operation names to prune.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -595,8 +628,8 @@ class TaylorFOWeightPruner(BasicPruner):
                     optimizer.step()
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     training_batches : int
@@ -644,12 +677,22 @@ class TaylorFOWeightPruner(BasicPruner):
             sub_shcema[SchemaOptional('op_types')] = ['Conv2d', 'Linear']
         schema = CompressorSchema(schema_list, model, _logger)
 
-        schema.validate(config_list)
+        try:
+            schema.validate(config_list)
+        except SchemaError as e:
+            if "Missing key: 'total_sparsity'" in str(e):
+                _logger.error('`config_list` validation failed. If global mode is set in this pruner, `sparsity_per_layer` and `sparsity` are not supported, make sure `total_sparsity` is set in config_list.')
+            raise e
 
     def _collector(self, buffer: List, weight_tensor: Tensor) -> Callable[[Tensor], None]:
+        assert len(buffer) == 0, 'Buffer pass to taylor pruner collector is not empty.'
+        buffer.append(0)
+        buffer.append(torch.zeros_like(weight_tensor))
+
         def collect_taylor(grad: Tensor):
-            if len(buffer) < self.training_batches:
-                buffer.append(self._calculate_taylor_expansion(weight_tensor, grad))
+            if buffer[0] < self.training_batches:
+                buffer[1] += self._calculate_taylor_expansion(weight_tensor, grad)
+                buffer[0] += 1
         return collect_taylor
 
     def _calculate_taylor_expansion(self, weight_tensor: Tensor, grad: Tensor) -> Tensor:
@@ -694,8 +737,9 @@ class ADMMPruner(BasicPruner):
             - sparsity : This is to specify the sparsity for each layer in this config to be compressed.
             - sparsity_per_layer : Equals to sparsity.
             - rho : Penalty parameters in ADMM algorithm.
-            - op_types : Operation types to prune.
-            - op_names : Operation names to prune.
+            - op_types : Operation types to be pruned.
+            - op_names : Operation names to be pruned.
+            - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     trainer : Callable[[Module, Optimizer, Callable]
         A callable function used to train model or just inference. Take model, optimizer, criterion as input.
@@ -717,8 +761,8 @@ class ADMMPruner(BasicPruner):
                     optimizer.step()
                 model.train(mode=training)
     traced_optimizer : nni.common.serializer.Traceable(torch.optim.Optimizer)
-        The traced optimizer instance which the optimizer class is wrapped by nni.algorithms.compression.v2.pytorch.utils.trace_parameters.
-        E.g. traced_optimizer = nni.algorithms.compression.v2.pytorch.utils.trace_parameters(torch.nn.Adam)(model.parameters()).
+        The traced optimizer instance which the optimizer class is wrapped by nni.trace.
+        E.g. traced_optimizer = nni.trace(torch.nn.Adam)(model.parameters()).
     criterion : Callable[[Tensor, Tensor], Tensor]
         The criterion function used in trainer. Take model output and target value as input, and return the loss.
     iterations : int

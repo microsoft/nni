@@ -1,4 +1,4 @@
-.. b7c7ceacdaabfcf383be1e74d067098d
+.. a67033195635ebcd510103eab8703b6a
 
 快速入门
 ===========
@@ -9,7 +9,10 @@
     Notebook Example <compression_pipeline_example>
 
 
-模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供非常简单的 API。 遵循本指南，快速了解如何使用 NNI 压缩模型。 NNI 主要关注于第二阶段，并为模型压缩提供非常简单的 API。 恭喜！ 您已经通过 NNI 压缩了您的第一个模型。 更深入地了解 NNI 中的模型压缩，请查看 `Tutorial <./Tutorial.rst>`__。 
+模型压缩通常包括三个阶段：1）预训练模型，2）压缩模型，3）微调模型。 NNI 主要关注于第二阶段，并为模型压缩提供易于使用的 API。
+遵循本指南，您将快速了解如何使用 NNI 来压缩模型。
+更深入地了解 NNI 中的模型压缩模块，请查看 `Tutorial <./Tutorial.rst>`__。
+提供了一个在 Jupyter notebook 中进行完整的模型压缩流程的 `示例 <./compression_pipeline_example.rst>`__，参考 :githublink:`代码 <examples/notebooks/compression_pipeline_example.ipynb>`。
 
 模型剪枝
 -------------
@@ -19,7 +22,7 @@
 Step1. 编写配置
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-编写配置来指定要剪枝的层。以下配置表示剪枝所有的 ``default`` 操作，稀疏度设为 0.5，其它层保持不变。
+编写配置来指定要剪枝的层。以下配置表示剪枝所有的 ``default`` 层，稀疏度设为 0.5，其它层保持不变。
 
 .. code-block:: python
 
@@ -28,34 +31,36 @@ Step1. 编写配置
        'op_types': ['default'],
    }]
 
-配置说明在 `这里 <./Tutorial.rst#quantization-specific-keys>`__。 注意，不同的 Pruner 可能有自定义的配置字段，例如，AGP Pruner 有 ``start_epoch``。 详情参考每个 Pruner 的 `用法 <./Pruner.rst>`__，来调整相应的配置。
+配置说明在 `这里 <./Tutorial.rst#specify-the-configuration>`__。注意，不同的 Pruner 可能有自定义的配置字段。
+详情参考每个 Pruner 的 `具体用法 <./Pruner.rst>`__，来调整相应的配置。
 
 Step2. 选择 Pruner 来压缩模型
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。 请注意，有些算法可能会检查压缩的梯度，因此我们还定义了一个优化器并传递给 Pruner。
+首先，使用模型来初始化 Pruner，并将配置作为参数传入，然后调用 ``compress()`` 来压缩模型。
+请注意，有些算法可能会检查训练过程中的梯度，因此我们可能会定义一组 trainer, optimizer, criterion 并传递给 Pruner。
 
 .. code-block:: python
 
    from nni.algorithms.compression.pytorch.pruning import LevelPruner
 
-   pruner = LevelPruner(model, config_list, optimizer_finetune)
+   pruner = LevelPruner(model, config_list)
    model = pruner.compress()
 
-然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。 有些 Pruner（如 L1FilterPruner、FPGMPruner）在开始时修剪一次，下面的训练可以看作是微调。 有些 Pruner（例如AGPPruner）会迭代的对模型剪枝，在训练过程中逐步修改掩码。
+然后，使用正常的训练方法来训练模型 （如，SGD），剪枝在训练过程中是透明的。
+有些 Pruner（如 L1FilterPruner、FPGMPruner）在开始时修剪一次，下面的训练可以看作是微调。
+有些 Pruner（例如AGPPruner）会迭代的对模型剪枝，在训练过程中逐步修改掩码。
 
-注意，``pruner.compress`` 只会在模型权重上直接增加掩码，不包括调优的逻辑。 如果要想调优压缩后的模型，需要在 ``pruner.compress`` 后增加调优的逻辑。
+如果使用 Pruner 进行迭代剪枝，或者剪枝过程中需要训练或者推理，则需要将 finetune 逻辑传到 Pruner 中。
 
 例如：
 
 .. code-block:: python
 
-   for epoch in range(1, args.epochs + 1):
-        pruner.update_epoch(epoch)
-        train(args, model, device, train_loader, optimizer_finetune, epoch)
-        test(model, device, test_loader)
+   from nni.algorithms.compression.pytorch.pruning import AGPPruner
 
-更多关于微调的 API 在 `这里 <./Tutorial.rst#api>`__。 
+   pruner = AGPPruner(model, config_list, optimizer, trainer, criterion, num_iterations=10, epochs_per_iteration=1, pruning_algorithm='level')
+   model = pruner.compress()
 
 
 Step3. 导出压缩结果
@@ -83,16 +88,21 @@ Step1. 编写配置
 .. code-block:: python
 
    config_list = [{
-       'quant_types': ['weight'],
+       'quant_types': ['weight', 'input'],
        'quant_bits': {
            'weight': 8,
+           'input': 8,
        }, # 这里可以仅使用 `int`，因为所有 `quan_types` 使用了一样的位长，参考下方 `ReLu6` 配置。
-       'op_types':['Conv2d', 'Linear']
+       'op_types':['Conv2d', 'Linear'],
+       'quant_dtype': 'int',
+       'quant_scheme': 'per_channel_symmetric'
    }, {
        'quant_types': ['output'],
        'quant_bits': 8,
        'quant_start_step': 7000,
-       'op_types':['ReLU6']
+       'op_types':['ReLU6'],
+       'quant_dtype': 'uint',
+       'quant_scheme': 'per_tensor_affine'
    }]
 
 配置说明在 `这里 <./Tutorial.rst#quantization-specific-keys>`__。

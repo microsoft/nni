@@ -33,6 +33,11 @@ def _test_file(json_path):
     # debug output
     #json.dump(orig_ir, open('_orig.json', 'w'), indent=4)
     #json.dump(dump_ir, open('_dump.json', 'w'), indent=4)
+
+    # skip comparison of _evaluator
+    orig_ir.pop('_evaluator')
+    dump_ir.pop('_evaluator')
+
     assert orig_ir == dump_ir
 
 
