@@ -5,7 +5,7 @@
 Change Log
 ==========
 
-Release 2.6 - 1/18/2022
+Release 2.6 - 1/19/2022
 -----------------------
 
 **NOTE**: NNI v2.6 is the last version that supports Python 3.6. From next release NNI will require Python 3.7+.
@@ -33,7 +33,7 @@ Algorithms
   * Support classArgs ``seed``.
   * Support classArgs ``tpe_args`` for expert users to customize algorithm behavior.
   * Parallel optimization has been turned on by default. To turn it off set ``tpe_args.constant_liar_type`` to ``null`` (or ``None`` in Python).
-  * ``constant_liar_type`` has been moved into ``tpe_args``. If you are using it please update your config.
+  * ``parallel_optimize`` and ``constant_liar_type`` has been removed. If you are using them please update your config to use ``tpe_args.constant_liar_type`` instead.
 
 * Grid search tuner now supports all search space types, including uniform, normal, and nested choice. `(doc) <https://nni.readthedocs.io/en/v2.6/Tuner/GridsearchTuner.html>`__
 
