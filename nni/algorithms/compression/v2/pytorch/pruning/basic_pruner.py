@@ -141,8 +141,8 @@ class LevelPruner(BasicPruner):
     """
 
     def __init__(self, model: Module, config_list: List[Dict], bank_num: int = 0):
-        super().__init__(model, config_list)
         self.bank_num = bank_num
+        super().__init__(model, config_list)
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
         schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
@@ -158,7 +158,7 @@ class LevelPruner(BasicPruner):
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
             self.sparsity_allocator = NormalSparsityAllocator(self) if self.bank_num == 0 \
-                else BankSparsityAllocator(self)
+                else BankSparsityAllocator(self, self.bank_num)
 
 class NormPruner(BasicPruner):
     """
