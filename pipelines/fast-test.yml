@@ -273,7 +273,7 @@ stages:
         set -e
         python -m pip install -U -r dependencies/setup.txt
         python -m pip install -r dependencies/develop.txt
-        # setuptools develop is buggy and it's safer to install dependencies manually
+        # setuptools "develop" mode is buggy and it's safer to install dependencies manually
         python -m pip install -r dependencies/required.txt
         python -m pip install -r dependencies/required_extra.txt
         python -m pip install -r dependencies/recommended_legacy.txt
@@ -311,7 +311,7 @@ stages:
 
   - job: macos
     pool:
-      vmImage: macOS-10.15
+      vmImage: macOS-latest
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
@@ -392,7 +392,7 @@ stages:
 
   - job: windows
     pool:
-      vmImage: windows-2019
+      vmImage: windows-latest
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
