@@ -40,6 +40,41 @@ class NormalSparsityAllocator(SparsityAllocator):
                 masks[name]['weight'] *= wrapper.weight_mask
         return masks
 
+class BankSparsityAllocator(SparsityAllocator):
+    """
+    In bank pruner, all values in weight are divided into different banks each contain back_num values. 
+    Each bank has the same sparsity which equal to the overall sparsity.
+    This allocator pruned the weight in the granularity of bank. 
+    """
+    def generate_sparsity(self, metrics: Dict[str, Tensor], bank_num: int) -> Dict[str, Dict[str, Tensor]]:
+        masks = {}
+        for name, wrapper in self.pruner.get_modules_wrapper().items():
+            sparsity_rate = wrapper.config['total_sparsity']
+
+            assert name in metrics, 'Metric of {} is not calculated.'.format(name)
+
+            # We assume the metric value are all positive right now.
+            metric = metrics[name]
+            assert metric.numel() % bank_num == 0, 'Length of {} weight is not \
+                aligned with bank number'.format(name)
+            if self.continuous_mask:
+                metric *= self._compress_mask(wrapper.weight_mask)
+            metric_banks = metric.reshape(-1, bank_num)
+            prune_num = int(sparsity_rate * bank_num)
+            
+            mask = torch.zeros(metric_banks.shape)
+            for idx, metric_bank in enumerate(metric_banks):
+                if prune_num == 0:
+                    threshold = metric_bank.min() -1
+                else:
+                    threshold = torch.topk(metric_bank.view(-1), prune_num, largest=False)[0].max()
+                mask_bank = torch.gt(metric_bank, threshold).type_as(metric_bank)
+                mask[idx] = mask_bank
+            mask.reshape(metric.shape)
+            masks[name] = self._expand_mask(name, mask)
+            if self.continuous_mask:
+                masks[name]['weight'] *= wrapper.weight_mask
+        return masks
 
 class GlobalSparsityAllocator(SparsityAllocator):
     """

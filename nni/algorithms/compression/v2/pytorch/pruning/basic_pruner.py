@@ -36,6 +36,7 @@ from .tools import (
 from .tools import (
     SparsityAllocator,
     NormalSparsityAllocator,
+    BankSparsityAllocator,
     GlobalSparsityAllocator,
     Conv2dDependencyAwareAllocator
 )
@@ -139,8 +140,9 @@ class LevelPruner(BasicPruner):
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
     """
 
-    def __init__(self, model: Module, config_list: List[Dict]):
+    def __init__(self, model: Module, config_list: List[Dict], bank_num: int = 0):
         super().__init__(model, config_list)
+        self.bank_num = bank_num
 
     def _validate_config_before_canonical(self, model: Module, config_list: List[Dict]):
         schema_list = [deepcopy(NORMAL_SCHEMA), deepcopy(EXCLUDE_SCHEMA), deepcopy(INTERNAL_SCHEMA)]
@@ -155,8 +157,8 @@ class LevelPruner(BasicPruner):
         if self.metrics_calculator is None:
             self.metrics_calculator = NormMetricsCalculator()
         if self.sparsity_allocator is None:
-            self.sparsity_allocator = NormalSparsityAllocator(self)
-
+            self.sparsity_allocator = NormalSparsityAllocator(self) if self.bank_num == 0 \
+                else BankSparsityAllocator(self)
 
 class NormPruner(BasicPruner):
     """
