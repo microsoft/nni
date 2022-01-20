@@ -34,6 +34,7 @@ class DartsLayerChoice(nn.Module):
     def r_forward(self, x):
         return self.op_choices.values()[0](x)
 
+
 class DartsInputChoice(nn.Module):
     def __init__(self, input_choice):
         super(DartsInputChoice, self).__init__()
@@ -62,13 +63,8 @@ class DartsInputChoice(nn.Module):
     def r_forward(self, x):
         return super().r_forward(x)
 
-DARTS_REPLACE_DICT = {
-    LayerChoice : DartsLayerChoice,
-    InputChoice : DartsInputChoice
-}
-
-class DartsModel(BaseOneShotLightningModule):
-    '''
+class DartsModule(BaseOneShotLightningModule):
+    """
     The DARTS model. In each iteration, there are 2 training phases. The phase 1 is architecture
     step, in which the model parameters are frozen and the alphas are optimized. The phase 2 is model
     step, in wchich the alphas are frozen and the model parameters are optimized. In this step, the
@@ -79,23 +75,25 @@ class DartsModel(BaseOneShotLightningModule):
 
     Reference
     ----------
-    [1]H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
-    International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
-    '''
+    .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
+        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
+    """
+    
+    automatic_optimization = False
+    
     def __init__(self, model, custom_replace_dict = None):
-        '''
+        """
         Parameters
         ----------
         base_model : pl.LightningModule
             The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
             is wrapped by base_model, and base_model will be wrapped by this model.
-        custom_replace_dict : dict{ type : callable }, default = None
+        custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
             The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
             return an nn.module. This custom replace dict will override the default replace
-            dict of each nas method.
-        '''
+            dict of each NAS method.
+        """
         super().__init__(model, custom_replace_dict)
-        self.automatic_optimization = False
     
     def on_train_start(self) -> None:
         return super().on_train_start()
@@ -109,8 +107,8 @@ class DartsModel(BaseOneShotLightningModule):
         # ParallelTrainValDataLoader will yield both train and val data in a batch
         trn_batch, val_batch = batch
 
-        # phase 1. architecture step
-        # The resample_architecture hook is kept for some following darts-based nas
+        # phase 1: architecture step
+        # The resample_architecture hook is kept for some following darts-based NAS
         # methods such as proxyless. See code of those methods for details. 
         self.resample_architecture()
         arc_optim.zero_grad()
@@ -130,27 +128,27 @@ class DartsModel(BaseOneShotLightningModule):
         return w_step_loss
 
     def resample_architecture(self):
-        '''
+        """
         Hook kept for darts-based methods. Some following works resample the architecture to
         reduce the memory consumption during training to fit the method to bigger models. Details
         are provided in code of those algorithms.
-        '''
+        """
         pass
 
     def finalize_grad(self):
-        '''
-        Hook kept for Proxyless NAS.
-        '''
+        # Note: This hook is currently kept for Proxyless NAS.
         pass
     
     @property
     def default_replace_dict(self):
-        return DARTS_REPLACE_DICT
+        return {
+            LayerChoice : DartsLayerChoice,
+            InputChoice : DartsInputChoice
+        }
+
 
     def configure_architecture_optimizers(self):
-        '''
-        The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
-        '''
+        # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
         ctrl_params = {}
         for _, m in self.nas_modules:
             if m.name in ctrl_params:
@@ -280,7 +278,6 @@ class ProxylessInputChoice(nn.Module):
         
         return super().forward(inputs)
 
-
     def resample(self, sample=None):
         if sample is None:
             probs = F.softmax(self.alpha, dim=-1)
@@ -302,13 +299,9 @@ class ProxylessInputChoice(nn.Module):
                 for j in range(self.num_input_candidates):
                     self.alpha.grad[i] += binary_grads[j] * probs[j] * (int(i == j) - probs[i])
 
-PROXYLESS_REPLACE_DICT = {
-    LayerChoice : ProxylessLayerChoice,
-    InputChoice : ProxylessInputChoice
-}
 
-class ProxylessModel(DartsModel):
-    '''
+class ProxylessModule(DartsModule):
+    """
     The Proxyless Model. This is a darts-based method. What it differs from darts is that it resample
     the architecture according to alphas to select only one path a time to reduce memory consumption.
     The Proxyless Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
@@ -316,23 +309,10 @@ class ProxylessModel(DartsModel):
 
     Reference
     ----------
-    [1]H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,”
-    presented at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
+    [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,”
+        presented at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
 
-    '''
-    def __init__(self, base_model, custom_replace_dict = None):
-        '''
-        Parameters
-        ----------
-        base_model : pl.LightningModule
-            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-            is wrapped by base_model, and base_model will be wrapped by this model.
-        custom_replace_dict : dict{ type : callable }, default = None
-            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
-            return an nn.module. This custom replace dict will override the default replace
-            dict of each nas method.
-        '''
-        super().__init__(base_model, custom_replace_dict)
+    """
 
     
     def configure_architecture_optimizers(self):
@@ -342,7 +322,11 @@ class ProxylessModel(DartsModel):
     
     @property
     def default_replace_dict(self):
-        return PROXYLESS_REPLACE_DICT
+        return {
+            LayerChoice : ProxylessLayerChoice,
+            InputChoice : ProxylessInputChoice
+        }
+
     
     def resample_architecture(self):
         for _, m in self.nas_modules:

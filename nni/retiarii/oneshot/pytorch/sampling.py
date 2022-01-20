@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from tracemalloc import is_tracing
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -11,7 +10,7 @@ import random
 from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
 
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
-from .base_lightning import BaseOneShotLightningModule, ConcatenateTrainValDataLoader
+from .base_lightning import BaseOneShotLightningModule
 
 
 class StackedLSTMCell(nn.Module):
@@ -151,40 +150,51 @@ class ReinforceController(nn.Module):
             sampled = sampled[0]
         return sampled
 
-ENAS_REPLACE_DICT={
-    LayerChoice : PathSamplingLayerChoice,
-    InputChoice : PathSamplingInputChoice
-}
 
-class EnasModel(BaseOneShotLightningModule):
+class EnasModule(BaseOneShotLightningModule):
     """
-    ENAS trainer.
-
-    Parameters
+    The ENAS Model. In each epoch, model parameters are first trained with weight sharing, followed by
+    the enas RL agent. The agent will produce a sample of model architecture, and the reward function
+    is used to train the agent.
+    The ENAS Model should be trained with ConcatenateTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    See base class for more attributes.
+    
+    Reference
     ----------
-    model : nn.Module
-        PyTorch model to be trained.
-    reward_function : callable
-        Receives logits and ground truth label, return a tensor, which will be feeded to RL controller as reward.
-    device : torch.device
-        ``torch.device("cpu")`` or ``torch.device("cuda")``.
-    entropy_weight : float
-        Weight of sample entropy loss.
-    skip_weight : float
-        Weight of skip penalty loss.
-    baseline_decay : float
-        Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
-    ctrl_steps_aggregate : int
-        Number of steps that will be aggregated into one mini-batch for RL controller.
-    ctrl_steps : int
-        Number of mini-batches for each epoch of RL controller learning.
-    ctrl_kwargs : dict
-        Optional kwargs that will be passed to :class:`ReinforceController`.
+    .. [enas] H. Pham, M. Guan, B. Zoph, Q. Le, and J. Dean, “Efficient Neural Architecture Search via Parameters Sharing,” 
+        in Proceedings of the 35th International Conference on Machine Learning, Jul. 2018, pp. 4095-4104. Available: https://proceedings.mlr.press/v80/pham18a.html
     """
+
+    automatic_optimization = False
 
     def __init__(self, base_model, reward_function, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999, 
                  ctrl_steps_aggregate = 20, grad_clip = 0, custom_replace_dict = None):
+        """
+        Parameters
+        ----------
+        base_model : pl.LightningModule
+            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+            is wrapped by ''base_model'', and ''base_model'' will be wrapped by this model.
+        reward_function : callable
+            Receives logits and ground truth label, return a tensor, which will be feeded to RL controller as reward.
+        ctrl_kwargs : dict
+            Optional kwargs that will be passed to :class:`ReinforceController`.
+        entropy_weight : float
+            Weight of sample entropy loss.
+        skip_weight : float
+            Weight of skip penalty loss.
+        baseline_decay : float
+            Decay factor of baseline. New baseline will be equal to ``baseline_decay * baseline_old + reward * (1 - baseline_decay)``.
+        ctrl_steps_aggregate : int
+            Number of steps that will be aggregated into one mini-batch for RL controller.
+        grad_clip : float
+            Gradient clipping vlaue
+        custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
+            return an nn.module. This custom replace dict will override the default replace
+            dict of each NAS method.
+        """
         super().__init__(base_model, custom_replace_dict)
 
         self.nas_fields = [ReinforceField(name, len(module),
@@ -201,20 +211,15 @@ class EnasModel(BaseOneShotLightningModule):
         self.ctrl_steps_aggregate = ctrl_steps_aggregate
         self.grad_clip = grad_clip
 
-        self.automatic_optimization = False
-    
-    def on_train_start(self) -> None:
-        train_loader = self.trainer.train_dataloader
-        val_loader = self.trainer.val_dataloaders[0]
-        self.trainer.train_dataloader = ConcatenateTrainValDataLoader(train_loader, val_loader)
-        self.trainer.val_dataloaders = None
-
     def configure_architecture_optimizers(self):
         return optim.Adam(self.controller.parameters(), lr=3.5e-4)
     
     @property
     def default_replace_dict(self):
-        return ENAS_REPLACE_DICT
+        return {
+            LayerChoice : PathSamplingLayerChoice,
+            InputChoice : PathSamplingInputChoice
+        }
 
     def training_step(self, batch, batch_idx):
         # grad manually
@@ -222,11 +227,12 @@ class EnasModel(BaseOneShotLightningModule):
         arc_opt = opts[0]
         w_opt = opts[1:]
 
-        # optimize rnn after the model
+        # the batch is composed with x, y, b, where b denote if the data provided
+        # is from the training set
         batch, is_train_batch = batch
 
         if is_train_batch:
-            # step 1 : train model params
+            # step 1: train model params
             self._resample()
             for opt in w_opt:
                 opt.zero_grad()
@@ -235,15 +241,13 @@ class EnasModel(BaseOneShotLightningModule):
             for opt in w_opt:
                 opt.step()
         else:
-            # step2: train rnn
-            print('from val batch')
-            breakpoint()
+            # step 2: train ENAS agent
             x, y = batch
             arc_opt.zero_grad()
             self._resample()
             with torch.no_grad():
                 logits = self.model(x)
-            reward = self.reward_function(logits, y)
+            reward = self.model.metrics['acc'](logits, y) # reward_function(logits, y)
             
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()
@@ -265,10 +269,6 @@ class EnasModel(BaseOneShotLightningModule):
     def validation_step(self, batch, batch_idx):
         pass
 
-    def on_train_end(self) -> None:
-        print(self.export())
-        return self.model.on_train_end()
-
     def _resample(self):
         result = self.controller.resample()
         for name, module in self.nas_modules:
@@ -279,17 +279,27 @@ class EnasModel(BaseOneShotLightningModule):
         with torch.no_grad():
             return self.controller.resample()
 
-RANDOM_REPLACE_DICT = {
-    LayerChoice : PathSamplingLayerChoice,
-    InputChoice : PathSamplingInputChoice
-}
 
-class RandomSampleModel(BaseOneShotLightningModule):
-    ''' Random Sampling Nas Algorithm.
-        Each xxxChoice is random sampled every batch.
-        See baseclass for args description.
-    '''
+
+class RandomSampleModule(BaseOneShotLightningModule):
+    """ 
+    Random Sampling NAS Algorithm. In each epoch, model parameters are first trained after a uniformly random
+    sampling of each choice. The training result is also a random sample of search space.
+    The RandomSample Model should be trained with ConcatenateTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
+    See base class for more attributes.
+    """
     def __init__(self, base_model, custom_replace_dict = None):
+        """
+        Parameters
+        ----------
+        base_model : pl.LightningModule
+            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+            is wrapped by ''base_model'', and ''base_model'' will be wrapped by this model.
+        custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
+            return an nn.module. This custom replace dict will override the default replace
+            dict of each NAS method.
+        """
         super().__init__(base_model, custom_replace_dict)
 
     def training_step(self, batch, batch_idx):
@@ -302,9 +312,14 @@ class RandomSampleModel(BaseOneShotLightningModule):
     
     @property
     def default_replace_dict(self):
-        return RANDOM_REPLACE_DICT
+        return {
+            LayerChoice : PathSamplingLayerChoice,
+            InputChoice : PathSamplingInputChoice
+        }   
 
     def _resample(self):
+        # The simplest sampling-based NAS method. 
+        # Each NAS module is uniformly sampled.
         result = {}
         for name, module in self.nas_modules:
             if name not in result:
@@ -314,3 +329,4 @@ class RandomSampleModel(BaseOneShotLightningModule):
 
     def export(self):
         return self._resample()
+
