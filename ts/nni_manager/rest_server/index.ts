@@ -22,6 +22,7 @@
  **/
 
 import type { Server } from 'http';
+import path from 'path';
 
 import bodyParser from 'body-parser';
 import express, { Request, Response, Router } from 'express';
@@ -103,8 +104,8 @@ export class RestServer {
 /**
  *  You will need to modify this function if you want to add a new module, for example, project management.
  *
- *  Each module should have a unique URL prefix and a "Router". Check express' reference about Router.
- *  Note that the order of `use()` calls does mater and you must never put a router after 404 handler.
+ *  Each module should have a unique URL prefix and a "Router". Check express' reference about Application and Router.
+ *  Note that the order of `use()` calls does matter so you must not put a router after web UI.
  *  
  *  In fact experiments management should have a separate prefix and module.
  **/
@@ -112,19 +113,22 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     const router = Router();
     router.use(bodyParser.json({ limit: '50mb' }));
 
-    // NNI Manager APIs
+    /* NNI manager APIs */
     router.use('/api/v1/nni', createRestHandler(stopCallback));
 
-    // Download log files
+    /* Download log files */
     router.use('/logs', express.static(getLogDir()));
 
-    // NAS architecture visualization
+    /* NAS model visualization */
     router.use('/netron', netronProxy());
 
-    // Web UI pages (put it last in case there is something strange in static directory)
+    /* Web UI */
     router.use('/', express.static('static'));
+    // React Router handles routing inside the browser. We must send index.html to all routes.
+    // path.resolve() is required by Response.sendFile() API.
+    router.get('*', (_req: Request, res: Response) => { res.sendFile(path.resolve('static/index.html')); });
 
-    // 404
+    /* 404 as catch-all */
     router.all('*', (_req: Request, res: Response) => { res.status(404).send('Not Found'); });
     return router;
 }
