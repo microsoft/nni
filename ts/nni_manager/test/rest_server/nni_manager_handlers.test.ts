@@ -32,14 +32,10 @@ describe('Unit test for rest server', () => {
         Container.bind(TrainingService).to(MockedTrainingService);
         Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
         Container.bind(TensorboardManager).to(NNITensorboardManager);
-        console.log('### A ###');
         const restServer: RestServer = component.get(RestServer);
-        console.log('### B ###');
         restServer.start().then(() => {
             ROOT_URL = `http://localhost:8080/api/v1/nni`;
-            console.log('### C ###');
             done();
-            console.log('### D ###');
         }).catch((e: Error) => {
             assert.fail(`Failed to start rest server: ${e.message}`);
         });

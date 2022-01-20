@@ -1,6 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  A helper HTTP server that sends request informantion back as response.
+ *  Used to check that RestServer will send correct requests to netron.app.
+ *
+ *  It will automatically dispose itself so no need for stop().
+ **/
+
 import type { AddressInfo } from 'net';
 
 import express, { Request, Response } from 'express';

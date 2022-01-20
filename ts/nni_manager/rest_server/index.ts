@@ -68,29 +68,22 @@ export class RestServer {
         // FIXME: We should have a global handler for critical errors.
         // `shutdown()` is not a callback and should not be passed to NNIRestHandler.
         app.use(this.urlPrefix, rootRouter(this.shutdown.bind(this)));
-        app.all('*', (req, _res, next) => { console.log(req.url); next(); });
         app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "${this.urlPrefix}"`); });
-        console.log('### E ###');
-        console.log(this.port);
         this.server = app.listen(this.port);
 
         const deferred = new Deferred<void>();
         this.server.on('listening', () => {
-            console.log('### G ###');
             if (this.port === 0) {  // Currently for unit test, can be public feature in future.
                 this.port = (<AddressInfo>this.server!.address()).port;
             }
             this.logger.info('REST server started.');
-            console.log('### H ###');
             deferred.resolve();
-            console.log('### I ###');
         });
         // FIXME: Use global handler. The event can be emitted after listening.
         this.server.on('error', (error: Error) => {
             this.logger.error('REST server error:', error);
             deferred.reject(error);
         });
-        console.log('### F ###');
         return deferred.promise;
     }
 
