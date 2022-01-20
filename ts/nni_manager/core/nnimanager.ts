@@ -25,7 +25,7 @@ import {
     REPORT_METRIC_DATA, REQUEST_TRIAL_JOBS, SEND_TRIAL_JOB_PARAMETER, TERMINATE, TRIAL_END, UPDATE_SEARCH_SPACE, IMPORT_DATA
 } from './commands';
 import { createDispatcherInterface, createDispatcherPipeInterface, IpcInterface } from './ipcInterface';
-import { NNIRestServer } from '../rest_server/nniRestServer';
+import { RestServer } from '../rest_server';
 
 /**
  * NNIManager which implements Manager interface
@@ -355,7 +355,7 @@ class NNIManager implements Manager {
             await this.experimentManager.stop();
             await component.get<TensorboardManager>(TensorboardManager).stop();
             await this.dataStore.close();
-            await component.get<NNIRestServer>(NNIRestServer).stop();
+            await component.get<RestServer>(RestServer).shutdown();
         } catch (err) {
             hasError = true;
             this.log.error(`${err.stack}`);
