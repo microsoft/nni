@@ -34,7 +34,7 @@ def create_experiment(args):
     logging.getLogger('nni').setLevel(logging.INFO)
 
     if not config_file.is_file():
-        _logger.error('"{config_file}" is not a valid file.')
+        _logger.error(f'"{config_file}" is not a valid file.')
         exit(1)
 
     with config_file.open() as config:

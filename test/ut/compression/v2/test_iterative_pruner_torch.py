@@ -7,6 +7,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
+import nni
 from nni.algorithms.compression.v2.pytorch.pruning import (
     LinearPruner,
     AGPPruner,
@@ -15,8 +16,7 @@ from nni.algorithms.compression.v2.pytorch.pruning import (
     AutoCompressPruner,
     AMCPruner
 )
-
-from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact, trace_parameters
+from nni.algorithms.compression.v2.pytorch.utils import compute_sparsity_mask2compact
 
 
 class TorchModel(torch.nn.Module):
@@ -53,7 +53,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return nni.trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -98,7 +98,7 @@ class IterativePrunerTestCase(unittest.TestCase):
 
     def test_simulated_annealing_pruner(self):
         model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         pruner = SimulatedAnnealingPruner(model, config_list, evaluator, start_temperature=40, log_dir='../../../logs')
         pruner.compress()
         _, pruned_model, masks, _, _ = pruner.get_best_result()
@@ -107,7 +107,7 @@ class IterativePrunerTestCase(unittest.TestCase):
 
     def test_auto_compress_pruner(self):
         model = TorchModel()
-        config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.8}]
+        config_list = [{'op_types': ['Conv2d'], 'total_sparsity': 0.8}]
         admm_params = {
             'trainer': trainer,
             'traced_optimizer': get_optimizer(model),
