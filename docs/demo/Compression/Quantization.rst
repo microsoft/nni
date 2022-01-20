@@ -9,4 +9,4 @@ Introduction for quantization specific concept.
     :maxdepth: 2
     :hidden:
 
-    Quick Start <QuickStartQuantization>
+    Get Started <QuantizationGetStarted>

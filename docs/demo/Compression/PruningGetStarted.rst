@@ -1,5 +1,5 @@
 ###################
-Quick Start Pruning
+Pruning Get Started
 ###################
 
 some code here

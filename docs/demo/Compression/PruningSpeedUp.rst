@@ -1,5 +1,6 @@
-Speed up Masked Model
-=====================
+#####################
+Speed Up Masked Model
+#####################
 
 Introduction
 ------------

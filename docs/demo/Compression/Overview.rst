@@ -1,4 +1,4 @@
-Model Compression with NNI
+Model Compression Overview
 ==========================
 
 Deep neural networks (DNNs) have achieved great success in many tasks.
@@ -35,7 +35,7 @@ The overall compression pipeline in NNI. For compressing a pretrained model, pru
 
 .. note::
   Since NNI compression algorithms are not meant to compress model while NNI speedup tool can truly compress model and reduce latency.
-  To obtain a truly compact model, users should conduct `model speedup <./ModelSpeedup.rst>`__.
+  To obtain a truly compact model, users should conduct `model speedup <./PruningSpeedUp.rst>`__.
   The interface and APIs are unified for both PyTorch and TensorFlow, currently only PyTorch version has been supported, TensorFlow version will be supported in future.
 
 
@@ -84,11 +84,3 @@ For example, using masks for pruning algorithms, and storing quantized values st
 Given the output masks and quantization bits produced by those algorithms, NNI can really speed up the model.
 The detailed tutorial of Masked Model Speedup can be found `here <./ModelSpeedup.rst>`__.
 The detailed tutorial of Mixed Precision Quantization Model Speedup can be found `here <./QuantizationSpeedup.rst>`__.
-
-
-..  toctree::
-    :maxdepth: 2
-    :hidden:
-
-    Pruning <Pruning>
-    Quantization <Quantization>

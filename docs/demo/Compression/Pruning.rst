@@ -2,13 +2,10 @@
 Pruning
 #######
 
-
-Introduction for pruning specific concept.
-
 ..  toctree::
     :maxdepth: 2
-    :hidden:
 
-    Quick Start <QuickStartPruning>
-    Pruner <Pruner>
+    Overview <PruningOverview>
+    Get Started <PruningGetStarted>
+    Pruner Reference <Pruner>
     Speed Up <PruningSpeedUp>
