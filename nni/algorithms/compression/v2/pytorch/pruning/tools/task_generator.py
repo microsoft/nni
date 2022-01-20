@@ -187,6 +187,11 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
     def reset(self, model: Module, config_list: List[Dict] = [], masks: Dict[str, Dict[str, Tensor]] = {}):
         self.current_temperature = self.start_temperature
 
+        # TODO: replace with validation here
+        for config in config_list:
+            if 'sparsity' in config or 'sparsity_per_layer' in config:
+                _logger.warning('Only `total_sparsity` can be differentially allocated sparse ratio to each layer, `sparsity` or `sparsity_per_layer` will allocate fixed sparse ratio to layers. Make sure you know what this will lead to, otherwise please use `total_sparsity`.')
+
         self.weights_numel, self.masked_rate = get_model_weights_numel(model, config_list, masks)
         self.target_sparsity_list = config_list_canonical(model, config_list)
         self._adjust_target_sparsity()
@@ -281,7 +286,10 @@ class SimulatedAnnealingTaskGenerator(TaskGenerator):
         magnitude = self.current_temperature / self.start_temperature * self.perturbation_magnitude
         for config, current_sparsity in zip(self.target_sparsity_list, self._current_sparsity_list):
             if len(current_sparsity) == 0:
-                self._temp_config_list.extend(deepcopy(config))
+                sub_temp_config_list = [deepcopy(config) for i in range(len(config['op_names']))]
+                for temp_config, op_name in zip(sub_temp_config_list, config['op_names']):
+                    temp_config.update({'total_sparsity': 0, 'op_names': [op_name]})
+                self._temp_config_list.extend(sub_temp_config_list)
                 self._temp_sparsity_list.append([])
                 continue
             while True:
