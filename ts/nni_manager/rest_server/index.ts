@@ -3,26 +3,34 @@
 
 /**
  *  Currently the REST server that dispatches web UI and `Experiment` requests.
- *  Should be refactored to handle WebSocket connections as well.
+ *  In future it should handle WebSocket connections as well.
+ *
+ *  To add new APIs to REST server, modify `rootRouter()` function.
  *
  *  This file contains API URL constants. They must be synchronized with:
  *    - nni/experiment/rest.py
  *    - ts/webui/src/static/constant.ts
  *    - ts/webui/src/components/public-child/OpenRow.tsx
  *  Remember to update them if the values are changed, or if this file is moved.
+ *
+ *  TODO:
+ *    1. Add a global function to handle critical error.
+ *    2. Refactor ClusterJobRestServer to an express-ws application so it don't require extra port.
+ *    3. Provide public API to register express app, so this can be decoupled with other modules' implementation.
+ *    4. Refactor NNIRestHandler. It's a mess.
+ *    5. Get rid of IOC.
  **/
 
-import { Server } from 'http';
+import type { Server } from 'http';
 
 import bodyParser from 'body-parser';
-import express from 'express';
-import { Request, Response, Router } from 'express';
+import express, { Request, Response, Router } from 'express';
 import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
 import { Singleton } from 'common/component';
 import { getBasePort, getPrefixUrl } from 'common/experimentStartupInfo';
-import { getLogger, Logger } from 'common/log';
+import { Logger, getLogger } from 'common/log';
 import { getLogDir } from 'common/utils';
 import { createRestHandler } from './restHandler';
 
@@ -40,8 +48,7 @@ export class RestServer {
     private logger: Logger = getLogger('RestServer');
 
     // I would prefer to get port and urlPrefix by constructor parameters,
-    // but this is impossible due to limiation of IOC.
-    // And I would prefer to get rid of IOC entirely.  -- Zhe
+    // but this is impossible due to limitation of IOC.
     constructor() {
         this.port = getBasePort();
         this.urlPrefix = getPrefixUrl();
@@ -105,7 +112,7 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     const router = Router();
     router.use(bodyParser.json({ limit: '50mb' }));
 
-    // NNI Manager APIs  (TODO: Refactor NNIRestHandler. It's a mess.)
+    // NNI Manager APIs
     router.use('/api/v1/nni', createRestHandler(stopCallback));
 
     // Download log files
