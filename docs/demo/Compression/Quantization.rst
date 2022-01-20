@@ -2,11 +2,10 @@
 Quantization
 ############
 
-
-Introduction for quantization specific concept.
-
 ..  toctree::
     :maxdepth: 2
-    :hidden:
 
+    Overview <QuantizationOverview>
     Get Started <QuantizationGetStarted>
+    Quantizer Reference <Quantizer>
+    Speed Up <QuantizationSpeedup>
