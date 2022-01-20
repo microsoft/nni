@@ -109,7 +109,7 @@ class DilConv(nn.Sequential):
         )
 
 
-class SepConv(nn.Module):
+class SepConv(nn.Sequential):
 
     def __init__(self, C_in, C_out, kernel_size, stride, padding, affine=True):
         super().__init__(
@@ -130,7 +130,7 @@ class SepConv(nn.Module):
         )
 
 
-class DilSepConv(nn.Module):
+class DilSepConv(nn.Sequential):
 
     def __init__(self, C_in, C_out, kernel_size, stride, padding, dilation, affine=True):
         super().__init__(
@@ -282,6 +282,33 @@ class NdsCell(nn.Module):
             return torch.cat([states[i] for i in unused_indices], 1)
 
 
+def get_cell_builder(op_candidates: List[str], channels: int, num_nodes: int):
+    # the cell builder is used in Repeat
+    # it takes an index that is the index in the repeat
+    def cell_builder(repeat_idx: int):
+        # number of predecessors for each cell is fixed to 2.
+        num_predecessors = 2
+        # number of ops per node is fixed to 2.
+        num_ops_per_node = 2
+
+        # reduction cell means stride = 2.
+        if repeat_idx == 0:
+            cell_type = 'reduction'
+        else:
+            cell_type = 'normal'
+
+        ops_factory = [
+            lambda node_index, op_index, input_index: \
+                OPS[op](channels, 2 if cell_type == 'reduction' and input_index < num_predecessors else 1, True)
+            for op in op_candidates
+        ]
+
+        return nn.Cell(ops_factory, num_nodes, num_ops_per_node, num_predecessors, 'loose_end',
+                       preprocesser=, label=cell_type)
+
+    return cell_builder
+
+
 @model_wrapper
 class NDS(nn.Module):
     """
@@ -307,6 +334,7 @@ class NDS(nn.Module):
                  num_cells: Union[List[int], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet'):
 
+        # preprocess the specified width and depth
         if isinstance(width, list):
             C = nn.ValueChoice(width, label='width')
         else:
@@ -315,6 +343,7 @@ class NDS(nn.Module):
         if isinstance(num_cells, list):
             num_cells = nn.ValueChoice(num_cells, label='depth')
         num_cells_per_stage = [i * num_cells // 3 - (i - 1) * num_cells // 3 for i in range(3)]
+
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
@@ -340,13 +369,13 @@ class NDS(nn.Module):
 
         self.stages = nn.ModuleList()
         for stage_idx in range(3):
-            builder = 
-            self.stages.append(nn.Repeat(cell_builder, num_cells_per_stage[stage_idx]))
+            cell_builder = get_cell_builder(op_candidates, C_curr, )
+            self.stages.append(nn.Repeat(, num_cells_per_stage[stage_idx]))
             if stage_idx > 0:
                 C_curr *= 2
             stage = nn.ModuleList()
             for i in range((self.max_num_cells + 2) // 3):  # div and ceil
-                cell = nn.Cell(config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
+                cell = nn.Cell(op_candidates, config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
                             stage_idx > 0 and i == 0, )
                 stage.append(cell)
                 C_prev_prev, C_prev = C_prev, cell.n_nodes * C_curr
@@ -386,47 +415,7 @@ class NDS(nn.Module):
         else:
             return logits
 
-    def prune(self):
-        super().prune()
-        handler_collection = []
-
-        def fn(m, _, __):
-            m.module_used = True
-
-        def add_hooks(m_):
-            m_.module_used = False
-            _handler = m_.register_forward_hook(fn)
-            handler_collection.append(_handler)
-
-        def dfs_and_delete(m):
-            names = []
-            for name, child in m.named_children():
-                if child.module_used or isinstance(child, (nn.ModuleList, nn.ModuleDict)):
-                    dfs_and_delete(child)
-                    if isinstance(child, (DynamicConv2d, DynamicBatchNorm2d, DynamicLinear, ResizableSequential)):
-                        child._static_mode = True
-                    if isinstance(child, DynamicConv2d):
-                        child.stride = child._dry_run_stride
-                else:
-                    names.append(name)
-            for name in names:
-                delattr(m, name)
-            delattr(m, 'module_used')
-
-        training = self.training
-        self.eval()
-        self.apply(add_hooks)
-        with torch.no_grad():
-            self(torch.zeros((1, 3, 32, 32)))
-        for m in self.auxiliary_head.modules():
-            m.module_used = True
-        for handler in handler_collection:
-            handler.remove()
-
-        dfs_and_delete(self)
-        self.train(training)
-
-    def drop_path_prob(self, drop_prob):
+    def set_drop_path_prob(self, drop_prob):
         for module in self.modules():
             if isinstance(module, DropPath_):
                 module.drop_prob = drop_prob
