@@ -9,22 +9,24 @@
  *
  *  This file contains API URL constants. They must be synchronized with:
  *    - nni/experiment/rest.py
- *    - ts/webui/src/static/constant.ts
+ *    - ts/webui/src/static/const.ts
  *    - ts/webui/src/components/public-child/OpenRow.tsx
  *  Remember to update them if the values are changed, or if this file is moved.
  *
  *  TODO:
  *    1. Add a global function to handle critical error.
- *    2. Refactor ClusterJobRestServer to an express-ws application so it don't require extra port.
+ *    2. Refactor ClusterJobRestServer to an express-ws application so it doesn't require extra port.
  *    3. Provide public API to register express app, so this can be decoupled with other modules' implementation.
  *    4. Refactor NNIRestHandler. It's a mess.
  *    5. Get rid of IOC.
+ *    6. Deal with log path mismatch between REST API and file system.
+ *    7. Strip slashes of URL prefix inside ExperimentStartupInfo.
  **/
 
 import type { Server } from 'http';
+import type { AddressInfo } from 'net';
 import path from 'path';
 
-import bodyParser from 'body-parser';
 import express, { Request, Response, Router } from 'express';
 import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
@@ -52,7 +54,8 @@ export class RestServer {
     // but this is impossible due to limitation of IOC.
     constructor() {
         this.port = getBasePort();
-        this.urlPrefix = getPrefixUrl();
+        // Stripping slashes should be done inside ExperimentInfo, but I don't want to touch it for now.
+        this.urlPrefix = '/' + stripSlashes(getPrefixUrl());
     }
 
     // The promise is resolved when it's ready to serve requests.
@@ -65,19 +68,29 @@ export class RestServer {
         // FIXME: We should have a global handler for critical errors.
         // `shutdown()` is not a callback and should not be passed to NNIRestHandler.
         app.use(this.urlPrefix, rootRouter(this.shutdown.bind(this)));
+        app.all('*', (req, _res, next) => { console.log(req.url); next(); });
         app.all('*', (_req: Request, res: Response) => { res.status(404).send(`Outside prefix "${this.urlPrefix}"`); });
+        console.log('### E ###');
+        console.log(this.port);
         this.server = app.listen(this.port);
 
         const deferred = new Deferred<void>();
         this.server.on('listening', () => {
+            console.log('### G ###');
+            if (this.port === 0) {  // Currently for unit test, can be public feature in future.
+                this.port = (<AddressInfo>this.server!.address()).port;
+            }
             this.logger.info('REST server started.');
+            console.log('### H ###');
             deferred.resolve();
+            console.log('### I ###');
         });
         // FIXME: Use global handler. The event can be emitted after listening.
         this.server.on('error', (error: Error) => {
             this.logger.error('REST server error:', error);
             deferred.reject(error);
         });
+        console.log('### F ###');
         return deferred.promise;
     }
 
@@ -111,22 +124,26 @@ export class RestServer {
  **/
 function rootRouter(stopCallback: () => Promise<void>): Router {
     const router = Router();
-    router.use(bodyParser.json({ limit: '50mb' }));
+    router.use(express.json({ limit: '50mb' }));
 
     /* NNI manager APIs */
     router.use('/api/v1/nni', createRestHandler(stopCallback));
 
     /* Download log files */
-    router.use('/logs', express.static(getLogDir()));
+    // The REST API path "/logs" does not match file system path "/log".
+    // Here we use an additional router to workaround this problem.
+    const logRouter = Router();
+    logRouter.get('*', express.static(getLogDir()));
+    router.use('/logs', logRouter);
 
     /* NAS model visualization */
     router.use('/netron', netronProxy());
 
     /* Web UI */
-    router.use('/', express.static('static'));
+    router.get('*', express.static(webuiPath));
     // React Router handles routing inside the browser. We must send index.html to all routes.
     // path.resolve() is required by Response.sendFile() API.
-    router.get('*', (_req: Request, res: Response) => { res.sendFile(path.resolve('static/index.html')); });
+    router.get('*', (_req: Request, res: Response) => { res.sendFile(path.join(webuiPath, 'index.html')); });
 
     /* 404 as catch-all */
     router.all('*', (_req: Request, res: Response) => { res.status(404).send('Not Found'); });
@@ -138,7 +155,28 @@ function netronProxy(): Router {
     const proxy = httpProxy.createProxyServer();
     router.all('*', (req: Request, res: Response): void => {
         delete req.headers.host;
-        proxy.web(req, res, { changeOrigin: true, target: 'https://netron.app' });
+        proxy.web(req, res, { changeOrigin: true, target: netronUrl });
     });
     return router;
+}
+
+function stripSlashes(str: string): string {
+    return str.replace(/^\/+/, '').replace(/\/+$/, '');
+}
+
+let webuiPath: string = path.resolve('static');
+let netronUrl: string = 'https://netron.app';
+
+export namespace UnitTestHelpers {
+    export function getPort(server: RestServer): number {
+        return (<any>server).port;
+    }
+
+    export function setWebuiPath(mockPath: string): void {
+        webuiPath = path.resolve(mockPath);
+    }
+
+    export function setNetronUrl(mockUrl: string): void {
+        netronUrl = mockUrl;
+    }
 }

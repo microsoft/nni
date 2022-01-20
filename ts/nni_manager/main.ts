@@ -21,7 +21,6 @@ import { NNIExperimentsManager } from './core/nniExperimentsManager';
 import { NNITensorboardManager } from './core/nniTensorboardManager';
 import { RestServer } from './rest_server';
 
-
 function initStartupInfo(
     startExpMode: string, experimentId: string, basePort: number, platform: string,
     logDirectory: string, experimentLogLevel: string, readonly: boolean, dispatcherPipe: string, urlprefix: string): void {
