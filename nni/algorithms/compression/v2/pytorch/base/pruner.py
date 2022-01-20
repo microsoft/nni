@@ -140,8 +140,13 @@ class Pruner(Compressor):
             Return a dict `{original_model_parameter_name: wrapped_model_parameter_name}`
         """
         if self.is_wrapped:
+            wrapped_param_names = {id(param): name for name, param in self.bound_model.named_parameters()}
             self._unwrap_model()
-            parameter_name_map = {name: name for name, _ in self.bound_model.named_parameters()}
+            parameter_name_map = {}
+            for name, param in self.bound_model.named_parameters():
+                # If the parameter name in under wrapped module is `xxx.weight` or `xxx.bias`, the name will not change after wrap.
+                # If the parameter name in under wrapped module is others, the name `xxx.param` will change to `xxx.module.param` after wrap.
+                parameter_name_map[name] = wrapped_param_names[id(param)] if id(param) in wrapped_param_names else name
             self._wrap_model()
             return parameter_name_map
         else:
