@@ -70,21 +70,6 @@ class Net(pl.LightningModule):
         output = F.log_softmax(x, dim=1)
         return output
     
-    def training_step(self, batch, batch_idx):
-        x, y = batch
-        output = self(x)
-        loss = nn.CrossEntropyLoss()
-        return loss(output, y)
-    
-    def validation_step(self, batch, batch_idx):
-        x, y = batch
-        pred = self(x).argmax(1, True)
-        acc = pred.eq(y.view_as(pred)).sum().item()/ len(y)
-        return acc
-    
-    def configure_optimizers(self):
-        optim = torch.optim.Adagrad(self.parameters(), 1, 0)
-        return optim
 
 
 def test_darts():
@@ -149,8 +134,8 @@ def test_random():
 
 
 if __name__ == '__main__':
-    test_darts()
-    test_proxyless()
+#    test_darts()
+#    test_proxyless()
     test_enas()
-    test_random()
+#    test_random()
 
