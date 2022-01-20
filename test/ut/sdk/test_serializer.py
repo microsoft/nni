@@ -272,6 +272,8 @@ def test_arguments_kind():
     assert lstm.hidden_size == 2
     assert lstm.trace_args == [2, 2]
 
+    lstm = nni.trace(nn.LSTM)(input_size=2, hidden_size=2)
+    assert lstm.trace_kwargs == {'input_size': 2, 'hidden_size': 2}
 
 
 if __name__ == '__main__':
