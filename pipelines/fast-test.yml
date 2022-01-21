@@ -274,7 +274,7 @@ stages:
         cd dependencies
         python -m pip install -U -r setup.txt
         # FIXME: due to pip's limitation ConfigSpaceNNI will not build without this
-        python -m pip install 'numpy<1.22'
+        python -m pip install numpy==1.21.5
         # if we do not put them in one line, pip may implicitly downgrade previously installed packages
         # this caused ConfigSpaceNNI to have incompatible numpy versions at compile-time and runtime
         echo '========================================'
@@ -299,6 +299,8 @@ stages:
         python -m pip install -r recommended_legacy.txt
         echo '========================================'
         echo '# 5'
+        python -m pip show numpy
+        python -m pip install numpy==1.21.5
         python -m pip show numpy
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install Python dependencies
