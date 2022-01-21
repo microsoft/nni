@@ -2,7 +2,7 @@
 Extract an archive created by pack_dependencies.py.
 """
 
-from __typing__ import annotations
+from __future__ import annotations
 
 import json
 import os
