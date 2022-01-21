@@ -7,6 +7,7 @@
 import os
 from pathlib import Path
 import sys
+import typing
 
 prefix = Path(sys.argv[1])
 prefix.mkdir(parents=True, exist_ok=True)
@@ -21,7 +22,11 @@ else:
     os.chmod('pip-install', 0o775)
 
 version = f'{sys.version_info.major}.{sys.version_info.minor}'
-path = str(prefix / f'lib/python{version}/site-packages')
-if os.getenv('PYTHONPATH'):
-    path = os.getenv('PYTHONPATH') + os.pathsep + path
+paths = [
+    Path(typing.__file__).parent,  # With PYTHONPATH, the backport version of typing will mask stdlib version.
+    prefix / f'lib/python{version}/site-packages',
+    os.getenv('PYTHONPATH'),
+]
+path = os.pathsep.join(str(p) for p in paths if p)
+
 print('##vso[task.setvariable variable=PYTHONPATH]' + path)
