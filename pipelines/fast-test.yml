@@ -12,7 +12,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
     - script: |
         sudo apt-get install -y pandoc
@@ -56,7 +56,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
     - script: |
         sudo apt-get remove swig -y
@@ -237,7 +237,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.6
+        versionSpec: 3.7
       displayName: Configure Python version
 
     - task: NodeTool@0
@@ -271,20 +271,22 @@ stages:
 
     - script: |
         set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
+        cd dependencies
+        python -m pip install -U -r setup.txt
+        # FIXME: Version resolving is a complete mess. Now it works magically.
+        python -m pip install numpy==1.21.5
+        python -m pip install -r develop.txt
+        python -m pip install -r required.txt
+        python -m pip install -r required_extra.txt
+        python -m pip install -r recommended_legacy.txt
+        python -m pip install numpy==1.21.5
+        python -m pip install pytorch-lightning==1.5.9
         echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install Python tools
+      displayName: Install Python dependencies
 
     - script: |
         python setup.py develop
       displayName: Install NNI
-
-    - script: |
-        set -e
-        python -m pip install -r dependencies/recommended_legacy.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-      displayName: Install extra dependencies
 
     # Need del later
     - script: |
@@ -313,7 +315,7 @@ stages:
 
   - job: macos
     pool:
-      vmImage: macOS-10.15
+      vmImage: macOS-latest
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
@@ -322,7 +324,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
 
     - task: NodeTool@0
@@ -394,7 +396,7 @@ stages:
 
   - job: windows
     pool:
-      vmImage: windows-2019
+      vmImage: windows-latest
     variables:
       PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
       YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
@@ -403,7 +405,7 @@ stages:
     steps:
     - task: UsePythonVersion@0
       inputs:
-        versionSpec: 3.8
+        versionSpec: 3.9
       displayName: Configure Python version
 
     - task: NodeTool@0
