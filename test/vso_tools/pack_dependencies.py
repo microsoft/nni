@@ -4,6 +4,7 @@ Use unpack_dependencies.py to extract the archive.
 """
 
 import json
+import os
 from pathlib import Path
 import shutil
 import site
@@ -24,7 +25,7 @@ def main() -> None:
         if file.parent.parent == cache:
             print('Compress', file, flush=True)
         if file.is_symlink():
-            symlinks[str(file)] = str(file.readlink())
+            symlinks[str(file)] = os.readlink(file)  # file.readlink() was added in Python 3.9
             continue
         if file.is_dir():
             empty_dirs.add(str(file))
