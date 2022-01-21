@@ -2,6 +2,8 @@
 Extract an archive created by pack_dependencies.py.
 """
 
+from __typing__ import annotations
+
 import json
 import os
 from pathlib import Path
