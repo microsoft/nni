@@ -1,0 +1,11 @@
+span.viewcode-link {
+    padding-left: 0.6rem;
+}
+
+dt.sig-object {
+    position: relative;
+    background: #f4f5f7;
+    padding: 0.5rem;
+    border-left: 0.2rem solid #ec407a;  /* this should be matched with theme color. */
+    word-wrap: break-word;
+}

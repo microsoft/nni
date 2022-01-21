@@ -1,3 +1,6 @@
+:orphan:
+
+
 .. raw:: html
 
     <h2>NoBug</h2>

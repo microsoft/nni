@@ -1,3 +1,6 @@
+:orphan:
+
+
 .. raw:: html
 
     <h2>Cut</h2>

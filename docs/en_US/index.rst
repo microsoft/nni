@@ -1,6 +1,32 @@
 .. modified from index.html
 .. replace \{\{ pathto\('(.*)'\) \}\} -> $1.html
 
+###########################
+Neural Network Intelligence
+###########################
+
+
+..  toctree::
+    :maxdepth: 2
+    :titlesonly:
+    :hidden:
+
+    Overview
+    Installation <installation>
+    QuickStart <Tutorial/QuickStart>
+    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
+    Neural Architecture Search <nas>
+    Model Compression <model_compression>
+    Feature Engineering <feature_engineering>
+    References <reference>
+    Use Cases and Solutions <CommunitySharings/community_sharings>
+    Research and Publications <ResearchPublications>
+    FAQ <Tutorial/FAQ>
+    How to Contribute <contribution>
+    Change Log <Release>
+
+
+
 .. raw:: html
 
   <div class="rowHeight">
@@ -81,7 +107,7 @@
     <a href="#overview"><img src="_static/img/overview.svg" /></a>
   </p>
 
-  <table class="list">
+  <table class="mainTable">
     <tbody>
       <tr align="center" valign="bottom" class="column">
         <td></td>
