@@ -51,12 +51,6 @@ steps:
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
 
-- script: |
-    python -m pip install numpy==1.21.5
-    python -m pip install pytorch-lightning==1.5.9
-  displayName: (legacy) Resolve legacy dependency version
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
-
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
     python test/vso_tools/interim_patch.py

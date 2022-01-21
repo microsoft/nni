@@ -8,9 +8,7 @@ steps:
     platform: ${{ parameters.platform }}
 
 - script: |
-    echo "#debug# ${PLATFORM} ${platform}"
     echo "##vso[task.setvariable variable=PLATFORM]${{ parameters.platform }}"
-    echo "#debug# ${PLATFORM} ${platform}"
     python test/vso_tools/pip_use_prefix.py python-packages
   displayName: Prepare
 
@@ -29,6 +27,11 @@ steps:
       echo "===== recommended ====="
       ./pip-install -r dependencies/recommended.txt
     fi
+    echo "===== rebuild ConfigSpaceNNI ====="
+    # numpy version can change multiple times during installation, and there was an ABI change not long ago
+    # we must make sure ConfigSpaceNNI is built against correct numpy version (FIXME)
+    python -m pip uninstall ConfigSpaceNNI
+    ./pip-install ConfigSpaceNNI
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
