@@ -8,7 +8,9 @@ steps:
     platform: ${{ parameters.platform }}
 
 - script: |
+    echo "#debug# ${PLATFORM} ${platform}"
     echo "##vso[task.setvariable variable=PLATFORM]${{ parameters.platform }}"
+    echo "#debug# ${PLATFORM} ${platform}"
     python test/vso_tools/pip_use_prefix.py python-packages
   displayName: Prepare
 

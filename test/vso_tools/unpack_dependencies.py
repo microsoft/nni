@@ -18,10 +18,7 @@ def main() -> None:
     for link, target in symlinks.items():
         Path(link).symlink_to(target)  # hopefully nobody uses symlink on windows
 
-    user_base = Path(site.getuserbase())
-    assert not user_base.exists()
-    user_base.parent.mkdir(parents=True, exist_ok=True)
-    shutil.move('cache/python-dependencies', user_base)
+    move_or_merge(Path('cache/python-dependencies'), Path(site.getuserbase()))
     shutil.move('cache/nni-manager-dependencies', 'ts/nni_manager/node_modules')
     shutil.move('cache/webui-dependencies', 'ts/webui/node_modules')
 
@@ -32,6 +29,14 @@ def extract_all(zf: ZipFile) -> None:
         path = zf.extract(info)
         if info.external_attr > 0xffff:
             os.chmod(path, info.external_attr >> 16)
+
+def move_or_merge(src: Path | str, dst: Path | str) -> None:
+    if dst.exists():
+        assert dst.is_dir()
+        for file in src.iterdir():
+            move_or_merge(file, dst / file.name)
+    else:
+        shutil.move(src, dst)
 
 if __name__ == '__main__':
     main()

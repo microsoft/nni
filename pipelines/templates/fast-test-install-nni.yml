@@ -1,0 +1,78 @@
+parameters:
+- name: platform
+  type: string
+
+steps:
+- template: config-version.yml
+  parameters:
+    platform: ${{ parameters.platform }}
+
+- script: |
+    echo "#debug# ${{ parameters.platform }}"
+    echo "#debug# ${PLATFORM} ${platform}"
+    echo "##vso[task.setvariable variable=PLATFORM]${{ parameters.platform }}"
+    echo "#debug# ${PLATFORM} ${platform}"
+  displayName: debug
+
+- script: |
+    set -e
+    apt-get install -y swig3.0
+    rm /usr/bin/swig
+    ln -s swig3.0 /usr/bin/swig
+  displayName: (Ubuntu) Downgrade swig
+  condition: contains('${{ parameters.platform }}', 'ubuntu')
+
+- script: |
+    set -e
+    brew install "swig@3"
+    rm /usr/local/bin/swig
+    ln -s "/usr/local/opt/swig@3/bin/swig" /usr/local/bin/swig
+  displayName: (macOS) Downgrade swig
+  condition: contains('${{ parameters.platform }}', 'macos')
+
+- task: UniversalPackages@0
+  inputs:
+    vstsFeed: NNIOpenSource/sandbox
+    vstsFeedPackage: dependencies-${{ parameters.platform }}
+    vstsPackageVersion: "*"
+  displayName: Download cache
+
+- script: |
+    python test/vso_tools/unpack_dependencies.py
+  displayName: Unpack cache
+
+- script: |
+    mv dependencies/recommended_legacy.txt dependencies/recommended.txt
+  displayName: (legacy) Prepare for legacy
+  condition: contains('${{ parameters.platform }}', 'legacy')
+
+- script: |
+    echo "===== develop ====="
+    python -m pip install -r dependencies/develop.txt
+    echo "===== required ====="
+    python -m pip install -r dependencies/required.txt
+    echo "===== required extra ====="
+    python -m pip install -r dependencies/required_extra.txt
+    echo "===== recommended ====="
+    python -m pip install -r dependencies/recommended.txt
+  displayName: Install Python dependencies
+
+- script: |
+    python -m pip install numpy==1.21.5
+    python -m pip install pytorch-lightning==1.5.9
+  displayName: (legacy) Resolve legacy dependency version
+  condition: contains('${{ parameters.platform }}', 'legacy')
+
+# TODO: Delete this after upgrading to PyTorch 1.11.
+- script: |
+    python test/vso_tools/interim_patch.py
+  displayName: Torch utils tensorboard interim patch
+
+- script: |
+    python setup.py develop
+    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+  displayName: (POSIX) Install NNI
+
+- script: |
+    python setup.py develop --no-user
+  displayName: (Windows) Install NNI

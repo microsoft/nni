@@ -29,4 +29,5 @@ paths = [
 ]
 path = os.pathsep.join(str(p) for p in paths if p)
 
+print('PYTHONPATH:', path)
 print('##vso[task.setvariable variable=PYTHONPATH]' + path)
