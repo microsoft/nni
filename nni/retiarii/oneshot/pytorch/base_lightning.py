@@ -1,4 +1,7 @@
-from logging import warning
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
+from warnings import warn
 from typing import Any, Dict
 import pytorch_lightning as pl
 import torch.optim as optim
@@ -12,18 +15,18 @@ def _replace_module_with_type(root_module, replace_dict, modules):
     Parameters
     ----------
     root_module : nn.Module
-        User-defined module with xxxChoice in it. In fact, since this method is 
-        called in the ''__init__'' of BaseOneShotLightningModule, this will be a 
+        User-defined module with xxxChoice in it. In fact, since this method is
+        called in the ''__init__'' of BaseOneShotLightningModule, this will be a
         pl.LightningModule.
     replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
-        Functions to replace xxxChoice modules. Keys should be xxxChoice type and values should be a 
+        Functions to replace xxxChoice modules. Keys should be xxxChoice type and values should be a
         function that return an nn.module.
     modules : list[ nn.Module ]
         The replace result. This is also the return value of this function.
 
     Returns
     ----------
-    modules : list[ nn.Module ] 
+    modules : list[ nn.Module ]
         The replace result.
     """
     if modules is None:
@@ -43,7 +46,7 @@ def _replace_module_with_type(root_module, replace_dict, modules):
 
 
 class BaseOneShotLightningModule(pl.LightningModule):
-    """ 
+    """
     The base class for all one-shot NAS models. Essential functions such as
     preprocessing user's model, redirect lightning hooks for user's model, configure
     optimizers and export NAS result are implemented in this class.
@@ -52,20 +55,18 @@ class BaseOneShotLightningModule(pl.LightningModule):
     ----------
     nas_modules : list[nn.Module]
         modules a paticular NAS method replaces with
-    """
 
+    Parameters
+    ----------
+    base_model : pl.LightningModule
+        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+        is wrapped by base_model, and base_model will be wrapped by this model.
+    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
+        return an nn.module. This custom replace dict will override the default replace
+        dict of each NAS method.
+    """
     def __init__(self, base_model, custom_replace_dict=None):
-        """
-        Parameters
-        ----------
-        base_model : pl.LightningModule
-            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-            is wrapped by base_model, and base_model will be wrapped by this model.
-        custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
-            return an nn.module. This custom replace dict will override the default replace
-            dict of each NAS method.
-        """
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
         self.model = base_model
@@ -82,8 +83,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
             self.model, choice_replace_dict, self.nas_modules)
 
     def __getattr__(self, name):
-        """ 
-        Redirect lightning hooks. 
+        """
+        Redirect lightning hooks.
         Only hooks in the list below will be redirect to user-deifend ones.
         The list is not customizable now. But if you need to redirect other user-defined
         hooks in your NAS method, you can override it and call user-defined methods manually.
@@ -94,16 +95,16 @@ class BaseOneShotLightningModule(pl.LightningModule):
         is exactly what NAS aims to do.
         """
         if name in [
-            'on_train_end', 
-            'on_fit_start', 
+            'on_train_end',
+            'on_fit_start',
             'on_fit_end',
-            'on_train_batch_start', 
+            'on_train_batch_start',
             'on_train_batch_end',
-            'on_epoch_start', 
+            'on_epoch_start',
             'on_epoch_end',
-            'on_train_epoch_start', 
+            'on_train_epoch_start',
             'on_train_epoch_end',
-            'on_before_backward', 
+            'on_before_backward',
             'on_after_backward',
             'configure_gradient_clipping'
         ]:
@@ -117,7 +118,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model.training_step(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx):
-        warning('Validation is skipped by the NAS method you chose.')
+        warn('Validation is skipped by the NAS method you chose.')
 
     def configure_optimizers(self):
         """
@@ -128,7 +129,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         arc_optimizers = self.configure_architecture_optimizers()
         if isinstance(arc_optimizers, optim.Optimizer):
             arc_optimizers = [arc_optimizers]
-        
+
         if arc_optimizers is None:
             return self.model.configure_optimizers()
 
@@ -147,7 +148,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def configure_architecture_optimizers(self):
         '''
         Hook kept for subclasses. Each specific NAS method returns the optimizer of
-        architecture parameters. 
+        architecture parameters.
 
         Returns
         ----------
@@ -161,7 +162,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def default_replace_dict(self):
         """
         Default xxxChoice replace dict. This is called in __init__ to get the default replace
-        functions for your NAS algorithm. Note that your default replace functions will be 
+        functions for your NAS algorithm. Note that your default replace functions will be
         override by user-defined custom_replace_dict.
 
         Returns
@@ -182,7 +183,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Returns
         --------
         result : dict { str : int }
-            Keys are names of nas_modules, and values are the choice of each nas_module.        
+            Keys are names of nas_modules, and values are the choice of each nas_module.
         """
         result = {}
         for name, module in self.nas_modules:

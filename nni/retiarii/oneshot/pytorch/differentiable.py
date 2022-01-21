@@ -1,3 +1,6 @@
+# Copyright (c) Microsoft Corporation.
+# Licensed under the MIT license.
+
 from collections import OrderedDict
 import torch
 import torch.nn as nn
@@ -5,63 +8,8 @@ import torch.nn.functional as F
 
 from .base_lightning import BaseOneShotLightningModule
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from .darts import DartsInputChoice, DartsLayerChoice
 
-class DartsLayerChoice(nn.Module):
-    def __init__(self, layer_choice):
-        super(DartsLayerChoice, self).__init__()
-        self.name = layer_choice.label
-        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
-        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
-
-    def forward(self, *args, **kwargs):
-        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
-        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
-        return torch.sum(op_results * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
-
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self, recurse):
-        for name, p in super(DartsLayerChoice, self).named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
-    
-    def r_forward(self, x):
-        return self.op_choices.values()[0](x)
-
-
-class DartsInputChoice(nn.Module):
-    def __init__(self, input_choice):
-        super(DartsInputChoice, self).__init__()
-        self.name = input_choice.label
-        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
-        self.n_chosen = input_choice.n_chosen or 1
-
-    def forward(self, inputs):
-        inputs = torch.stack(inputs)
-        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
-        return torch.sum(inputs * F.softmax(self.alpha, -1).view(*alpha_shape), 0)
-
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self, recurse):
-        for name, p in super(DartsInputChoice, self).named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
-    
-    def r_forward(self, x):
-        return super().r_forward(x)
 
 class DartsModule(BaseOneShotLightningModule):
     """
@@ -73,31 +21,26 @@ class DartsModule(BaseOneShotLightningModule):
     The DARTS Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
     See base class for more attributes.
 
+    Parameters
+    ----------
+    base_model : pl.LightningModule
+        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+        is wrapped by base_model, and base_model will be wrapped by this model.
+    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
+        return an nn.module. This custom replace dict will override the default replace
+        dict of each NAS method.
+
     Reference
     ----------
     .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
     """
-    
     automatic_optimization = False
-    
-    def __init__(self, model, custom_replace_dict = None):
-        """
-        Parameters
-        ----------
-        base_model : pl.LightningModule
-            The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
-            is wrapped by base_model, and base_model will be wrapped by this model.
-        custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
-            The custom xxxChoice replace method. Keys should be xxxChoice type and values should 
-            return an nn.module. This custom replace dict will override the default replace
-            dict of each NAS method.
-        """
-        super().__init__(model, custom_replace_dict)
-    
+
     def on_train_start(self) -> None:
         return super().on_train_start()
-        
+
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
@@ -109,7 +52,7 @@ class DartsModule(BaseOneShotLightningModule):
 
         # phase 1: architecture step
         # The resample_architecture hook is kept for some following darts-based NAS
-        # methods such as proxyless. See code of those methods for details. 
+        # methods such as proxyless. See code of those methods for details.
         self.resample_architecture()
         arc_optim.zero_grad()
         arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
@@ -138,14 +81,13 @@ class DartsModule(BaseOneShotLightningModule):
     def finalize_grad(self):
         # Note: This hook is currently kept for Proxyless NAS.
         pass
-    
+
     @property
     def default_replace_dict(self):
         return {
             LayerChoice : DartsLayerChoice,
             InputChoice : DartsInputChoice
         }
-
 
     def configure_architecture_optimizers(self):
         # The alpha in DartsXXXChoices are the architecture parameters of DARTS. They share one optimizer.
@@ -160,29 +102,31 @@ class DartsModule(BaseOneShotLightningModule):
                                            weight_decay=1.0E-3)
         return ctrl_optim
 
+
 class _ArchGradientFunction(torch.autograd.Function):
     @staticmethod
     def forward(ctx, x, binary_gates, run_func, backward_func):
         ctx.run_func = run_func
         ctx.backward_func = backward_func
- 
+
         detached_x = x.detach()
         detached_x.requires_grad = x.requires_grad
         with torch.enable_grad():
             output = run_func(detached_x)
         ctx.save_for_backward(detached_x, output)
         return output.data
- 
+
     @staticmethod
     def backward(ctx, grad_output):
         detached_x, output = ctx.saved_tensors
- 
+
         grad_x = torch.autograd.grad(output, detached_x, grad_output, only_inputs=True)
         # compute gradients w.r.t. binary_gates
         binary_grads = ctx.backward_func(detached_x.data, output.data, grad_output.data)
- 
+
         return grad_x[0], binary_grads, None, None
-     
+
+
 class ProxylessLayerChoice(nn.Module):
     def __init__(self, ops):
         super(ProxylessLayerChoice, self).__init__()
@@ -218,7 +162,7 @@ class ProxylessLayerChoice(nn.Module):
                 x, self._binary_gates, run_function(self.ops, self.sampled, **kwargs),
                 backward_function(self.ops, self.sampled, self._binary_gates, **kwargs)
             )
-        
+
         return super().forward(*args, **kwargs)
 
     def resample(self):
@@ -245,6 +189,7 @@ class ProxylessLayerChoice(nn.Module):
 
     def export_prob(self):
         return F.softmax(self.alpha, dim=-1)
+
 
 class ProxylessInputChoice(nn.Module):
     def __init__(self, input_choice):
@@ -275,7 +220,7 @@ class ProxylessInputChoice(nn.Module):
                 inputs, self._binary_gates, run_function(self.sampled),
                 backward_function(self._binary_gates)
             )
-        
+
         return super().forward(inputs)
 
     def resample(self, sample=None):
@@ -310,16 +255,15 @@ class ProxylessModule(DartsModule):
     Reference
     ----------
     [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,”
-        presented at the International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
+        presented at the International Conference on Learning Representations, Sep. 2018. 
+        Available: https://openreview.net/forum?id=HylVB3AqYm
 
     """
-
-    
     def configure_architecture_optimizers(self):
         ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], lr=3.e-4,
                                            weight_decay=0, betas=(0, 0.999), eps=1e-8)
         return ctrl_optim
-    
+
     @property
     def default_replace_dict(self):
         return {
@@ -327,12 +271,10 @@ class ProxylessModule(DartsModule):
             InputChoice : ProxylessInputChoice
         }
 
-    
     def resample_architecture(self):
         for _, m in self.nas_modules:
             m.resample()
-    
+
     def finalize_grad(self):
         for _, m in self.nas_modules:
             m.finalize_grad()
-
