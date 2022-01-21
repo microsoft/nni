@@ -187,13 +187,13 @@ def replace_module_with_type(root_module, init_fn, type_name, modules):
     return _replace_module_with_type(root_module, init_fn, type_name, modules)
 
 class ParallelTrainValDataset(Dataset):
-    """ 
+    """
     ** You are recommended to use ParallelTrainValDataLoader first. **
-    
+
     A dataset yields both train data and validation data in a batch, with an order of
-    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length 
-    of the longer one, and the tail of the last repeat will be dropped. 
-    
+    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length
+    of the longer one, and the tail of the last repeat will be dropped.
+
     Some NAS algorithms, i.e. DARTS and Proxyless, may require this type of dataset.
 
     Example
@@ -207,23 +207,23 @@ class ParallelTrainValDataset(Dataset):
         super().__init__()
         self.train_dataset = train_data.dataset if isinstance(train_data, DataLoader) else train_data
         self.val_dataset = val_data.dataset if isinstance(val_data, DataLoader) else val_data
-    
+
     def __getitem__(self, index):
         # The shorter one is upsampled
         return self.train_dataset[index % len(self.train_dataset)], self.val_dataset[index % len(self.val_dataset)]
-    
+
     def __len__(self):
         return max(len(self.train_dataset), len(self.val_dataset))
 
 class ConcatenateTrainValDataset(Dataset):
-    """ 
+    """
     ** You are recommended to use ConcatenateTrainValDataLoader first. **
-    
+
     A dataset that yields validation data after training data in an epoch. You will got a batch in a form of
-    (batch, b) in the training step, where the bool variable 'b' is set to true if the 'batch' comes from the 
-    training dataset. 
-    
-    Some NAS algorithms i.e. ENAS may require this type of dataset. 
+    (batch, b) in the training step, where the bool variable 'b' is set to true if the 'batch' comes from the
+    training dataset.
+
+    Some NAS algorithms i.e. ENAS may require this type of dataset.
 
     Example
     --------
@@ -244,26 +244,26 @@ class ConcatenateTrainValDataset(Dataset):
         super().__init__()
         self.train_dataset = train_data if isinstance(train_data, Dataset) else train_data.dataset
         self.val_dataset = val_data if isinstance(val_data, Dataset) else val_data.dataset
-        
+
     def __getitem__(self, index):
         """
-        The return value is in the form of (batch, bool), where the bool value is set to True if 
-        the batch comes from training dataset, and vice versa.  
+        The return value is in the form of (batch, bool), where the bool value is set to True if
+        the batch comes from training dataset, and vice versa.
         """
         if index < len(self.train_dataset):
             return (self.train_dataset[index], True)
-        # if train data is used up, return validation data 
+        # if train data is used up, return validation data
         return (self.val_dataset[index - len(self.train_dataset)], False)
-    
+
     def __len__(self):
         return len(self.train_dataset)+ len(self.val_dataset)
 
 class ParallelTrainValDataLoader(DataLoader):
-    """ 
+    """
     A dataloader yields both train data and validation data in a batch, with an order of
-    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length 
-    of the longer one, and the tail of the last repeat will be dropped. 
-    
+    (train_batch, val_batch). The shorter one will be upsampled (repeated) to the length
+    of the longer one, and the tail of the last repeat will be dropped.
+
     Some NAS algorithms, i.e. DARTS and Proxyless, require this type of dataloader.
 
     Example
@@ -286,12 +286,12 @@ class ParallelTrainValDataLoader(DataLoader):
         self.equal_len = len(train_dataloader) == len(val_dataloader)
         self.train_longger = len(train_dataloader) > len(val_dataloader)
         super().__init__(None)
-    
+
     def __iter__(self):
         self.train_iter = iter(self.train_loader)
         self.val_iter = iter(self.val_loader)
         return self
-    
+
     def __next__(self):
         try:
             train_batch = next(self.train_iter)
@@ -309,26 +309,26 @@ class ParallelTrainValDataLoader(DataLoader):
         except StopIteration:
             # validation data is used up
             if not self.train_longger:
-                # if validation is the longger one (the equal condition is 
+                # if validation is the longger one (the equal condition is
                 # covered above), stop iteration
                 raise StopIteration()
             # if validation is the shorter one, upsample it
             self.val_iter = iter(self.val_loader)
             val_batch = next(self.val_iter)
-        
+
         return train_batch, val_batch
-    
+
     def __len__(self) -> int:
         return max(len(self.train_loader), len(self.val_loader))
 
 class ConcatenateTrainValDataLoader(DataLoader):
-    """ 
+    """
     A dataloader that yields validation data after training data in an epoch. You will
     got a batch in a form of (batch, b) in the training step, where the bool variable 'b'
     is set to true if the 'batch' comes from the training dataset, and False for validation
     dataset.
-    
-    Some NAS algorithms, i.e. ENAS, may require this type of dataset. 
+
+    Some NAS algorithms, i.e. ENAS, may require this type of dataset.
 
     Example
     --------
@@ -348,12 +348,12 @@ class ConcatenateTrainValDataLoader(DataLoader):
         self.train_loader = train_dataloader
         self.val_loader = val_dataloader
         super().__init__(None)
-    
+
     def __iter__(self):
         self.cur_iter = iter(self.train_loader)
         self.is_train = True
         return self
-    
+
     def __next__(self):
         try:
             batch = next(self.cur_iter)
