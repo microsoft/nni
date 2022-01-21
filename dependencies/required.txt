@@ -1,21 +1,22 @@
 astor
+cloudpickle
+colorama
+filelock
 hyperopt == 0.1.2
 json_tricks >= 3.15.5
+numpy < 1.22 ; python_version < "3.8"
+numpy ; python_version >= "3.8"
+pandas
+prettytable
 psutil
+PythonWebHDFS
 pyyaml >= 5.4
 requests
 responses
 schema
-typeguard
-PythonWebHDFS
-colorama
 scikit-learn >= 0.24.1
-websockets
-filelock
-prettytable
-cloudpickle
+scipy < 1.8 ; python_version < "3.8"
+scipy ; python_version >= "3.8"
+typeguard
 typing_extensions ; python_version < "3.8"
-numpy < 1.22 ; python_version < "3.8"
-numpy ; python_version >= "3.8"
-scipy
-pandas
+websockets >= 10.1

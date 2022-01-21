@@ -1,6 +1,5 @@
 """
-Create an archive containing user site-packages and node_modules, in directory `sys.argv[1]`.
-This should only be used in a disposable environment.
+Create an archive in sys.argv[1], containing python-packages and node_modules.
 Use unpack_dependencies.py to extract the archive.
 """
 
@@ -14,7 +13,7 @@ from zipfile import ZIP_DEFLATED, ZipFile
 def main() -> None:
     cache = Path('cache')
     cache.mkdir()
-    shutil.move(site.getuserbase(), 'cache/python-dependencies')
+    shutil.move('python-packages', 'cache/python-dependencies')
     shutil.move('ts/nni_manager/node_modules', 'cache/nni-manager-dependencies')
     shutil.move('ts/webui/node_modules', 'cache/webui-dependencies')
 

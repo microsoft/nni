@@ -1,0 +1,63 @@
+parameters:
+- name: system
+  type: string
+
+steps:
+- template: config-version.yml
+  parameters:
+    system: ${{ parameters.system }}
+
+- script: |
+    echo "##vso[task.setvariable variable=SYSTEM]${{ parameters.system }}"
+    python test/vso_tools/pip_use_prefix.py python-packages
+  displayName: Prepare
+
+- script: |
+    set -e
+    echo "===== develop ====="
+    ./pip-install -r dependencies/develop.txt
+    echo "===== required ====="
+    ./pip-install -r dependencies/required.txt
+    echo "===== required extra ====="
+    ./pip-install -r dependencies/required_extra.txt
+    if [[ ${SYSTEM} =~ 'legacy' ]]; then
+      echo "===== recommended legacy ====="
+      ./pip-install -r dependencies/recommended_legacy.txt
+    else
+      echo "===== recommended ====="
+      ./pip-install -r dependencies/recommended.txt
+    fi
+    python test/vso_tools/fix_shebang.py python-packages/bin
+  displayName: (POSIX) Install Python packages
+  condition: not(contains('${{ parameters.system }}', 'windows'))
+
+- script: |
+    echo "===== develop ====="
+    ./pip-install.cmd -r dependencies/develop.txt
+    echo "===== required ====="
+    ./pip-install.cmd -r dependencies/required.txt
+    echo "===== required extra ====="
+    ./pip-install.cmd -r dependencies/required_extra.txt
+    echo "===== recommended ====="
+    ./pip-install.cmd -r dependencies/recommended.txt
+  displayName: (Windows) Install Python packages
+  condition: contains('${{ parameters.system }}', 'windows')
+
+- script: |
+    yarn --cwd ts/nni_manager install
+  displayName: Install NNI Manager dependencies
+
+- script: |
+    yarn --cwd ts/webui install
+  displayName: Install Web UI dependencies
+
+- script: |
+    python test/vso_tools/pack_dependencies.py $(Build.ArtifactStagingDirectory)
+  displayName: Create cache archive
+
+- task: UniversalPackages@0
+  inputs:
+    command: publish
+    vstsFeedPublish: NNIOpenSource/sandbox
+    vstsFeedPackagePublish: dependencies-${{ parameters.feed }}
+  displayName: Upload cache archive

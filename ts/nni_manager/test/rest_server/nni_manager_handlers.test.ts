@@ -15,7 +15,7 @@ import { TrainingService } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';
 import { MockedDataStore } from '../mock/datastore';
 import { MockedTrainingService } from '../mock/trainingService';
-import { NNIRestServer } from '../../rest_server/nniRestServer';
+import { RestServer } from '../../rest_server';
 import { testManagerProvider } from '../mock/nniManager';
 import { testExperimentManagerProvider } from '../mock/experimentManager';
 import { TensorboardManager } from '../../common/tensorboardManager';
@@ -32,9 +32,9 @@ describe('Unit test for rest server', () => {
         Container.bind(TrainingService).to(MockedTrainingService);
         Container.bind(ExperimentManager).provider(testExperimentManagerProvider);
         Container.bind(TensorboardManager).to(NNITensorboardManager);
-        const restServer: NNIRestServer = component.get(NNIRestServer);
+        const restServer: RestServer = component.get(RestServer);
         restServer.start().then(() => {
-            ROOT_URL = `${restServer.endPoint}/api/v1/nni`;
+            ROOT_URL = `http://localhost:8080/api/v1/nni`;
             done();
         }).catch((e: Error) => {
             assert.fail(`Failed to start rest server: ${e.message}`);
@@ -42,7 +42,7 @@ describe('Unit test for rest server', () => {
     });
 
     after(() => {
-        component.get<NNIRestServer>(NNIRestServer).stop();
+        component.get<RestServer>(RestServer).shutdown();
         cleanupUnitTest();
     });
 
