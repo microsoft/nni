@@ -1,14 +1,14 @@
 parameters:
-- name: system
+- name: platform
   type: string
 
 steps:
 - template: config-version.yml
   parameters:
-    system: ${{ parameters.system }}
+    platform: ${{ parameters.platform }}
 
 - script: |
-    echo "##vso[task.setvariable variable=SYSTEM]${{ parameters.system }}"
+    echo "##vso[task.setvariable variable=PLATFORM]${{ parameters.platform }}"
     python test/vso_tools/pip_use_prefix.py python-packages
   displayName: Prepare
 
@@ -20,7 +20,7 @@ steps:
     ./pip-install -r dependencies/required.txt
     echo "===== required extra ====="
     ./pip-install -r dependencies/required_extra.txt
-    if [[ ${SYSTEM} =~ 'legacy' ]]; then
+    if [[ ${PLATFORM} =~ 'legacy' ]]; then
       echo "===== recommended legacy ====="
       ./pip-install -r dependencies/recommended_legacy.txt
     else
@@ -29,7 +29,7 @@ steps:
     fi
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
-  condition: not(contains('${{ parameters.system }}', 'windows'))
+  condition: not(contains('${{ parameters.platform }}', 'windows'))
 
 - script: |
     echo "===== develop ====="
@@ -41,7 +41,7 @@ steps:
     echo "===== recommended ====="
     ./pip-install.cmd -r dependencies/recommended.txt
   displayName: (Windows) Install Python packages
-  condition: contains('${{ parameters.system }}', 'windows')
+  condition: contains('${{ parameters.platform }}', 'windows')
 
 - script: |
     yarn --cwd ts/nni_manager install
@@ -59,5 +59,5 @@ steps:
   inputs:
     command: publish
     vstsFeedPublish: NNIOpenSource/sandbox
-    vstsFeedPackagePublish: dependencies-${{ parameters.system }}
+    vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
   displayName: Upload cache archive

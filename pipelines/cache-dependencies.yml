@@ -8,7 +8,7 @@ jobs:
   steps:
   - template: templates/cache-dependencies-template.yml
     parameters:
-      system: ubuntu-latest
+      platform: ubuntu-latest
 
 - job: ubuntu_legacy
   pool:
@@ -16,7 +16,7 @@ jobs:
   steps:
   - template: templates/cache-dependencies-template.yml
     parameters:
-      system: ubuntu-legacy
+      platform: ubuntu-legacy
 
 - job: windows
   pool:
@@ -24,7 +24,7 @@ jobs:
   steps:
   - template: templates/cache-dependencies-template.yml
     parameters:
-      system: windows
+      platform: windows
 
 - job: macos
   pool:
@@ -32,4 +32,4 @@ jobs:
   steps:
   - template: templates/cache-dependencies-template.yml
     parameters:
-      system: macos
+      platform: macos

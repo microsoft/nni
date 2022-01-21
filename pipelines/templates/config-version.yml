@@ -1,5 +1,5 @@
 parameters:
-- name: system
+- name: platform
   type: string
 
 steps:
@@ -7,13 +7,13 @@ steps:
   inputs:
     versionSpec: 3.9
   displayName: (latest) Configure Python version
-  condition: not(contains('${{ parameters.system }}', 'legacy'))
+  condition: not(contains('${{ parameters.platform }}', 'legacy'))
 
 - task: UsePythonVersion@0
   inputs:
     versionSpec: 3.7
   displayName: (legacy) Configure Python version
-  condition: contains('${{ parameters.system }}', 'legacy')
+  condition: contains('${{ parameters.platform }}', 'legacy')
 
 - task: NodeTool@0
   inputs:
