@@ -6,10 +6,9 @@ from collections import OrderedDict
 
 import numpy as np
 import torch
+from torch.utils.data import DataLoader
 import nni.retiarii.nn.pytorch as nn
 from nni.nas.pytorch.mutables import InputChoice, LayerChoice
-from torch.utils.data import DataLoader, Dataset
-from nni.retiarii.evaluator.pytorch.lightning import DataLoader as nniDataLoader
 
 _logger = logging.getLogger(__name__)
 
@@ -195,7 +194,7 @@ class ParallelTrainValDataLoader(DataLoader):
     of the longer one, and the tail of the last repeat will be dropped.
 
     Some NAS algorithms, i.e. DARTS and Proxyless, require this type of dataloader.
-    
+
     Parameters
     ----------
     train_data : DataLoader

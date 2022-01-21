@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from .base_lightning import BaseOneShotLightningModule
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
+from .base_lightning import BaseOneShotLightningModule
 from .darts import DartsInputChoice, DartsLayerChoice
 
 
@@ -247,16 +247,16 @@ class ProxylessInputChoice(nn.Module):
 
 class ProxylessModule(DartsModule):
     """
-    The Proxyless Model. This is a darts-based method. What it differs from darts is that it resample
+    The Proxyless Module. This is a darts-based method. What it differs from darts is that it resample
     the architecture according to alphas to select only one path a time to reduce memory consumption.
     The Proxyless Model should be trained with ParallelTraiValDataloader in nn.retiarii.oneshot.pytorch.utils.
     See base class for more attributes.
 
     Reference
     ----------
-    [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target Task and Hardware,”
-        presented at the International Conference on Learning Representations, Sep. 2018. 
-        Available: https://openreview.net/forum?id=HylVB3AqYm
+    [proxyless] H. Cai, L. Zhu, and S. Han, “ProxylessNAS: Direct Neural Architecture Search on Target
+        Task and Hardware,” presented at the International Conference on Learning Representations,
+        Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
 
     """
     def configure_architecture_optimizers(self):
@@ -278,3 +278,120 @@ class ProxylessModule(DartsModule):
     def finalize_grad(self):
         for _, m in self.nas_modules:
             m.finalize_grad()
+
+
+class SNASLayerChoice(nn.Module):
+    def __init__(self, layer_choice, temp = 1):
+        super().__init__()
+        self.name = layer_choice.label
+        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
+        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
+        self._temp = temp
+
+    def forward(self, *args, **kwargs):
+        op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
+        alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
+        return torch.sum(op_results * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
+
+    def resample(self):
+        log_alpha = torch.log(self.alpha)
+        u = torch.zeros_like(log_alpha).uniform_()
+        softmax = torch.nn.Softmax(-1)
+        self.one_hot = softmax((log_alpha -(-u.log()).log()) / self._temp)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsLayerChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
+
+    def r_forward(self, x):
+        return self.op_choices.values()[0](x)
+
+
+class SNASInputChoice(nn.Module):
+    def __init__(self, input_choice, temp = 1):
+        super().__init__()
+        self.name = input_choice.label
+        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
+        self.n_chosen = input_choice.n_chosen or 1
+        self._temp = temp
+
+    def forward(self, inputs):
+        inputs = torch.stack(inputs)
+        alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
+        return torch.sum(inputs * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
+
+    def resample(self):
+        log_alpha = torch.log(self.alpha)
+        u = torch.zeros_like(log_alpha).uniform_()
+        softmax = torch.nn.Softmax(-1)
+        self.one_hot = softmax((log_alpha -(-u.log()).log()) / self._temp)
+
+    def parameters(self):
+        for _, p in self.named_parameters():
+            yield p
+
+    def named_parameters(self):
+        for name, p in super(DartsInputChoice, self).named_parameters():
+            if name == 'alpha':
+                continue
+            yield name, p
+
+    def export(self):
+        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
+
+    def r_forward(self, x):
+        return super().r_forward(x)
+
+
+class SNASModule(DartsModule):
+    """
+    The SNAS Module. This is a darts-based method. It uses gumble-softmax to simulate a one-hot distribution to
+    select only one path a time. The SNAS Module should be trained with ParallelTrainValDataLoader in
+    nn.retiarii.oneshot.utils.
+    See base class for more attributes.
+
+    Parameters
+    ----------
+    base_model : pl.LightningModule
+        The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
+        is wrapped by base_model, and base_model will be wrapped by this model.
+    gumble_temperature : float
+        The temperature used in gumble-softmax. See [snas] for details.
+    custom_replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]], default = None
+        The custom xxxChoice replace method. Keys should be xxxChoice type and values should
+        return an nn.module. This custom replace dict will override the default replace
+        dict of each NAS method.
+
+    Reference
+    ----------
+    ..[snas] S. Xie, H. Zheng, C. Liu, and L. Lin, “SNAS: stochastic neural architecture search,” presented at the
+        International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=rylqooRqK7
+    """
+    def __init__(self, base_model, gumble_temperature = 1., custom_replace_dict=None):
+        self.temp = gumble_temperature
+        super().__init__(base_model, custom_replace_dict)
+
+    def configure_architecture_optimizers(self):
+        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], lr=3.e-4,
+                                           weight_decay=0, betas=(0, 0.999), eps=1e-8)
+        return ctrl_optim
+
+    @property
+    def default_replace_dict(self):
+        return {
+            LayerChoice : lambda m : SNASLayerChoice(m, self.temp),
+            InputChoice : lambda m : SNASInputChoice(m, self.temp)
+        }
+
+    def resample_architecture(self):
+        for _, m in self.nas_modules:
+            m.resample()

@@ -11,6 +11,7 @@ from nni.retiarii.oneshot.pytorch import (ConcatenateTrainValDataLoader,
                                           DartsModule, EnasModule,
                                           ParallelTrainValDataLoader,
                                           ProxylessModule, RandomSampleModule)
+from nni.retiarii.oneshot.pytorch.differentiable import SNASModule
 
 
 class DepthwiseSeparableConv(nn.Module):
@@ -21,6 +22,7 @@ class DepthwiseSeparableConv(nn.Module):
 
     def forward(self, x):
         return self.pointwise(self.depthwise(x))
+
 
 class Net(pl.LightningModule):
     def __init__(self):
@@ -60,7 +62,7 @@ class Net(pl.LightningModule):
             nn.Linear(10, 10),
             [1, 2]
         )
-        
+
     def forward(self, x):
         x = F.relu(self.conv1(x))
         x = F.max_pool2d(self.conv2(x), 2)
@@ -69,16 +71,21 @@ class Net(pl.LightningModule):
         x = self.rpfc(x)
         output = F.log_softmax(x, dim=1)
         return output
-    
 
 
-def test_darts():
+def prepare_model_data():
     base_model = Net()
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
     train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
     train_loader = DataLoader(train_dataset, 32, shuffle= True)
     valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
     valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
+
+    return base_model, train_loader, valid_loader
+
+
+def test_darts():
+    base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader,**{'max_epochs':1})
     cls.module.set_model(base_model)
     darts_model = DartsModule(cls.module)
@@ -87,12 +94,7 @@ def test_darts():
 
 
 def test_proxyless():
-    base_model = Net()
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
-    train_loader = DataLoader(train_dataset, 32, shuffle= True)
-    valid_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
-    valid_loader = DataLoader(valid_dataset, 64, shuffle= True)
+    base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
     cls.module.set_model(base_model)
     proxyless_model = ProxylessModule(cls.module)
@@ -107,12 +109,7 @@ def reward_accuracy(output, target, topk=(1,)):
 
 
 def test_enas():
-    base_model = Net()
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
-    train_loader = DataLoader(train_dataset, 64, shuffle= True, num_workers=4)
-    val_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
-    valid_loader = DataLoader(val_dataset, 64, num_workers=4)
+    base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
     cls.module.set_model(base_model)
     enas_model = EnasModule(cls.module, reward_function=reward_accuracy)
@@ -121,21 +118,25 @@ def test_enas():
 
 
 def test_random():
-    base_model = Net()
-    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))])
-    train_dataset = MNIST('data/mnist', train = True, download=True, transform=transform)
-    train_loader = DataLoader(train_dataset, 64, shuffle= True, num_workers=4)
-    val_dataset = MNIST('data/mnist', train = False, download=True, transform=transform)
-    valid_loader = DataLoader(val_dataset, 64, num_workers=4)
+    base_model, train_loader, valid_loader = prepare_model_data()
     cls = Classification(train_dataloader = train_loader, val_dataloaders=valid_loader , **{'max_epochs':1})
     cls.module.set_model(base_model)
     random_model = RandomSampleModule(cls.module)
     cls.trainer.fit(random_model, cls.train_dataloader, cls.val_dataloaders)
 
 
-if __name__ == '__main__':
-#    test_darts()
-#    test_proxyless()
-    test_enas()
-#    test_random()
+def test_snas():
+    base_model, train_loader, valid_loader = prepare_model_data()
+    cls = Classification(train_dataloader=train_loader, val_dataloaders=valid_loader, **{'max_epochs':1})
+    cls.module.set_model(base_model)
+    proxyless_model = SNASModule(cls.module)
+    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    cls.trainer.fit(proxyless_model, para_loader)
 
+
+if __name__ == '__main__':
+    # test_darts()
+    # test_proxyless()
+    # test_enas()
+    # test_random()
+    test_snas()
