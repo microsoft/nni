@@ -13,7 +13,7 @@ steps:
     sudo rm /usr/bin/swig
     sudo ln -s swig3.0 /usr/bin/swig
   displayName: (Ubuntu) Downgrade swig
-  condition: contains('${{ parameters.platform }}', 'ubuntu')
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
 
 - script: |
     set -e
@@ -21,7 +21,7 @@ steps:
     rm /usr/local/bin/swig
     ln -s "/usr/local/opt/swig@3/bin/swig" /usr/local/bin/swig
   displayName: (macOS) Downgrade swig
-  condition: contains('${{ parameters.platform }}', 'macos')
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
 
 - task: UniversalPackages@0
   inputs:
@@ -38,7 +38,7 @@ steps:
 - script: |
     mv dependencies/recommended_legacy.txt dependencies/recommended.txt
   displayName: (legacy) Prepare for legacy
-  condition: contains('${{ parameters.platform }}', 'legacy')
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
     echo "===== develop ====="
@@ -55,7 +55,7 @@ steps:
     python -m pip install numpy==1.21.5
     python -m pip install pytorch-lightning==1.5.9
   displayName: (legacy) Resolve legacy dependency version
-  condition: contains('${{ parameters.platform }}', 'legacy')
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
@@ -66,7 +66,9 @@ steps:
     python setup.py develop
     echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
   displayName: (POSIX) Install NNI
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 - script: |
     python setup.py develop --no-user
   displayName: (Windows) Install NNI
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))

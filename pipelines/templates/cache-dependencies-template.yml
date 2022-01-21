@@ -31,7 +31,7 @@ steps:
     fi
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
-  condition: not(contains('${{ parameters.platform }}', 'windows'))
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
 - script: |
     echo "===== develop ====="
@@ -43,7 +43,7 @@ steps:
     echo "===== recommended ====="
     ./pip-install.cmd -r dependencies/recommended.txt
   displayName: (Windows) Install Python packages
-  condition: contains('${{ parameters.platform }}', 'windows')
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
 
 - script: |
     yarn --cwd ts/nni_manager install
