@@ -514,7 +514,7 @@ def _formulate_arguments(func, args, kwargs, kw_only, is_class_init=False):
     positional_args = [_formulate_single_argument(arg) for arg in positional_args]
     keyword_args = {k: _formulate_single_argument(arg) for k, arg in keyword_args.items()}
 
-    return list(positional_args), keyword_args
+    return positional_args, keyword_args
 
 
 def _is_function(obj: Any) -> bool:
