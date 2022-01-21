@@ -14,6 +14,11 @@ import '../../static/style/overview/overview.scss';
 import '../../static/style/copyParameter.scss';
 import '../../static/style/openRow.scss';
 
+/**
+ *  netron URL must be synchronized with ts/nni_manager/rest_server/index.ts`.
+ *  Remember to update it if the value is changed or this file is moved.
+ **/
+
 interface OpenRowProps {
     trialId: string;
 }

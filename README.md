@@ -25,7 +25,7 @@ The tool manages automated machine learning (AutoML) experiments, **dispatches a
 
 ## **What's NEW!** &nbsp;<a href="#nni-released-reminder"><img width="48" src="docs/img/release_icon.png"></a>
 
-* **New release**: [v2.5 is available](https://github.com/microsoft/nni/releases/tag/v2.5) - _released on Nov-04-2021_
+* **New release**: [v2.6 is available](https://github.com/microsoft/nni/releases/tag/v2.6) - _released on Jan-19-2022_
 * **New demo available**: [Youtube entry](https://www.youtube.com/channel/UCKcafm6861B2mnYhPbZHavw) | [Bilibili 入口](https://space.bilibili.com/1649051673) - _last updated on May-26-2021_
 * **New webinar**: [Introducing Retiarii: A deep learning exploratory-training framework on NNI](https://note.microsoft.com/MSR-Webinar-Retiarii-Registration-Live.html) - _scheduled on June-24-2021_
 * **New community channel**: [Discussions](https://github.com/microsoft/nni/discussions)
@@ -253,7 +253,7 @@ Note:
 * Download the examples via clone the source code.
 
   ```bash
-  git clone -b v2.5 https://github.com/Microsoft/nni.git
+  git clone -b v2.6 https://github.com/Microsoft/nni.git
   ```
 
 * Run the MNIST example.

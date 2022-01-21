@@ -7,7 +7,7 @@ import subprocess
 import json
 import requests
 from nni.experiment import Experiment
-from nni.tools.nnictl.updater import load_search_space
+from nni.tools.nnictl.updater import load_imported_data
 from utils import METRICS_URL, GET_IMPORTED_DATA_URL
 
 
@@ -42,7 +42,7 @@ class ImportValidator(ITValidator):
         assert proc.returncode == 0, \
             '`nnictl experiment import {0} -f {1}` failed with code {2}'.format(exp_id, import_data_file_path, proc.returncode)
         imported_data = requests.get(GET_IMPORTED_DATA_URL).json()
-        origin_data = load_search_space(import_data_file_path).replace(' ', '')
+        origin_data = load_imported_data(import_data_file_path).replace(' ', '')
         assert origin_data in imported_data
 
 class MetricsValidator(ITValidator):
