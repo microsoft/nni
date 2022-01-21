@@ -1,4 +1,4 @@
-.. a6dd4da0aa88f250a7b1146566021ce8
+.. acdfab53c8209a53709a5bdca72d29b2
 
 在 Windows 上安装
 ==================
@@ -42,7 +42,7 @@
 
   .. code-block:: bat
 
-       git clone -b v2.0 https://github.com/Microsoft/nni.git
+       git clone -b v2.6 https://github.com/Microsoft/nni.git
        cd nni
        python setup.py develop
 
@@ -54,7 +54,7 @@
 
   .. code-block:: bat
 
-       git clone -b v2.0 https://github.com/Microsoft/nni.git
+       git clone -b v2.6 https://github.com/Microsoft/nni.git
 
 * 
   运行 MNIST 示例。

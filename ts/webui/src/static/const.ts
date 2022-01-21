@@ -4,6 +4,13 @@ import { getPrefix } from './function';
 const METRIC_GROUP_UPDATE_THRESHOLD = 100;
 const METRIC_GROUP_UPDATE_SIZE = 20;
 
+/**
+ *  RESTAPI and DOWNLOAD_IP must be synchronized with:
+ *    - nni/experiment/rest.py
+ *    - ts/nni_manager/rest_server/index.ts
+ *  Remember to update them if the values are changed or if this file is moved.
+ **/
+
 const prefix = getPrefix();
 const RESTAPI = '/api/v1/nni';
 const MANAGER_IP = prefix === undefined ? RESTAPI : `${prefix}${RESTAPI}`;
