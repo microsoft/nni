@@ -61,14 +61,3 @@ steps:
 - script: |
     python test/vso_tools/interim_patch.py
   displayName: Torch utils tensorboard interim patch
-
-- script: |
-    python setup.py develop
-    echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-  displayName: (POSIX) Install NNI
-  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
-
-- script: |
-    python setup.py develop --no-user
-  displayName: (Windows) Install NNI
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
