@@ -138,6 +138,12 @@ class LevelPruner(BasicPruner):
             - op_names : Operation names to be pruned.
             - op_partial_names: Operation partial names to be pruned, will be autocompleted by NNI.
             - exclude : Set True then the layers setting by op_types and op_names will be excluded from pruning.
+    bank_num : int
+        Default value is 0 which means pruning without awaring bank, namely normal finegrained pruning. 
+        If passing non-zero value, LevelPruner will prune the model in the granularity of bank. 
+        For instance, if setting bank_num = 5, sparsity = 0.6, pruner will divide pruning parameters 
+        into multiple banks sequentially and each bank has five values and two values would be kept 
+        after pruning.
     """
 
     def __init__(self, model: Module, config_list: List[Dict], bank_num: int = 0):
