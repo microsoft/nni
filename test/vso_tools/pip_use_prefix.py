@@ -14,10 +14,10 @@ prefix.mkdir(parents=True, exist_ok=True)
 prefix = prefix.resolve()
 
 if sys.platform == 'win32':
-    script = f'python -m pip install --prefix {prefix} --prefer-binary %*'
+    script = f'python -m pip install --prefix {prefix} --no-compile --prefer-binary %*'
     Path('pip-install.cmd').write_text(script + '\n')
 else:
-    script = f'python -m pip install --prefix {prefix} --prefer-binary "$@"'
+    script = f'python -m pip install --prefix {prefix} --no-compile --prefer-binary "$@"'
     Path('pip-install').write_text('#!/bin/bash\n' + script + '\n')
     os.chmod('pip-install', 0o775)
 

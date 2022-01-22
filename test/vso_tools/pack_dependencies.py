@@ -22,8 +22,6 @@ def main() -> None:
     symlinks = {}
     empty_dirs = set()
     for file in sorted(cache.rglob('*')):
-        if '__pycache__' in file.parts:  # PYCACHEPREFIX was added in Python 3.8
-            continue
         if file.parent.parent == cache or file.parent == cache / 'python-dependencies/lib':
             print('Compress', file, flush=True)
         if file.is_symlink():

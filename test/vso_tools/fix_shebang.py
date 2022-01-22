@@ -6,8 +6,6 @@ from pathlib import Path
 import sys
 
 for file in Path(sys.argv[1]).iterdir():
-    if file.name == '__pycache__':
-        continue
     try:
         text = file.read_text()
         assert text.startswith('#!'), 'no shebang'
