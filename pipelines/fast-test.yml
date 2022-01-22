@@ -114,11 +114,12 @@ stages:
       displayName: ESLint (NNI Manager)
     - script: |
         set -e
-        cd ts/webui
-        yarn
-        yarn eslint
-        yarn tsc
+        yarn --cwd ts/webui
+        yarn --cwd ts/webui eslint
       displayName: ESLint (WebUI)
+    - script: |
+        yarn --cwd ts/webui tsc
+    - displayName: Type Check (WebUI)
 
 
 - stage: test
