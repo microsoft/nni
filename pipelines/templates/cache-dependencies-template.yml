@@ -27,7 +27,7 @@ steps:
     ./pip-install -r dependencies/required_extra.txt
     echo '===== recommended ====='
     ./pip-install -r dependencies/recommended.txt
-    echo '===== fix "#!python" ====='
+    echo '===== fix shebang ====='
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
