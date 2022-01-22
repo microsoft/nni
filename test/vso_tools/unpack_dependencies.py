@@ -13,8 +13,15 @@ import sys
 from zipfile import ZipFile
 
 def main() -> None:
-    print('Extract Python packages to', site.getuserbase())
-    print('All Python paths:', ' '.join(sys.path))
+    if sys.platform == 'win32':
+        # Strangely user site is not enabled on Windows.
+        prefix = sys.prefix
+    else:
+        prefix = site.getuserbase()
+
+    print('Extract Python packages to', prefix)
+    print('All Python paths:')
+    print('\n'.join(sys.path), flush=True)
 
     extract_all(ZipFile('cache.zip'))
     empty_dirs = json.loads(Path('directories.json').read_text())
@@ -24,7 +31,7 @@ def main() -> None:
     for link, target in symlinks.items():
         Path(link).symlink_to(target)  # hopefully nobody uses symlink on windows
 
-    move_or_merge(Path('cache/python-dependencies'), Path(site.getuserbase()))
+    move_or_merge(Path('cache/python-dependencies'), Path(prefix))
     shutil.move('cache/nni-manager-dependencies', 'ts/nni_manager/node_modules')
     shutil.move('cache/webui-dependencies', 'ts/webui/node_modules')
 
