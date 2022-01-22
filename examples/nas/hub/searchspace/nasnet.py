@@ -282,7 +282,68 @@ class NdsCell(nn.Module):
             return torch.cat([states[i] for i in unused_indices], 1)
 
 
-def get_cell_builder(op_candidates: List[str], channels: int, num_nodes: int):
+class CellPreprocessor(nn.Module):
+    """
+    In the original code, there is a snippet to deal with shape alignment.
+
+    .. code-block:: python
+
+        self.preprocess0_reduce = FactorizedReduce(C_prev_prev, C)
+        self.preprocess0 = ReLUConvBN(C_prev_prev, C, 1, 0)
+        self.preprocess1 = ReLUConvBN(C_prev, C, 1, 0)
+
+        # in forward
+        if s0.size(2) != s1.size(2):
+            # needs to be down-sampled
+            s0 = self.preprocess0_reduce(s0, width)
+        else:
+            s0 = self.preprocess0(s0, width)
+        s1 = self.preprocess1(s1, width)
+
+    The trick here is actually in the first ``if``, which happens when the last cell is a reduction cell.
+    In this case, the previous-previous cell should be first downsampled to match the shape of last cell's output.
+    Another way to look at it is that, this should be a postprocessing step of reduction cell (what I implemented).
+    In normal cell, the previous-previous cell would go through another 1x1 conv (preprocess0),
+    but in the first ``if``, this extra 1x1 conv is bypassed.
+
+    This preprocessor assumes ``num_preprocessor == 2``. Bypass the first conv-1x1 if ``last_cell_reduction`` is true.
+    """
+    def __init__(self, C_in: int, C_out: int, last_cell_reduction: bool):
+        if last_cell_reduction:
+            # if last cell is reduction, number of channels should be already as expected
+            self.pre0 = nn.Identity()
+        else:
+            self.pre0 = ReLUConvBN(C_in, C_out, 1, 0)
+        self.pre1 = ReLUConvBN(C_in, C_out, 1, 0)
+
+    def forward(self, s):
+        assert len(s) == 2
+        return [self.pre0(s[0]), self.pre1(s[1])]
+
+
+class CellPostprocessor(nn.Module):
+    """
+    See documentation of ``CellPreprocessor``.
+
+    Assumes ``num_preprocessor == 2``. ``FactorizedReduce`` is enabled if ``reduction`` is true.
+    ``C_in`` and ``C_out`` are input and output channel numbers of this cell.
+    """
+
+    def __init__(self, C_in: int, C_out: int, reduction: bool):
+        self.reduction = reduction
+        if reduction:
+            # C_out instead of C_out * num_nodes
+            self.post = FactorizedReduce(C_in, C_out)
+
+    def forward(self, this_cell, previous_cells):
+        assert len(previous_cells) == 2
+        if self.reduction:
+            return [self.post(previous_cells[-1]), this_cell]
+        else:
+            return [previous_cells[-1], this_cell]
+
+
+def get_cell_builder(op_candidates: List[str], C_in: int, C_out: int, num_nodes: int, merge_op: Literal['all', 'loose_end']):
     # the cell builder is used in Repeat
     # it takes an index that is the index in the repeat
     def cell_builder(repeat_idx: int):
@@ -299,12 +360,14 @@ def get_cell_builder(op_candidates: List[str], channels: int, num_nodes: int):
 
         ops_factory = [
             lambda node_index, op_index, input_index: \
-                OPS[op](channels, 2 if cell_type == 'reduction' and input_index < num_predecessors else 1, True)
+                OPS[op](C_out, 2 if cell_type == 'reduction' and input_index < num_predecessors else 1, True)
             for op in op_candidates
         ]
 
-        return nn.Cell(ops_factory, num_nodes, num_ops_per_node, num_predecessors, 'loose_end',
-                       preprocesser=, label=cell_type)
+        return nn.Cell(ops_factory, num_nodes, num_ops_per_node, num_predecessors, merge_op,
+                       preprocesser=CellPreprocessor(C_in, C_out, cell_type == 'normal'),
+                       postprocessor=CellPostprocessor(C_in, C_out, cell_type == 'reduction'),
+                       label=cell_type)
 
     return cell_builder
 
@@ -330,6 +393,7 @@ class NDS(nn.Module):
                  op_candidates: List[str],
                  merge_op: Literal['all', 'loose_end'] = 'all',
                  num_labels: int = 10,
+                 num_nodes: int = 4,
                  width: Union[List[int], int] = 16,
                  num_cells: Union[List[int], int] = 20,
                  dataset: Literal['cifar', 'imagenet'] = 'imagenet'):
@@ -343,7 +407,6 @@ class NDS(nn.Module):
         if isinstance(num_cells, list):
             num_cells = nn.ValueChoice(num_cells, label='depth')
         num_cells_per_stage = [i * num_cells // 3 - (i - 1) * num_cells // 3 for i in range(3)]
-
 
         # auxiliary head is different for network targetted at different datasets
         if dataset == 'imagenet':
@@ -369,10 +432,10 @@ class NDS(nn.Module):
 
         self.stages = nn.ModuleList()
         for stage_idx in range(3):
-            cell_builder = get_cell_builder(op_candidates, C_curr, )
-            self.stages.append(nn.Repeat(, num_cells_per_stage[stage_idx]))
             if stage_idx > 0:
                 C_curr *= 2
+            cell_builder = get_cell_builder(op_candidates, C_prev, C_curr, num_nodes, merge_op)
+            self.stages.append(nn.Repeat(cell_builder, num_cells_per_stage[stage_idx]))
             stage = nn.ModuleList()
             for i in range((self.max_num_cells + 2) // 3):  # div and ceil
                 cell = nn.Cell(op_candidates, config.n_nodes, op_candidates, C_prev_prev, C_prev, C_curr,
