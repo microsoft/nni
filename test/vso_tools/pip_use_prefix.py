@@ -22,10 +22,14 @@ else:
     Path('pip-install').write_text('#!/bin/bash\n' + script + '\n')
     os.chmod('pip-install', 0o775)
 
-version = f'{sys.version_info.major}.{sys.version_info.minor}'
+if sys.platform == 'win32':
+    site_path = prefix / 'Lib/site-packages'
+else:
+    version = f'{sys.version_info.major}.{sys.version_info.minor}'
+    site_path = prefix / f'lib/python{version}/site-packages',
 paths = [
     Path(typing.__file__).parent,  # With PYTHONPATH, the backport version of typing will mask stdlib version.
-    prefix / f'lib/python{version}/site-packages',
+    site_path,
     os.getenv('PYTHONPATH'),
 ]
 path = os.pathsep.join(str(p) for p in paths if p)
