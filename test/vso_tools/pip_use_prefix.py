@@ -26,7 +26,7 @@ if sys.platform == 'win32':
     site_path = prefix / 'Lib/site-packages'
 else:
     version = f'{sys.version_info.major}.{sys.version_info.minor}'
-    site_path = prefix / f'lib/python{version}/site-packages',
+    site_path = prefix / f'lib/python{version}/site-packages'
 paths = [
     Path(typing.__file__).parent,  # With PYTHONPATH, the backport version of typing will mask stdlib version.
     site_path,
