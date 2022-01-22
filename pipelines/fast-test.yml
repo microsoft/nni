@@ -71,8 +71,8 @@ stages:
   #      displayName: ESLint (WebUI)
 
 
-  #- stage: test
-  #  jobs:
+  - stage: test
+    jobs:
   #  - job: ubuntu_latest
   #    pool:
   #      vmImage: ubuntu-latest
