@@ -2,15 +2,6 @@ trigger:
   branches:
     exclude: [ l10n_master ]
 
-#jobs:
-#- job: debug
-#  pool:
-#    vmImage: windows-latest
-#  steps:
-#  - template: templates/cache-dependencies-template.yml
-#    parameters:
-#      platform: windows
-
 stages:
 - stage: lint
   jobs:
@@ -168,10 +159,36 @@ stages:
         yarn --cwd ts/nni_manager test
       displayName: TypeScript unit test
 
+  - job: windows
+    pool:
+      vmImage: windows-latest
+
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: windows
+
+    - script: |
+        python setup.py develop --no-user
+      displayName: Install NNI
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        yarn --cwd ts/nni_manager test
+      displayName: TypeScript unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
+
   - job: macos
     pool:
       vmImage: macOS-latest
-    timeoutInMinutes: 90  # macos test need extra time
 
     steps:
     - template: templates/install-dependencies.yml
@@ -191,34 +208,6 @@ stages:
         cd test
         python -m pytest ut
       displayName: Python unit test
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
-
-  - job: windows
-    pool:
-      vmImage: windows-latest
-    timeoutInMinutes: 120  # windows test need extra time
-
-    steps:
-    - template: templates/install-dependencies.yml
-      parameters:
-        platform: windows
-
-    - script: |
-        python setup.py develop --no-user
-      displayName: Install NNI
-
-    - script: |
-        cd test
-        python -m pytest ut
-      displayName: Python unit test
-
-    - script: |
-        yarn --cwd ts/nni_manager test
-      displayName: TypeScript unit test
 
     - script: |
         cd test
