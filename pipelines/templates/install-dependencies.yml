@@ -4,8 +4,6 @@ parameters:
 
 steps:
 - template: config-version.yml
-  parameters:
-    platform: ${{ parameters.platform }}
 
 - script: |
     set -e
