@@ -36,9 +36,9 @@ steps:
 - powershell: |
     echo '===== debug ====='
     ./pip-install numpy
-    Get-ChildItem -Recurse -Depth 3 python-packages
-    python -c 'import os ; print(os.getenviron("PYTHONPATH"))'
-    python -c 'import sys ; print("  ".join(sys.path))'
+    Get-ChildItem -Recurse -Depth 2 python-packages
+    python -c 'import os ; print(os.environ)'
+    python -c 'import sys ; print(sys.path)'
     python -c 'import numpy ; print(numpy.__version__, numpy.__path__)'
     #echo '===== develop ====='
     #./pip-install -r dependencies/develop.txt
