@@ -23,8 +23,6 @@ steps:
     ./pip-install -r dependencies/develop.txt
     echo '===== required ====='
     ./pip-install -r dependencies/required.txt
-    echo '===== debug ====='
-    python -c 'import numpy ; print(numpy.__version__, numpy.__path__)'
     echo '===== required extra ====='
     ./pip-install -r dependencies/required_extra.txt
     echo '===== recommended ====='
@@ -36,6 +34,10 @@ steps:
 
 # FIXME: It does not stop on failure. Tried "ErrorActionPreference" with no luck.
 - powershell: |
+    echo '===== debug ====='
+    ./pip-install numpy
+    Get-ChildItem -Recurse python-packages
+    python -c 'import numpy ; print(numpy.__version__, numpy.__path__)'
     echo '===== develop ====='
     ./pip-install -r dependencies/develop.txt
     echo '===== required ====='
