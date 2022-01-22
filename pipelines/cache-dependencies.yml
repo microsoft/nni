@@ -1,5 +1,10 @@
 trigger: none
 pr: none
+schedules:
+- cron: "0 16 * * *"
+  branches:
+    include: [ master ]
+  always: true
 
 jobs:
 - job: ubuntu_latest

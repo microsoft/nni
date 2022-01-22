@@ -22,7 +22,7 @@ def main() -> None:
     symlinks = {}
     empty_dirs = set()
     for file in sorted(cache.rglob('*')):
-        if file.parent.parent == cache or file.parent == cache / 'python-dependencies/lib':
+        if file.parent.parent == cache or file.parent.name == 'site-packages':
             print('Compress', file, flush=True)
         if file.is_symlink():
             symlinks[str(file)] = os.readlink(file)  # file.readlink() was added in Python 3.9

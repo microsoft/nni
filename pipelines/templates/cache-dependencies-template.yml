@@ -18,7 +18,7 @@ steps:
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
-    rem || set -e
+    set -e
     echo '===== develop ====='
     ./pip-install -r dependencies/develop.txt
     echo '===== required ====='
@@ -29,7 +29,20 @@ steps:
     ./pip-install -r dependencies/recommended.txt
     echo '===== fix "#!python" ====='
     python test/vso_tools/fix_shebang.py python-packages/bin
+  displayName: (POSIX) Install Python packages
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+
+- script: |
+    echo '===== develop ====='
+    powershell -file pip-install -r dependencies/develop.txt
+    echo '===== required ====='
+    powershell -file pip-install -r dependencies/required.txt
+    echo '===== required extra ====='
+    powershell -file pip-install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    powershell -file pip-install -r dependencies/recommended.txt
   displayName: Install Python packages
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
 
 # FIXME:
 # numpy version may change several times during installation, and it has an ABI change in recent versions.
@@ -37,7 +50,7 @@ steps:
 - script: |
     python -m pip uninstall -y ConfigSpaceNNI
     ./pip-install --no-cache-dir ConfigSpaceNNI
-  displayName: (POSIX) Rebuild ConfigSpaceNNI
+  displayName: (Ubuntu) Rebuild ConfigSpaceNNI
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
 
 - script: |
