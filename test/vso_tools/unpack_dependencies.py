@@ -15,9 +15,9 @@ from zipfile import ZipFile
 def main() -> None:
     if sys.platform == 'win32':
         # Strangely user site is not enabled on Windows.
-        prefix = sys.prefix
+        prefix = Path(sys.prefix)
     else:
-        prefix = site.getuserbase()
+        prefix = Path(site.getuserbase())
 
     print('Extract Python packages to', prefix)
     print('All Python paths:')
@@ -31,7 +31,7 @@ def main() -> None:
     for link, target in symlinks.items():
         Path(link).symlink_to(target)  # hopefully nobody uses symlink on windows
 
-    move_or_merge(Path('cache/python-dependencies'), Path(prefix))
+    move_or_merge(Path('cache/python-dependencies'), prefix)
     shutil.move('cache/nni-manager-dependencies', 'ts/nni_manager/node_modules')
     shutil.move('cache/webui-dependencies', 'ts/webui/node_modules')
 
