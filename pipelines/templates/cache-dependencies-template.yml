@@ -69,7 +69,6 @@ steps:
 - task: UniversalPackages@0
   inputs:
     command: publish
-    #vstsFeedPublish: NNIOpenSource/dependencies
-    vstsFeedPublish: NNIOpenSource/sandbox
+    vstsFeedPublish: NNIOpenSource/dependencies
     vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
   displayName: Upload cache archive
