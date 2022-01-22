@@ -30,7 +30,7 @@ steps:
     echo "===== rebuild ConfigSpaceNNI ====="
     # numpy version can change multiple times during installation, and there was an ABI change not long ago
     # we must make sure ConfigSpaceNNI is built against correct numpy version (FIXME)
-    python -m pip uninstall ConfigSpaceNNI
+    python -m pip uninstall -y ConfigSpaceNNI
     ./pip-install ConfigSpaceNNI
     python test/vso_tools/fix_shebang.py python-packages/bin
   displayName: (POSIX) Install Python packages
