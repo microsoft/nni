@@ -9,9 +9,13 @@ import os
 from pathlib import Path
 import shutil
 import site
+import sys
 from zipfile import ZipFile
 
 def main() -> None:
+    print('Extract Python packages to', site.getuserbase())
+    print('All Python paths:', ' '.join(sys.path))
+
     extract_all(ZipFile('cache.zip'))
     empty_dirs = json.loads(Path('directories.json').read_text())
     symlinks = json.loads(Path('symlinks.json').read_text())
