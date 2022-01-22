@@ -25,7 +25,7 @@ steps:
 
 - task: UniversalPackages@0
   inputs:
-    vstsFeed: NNIOpenSource/sandbox
+    vstsFeed: NNIOpenSource/dependencies
     vstsFeedPackage: dependencies-${{ parameters.platform }}
     vstsPackageVersion: "*"
   displayName: Download cache
