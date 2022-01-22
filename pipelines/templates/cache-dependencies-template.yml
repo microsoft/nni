@@ -23,6 +23,8 @@ steps:
     ./pip-install -r dependencies/develop.txt
     echo '===== required ====='
     ./pip-install -r dependencies/required.txt
+    echo '===== debug ====='
+    python -c 'import numpy ; print(numpy.__version__, numpy.__path__)'
     echo '===== required extra ====='
     ./pip-install -r dependencies/required_extra.txt
     echo '===== recommended ====='
