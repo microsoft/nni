@@ -32,16 +32,18 @@ steps:
   displayName: (POSIX) Install Python packages
   condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
 
+# Not using CMD script because it skips the step.
+# Not using powershell task because it does not stop on failure.
 - script: |
     echo '===== develop ====='
-    powershell -file pip-install -r dependencies/develop.txt
+    powershell -file pip-install.ps1 -r dependencies/develop.txt
     echo '===== required ====='
-    powershell -file pip-install -r dependencies/required.txt
+    powershell -file pip-install.ps1 -r dependencies/required.txt
     echo '===== required extra ====='
-    powershell -file pip-install -r dependencies/required_extra.txt
+    powershell -file pip-install.ps1 -r dependencies/required_extra.txt
     echo '===== recommended ====='
-    powershell -file pip-install -r dependencies/recommended.txt
-  displayName: Install Python packages
+    powershell -file pip-install.ps1 -r dependencies/recommended.txt
+  displayName: (Windows) Install Python packages
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
 
 # FIXME:
