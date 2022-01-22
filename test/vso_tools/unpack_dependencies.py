@@ -44,12 +44,13 @@ def extract_all(zf: ZipFile) -> None:
             os.chmod(path, info.external_attr >> 16)
 
 def move_or_merge(src: Path | str, dst: Path | str) -> None:
-    if dst.exists():
-        assert dst.is_dir()
+    if not dst.exists():
+        shutil.move(src, dst)
+    elif dst.is_dir()
         for file in src.iterdir():
             move_or_merge(file, dst / file.name)
     else:
-        shutil.move(src, dst)
+        print('Skip', dst)
 
 if __name__ == '__main__':
     main()
