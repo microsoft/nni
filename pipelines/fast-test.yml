@@ -117,6 +117,7 @@ stages:
         cd ts/webui
         yarn
         yarn eslint
+        yarn tsc
       displayName: ESLint (WebUI)
 
 

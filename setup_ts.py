@@ -177,7 +177,10 @@ def compile_ts(release):
 
     _print('Building web UI')
     _yarn('ts/webui')
-    _yarn('ts/webui', 'build')
+    if release:
+        _yarn('ts/webui', 'release')
+    else:
+        _yarn('ts/webui', 'build')
 
     _print('Building JupyterLab extension')
     if release:
