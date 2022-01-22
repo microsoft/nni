@@ -14,8 +14,9 @@ prefix.mkdir(parents=True, exist_ok=True)
 prefix = prefix.resolve()
 
 if sys.platform == 'win32':
-    script = f'python -m pip install --prefix {prefix} --no-compile --prefer-binary %*'
-    Path('pip-install.cmd').write_text(script + '\n')
+    # Do not use CMD script. It will magically stop pipeline step.
+    script = f'python -m pip install --prefix {prefix} --no-compile --prefer-binary $args'
+    Path('pip-install.ps1').write_text(script + '\n')
 else:
     script = f'python -m pip install --prefix {prefix} --no-compile --prefer-binary "$@"'
     Path('pip-install').write_text('#!/bin/bash\n' + script + '\n')

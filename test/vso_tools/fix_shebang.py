@@ -5,6 +5,9 @@ Change "#!" line to "#!/usr/bin/env python" for all files in directory sys.argv[
 from pathlib import Path
 import sys
 
+if sys.platform == 'win32':
+    exit()
+
 for file in Path(sys.argv[1]).iterdir():
     try:
         text = file.read_text()

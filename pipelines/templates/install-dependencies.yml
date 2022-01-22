@@ -17,9 +17,9 @@ steps:
 
 - script: |
     set -e
-    brew install "swig@3"
+    brew install 'swig@3'
     rm /usr/local/bin/swig
-    ln -s "/usr/local/opt/swig@3/bin/swig" /usr/local/bin/swig
+    ln -s '/usr/local/opt/swig@3/bin/swig' /usr/local/bin/swig
   displayName: (macOS) Downgrade swig
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
 
@@ -31,23 +31,22 @@ steps:
   displayName: Download cache
 
 - script: |
-    python --version
     python test/vso_tools/unpack_dependencies.py
   displayName: Unpack cache
 
 - script: |
     mv dependencies/recommended_legacy.txt dependencies/recommended.txt
-  displayName: (legacy) Prepare for legacy
+  displayName: (legacy) Activate legacy dependencies
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
-    echo "===== develop ====="
+    echo '===== develop ====='
     python -m pip install -r dependencies/develop.txt
-    echo "===== required ====="
+    echo '===== required ====='
     python -m pip install -r dependencies/required.txt
-    echo "===== required extra ====="
+    echo '===== required extra ====='
     python -m pip install -r dependencies/required_extra.txt
-    echo "===== recommended ====="
+    echo '===== recommended ====='
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
 

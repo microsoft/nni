@@ -13,40 +13,32 @@ steps:
   displayName: Prepare
 
 - script: |
-    set -e
-    echo "===== develop ====="
-    ./pip-install -r dependencies/develop.txt
-    echo "===== required ====="
-    ./pip-install -r dependencies/required.txt
-    echo "===== required extra ====="
-    ./pip-install -r dependencies/required_extra.txt
-    if [[ ${PLATFORM} =~ 'legacy' ]]; then
-      echo "===== recommended legacy ====="
-      ./pip-install -r dependencies/recommended_legacy.txt
-    else
-      echo "===== recommended ====="
-      ./pip-install -r dependencies/recommended.txt
-    fi
-    python test/vso_tools/fix_shebang.py python-packages/bin
-    echo "*** rebuild ConfigSpaceNNI ***"
-    # numpy version can change multiple times during installation, and there was an ABI change not long ago
-    # we must make sure ConfigSpaceNNI is built against correct numpy version (FIXME)
-    python -m pip uninstall -y ConfigSpaceNNI
-    ./pip-install --no-cache-dir ConfigSpaceNNI
-  displayName: (POSIX) Install Python packages
-  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'windows')))
+    cp dependencies/recommended_legacy.txt dependencies/recommended.txt
+  displayName: (legacy) Activate legacy dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
 
 - script: |
-    echo "===== develop ====="
-    ./pip-install.cmd -r dependencies/develop.txt
-    echo "===== required ====="
-    ./pip-install.cmd -r dependencies/required.txt
-    echo "===== required extra ====="
-    ./pip-install.cmd -r dependencies/required_extra.txt
-    echo "===== recommended ====="
-    ./pip-install.cmd -r dependencies/recommended.txt
-  displayName: (Windows) Install Python packages
-  condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
+    rem || set -e
+    echo '===== develop ====='
+    ./pip-install -r dependencies/develop.txt
+    echo '===== required ====='
+    ./pip-install -r dependencies/required.txt
+    echo '===== required extra ====='
+    ./pip-install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    ./pip-install -r dependencies/recommended.txt
+    echo '===== fix "#!python" ====='
+    python test/vso_tools/fix_shebang.py python-packages/bin
+  displayName: Install Python packages
+
+# FIXME:
+# numpy version may change several times during installation, and it has an ABI change in recent versions.
+# We must make sure ConfigSpaceNNI is built against correct numpy version, or it will fail on import.
+- script: |
+    python -m pip uninstall -y ConfigSpaceNNI
+    ./pip-install --no-cache-dir ConfigSpaceNNI
+  displayName: (POSIX) Rebuild ConfigSpaceNNI
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
 
 - script: |
     yarn --cwd ts/nni_manager install
@@ -63,6 +55,7 @@ steps:
 - task: UniversalPackages@0
   inputs:
     command: publish
+    #vstsFeedPublish: NNIOpenSource/dependencies
     vstsFeedPublish: NNIOpenSource/sandbox
     vstsFeedPackagePublish: dependencies-${{ parameters.platform }}
   displayName: Upload cache archive
