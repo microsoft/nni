@@ -24,7 +24,7 @@ def main() -> None:
     for file in sorted(cache.rglob('*')):
         if '__pycache__' in file.parts:  # PYCACHEPREFIX was added in Python 3.8
             continue
-        if file.parent.parent == cache:
+        if file.parent.parent == cache or file.parent == cache / 'python-dependencies/lib':
             print('Compress', file, flush=True)
         if file.is_symlink():
             symlinks[str(file)] = os.readlink(file)  # file.readlink() was added in Python 3.9
