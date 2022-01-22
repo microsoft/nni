@@ -34,20 +34,14 @@ steps:
 
 # FIXME: It does not stop on failure. Tried "ErrorActionPreference" with no luck.
 - powershell: |
-    echo '===== debug ====='
-    ./pip-install numpy
-    Get-ChildItem -Recurse -Depth 2 python-packages
-    python -c 'import os ; print(os.environ)'
-    python -c 'import sys ; print(sys.path)'
-    python -c 'import numpy ; print(numpy.__version__, numpy.__path__)'
-    #echo '===== develop ====='
-    #./pip-install -r dependencies/develop.txt
-    #echo '===== required ====='
-    #./pip-install -r dependencies/required.txt
-    #echo '===== required extra ====='
-    #./pip-install -r dependencies/required_extra.txt
-    #echo '===== recommended ====='
-    #./pip-install -r dependencies/recommended.txt
+    echo '===== develop ====='
+    ./pip-install -r dependencies/develop.txt
+    echo '===== required ====='
+    ./pip-install -r dependencies/required.txt
+    echo '===== required extra ====='
+    ./pip-install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    ./pip-install -r dependencies/recommended.txt
   displayName: (Windows) Install Python packages
   condition: and(succeeded(), contains('${{ parameters.platform }}', 'windows'))
 
