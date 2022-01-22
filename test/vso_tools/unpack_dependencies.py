@@ -46,7 +46,7 @@ def extract_all(zf: ZipFile) -> None:
 def move_or_merge(src: Path | str, dst: Path | str) -> None:
     if not dst.exists():
         shutil.move(src, dst)
-    elif dst.is_dir()
+    elif dst.is_dir():
         for file in src.iterdir():
             move_or_merge(file, dst / file.name)
     else:
