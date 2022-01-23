@@ -19,9 +19,11 @@ import { LogStream, dummyStream } from './log_stream';
 import { initPaths } from './paths';
 
 export interface NniGlobals {
+    // Type-1 globals, public API
     readonly args: NniManagerArgs;
     readonly paths: NniPaths;
 
+    // Type-2 globals, should not be used by normal modules
     readonly logStream: LogStream;
 }
 
@@ -32,9 +34,9 @@ export interface NniManagerArgs {
     readonly experimentsDirectory: string;
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
     readonly foreground: boolean;
-    readonly urlPrefix: string;
+    readonly urlPrefix: string;  // leading and trailing slashes are all stripped (python side's responsibility)
 
-    // these are scheduled to be removed
+    // these are planned to be removed
     readonly mode: string | undefined;
     readonly dispatcherPipe: string | undefined;
 }
@@ -44,7 +46,7 @@ export interface NniPaths {
     readonly logDirectory: string;
     readonly nniManagerLog: string;
 
-    // these are scheduled to be removed
+    // these are planned to be removed
     readonly experimentRoot: string;
     readonly checkpointDirectory: string;
     readonly databaseDirectory: string;
@@ -69,7 +71,7 @@ declare global {
 
 if (global.nni === undefined) {
     global.nni = new Globals();
-}
+}  // otherwise this is inside a 3rd-party training service and globals are already initialized
 const globals: NniGlobals = global.nni;
 export default globals;
 

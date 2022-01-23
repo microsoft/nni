@@ -51,29 +51,6 @@ export function resetExperimentStartupInfo(): void {
     singleton = new ExperimentStartupInfo();
 }
 
-export function setExperimentStartupInfo(
-        newExperiment: boolean,
-        experimentId: string,
-        basePort: number,
-        platform: string,
-        logDir?: string,
-        logLevel?: string,
-        readonly?: boolean,
-        dispatcherPipe?: string,
-        urlprefix?: string): void {
-    singleton = <ExperimentStartupInfo>{
-        newExperiment,
-        experimentId,
-        basePort,
-        platform,
-        logDir,
-        logLevel,
-        readonly,
-        dispatcherPipe,
-        urlprefix
-    };
-}
-
 export function getExperimentId(): string {
     return getExperimentStartupInfo().experimentId;
 }

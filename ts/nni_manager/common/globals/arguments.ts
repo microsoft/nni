@@ -2,7 +2,7 @@
 // Licensed under the MIT license.
 
 /**
- *  NNI manager's command line arguments.
+ *  Parse NNI manager's command line arguments.
  **/
 
 import assert from 'assert/strict';
@@ -11,12 +11,12 @@ import yargs from 'yargs/yargs';
 
 import type { NniManagerArgs } from './index';
 
-export function parseArgs(rawArgs: string[], isUnitTest: boolean = false): NniManagerArgs {
+export function parseArgs(rawArgs: string[]): NniManagerArgs {
     if (rawArgs === undefined) {
         rawArgs = process.argv.slice(2);
     }
 
-    const parser = yargs(rawArgs).options(yargsOptions).strict(!isUnitTest).fail((_msg, err, _yargs) => { throw err; });
+    const parser = yargs(rawArgs).options(yargsOptions).strict().fail((_msg, err, _yargs) => { throw err; });
     const parsedArgs: NniManagerArgs = parser.parseSync();
 
     // strip yargs leftovers

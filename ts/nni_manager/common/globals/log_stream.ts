@@ -1,6 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  The underlying stream of loggers.
+ *
+ *  This module should only be used by "common/log.ts".
+ **/
+
 import fs from 'fs';
 
 import type { NniManagerArgs, NniPaths } from './index';

@@ -182,7 +182,6 @@ function prepareUnitTest(): void {
     });
     resetExperimentStartupInfo();
 
-    //setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -203,8 +202,6 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentManager);
-    //const logLevel: string = parseArg(['--log_level', '-ll']);
-    //setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedIpv4Address: string | null = null;

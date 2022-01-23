@@ -3,6 +3,10 @@
 
 /**
  *  Manage experiment paths.
+ *
+ *  Ideally all path constants should be put here so other modules (especially training services)
+ *  do not need to know file hierarchy of nni-experiments folders,
+ *  which is an implicit undocumented protocol.
  **/
 
 import assert from 'assert/strict';
