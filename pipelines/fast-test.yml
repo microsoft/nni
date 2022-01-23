@@ -119,7 +119,7 @@ stages:
       displayName: ESLint (WebUI)
     - script: |
         yarn --cwd ts/webui tsc
-    - displayName: Type Check (WebUI)
+      displayName: Type Check (WebUI)
 
 
 - stage: test
