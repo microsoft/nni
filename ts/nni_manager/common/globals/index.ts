@@ -18,6 +18,12 @@ import { parseArgs } from './arguments';
 import { LogStream, dummyStream } from './log_stream';
 import { initPaths } from './paths';
 
+/**
+ *  Collection of all global objects.
+ *
+ *  It can be obtained with `import globals from '...'` or `global.nni`.
+ *  The former is preferred because it exposes less implementation details.
+ **/
 export interface NniGlobals {
     // Type-1 globals, public API
     readonly args: NniManagerArgs;
@@ -27,11 +33,17 @@ export interface NniGlobals {
     readonly logStream: LogStream;
 }
 
+/**
+ *  Command line arguments provided by "nni/experiment/launcher.py".
+ *
+ *  Hyphen-separated words are automatically converted to camelCases by yargs lib, but snake_cases are not.
+ *  So it supports "--log-level" but does not support "--log_level".
+ **/
 export interface NniManagerArgs {
     readonly port: number;
     readonly experimentId: string;
     readonly action: 'create' | 'resume' | 'view';
-    readonly experimentsDirectory: string;
+    readonly experimentsDirectory: string;  // must be absolute
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
     readonly foreground: boolean;
     readonly urlPrefix: string;  // leading and trailing slashes are all stripped (python side's responsibility)
@@ -42,11 +54,11 @@ export interface NniManagerArgs {
 }
 
 export interface NniPaths {
-    readonly experimentsList: string;
-    readonly logDirectory: string;
+    readonly experimentsList: string;  // the json file containing basic info of all experiments
+    readonly logDirectory: string;  // directory of nni manager log and dispatcher log. trial logs are not here
     readonly nniManagerLog: string;
 
-    // these are planned to be removed
+    // these are planned to be removed? (if they are never directly used anywhere)
     readonly experimentRoot: string;
     readonly checkpointDirectory: string;
     readonly databaseDirectory: string;

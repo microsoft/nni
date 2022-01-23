@@ -1,6 +1,24 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
+/**
+ *  Entry point of NNI manager.
+ *
+ *  NNI manager is normally started by "nni/experiment/launcher.py".
+ *  It requires command line arguments defined as NniManagerArgs in "common/globals/index.ts".
+ *
+ *  Example usage:
+ *
+ *      node main.js \
+ *          --port 8080 \
+ *          --experiment-id ID \
+ *          --action create \
+ *          --experiments-directory /home/USER/nni-experiments \
+ *          --log-level info \
+ *          --foreground false \  (optional)
+ *          --mode local  (required for now, will be removed later)
+ **/
+
 import 'app-module-path/register';  // so we can use absolute path to import
 
 import fs from 'fs';
@@ -43,10 +61,12 @@ function shutdown(): void {
 
 // Free training service resources on unexpected shutdown.
 // A graceful stop should use REST API.
-// They calls the same function, but interrupts can cause strange behaviors on children processes.
+// Both call the same function, but interrupts can cause strange behaviors in children processes.
 process.on('SIGBREAK', shutdown);
 process.on('SIGINT', shutdown);
 process.on('SIGTERM', shutdown);
+
+/* main */
 
 initGlobals();
 
@@ -63,5 +83,5 @@ start().then(() => {
 });
 
 // Node.js exits when there is no active handler,
-// and we registered a lot of handlers which are never cleaned up.
+// and we have registered a lot of handlers which are never cleaned up.
 // So it runs forever until NNIManager calls `process.exit()`.
