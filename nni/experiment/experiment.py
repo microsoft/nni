@@ -91,7 +91,7 @@ class Experiment:
         self.id: str = management.generate_experiment_id()
         self.port: Optional[int] = None
         self._proc: Optional[Popen] = None
-        self.mode = 'new'
+        self.mode = 'create'
         self.url_prefix: Optional[str] = None
 
         args = [config, training_service]  # deal with overloading
