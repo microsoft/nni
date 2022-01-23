@@ -22,29 +22,30 @@ import { getExperimentStartupInfo, setExperimentStartupInfo } from './experiment
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
+import globals from './globals';
 
 function getExperimentRootDir(): string {
-    return getExperimentStartupInfo().logDir;
+    return globals.paths.experimentRoot;
 }
 
 function getLogDir(): string {
-    return path.join(getExperimentRootDir(), 'log');
+    return globals.paths.logDirectory;
 }
 
 function getLogLevel(): string {
-    return getExperimentStartupInfo().logLevel;
+    return globals.args.logLevel;
 }
 
 function getDefaultDatabaseDir(): string {
-    return path.join(getExperimentRootDir(), 'db');
+    return globals.paths.databaseDirectory;
 }
 
 function getCheckpointDir(): string {
-    return path.join(getExperimentRootDir(), 'checkpoint');
+    return globals.paths.checkpointDirectory;
 }
 
 function getExperimentsInfoPath(): string {
-    return path.join(os.homedir(), 'nni-experiments', '.experiment');
+    return globals.paths.experimentsList;
 }
 
 async function mkDirP(dirPath: string): Promise<void> {

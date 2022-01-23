@@ -32,9 +32,8 @@ import httpProxy from 'http-proxy';
 import { Deferred } from 'ts-deferred';
 
 import { Singleton } from 'common/component';
-import { getBasePort, getPrefixUrl } from 'common/experimentStartupInfo';
+import globals from 'common/globals';
 import { Logger, getLogger } from 'common/log';
-import { getLogDir } from 'common/utils';
 import { createRestHandler } from './restHandler';
 
 /**
@@ -53,9 +52,8 @@ export class RestServer {
     // I would prefer to get port and urlPrefix by constructor parameters,
     // but this is impossible due to limitation of IOC.
     constructor() {
-        this.port = getBasePort();
-        // Stripping slashes should be done inside ExperimentInfo, but I don't want to touch it for now.
-        this.urlPrefix = '/' + stripSlashes(getPrefixUrl());
+        this.port = globals.args.port;
+        this.urlPrefix = '/' + globals.args.urlPrefix;
     }
 
     // The promise is resolved when it's ready to serve requests.
@@ -126,7 +124,7 @@ function rootRouter(stopCallback: () => Promise<void>): Router {
     // The REST API path "/logs" does not match file system path "/log".
     // Here we use an additional router to workaround this problem.
     const logRouter = Router();
-    logRouter.get('*', express.static(getLogDir()));
+    logRouter.get('*', express.static(globals.paths.logDirectory));
     router.use('/logs', logRouter);
 
     /* NAS model visualization */
@@ -151,10 +149,6 @@ function netronProxy(): Router {
         proxy.web(req, res, { changeOrigin: true, target: netronUrl });
     });
     return router;
-}
-
-function stripSlashes(str: string): string {
-    return str.replace(/^\/+/, '').replace(/\/+$/, '');
 }
 
 let webuiPath: string = path.resolve('static');
