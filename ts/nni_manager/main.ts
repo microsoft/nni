@@ -21,7 +21,6 @@ import { NNIManager } from 'core/nnimanager';
 import { SqlDB } from 'core/sqlDatabase';
 import { RestServer } from 'rest_server';
 
-// Asynchronous part of initialization.
 async function start(): Promise<void> {
     getLogger('main').info('Start NNI manager');
 
@@ -54,7 +53,12 @@ initGlobals();
 start().then(() => {
     getLogger('main').debug('start() returned.');
 }).catch((err: Error) => {
-    getLogger('main').error('Failed to start:', err);
+    try {
+        getLogger('main').error('Failed to start:', err);
+    } catch (loggerError: Error) {
+        console.log('Failed to start:', err);
+        console.log('Seems logger is faulty:', loggerError);
+    }
     process.exit(1);
 });
 
