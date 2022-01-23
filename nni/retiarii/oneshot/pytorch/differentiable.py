@@ -38,9 +38,6 @@ class DartsModule(BaseOneShotLightningModule):
     """
     automatic_optimization = False
 
-    def on_train_start(self) -> None:
-        return super().on_train_start()
-
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
@@ -55,7 +52,7 @@ class DartsModule(BaseOneShotLightningModule):
         # methods such as proxyless. See code of those methods for details.
         self.resample_architecture()
         arc_optim.zero_grad()
-        arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
+        arc_step_loss = self._extract_user_loss(val_batch, 2 * batch_idx)
         self.manual_backward(arc_step_loss)
         self.finalize_grad()
         arc_optim.step()
@@ -64,7 +61,7 @@ class DartsModule(BaseOneShotLightningModule):
         self.resample_architecture()
         for opt in w_optim:
             opt.zero_grad()
-        w_step_loss = self.model.training_step(trn_batch, 2 * batch_idx + 1)
+        w_step_loss = self._extract_user_loss(trn_batch, 2 * batch_idx + 1)
         self.manual_backward(w_step_loss)
         for opt in w_optim:
             opt.step()
@@ -294,6 +291,7 @@ class SNASLayerChoice(nn.Module):
         return torch.sum(op_results * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
 
     def resample(self):
+        # gumble soft-max
         log_alpha = torch.log(self.alpha)
         u = torch.zeros_like(log_alpha).uniform_()
         softmax = torch.nn.Softmax(-1)
@@ -304,7 +302,7 @@ class SNASLayerChoice(nn.Module):
             yield p
 
     def named_parameters(self):
-        for name, p in super(DartsLayerChoice, self).named_parameters():
+        for name, p in super().named_parameters():
             if name == 'alpha':
                 continue
             yield name, p
@@ -330,6 +328,7 @@ class SNASInputChoice(nn.Module):
         return torch.sum(inputs * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
 
     def resample(self):
+        # gumble soft-max
         log_alpha = torch.log(self.alpha)
         u = torch.zeros_like(log_alpha).uniform_()
         softmax = torch.nn.Softmax(-1)
@@ -340,7 +339,7 @@ class SNASInputChoice(nn.Module):
             yield p
 
     def named_parameters(self):
-        for name, p in super(DartsInputChoice, self).named_parameters():
+        for name, p in super().named_parameters():
             if name == 'alpha':
                 continue
             yield name, p

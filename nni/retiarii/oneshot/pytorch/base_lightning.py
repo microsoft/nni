@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 from warnings import warn
-from typing import Any, Dict
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
@@ -115,6 +114,15 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model(x)
 
     def training_step(self, batch, batch_idx):
+        # You can use self.optimizers() in training_step to get a list of all optimizers.
+        # Model optimizers comes after architecture optimizers, and the number of architecture
+        # optimizers is self.arc_optim_count.
+        #
+        # Example :
+        # optims = self.optimizers()
+        # arc_optims = optims[:self.arc_optim_count] # architecture optimizers
+        # w_optimizers = optims[self.arc_optim_count:] # model optimizers
+
         return self.model.training_step(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx):
@@ -125,11 +133,11 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Combine architecture optimizers and user's model optimizers.
         Overwrite configure_architecture_optimizers if architecture optimizers
         are needed in your NAS algorithm.
+        By default ''self.model'' is currently a _SupervisedLearningModule in
+        nni.retiarii.evaluator.pytorch.lightning, and it only returns 1 optimizer.
+        But for extendibility, codes for other return value types are also implemented.
         """
         arc_optimizers = self.configure_architecture_optimizers()
-        if isinstance(arc_optimizers, optim.Optimizer):
-            arc_optimizers = [arc_optimizers]
-
         if arc_optimizers is None:
             return self.model.configure_optimizers()
 
@@ -137,13 +145,51 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
-        w_optimizers = self.model.configure_optimizers()
-        if isinstance(w_optimizers, optim.Optimizer):
-            w_optimizers = [w_optimizers]
-        else:
-            w_optimizers = list(w_optimizers)
+        optim_conf = self.model.configure_optimizers()
+        optimizers, lr_schedulers = [], []
 
-        return arc_optimizers + w_optimizers
+        # single output, single optimizer
+        if isinstance(optim_conf, optim.Optimizer):
+            optimizers = [optim_conf]
+        # two lists, optimizer + lr schedulers
+        elif (
+            isinstance(optim_conf, (list, tuple))
+            and len(optim_conf) == 2
+            and isinstance(optim_conf[0], list)
+            and all(isinstance(opt, optim.Optimizer) for opt in optim_conf[0])
+        ):
+            opt, sch = optim_conf
+            optimizers = opt
+            lr_schedulers = sch if isinstance(sch, list) else [sch]
+        # single dictionary
+        elif isinstance(optim_conf, dict):
+            optimizers = [optim_conf["optimizer"]]
+            lr_schedulers = [optim_conf["lr_scheduler"]] if "lr_scheduler" in optim_conf else []
+        # multiple dictionaries
+        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
+            optimizers = [opt_dict["optimizer"] for opt_dict in optim_conf]
+            scheduler_dict = (
+                lambda scheduler, opt_idx: dict(scheduler, opt_idx=opt_idx)
+                if isinstance(scheduler, dict)
+                else {"scheduler": scheduler, "opt_idx": opt_idx}
+            )
+
+            lr_schedulers = [
+                scheduler_dict(opt_dict["lr_scheduler"], opt_idx)
+                for opt_idx, opt_dict in enumerate(optim_conf)
+                if "lr_scheduler" in opt_dict
+            ]
+            # Note that because architecture optimizers are also provided, user-provided ''frequency''s
+            # are ignored. Otherwise this can not pass the assertion that len(frequency)==len(optimizers)
+            # in lightning trainer code.
+        # single list or tuple, multiple optimizer
+        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, optim.Optimizer) for opt in optim_conf):
+            optimizers = list(optim_conf)
+        # unknown configuration
+        else:
+            raise Exception("Unknown configuration for model optimizers.")
+
+        return arc_optimizers + optimizers, lr_schedulers
 
     def configure_architecture_optimizers(self):
         '''
@@ -153,10 +199,23 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Returns
         ----------
         arc_optimizers : List[Optimizer], Optimizer
-            optimizers used by a specific NAS algorithm for its architecture parameters
+            Optimizers used by a specific NAS algorithm for its architecture parameters.
+            Return None if no architecture optimizers are needed.
         '''
-        arc_optimizers = []
+        arc_optimizers = None
         return arc_optimizers
+
+    def _extract_user_loss(self, batch, batch_index):
+        """
+        Handle different type of the return value of user's training_step and
+        return the loss tensor.
+        Use this instead of ''self.model.training_step(batch, batch_index)''
+        """
+        training_loss = self.model.training_step(batch, batch_index)
+        if isinstance(training_loss, dict):
+            training_loss = training_loss.get('loss')
+
+        return training_loss
 
     @property
     def default_replace_dict(self):
@@ -175,7 +234,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         replace_dict = {}
         return replace_dict
 
-    def export(self) -> Dict[str, Any]:
+    def export(self):
         """
         Export the NAS result, idealy the best choice of each nas_modules.
         You may implement an export method for your customized nas_module.

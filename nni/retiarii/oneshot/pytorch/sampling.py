@@ -8,7 +8,6 @@ import torch.nn.functional as F
 import torch.optim as optim
 
 from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice
-
 from .random import PathSamplingLayerChoice, PathSamplingInputChoice
 from .base_lightning import BaseOneShotLightningModule
 
@@ -237,7 +236,7 @@ class EnasModule(BaseOneShotLightningModule):
             self._resample()
             for opt in w_opt:
                 opt.zero_grad()
-            w_step_loss = self.model.training_step(batch, batch_idx)
+            w_step_loss = self._extract_user_loss(batch, batch_idx)
             self.manual_backward(w_step_loss)
             for opt in w_opt:
                 opt.step()
@@ -299,7 +298,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
 
     def training_step(self, batch, batch_idx):
         self._resample()
-        return self.model.training_step(batch, batch_idx)
+        return self._extract_user_loss(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx):
         self._resample()
