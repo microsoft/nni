@@ -128,13 +128,10 @@ async function configRestServer(urlPrefix?: string) {
         await restServer.shutdown();
     }
 
-    globals.args.port = 0;
-    globals.args.urlPrefix = urlPrefix ?? '';
     globals.paths.logDirectory = path.join(__dirname, 'log');
-
     UnitTestHelpers.setWebuiPath(path.join(__dirname, 'static'));
 
-    restServer = new RestServer();
+    restServer = new RestServer(0, urlPrefix ?? '');
     await restServer.start();
     const port = UnitTestHelpers.getPort(restServer);
 

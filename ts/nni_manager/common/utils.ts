@@ -18,7 +18,7 @@ import { Container } from 'typescript-ioc';
 import glob from 'glob';
 
 import { Database, DataStore } from './datastore';
-import { getExperimentStartupInfo, setExperimentStartupInfo } from './experimentStartupInfo';
+import { resetExperimentStartupInfo } from './experimentStartupInfo';
 import { ExperimentConfig, Manager } from './manager';
 import { ExperimentManager } from './experimentManager';
 import { HyperParameters, TrainingService, TrialJobStatus } from './trainingService';
@@ -168,7 +168,21 @@ function prepareUnitTest(): void {
 
     const logLevel: string = parseArg(['--log_level', '-ll']);
 
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
+    // TODO: requrie is bad
+    const utGlobals = require('./globals/unittest').default;
+    utGlobals.init({
+        port: 8080,
+        experimentId: 'unittest',
+        action: 'create',
+        experimentsDirectory: path.join(os.homedir(), 'nni-experiments'),
+        logLevel: 'info',
+        foreground: false,
+        urlPrefix: '',
+        mode: 'unittest'
+    });
+    resetExperimentStartupInfo();
+
+    //setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
     mkDirPSync(getLogDir());
 
     const sqliteFile: string = path.join(getDefaultDatabaseDir(), 'nni.sqlite');
@@ -189,8 +203,8 @@ function cleanupUnitTest(): void {
     Container.restore(DataStore);
     Container.restore(Database);
     Container.restore(ExperimentManager);
-    const logLevel: string = parseArg(['--log_level', '-ll']);
-    setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
+    //const logLevel: string = parseArg(['--log_level', '-ll']);
+    //setExperimentStartupInfo(true, 'unittest', 8080, 'unittest', undefined, logLevel);
 }
 
 let cachedIpv4Address: string | null = null;

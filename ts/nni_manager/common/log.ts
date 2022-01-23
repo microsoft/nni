@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT license.
 
-import fs from 'fs';
-import { Writable } from 'stream';
 import util from 'util';
+
+import globals from 'common/globals';
 
 /* log level constants */
 
@@ -25,9 +25,9 @@ const levelNames = new Map<number, string>([
     [TRACE, 'TRACE'],
 ]);
 
-/* global_ states */
+/* global states */
 
-let logLevel: number = 0;
+let logLevel: number | undefined = undefined;
 const loggers = new Map<string, Logger>();
 
 /* major api */
@@ -68,8 +68,7 @@ export class Logger {
     }
 
     private log(level: number, args: any[]): void {
-        const logFile: Writable | undefined = (global as any).logFile;
-        if (level < logLevel) {
+        if (level < logLevel!) {
             return;
         }
 
@@ -83,19 +82,14 @@ export class Logger {
 
         const message = args.map(arg => (typeof arg === 'string' ? arg : util.inspect(arg))).join(' ');
         
-        const record = `[${datetime}] ${levelName} (${this.name}) ${message}`;
-
-        if (logFile === undefined) {
-            if (!isUnitTest()) {  // be quite for unit test
-                console.log(record);
-            }
-        } else {
-            logFile.write(record + '\n');
-        }
+        globals.logStream.writeLine(`[${datetime}] ${levelName} (${this.name}) ${message}`);
     }
 }
 
 export function getLogger(name: string = 'root'): Logger {
+    if (logLevel === undefined) {
+        setLogLevel(globals.args.logLevel);
+    }
     let logger = loggers.get(name);
     if (logger === undefined) {
         logger = new Logger(name);
@@ -118,24 +112,10 @@ export function setLogLevel(levelName: string): void {
     }
 }
 
-export function startLogging(logPath: string): void {
-    (global as any).logFile = fs.createWriteStream(logPath, {
-        flags: 'a+',
-        encoding: 'utf8',
-        autoClose: true
-    });
+export function startLogging(): void {
+    globals.logStream.open();
 }
 
 export function stopLogging(): void {
-    if ((global as any).logFile !== undefined) {
-        (global as any).logFile.end();
-        (global as any).logFile = undefined;
-    }
-}
-
-/* utilities */
-
-function isUnitTest(): boolean {
-    const event = process.env['npm_lifecycle_event'] ?? '';
-    return event.startsWith('test') || event === 'mocha' || event === 'nyc';
+    globals.logStream.close();
 }

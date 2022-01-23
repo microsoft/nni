@@ -15,7 +15,15 @@
  **/
 
 import { parseArgs } from './arguments';
+import { LogStream, dummyStream } from './log_stream';
 import { initPaths } from './paths';
+
+export interface NniGlobals {
+    readonly args: NniManagerArgs;
+    readonly paths: NniPaths;
+
+    readonly logStream: LogStream;
+}
 
 export interface NniManagerArgs {
     readonly port: number;
@@ -42,18 +50,15 @@ export interface NniPaths {
     readonly databaseDirectory: string;
 }
 
-export interface NniGlobals {
-    readonly args: NniManagerArgs;
-    readonly paths: NniPaths;
-}
-
 class Globals implements NniGlobals {
-    args: NniManagerArgs;
-    paths: NniPaths;
+    args!: NniManagerArgs;
+    paths!: NniPaths;
+    logStream: LogStream = dummyStream;
 
-    constructor() {
+    init(): void {
         this.args = parseArgs(process.argv.slice(2));
         this.paths = initPaths(this.args);
+        this.logStream = new LogStream(this.args, this.paths);
     }
 }
 
@@ -65,7 +70,10 @@ declare global {
 if (global.nni === undefined) {
     global.nni = new Globals();
 }
+const globals: NniGlobals = global.nni;
+export default globals;
 
-const nniGlobals: NniGlobals = global.nni;
-
-export default nniGlobals;
+// Must and must only be invoked in "main.ts".
+export function initGlobals(): void {
+    (<Globals>globals).init();
+}

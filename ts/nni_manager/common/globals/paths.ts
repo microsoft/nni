@@ -6,6 +6,7 @@
  **/
 
 import assert from 'assert/strict';
+import fs from 'fs';
 import os from 'os';
 import path from 'path';
 
@@ -19,6 +20,9 @@ export function initPaths(args: NniManagerArgs): NniPaths {
     const checkpointDirectory = path.join(experimentRoot, 'checkpoint');
     const databaseDirectory = path.join(experimentRoot, 'db');
     const logDirectory = path.join(experimentRoot, 'log');
+
+    // TODO: move all mkdir here
+    fs.mkdirSync(logDirectory, { recursive: true });
 
     const nniManagerLog = path.join(logDirectory, 'nnimanager.log');
 
