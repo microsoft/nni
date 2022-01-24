@@ -7,7 +7,7 @@ smac4nni
 
 # BOHB
 ConfigSpace>=0.4.17
-statsmodels==0.12.0
+statsmodels>=0.12.0
 
 # PPOTuner
 gym

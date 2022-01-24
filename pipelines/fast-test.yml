@@ -1,5 +1,6 @@
-# To reduce debug cost, steps are sorted differently on each platform,
-# so that a bug in any module will cause at least one platform to fail quickly.
+trigger:
+  branches:
+    exclude: [ l10n_master ]
 
 stages:
 - stage: lint
@@ -7,42 +8,20 @@ stages:
   - job: docs
     pool:
       vmImage: ubuntu-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.9
-      displayName: Configure Python version
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
+
     - script: |
         sudo apt-get install -y pandoc
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        python -m pip install -r dependencies/required.txt
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -r dependencies/required_extra.txt
-      displayName: Install requirements
-    - script: |
-        python test/vso_tools/interim_patch.py
-      displayName: Apply patch
+      displayName: Install pandoc
+
     - script: |
         cd docs
         python tools/chineselink.py check
       displayName: Translation up-to-date
+
     - script: |
         cd docs/en_US
         sphinx-build -M html . _build -W --keep-going -T
@@ -51,37 +30,20 @@ stages:
   - job: python
     pool:
       vmImage: ubuntu-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.9
-      displayName: Configure Python version
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
+
     - script: |
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
+        # pylint requires newer typing extension. Override requirements in tensorflow
+        python -m pip install "typing-extensions>=3.10"
+      displayName: Resolve dependency version
+
     - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        python -m pip install -r dependencies/required.txt
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -r dependencies/required_extra.txt
-        python -m pip install "typing-extensions>=3.10"  # pylint requires newer typing extension. Override requirements in tensorflow
-      displayName: Install requirements
-    - script: python -m pylint --rcfile pylintrc nni
+        python -m pylint --rcfile pylintrc nni
       displayName: pylint
+
     - script: |
         set -e
         python -m flake8 nni --count --select=E9,F63,F72,F82 --show-source --statistics
@@ -92,103 +54,45 @@ stages:
   - job: typescript
     pool:
       vmImage: ubuntu-latest
-    variables:
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
     steps:
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-    - task: Cache@2
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
+
     - script: |
         set -e
-        cd ts/nni_manager
-        yarn
-        yarn eslint
+        yarn --cwd ts/nni_manager
+        yarn --cwd ts/nni_manager eslint
       displayName: ESLint (NNI Manager)
+
     - script: |
         set -e
-        cd ts/webui
-        yarn
-        yarn eslint
+        yarn --cwd ts/webui
+        yarn --cwd ts/webui eslint
       displayName: ESLint (WebUI)
 
 
+  # To reduce debug cost, steps are sorted differently on each platform,
+  # so that a bug in any module will cause at least one platform to fail quickly.
 - stage: test
   jobs:
   - job: ubuntu_latest
     pool:
       vmImage: ubuntu-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.9
-      displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-
-    - script: |
-        sudo apt-get install -y pandoc
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | latest | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-
-    - task: Cache@2
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | latest | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
-
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install Python tools
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-latest
 
     - script: |
         python setup.py develop
-        mkdir -p coverage
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install NNI
 
     - script: |
         set -e
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[PPOTuner,DNGO]
-      displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        python test/vso_tools/interim_patch.py
-      displayName: Torch utils tensorboard interim patch
-
-    - script: |
-        set -e
+        mkdir -p coverage
         cd test
         python -m pytest ut --cov-config=.coveragerc \
           --ignore=ut/compression/v1/test_pruners.py \
@@ -203,10 +107,8 @@ stages:
       displayName: Python unit test
 
     - script: |
-        set -e
-        cd ts/nni_manager
-        yarn test
-        cp coverage/cobertura-coverage.xml ../../coverage/typescript.xml
+        yarn --cwd ts/nni_manager test
+        cp ts/nni_manager/coverage/cobertura-coverage.xml coverage/typescript.xml
       displayName: TypeScript unit test
 
     - task: PublishTestResults@2
@@ -230,70 +132,16 @@ stages:
   - job: ubuntu_legacy
     pool:
       vmImage: ubuntu-18.04
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
 
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.7
-      displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-
-    - script: |
-        sudo apt-get install -y pandoc
-        sudo apt-get remove swig -y
-        sudo apt-get install swig3.0 -y
-        sudo ln -s /usr/bin/swig3.0 /usr/bin/swig
-      displayName: Install apt packages
-
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | legacy | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-
-    - task: Cache@2
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | legacy | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
-
-    - script: |
-        set -e
-        cd dependencies
-        python -m pip install -U -r setup.txt
-        # FIXME: Version resolving is a complete mess. Now it works magically.
-        python -m pip install numpy==1.21.5
-        python -m pip install -r develop.txt
-        python -m pip install -r required.txt
-        python -m pip install -r required_extra.txt
-        python -m pip install -r recommended_legacy.txt
-        python -m pip install numpy==1.21.5
-        python -m pip install pytorch-lightning==1.5.9
-        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
-      displayName: Install Python dependencies
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: ubuntu-legacy
 
     - script: |
         python setup.py develop
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
       displayName: Install NNI
-
-    # Need del later
-    - script: |
-        set -e
-        python test/vso_tools/interim_patch.py
-      displayName: Torch utils tensorboard interim patch
-
 
     - script: |
         cd test
@@ -308,157 +156,29 @@ stages:
       displayName: Python unit test
 
     - script: |
-        set -e
-        cd ts/nni_manager
-        yarn test
+        yarn --cwd ts/nni_manager test
       displayName: TypeScript unit test
-
-  - job: macos
-    pool:
-      vmImage: macOS-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-    timeoutInMinutes: 90  # macos test need extra time
-
-    steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.9
-      displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-
-    - script: |
-        brew install swig@3
-        rm -f /usr/local/bin/swig
-        ln -s /usr/local/opt/swig\@3/bin/swig /usr/local/bin/swig
-      displayName: Install brew packages
-
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-
-    - task: Cache@2
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
-
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-        echo "##vso[task.setvariable variable=PATH]${PATH}:${HOME}/.local/bin"
-      displayName: Install Python tools
-
-    - script: |
-        python setup.py develop
-      displayName: Install NNI
-
-    - script: |
-        set -e
-        export CI=true
-        (cd ts/nni_manager && yarn test --exclude test/core/nnimanager.test.ts)
-      displayName: TypeScript unit test
-
-    - script: |
-        set -e
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[SMAC,BOHB,PPOTuner,DNGO]
-      displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python test/vso_tools/interim_patch.py
-      displayName: Torch utils tensorboard interim patch
-
-    - script: |
-        cd test
-        python -m pytest ut
-      displayName: Python unit test
-
-    - script: |
-        cd test
-        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
-      displayName: Simple integration test
 
   - job: windows
     pool:
       vmImage: windows-latest
-    variables:
-      PIP_CACHE_DIR: $(Pipeline.Workspace)/.pip
-      YARN_CACHE_FOLDER: $(Pipeline.Workspace)/.yarn
-    timeoutInMinutes: 120  # windows test need extra time
 
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: 3.9
-      displayName: Configure Python version
-
-    - task: NodeTool@0
-      inputs:
-        versionSpec: 16.3.0
-      displayName: Configure Node.js version
-
-    - task: Cache@2
-      inputs:
-        key: 'python | "$(Agent.OS)" | dependencies/*.txt'
-        restoreKeys: | 
-          python | "$(Agent.OS)"
-          python
-        path: $(PIP_CACHE_DIR)
-      displayName: Cache pip packages
-
-    - task: Cache@2
-      inputs:
-        key: 'yarn | "$(Agent.OS)" | ts/**/yarn.lock, !**/node_modules/**'
-        restoreKeys: |
-          yarn | "$(Agent.OS)"
-        path: $(YARN_CACHE_FOLDER)
-      displayName: Cache yarn packages
-
-    - script: |
-        set -e
-        python -m pip install -U -r dependencies/setup.txt
-        python -m pip install -r dependencies/develop.txt
-      displayName: Install Python tools
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: windows
 
     - script: |
         python setup.py develop --no-user
       displayName: Install NNI
 
     - script: |
-        python -m pip install -r dependencies/recommended.txt
-        python -m pip install -e .[DNGO]
-      displayName: Install extra dependencies
-
-    # Need del later
-    - script: |
-        set -e
-        python test/vso_tools/interim_patch.py
-      displayName: Torch utils tensorboard interim patch
-
-    - script: |
         cd test
         python -m pytest ut
       displayName: Python unit test
 
     - script: |
-        cd ts/nni_manager
-        yarn test
+        yarn --cwd ts/nni_manager test
       displayName: TypeScript unit test
 
     - script: |
@@ -466,7 +186,30 @@ stages:
         python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
       displayName: Simple integration test
 
+  - job: macos
+    pool:
+      vmImage: macOS-latest
 
-trigger:
-  branches:
-    exclude: [ l10n_master ]
+    steps:
+    - template: templates/install-dependencies.yml
+      parameters:
+        platform: macos
+
+    - script: |
+        python setup.py develop
+        echo "##vso[task.setvariable variable=PATH]${HOME}/.local/bin:${PATH}"
+      displayName: Install NNI
+
+    - script: |
+        CI=true yarn --cwd ts/nni_manager test --exclude test/core/nnimanager.test.ts
+      displayName: TypeScript unit test
+
+    - script: |
+        cd test
+        python -m pytest ut
+      displayName: Python unit test
+
+    - script: |
+        cd test
+        python nni_test/nnitest/run_tests.py --config config/pr_tests.yml
+      displayName: Simple integration test
