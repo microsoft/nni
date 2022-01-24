@@ -59,7 +59,7 @@ steps:
     python -m pip uninstall -y ConfigSpaceNNI
     python -m pip install ConfigSpaceNNI
   displayName: (Ubuntu) Rebuild ConfigSpaceNNI
-  condition: and(succeeded(), not(${{ parameters.useCache }}))
+  condition: and(succeeded(), not(${{ parameters.useCache }}), contains('${{ parameters.platform }}', 'ubuntu'))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
