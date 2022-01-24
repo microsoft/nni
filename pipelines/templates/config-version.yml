@@ -1,0 +1,25 @@
+parameters:
+- name: platform
+  type: string
+
+steps:
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: 3.9
+  displayName: (latest) Configure Python version
+  condition: and(succeeded(), not(contains('${{ parameters.platform }}', 'legacy')))
+
+- task: UsePythonVersion@0
+  inputs:
+    versionSpec: 3.7
+  displayName: (legacy) Configure Python version
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+
+- task: NodeTool@0
+  inputs:
+    versionSpec: 16.3.0
+  displayName: Configure Node.js version
+
+- script: |
+    python -m pip install pip==21.3.1 setuptools==60.5.0 wheel==0.37.1
+  displayName: Install PyPA tools
