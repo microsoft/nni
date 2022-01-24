@@ -83,6 +83,9 @@ pygments_style = None
 # HTML logo
 html_logo = '../img/nni_icon.svg'
 
+# HTML favicon
+html_favicon = '../img/favicon.ico'
+
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
@@ -131,13 +134,15 @@ class html_context_dict(dict):
 
         # rename versions as theme_version_info
         if 'versions' in kwargs:
-            kwargs['theme_version_info'] = dict(kwargs['version'])
+            kwargs['theme_version_info'] = dict(kwargs['versions'])
 
         # support other logics here if needed
         return super().update(**kwargs)
 
 # Declare html_context here, so that readthedocs can find it in the globals()
-html_context = html_context_dict()
+# Annotated as any to suppress warnings
+from typing import Any
+html_context: Any = html_context_dict()
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
