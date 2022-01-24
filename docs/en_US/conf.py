@@ -121,6 +121,23 @@ html_theme_options = {
     'version_json': '../static/versions.json'
 }
 
+# Customizing html context, so that some keys inserted by readthedocs
+# gets populated into other keys in the format of sphinx-material
+class html_context_dict(dict):
+    def update(self, *args, **kwargs):
+        assert (len(args) == 1 and isinstance(args[0], dict)) or not args
+        if len(args) == 1:
+            return self.update(**args[0])
+
+        # rename versions as theme_version_info
+        if 'versions' in kwargs:
+            kwargs['theme_version_info'] = dict(kwargs['version'])
+
+        # support other logics here if needed
+        return super().update(**kwargs)
+
+# Declare html_context here, so that readthedocs can find it in the globals()
+html_context = html_context_dict()
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
