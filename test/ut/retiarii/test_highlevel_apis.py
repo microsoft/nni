@@ -772,6 +772,8 @@ class Python(GraphIR):
 
         values = [4, 8, 16, 32, 64, 128]
         divisors = [2, 3, 5, 7, 15]
+        with pytest.raises(RuntimeError):
+            original_make_divisible(nn.ValueChoice(values, label='value'), nn.ValueChoice(divisors, label='divisor'))
         result = make_divisible(nn.ValueChoice(values, label='value'), nn.ValueChoice(divisors, label='divisor'))
         for value in values:
             for divisor in divisors:
