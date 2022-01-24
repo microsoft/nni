@@ -1,7 +1,7 @@
 import torch.nn as nn
 import math
 
-from .proxylessnas import make_divisible
+from .proxylessnas import InvertedResidual, make_divisible
 
 
 __all__ = ['mobilenetv3_large', 'mobilenetv3_small']
@@ -25,84 +25,11 @@ class h_swish(nn.Module):
         return x * self.sigmoid(x)
 
 
-class SELayer(nn.Module):
-    def __init__(self, channel, reduction=4):
-        super(SELayer, self).__init__()
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-                nn.Linear(channel, make_divisible(channel // reduction, 8)),
-                nn.ReLU(inplace=True),
-                nn.Linear(make_divisible(channel // reduction, 8), channel),
-                h_sigmoid()
-        )
-
-    def forward(self, x):
-        b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.fc(y).view(b, c, 1, 1)
-        return x * y
-
-
-def conv_3x3_bn(inp, oup, stride):
-    return nn.Sequential(
-        nn.Conv2d(inp, oup, 3, stride, 1, bias=False),
-        nn.BatchNorm2d(oup),
-        h_swish()
-    )
-
-
-def conv_1x1_bn(inp, oup):
-    return nn.Sequential(
-        nn.Conv2d(inp, oup, 1, 1, 0, bias=False),
-        nn.BatchNorm2d(oup),
-        h_swish()
-    )
-
-
-class InvertedResidual(nn.Module):
-    def __init__(self, inp, hidden_dim, oup, kernel_size, stride, use_se, use_hs):
-        super(InvertedResidual, self).__init__()
-        assert stride in [1, 2]
-
-        self.identity = stride == 1 and inp == oup
-
-        if inp == hidden_dim:
-            self.conv = nn.Sequential(
-                # dw
-                nn.Conv2d(hidden_dim, hidden_dim, kernel_size, stride, (kernel_size - 1) // 2, groups=hidden_dim, bias=False),
-                nn.BatchNorm2d(hidden_dim),
-                h_swish() if use_hs else nn.ReLU(inplace=True),
-                # Squeeze-and-Excite
-                SELayer(hidden_dim) if use_se else nn.Identity(),
-                # pw-linear
-                nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(oup),
-            )
-        else:
-            self.conv = nn.Sequential(
-                # pw
-                nn.Conv2d(inp, hidden_dim, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(hidden_dim),
-                h_swish() if use_hs else nn.ReLU(inplace=True),
-                # dw
-                nn.Conv2d(hidden_dim, hidden_dim, kernel_size, stride, (kernel_size - 1) // 2, groups=hidden_dim, bias=False),
-                nn.BatchNorm2d(hidden_dim),
-                # Squeeze-and-Excite
-                SELayer(hidden_dim) if use_se else nn.Identity(),
-                h_swish() if use_hs else nn.ReLU(inplace=True),
-                # pw-linear
-                nn.Conv2d(hidden_dim, oup, 1, 1, 0, bias=False),
-                nn.BatchNorm2d(oup),
-            )
-
-    def forward(self, x):
-        if self.identity:
-            return x + self.conv(x)
-        else:
-            return self.conv(x)
-
-
 class MobileNetV3(nn.Module):
+    """
+    We use the following snipppet as reference.
+    https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
+    """
     def __init__(self, cfgs, mode, num_classes=1000, width_mult=1.):
         super(MobileNetV3, self).__init__()
         # setting of inverted residual blocks

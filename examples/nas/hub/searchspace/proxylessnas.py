@@ -1,5 +1,5 @@
 import math
-from typing import Optional, Callable, List
+from typing import Optional, Callable, List, Tuple
 
 import torch
 import nni.retiarii.nn.pytorch as nn
@@ -52,6 +52,31 @@ class ConvBNReLU(nn.Sequential):
         self.out_channels = out_channels
 
 
+class SELayer(nn.Module):
+    """Squeeze-and-excite layer."""
+
+    def __init__(self,
+                 channels: int,
+                 reduction: int = 4,
+                 activation_layer: Optional[Callable[..., nn.Module]] = None):
+        super().__init__()
+        if activation_layer is None:
+            activation_layer = nn.ReLU6
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channels, make_divisible(channels // reduction, 8)),
+            nn.ReLU(inplace=True),
+            nn.Linear(make_divisible(channels // reduction, 8), channels),
+            activation_layer()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y
+
+
 class InvertedResidual(nn.Sequential):
     """
     An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
@@ -77,9 +102,11 @@ class InvertedResidual(nn.Sequential):
         kernel_size: int = 3,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         omit_expansion: bool = True,
+        squeeze_and_excite: bool = False,
     ) -> None:
         super(InvertedResidual, self).__init__()
         self.stride = stride
+        self.out_channels = out_channels
         assert stride in [1, 2]
 
         if norm_layer is None:
@@ -97,15 +124,21 @@ class InvertedResidual(nn.Sequential):
             # point-wise convolution
             layers.append(ConvBNReLU(in_channels, hidden_ch, kernel_size=1, norm_layer=norm_layer))
 
-        layers.extend([
+        layers.append(
             # depth-wise
-            ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch, norm_layer=norm_layer),
+            ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch, norm_layer=norm_layer)
+        )
+
+        if squeeze_and_excite:
+            layers.append(SELayer(hidden_ch))
+
+        layers += [
             # pw-linear
             nn.Conv2d(hidden_ch, out_channels, 1, 1, 0, bias=False),
             norm_layer(out_channels),
-        ])
+        ]
+
         super().__init__(*layers)
-        self.out_channels = out_channels
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if self.residual_connection:
@@ -154,18 +187,16 @@ class ProxylessSpace(nn.Module):
     """
 
     def __init__(self, num_labels: int = 1000,
-                 widths: Optional[List[int]] = None,
+                 base_widths: Tuple[int] = (16, 32, 40, 80, 96, 192, 320, 1280),
                  dropout_rate: float = 0.,
                  stem_width: int = 32,
                  width_mult: float = 1.0,
                  bn_eps: float = 1e-3,
                  bn_momentum: float = 0.1):
-        if widths is None:
-            widths = [16, 32, 40, 80, 96, 192, 320, 1280]
 
-        assert len(widths) == 8
+        assert len(base_widths) == 8
         # include the last stage info widths here
-        widths = [make_divisible(width * width_mult, 8) for width in widths]
+        widths = [make_divisible(base_widths * width_mult, 8) for width in base_widths]
         downsamples = [False, True, True, True, False, True, False]
 
         self.num_labels = num_labels
