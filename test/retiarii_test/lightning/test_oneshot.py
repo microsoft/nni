@@ -135,8 +135,8 @@ def test_snas():
 
 
 if __name__ == '__main__':
-    # test_darts()
-    # test_proxyless()
-    # test_enas()
-    # test_random()
+    test_darts()
+    test_proxyless()
+    test_enas()
+    test_random()
     test_snas()

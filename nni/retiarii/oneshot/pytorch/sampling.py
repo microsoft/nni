@@ -224,8 +224,13 @@ class EnasModule(BaseOneShotLightningModule):
     def training_step(self, batch, batch_idx):
         # grad manually
         opts = self.optimizers()
-        arc_opt = opts[0]
-        w_opt = opts[1:]
+        if isinstance(opts,list):
+            # list of optimizers
+            arc_opt = opts[0]
+            w_opt = opts[1:]
+        else :
+            # no model optimizer
+            arc_opt = opts
 
         # the batch is composed with x, y, b, where b denote if the data provided
         # is from the training set
@@ -234,12 +239,14 @@ class EnasModule(BaseOneShotLightningModule):
         if is_train_batch:
             # step 1: train model params
             self._resample()
-            for opt in w_opt:
-                opt.zero_grad()
+            if w_opt is not None:
+               for opt in w_opt:
+                    opt.zero_grad()
             w_step_loss = self._extract_user_loss(batch, batch_idx)
             self.manual_backward(w_step_loss)
-            for opt in w_opt:
-                opt.step()
+            if w_opt is not None:
+                for opt in w_opt:
+                    opt.step()
         else:
             # step 2: train ENAS agent
             x, y = batch
@@ -298,7 +305,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
 
     def training_step(self, batch, batch_idx):
         self._resample()
-        return self._extract_user_loss(batch, batch_idx)
+        return self.model.training_step(batch, batch_idx)
 
     def validation_step(self, batch, batch_idx):
         self._resample()

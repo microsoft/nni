@@ -41,8 +41,13 @@ class DartsModule(BaseOneShotLightningModule):
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
-        arc_optim = opts[0]
-        w_optim = opts[1:]
+        if isinstance(opts,list):
+            # list of optimizers
+            arc_optim = opts[0]
+            w_optim = opts[1:]
+        else :
+            # no model optimizer
+            arc_optim = opts
 
         # ParallelTrainValDataLoader will yield both train and val data in a batch
         trn_batch, val_batch = batch
@@ -59,12 +64,14 @@ class DartsModule(BaseOneShotLightningModule):
 
         # phase 2: model step
         self.resample_architecture()
-        for opt in w_optim:
-            opt.zero_grad()
+        if w_optim is not None:
+            for opt in w_optim:
+                opt.zero_grad()
         w_step_loss = self._extract_user_loss(trn_batch, 2 * batch_idx + 1)
         self.manual_backward(w_step_loss)
-        for opt in w_optim:
-            opt.step()
+        if w_optim is not None:
+            for opt in w_optim:
+                opt.step()
         return w_step_loss
 
     def resample_architecture(self):
