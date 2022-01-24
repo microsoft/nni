@@ -14,6 +14,19 @@ from .nn import ModuleList
 from .utils import generate_new_label
 
 
+class _ListIdentity(nn.Identity):
+    # workaround for torchscript
+    def forward(self, x: List[torch.Tensor]) -> List[torch.Tensor]:
+        return x
+
+
+class _DefaultPostprocessor(nn.Module):
+    # this is also a workaround for torchscript
+
+    def forward(self, this_cell: torch.Tensor, prev_cell: List[torch.Tensor]) -> torch.Tensor:
+        return this_cell
+
+
 class Cell(nn.Module):
     """
     Cell structure [zophnas]_ [zophnasnet]_ that is popularly used in NAS literature.
@@ -43,6 +56,17 @@ class Cell(nn.Module):
         If "loose_end", only the nodes that have never been used as other nodes' inputs will be concatenated to the output.
         Predecessors are not considered when calculating unused nodes.
         Details can be found in reference [nds]. Default: all.
+    preprocessor : callable
+        Override this if some extra transformation on cell's input is intended.
+        It should be a callable (``nn.Module`` is also acceptable) that takes a list of tensors which are predecessors,
+        and outputs a list of tensors, with the same length as input.
+        By default, it does nothing to the input.
+    postprocessor : callable
+        Override this if customization on the output of the cell is intended.
+        It should be a callable that takes the output of this cell, and a list which are predecessors.
+        Its return type should be either one tensor, or a tuple of tensors.
+        The return value of postprocessor is the return value of the cell's forward.
+        By default, it returns only the output of the current cell.
     label : str
         Identifier of the cell. Cell sharing the same label will semantically share the same choice.
 
@@ -86,12 +110,12 @@ class Cell(nn.Module):
 
         # modules are created in "natural" order
         # first create preprocessor
-        self.preprocessor = preprocessor or nn.Identity()
+        self.preprocessor = preprocessor or _ListIdentity()
         # then create intermediate ops
         self.ops = ModuleList()
         self.inputs = ModuleList()
         # finally postprocessor
-        self.postprocessor = postprocessor or (lambda this, prev: this)
+        self.postprocessor = postprocessor or _DefaultPostprocessor()
 
         self.num_nodes = num_nodes
         self.num_ops_per_node = num_ops_per_node
@@ -131,7 +155,9 @@ class Cell(nn.Module):
     def label(self):
         return self._label
 
-    def forward(self, x: List[torch.Tensor]) -> Union[Tuple[torch.Tensor], torch.Tensor]:
+    def forward(self, x: List[torch.Tensor]):
+        # The return type should be 'Union[Tuple[torch.Tensor], torch.Tensor]'.
+        # Cannot decorate it as annotation. Otherwise torchscript will complain.
         assert isinstance(x, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
         states = self.preprocessor(x)
         for ops, inps in zip(self.ops, self.inputs):
