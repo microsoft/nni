@@ -8,7 +8,6 @@ import { Container, Scope } from 'typescript-ioc';
 
 import * as component from '../../common/component';
 import { Database, DataStore, TrialJobInfo } from '../../common/datastore';
-import { setExperimentStartupInfo } from '../../common/experimentStartupInfo';
 import { ExperimentProfile, TrialJobStatistics } from '../../common/manager';
 import { TrialJobStatus } from '../../common/trainingService';
 import { cleanupUnitTest, prepareUnitTest } from '../../common/utils';

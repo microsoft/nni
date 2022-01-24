@@ -9,7 +9,6 @@ import * as path from 'path';
 import { Container } from 'typescript-ioc';
 import * as component from '../../common/component';
 import { Database, MetricDataRecord, TrialJobEvent, TrialJobEventRecord } from '../../common/datastore';
-import { setExperimentStartupInfo } from '../../common/experimentStartupInfo';
 import { ExperimentConfig, ExperimentProfile } from '../../common/manager';
 import { cleanupUnitTest, getDefaultDatabaseDir, mkDirP, prepareUnitTest } from '../../common/utils';
 import { SqlDB } from '../../core/sqlDatabase';
