@@ -104,6 +104,7 @@ def start_experiment(action, exp_id, config, port, debug, run_mode, url_prefix):
             pid=proc.pid,
             logDir=config.experiment_working_directory,
             tag=[],
+            prefixUrl=url_prefix
         )
 
         _logger.info('Setting up...')
