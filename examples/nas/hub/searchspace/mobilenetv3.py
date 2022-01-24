@@ -1,7 +1,11 @@
-import torch.nn as nn
 import math
+from typing import Tuple
 
-from .proxylessnas import InvertedResidual, make_divisible
+import torch.nn as nn
+
+from nni.retiarii import model_wrapper
+
+from .proxylessnas import ConvBNReLU, InvertedResidual, ProxylessSpace, SeparableConv, make_divisible
 
 
 __all__ = ['mobilenetv3_large', 'mobilenetv3_small']
@@ -25,19 +29,45 @@ class h_swish(nn.Module):
         return x * self.sigmoid(x)
 
 
-class MobileNetV3(nn.Module):
+@model_wrapper
+class MobileNetV3(ProxylessSpace):
     """
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
     """
-    def __init__(self, cfgs, mode, num_classes=1000, width_mult=1.):
-        super(MobileNetV3, self).__init__()
-        # setting of inverted residual blocks
-        self.cfgs = cfgs
-        assert mode in ['large', 'small']
+    def __init__(self, num_labels: int = 1000,
+                 base_widths: Tuple[int, ...] = (16, 16, 32, 64, 128, 256, 512, 1024),
+                 width_multipliers: Tuple[float, ...] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
+                 expansion_multipliers: Tuple[float, ...] = (1.0, 2.0, 3.0, 4.0, 5.0, 6.0),
+                 dropout_rate: float = 0.,
+                 stem_width: int = 32,
+                 width_mult: float = 1.0,
+                 bn_eps: float = 1e-3,
+                 bn_momentum: float = 0.1):
+        super().__init__()
+
+        self.widths = []
+        self.width_multipliers = width_multipliers
+
+        act = h_swish
+
+        blocks = [
+            # Stem
+            ConvBNReLU(
+                3, self._get_width(base_widths[0]),
+                nn.ValueChoice([3, 5], label='first_conv_ks'),
+                stride=2, activation_layer=act
+            ),
+            SeparableConv(self.widths[-1], self._get_width(base_widths[0]), activation_layer=nn.ReLU),
+        ]
+
+        for stage_idx in range(1, 6):
+            blocks += [
+                
+            ]
 
         # building first layer
-        input_channel = make_divisible(16 * width_mult, 8)
+        input_channel = make_divisible(base_widths * width_mult, 8)
         layers = [conv_3x3_bn(3, input_channel, 2)]
         # building inverted residual blocks
         block = InvertedResidual
@@ -59,7 +89,7 @@ class MobileNetV3(nn.Module):
             nn.Linear(output_channel, num_classes),
         )
 
-        self._initialize_weights()
+        self.reset_parameters()
 
     def forward(self, x):
         x = self.features(x)
@@ -69,19 +99,11 @@ class MobileNetV3(nn.Module):
         x = self.classifier(x)
         return x
 
-    def _initialize_weights(self):
-        for m in self.modules():
-            if isinstance(m, nn.Conv2d):
-                n = m.kernel_size[0] * m.kernel_size[1] * m.out_channels
-                m.weight.data.normal_(0, math.sqrt(2. / n))
-                if m.bias is not None:
-                    m.bias.data.zero_()
-            elif isinstance(m, nn.BatchNorm2d):
-                m.weight.data.fill_(1)
-                m.bias.data.zero_()
-            elif isinstance(m, nn.Linear):
-                m.weight.data.normal_(0, 0.01)
-                m.bias.data.zero_()
+    def _get_width(self, base_width):
+        new_width = nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in self.width_multipliers],
+                                   label=f'width_{len(self.widths)}')
+        self.widths.append(new_width)
+        return new_width
 
 
 def mobilenetv3_large(**kwargs):

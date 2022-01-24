@@ -77,6 +77,36 @@ class SELayer(nn.Module):
         return x * y
 
 
+class SeparableConv(nn.Sequential):
+    """
+    In the original MobileNetV2 implementation, this is InvertedResidual when expand ratio = 1.
+    Residual connection is added if input and output shape are the same.
+    """
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        kernel_size: int = 3,
+        stride: int = 1,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        activation_layer: Optional[Callable[..., nn.Module]] = None,
+    ) -> None:
+        self.residual_connection = stride == 1 and in_channels == out_channels
+        super().__init__(
+            # dw
+            ConvBNReLU(in_channels, in_channels, stride=stride, kernel_size=kernel_size, groups=in_channels,
+                        norm_layer=norm_layer, activation_layer=activation_layer),
+            # pw-linear
+            ConvBNReLU(in_channels, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
+        )
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.residual_connection:
+            return x + super().forward(x)
+        else:
+            return super().forward(x)
+
+
 class InvertedResidual(nn.Sequential):
     """
     An Inverted Residual Block, sometimes called an MBConv Block, is a type of residual block used for image models
@@ -86,6 +116,9 @@ class InvertedResidual(nn.Sequential):
     It follows a narrow -> wide -> narrow approach, hence the inversion.
     It first widens with a 1x1 convolution, then uses a 3x3 depthwise convolution (which greatly reduces the number of parameters),
     then a 1x1 convolution is used to reduce the number of channels so input and output can be added.
+
+    Follow implementation of:
+    https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/rematlib/mobile_model_v3.py#L453
 
     References
     ----------
@@ -97,45 +130,42 @@ class InvertedResidual(nn.Sequential):
         self,
         in_channels: int,
         out_channels: int,
-        stride: int,
         expand_ratio: int,
+        stride: int = 1,
         kernel_size: int = 3,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
-        omit_expansion: bool = True,
+        activation_layer: Optional[Callable[..., nn.Module]] = None,
         squeeze_and_excite: bool = False,
     ) -> None:
-        super(InvertedResidual, self).__init__()
+        super().__init__()
         self.stride = stride
         self.out_channels = out_channels
         assert stride in [1, 2]
 
-        if norm_layer is None:
-            norm_layer = nn.BatchNorm2d
-
         hidden_ch = int(round(in_channels * expand_ratio))
 
+        # FIXME: check whether this equal works
         # Residual connection is added here stride = 1 and input channels and output channels are the same.
-        self.residual_connection = self.stride == 1 and in_channels == out_channels
+        self.residual_connection = stride == 1 and in_channels == out_channels
 
-        layers: List[nn.Module] = []
-
-        # if weight sharing is enabled, this expansion can not be omitted, otherwise weights won't be able to be shared.
-        if expand_ratio != 1 or not omit_expansion:
+        layers: List[nn.Module] = [
             # point-wise convolution
-            layers.append(ConvBNReLU(in_channels, hidden_ch, kernel_size=1, norm_layer=norm_layer))
-
-        layers.append(
+            # NOTE: some paper omit this point-wise convolution when stride = 1.
+            # In our implementation, if this pw convolution is intended to be omitted,
+            # please use SepConv instead.
+            ConvBNReLU(in_channels, hidden_ch, kernel_size=1,
+                       norm_layer=norm_layer, activation_layer=activation_layer),
             # depth-wise
-            ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch, norm_layer=norm_layer)
-        )
+            ConvBNReLU(hidden_ch, hidden_ch, stride=stride, kernel_size=kernel_size, groups=hidden_ch,
+                    norm_layer=norm_layer, activation_layer=activation_layer)
+        ]
 
         if squeeze_and_excite:
             layers.append(SELayer(hidden_ch))
 
         layers += [
             # pw-linear
-            nn.Conv2d(hidden_ch, out_channels, 1, 1, 0, bias=False),
-            norm_layer(out_channels),
+            ConvBNReLU(hidden_ch, out_channels, kernel_size=1, norm_layer=norm_layer, activation_layer=nn.Identity)
         ]
 
         super().__init__(*layers)
@@ -168,7 +198,7 @@ def inverted_residual_choice_builder(
         op_choices = {}
         for exp_ratio in expand_ratios:
             for kernel_size in kernel_sizes:
-                op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(inp, oup, stride, exp_ratio, kernel_size)
+                op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(inp, oup, exp_ratio, stride, kernel_size)
 
         return nn.LayerChoice(op_choices, label=f'{label}_i{index}')
 
@@ -187,47 +217,47 @@ class ProxylessSpace(nn.Module):
     """
 
     def __init__(self, num_labels: int = 1000,
-                 base_widths: Tuple[int] = (16, 32, 40, 80, 96, 192, 320, 1280),
+                 base_widths: Tuple[int, ...] = (32, 16, 32, 40, 80, 96, 192, 320, 1280),
                  dropout_rate: float = 0.,
-                 stem_width: int = 32,
                  width_mult: float = 1.0,
                  bn_eps: float = 1e-3,
                  bn_momentum: float = 0.1):
 
-        assert len(base_widths) == 8
+        assert len(base_widths) == 9
         # include the last stage info widths here
-        widths = [make_divisible(base_widths * width_mult, 8) for width in base_widths]
-        downsamples = [False, True, True, True, False, True, False]
+        widths = [make_divisible(width * width_mult, 8) for width in base_widths]
+        downsamples = [True, False, True, True, True, False, True, False]
 
         self.num_labels = num_labels
         self.dropout_rate = dropout_rate
-        self.stem_width = stem_width
         self.bn_eps = bn_eps
         self.bn_momentum = bn_momentum
 
-        self.first_conv = ConvBNReLU(3, stem_width, stride=2, norm_layer=nn.BatchNorm2d)
+        self.first_conv = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
 
         blocks = []
 
         # https://github.com/ultmaster/AceNAS/blob/46c8895fd8a05ffbc61a6b44f1e813f64b4f66b7/searchspace/proxylessnas/__init__.py#L21
-        for stage in range(7):
-            if stage == 0:
+        for stage in range(1, 8):
+            if stage == 1:
                 # first stage is fixed
-                blocks.append(InvertedResidual(stem_width, widths[0], stride=1, expand_ratio=1, kernel_size=3))
+                blocks.append(SeparableConv(widths[0], widths[1], kernel_size=3, stride=1))
             else:
+                # Rather than returning a fixed module here,
+                # we return a builder that dynamically creates module for different `repeat_idx`.
                 builder = inverted_residual_choice_builder(
                     [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
                 if stage < 6:
                     blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
                 else:
-                    # not mutating depth for last stage
-                    # therefore directly call builder to 
+                    # No mutation for depth in the last stage.
+                    # Directly call builder to initiate one block
                     blocks.append(builder())
 
         self.blocks = nn.Sequential(*blocks)
 
         # final layers
-        self.feature_mix_layer = ConvBNReLU(widths[6], widths[7], kernel_size=1, norm_layer=nn.BatchNorm2d)
+        self.feature_mix_layer = ConvBNReLU(widths[7], widths[8], kernel_size=1, norm_layer=nn.BatchNorm2d)
         self.global_avg_pooling = nn.AdaptiveAvgPool2d(1)
         self.dropout_layer = nn.Dropout(dropout_rate)
         self.classifier = nn.Linear(widths[-1], num_labels)
