@@ -226,6 +226,7 @@ class EnasModule(BaseOneShotLightningModule):
         opts = self.optimizers()
         if isinstance(opts,list):
             # list of optimizers
+            # pylint: disable=unsubscriptable-object
             arc_opt = opts[0]
             w_opt = opts[1:]
         else :

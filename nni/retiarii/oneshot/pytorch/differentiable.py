@@ -43,6 +43,7 @@ class DartsModule(BaseOneShotLightningModule):
         opts = self.optimizers()
         if isinstance(opts,list):
             # list of optimizers
+            # pylint: disable=unsubscriptable-object
             arc_optim = opts[0]
             w_optim = opts[1:]
         else :
