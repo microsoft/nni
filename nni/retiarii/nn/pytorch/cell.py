@@ -102,7 +102,7 @@ class Cell(nn.Module):
                  merge_op: Literal['all', 'loose_end'] = 'all',
                  preprocessor: Optional[Callable[[List[torch.Tensor]], List[torch.Tensor]]] = None,
                  postprocessor: Optional[Callable[[torch.Tensor, List[torch.Tensor]],
-                                         Union[Tuple[torch.Tensor], torch.Tensor]]] = None,
+                                         Union[Tuple[torch.Tensor, ...], torch.Tensor]]] = None,
                  *,
                  label: Optional[str] = None):
         super().__init__()
@@ -156,7 +156,7 @@ class Cell(nn.Module):
         return self._label
 
     def forward(self, x: List[torch.Tensor]):
-        # The return type should be 'Union[Tuple[torch.Tensor], torch.Tensor]'.
+        # The return type should be 'Union[Tuple[torch.Tensor, ...], torch.Tensor]'.
         # Cannot decorate it as annotation. Otherwise torchscript will complain.
         assert isinstance(x, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
         states = self.preprocessor(x)
