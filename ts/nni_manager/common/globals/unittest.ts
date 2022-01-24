@@ -4,7 +4,7 @@
 /**
  *  Unit test helper.
  *
- *  Import this module before index.ts will replace NNI globals with empty objects.
+ *  Import this module will replace NNI globals with empty objects.
  *  You can then edit these mocked globals and the injection will be visible to all modules.
  **/
 

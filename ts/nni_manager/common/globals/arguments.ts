@@ -12,10 +12,6 @@ import yargs from 'yargs/yargs';
 import type { NniManagerArgs } from './index';
 
 export function parseArgs(rawArgs: string[]): NniManagerArgs {
-    if (rawArgs === undefined) {
-        rawArgs = process.argv.slice(2);
-    }
-
     const parser = yargs(rawArgs).options(yargsOptions).strict().fail((_msg, err, _yargs) => { throw err; });
     const parsedArgs: NniManagerArgs = parser.parseSync();
 

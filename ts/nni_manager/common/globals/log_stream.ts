@@ -13,8 +13,8 @@ import type { NniManagerArgs, NniPaths } from './index';
 
 export class LogStream {
     private isOpen: boolean = false;
+    private logFileFd!: number;
     private logFilePath: string;
-    private logFileStream!: fs.WriteStream;
     private toConsole: boolean;
 
     constructor(args: NniManagerArgs, paths: NniPaths) {
@@ -25,7 +25,10 @@ export class LogStream {
 
     public writeLine(line: string): void {
         if (this.isOpen) {
-            this.logFileStream.write(line + '\n');
+            // use writeSync() because the doc says it is unsafe to write() without waiting resolved
+            // hopefully this will not cause performance issue, or we will need to do buffer ourself
+            // createWriteStream() is buffered and cannot manually flush, so not good for logging
+            fs.writeSync(this.logFileFd, line + '\n');
             if (this.toConsole) {
                 console.log(line);
             }
@@ -34,14 +37,14 @@ export class LogStream {
 
     public open(): void {
         if (!this.isOpen) {
-            this.logFileStream = fs.createWriteStream(this.logFilePath, { flags: 'a' });
+            this.logFileFd = fs.openSync(this.logFilePath, 'a');
             this.isOpen = true;
         }
     }
 
     public close(): void {
         if (this.isOpen) {
-            this.logFileStream.close();
+            fs.closeSync(this.logFileFd);
             this.isOpen = false;
         }
     }
