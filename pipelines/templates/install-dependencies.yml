@@ -1,0 +1,56 @@
+parameters:
+- name: platform
+  type: string
+
+steps:
+- template: config-version.yml
+  parameters:
+    platform: ${{ parameters.platform }}
+
+- script: |
+    set -e
+    sudo apt-get install -y swig3.0
+    sudo rm /usr/bin/swig
+    sudo ln -s swig3.0 /usr/bin/swig
+  displayName: (Ubuntu) Downgrade swig
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'ubuntu'))
+
+- script: |
+    set -e
+    brew install 'swig@3'
+    rm /usr/local/bin/swig
+    ln -s '/usr/local/opt/swig@3/bin/swig' /usr/local/bin/swig
+  displayName: (macOS) Downgrade swig
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'macos'))
+
+- task: UniversalPackages@0
+  inputs:
+    vstsFeed: NNIOpenSource/dependencies
+    vstsFeedPackage: dependencies-${{ parameters.platform }}
+    vstsPackageVersion: "*"
+  displayName: Download cache
+
+- script: |
+    python test/vso_tools/unpack_dependencies.py
+  displayName: Unpack cache
+
+- script: |
+    mv dependencies/recommended_legacy.txt dependencies/recommended.txt
+  displayName: (legacy) Activate legacy dependencies
+  condition: and(succeeded(), contains('${{ parameters.platform }}', 'legacy'))
+
+- script: |
+    echo '===== develop ====='
+    python -m pip install -r dependencies/develop.txt
+    echo '===== required ====='
+    python -m pip install -r dependencies/required.txt
+    echo '===== required extra ====='
+    python -m pip install -r dependencies/required_extra.txt
+    echo '===== recommended ====='
+    python -m pip install -r dependencies/recommended.txt
+  displayName: Install Python dependencies
+
+# TODO: Delete this after upgrading to PyTorch 1.11.
+- script: |
+    python test/vso_tools/interim_patch.py
+  displayName: Torch utils tensorboard interim patch
