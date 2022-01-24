@@ -730,3 +730,25 @@ class Python(GraphIR):
 
         a = nn.ValueChoice([5, 3]) * nn.ValueChoice([6.5, 7.5])
         assert math.floor(a.evaluate([5, 7.5])) == int(5 * 7.5)
+
+        a = nn.ValueChoice([1, 3])
+        b = nn.ValueChoice([2, 4])
+        with pytest.raises(RuntimeError):
+            min(a, b)
+        with pytest.raises(RuntimeError):
+            if a < b:
+                ...
+
+        assert nn.ValueChoice.min(a, b).evaluate([3, 2]) == 2
+        assert nn.ValueChoice.max(a, b).evaluate([3, 2]) == 3
+        assert nn.ValueChoice.max(1, 2, 3) == 3
+        assert nn.ValueChoice.max([1, 3, 2]) == 3
+
+        assert nn.ValueChoice.condition(nn.ValueChoice([2, 3]) <= 2, 'a', 'b').evaluate([3]) == 'b'
+        assert nn.ValueChoice.condition(nn.ValueChoice([2, 3]) <= 2, 'a', 'b').evaluate([2]) == 'a'
+
+        with pytest.raises(RuntimeError):
+            assert int(nn.ValueChoice([2.5, 3.5])).evalute([2.5]) == 2
+
+        assert nn.ValueChoice.to_int(nn.ValueChoice([2.5, 3.5])).evaluate([2.5]) == 2
+        assert nn.ValueChoice.to_float(nn.ValueChoice(['2.5', '3.5'])).evaluate(['3.5']) == 3.5

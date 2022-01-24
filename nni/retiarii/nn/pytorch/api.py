@@ -4,7 +4,7 @@
 import math
 import operator
 import warnings
-from typing import Any, List, Union, Dict, Optional, Callable, Iterable
+from typing import Any, List, Union, Dict, Optional, Callable, Iterable, NoReturn, TypeVar
 
 import torch
 import torch.nn as nn
@@ -259,9 +259,60 @@ class ChosenInputs(nn.Module):
         raise ValueError(f'Unrecognized reduction policy: "{reduction_type}"')
 
 
+# the code in ValueChoice can be generated with this codegen
+# this is not done online because because I want to have type-hint supports
+# $ python -c "from nni.retiarii.nn.pytorch.api import _valuechoice_codegen; _valuechoice_codegen(_internal=True)"
+def _valuechoice_codegen(*, _internal: bool = False):
+    if not _internal:
+        raise RuntimeError("This method is set to be internal. Please don't use it directly.")
+    MAPPING = {
+        # unary
+        'neg': '-', 'pos': '+', 'invert': '~',
+        # binary
+        'add': '+', 'sub': '-', 'mul': '*', 'matmul': '@',
+        'truediv': '//', 'floordiv': '/', 'mod': '%',
+        'lshift': '<<', 'rshift': '>>',
+        'and': '&', 'xor': '^', 'or': '|',
+        # no reflection
+        'lt': '<', 'le': '<=', 'eq': '==',
+        'ne': '!=', 'ge': '>=', 'gt': '>',
+        # NOTE
+        # Currently we don't support operators like __contains__ (b in a),
+        # Might support them in future when we actually need them.
+    }
+
+    binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [self, other])"""
+
+    binary_r_template = """    def __r{op}__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [other, self])"""
+
+    unary_template = """    def __{op}__(self) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.{op}, '{sym}{{}}', [self])"""
+
+    for op, sym in MAPPING.items():
+        if op in ['neg', 'pos', 'invert']:
+            print(unary_template.format(op=op, sym=sym) + '\n')
+        else:
+            opt = op + '_' if op in ['and', 'or'] else op
+            print(binary_template.format(op=op, opt=opt, sym=sym) + '\n')
+            if op not in ['lt', 'le', 'eq', 'ne', 'ge', 'gt']:
+                print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
+
+
+def _valuechoice_staticmethod_helper(orig_func):
+    orig_func.__doc__ += """
+        Notes
+        -----
+        This function performs lazy evaluation.
+        Only the expression will be recorded when the function is called.
+        The real evaluation happens when the inner value choice has determined its final decision.
+        If no value choice is contained in the parameter list, the evaluation will be intermediate."""
+    return orig_func
+
+
 class ValueChoiceX(Translatable):
-    """
-    Internal API. Implementation note:
+    """Internal API. Implementation note:
 
     The transformed (X) version of value choice.
     It can be the result of composition (transformation) of one or several value choices. For example,
@@ -353,6 +404,75 @@ class ValueChoiceX(Translatable):
     # which is a transformed version of value choice
     # https://docs.python.org/3/reference/datamodel.html#special-method-names
 
+    # Special operators that can be useful in place of built-in conditional operators.
+    @staticmethod
+    @_valuechoice_staticmethod_helper
+    def to_int(obj: 'ValueChoiceOrAny') -> Union['ValueChoiceX', int]:
+        """
+        Convert a ``ValueChoice`` to an integer.
+        """
+        if isinstance(obj, ValueChoiceX):
+            return ValueChoiceX(int, 'int({})', [obj])
+        return int(obj)
+
+    @staticmethod
+    @_valuechoice_staticmethod_helper
+    def to_float(obj: 'ValueChoiceOrAny') -> Union['ValueChoiceX', float]:
+        """
+        Convert a ``ValueChoice`` to a float.
+        """
+        if isinstance(obj, ValueChoiceX):
+            return ValueChoiceX(float, 'float({})', [obj])
+        return float(obj)
+
+    @staticmethod
+    @_valuechoice_staticmethod_helper
+    def condition(pred: 'ValueChoiceOrAny',
+                  true: 'ValueChoiceOrAny',
+                  false: 'ValueChoiceOrAny') -> 'ValueChoiceOrAny':
+        """
+        Return ``true`` if the predicate ``pred`` is true else ``false``.
+
+        Examples
+        --------
+        >>> ValueChoice.condition(ValueChoice([1, 2]) > ValueChoice([0, 3]), 2, 1)
+        """
+        if any(isinstance(obj, ValueChoiceX) for obj in [pred, true, false]):
+            return ValueChoiceX(lambda t, c, f: t if c else f, '{} if {} else {}', [true, pred, false])
+        return true if pred else false
+
+    @staticmethod
+    @_valuechoice_staticmethod_helper
+    def max(arg0: Union[Iterable['ValueChoiceOrAny'], 'ValueChoiceOrAny'],
+            *args: List['ValueChoiceOrAny']) -> 'ValueChoiceOrAny':
+        """
+        Returns the maximum value from a list of value choices.
+        The usage should be similar to Python's built-in value choices,
+        where the parameters could be an iterable, or at least two arguments.
+        """
+        if not args:
+            return ValueChoiceX.max(*list(arg0))
+        lst = [arg0] + list(args)
+        if any(isinstance(obj, ValueChoiceX) for obj in lst):
+            return ValueChoiceX(max, 'max({})', lst)
+        return max(lst)
+
+    @staticmethod
+    @_valuechoice_staticmethod_helper
+    def min(arg0: Union[Iterable['ValueChoiceOrAny'], 'ValueChoiceOrAny'],
+            *args: List['ValueChoiceOrAny']) -> 'ValueChoiceOrAny':
+        """
+        Returns the minunum value from a list of value choices.
+        The usage should be similar to Python's built-in value choices,
+        where the parameters could be an iterable, or at least two arguments.
+        """
+        if not args:
+            return ValueChoiceX.min(*list(arg0))
+        lst = [arg0] + list(args)
+        if any(isinstance(obj, ValueChoiceX) for obj in lst):
+            return ValueChoiceX(min, 'min({})', lst)
+        return min(lst)
+
     # NOTE:
     # Write operations are not supported. Reasons follow:
     # - Semantics are not clear. It can be applied to "all" the inner candidates, or only the chosen one.
@@ -378,9 +498,18 @@ class ValueChoiceX(Translatable):
 
     def __ceil__(self) -> 'ValueChoiceX':
         return ValueChoiceX(math.ceil, 'math.ceil({})', [self])
+
+    def __index__(self) -> NoReturn:
+        # https://docs.python.org/3/reference/datamodel.html#object.__index__
+        raise RuntimeError("`__index__` is not allowed on ValueChoice, which means you can't "
+                           "use int(), float(), complex(), range() on a ValueChoice.")
+
+    def __bool__(self) -> NoReturn:
+        raise RuntimeError('Cannot use bool() on ValueChoice. That means, using ValueChoice in a if-clause is illegal. '
+                           'Please try methods like `ValueChoice.max(a, b)` to see whether that meets your needs.')
     # endregion
 
-    # region the following code is generated with codegen (see below)
+    # region the following code is generated with codegen (see above)
     # Annotated with "region" because I want to collapse them in vscode
     def __neg__(self) -> 'ValueChoiceX':
         return ValueChoiceX(operator.neg, '-{}', [self])
@@ -462,43 +591,25 @@ class ValueChoiceX(Translatable):
 
     def __ror__(self, other: Any) -> 'ValueChoiceX':
         return ValueChoiceX(operator.or_, '{} | {}', [other, self])
+
+    def __lt__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.lt, '{} < {}', [self, other])
+
+    def __le__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.le, '{} <= {}', [self, other])
+
+    def __eq__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.eq, '{} == {}', [self, other])
+
+    def __ne__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.ne, '{} != {}', [self, other])
+
+    def __ge__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.ge, '{} >= {}', [self, other])
+
+    def __gt__(self, other: Any) -> 'ValueChoiceX':
+        return ValueChoiceX(operator.gt, '{} > {}', [self, other])
     # endregion
-
-    # the above code can be generated with this codegen
-    # this is not done online because because I want to have type-hint supports
-    # $ python -c "from nni.retiarii.nn.pytorch.api import ValueChoiceX; ValueChoiceX._codegen(_internal=True)"
-    @staticmethod
-    def _codegen(*, _internal=True):
-        MAPPING = {
-            # unary
-            'neg': '-', 'pos': '+', 'invert': '~',
-            # binary
-            'add': '+', 'sub': '-', 'mul': '*', 'matmul': '@',
-            'truediv': '//', 'floordiv': '/', 'mod': '%',
-            'lshift': '<<', 'rshift': '>>',
-            'and': '&', 'xor': '^', 'or': '|',
-            # NOTE
-            # don't support operators like __contains__ (if b in a),
-            # because I think we rarely need them,
-            # and it's NOT effortless to support them.
-        }
-
-        binary_template = """    def __{op}__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [self, other])"""
-
-        binary_r_template = """    def __r{op}__(self, other: Any) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.{opt}, '{{}} {sym} {{}}', [other, self])"""
-
-        unary_template = """    def __{op}__(self) -> 'ValueChoiceX':
-        return ValueChoiceX(operator.{op}, '{sym}{{}}', [self])"""
-
-        for op, sym in MAPPING.items():
-            if op in ['neg', 'pos', 'invert']:
-                print(unary_template.format(op=op, sym=sym) + '\n')
-            else:
-                opt = op + '_' if op in ['and', 'or'] else op
-                print(binary_template.format(op=op, opt=opt, sym=sym) + '\n')
-                print(binary_r_template.format(op=op, opt=opt, sym=sym) + '\n')
 
     # __pow__, __divmod__, __abs__ are special ones.
     # Not easy to cover those cases with codegen.
@@ -520,6 +631,9 @@ class ValueChoiceX(Translatable):
 
     def __abs__(self) -> 'ValueChoiceX':
         return ValueChoiceX(abs, 'abs({})', [self])
+
+
+ValueChoiceOrAny = TypeVar('ValueChoiceOrAny', ValueChoiceX, Any)
 
 
 class ValueChoice(ValueChoiceX, Mutable):
