@@ -752,3 +752,28 @@ class Python(GraphIR):
 
         assert nn.ValueChoice.to_int(nn.ValueChoice([2.5, 3.5])).evaluate([2.5]) == 2
         assert nn.ValueChoice.to_float(nn.ValueChoice(['2.5', '3.5'])).evaluate(['3.5']) == 3.5
+
+    def test_make_divisible(self):
+        def make_divisible(value, divisor, min_value=None, min_ratio=0.9):
+            if min_value is None:
+                min_value = divisor
+            new_value = nn.ValueChoice.max(min_value, nn.ValueChoice.to_int(value + divisor / 2) // divisor * divisor)
+            # Make sure that round down does not go down by more than (1-min_ratio).
+            return nn.ValueChoice.condition(new_value < min_ratio * value, new_value + divisor, new_value)
+
+        def original_make_divisible(value, divisor, min_value=None, min_ratio=0.9):
+            if min_value is None:
+                min_value = divisor
+            new_value = max(min_value, int(value + divisor / 2) // divisor * divisor)
+            # Make sure that round down does not go down by more than (1-min_ratio).
+            if new_value < min_ratio * value:
+                new_value += divisor
+            return new_value
+
+        values = [4, 8, 16, 32, 64, 128]
+        divisors = [2, 3, 5, 7, 15]
+        result = make_divisible(nn.ValueChoice(values, label='value'), nn.ValueChoice(divisors, label='divisor'))
+        for value in values:
+            for divisor in divisors:
+                lst = [value if choice.label == 'value' else divisor for choice in result.inner_choices()]
+                assert result.evaluate(lst) == original_make_divisible(value, divisor)
