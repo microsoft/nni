@@ -75,7 +75,7 @@ start().then(() => {
 }).catch((err: any) => {
     try {
         getLogger('main').error('Failed to start:', err);
-    } catch (loggerError: Error) {
+    } catch (loggerError: any) {
         console.log('Failed to start:', err);
         console.log('Seems logger is faulty:', loggerError);
     }
