@@ -54,6 +54,14 @@ steps:
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
 
+# see cache-dependencies-template.yml on why it needs rebuild
+- script: |
+    python -m pip uninstall -y ConfigSpaceNNI
+    python -m pip install ConfigSpaceNNI
+  displayName: (Ubuntu) Rebuild ConfigSpaceNNI
+  condition: and(succeeded(), not(${{ parameters.useCache }}))
+
+
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
     python test/vso_tools/interim_patch.py
