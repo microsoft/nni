@@ -5,4 +5,4 @@ Neural Architecture Search
 ..  toctree::
     :maxdepth: 2
 
-    Overview <NAS/Overview>
+    Overview <nas/overview>
