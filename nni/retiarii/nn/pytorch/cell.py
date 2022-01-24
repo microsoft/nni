@@ -1,6 +1,6 @@
 import copy
 import warnings
-from typing import Callable, Dict, List, Union, Optional
+from typing import Callable, Dict, List, Union, Optional, Tuple
 try:
     from typing import Literal
 except ImportError:
@@ -51,6 +51,11 @@ class Cell(nn.Module):
         Indices of the nodes concatenated to the output. For example, if the following operation is a 2d-convolution,
         its input channels is ``len(output_node_indices) * channels``.
 
+    Examples
+    --------
+    >>> cell = nn.Cell([nn.Conv2d(32, 32, 3), nn.MaxPool2d(3)], 4, 1, 2)
+    >>> output = cell([input1, input2])
+
     References
     ----------
     .. [zophnas] Barret Zoph, Quoc V. Le, "Neural Architecture Search with Reinforcement Learning". https://arxiv.org/abs/1611.01578
@@ -70,12 +75,23 @@ class Cell(nn.Module):
                  num_ops_per_node: int = 1,
                  num_predecessors: int = 1,
                  merge_op: Literal['all', 'loose_end'] = 'all',
+                 preprocessor: Optional[Callable[[List[torch.Tensor]], List[torch.Tensor]]] = None,
+                 postprocessor: Optional[Callable[[torch.Tensor, List[torch.Tensor]],
+                                         Union[Tuple[torch.Tensor], torch.Tensor]]] = None,
                  *,
                  label: Optional[str] = None):
         super().__init__()
         self._label = generate_new_label(label)
+
+        # modules are created in "natural" order
+        # first create preprocessor
+        self.preprocessor = preprocessor or nn.Identity()
+        # then create intermediate ops
         self.ops = ModuleList()
         self.inputs = ModuleList()
+        # finally postprocessor
+        self.postprocessor = postprocessor or (lambda this, prev: this)
+
         self.num_nodes = num_nodes
         self.num_ops_per_node = num_ops_per_node
         self.num_predecessors = num_predecessors
@@ -114,8 +130,9 @@ class Cell(nn.Module):
     def label(self):
         return self._label
 
-    def forward(self, x: List[torch.Tensor]):
-        states = x
+    def forward(self, x: List[torch.Tensor]) -> Union[Tuple[torch.Tensor], torch.Tensor]:
+        assert isinstance(x, list), 'We currently only support input of cell as a list, even if you have only one predecessor.'
+        states = self.preprocessor(x)
         for ops, inps in zip(self.ops, self.inputs):
             current_state = []
             for op, inp in zip(ops, inps):
@@ -124,9 +141,10 @@ class Cell(nn.Module):
             states.append(current_state)
         if self.merge_op == 'all':
             # a special case for graph engine
-            return torch.cat(states[self.num_predecessors:], 1)
+            this_cell = torch.cat(states[self.num_predecessors:], 1)
         else:
-            return torch.cat([states[k] for k in self.output_node_indices], 1)
+            this_cell = torch.cat([states[k] for k in self.output_node_indices], 1)
+        return self.postprocessor(this_cell, x)
 
     @staticmethod
     def _convert_op_candidates(op_candidates, node_index, op_index, chosen) -> Union[Dict[str, nn.Module], List[nn.Module]]:
