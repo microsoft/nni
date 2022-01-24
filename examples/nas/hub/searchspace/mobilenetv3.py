@@ -103,6 +103,8 @@ class MobileNetV3(ProxylessSpace):
             ConvBNReLU(self.widths[6], self.widths[7], 1, 1, norm_layer=nn.Identity, activation_layer=h_swish),
         ]
 
+        self.blocks = nn.Sequential(*blocks)
+
         self.classifier = nn.Sequential(
             nn.Dropout(0.2),
             nn.Linear(self.widths[7], num_labels),
@@ -111,9 +113,7 @@ class MobileNetV3(ProxylessSpace):
         self.reset_parameters()
 
     def forward(self, x):
-        x = self.features(x)
-        x = self.conv(x)
-        x = self.avgpool(x)
+        x = self.blocks(x)
         x = x.view(x.size(0), -1)
         x = self.classifier(x)
         return x
