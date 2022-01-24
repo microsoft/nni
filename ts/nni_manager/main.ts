@@ -72,7 +72,7 @@ initGlobals();
 
 start().then(() => {
     getLogger('main').debug('start() returned.');
-}).catch((err: Error) => {
+}).catch((err: any) => {
     try {
         getLogger('main').error('Failed to start:', err);
     } catch (loggerError: Error) {
