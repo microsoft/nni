@@ -57,7 +57,7 @@ steps:
 # FIXME: See cache-dependencies-template.yml on why it needs rebuild.
 - script: |
     python -m pip uninstall -y ConfigSpaceNNI
-    python -m pip install ConfigSpaceNNI
+    python -m pip install --no-cache-dir ConfigSpaceNNI
   displayName: Rebuild ConfigSpaceNNI
   condition: and(succeeded(), not(${{ parameters.useCache }}), contains('${{ parameters.platform }}', 'ubuntu'))
 
