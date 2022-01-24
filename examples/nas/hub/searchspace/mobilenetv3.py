@@ -1,14 +1,9 @@
-import math
-from typing import Tuple
+from typing import Tuple, Optional, Callable
 
-import torch.nn as nn
-
+import nni.retiarii.nn.pytorch as nn
 from nni.retiarii import model_wrapper
 
 from .proxylessnas import ConvBNReLU, InvertedResidual, ProxylessSpace, SeparableConv, make_divisible
-
-
-__all__ = ['mobilenetv3_large', 'mobilenetv3_small']
 
 
 class h_sigmoid(nn.Module):
@@ -29,16 +24,42 @@ class h_swish(nn.Module):
         return x * self.sigmoid(x)
 
 
+class SELayer(nn.Module):
+    """Squeeze-and-excite layer."""
+
+    def __init__(self,
+                 channels: int,
+                 reduction: int = 4,
+                 activation_layer: Optional[Callable[..., nn.Module]] = None):
+        super().__init__()
+        if activation_layer is None:
+            activation_layer = nn.Sigmoid
+        self.avg_pool = nn.AdaptiveAvgPool2d(1)
+        self.fc = nn.Sequential(
+            nn.Linear(channels, make_divisible(channels // reduction, 8)),
+            nn.ReLU(inplace=True),
+            nn.Linear(make_divisible(channels // reduction, 8), channels),
+            activation_layer()
+        )
+
+    def forward(self, x):
+        b, c, _, _ = x.size()
+        y = self.avg_pool(x).view(b, c)
+        y = self.fc(y).view(b, c, 1, 1)
+        return x * y
+
+
 @model_wrapper
 class MobileNetV3(ProxylessSpace):
     """
     We use the following snipppet as reference.
     https://github.com/google-research/google-research/blob/20736344591f774f4b1570af64624ed1e18d2867/tunas/mobile_search_space_v3.py#L728
     """
+
     def __init__(self, num_labels: int = 1000,
                  base_widths: Tuple[int, ...] = (16, 16, 32, 64, 128, 256, 512, 1024),
                  width_multipliers: Tuple[float, ...] = (0.5, 0.625, 0.75, 1.0, 1.25, 1.5, 2.0),
-                 expansion_multipliers: Tuple[float, ...] = (1.0, 2.0, 3.0, 4.0, 5.0, 6.0),
+                 expand_ratios: Tuple[int, ...] = (1, 2, 3, 4, 5, 6),
                  dropout_rate: float = 0.,
                  stem_width: int = 32,
                  width_mult: float = 1.0,
@@ -46,47 +67,45 @@ class MobileNetV3(ProxylessSpace):
                  bn_momentum: float = 0.1):
         super().__init__()
 
-        self.widths = []
-        self.width_multipliers = width_multipliers
-
-        act = h_swish
+        self.widths = [
+            nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in self.width_multipliers], label=f'width_{i}')
+            for i, base_width in enumerate(base_widths)
+        ]
+        self.expand_ratios = expand_ratios
 
         blocks = [
             # Stem
             ConvBNReLU(
-                3, self._get_width(base_widths[0]),
-                nn.ValueChoice([3, 5], label='first_conv_ks'),
-                stride=2, activation_layer=act
+                3, self.widths[0],
+                nn.ValueChoice([3, 5], label='ks_0'),
+                stride=2, activation_layer=h_swish
             ),
-            SeparableConv(self.widths[-1], self._get_width(base_widths[0]), activation_layer=nn.ReLU),
+            SeparableConv(self.widths[0], self.widths[0], activation_layer=nn.ReLU),
         ]
 
-        for stage_idx in range(1, 6):
-            blocks += [
-                
-            ]
+        # counting for kernel sizes and expand ratios
+        self.layer_count = 2
 
-        # building first layer
-        input_channel = make_divisible(base_widths * width_mult, 8)
-        layers = [conv_3x3_bn(3, input_channel, 2)]
-        # building inverted residual blocks
-        block = InvertedResidual
-        for k, t, c, use_se, use_hs, s in self.cfgs:
-            output_channel = make_divisible(c * width_mult, 8)
-            exp_size = make_divisible(input_channel * t, 8)
-            layers.append(block(input_channel, exp_size, output_channel, k, s, use_se, use_hs))
-            input_channel = output_channel
-        self.features = nn.Sequential(*layers)
-        # building last several layers
-        self.conv = conv_1x1_bn(input_channel, exp_size)
-        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
-        output_channel = {'large': 1280, 'small': 1024}
-        output_channel = make_divisible(output_channel[mode] * width_mult, 8) if width_mult > 1.0 else output_channel[mode]
+        blocks += [
+            # Body
+            self._make_stage(1, self.widths[0], self.widths[1], False, 2, nn.ReLU),
+            self._make_stage(2, self.widths[1], self.widths[2], True, 2, nn.ReLU),
+            self._make_stage(1, self.widths[0], self.widths[1], False, 2, h_swish),
+            self._make_stage(1, self.widths[0], self.widths[1], True, 1, h_swish),
+            self._make_stage(1, self.widths[0], self.widths[1], True, 2, h_swish),
+        ]
+
+        # Head
+        blocks += [
+            ConvBNReLU(self.widths[5], self.widths[6], 1, 1, activation_layer=h_swish),
+            nn.AdaptiveAvgPool2d(1),
+
+            ConvBNReLU(self.widths[6], self.widths[7], 1, 1, norm_layer=nn.Identity, activation_layer=h_swish),
+        ]
+
         self.classifier = nn.Sequential(
-            nn.Linear(exp_size, output_channel),
-            h_swish(),
             nn.Dropout(0.2),
-            nn.Linear(output_channel, num_classes),
+            nn.Linear(self.widths[7], num_labels),
         )
 
         self.reset_parameters()
@@ -99,55 +118,30 @@ class MobileNetV3(ProxylessSpace):
         x = self.classifier(x)
         return x
 
-    def _get_width(self, base_width):
-        new_width = nn.ValueChoice([make_divisible(base_width * mult, 8) for mult in self.width_multipliers],
-                                   label=f'width_{len(self.widths)}')
-        self.widths.append(new_width)
-        return new_width
+    def _make_stage(self, stage_idx, inp, oup, se, stride, act):
+        # initialize them first because they are related to layer_count.
+        exp, ks, se_blocks = [], [], []
+        for _ in range(4):
+            exp.append(nn.ValueChoice(list(self.expand_ratios), label=f'exp_{self.layer_count}'))
+            ks.append(nn.ValueChoice([3, 5, 7]), label=f'ks_{self.layer_count}')
+            if se:
+                # if SE is true, assign a layer choice to SE
+                se_blocks.append(
+                    lambda hidden_ch: nn.LayerChoice([nn.Identity(), SELayer(hidden_ch)], label=f'se_{self.layer_count}')
+                )
+            else:
+                se_blocks.append(None)
+            self.layer_count += 1
 
+        blocks = [
+            # stride = 2
+            InvertedResidual(inp, oup, exp[0], ks[0],
+                             stride, squeeze_and_excite=se[0], activation_layer=act),
+            # stride = 1, residual connection should be automatically enabled
+            InvertedResidual(oup, oup, exp[1], ks[1], squeeze_and_excite=se[1], activation_layer=act),
+            InvertedResidual(oup, oup, exp[2], ks[2], squeeze_and_excite=se[2], activation_layer=act),
+            InvertedResidual(oup, oup, exp[3], ks[3], squeeze_and_excite=se[3], activation_layer=act)
+        ]
 
-def mobilenetv3_large(**kwargs):
-    """
-    Constructs a MobileNetV3-Large model
-    """
-    cfgs = [
-        # k, t, c, SE, HS, s 
-        [3,   1,  16, 0, 0, 1],
-        [3,   4,  24, 0, 0, 2],
-        [3,   3,  24, 0, 0, 1],
-        [5,   3,  40, 1, 0, 2],
-        [5,   3,  40, 1, 0, 1],
-        [5,   3,  40, 1, 0, 1],
-        [3,   6,  80, 0, 1, 2],
-        [3, 2.5,  80, 0, 1, 1],
-        [3, 2.3,  80, 0, 1, 1],
-        [3, 2.3,  80, 0, 1, 1],
-        [3,   6, 112, 1, 1, 1],
-        [3,   6, 112, 1, 1, 1],
-        [5,   6, 160, 1, 1, 2],
-        [5,   6, 160, 1, 1, 1],
-        [5,   6, 160, 1, 1, 1]
-    ]
-    return MobileNetV3(cfgs, mode='large', **kwargs)
-
-
-def mobilenetv3_small(**kwargs):
-    """
-    Constructs a MobileNetV3-Small model
-    """
-    cfgs = [
-        # k, t, c, SE, HS, s 
-        [3,    1,  16, 1, 0, 2],
-        [3,  4.5,  24, 0, 0, 2],
-        [3, 3.67,  24, 0, 0, 1],
-        [5,    4,  40, 1, 1, 2],
-        [5,    6,  40, 1, 1, 1],
-        [5,    6,  40, 1, 1, 1],
-        [5,    3,  48, 1, 1, 1],
-        [5,    3,  48, 1, 1, 1],
-        [5,    6,  96, 1, 1, 2],
-        [5,    6,  96, 1, 1, 1],
-        [5,    6,  96, 1, 1, 1],
-    ]
-
-    return MobileNetV3(cfgs, mode='small', **kwargs)
+        # mutable depth
+        return nn.Repeat(blocks, depth=(1, 4), label=f'depth_{stage_idx}')

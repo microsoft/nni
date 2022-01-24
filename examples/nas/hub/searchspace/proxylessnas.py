@@ -15,11 +15,10 @@ def make_divisible(v, divisor, min_val=None):
     """
     if min_val is None:
         min_val = divisor
-    new_v = max(min_val, int(v + divisor / 2) // divisor * divisor)
+    # This should work for both value choices and constants.
+    new_v = nn.ValueChoice.max(min_val, round(v + divisor // 2) // divisor * divisor)
     # Make sure that round down does not go down by more than 10%.
-    if new_v < 0.9 * v:
-        new_v += divisor
-    return new_v
+    return nn.ValueChoice.condition(new_v < 0.9 * v, new_v + divisor, new_v)
 
 
 class ConvBNReLU(nn.Sequential):
@@ -50,31 +49,6 @@ class ConvBNReLU(nn.Sequential):
             activation_layer(inplace=True)
         )
         self.out_channels = out_channels
-
-
-class SELayer(nn.Module):
-    """Squeeze-and-excite layer."""
-
-    def __init__(self,
-                 channels: int,
-                 reduction: int = 4,
-                 activation_layer: Optional[Callable[..., nn.Module]] = None):
-        super().__init__()
-        if activation_layer is None:
-            activation_layer = nn.ReLU6
-        self.avg_pool = nn.AdaptiveAvgPool2d(1)
-        self.fc = nn.Sequential(
-            nn.Linear(channels, make_divisible(channels // reduction, 8)),
-            nn.ReLU(inplace=True),
-            nn.Linear(make_divisible(channels // reduction, 8), channels),
-            activation_layer()
-        )
-
-    def forward(self, x):
-        b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.fc(y).view(b, c, 1, 1)
-        return x * y
 
 
 class SeparableConv(nn.Sequential):
@@ -131,11 +105,11 @@ class InvertedResidual(nn.Sequential):
         in_channels: int,
         out_channels: int,
         expand_ratio: int,
-        stride: int = 1,
         kernel_size: int = 3,
+        stride: int = 1,
+        squeeze_and_excite: Optional[Callable[[int], nn.Module]] = None,
         norm_layer: Optional[Callable[..., nn.Module]] = None,
         activation_layer: Optional[Callable[..., nn.Module]] = None,
-        squeeze_and_excite: bool = False,
     ) -> None:
         super().__init__()
         self.stride = stride
@@ -161,7 +135,7 @@ class InvertedResidual(nn.Sequential):
         ]
 
         if squeeze_and_excite:
-            layers.append(SELayer(hidden_ch))
+            layers.append(squeeze_and_excite(hidden_ch))
 
         layers += [
             # pw-linear
@@ -198,8 +172,10 @@ def inverted_residual_choice_builder(
         op_choices = {}
         for exp_ratio in expand_ratios:
             for kernel_size in kernel_sizes:
-                op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(inp, oup, exp_ratio, stride, kernel_size)
+                op_choices[f'k{kernel_size}e{exp_ratio}'] = InvertedResidual(inp, oup, exp_ratio, kernel_size, stride)
 
+        # It can be implemented with ValueChoice, but we use LayerChoice here
+        # to be aligned with the intention of the original ProxylessNAS.
         return nn.LayerChoice(op_choices, label=f'{label}_i{index}')
 
     return builder
@@ -235,24 +211,23 @@ class ProxylessSpace(nn.Module):
 
         self.first_conv = ConvBNReLU(3, widths[0], stride=2, norm_layer=nn.BatchNorm2d)
 
-        blocks = []
+        blocks = [
+            # first stage is fixed
+            SeparableConv(widths[0], widths[1], kernel_size=3, stride=1)
+        ]
 
         # https://github.com/ultmaster/AceNAS/blob/46c8895fd8a05ffbc61a6b44f1e813f64b4f66b7/searchspace/proxylessnas/__init__.py#L21
-        for stage in range(1, 8):
-            if stage == 1:
-                # first stage is fixed
-                blocks.append(SeparableConv(widths[0], widths[1], kernel_size=3, stride=1))
+        for stage in range(2, 8):
+            # Rather than returning a fixed module here,
+            # we return a builder that dynamically creates module for different `repeat_idx`.
+            builder = inverted_residual_choice_builder(
+                [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
+            if stage < 6:
+                blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
             else:
-                # Rather than returning a fixed module here,
-                # we return a builder that dynamically creates module for different `repeat_idx`.
-                builder = inverted_residual_choice_builder(
-                    [3, 6], [3, 5, 7], downsamples[stage], widths[stage - 1], widths[stage], f's{stage}')
-                if stage < 6:
-                    blocks.append(nn.Repeat(builder, (1, 4), label='s{stage}_depth'))
-                else:
-                    # No mutation for depth in the last stage.
-                    # Directly call builder to initiate one block
-                    blocks.append(builder())
+                # No mutation for depth in the last stage.
+                # Directly call builder to initiate one block
+                blocks.append(builder())
 
         self.blocks = nn.Sequential(*blocks)
 
