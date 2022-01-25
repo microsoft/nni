@@ -43,9 +43,9 @@ class NormalSparsityAllocator(SparsityAllocator):
 
 class BankSparsityAllocator(SparsityAllocator):
     """
-    In bank pruner, all values in weight are divided into different banks each contain back_num values. 
-    Each bank has the same sparsity which equal to the overall sparsity.
-    This allocator pruned the weight in the granularity of bank. 
+    In bank pruner, all values in weight are divided into different sub blocks each shape
+    aligned with balance_gran. Each sub block has the same sparsity which equal to the overall sparsity.
+    This allocator pruned the weight in the granularity of block. 
     """
     def __init__(self, pruner: Pruner, balance_gran: list):
         super().__init__(pruner)
