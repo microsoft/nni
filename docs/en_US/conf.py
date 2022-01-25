@@ -20,13 +20,15 @@ sys.path.insert(0, os.path.abspath('../..'))
 
 # -- Project information ---------------------------------------------------
 
+from datetime import datetime
 project = 'NNI'
-copyright = '2021, Microsoft'
+copyright = f'{datetime.now().year}, Microsoft'
 author = 'Microsoft'
 
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
+# FIXME: this should be written somewhere globally
 release = 'v2.6'
 
 # -- General configuration ---------------------------------------------------
@@ -54,7 +56,7 @@ extensions = [
 autodoc_mock_imports = ['apex', 'nni_node', 'tensorrt', 'pycuda', 'nn_meter']
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ['../templates']
 
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
@@ -121,28 +123,11 @@ html_theme_options = {
     'globaltoc_depth': 3,
 
     'version_dropdown': True,
-    'version_json': '../static/versions.json'
+    # This is a placeholder, which should be replaced later.
+    'version_info': {
+        'current': '/'
+    },
 }
-
-# Customizing html context, so that some keys inserted by readthedocs
-# gets populated into other keys in the format of sphinx-material
-class html_context_dict(dict):
-    def update(self, *args, **kwargs):
-        assert (len(args) == 1 and isinstance(args[0], dict)) or not args
-        if len(args) == 1:
-            return self.update(**args[0])
-
-        # rename versions as theme_version_info
-        if 'versions' in kwargs:
-            kwargs['theme_version_info'] = dict(kwargs['versions'])
-
-        # support other logics here if needed
-        return super().update(**kwargs)
-
-# Declare html_context here, so that readthedocs can find it in the globals()
-# Annotated as any to suppress warnings
-from typing import Any
-html_context: Any = html_context_dict()
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -162,6 +147,15 @@ html_sidebars = {
 }
 
 html_title = 'Neural Network Intelligence'
+
+# Add extra css files and js files
+html_css_files = [
+    'css/material_custom.css',
+    'css/index_page.css',
+]
+html_js_files = [
+    'js/version.js',
+]
 
 # -- Options for HTMLHelp output ---------------------------------------------
 
@@ -244,8 +238,3 @@ git_commit_id = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode().s
 extlinks = {
     'githublink': ('https://github.com/microsoft/nni/blob/' + git_commit_id + '/%s', 'Github link: ')
 }
-
-# -- Extension configuration -------------------------------------------------
-def setup(app):
-    app.add_css_file('css/material_custom.css')
-    app.add_css_file('css/index_page.css')

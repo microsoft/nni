@@ -1,0 +1,11 @@
+{% extends "!layout.html" %}
+
+{#- TO INJECT INFORMATION FROM READTHEDOCS HERE #}
+{% block scripts %}
+  {{ super() }}
+  {% if versions %}
+  <script type="text/javascript">
+    READTHEDOCS_VERSIONS = {{ versions | tojson }}
+  </script>
+  {% endif %}
+{% endblock %}
