@@ -74,6 +74,10 @@ stages:
         yarn --cwd ts/webui eslint
       displayName: ESLint (WebUI)
 
+    - script: |
+        yarn --cwd ts/webui tsc
+      displayName: Type Check (WebUI)
+
 
   # To reduce debug cost, steps are sorted differently on each platform,
   # so that a bug in any module will cause at least one platform to fail quickly.
