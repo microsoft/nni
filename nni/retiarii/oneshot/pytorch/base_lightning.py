@@ -81,35 +81,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         _replace_module_with_type(
             self.model, choice_replace_dict, self.nas_modules)
 
-    def __getattr__(self, name):
-        """
-        Redirect lightning hooks.
-        Only hooks in the list below will be redirect to user-deifend ones.
-        The list is not customizable now. But if you need to redirect other user-defined
-        hooks in your NAS method, you can override it and call user-defined methods manually.
-
-        Warnings
-        ----------
-        Validation-related hooks are bypassed as default, since architecture selection
-        is exactly what NAS aims to do.
-        """
-        if name in [
-            'on_train_end',
-            'on_fit_start',
-            'on_fit_end',
-            'on_train_batch_start',
-            'on_train_batch_end',
-            'on_epoch_start',
-            'on_epoch_end',
-            'on_train_epoch_start',
-            'on_train_epoch_end',
-            'on_before_backward',
-            'on_after_backward',
-            'configure_gradient_clipping'
-        ]:
-            return getattr(self.__dict__['_modules']['model'], name)
-        return super().__getattr__(name)
-
     def forward(self, x):
         return self.model(x)
 
@@ -145,51 +116,52 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
-        optim_conf = self.model.configure_optimizers()
-        optimizers, lr_schedulers = [], []
+        # The third return value ''frequency'' and ''monitor'' are ignored since lightning
+        # requires len(optimizers) == len(frequency), and gradient backword
+        # is handled manually.
+        w_optimizers, lr_schedulers, _, _ = \
+            self.trainer._configure_optimizers(self.model.configure_optimizers())
 
-        # single output, single optimizer
-        if isinstance(optim_conf, optim.Optimizer):
-            optimizers = [optim_conf]
-        # two lists, optimizer + lr schedulers
-        elif (
-            isinstance(optim_conf, (list, tuple))
-            and len(optim_conf) == 2
-            and isinstance(optim_conf[0], list)
-            and all(isinstance(opt, optim.Optimizer) for opt in optim_conf[0])
-        ):
-            opt, sch = optim_conf
-            optimizers = opt
-            lr_schedulers = sch if isinstance(sch, list) else [sch]
-        # single dictionary
-        elif isinstance(optim_conf, dict):
-            optimizers = [optim_conf["optimizer"]]
-            lr_schedulers = [optim_conf["lr_scheduler"]] if "lr_scheduler" in optim_conf else []
-        # multiple dictionaries
-        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
-            optimizers = [opt_dict["optimizer"] for opt_dict in optim_conf]
-            scheduler_dict = (
-                lambda scheduler, opt_idx: dict(scheduler, opt_idx=opt_idx)
-                if isinstance(scheduler, dict)
-                else {"scheduler": scheduler, "opt_idx": opt_idx}
-            )
+        return arc_optimizers + w_optimizers, lr_schedulers
 
-            lr_schedulers = [
-                scheduler_dict(opt_dict["lr_scheduler"], opt_idx)
-                for opt_idx, opt_dict in enumerate(optim_conf)
-                if "lr_scheduler" in opt_dict
-            ]
-            # Note that because architecture optimizers are also provided, user-provided ''frequency''s
-            # are ignored. Otherwise this can not pass the assertion that len(frequency)==len(optimizers)
-            # in lightning trainer code.
-        # single list or tuple, multiple optimizer
-        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, optim.Optimizer) for opt in optim_conf):
-            optimizers = list(optim_conf)
-        # unknown configuration
-        else:
-            raise Exception("Unknown configuration for model optimizers.")
+    def on_train_start(self):
+        return self.model.on_train_start()
 
-        return arc_optimizers + optimizers, lr_schedulers
+    def on_train_end(self):
+        return self.model.on_train_end()
+
+    def on_fit_start(self):
+        return self.model.on_train_start()
+
+    def on_fit_end(self):
+        return self.model.on_train_end()
+
+    def on_train_batch_start(self, batch, batch_idx, unused = 0):
+        return self.model.on_train_batch_start(batch, batch_idx, unused)
+
+    def on_train_batch_end(self, outputs, batch, batch_idx, unused = 0):
+        return self.model.on_train_batch_end(outputs, batch, batch_idx, unused)
+
+    def on_epoch_start(self):
+        return self.model.on_epoch_start()
+
+    def on_epoch_end(self):
+        return self.model.on_epoch_end()
+
+    def on_train_epoch_start(self):
+        return self.model.on_train_epoch_start()
+
+    def on_train_epoch_end(self):
+        return self.model.on_train_epoch_end()
+
+    def on_before_backward(self, loss):
+        return self.model.on_before_backward(loss)
+
+    def on_after_backward(self):
+        return self.model.on_after_backward()
+
+    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
+        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
 
     def configure_architecture_optimizers(self):
         '''

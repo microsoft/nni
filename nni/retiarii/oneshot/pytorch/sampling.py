@@ -255,6 +255,8 @@ class EnasModule(BaseOneShotLightningModule):
             self._resample()
             with torch.no_grad():
                 logits = self.model(x)
+            # metrics 有一个键叫 default，多个拿default，一个拿第一个，否则报错。
+            # 找 self.model 拿 log 里的 metric
             reward = self.model.metrics['acc'](logits, y) # reward_function(logits, y)
 
             if self.entropy_weight:
@@ -272,6 +274,8 @@ class EnasModule(BaseOneShotLightningModule):
                     nn.utils.clip_grad_norm_(self.controller.parameters(), self.grad_clip)
                 arc_opt.step()
                 arc_opt.zero_grad()
+
+        return self.model.training_step(batch, batch_idx)
 
     def _resample(self):
         result = self.controller.resample()

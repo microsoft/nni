@@ -73,7 +73,7 @@ class DartsModule(BaseOneShotLightningModule):
         if w_optim is not None:
             for opt in w_optim:
                 opt.step()
-        return w_step_loss
+        return self.model.training_step(trn_batch, 2 * batch_idx + 1)
 
     def resample_architecture(self):
         """
@@ -300,10 +300,7 @@ class SNASLayerChoice(nn.Module):
 
     def resample(self):
         # gumble soft-max
-        log_alpha = torch.log(self.alpha)
-        u = torch.zeros_like(log_alpha).uniform_()
-        softmax = torch.nn.Softmax(-1)
-        self.one_hot = softmax((log_alpha -(-u.log()).log()) / self._temp)
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
 
     def parameters(self):
         for _, p in self.named_parameters():
@@ -337,10 +334,7 @@ class SNASInputChoice(nn.Module):
 
     def resample(self):
         # gumble soft-max
-        log_alpha = torch.log(self.alpha)
-        u = torch.zeros_like(log_alpha).uniform_()
-        softmax = torch.nn.Softmax(-1)
-        self.one_hot = softmax((log_alpha -(-u.log()).log()) / self._temp)
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
 
     def parameters(self):
         for _, p in self.named_parameters():
