@@ -5,7 +5,7 @@ import assert from 'assert/strict';
 
 import { parseArgs } from 'common/globals/arguments';
 
-const cmd = '--port 80 --experiment-id ID --action resume --experiments-directory DIR --log-level error';
+const command = '--port 80 --experiment-id ID --action resume --experiments-directory DIR --log-level error';
 const expected = {
     port: 80,
     experimentId: 'ID',
@@ -20,42 +20,42 @@ const expected = {
 };
 
 function testGoodShort(): void {
-    const args = parseArgs(cmd.split(' '));
+    const args = parseArgs(command.split(' '));
     assert.deepEqual(args, expected);
 }
 
 function testGoodLong(): void {
-    const str = cmd + ' --url-prefix URL/prefix --foreground true';
-    const args = parseArgs(str.split(' '));
-    const expected = Object.assign({}, expected);
-    expected.urlPrefix = 'URL/prefix';
-    expected.foreground = true;
-    assert.deepEqual(args, expected);
+    const cmd = command + ' --url-prefix URL/prefix --foreground true';
+    const args = parseArgs(cmd.split(' '));
+    const expectedLong = Object.assign({}, expected);
+    expectedLong.urlPrefix = 'URL/prefix';
+    expectedLong.foreground = true;
+    assert.deepEqual(args, expectedLong);
 }
 
 function testBadKey(): void {
-    const str = cmd + ' --bad 1';
-    assert.throws(() => parseArgs(str.split(' ')));
+    const cmd = command + ' --bad 1';
+    assert.throws(() => parseArgs(cmd.split(' ')));
 }
 
 function testBadPos(): void {
-    const str = cmd.replace('--port', 'port');
-    assert.throws(() => parseArgs(str.split(' ')));
+    const cmd = command.replace('--port', 'port');
+    assert.throws(() => parseArgs(cmd.split(' ')));
 }
 
 function testBadNum(): void {
-    const str = cmd.replace('80', '8o');
-    assert.throws(() => parseArgs(str.split(' ')));
+    const cmd = command.replace('80', '8o');
+    assert.throws(() => parseArgs(cmd.split(' ')));
 }
 
 function testBadBool(): void {
-    const str = cmd + ' --foreground 1';
-    assert.throws(() => parseArgs(str.split(' ')));
+    const cmd = command + ' --foreground 1';
+    assert.throws(() => parseArgs(cmd.split(' ')));
 }
 
 function testBadChoice(): void {
-    const str = cmd.replace('resume', 'new');
-    assert.throws(() => parseArgs(str.split(' ')));
+    const cmd = command.replace('resume', 'new');
+    assert.throws(() => parseArgs(cmd.split(' ')));
 }
 
 describe('## globals.arguments ##', () => {
