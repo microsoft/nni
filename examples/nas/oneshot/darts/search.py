@@ -11,7 +11,6 @@ import torch.nn as nn
 
 import datasets
 from model import CNN
-from nni.nas.pytorch.callbacks import ArchitectureCheckpoint, LRSchedulerCallback
 from utils import accuracy
 
 
@@ -37,37 +36,19 @@ if __name__ == "__main__":
     optim = torch.optim.SGD(model.parameters(), 0.025, momentum=0.9, weight_decay=3.0E-4)
     lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optim, args.epochs, eta_min=0.001)
 
-    if args.v1:
-        from nni.algorithms.nas.pytorch.darts import DartsTrainer
-        trainer = DartsTrainer(model,
-                               loss=criterion,
-                               metrics=lambda output, target: accuracy(output, target, topk=(1,)),
-                               optimizer=optim,
-                               num_epochs=args.epochs,
-                               dataset_train=dataset_train,
-                               dataset_valid=dataset_valid,
-                               batch_size=args.batch_size,
-                               log_frequency=args.log_frequency,
-                               unrolled=args.unrolled,
-                               callbacks=[LRSchedulerCallback(lr_scheduler), ArchitectureCheckpoint("./checkpoints")])
-        if args.visualization:
-            trainer.enable_visualization()
-
-        trainer.train()
-    else:
-        from nni.retiarii.oneshot.pytorch import DartsTrainer
-        trainer = DartsTrainer(
-            model=model,
-            loss=criterion,
-            metrics=lambda output, target: accuracy(output, target, topk=(1,)),
-            optimizer=optim,
-            num_epochs=args.epochs,
-            dataset=dataset_train,
-            batch_size=args.batch_size,
-            log_frequency=args.log_frequency,
-            unrolled=args.unrolled
-        )
-        trainer.fit()
-        final_architecture = trainer.export()
-        print('Final architecture:', trainer.export())
-        json.dump(trainer.export(), open('checkpoint.json', 'w'))
+    from nni.retiarii.oneshot.pytorch import DartsTrainer
+    trainer = DartsTrainer(
+        model=model,
+        loss=criterion,
+        metrics=lambda output, target: accuracy(output, target, topk=(1,)),
+        optimizer=optim,
+        num_epochs=args.epochs,
+        dataset=dataset_train,
+        batch_size=args.batch_size,
+        log_frequency=args.log_frequency,
+        unrolled=args.unrolled
+    )
+    trainer.fit()
+    final_architecture = trainer.export()
+    print('Final architecture:', trainer.export())
+    json.dump(trainer.export(), open('checkpoint.json', 'w'))
