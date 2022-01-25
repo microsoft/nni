@@ -1,6 +1,8 @@
 parameters:
 - name: platform
   type: string
+- name: useCache
+  type: boolean
 
 steps:
 - template: config-version.yml
@@ -29,10 +31,12 @@ steps:
     vstsFeedPackage: dependencies-${{ parameters.platform }}
     vstsPackageVersion: "*"
   displayName: Download cache
+  condition: and(succeeded(), ${{ parameters.useCache }})
 
 - script: |
     python test/vso_tools/unpack_dependencies.py
   displayName: Unpack cache
+  condition: and(succeeded(), ${{ parameters.useCache }})
 
 - script: |
     mv dependencies/recommended_legacy.txt dependencies/recommended.txt
@@ -49,6 +53,13 @@ steps:
     echo '===== recommended ====='
     python -m pip install -r dependencies/recommended.txt
   displayName: Install Python dependencies
+
+# FIXME: See cache-dependencies-template.yml on why it needs rebuild.
+- script: |
+    python -m pip uninstall -y ConfigSpaceNNI
+    python -m pip install --no-cache-dir ConfigSpaceNNI
+  displayName: Rebuild ConfigSpaceNNI
+  condition: and(succeeded(), not(${{ parameters.useCache }}), contains('${{ parameters.platform }}', 'ubuntu'))
 
 # TODO: Delete this after upgrading to PyTorch 1.11.
 - script: |
