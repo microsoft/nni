@@ -10,7 +10,7 @@ from torch import autograd, Tensor
 from torch.nn import Module, Parameter
 from torch.optim import Optimizer, Adam
 
-from nni.algorithms.compression.v2.pytorch.base.compressor import Compressor, _setattr, LayerInfo
+from nni.algorithms.compression.v2.pytorch.base import PrunerModuleWrapper, LayerInfo
 from nni.algorithms.compression.v2.pytorch.pruning.basic_pruner import BasicPruner, NORMAL_SCHEMA, EXCLUDE_SCHEMA, INTERNAL_SCHEMA
 from nni.algorithms.compression.v2.pytorch.utils import CompressorSchema, OptimizerConstructHelper
 from nni.common.serializer import Traceable
@@ -25,7 +25,7 @@ from .tools import (
 _logger = logging.getLogger(__name__)
 
 
-class PrunerScoredModuleWrapper(Module):
+class PrunerScoredModuleWrapper(PrunerModuleWrapper):
     """
     Wrap a module to enable data parallel, forward method customization and buffer registeration.
     Different from `PrunerModuleWrapper`, `PrunerScoredModuleWrapper` will record the gradient.
@@ -38,55 +38,11 @@ class PrunerScoredModuleWrapper(Module):
         The configurations that users specify for compression.
     module_name
         The name of the module to compress, wrapper module shares same name.
-    pruner
-        The pruner used to calculate mask.
     """
-    def __init__(self, module: Module, module_name: str, config: Dict, pruner: Compressor):
-        super().__init__()
-        # origin layer information
-        self.module = module
-        self.name = module_name
-        # config and pruner
-        self.config = config
-        self.pruner = pruner
-
-        self.weight = Parameter(torch.empty(self.module.weight.size()))
+    def __init__(self, module: Module, module_name: str, config: Dict):
+        super().__init__(module, module_name, config)
         self.weight_score = Parameter(torch.empty(self.weight.size()))
         torch.nn.init.constant_(self.weight_score, val=0.0)
-
-        # register buffer for mask
-        self.register_buffer("weight_mask", torch.ones(self.module.weight.shape))
-        if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.register_buffer("bias_mask", torch.ones(self.module.bias.shape))
-            self.bias = Parameter(torch.empty(self.module.bias.size()))
-        else:
-            self.register_buffer("bias_mask", None)
-
-    def _weight2buffer(self):
-        """
-        When using this wrapper to inference, call `_weight2buffer()` to make original weight untrainable.
-        The best place to call this function is in `Pruner._wrap_model()`.
-        """
-        self.weight.data = self.module.weight.data
-        delattr(self.module, 'weight')
-        self.module.register_buffer('weight', self.weight.data)
-        if hasattr(self.module, 'bias') and self.module.bias is not None:
-            self.bias.data = self.module.bias.data
-            delattr(self.module, 'bias')
-            self.module.register_buffer('bias', self.bias.data)
-
-    def _weight2parameter(self):
-        """
-        When don't need to record score or need to export the model, call `_weight2parameter()` to make the original weight trainable.
-        The best place to call this function is in `Pruner._unwrap_model()`.
-        """
-        delattr(self.module, 'weight')
-        self.module.weight = Parameter(torch.empty(self.weight.size()))
-        self.module.weight.data = torch.mul(self.weight, self.weight_mask)
-        if hasattr(self.module, 'bias') and self.module.bias is not None:
-            delattr(self.module, 'bias')
-            self.module.bias = Parameter(torch.empty(self.bias.size()))
-            self.module.bias.data = torch.mul(self.bias, self.bias_mask)
 
     def forward(self, *inputs):
         # apply mask to weight, bias
@@ -230,28 +186,6 @@ class MovementPruner(BasicPruner):
         else:
             self.data_collector.reset()
 
-    def _wrap_model(self):
-        """
-        Wrap all modules that needed to be compressed.
-        Different from the parent function, call `wrapper._weight2buffer()` after replace the origin module to wrapper.
-        """
-        if not self.is_wrapped:
-            for _, wrapper in reversed(self.get_modules_wrapper().items()):
-                _setattr(self.bound_model, wrapper.name, wrapper)
-                wrapper._weight2buffer()
-            self.is_wrapped = True
-
-    def _unwrap_model(self):
-        """
-        Unwrap all modules that needed to be compressed.
-        Different from the parent function, call `wrapper._weight2parameter()` after replace the wrapper to origin module.
-        """
-        if self.is_wrapped:
-            for _, wrapper in self.get_modules_wrapper().items():
-                _setattr(self.bound_model, wrapper.name, wrapper.module)
-                wrapper._weight2parameter()
-            self.is_wrapped = False
-
     def _wrap_modules(self, layer: LayerInfo, config: Dict):
         """
         Create a wrapper module to replace the original one.
@@ -265,20 +199,11 @@ class MovementPruner(BasicPruner):
             The configuration for generating the mask.
         """
         _logger.debug("Module detected to compress : %s.", layer.name)
-        wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config, self)
+        wrapper = PrunerScoredModuleWrapper(layer.module, layer.name, config)
         assert hasattr(layer.module, 'weight'), "module %s does not have 'weight' attribute" % layer.name
         # move newly registered buffers to the same device of weight
         wrapper.to(layer.module.weight.device)
         return wrapper
-
-    def get_origin2wrapped_parameter_name_map(self) -> Dict[str, str]:
-        if self.is_wrapped:
-            self._unwrap_model()
-            parameter_name_map = {name: name for name, _ in self.bound_model.named_parameters()}
-            self._wrap_model()
-            return parameter_name_map
-        else:
-            raise Exception('When only the model is wrapped can get the parameter_name_map.')
 
     def compress(self) -> Tuple[Module, Dict]:
         # sparsity grow from 0
