@@ -186,7 +186,7 @@ def _ensure_port_idle(port: int, message: Optional[str] = None) -> None:
 
 
 def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool, experiment_id: str,
-                                pipe_path: str = None, mode: str = 'create') -> Tuple[int, Popen]:
+                                pipe_path: str) -> Tuple[int, Popen]:
     if isinstance(config.training_service, list):
         ts = 'hybrid'
     else:
@@ -198,7 +198,7 @@ def _start_rest_server_retiarii(config: ExperimentConfig, port: int, debug: bool
         'port': port,
         'mode': ts,
         'experiment_id': experiment_id,
-        'action': mode,
+        'action': 'create',
         'experiments_directory': config.experiment_working_directory,
         'log_level': 'debug' if debug else 'info'
     }

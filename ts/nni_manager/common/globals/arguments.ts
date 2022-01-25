@@ -22,7 +22,7 @@ export interface NniManagerArgs {
     readonly experimentsDirectory: string;  // must be absolute
     readonly logLevel: 'critical' | 'error' | 'warning' | 'info' | 'debug';
     readonly foreground: boolean;
-    readonly urlPrefix: string;  // leading and trailing slashes are all stripped (python side's responsibility)
+    readonly urlPrefix: string;  // leading and trailing slashes must be stripped
 
     // these are planned to be removed
     readonly mode: string;
@@ -36,7 +36,7 @@ export function parseArgs(rawArgs: string[]): NniManagerArgs {
     // strip yargs leftovers
     const argsAsAny: any = {};
     for (const key in yargsOptions) {
-        argsAsAny[key] = (<any>parsedArgs)[key];
+        argsAsAny[key] = (parsedArgs as any)[key];
         assert(!Number.isNaN(argsAsAny[key]), `Command line arg --${key} is not a number`);
     }
     if (argsAsAny.dispatcherPipe === '') {
