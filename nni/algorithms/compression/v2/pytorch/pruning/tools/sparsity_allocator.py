@@ -1,15 +1,18 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from collections import OrderedDict
 import math
+from tkinter import N
 from typing import Any, Dict, List, Tuple, Union
+from datasets import metric
 
 import numpy as np
 import torch
 from torch import Tensor
 
 from nni.algorithms.compression.v2.pytorch.base import Pruner
-from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency
+from nni.compression.pytorch.utils.shape_dependency import ChannelDependency, GroupDependency, AttentionWeightDependency
 
 from .base import SparsityAllocator
 
@@ -176,3 +179,109 @@ class Conv2dDependencyAwareAllocator(SparsityAllocator):
         for group_metric in group_metrics:
             group_sum_metric += group_metric
         return group_sum_metric
+
+
+class AttentionSparsityAllocator(SparsityAllocator):
+    """
+    A specific allocator for attention has a structure like self-attention in Bert.
+    In this sparsity allocator, :math:`Q_{proj}`, :math:`K_{proj}`, :math:`V_{proj}` of the same attention head will in one group.
+    Sparsity allocator will combine their metrics and share the mask among these three weights in one group.
+    Note that by default, assuming QKV are implemented with `torch.nn.Linear`.
+    """
+    def __init__(self, pruner: Pruner, dim: int, dummy_input: Any):
+        super().__init__(pruner, dim=dim)
+        self.dummy_input = dummy_input
+
+    def _get_dependency(self):
+        """
+        Populate self.attention_name_groups by running inference on the module graph.
+        Currently, the group inferred AttentionWeightDependency is limited to a set of four weights, with the first
+        three corresponding to :math:`Q_{proj}`, :math:`K_{proj}`, :math:`V_{proj}` (in any order) and the last one being :math:`{Output}_{proj}`.
+        """
+        try:
+            graph = self.pruner.generate_graph(dummy_input=self.dummy_input)
+            dependency_tracer = AttentionWeightDependency(traced_model=graph.trace)
+            self.attention_name_groups = dependency_tracer.dependency_sets
+
+        except Exception as e:
+            raise RuntimeError('Graph trace failed: please check dummy_input, or specify attention_name_groups.\n'
+                               'Exception message: ' + str(e))
+
+    def _group_metric_calculate(self, group_metrics_dict: Dict[str, Tensor]) -> Tensor:
+        """
+        Sum :math:`Q_{proj}`, :math:`K_{proj}`, :math:`V_{proj}` metric value in the same position in one group.
+        """
+        group_metrics_list = list(group_metrics_dict.values())
+        assert all(group_metrics_list[0].size() == group_metric.size() for group_metric in group_metrics_list), 'Metrics size mismatched.'
+        group_sum_metric = torch.zeros(group_metrics_list[0].size(), device=group_metrics_list[0].device)
+        for group_metric in group_metrics_list:
+            group_sum_metric += group_metric
+        return group_sum_metric
+
+    def generate_sparsity(self, metrics: Dict) -> Dict[str, Dict[str, Tensor]]:
+        self._get_dependency()
+        masks = {}
+        grouped_metrics = {}
+
+        # Group the QKV metrics in one head.
+        for idx, names in enumerate(self.attention_name_groups):
+            group_metric_dict = OrderedDict()
+            for name in names[0: 3]:
+                # If the Linear will be pruned, add it to this group.
+                if name in metrics:
+                    group_metric_dict[name] = metrics[name]
+                    if self.continuous_mask:
+                        group_metric_dict[name] *= self._compress_mask(self.pruner.get_modules_wrapper()[name].weight_mask)
+            grouped_metrics[idx] = group_metric_dict
+
+        # Calculate group metric.
+        for idx, group_metric_dict in grouped_metrics.items():
+            group_metric = self._group_metric_calculate(group_metric_dict)
+            for name in group_metric_dict.keys():
+                metrics[name] = group_metric
+
+            # Special rule based output layer mask generation.
+            output_layer_name = self.attention_name_groups[idx][-1]
+            if output_layer_name in metrics and len(self.dim) == 1 and self.dim[0] == 1:
+                # Don't use colculated metric, use group metric.
+                metrics[output_layer_name] = None
+                metric = group_metric
+                wrapper = self.pruner.get_modules_wrapper()[output_layer_name]
+                prune_num = int(wrapper.config['total_sparsity'] * metric.numel())
+                head_width = int(wrapper.module.weight.size(1) / metric.size(0))
+                prune_num = int(wrapper.config['total_sparsity'] * metric.numel())
+                if prune_num == 0:
+                    threshold = metric.min() - 1
+                else:
+                    threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
+                proj_mask = torch.gt(metric, threshold).type_as(metric)
+                # The mask is on input channels, not output channels
+                masks[output_layer_name] = {
+                    'weight': proj_mask.unsqueeze(1).expand(-1, head_width).reshape(-1).unsqueeze(0).expand_as(wrapper.module.weight).clone()
+                }
+                if wrapper.bias_mask is not None:
+                    masks[output_layer_name]['bias'] = wrapper.bias_mask.clone().detach()
+
+        # Complement the full sparsity, generate masks for other layer (not in attention) weights
+        for name, wrapper in self.pruner.get_modules_wrapper().items():
+            sparsity_rate = wrapper.config['total_sparsity']
+            assert name in metrics, 'Metric of {} is not calculated.'.format(name)
+            # If it is output layer in attention head, its mask may already be generated above.
+            if metrics[name] is None:
+                continue
+
+            # We assume the metric value are all positive right now.
+            metric = metrics[name]
+            if self.continuous_mask:
+                metric *= self._compress_mask(wrapper.weight_mask)
+            prune_num = int(sparsity_rate * metric.numel())
+            if prune_num == 0:
+                threshold = metric.min() - 1
+            else:
+                threshold = torch.topk(metric.view(-1), prune_num, largest=False)[0].max()
+            mask = torch.gt(metric, threshold).type_as(metric)
+            masks[name] = self._expand_mask(name, mask)
+            if self.continuous_mask:
+                masks[name]['weight'] *= wrapper.weight_mask
+
+        return masks
