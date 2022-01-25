@@ -21,7 +21,8 @@ from .metrics_calculator import (
 from .sparsity_allocator import (
     NormalSparsityAllocator,
     GlobalSparsityAllocator,
-    Conv2dDependencyAwareAllocator
+    Conv2dDependencyAwareAllocator,
+    AttentionSparsityAllocator
 )
 from .task_generator import (
     AGPTaskGenerator,

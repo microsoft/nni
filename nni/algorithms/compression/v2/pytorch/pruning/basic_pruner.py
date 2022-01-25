@@ -37,7 +37,8 @@ from .tools import (
     SparsityAllocator,
     NormalSparsityAllocator,
     GlobalSparsityAllocator,
-    Conv2dDependencyAwareAllocator
+    Conv2dDependencyAwareAllocator,
+    AttentionSparsityAllocator
 )
 
 _logger = logging.getLogger(__name__)
@@ -175,7 +176,7 @@ class NormPruner(BasicPruner):
     p : int
         The order of norm.
     mode : str
-        'normal' or 'dependency_aware'.
+        'normal' or 'dependency_aware' or 'attention'.
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the norm of weights and the channel-dependency or
         group-dependency of the model. In this way, the pruner will force the conv layers
@@ -215,8 +216,10 @@ class NormPruner(BasicPruner):
                 self.sparsity_allocator = NormalSparsityAllocator(self, dim=0)
             elif self.mode == 'dependency_aware':
                 self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            elif self.mode == 'attention':
+                self.sparsity_allocator = AttentionSparsityAllocator(self, 0, self.dummy_input)
             else:
-                raise NotImplementedError('Only support mode `normal` and `dependency_aware`')
+                raise NotImplementedError('Only support mode `normal`, `dependency_aware`, `attention`')
 
 
 class L1NormPruner(NormPruner):
@@ -635,7 +638,7 @@ class TaylorFOWeightPruner(BasicPruner):
     training_batches : int
         The batch number used to collect activations.
     mode : str
-        'normal', 'dependency_aware' or 'global'.
+        'normal', 'dependency_aware', 'global', 'attention'.
 
         If prune the model in a dependency-aware way, this pruner will
         prune the model according to the taylorFO and the channel-dependency or
@@ -715,8 +718,10 @@ class TaylorFOWeightPruner(BasicPruner):
                 self.sparsity_allocator = GlobalSparsityAllocator(self, dim=0)
             elif self.mode == 'dependency_aware':
                 self.sparsity_allocator = Conv2dDependencyAwareAllocator(self, 0, self.dummy_input)
+            elif self.mode == 'attention':
+                self.sparsity_allocator = AttentionSparsityAllocator(self, 0, self.dummy_input)
             else:
-                raise NotImplementedError('Only support mode `normal`, `global` and `dependency_aware`')
+                raise NotImplementedError('Only support mode `normal`, `global`, `dependency_aware`, `attention`')
 
 
 class ADMMPruner(BasicPruner):
