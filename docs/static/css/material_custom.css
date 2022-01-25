@@ -16,3 +16,13 @@ dt.sig-object {
 a.md-logo img {
     padding: 3px;
 }
+
+/* Add split for navigation */
+nav.md-tabs .md-tabs__item:not(:last-child) {
+    padding-right: 0;
+}
+
+nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
+    content: "»";
+    padding-left: 0.6rem;    
+}
