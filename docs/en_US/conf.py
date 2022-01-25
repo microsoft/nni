@@ -151,6 +151,7 @@ html_title = 'Neural Network Intelligence'
 # Add extra css files and js files
 html_css_files = [
     'css/material_custom.css',
+    'css/material_dropdown.css',
     'css/index_page.css',
 ]
 html_js_files = [

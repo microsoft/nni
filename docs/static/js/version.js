@@ -34,26 +34,36 @@
 
 function create_dropdown(button_text, items) {
     var dropdown = document.createElement("div");
-    dropdown.className = "md-flex__cell md-flex__cell--shrink dropdown";
+    dropdown.className = "md-flex__cell md-flex__cell--shrink drop";
     var button = document.createElement("button");
-    button.className = "dropdownbutton";
     button.innerHTML = button_text;
-    var content = document.createElement("div");
-    content.className = "dropdown-content md-hero";
+    var content = document.createElement("ul");
+    // content.className = "dropdown-content md-hero";
     dropdown.appendChild(button);
     dropdown.appendChild(content);
 
     for (var key in items) {
         if (items.hasOwnProperty(key)) {
-            console.log(key, items[key]);
+            var li = document.createElement("li");
             var a = document.createElement("a");
+            a.className = "md-nav__link"
             a.innerHTML = key;
             a.title = key;
             a.href = items[key];
-            content.appendChild(a);
+            li.appendChild(a);
+            content.appendChild(li);
         }
     }
 
+    $(button).click(function (e) {
+        // first close all others.
+        $(".drop").find("ul.active").removeClass("active");
+        $(dropdown).find("ul").addClass("active");
+        e.stopPropagation();
+    })
+    $(document).click(function () {
+        $(dropdown).find("ul").removeClass("active");
+    })
     return dropdown;
 }
 
