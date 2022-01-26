@@ -1,11 +1,10 @@
 import * as React from 'react';
 import { Stack } from '@fluentui/react';
+import { AllExperimentList } from '../../static/interface';
 import CopyButton from '../public-child/CopyButton';
 
 interface TrialIdColumnProps {
-    port: number;
-    id: string;
-    status: string;
+    item: AllExperimentList;
 }
 
 class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
@@ -14,14 +13,17 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
     }
 
     render(): React.ReactNode {
-        const { port, id, status } = this.props;
+        const { item } = this.props;
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
-        const webuiPortal = `${protocol}//${hostname}:${port}/oview`;
+        const webuiPortal =
+            item.prefixUrl === 'null'
+                ? `${protocol}//${hostname}:${item.port}/oview`
+                : `${protocol}//${hostname}:${item.port}/${item.prefixUrl}/oview`;
         return (
             <Stack horizontal className='ellipsis idCopy'>
-                {status === 'STOPPED' ? (
-                    <div className='idColor'>{id}</div>
+                {item.status === 'STOPPED' ? (
+                    <div className='idColor'>{item.id}</div>
                 ) : (
                     <a
                         href={webuiPortal}
@@ -29,10 +31,10 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
                         target='_blank'
                         rel='noopener noreferrer'
                     >
-                        {id}
+                        {item.id}
                     </a>
                 )}
-                <CopyButton value={id} />
+                <CopyButton value={item.id} />
             </Stack>
         );
     }
