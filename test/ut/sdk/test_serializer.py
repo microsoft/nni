@@ -1,8 +1,9 @@
 import math
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 
+import pytest
 import nni
 import torch
 from torch.utils.data import DataLoader
@@ -189,6 +190,21 @@ def test_dataset():
     assert y.size() == torch.Size([10])
 
 
+@pytest.mark.skipif(sys.platform != 'linux', reason='https://github.com/microsoft/nni/issues/4434')
+def test_multiprocessing_dataloader():
+    # check whether multi-processing works
+    # it's possible to have pickle errors
+    dataset = nni.trace(MNIST)(root='data/mnist', train=False, download=True,
+                               transform=nni.trace(transforms.Compose)(
+                                   [transforms.ToTensor(), transforms.Normalize((0.1307,), (0.3081,))]
+                               ))
+    import nni.retiarii.evaluator.pytorch.lightning as pl
+    dataloader = pl.DataLoader(dataset, batch_size=10, num_workers=2)
+    x, y = next(iter(dataloader))
+    assert x.size() == torch.Size([10, 1, 28, 28])
+    assert y.size() == torch.Size([10])
+
+
 def test_type():
     assert nni.dump(torch.optim.Adam) == '{"__nni_type__": "path:torch.optim.adam.Adam"}'
     assert nni.load('{"__nni_type__": "path:torch.optim.adam.Adam"}') == torch.optim.Adam
@@ -205,10 +221,28 @@ def test_lightning_earlystop():
     assert any(isinstance(callback, EarlyStopping) for callback in trainer.callbacks)
 
 
+def test_generator():
+    import torch.nn as nn
+    import torch.optim as optim
+
+    class Net(nn.Module):
+        def __init__(self):
+            super().__init__()
+            self.conv = nn.Conv2d(3, 10, 1)
+
+        def forward(self, x):
+            return self.conv(x)
+
+    model = Net()
+    optimizer = nni.trace(optim.Adam)(model.parameters())
+    print(optimizer.trace_kwargs)
+
+
+
 if __name__ == '__main__':
     # test_simple_class()
     # test_external_class()
     # test_nested_class()
     # test_unserializable()
     # test_basic_unit()
-    test_type()
+    test_generator()

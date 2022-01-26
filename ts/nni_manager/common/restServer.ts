@@ -14,7 +14,7 @@ import { getBasePort } from './experimentStartupInfo';
  * The module who wants to use a RestServer could <b>extends</b> this abstract class
  * And implement its own registerRestHandler() function to register routers
  */
-export abstract class RestServer {
+export abstract class LegacyRestServer {
     private startTask!: Deferred<void>;
     private stopTask!: Deferred<void>;
     private server!: http.Server;

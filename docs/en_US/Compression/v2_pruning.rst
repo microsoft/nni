@@ -23,3 +23,4 @@ For details, please refer to the following tutorials:
 
     Pruning Algorithms <v2_pruning_algo>
     Pruning Scheduler <v2_scheduler>
+    Pruning Config List <v2_pruning_config_list>

@@ -6,6 +6,7 @@ import unittest
 import torch
 import torch.nn.functional as F
 
+import nni
 from nni.algorithms.compression.v2.pytorch.base import Pruner
 from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     WeightDataCollector,
@@ -24,7 +25,7 @@ from nni.algorithms.compression.v2.pytorch.pruning.tools import (
     GlobalSparsityAllocator
 )
 from nni.algorithms.compression.v2.pytorch.pruning.tools.base import HookCollectorInfo
-from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name, trace_parameters
+from nni.algorithms.compression.v2.pytorch.utils import get_module_by_name
 from nni.algorithms.compression.v2.pytorch.utils.constructor_helper import OptimizerConstructHelper
 
 
@@ -62,7 +63,7 @@ def trainer(model, optimizer, criterion):
 
 
 def get_optimizer(model):
-    return trace_parameters(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
+    return nni.trace(torch.optim.SGD)(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
 
 
 criterion = torch.nn.CrossEntropyLoss()
@@ -139,12 +140,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test MultiDataNormMetricsCalculator
         metrics_calculator = MultiDataNormMetricsCalculator(dim=0, p=1)
         data = {
-            '1': [torch.ones(3, 3, 3), torch.ones(3, 3, 3) * 2],
-            '2': [torch.ones(4, 4), torch.ones(4, 4) * 2]
+            '1': [2, torch.ones(3, 3, 3) * 2],
+            '2': [2, torch.ones(4, 4) * 2]
         }
         result = {
-            '1': torch.ones(3) * 27,
-            '2': torch.ones(4) * 12
+            '1': torch.ones(3) * 18,
+            '2': torch.ones(4) * 8
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
@@ -152,12 +153,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test APoZRankMetricsCalculator
         metrics_calculator = APoZRankMetricsCalculator(dim=1)
         data = {
-            '1': [torch.tensor([[1, 0], [0, 1]], dtype=torch.float32), torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
-            '2': [torch.tensor([[1, 0, 1], [0, 1, 0]], dtype=torch.float32), torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': [2, torch.tensor([[1, 1], [1, 1]], dtype=torch.float32)],
+            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
         }
         result = {
             '1': torch.tensor([0.5, 0.5], dtype=torch.float32),
-            '2': torch.tensor([0.25, 0.25, 0.5], dtype=torch.float32)
+            '2': torch.tensor([1, 1, 0.75], dtype=torch.float32)
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())
@@ -165,12 +166,12 @@ class PruningToolsTestCase(unittest.TestCase):
         # Test MeanRankMetricsCalculator
         metrics_calculator = MeanRankMetricsCalculator(dim=1)
         data = {
-            '1': [torch.tensor([[1, 0], [0, 1]], dtype=torch.float32), torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
-            '2': [torch.tensor([[1, 0, 1], [0, 1, 0]], dtype=torch.float32), torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
+            '1': [2, torch.tensor([[0, 1], [1, 0]], dtype=torch.float32)],
+            '2': [2, torch.tensor([[0, 0, 1], [0, 0, 0]], dtype=torch.float32)]
         }
         result = {
-            '1': torch.tensor([0.5, 0.5], dtype=torch.float32),
-            '2': torch.tensor([0.25, 0.25, 0.5], dtype=torch.float32)
+            '1': torch.tensor([0.25, 0.25], dtype=torch.float32),
+            '2': torch.tensor([0, 0, 0.25], dtype=torch.float32)
         }
         metrics = metrics_calculator.calculate_metrics(data)
         assert all(torch.equal(result[k], v) for k, v in metrics.items())

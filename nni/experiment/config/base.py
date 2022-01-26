@@ -59,7 +59,7 @@ class ConfigBase:
     def __init__(self, **kwargs):
         """
         There are two common ways to use the constructor,
-        directly writing Python code and unpacking from JSON(YAML) object:
+        directly writing kwargs and unpacking from JSON (YAML) object:
 
         .. code-block:: python
 
@@ -77,7 +77,7 @@ class ConfigBase:
         then using ``hello_world=1``, ``helloWorld=1``, and ``_HELLOWORLD_=1`` in constructor
         will all assign to the same field.
 
-        If ``kwargs`` contain extra keys, a `ValueError` will be raised.
+        If ``kwargs`` contain extra keys, `AttributeError` will be raised.
 
         If ``kwargs`` do not have enough key, missing fields are silently set to `MISSING()`.
         You can use ``utils.is_missing()`` to check them.
@@ -90,7 +90,7 @@ class ConfigBase:
         if args:  # maybe a key is misspelled
             class_name = type(self).__name__
             fields = ', '.join(args.keys())
-            raise ValueError(f'{class_name} does not have field(s) {fields}')
+            raise AttributeError(f'{class_name} does not have field(s) {fields}')
 
         # try to unpack nested config
         for field in dataclasses.fields(self):
@@ -135,7 +135,7 @@ class ConfigBase:
         with open(path) as yaml_file:
             data = yaml.safe_load(yaml_file)
         if not isinstance(data, dict):
-            raise ValueError(f'Conent of config file {path} is not a dict/object')
+            raise TypeError(f'Conent of config file {path} is not a dict/object')
         utils.set_base_path(Path(path).parent)
         config = cls(**data)
         utils.unset_base_path()
@@ -143,9 +143,14 @@ class ConfigBase:
 
     def canonical_copy(self):
         """
-        Create a canonicalized copy of the config, and validate it.
+        Create a "canonical" copy of the config, and validate it.
 
         This function is mainly used internally by NNI.
+
+        Term explanation:
+        The config schema for end users is more flexible than the format NNI manager accepts,
+        so config classes have to deal with the conversion.
+        Here we call the converted format "canonical".
 
         Returns
         -------
@@ -186,15 +191,16 @@ class ConfigBase:
 
     def _canonicalize(self, parents):
         """
-        The config schema for end users is more flexible than the format NNI manager accepts.
-        This method convert a config object to the constrained format accepted by NNI manager.
+        To be overrided by subclass.
+
+        Convert the config object to canonical format.
 
         The default implementation will:
 
         1. Resolve all ``PathLike`` fields to absolute path
-        2. Call ``_canonicalize()`` on all children config objects, including those inside list and dict
+        2. Call ``_canonicalize([self] + parents)`` on all children config objects, including those inside list and dict
 
-        Subclasses are recommended to call ``super()._canonicalize(parents)`` at the end of their overrided version.
+        If the subclass has nested config fields, be careful about where to call ``super()._canonicalize()``.
 
         Parameters
         ----------
@@ -212,6 +218,8 @@ class ConfigBase:
 
     def _validate_canonical(self):
         """
+        To be overrided by subclass.
+
         Validate legality of a canonical config object. It's caller's responsibility to ensure the config is canonical.
 
         Raise exception if any problem found. This function does **not** return truth value.
@@ -220,8 +228,6 @@ class ConfigBase:
 
         1. Validate that all fields match their type hint
         2. Call ``_validate_canonical()`` on children config objects, including those inside list and dict
-
-        Subclasses are recommended to to call ``super()._validate_canonical()``.
         """
         utils.validate_type(self)
         for field in dataclasses.fields(self):
@@ -229,6 +235,10 @@ class ConfigBase:
             _recursive_validate_child(value)
 
     def __setattr__(self, name, value):
+        """
+        To prevent typo, config classes forbid assigning to attribute that is not a config field,
+        unless it starts with underscore.
+        """
         if hasattr(self, name) or name.startswith('_'):
             super().__setattr__(name, value)
             return
