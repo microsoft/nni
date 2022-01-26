@@ -91,7 +91,8 @@
   "proxy": "http://localhost:12138",
   "scripts": {
     "start": "node --max-old-space-size=3072 scripts/start.js",
-    "build": "node --max-old-space-size=3072 scripts/build.js",
+    "build": "node --max-old-space-size=3072 scripts/developmentBuild.js",
+    "release": "node --max-old-space-size=3072 scripts/productionBuild.js",
     "test": "node --max-old-space-size=3072 scripts/test.js",
     "eslint": "npx eslint ./ --ext .tsx,.ts",
     "stylelint": "npx stylelint **/*{.css,.scss}",
