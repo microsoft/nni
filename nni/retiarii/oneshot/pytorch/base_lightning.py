@@ -15,7 +15,7 @@ def _replace_module_with_type(root_module, replace_dict, modules):
     ----------
     root_module : nn.Module
         User-defined module with xxxChoice in it. In fact, since this method is
-        called in the ''__init__'' of BaseOneShotLightningModule, this will be a
+        called in the ``__init__`` of BaseOneShotLightningModule, this will be a
         pl.LightningModule.
     replace_dict : Dict[Type[nn.Module], Callable[[nn.Module], nn.Module]]
         Functions to replace xxxChoice modules. Keys should be xxxChoice type and values should be a
@@ -65,6 +65,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return an nn.module. This custom replace dict will override the default replace
         dict of each NAS method.
     """
+    automatic_optimization = False
+
     def __init__(self, base_model, custom_replace_dict=None):
         super().__init__()
         assert isinstance(base_model, pl.LightningModule)
@@ -104,7 +106,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         Combine architecture optimizers and user's model optimizers.
         Overwrite configure_architecture_optimizers if architecture optimizers
         are needed in your NAS algorithm.
-        By default ''self.model'' is currently a _SupervisedLearningModule in
+        By default ``self.model`` is currently a _SupervisedLearningModule in
         nni.retiarii.evaluator.pytorch.lightning, and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """
@@ -116,7 +118,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             arc_optimizers = [arc_optimizers]
         self.arc_optim_count = len(arc_optimizers)
 
-        # The third return value ''frequency'' and ''monitor'' are ignored since lightning
+        # The third return value ``frequency`` and ``monitor`` are ignored since lightning
         # requires len(optimizers) == len(frequency), and gradient backword
         # is handled manually.
         w_optimizers, lr_schedulers, _, _ = \
@@ -125,6 +127,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
+        # let users have access to the trainer
+        self.model.trianer = self.trainer
         return self.model.on_train_start()
 
     def on_train_end(self):
@@ -164,7 +168,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
 
     def configure_architecture_optimizers(self):
-        '''
+        """
         Hook kept for subclasses. Each specific NAS method returns the optimizer of
         architecture parameters.
 
@@ -173,7 +177,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         arc_optimizers : List[Optimizer], Optimizer
             Optimizers used by a specific NAS algorithm for its architecture parameters.
             Return None if no architecture optimizers are needed.
-        '''
+        """
         arc_optimizers = None
         return arc_optimizers
 
@@ -181,7 +185,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         Handle different type of the return value of user's training_step and
         return the loss tensor.
-        Use this instead of ''self.model.training_step(batch, batch_index)''
+        Use this instead of ``self.model.training_step(batch, batch_index)``
         """
         training_loss = self.model.training_step(batch, batch_index)
         if isinstance(training_loss, dict):

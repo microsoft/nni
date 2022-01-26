@@ -36,7 +36,6 @@ class DartsModule(BaseOneShotLightningModule):
     .. [darts] H. Liu, K. Simonyan, and Y. Yang, “DARTS: Differentiable Architecture Search,” presented at the
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
     """
-    automatic_optimization = False
 
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
@@ -54,9 +53,9 @@ class DartsModule(BaseOneShotLightningModule):
         trn_batch, val_batch = batch
 
         # phase 1: architecture step
-        # The resample_architecture hook is kept for some following darts-based NAS
+        # The _resample hook is kept for some following darts-based NAS
         # methods such as proxyless. See code of those methods for details.
-        self.resample_architecture()
+        self._resample()
         arc_optim.zero_grad()
         arc_step_loss = self._extract_user_loss(val_batch, 2 * batch_idx)
         self.manual_backward(arc_step_loss)
@@ -64,7 +63,7 @@ class DartsModule(BaseOneShotLightningModule):
         arc_optim.step()
 
         # phase 2: model step
-        self.resample_architecture()
+        self._resample()
         if w_optim is not None:
             for opt in w_optim:
                 opt.zero_grad()
@@ -75,7 +74,7 @@ class DartsModule(BaseOneShotLightningModule):
                 opt.step()
         return self.model.training_step(trn_batch, 2 * batch_idx + 1)
 
-    def resample_architecture(self):
+    def _resample(self):
         """
         Hook kept for darts-based methods. Some following works resample the architecture to
         reduce the memory consumption during training to fit the method to bigger models. Details
@@ -264,10 +263,6 @@ class ProxylessModule(DartsModule):
         Sep. 2018. Available: https://openreview.net/forum?id=HylVB3AqYm
 
     """
-    def configure_architecture_optimizers(self):
-        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], lr=3.e-4,
-                                           weight_decay=0, betas=(0, 0.999), eps=1e-8)
-        return ctrl_optim
 
     @property
     def default_replace_dict(self):
@@ -276,7 +271,7 @@ class ProxylessModule(DartsModule):
             InputChoice : ProxylessInputChoice
         }
 
-    def resample_architecture(self):
+    def _resample(self):
         for _, m in self.nas_modules:
             m.resample()
 
@@ -285,72 +280,28 @@ class ProxylessModule(DartsModule):
             m.finalize_grad()
 
 
-class SNASLayerChoice(nn.Module):
+class SNASLayerChoice(DartsLayerChoice):
     def __init__(self, layer_choice, temp = 1):
-        super().__init__()
-        self.name = layer_choice.label
-        self.op_choices = nn.ModuleDict(OrderedDict([(name, layer_choice[name]) for name in layer_choice.names]))
-        self.alpha = nn.Parameter(torch.randn(len(self.op_choices)) * 1e-3)
+        super().__init__(layer_choice)
         self._temp = temp
 
     def forward(self, *args, **kwargs):
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
         op_results = torch.stack([op(*args, **kwargs) for op in self.op_choices.values()])
         alpha_shape = [-1] + [1] * (len(op_results.size()) - 1)
         return torch.sum(op_results * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
 
-    def resample(self):
-        # gumble soft-max
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
 
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self):
-        for name, p in super().named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return list(self.op_choices.keys())[torch.argmax(self.alpha).item()]
-
-    def r_forward(self, x):
-        return self.op_choices.values()[0](x)
-
-
-class SNASInputChoice(nn.Module):
+class SNASInputChoice(DartsInputChoice):
     def __init__(self, input_choice, temp = 1):
-        super().__init__()
-        self.name = input_choice.label
-        self.alpha = nn.Parameter(torch.randn(input_choice.n_candidates) * 1e-3)
-        self.n_chosen = input_choice.n_chosen or 1
+        super().__init__(input_choice)
         self._temp = temp
 
     def forward(self, inputs):
+        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
         inputs = torch.stack(inputs)
         alpha_shape = [-1] + [1] * (len(inputs.size()) - 1)
         return torch.sum(inputs * F.softmax(self.one_hot, -1).view(*alpha_shape), 0)
-
-    def resample(self):
-        # gumble soft-max
-        self.one_hot = F.gumbel_softmax(self.alpha.log(), self._temp)
-
-    def parameters(self):
-        for _, p in self.named_parameters():
-            yield p
-
-    def named_parameters(self):
-        for name, p in super().named_parameters():
-            if name == 'alpha':
-                continue
-            yield name, p
-
-    def export(self):
-        return torch.argsort(-self.alpha).cpu().numpy().tolist()[:self.n_chosen]
-
-    def r_forward(self, x):
-        return super().r_forward(x)
 
 
 class SNASModule(DartsModule):
@@ -381,18 +332,9 @@ class SNASModule(DartsModule):
         self.temp = gumble_temperature
         super().__init__(base_model, custom_replace_dict)
 
-    def configure_architecture_optimizers(self):
-        ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], lr=3.e-4,
-                                           weight_decay=0, betas=(0, 0.999), eps=1e-8)
-        return ctrl_optim
-
     @property
     def default_replace_dict(self):
         return {
             LayerChoice : lambda m : SNASLayerChoice(m, self.temp),
             InputChoice : lambda m : SNASInputChoice(m, self.temp)
         }
-
-    def resample_architecture(self):
-        for _, m in self.nas_modules:
-            m.resample()
