@@ -32,7 +32,7 @@
     left: 0;
     top: 6em;
     transition: all 0.1s ease;
-    padding: .625em .3rem;
+    padding: .625em 0;
     margin-top: -0.9rem;
     transform: scale(0);
     transform-origin: 0 0;
@@ -51,7 +51,7 @@
 
 .drop ul li a.md-nav__link {
     width: 100%;
-    padding: 1em .4rem;
+    padding: .4rem 1em;
     display: inline-block;
     white-space: pre;
     box-sizing: border-box;
