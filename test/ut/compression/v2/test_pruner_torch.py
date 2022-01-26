@@ -75,7 +75,7 @@ class PrunerTestCase(unittest.TestCase):
     def test_level_pruner_bank(self):
         model = TorchModel()
         config_list = [{'op_types': ['Conv2d'], 'sparsity': 0.7}]
-        pruner = LevelPruner(model=model, config_list=config_list, balance_gran=[5])
+        pruner = LevelPruner(model=model, config_list=config_list, mode='balance', balance_gran=[5])
         pruned_model, masks = pruner.compress()
         pruner._unwrap_model()
         sparsity_list = compute_sparsity_mask2compact(pruned_model, masks, config_list)
