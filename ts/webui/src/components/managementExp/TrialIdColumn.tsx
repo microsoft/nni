@@ -48,7 +48,6 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
             prefix = prefix.slice(0, prefix.length - 1);
         }
 
-        console.info(prefix);
         return prefix;
     }
 }
