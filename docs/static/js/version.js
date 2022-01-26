@@ -84,14 +84,14 @@ function add_language_dropdown() {
         'en': 'English',
         'zh': '简体中文'
     };
-    const current_language = 'en';
+    let current_language = 'en';
     const pathname_prefix = window.location.pathname.split('/');
     if (pathname_prefix.length > 1 && language_dropdown.hasOwnProperty(pathname_prefix[1])) {
         current_language = pathname_prefix[1];
     }
 
     function get_dropdown_href(lang) {
-        const pathname = window.location.pathname.split('/');
+        let pathname = window.location.pathname.split('/');
         if (pathname.length > 1) {
             pathname[1] = lang;
         }
