@@ -2,6 +2,7 @@
 # Licensed under the MIT license.
 
 from warnings import warn
+import weakref
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
@@ -127,8 +128,9 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
-        # let users have access to the trainer
-        self.model.trianer = self.trainer
+        # let users have access to the trainer and log
+        self.model.trainer = self.trainer
+        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
