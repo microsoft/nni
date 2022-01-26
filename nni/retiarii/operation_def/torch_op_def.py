@@ -124,6 +124,13 @@ class PrimGetAttr(PyTorchOperation):
             return f"{output} = {self.parameters['input']}.{self.parameters['name']}"
 
 
+class PrimUncheckedCast(PyTorchOperation):
+    _ori_type_name = ['prim::unchecked_cast']
+
+    def to_forward_code(self, field: str, output: str, inputs: List[str], inputs_value: List[Any] = None) -> str:
+        return f'{output} = {inputs[0]}'
+
+
 class SimpleMember(PyTorchOperation):
     _ori_type_name = ['prim::is_cuda', 'prim::data']
 
