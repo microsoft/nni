@@ -1,5 +1,4 @@
 import math
-import re
 import sys
 from pathlib import Path
 
@@ -15,6 +14,10 @@ from nni.common.serializer import is_traceable
 if True:  # prevent auto formatting
     sys.path.insert(0, Path(__file__).parent.as_posix())
     from imported.model import ImportTest
+
+    # this test cannot be directly put in this file. It will cause syntax error for python <= 3.7.
+    if tuple(sys.version_info) >= (3, 8):
+        from imported._test_serializer_py38 import test_positional_only
 
 
 @nni.trace
@@ -252,13 +255,6 @@ def test_arguments_kind():
     d = nni.trace(foo)(1, b=2)
     # this is not perfect, but it's safe
     assert d.trace_kwargs == dict(a=1, b=2)
-
-    def foo(a, b, /, c):
-        pass
-
-    d = nni.trace(foo)(1, 2, c=3)
-    assert d.trace_args == [1, 2]
-    assert d.trace_kwargs == dict(c=3)
 
     def foo(a, *, b=3, c=5):
         pass
