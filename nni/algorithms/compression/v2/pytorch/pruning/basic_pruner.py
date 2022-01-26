@@ -699,7 +699,7 @@ class TaylorFOWeightPruner(BasicPruner):
         return (weight_tensor.detach() * grad.detach()).data.pow(2)
 
     def reset_tools(self):
-        hook_targets = {layer_info.name: layer_info.weight for layer_info, _ in self._detect_modules_to_compress()}
+        hook_targets = {name: wrapper.weight for name, wrapper in self.get_modules_wrapper()}
         collector_info = HookCollectorInfo(hook_targets, 'tensor', self._collector)
         if self.data_collector is None:
             self.data_collector = SingleHookTrainerBasedDataCollector(self, self.trainer, self.optimizer_helper, self.criterion,
