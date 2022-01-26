@@ -165,8 +165,6 @@ class EnasModule(BaseOneShotLightningModule):
     base_model : pl.LightningModule
         The module in evaluators in nni.retiarii.evaluator.lightning. User defined model
         is wrapped by ''base_model'', and ''base_model'' will be wrapped by this model.
-    reward_function : callable
-        Receives logits and ground truth label, return a tensor, which will be feeded to RL controller as reward.
     ctrl_kwargs : dict
         Optional kwargs that will be passed to :class:`ReinforceController`.
     entropy_weight : float
@@ -192,7 +190,7 @@ class EnasModule(BaseOneShotLightningModule):
     """
     automatic_optimization = False
 
-    def __init__(self, base_model, reward_function, ctrl_kwargs = None,
+    def __init__(self, base_model, ctrl_kwargs = None,
                  entropy_weight = 1e-4, skip_weight = .8, baseline_decay = .999,
                  ctrl_steps_aggregate = 20, grad_clip = 0, custom_replace_dict = None):
         super().__init__(base_model, custom_replace_dict)
@@ -201,8 +199,6 @@ class EnasModule(BaseOneShotLightningModule):
                                           isinstance(module, PathSamplingLayerChoice) or module.n_chosen == 1)
                            for name, module in self.nas_modules]
         self.controller = ReinforceController(self.nas_fields, **(ctrl_kwargs or {}))
-
-        self.reward_function = reward_function
 
         self.entropy_weight = entropy_weight
         self.skip_weight = skip_weight
@@ -255,10 +251,16 @@ class EnasModule(BaseOneShotLightningModule):
             self._resample()
             with torch.no_grad():
                 logits = self.model(x)
-            # metrics 有一个键叫 default，多个拿default，一个拿第一个，否则报错。
-            # 找 self.model 拿 log 里的 metric
-            reward = self.model.metrics['acc'](logits, y) # reward_function(logits, y)
+            breakpoint()
+            # get the default metric of self.model
+            if len(self.model.metrics) == 1:
+                _, metric = next(iter(self.model.metrics.items()))
+            else:
+                if 'default' not in self.model.metrics.keys():
+                    raise KeyError('model.metrics should contain a ''default'' key')
+                metric = self.model.metrics['default']
 
+            reward = metric(logits, y)
             if self.entropy_weight:
                 reward = reward + self.entropy_weight * self.controller.sample_entropy.item()
             self.baseline = self.baseline * self.baseline_decay + reward * (1 - self.baseline_decay)
