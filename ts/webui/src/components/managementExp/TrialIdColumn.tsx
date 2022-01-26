@@ -17,9 +17,9 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
         const hostname = window.location.hostname;
         const protocol = window.location.protocol;
         const webuiPortal =
-            item.prefixUrl === 'null'
+            item.prefixUrl === null
                 ? `${protocol}//${hostname}:${item.port}/oview`
-                : `${protocol}//${hostname}:${item.port}/${item.prefixUrl}/oview`;
+                : `${protocol}//${hostname}:${item.port}/${this.formatPrefix(item.prefixUrl)}/oview`;
         return (
             <Stack horizontal className='ellipsis idCopy'>
                 {item.status === 'STOPPED' ? (
@@ -37,6 +37,19 @@ class TrialIdColumn extends React.Component<TrialIdColumnProps, {}> {
                 <CopyButton value={item.id} />
             </Stack>
         );
+    }
+
+    private formatPrefix(prefix): string {
+        if (prefix.startsWith('/')) {
+            prefix = prefix.slice(1);
+        }
+
+        if (prefix.endsWith('/')) {
+            prefix = prefix.slice(0, prefix.length - 1);
+        }
+
+        console.info(prefix);
+        return prefix;
     }
 }
 
