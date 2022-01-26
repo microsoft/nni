@@ -184,6 +184,11 @@ class NormPruner(BasicPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
+
+        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
+        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
+        In this mode, NNI will find these three Linear layers in each attention,
+        then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
@@ -245,6 +250,11 @@ class L1NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
+
+        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
+        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
+        In this mode, NNI will find these three Linear layers in each attention,
+        then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
@@ -278,6 +288,11 @@ class L2NormPruner(NormPruner):
         harvest the speed benefit from the pruned model. Note that, if set 'dependency_aware'
         , the dummy_input cannot be None, because the pruner needs a dummy input to trace the
         dependency between the conv layers.
+
+        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
+        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
+        In this mode, NNI will find these three Linear layers in each attention,
+        then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
@@ -651,6 +666,11 @@ class TaylorFOWeightPruner(BasicPruner):
         If prune the model in a global way, all layer weights with same config will be considered uniformly.
         That means a single layer may not reach or exceed the sparsity setting in config,
         but the total pruned weights meet the sparsity setting.
+
+        If prune the model in an attention way, make sure you have (self-attention-like, QKV projection) structure in your model,
+        and they are implemented with `torch.nn.Linear` (like Bert implemented in hugging face).
+        In this mode, NNI will find these three Linear layers in each attention,
+        then apply the mask on the same position among three layers as possible.
     dummy_input : Optional[torch.Tensor]
         The dummy input to analyze the topology constraints. Note that, the dummy_input
         should on the same device with the model.
