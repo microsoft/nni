@@ -165,6 +165,7 @@ html_css_files = [
 ]
 html_js_files = [
     'js/version.js',
+    'js/github.js',
 ]
 
 # -- Options for HTMLHelp output ---------------------------------------------
