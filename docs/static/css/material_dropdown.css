@@ -17,21 +17,27 @@
     padding: 0 0 0.3rem 0.2rem;
     font-size: 0.5rem;
     font-family: "Material Icons";
+    display: inline-block;
+    transition: all 0.2s ease;
+    transform: rotate(0);
+    transform-origin: 65% 30%;
+}
+
+.drop button.active:after {
+    transform: rotate(180deg);
 }
 
 .drop ul {
     position: absolute;
     left: 0;
-    top: 3em;
+    top: 6em;
     transition: all 0.1s ease;
-    padding-left: 0;
+    padding: .625em .3rem;
     margin-top: -0.9rem;
     transform: scale(0);
     transform-origin: 0 0;
     background: #fcfcfc;
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.16), 0 2px 8px 0 rgba(0, 0, 0, 0.12);
-    padding-top: .625em;
-    padding-bottom: .625em;
 }
 
 .drop ul.active {
@@ -45,7 +51,7 @@
 
 .drop ul li a.md-nav__link {
     width: 100%;
-    padding: 1em 18px;
+    padding: 1em .4rem;
     display: inline-block;
     white-space: pre;
     box-sizing: border-box;

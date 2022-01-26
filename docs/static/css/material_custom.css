@@ -32,3 +32,13 @@ nav.md-tabs .md-tabs__item:not(:last-child) .md-tabs__link:after {
 .rst-versions.rst-badge {
     display: none !important;
 }
+
+/* Add some margin between main content and footer */
+.md-footer {
+    margin-top: 1rem;
+}
+
+/* make footer appearing inline */
+.md-footer-copyright__highlight {
+    display: inline;
+}

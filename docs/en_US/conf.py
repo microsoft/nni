@@ -127,7 +127,16 @@ html_theme_options = {
     'version_info': {
         'current': '/'
     },
+
+    # Text to appear at the top of the home page in a "hero" div.
+    'heroes': {
+        # We can have heroes for the home pages of HPO, NAS, Compression in future.
+        'index': 'An open source AutoML toolkit for neural architecture search, model compression and hyper-parameter tuning.'
+    }
 }
+
+# Disable show source link.
+html_show_sourcelink = False
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

@@ -107,7 +107,7 @@ Neural Network Intelligence
     <a href="#overview"><img src="_static/img/overview.svg" /></a>
   </p>
 
-  <table class="mainTable">
+  <table class="main-table">
     <tbody>
       <tr align="center" valign="bottom" class="column">
         <td></td>
@@ -333,7 +333,7 @@ Neural Network Intelligence
             You can explore the experiment using the Web UI url.
           </div>
           <!-- Indentation affects style！ -->
-          <pre class="code">
+          <pre class="main-code">
   INFO: Starting restful server...
   INFO: Successfully started Restful server!
   INFO: Setting local config...

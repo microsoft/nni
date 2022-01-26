@@ -33,19 +33,19 @@
 
 
 function create_dropdown(button_text, items) {
-    var dropdown = document.createElement("div");
+    const dropdown = document.createElement("div");
     dropdown.className = "md-flex__cell md-flex__cell--shrink drop";
-    var button = document.createElement("button");
+    const button = document.createElement("button");
     button.innerHTML = button_text;
-    var content = document.createElement("ul");
+    const content = document.createElement("ul");
     // content.className = "dropdown-content md-hero";
     dropdown.appendChild(button);
     dropdown.appendChild(content);
 
-    for (var key in items) {
+    for (const key in items) {
         if (items.hasOwnProperty(key)) {
-            var li = document.createElement("li");
-            var a = document.createElement("a");
+            const li = document.createElement("li");
+            const a = document.createElement("a");
             a.className = "md-nav__link"
             a.innerHTML = key;
             a.title = key;
@@ -57,12 +57,13 @@ function create_dropdown(button_text, items) {
 
     $(button).click(function (e) {
         // first close all others.
-        $(".drop").find("ul.active").removeClass("active");
+        $(".drop").find(".active").removeClass("active");
         $(dropdown).find("ul").addClass("active");
+        $(dropdown).find("button").addClass("active");
         e.stopPropagation();
     })
     $(document).click(function () {
-        $(dropdown).find("ul").removeClass("active");
+        $(".drop").find(".active").removeClass("active");
     })
     return dropdown;
 }
@@ -72,26 +73,25 @@ function remove_version_dropdown() {
 }
 
 function add_version_dropdown() {
-    var prev_versions = Object.assign({}, ...READTHEDOCS_VERSIONS.map(([k, v]) => ({ [k]: v })));
-    console.log(prev_versions);
+    const prev_versions = Object.assign({}, ...READTHEDOCS_VERSIONS.map(([k, v]) => ({ [k]: v })));
 
-    var current_version = 'v: ' + READTHEDOCS_DATA["version"];
+    const current_version = 'v: ' + READTHEDOCS_DATA["version"];
     $(".navheader").append(create_dropdown(current_version, prev_versions));
 }
 
 function add_language_dropdown() {
-    var language_dropdown = {
+    const language_dropdown = {
         'en': 'English',
         'zh': '简体中文'
     };
-    var current_language = 'en';
-    var pathname_prefix = window.location.pathname.split('/');
+    const current_language = 'en';
+    const pathname_prefix = window.location.pathname.split('/');
     if (pathname_prefix.length > 1 && language_dropdown.hasOwnProperty(pathname_prefix[1])) {
         current_language = pathname_prefix[1];
     }
 
     function get_dropdown_href(lang) {
-        var pathname = window.location.pathname.split('/');
+        const pathname = window.location.pathname.split('/');
         if (pathname.length > 1) {
             pathname[1] = lang;
         }

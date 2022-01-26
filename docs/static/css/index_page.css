@@ -35,6 +35,11 @@
     padding-left: 10px;
 }
 
+.main-code {
+    background-color: #f8f8f8;
+    padding: 15px 20px;
+}
+
 .command-intro {
     line-height: 48px;
 }
@@ -58,7 +63,7 @@
     margin-left: 24px;
 }
 
-.mainTable, .mainTable tr, .mainTable td {
+.main-table, .main-table tr, .main-table td {
     border: 1px solid #ccc;
 }
 
@@ -78,15 +83,15 @@ td.framework {
     -webkit-width: 220px;
 }
 
-.mainTable .circle li {
+.main-table .circle li {
     list-style-type: circle;
 }
 
-.mainTable .firstUl, .circle {
+.main-table .firstUl, .circle {
     padding-left: 20px;
 }
 
-.mainTable .verticalMiddle {
+.main-table .verticalMiddle {
     vertical-align: middle !important;
     text-align: center;
 }
@@ -112,7 +117,7 @@ td.framework {
     color: #fff !important;
 }
 
-.mainTable {
+.main-table {
     width: 90%;
     margin: 0 auto;
 }
