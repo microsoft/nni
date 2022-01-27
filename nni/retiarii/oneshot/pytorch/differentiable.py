@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from collections import OrderedDict
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -270,7 +269,7 @@ class ProxylessModule(DartsModule):
             LayerChoice : ProxylessLayerChoice,
             InputChoice : ProxylessInputChoice
         }
-    
+
     def configure_architecture_optimizers(self):
         ctrl_optim = torch.optim.Adam([m.alpha for _, m in self.nas_modules], 3.e-4,
                                            weight_decay=0, betas=(0, 0.999), eps=1e-8)

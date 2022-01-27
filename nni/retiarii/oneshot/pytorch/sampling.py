@@ -4,7 +4,6 @@
 import random
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
 import torch.optim as optim
 
 from nni.retiarii.nn.pytorch.api import LayerChoice, InputChoice

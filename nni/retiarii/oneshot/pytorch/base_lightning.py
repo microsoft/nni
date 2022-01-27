@@ -2,7 +2,6 @@
 # Licensed under the MIT license.
 
 from warnings import warn
-import weakref
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
