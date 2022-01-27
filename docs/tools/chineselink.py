@@ -27,7 +27,7 @@ def walk(path):
 # Not the recommended way of sphinx though: https://docs.readthedocs.io/en/stable/guides/manage-translations-sphinx.html
 
 whitelist = [
-    '_templates/index.html',  # I think no one ever remembers to update this file. Might need to rethink about this.
+    'index.rst',  # I think no one ever remembers to update this file. Might need to rethink about this.
     'Overview.rst',
     'installation.rst',
     'Tutorial/InstallationLinux.rst',
