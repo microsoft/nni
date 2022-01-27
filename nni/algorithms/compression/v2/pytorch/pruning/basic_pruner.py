@@ -148,7 +148,8 @@ class LevelPruner(BasicPruner):
         acceleration. Please refer to releated paper for further information 'Balanced Sparsity for 
         Efficient DNN Inference on GPU'(https://arxiv.org/pdf/1811.00206.pdf).
     balance_gran : list
-        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning without awaring balance, namely normal finegrained pruning.
+        Balance_gran is for special sparse pattern balanced sparsity, Default value is None which means pruning 
+        without awaring balance, namely normal finegrained pruning.
         If passing list of int, LevelPruner will prune the model in the granularity of multi-dimension block.
         Attention that the length of balance_gran should be smaller than tensor dimension.
         For instance, in Linear operation, length of balance_gran should be equal or smaller than two since
@@ -157,6 +158,9 @@ class LevelPruner(BasicPruner):
         and 10 values would be kept after pruning. Finegrained pruning is applied in the granularity of block 
         so that each block will kept same number of non-zero values after pruning. Such pruning method "balance" 
         the non-zero value in tensor which create chance for better hardware acceleration.
+
+        Note: If length of given balance_gran smaller than length of pruning tensor shape, it will be made up
+              in right align(such as example 1).
 
             example 1:
                 operation: Linear
@@ -180,7 +184,7 @@ class LevelPruner(BasicPruner):
                 
     """
 
-    def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: list = None):
+    def __init__(self, model: Module, config_list: List[Dict], mode: str = "normal", balance_gran: Optional[List] = None):
         self.mode = mode
         self.balance_gran = balance_gran
         super().__init__(model, config_list)
