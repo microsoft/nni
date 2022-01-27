@@ -5,6 +5,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
+from torch.optim.lr_scheduler import _LRScheduler
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .darts import DartsInputChoice, DartsLayerChoice
@@ -39,6 +40,7 @@ class DartsModule(BaseOneShotLightningModule):
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
+        lr_schedulers = self.lr_schedulers()
         if isinstance(opts,list):
             # list of optimizers
             # pylint: disable=unsubscriptable-object
@@ -56,22 +58,25 @@ class DartsModule(BaseOneShotLightningModule):
         # methods such as proxyless. See code of those methods for details.
         self._resample()
         arc_optim.zero_grad()
-        arc_step_loss = self._extract_user_loss(val_batch, 2 * batch_idx)
+        arc_step_loss = self.model.training_step(val_batch, 2 * batch_idx)
+        if isinstance(arc_step_loss, dict):
+            arc_step_loss = arc_step_loss['loss']
         self.manual_backward(arc_step_loss)
         self.finalize_grad()
         arc_optim.step()
 
         # phase 2: model step
         self._resample()
-        if w_optim is not None:
-            for opt in w_optim:
-                opt.zero_grad()
-        w_step_loss = self._extract_user_loss(trn_batch, 2 * batch_idx + 1)
+        self.call_user_optimizers(w_optim, 'zero_grad')
+        loss_and_metrics = self.model.training_step(trn_batch, 2 * batch_idx + 1)
+        w_step_loss = loss_and_metrics['loss'] \
+            if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
-        if w_optim is not None:
-            for opt in w_optim:
-                opt.step()
-        return self.model.training_step(trn_batch, 2 * batch_idx + 1)
+        self.call_user_optimizers(w_optim, 'step')
+        
+        self.call_lr_schedulers(batch_idx)
+
+        return loss_and_metrics
 
     def _resample(self):
         """

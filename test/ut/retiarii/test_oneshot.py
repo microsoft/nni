@@ -89,8 +89,8 @@ def test_darts():
     cls = Classification(train_dataloader=train_loader, val_dataloaders = valid_loader,**{'max_epochs':1})
     cls.module.set_model(base_model)
     darts_model = DartsModule(cls.module)
-    darts_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
-    cls.trainer.fit(darts_model, darts_loader)
+    para_loader = ParallelTrainValDataLoader(cls.train_dataloader, cls.val_dataloaders)
+    cls.trainer.fit(darts_model, para_loader)
 
 
 def test_proxyless():

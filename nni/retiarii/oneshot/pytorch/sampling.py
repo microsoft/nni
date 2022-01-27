@@ -94,15 +94,15 @@ class EnasModule(BaseOneShotLightningModule):
         if source == 'train':
             # step 1: train model params
             self._resample()
-            if w_opt is not None:
-               for opt in w_opt:
-                    opt.zero_grad()
-            w_step_loss = self._extract_user_loss(batch, batch_idx)
+            self.call_user_optimizers(w_opt, 'zero_grad')
+            loss_and_metrics = self.model.training_step(batch, batch_idx)
+            w_step_loss = loss_and_metrics['loss'] \
+                if isinstance(loss_and_metrics, dict) else loss_and_metrics
             self.manual_backward(w_step_loss)
-            if w_opt is not None:
-                for opt in w_opt:
-                    opt.step()
-        elif source == 'val':
+            self.call_user_optimizers(w_opt, 'step')
+            return loss_and_metrics
+        
+        if source == 'val':
             # step 2: train ENAS agent
             x, y = batch
             arc_opt.zero_grad()
@@ -135,7 +135,6 @@ class EnasModule(BaseOneShotLightningModule):
                 arc_opt.step()
                 arc_opt.zero_grad()
 
-        return self.model.training_step(batch, batch_idx)
 
     def _resample(self):
         result = self.controller.resample()

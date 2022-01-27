@@ -6,6 +6,8 @@ import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
 
+from torch.optim.lr_scheduler import _LRScheduler
+
 
 def _replace_module_with_type(root_module, replace_dict, modules):
     """
@@ -121,8 +123,17 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # The third return value ``frequency`` and ``monitor`` are ignored since lightning
         # requires len(optimizers) == len(frequency), and gradient backword
         # is handled manually.
-        w_optimizers, lr_schedulers, _, _ = \
+        w_optimizers, lr_schedulers, self.frequencies, monitor = \
             self.trainer._configure_optimizers(self.model.configure_optimizers())
+        
+        lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+        if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
+            raise Exception(
+            "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
+        )
+
+        self.cur_optimizer_step = 0
+        self.cur_optimizer_index = 0
 
         return arc_optimizers + w_optimizers, lr_schedulers
 
@@ -179,20 +190,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             Optimizers used by a specific NAS algorithm for its architecture parameters.
             Return None if no architecture optimizers are needed.
         """
-        arc_optimizers = None
-        return arc_optimizers
-
-    def _extract_user_loss(self, batch, batch_index):
-        """
-        Handle different type of the return value of user's training_step and
-        return the loss tensor.
-        Use this instead of ``self.model.training_step(batch, batch_index)``
-        """
-        training_loss = self.model.training_step(batch, batch_index)
-        if isinstance(training_loss, dict):
-            training_loss = training_loss.get('loss')
-
-        return training_loss
+        return None
 
     @property
     def default_replace_dict(self):
@@ -210,6 +208,53 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         replace_dict = {}
         return replace_dict
+    
+    def call_lr_schedulers(self, batch_index):
+        def apply(lr_scheduler):
+            # single scheduler is called every epoch
+            if  isinstance(lr_scheduler, _LRScheduler) and \
+                self.trainer.is_last_batch:
+                lr_schedulers.step()
+            # lr_scheduler_config is called as configured
+            elif isinstance(lr_scheduler, dict):
+                interval = lr_scheduler['interval']
+                frequency = lr_scheduler['frequency']
+                if  interval == 'step' and \
+                    batch_index % frequency == 0 \
+                    or \
+                    interval == 'epoch' and \
+                    self.trainer.is_last_batch and \
+                    (self.trainer.current_epoch + 1) % frequency == 0:
+                        lr_scheduler.step()
+
+        lr_schedulers = self.lr_schedulers()
+
+        if isinstance(lr_schedulers, list):
+            for lr_scheduler in lr_schedulers:
+                apply(lr_scheduler)
+        else:
+            apply(lr_schedulers)
+    
+    def call_user_optimizers(self, optimizers, method):
+        def apply_method(optimizer, method):
+            if method == 'step':
+                optimizer.step()
+            elif method == 'zero_grad':
+                optimizer.zero_grad()
+
+        if len(self.frequencies) > 0:
+            self.cur_optimizer_step += 1
+            if self.frequencies[self.cur_optimizer_index] == self.cur_optimizer_step:
+                self.cur_optimizer_step = 0
+                self.cur_optimizer_index = self.cur_optimizer_index + 1 \
+                    if self.cur_optimizer_index + 1 < len(optimizers) \
+                    else 0
+            apply_method(optimizers[self.cur_optimizer_index], method)
+        else:
+            for optimizer in optimizers:
+                apply_method(optimizer, method)
+                
+    
 
     def export(self):
         """
