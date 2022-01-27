@@ -12,3 +12,4 @@ sphinx
 sphinx-argparse
 sphinx-rtd-theme
 sphinxcontrib-websupport
+git+https://github.com/bashtage/sphinx-material.git
