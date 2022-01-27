@@ -7,7 +7,7 @@ import MessageInfo from '../modals/MessageInfo';
 import { compareDate, filterByStatusOrPlatform, getSortedSource } from './expFunction';
 import { MAXSCREENCOLUMNWIDHT, MINSCREENCOLUMNWIDHT } from './experimentConst';
 import { Hearder } from './Header';
-import NameColumn from './TrialIdColumn';
+import TrialIdColumn from './TrialIdColumn';
 import FilterBtns from './FilterBtns';
 import { TitleContext } from '../overview/TitleContext';
 import { Title } from '../overview/Title';
@@ -194,7 +194,7 @@ class Experiment extends React.Component<{}, ExpListState> {
             className: 'tableHead leftTitle',
             data: 'string',
             onColumnClick: this.onColumnClick,
-            onRender: (item: any): React.ReactNode => <NameColumn port={item.port} status={item.status} id={item.id} />
+            onRender: (item: any): React.ReactNode => <TrialIdColumn item={item} />
         },
         {
             name: 'Status',
