@@ -11,19 +11,16 @@ Neural Network Intelligence
     :titlesonly:
     :hidden:
 
-    Overview
-    Installation <installation>
-    QuickStart <Tutorial/QuickStart>
-    Auto (Hyper-parameter) Tuning <hyperparameter_tune>
+    Overview <overview>
+    Tutorials <tutorials>
+    Auto (Hyper-parameter) Tuning <hpo>
     Neural Architecture Search <nas>
-    Model Compression <model_compression>
+    Model Compression <compression>
     Feature Engineering <feature_engineering>
-    References <reference>
-    Use Cases and Solutions <CommunitySharings/community_sharings>
-    Research and Publications <ResearchPublications>
-    FAQ <Tutorial/FAQ>
-    How to Contribute <contribution>
-    Change Log <Release>
+    NNI Experiment <experiment>
+    References <references>
+    Research and Publications <research_publications>
+    Change Log <release>
 
 
 
