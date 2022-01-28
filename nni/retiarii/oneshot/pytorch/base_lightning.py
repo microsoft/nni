@@ -1,7 +1,6 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
-from warnings import warn
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
