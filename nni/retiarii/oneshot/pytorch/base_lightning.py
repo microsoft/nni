@@ -6,6 +6,7 @@ import torch.optim as optim
 import torch.nn as nn
 
 from torch.optim.lr_scheduler import _LRScheduler
+from torch.optim import Optimizer
 
 
 def _replace_module_with_type(root_module, replace_dict, modules):
@@ -99,6 +100,67 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         return self.model.training_step(batch, batch_idx)
 
+    @staticmethod
+    def _configure_optimizers(
+        optim_conf    ):
+        optimizers, lr_schedulers, optimizer_frequencies = [], [], []
+        monitor = None
+
+        # single output, single optimizer
+        if isinstance(optim_conf, Optimizer):
+            optimizers = [optim_conf]
+        # two lists, optimizer + lr schedulers
+        elif (
+            isinstance(optim_conf, (list, tuple))
+            and len(optim_conf) == 2
+            and isinstance(optim_conf[0], list)
+            and all(isinstance(opt, Optimizer) for opt in optim_conf[0])
+        ):
+            opt, sch = optim_conf
+            optimizers = opt
+            lr_schedulers = sch if isinstance(sch, list) else [sch]
+        # single dictionary
+        elif isinstance(optim_conf, dict):
+            optimizers = [optim_conf["optimizer"]]
+            monitor = optim_conf.get("monitor", None)
+            lr_schedulers = [optim_conf["lr_scheduler"]] if "lr_scheduler" in optim_conf else []
+        # multiple dictionaries
+        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(d, dict) for d in optim_conf):
+            for opt_dict in optim_conf:
+                optimizers = [opt_dict["optimizer"] for opt_dict in optim_conf]
+                scheduler_dict = (
+                    lambda scheduler, opt_idx: dict(scheduler, opt_idx=opt_idx)
+                    if isinstance(scheduler, dict)
+                    else {"scheduler": scheduler, "opt_idx": opt_idx}
+                )
+
+                lr_schedulers = [
+                    scheduler_dict(opt_dict["lr_scheduler"], opt_idx)
+                    for opt_idx, opt_dict in enumerate(optim_conf)
+                    if "lr_scheduler" in opt_dict
+                ]
+                optimizer_frequencies = [
+                    opt_dict["frequency"] for opt_dict in optim_conf if opt_dict.get("frequency", None) is not None
+                ]
+                # assert that if frequencies are present, they are given for all optimizers
+                if optimizer_frequencies and len(optimizer_frequencies) != len(optimizers):
+                    raise ValueError("A frequency must be given to each optimizer.")
+        # single list or tuple, multiple optimizer
+        elif isinstance(optim_conf, (list, tuple)) and all(isinstance(opt, Optimizer) for opt in optim_conf):
+            optimizers = list(optim_conf)
+        # unknown configuration
+        else:
+            raise Exception(
+                "Unknown configuration for model optimizers."
+                " Output from `model.configure_optimizers()` should either be:\n"
+                " * `torch.optim.Optimizer`\n"
+                " * [`torch.optim.Optimizer`]\n"
+                " * ([`torch.optim.Optimizer`], [`torch.optim.lr_scheduler`])\n"
+                ' * {"optimizer": `torch.optim.Optimizer`, (optional) "lr_scheduler": `torch.optim.lr_scheduler`}\n'
+                ' * A list of the previously described dict format, with an optional "frequency" key (int)'
+            )
+        return optimizers, lr_schedulers, optimizer_frequencies, monitor
+
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
@@ -121,8 +183,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # requires len(optimizers) == len(frequency), and gradient backword
         # is handled manually.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
-            self.trainer._configure_optimizers(self.model.configure_optimizers())
-
+            self._configure_optimizers(self.model.configure_optimizers())
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
