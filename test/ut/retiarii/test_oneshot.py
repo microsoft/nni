@@ -1,3 +1,4 @@
+import argparse
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -129,8 +130,21 @@ def test_snas():
 
 
 if __name__ == '__main__':
-    test_darts()
-    test_proxyless()
-    test_enas()
-    test_random()
-    test_snas()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--exp', type=str, default='all', metavar='E',
+        help='exp to run, default = all' )
+    args = parser.parse_args()
+
+    exp_dict = {
+        'darts' : test_darts,
+        'proxyless' : test_proxyless,
+        'enas' : test_enas,
+        'random' : test_random,
+        'snas' : test_snas
+    }
+
+    if args.exp == 'all':
+        for func in exp_dict.values():
+            func()
+    else:
+        exp_dict[args.exp]()
