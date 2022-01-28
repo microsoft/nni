@@ -274,8 +274,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return arc_optimizers + w_optimizers, lr_schedulers
 
     def on_train_start(self):
-        # let users have access to the trainer and log
-        self.model.trainer = self.trainer
         return self.model.on_train_start()
 
     def on_train_end(self):
