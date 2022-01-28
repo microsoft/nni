@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation.
 # Licensed under the MIT license.
 
+from warnings import warn
 import pytorch_lightning as pl
 import torch.optim as optim
 import torch.nn as nn
@@ -82,8 +83,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
             for k, v in custom_replace_dict.items():
                 assert isinstance(v, nn.Module)
                 choice_replace_dict[k] = v
-        _replace_module_with_type(
-            self.model, choice_replace_dict, self.nas_modules)
+        _replace_module_with_type(self.model, choice_replace_dict, self.nas_modules)
 
     def forward(self, x):
         return self.model(x)
@@ -101,8 +101,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         return self.model.training_step(batch, batch_idx)
 
     @staticmethod
-    def _configure_optimizers(
-        optim_conf    ):
+    def _configure_optimizers(optim_conf):
         optimizers, lr_schedulers, optimizer_frequencies = [], [], []
         monitor = None
 
@@ -161,6 +160,85 @@ class BaseOneShotLightningModule(pl.LightningModule):
             )
         return optimizers, lr_schedulers, optimizer_frequencies, monitor
 
+    @staticmethod
+    def _configure_schedulers(schedulers, monitor, is_manual_optimization):
+        """Convert each scheduler into dict structure with relevant information."""
+        lr_schedulers = []
+        default_config = {
+            "scheduler": None,
+            "name": None,  # no custom name
+            "interval": "epoch",  # after epoch is over
+            "frequency": 1,  # every epoch/batch
+            "reduce_on_plateau": False,  # most often not ReduceLROnPlateau scheduler
+            "monitor": None,  # value to monitor for ReduceLROnPlateau
+            "strict": True,  # enforce that the monitor exists for ReduceLROnPlateau
+            "opt_idx": None,  # necessary to store opt_idx when optimizer frequencies are specified
+        }
+        for scheduler in schedulers:
+            if is_manual_optimization:
+                if isinstance(scheduler, dict):
+                    invalid_keys = {"interval", "frequency", "reduce_on_plateau", "monitor", "strict"}
+                    keys_to_warn = [k for k in scheduler.keys() if k in invalid_keys]
+
+                    if keys_to_warn:
+                        warn(
+                            f"The lr scheduler dict contains the key(s) {keys_to_warn}, but the keys will be ignored."
+                            " You need to call `lr_scheduler.step()` manually in manual optimization.",
+                            RuntimeWarning,
+                        )
+
+                    scheduler = {key: scheduler[key] for key in scheduler if key not in invalid_keys}
+                    lr_schedulers.append({**default_config, **scheduler})
+                else:
+                    lr_schedulers.append({**default_config, "scheduler": scheduler})
+            else:
+                if isinstance(scheduler, dict):
+                    # check provided keys
+                    extra_keys = [k for k in scheduler.keys() if k not in default_config.keys()]
+                    if extra_keys:
+                        warn(f"Found unsupported keys in the lr scheduler dict: {extra_keys}", RuntimeWarning)
+                    if "scheduler" not in scheduler:
+                        raise Exception(
+                            'The lr scheduler dict must have the key "scheduler" with its item being an lr scheduler'
+                        )
+                    if "interval" in scheduler and scheduler["interval"] not in ("step", "epoch"):
+                        raise Exception(
+                            'The "interval" key in lr scheduler dict must be "step" or "epoch"'
+                            f' but is "{scheduler["interval"]}"'
+                        )
+                    scheduler["reduce_on_plateau"] = isinstance(
+                        scheduler["scheduler"], optim.lr_scheduler.ReduceLROnPlateau
+                    )
+                    if scheduler["reduce_on_plateau"] and scheduler.get("monitor", None) is None:
+                        raise Exception(
+                            "The lr scheduler dict must include a monitor when a `ReduceLROnPlateau` scheduler is used."
+                            ' For example: {"optimizer": optimizer, "lr_scheduler":'
+                            ' {"scheduler": scheduler, "monitor": "your_loss"}}'
+                        )
+                    is_one_cycle = isinstance(scheduler["scheduler"], optim.lr_scheduler.OneCycleLR)
+                    if is_one_cycle and scheduler.get("interval", "epoch") == "epoch":
+                        warn(
+                            "A `OneCycleLR` scheduler is using 'interval': 'epoch'."
+                            " Are you sure you didn't mean 'interval': 'step'?",
+                            RuntimeWarning,
+                        )
+                    lr_schedulers.append({**default_config, **scheduler})
+                elif isinstance(scheduler, optim.lr_scheduler.ReduceLROnPlateau):
+                    if monitor is None:
+                        raise Exception(
+                            "`configure_optimizers` must include a monitor when a `ReduceLROnPlateau`"
+                            " scheduler is used. For example:"
+                            ' {"optimizer": optimizer, "lr_scheduler": scheduler, "monitor": "metric_to_track"}'
+                        )
+                    lr_schedulers.append(
+                        {**default_config, "scheduler": scheduler, "reduce_on_plateau": True, "monitor": monitor}
+                    )
+                elif isinstance(scheduler, optim.lr_scheduler._LRScheduler):
+                    lr_schedulers.append({**default_config, "scheduler": scheduler})
+                else:
+                    raise ValueError(f'The provided lr scheduler "{scheduler}" is invalid')
+        return lr_schedulers
+
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
@@ -184,7 +262,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # is handled manually.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
             self._configure_optimizers(self.model.configure_optimizers())
-        lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
+        lr_schedulers = self._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
             "Some schedulers are attached with an optimizer that wasn't returned from `configure_optimizers`."
