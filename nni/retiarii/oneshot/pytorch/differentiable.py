@@ -36,7 +36,7 @@ class DartsModule(BaseOneShotLightningModule):
         International Conference on Learning Representations, Sep. 2018. Available: https://openreview.net/forum?id=S1eYHoC5FX
     """
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, optimizer_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
         if isinstance(opts,list):

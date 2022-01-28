@@ -88,7 +88,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
-    def training_step(self, batch, batch_idx):
+    def training_step(self, batch, batch_idx, optimizer_idx):
         # You can use self.optimizers() in training_step to get a list of all optimizers.
         # Model optimizers comes after architecture optimizers, and the number of architecture
         # optimizers is self.arc_optim_count.
@@ -309,8 +309,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_after_backward(self):
         return self.model.on_after_backward()
 
-    def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
-        return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
+    # def configure_gradient_clipping(self, optimizer, optimizer_idx, gradient_clip_val = None, gradient_clip_algorithm = None):
+    #     return self.model.configure_gradient_clipping(optimizer, optimizer_idx, gradient_clip_val, gradient_clip_algorithm)
 
     def configure_architecture_optimizers(self):
         """
