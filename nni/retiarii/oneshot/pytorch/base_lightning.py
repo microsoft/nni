@@ -100,9 +100,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
 
         return self.model.training_step(batch, batch_idx)
 
-    def validation_step(self, batch, batch_idx):
-        warn('Validation is skipped by the NAS method you chose.')
-
     def configure_optimizers(self):
         """
         Combine architecture optimizers and user's model optimizers.
@@ -254,8 +251,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             for optimizer in optimizers:
                 apply_method(optimizer, method)
-
-
 
     def export(self):
         """
