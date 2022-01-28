@@ -5,7 +5,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-from torch.optim.lr_scheduler import _LRScheduler
 from nni.retiarii.nn.pytorch import LayerChoice, InputChoice
 from .base_lightning import BaseOneShotLightningModule
 from .darts import DartsInputChoice, DartsLayerChoice
@@ -40,7 +39,6 @@ class DartsModule(BaseOneShotLightningModule):
     def training_step(self, batch, batch_idx):
         # grad manually, only 1 architecture optimizer for darts
         opts = self.optimizers()
-        lr_schedulers = self.lr_schedulers()
         if isinstance(opts,list):
             # list of optimizers
             # pylint: disable=unsubscriptable-object
@@ -73,7 +71,7 @@ class DartsModule(BaseOneShotLightningModule):
             if isinstance(loss_and_metrics, dict) else loss_and_metrics
         self.manual_backward(w_step_loss)
         self.call_user_optimizers(w_optim, 'step')
-        
+
         self.call_lr_schedulers(batch_idx)
 
         return loss_and_metrics

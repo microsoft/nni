@@ -112,6 +112,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         nni.retiarii.evaluator.pytorch.lightning, and it only returns 1 optimizer.
         But for extendibility, codes for other return value types are also implemented.
         """
+        # pylint: disable=assignment-from-none
         arc_optimizers = self.configure_architecture_optimizers()
         if arc_optimizers is None:
             return self.model.configure_optimizers()
@@ -125,7 +126,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         # is handled manually.
         w_optimizers, lr_schedulers, self.frequencies, monitor = \
             self.trainer._configure_optimizers(self.model.configure_optimizers())
-        
+
         lr_schedulers = self.trainer._configure_schedulers(lr_schedulers, monitor, not self.automatic_optimization)
         if any(sch["scheduler"].optimizer not in w_optimizers for sch in lr_schedulers):
             raise Exception(
@@ -208,7 +209,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
         """
         replace_dict = {}
         return replace_dict
-    
+
     def call_lr_schedulers(self, batch_index):
         def apply(lr_scheduler):
             # single scheduler is called every epoch
@@ -234,7 +235,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
                 apply(lr_scheduler)
         else:
             apply(lr_schedulers)
-    
+
     def call_user_optimizers(self, optimizers, method):
         def apply_method(optimizer, method):
             if method == 'step':
@@ -253,8 +254,8 @@ class BaseOneShotLightningModule(pl.LightningModule):
         else:
             for optimizer in optimizers:
                 apply_method(optimizer, method)
-                
-    
+
+
 
     def export(self):
         """

@@ -101,7 +101,7 @@ class EnasModule(BaseOneShotLightningModule):
             self.manual_backward(w_step_loss)
             self.call_user_optimizers(w_opt, 'step')
             return loss_and_metrics
-        
+
         if source == 'val':
             # step 2: train ENAS agent
             x, y = batch
