@@ -88,7 +88,7 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def forward(self, x):
         return self.model(x)
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
         # You can use self.optimizers() in training_step to get a list of all optimizers.
         # Model optimizers comes after architecture optimizers, and the number of architecture
         # optimizers is self.arc_optim_count.

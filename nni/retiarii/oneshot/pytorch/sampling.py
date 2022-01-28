@@ -75,7 +75,7 @@ class EnasModule(BaseOneShotLightningModule):
             InputChoice : PathSamplingInputChoice
         }
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
         # grad manually
         opts = self.optimizers()
         if isinstance(opts,list):
@@ -168,7 +168,7 @@ class RandomSampleModule(BaseOneShotLightningModule):
     def __init__(self, base_model, custom_replace_dict = None):
         super().__init__(base_model, custom_replace_dict)
 
-    def training_step(self, batch, batch_idx, optimizer_idx):
+    def training_step(self, batch, batch_idx):
         self._resample()
         return self.model.training_step(batch, batch_idx)
 
