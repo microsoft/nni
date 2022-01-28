@@ -276,7 +276,6 @@ class BaseOneShotLightningModule(pl.LightningModule):
     def on_train_start(self):
         # let users have access to the trainer and log
         self.model.trainer = self.trainer
-        self.model.log = self.log
         return self.model.on_train_start()
 
     def on_train_end(self):
